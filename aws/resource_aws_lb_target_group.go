@@ -121,6 +121,16 @@ func resourceAwsLbTargetGroup() *schema.Resource {
 				}, false),
 			},
 
+			"load_balancing_algorithm_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"round_robin",
+					"least_outstanding_requests",
+				}, false),
+			},
+
 			"stickiness": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -451,6 +461,13 @@ func resourceAwsLbTargetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 				})
 			}
 		}
+
+		if d.HasChange("load_balancing_algorithm_type") {
+			attrs = append(attrs, &elbv2.TargetGroupAttribute{
+				Key:   aws.String("load_balancing.algorithm.type"),
+				Value: aws.String(d.Get("load_balancing_algorithm_type").(string)),
+			})
+		}
 	case elbv2.TargetTypeEnumLambda:
 		if d.HasChange("lambda_multi_value_headers_enabled") {
 			attrs = append(attrs, &elbv2.TargetGroupAttribute{
@@ -608,6 +625,9 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 				return fmt.Errorf("Error converting slow_start.duration_seconds to int: %s", aws.StringValue(attr.Value))
 			}
 			d.Set("slow_start", slowStart)
+		case "load_balancing.algorithm.type":
+			loadBalancingAlgorithm := aws.StringValue(attr.Value)
+			d.Set("load_balancing_algorithm_type", loadBalancingAlgorithm)
 		}
 	}
 
@@ -735,16 +755,24 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 
 	if protocol == elbv2.ProtocolEnumTcp {
 		if diff.HasChange("health_check.0.interval") {
-			old, new := diff.GetChange("health_check.0.interval")
-			return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
-				" use 'terraform taint' to recreate the resource if you wish",
-				old, new, diff.Id())
+			if err := diff.ForceNew("health_check.0.interval"); err != nil {
+				return err
+			}
+		}
+		// The health_check configuration block protocol argument has Default: HTTP, however the block
+		// itself is Computed: true. When not configured, a TLS (Network LB) Target Group will default
+		// to health check protocol TLS. We do not want to trigger recreation in this scenario.
+		// ResourceDiff will show 0 changed keys for the configuration block, which we can use to ensure
+		// there was an actual change to trigger the ForceNew.
+		if diff.HasChange("health_check.0.protocol") && len(diff.GetChangedKeysPrefix("health_check.0")) != 0 {
+			if err := diff.ForceNew("health_check.0.protocol"); err != nil {
+				return err
+			}
 		}
 		if diff.HasChange("health_check.0.timeout") {
-			old, new := diff.GetChange("health_check.0.timeout")
-			return fmt.Errorf("Health check timeout cannot be updated from %d to %d for TCP based Target Group %s,"+
-				" use 'terraform taint' to recreate the resource if you wish",
-				old, new, diff.Id())
+			if err := diff.ForceNew("health_check.0.timeout"); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

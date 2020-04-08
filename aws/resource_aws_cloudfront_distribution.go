@@ -647,6 +647,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"restriction_type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											cloudfront.GeoRestrictionTypeNone,
+											cloudfront.GeoRestrictionTypeBlacklist,
+											cloudfront.GeoRestrictionTypeWhitelist,
+										}, false),
 									},
 								},
 							},
@@ -816,6 +821,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
+
 	// Update other attributes outside of DistributionConfig
 	err = d.Set("active_trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners))
 	if err != nil {

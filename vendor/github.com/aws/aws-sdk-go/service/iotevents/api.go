@@ -436,8 +436,8 @@ func (c *IoTEvents) DescribeDetectorModelRequest(input *DescribeDetectorModelInp
 
 // DescribeDetectorModel API operation for AWS IoT Events.
 //
-// Describes a detector model. If the "version" parameter is not specified,
-// information about the latest version is returned.
+// Describes a detector model. If the version parameter is not specified, information
+// about the latest version is returned.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1076,10 +1076,10 @@ func (c *IoTEvents) PutLoggingOptionsRequest(input *PutLoggingOptionsInput) (req
 //
 // Sets or updates the AWS IoT Events logging options.
 //
-// If you update the value of any "loggingOptions" field, it takes up to one
-// minute for the change to take effect. Also, if you change the policy attached
-// to the role you specified in the "roleArn" field (for example, to correct
-// an invalid policy) it takes up to five minutes for that change to take effect.
+// If you update the value of any loggingOptions field, it takes up to one minute
+// for the change to take effect. If you change the policy attached to the role
+// you specified in the roleArn field (for example, to correct an invalid policy),
+// it takes up to five minutes for that change to take effect.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1549,7 +1549,7 @@ func (s *Action) SetInputName(v string) *Action {
 	return s
 }
 
-// An action to be performed when the "condition" is TRUE.
+// An action to be performed when the condition is TRUE.
 type ActionData struct {
 	_ struct{} `type:"structure"`
 
@@ -1557,11 +1557,11 @@ type ActionData struct {
 	ClearTimer *ClearTimerAction `locationName:"clearTimer" type:"structure"`
 
 	// Sends information about the detector model instance and the event that triggered
-	// the action to a Kinesis Data Firehose delivery stream.
+	// the action to an Amazon Kinesis Data Firehose delivery stream.
 	Firehose *FirehoseAction `locationName:"firehose" type:"structure"`
 
-	// Sends an IoT Events input, passing in information about the detector model
-	// instance and the event that triggered the action.
+	// Sends an AWS IoT Events input, passing in information about the detector
+	// model instance and the event that triggered the action.
 	IotEvents *Action `locationName:"iotEvents" type:"structure"`
 
 	// Publishes an MQTT message with the given topic to the AWS IoT message broker.
@@ -1720,7 +1720,7 @@ func (s *ActionData) SetSqs(v *SqsAction) *ActionData {
 
 // The attributes from the JSON payload that are made available by the input.
 // Inputs are derived from messages sent to the AWS IoT Events system using
-// BatchPutMessage. Each such message contains a JSON payload, and those attributes
+// BatchPutMessage. Each such message contains a JSON payload. Those attributes
 // (and their paired values) specified here are available for use in the condition
 // expressions used by detectors.
 type Attribute struct {
@@ -1728,10 +1728,10 @@ type Attribute struct {
 
 	// An expression that specifies an attribute-value pair in a JSON structure.
 	// Use this to specify an attribute from the JSON payload that is made available
-	// by the input. Inputs are derived from messages sent to the AWS IoT Events
-	// system (BatchPutMessage). Each such message contains a JSON payload, and
-	// the attribute (and its paired value) specified here are available for use
-	// in the "condition" expressions used by detectors.
+	// by the input. Inputs are derived from messages sent to AWS IoT Events (BatchPutMessage).
+	// Each such message contains a JSON payload. The attribute (and its paired
+	// value) specified here are available for use in the condition expressions
+	// used by detectors.
 	//
 	// Syntax: <field-name>.<field-name>...
 	//
@@ -1833,11 +1833,11 @@ type CreateDetectorModelInput struct {
 	// are executed.
 	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
 
-	// The input attribute key used to identify a device or system in order to create
-	// a detector (an instance of the detector model) and then to route each input
-	// received to the appropriate detector (instance). This parameter uses a JSON-path
-	// expression to specify the attribute-value pair in the message payload of
-	// each input that is used to identify the device associated with the input.
+	// The input attribute key used to identify a device or system to create a detector
+	// (an instance of the detector model) and then to route each input received
+	// to the appropriate detector (instance). This parameter uses a JSON-path expression
+	// in the message payload of each input to specify the attribute-value pair
+	// that is used to identify the device associated with the input.
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The ARN of the role that grants permission to AWS IoT Events to perform its
@@ -2478,11 +2478,11 @@ type DetectorModelConfiguration struct {
 	// are executed.
 	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
 
-	// The input attribute key used to identify a device or system in order to create
-	// a detector (an instance of the detector model) and then to route each input
-	// received to the appropriate detector (instance). This parameter uses a JSON-path
-	// expression to specify the attribute-value pair in the message payload of
-	// each input that is used to identify the device associated with the input.
+	// The input attribute key used to identify a device or system to create a detector
+	// (an instance of the detector model) and then to route each input received
+	// to the appropriate detector (instance). This parameter uses a JSON-path expression
+	// in the message payload of each input to specify the attribute-value pair
+	// that is used to identify the device associated with the input.
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The time the detector model was last updated.
@@ -2766,17 +2766,16 @@ func (s *DetectorModelVersionSummary) SetStatus(v string) *DetectorModelVersionS
 	return s
 }
 
-// Specifies the "actions" to be performed when the "condition" evaluates to
-// TRUE.
+// Specifies the actions to be performed when the condition evaluates to TRUE.
 type Event struct {
 	_ struct{} `type:"structure"`
 
 	// The actions to be performed.
 	Actions []*ActionData `locationName:"actions" type:"list"`
 
-	// [Optional] The Boolean expression that when TRUE causes the "actions" to
-	// be performed. If not present, the actions are performed (=TRUE); if the expression
-	// result is not a Boolean value, the actions are NOT performed (=FALSE).
+	// Optional. The Boolean expression that, when TRUE, causes the actions to be
+	// performed. If not present, the actions are performed (=TRUE). If the expression
+	// result is not a Boolean value, the actions are not performed (=FALSE).
 	Condition *string `locationName:"condition" type:"string"`
 
 	// The name of the event.
@@ -2837,7 +2836,7 @@ func (s *Event) SetEventName(v string) *Event {
 }
 
 // Sends information about the detector model instance and the event that triggered
-// the action to a Kinesis Data Firehose delivery stream.
+// the action to an Amazon Kinesis Data Firehose delivery stream.
 type FirehoseAction struct {
 	_ struct{} `type:"structure"`
 
@@ -3006,7 +3005,7 @@ type InputDefinition struct {
 	// The attributes from the JSON payload that are made available by the input.
 	// Inputs are derived from messages sent to the AWS IoT Events system using
 	// BatchPutMessage. Each such message contains a JSON payload, and those attributes
-	// (and their paired values) specified here are available for use in the "condition"
+	// (and their paired values) specified here are available for use in the condition
 	// expressions used by detectors that monitor this input.
 	//
 	// Attributes is a required field
@@ -3126,8 +3125,8 @@ func (s *InputSummary) SetStatus(v string) *InputSummary {
 
 // An internal failure occurred.
 type InternalFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -3145,17 +3144,17 @@ func (s InternalFailureException) GoString() string {
 
 func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
 	return &InternalFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalFailureException) Code() string {
+func (s *InternalFailureException) Code() string {
 	return "InternalFailureException"
 }
 
 // Message returns the exception's message.
-func (s InternalFailureException) Message() string {
+func (s *InternalFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3163,28 +3162,28 @@ func (s InternalFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalFailureException) OrigErr() error {
+func (s *InternalFailureException) OrigErr() error {
 	return nil
 }
 
-func (s InternalFailureException) Error() string {
+func (s *InternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request was invalid.
 type InvalidRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -3202,17 +3201,17 @@ func (s InvalidRequestException) GoString() string {
 
 func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidRequestException) Code() string {
+func (s *InvalidRequestException) Code() string {
 	return "InvalidRequestException"
 }
 
 // Message returns the exception's message.
-func (s InvalidRequestException) Message() string {
+func (s *InvalidRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3220,30 +3219,32 @@ func (s InvalidRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidRequestException) OrigErr() error {
+func (s *InvalidRequestException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidRequestException) Error() string {
+func (s *InvalidRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
-// Information required to publish the MQTT message via the AWS IoT message
+// Information required to publish the MQTT message through the AWS IoT message
 // broker.
 type IotTopicPublishAction struct {
 	_ struct{} `type:"structure"`
 
-	// The MQTT topic of the message.
+	// The MQTT topic of the message. You can use a string expression that includes
+	// variables ($variable.<variable-name>) and input values ($input.<input-name>.<path-to-datum>)
+	// as the topic string.
 	//
 	// MqttTopic is a required field
 	MqttTopic *string `locationName:"mqttTopic" min:"1" type:"string" required:"true"`
@@ -3326,8 +3327,8 @@ func (s *LambdaAction) SetFunctionArn(v string) *LambdaAction {
 
 // A limit was exceeded.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -3345,17 +3346,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3363,22 +3364,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListDetectorModelVersionsInput struct {
@@ -3794,7 +3795,7 @@ type OnEnterLifecycle struct {
 	_ struct{} `type:"structure"`
 
 	// Specifies the actions that are performed when the state is entered and the
-	// "condition" is TRUE.
+	// condition is TRUE.
 	Events []*Event `locationName:"events" type:"list"`
 }
 
@@ -3834,13 +3835,13 @@ func (s *OnEnterLifecycle) SetEvents(v []*Event) *OnEnterLifecycle {
 	return s
 }
 
-// When exiting this state, perform these "actions" if the specified "condition"
+// When exiting this state, perform these actions if the specified condition
 // is TRUE.
 type OnExitLifecycle struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the "actions" that are performed when the state is exited and the
-	// "condition" is TRUE.
+	// Specifies the actions that are performed when the state is exited and the
+	// condition is TRUE.
 	Events []*Event `locationName:"events" type:"list"`
 }
 
@@ -3880,14 +3881,14 @@ func (s *OnExitLifecycle) SetEvents(v []*Event) *OnExitLifecycle {
 	return s
 }
 
-// Specifies the actions performed when the "condition" evaluates to TRUE.
+// Specifies the actions performed when the condition evaluates to TRUE.
 type OnInputLifecycle struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the actions performed when the "condition" evaluates to TRUE.
+	// Specifies the actions performed when the condition evaluates to TRUE.
 	Events []*Event `locationName:"events" type:"list"`
 
-	// Specifies the actions performed, and the next state entered, when a "condition"
+	// Specifies the actions performed, and the next state entered, when a condition
 	// evaluates to TRUE.
 	TransitionEvents []*TransitionEvent `locationName:"transitionEvents" type:"list"`
 }
@@ -4001,7 +4002,8 @@ func (s PutLoggingOptionsOutput) GoString() string {
 	return s.String()
 }
 
-// Information needed to reset the timer.
+// Information required to reset the timer. The timer is reset to the previously
+// evaluated result of the duration.
 type ResetTimerAction struct {
 	_ struct{} `type:"structure"`
 
@@ -4045,8 +4047,8 @@ func (s *ResetTimerAction) SetTimerName(v string) *ResetTimerAction {
 
 // The resource already exists.
 type ResourceAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -4070,17 +4072,17 @@ func (s ResourceAlreadyExistsException) GoString() string {
 
 func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ResourceAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceAlreadyExistsException) Code() string {
+func (s *ResourceAlreadyExistsException) Code() string {
 	return "ResourceAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ResourceAlreadyExistsException) Message() string {
+func (s *ResourceAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4088,28 +4090,28 @@ func (s ResourceAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceAlreadyExistsException) OrigErr() error {
+func (s *ResourceAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceAlreadyExistsException) Error() string {
+func (s *ResourceAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource is in use.
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -4127,17 +4129,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4145,28 +4147,28 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource was not found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -4184,17 +4186,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4202,22 +4204,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information required to publish the Amazon SNS message.
@@ -4264,8 +4266,8 @@ func (s *SNSTopicPublishAction) SetTargetArn(v string) *SNSTopicPublishAction {
 
 // The service is currently unavailable.
 type ServiceUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -4283,17 +4285,17 @@ func (s ServiceUnavailableException) GoString() string {
 
 func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceUnavailableException) Code() string {
+func (s *ServiceUnavailableException) Code() string {
 	return "ServiceUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ServiceUnavailableException) Message() string {
+func (s *ServiceUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4301,33 +4303,41 @@ func (s ServiceUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceUnavailableException) OrigErr() error {
+func (s *ServiceUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceUnavailableException) Error() string {
+func (s *ServiceUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information needed to set the timer.
 type SetTimerAction struct {
 	_ struct{} `type:"structure"`
 
+	// The duration of the timer, in seconds. You can use a string expression that
+	// includes numbers, variables ($variable.<variable-name>), and input values
+	// ($input.<input-name>.<path-to-datum>) as the duration. The range of the duration
+	// is 1-31622400 seconds. To ensure accuracy, the minimum duration is 60 seconds.
+	// The evaluated result of the duration is rounded down to the nearest whole
+	// number.
+	DurationExpression *string `locationName:"durationExpression" min:"1" type:"string"`
+
 	// The number of seconds until the timer expires. The minimum value is 60 seconds
 	// to ensure accuracy.
 	//
-	// Seconds is a required field
-	Seconds *int64 `locationName:"seconds" type:"integer" required:"true"`
+	// Deprecated: seconds is deprecated. You can use durationExpression for SetTimerAction. The value of seconds can be used as a string expression for durationExpression.
+	Seconds *int64 `locationName:"seconds" min:"1" deprecated:"true" type:"integer"`
 
 	// The name of the timer.
 	//
@@ -4348,8 +4358,11 @@ func (s SetTimerAction) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *SetTimerAction) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "SetTimerAction"}
-	if s.Seconds == nil {
-		invalidParams.Add(request.NewErrParamRequired("Seconds"))
+	if s.DurationExpression != nil && len(*s.DurationExpression) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DurationExpression", 1))
+	}
+	if s.Seconds != nil && *s.Seconds < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Seconds", 1))
 	}
 	if s.TimerName == nil {
 		invalidParams.Add(request.NewErrParamRequired("TimerName"))
@@ -4362,6 +4375,12 @@ func (s *SetTimerAction) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDurationExpression sets the DurationExpression field's value.
+func (s *SetTimerAction) SetDurationExpression(v string) *SetTimerAction {
+	s.DurationExpression = &v
+	return s
 }
 
 // SetSeconds sets the Seconds field's value.
@@ -4445,8 +4464,8 @@ type SqsAction struct {
 	// QueueUrl is a required field
 	QueueUrl *string `locationName:"queueUrl" type:"string" required:"true"`
 
-	// Set this to TRUE if you want the data to be Base-64 encoded before it is
-	// written to the queue. Otherwise, set this to FALSE.
+	// Set this to TRUE if you want the data to be base-64 encoded before it is
+	// written to the queue.
 	UseBase64 *bool `locationName:"useBase64" type:"boolean"`
 }
 
@@ -4489,15 +4508,15 @@ func (s *SqsAction) SetUseBase64(v bool) *SqsAction {
 type State struct {
 	_ struct{} `type:"structure"`
 
-	// When entering this state, perform these "actions" if the "condition" is TRUE.
+	// When entering this state, perform these actions if the condition is TRUE.
 	OnEnter *OnEnterLifecycle `locationName:"onEnter" type:"structure"`
 
-	// When exiting this state, perform these "actions" if the specified "condition"
+	// When exiting this state, perform these actions if the specified condition
 	// is TRUE.
 	OnExit *OnExitLifecycle `locationName:"onExit" type:"structure"`
 
-	// When an input is received and the "condition" is TRUE, perform the specified
-	// "actions".
+	// When an input is received and the condition is TRUE, perform the specified
+	// actions.
 	OnInput *OnInputLifecycle `locationName:"onInput" type:"structure"`
 
 	// The name of the state.
@@ -4708,8 +4727,8 @@ func (s TagResourceOutput) GoString() string {
 
 // The request could not be completed due to throttling.
 type ThrottlingException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -4727,17 +4746,17 @@ func (s ThrottlingException) GoString() string {
 
 func newErrorThrottlingException(v protocol.ResponseMetadata) error {
 	return &ThrottlingException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ThrottlingException) Code() string {
+func (s *ThrottlingException) Code() string {
 	return "ThrottlingException"
 }
 
 // Message returns the exception's message.
-func (s ThrottlingException) Message() string {
+func (s *ThrottlingException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4745,25 +4764,25 @@ func (s ThrottlingException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ThrottlingException) OrigErr() error {
+func (s *ThrottlingException) OrigErr() error {
 	return nil
 }
 
-func (s ThrottlingException) Error() string {
+func (s *ThrottlingException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ThrottlingException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ThrottlingException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ThrottlingException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ThrottlingException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
-// Specifies the actions performed and the next state entered when a "condition"
+// Specifies the actions performed and the next state entered when a condition
 // evaluates to TRUE.
 type TransitionEvent struct {
 	_ struct{} `type:"structure"`
@@ -4771,8 +4790,8 @@ type TransitionEvent struct {
 	// The actions to be performed.
 	Actions []*ActionData `locationName:"actions" type:"list"`
 
-	// [Required] A Boolean expression that when TRUE causes the actions to be performed
-	// and the "nextState" to be entered.
+	// Required. A Boolean expression that when TRUE causes the actions to be performed
+	// and the nextState to be entered.
 	//
 	// Condition is a required field
 	Condition *string `locationName:"condition" type:"string" required:"true"`
@@ -4856,8 +4875,8 @@ func (s *TransitionEvent) SetNextState(v string) *TransitionEvent {
 
 // The requested operation is not supported.
 type UnsupportedOperationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The message for the exception.
 	Message_ *string `locationName:"message" type:"string"`
@@ -4875,17 +4894,17 @@ func (s UnsupportedOperationException) GoString() string {
 
 func newErrorUnsupportedOperationException(v protocol.ResponseMetadata) error {
 	return &UnsupportedOperationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedOperationException) Code() string {
+func (s *UnsupportedOperationException) Code() string {
 	return "UnsupportedOperationException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedOperationException) Message() string {
+func (s *UnsupportedOperationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4893,22 +4912,22 @@ func (s UnsupportedOperationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedOperationException) OrigErr() error {
+func (s *UnsupportedOperationException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedOperationException) Error() string {
+func (s *UnsupportedOperationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedOperationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedOperationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedOperationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedOperationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {

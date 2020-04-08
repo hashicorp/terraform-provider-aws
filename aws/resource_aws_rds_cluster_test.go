@@ -672,29 +672,32 @@ func TestAccAWSRDSCluster_copyTagsToSnapshot(t *testing.T) {
 func TestAccAWSRDSCluster_EncryptedCrossRegionReplication(t *testing.T) {
 	var primaryCluster rds.DBCluster
 	var replicaCluster rds.DBCluster
-	resourceName := "aws_rds_cluster.test_primary"
-	resourceName2 := "aws_rds_cluster.test_replica"
+	resourceName := "aws_rds_cluster.test"
+	resourceName2 := "aws_rds_cluster.alternate"
+	rInt := acctest.RandInt()
 
 	// record the initialized providers so that we can use them to
 	// check for the cluster in each region
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
 		ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy:      testAccCheckWithProviders(testAccCheckAWSClusterDestroyWithProvider, &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfigEncryptedCrossRegionReplica(acctest.RandInt()),
+				Config: testAccAWSClusterConfigEncryptedCrossRegionReplica(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSClusterExistsWithProvider(resourceName,
-						&primaryCluster, testAccAwsRegionProviderFunc("us-west-2", &providers)),
-					testAccCheckAWSClusterExistsWithProvider(resourceName2,
-						&replicaCluster, testAccAwsRegionProviderFunc("us-east-1", &providers)),
+					testAccCheckAWSClusterExistsWithProvider(resourceName, &primaryCluster, testAccAwsRegionProviderFunc(testAccGetRegion(), &providers)),
+					testAccCheckAWSClusterExistsWithProvider(resourceName2, &replicaCluster, testAccAwsRegionProviderFunc(testAccGetAlternateRegion(), &providers)),
 				),
 			},
 			{
-				Config:            testAccAWSClusterConfigEncryptedCrossRegionReplica(acctest.RandInt()),
+				Config:            testAccAWSClusterConfigEncryptedCrossRegionReplica(rInt),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -2120,6 +2123,11 @@ func testAccAWSClusterConfig_AvailabilityZones(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_rds_cluster" "test" {
@@ -2161,6 +2169,11 @@ func testAccAWSClusterConfig_DbSubnetGroupName(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_rds_cluster" "test" {
@@ -2210,6 +2223,11 @@ func testAccAWSClusterConfig_s3Restore(bucketName string, bucketPrefix string, u
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_region" "current" {}
@@ -2793,30 +2811,23 @@ resource "aws_rds_cluster" "test" {
 }
 
 func testAccAWSClusterConfigEncryptedCrossRegionReplica(n int) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  alias  = "useast1"
-  region = "us-east-1"
+	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "alternate" {
+  provider = "aws.alternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
-provider "aws" {
-  alias  = "uswest2"
-  region = "us-west-2"
-}
+data "aws_caller_identity" "current" {}
 
-data "aws_availability_zones" "us-east-1" {
-  provider = "aws.useast1"
-}
+data "aws_region" "current" {}
 
-resource "aws_rds_cluster_instance" "test_instance" {
-  provider           = "aws.uswest2"
-  identifier         = "tf-aurora-instance-%[1]d"
-  cluster_identifier = "${aws_rds_cluster.test_primary.id}"
-  instance_class     = "db.t2.small"
-}
-
-resource "aws_rds_cluster_parameter_group" "default" {
-  provider    = "aws.uswest2"
+resource "aws_rds_cluster_parameter_group" "test" {
   name        = "tf-aurora-prm-grp-%[1]d"
   family      = "aurora5.6"
   description = "RDS default cluster parameter group"
@@ -2828,10 +2839,9 @@ resource "aws_rds_cluster_parameter_group" "default" {
   }
 }
 
-resource "aws_rds_cluster" "test_primary" {
-  provider                        = "aws.uswest2"
+resource "aws_rds_cluster" "test" {
   cluster_identifier              = "tf-test-primary-%[1]d"
-  db_cluster_parameter_group_name = "${aws_rds_cluster_parameter_group.default.name}"
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
@@ -2839,10 +2849,14 @@ resource "aws_rds_cluster" "test_primary" {
   skip_final_snapshot             = true
 }
 
-data "aws_caller_identity" "current" {}
+resource "aws_rds_cluster_instance" "test" {
+  identifier         = "tf-aurora-instance-%[1]d"
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = "db.t2.small"
+}
 
-resource "aws_kms_key" "kms_key_east" {
-  provider    = "aws.useast1"
+resource "aws_kms_key" "alternate" {
+  provider    = "aws.alternate"
   description = "Terraform acc test %[1]d"
 
   policy = <<POLICY
@@ -2864,8 +2878,8 @@ resource "aws_kms_key" "kms_key_east" {
   POLICY
 }
 
-resource "aws_vpc" "main" {
-  provider   = "aws.useast1"
+resource "aws_vpc" "alternate" {
+  provider   = "aws.alternate"
   cidr_block = "10.0.0.0/16"
 
   tags = {
@@ -2873,11 +2887,11 @@ resource "aws_vpc" "main" {
   }
 }
 
-resource "aws_subnet" "db" {
-  provider          = "aws.useast1"
+resource "aws_subnet" "alternate" {
+  provider          = "aws.alternate"
   count             = 3
-  vpc_id            = "${aws_vpc.main.id}"
-  availability_zone = "${data.aws_availability_zones.us-east-1.names[count.index]}"
+  vpc_id            = aws_vpc.alternate.id
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
   cidr_block        = "10.0.${count.index}.0/24"
 
   tags = {
@@ -2885,27 +2899,27 @@ resource "aws_subnet" "db" {
   }
 }
 
-resource "aws_db_subnet_group" "replica" {
-  provider   = "aws.useast1"
+resource "aws_db_subnet_group" "alternate" {
+  provider   = "aws.alternate"
   name       = "test_replica-subnet-%[1]d"
-  subnet_ids = ["${aws_subnet.db.*.id[0]}", "${aws_subnet.db.*.id[1]}", "${aws_subnet.db.*.id[2]}"]
+  subnet_ids = aws_subnet.alternate[*].id
 }
 
-resource "aws_rds_cluster" "test_replica" {
-  provider                      = "aws.useast1"
+resource "aws_rds_cluster" "alternate" {
+  provider                      = "aws.alternate"
   cluster_identifier            = "tf-test-replica-%[1]d"
-  db_subnet_group_name          = "${aws_db_subnet_group.replica.name}"
+  db_subnet_group_name          = aws_db_subnet_group.alternate.name
   database_name                 = "mydb"
   master_username               = "foo"
   master_password               = "mustbeeightcharaters"
-  kms_key_id                    = "${aws_kms_key.kms_key_east.arn}"
+  kms_key_id                    = aws_kms_key.alternate.arn
   storage_encrypted             = true
   skip_final_snapshot           = true
-  replication_source_identifier = "arn:aws:rds:us-west-2:${data.aws_caller_identity.current.account_id}:cluster:${aws_rds_cluster.test_primary.cluster_identifier}"
-  source_region                 = "us-west-2"
+  replication_source_identifier = aws_rds_cluster.test.arn
+  source_region                 = data.aws_region.current.name
 
   depends_on = [
-    "aws_rds_cluster_instance.test_instance",
+    aws_rds_cluster_instance.test,
   ]
 }
 `, n)
@@ -2943,6 +2957,11 @@ func testAccAWSRDSClusterConfig_EngineMode_Multimaster(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {

@@ -182,8 +182,6 @@ func resourceAwsDocDBClusterParameterGroupRead(d *schema.ResourceData, meta inte
 func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).docdbconn
 
-	d.Partial(true)
-
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
 		if o == nil {
@@ -227,7 +225,6 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 					return fmt.Errorf("Error modifying DocDB Cluster Parameter Group: %s", err)
 				}
 			}
-			d.SetPartial("parameter")
 		}
 	}
 
@@ -237,11 +234,7 @@ func resourceAwsDocDBClusterParameterGroupUpdate(d *schema.ResourceData, meta in
 		if err := keyvaluetags.DocdbUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating DocumentDB Cluster Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsDocDBClusterParameterGroupRead(d, meta)
 }

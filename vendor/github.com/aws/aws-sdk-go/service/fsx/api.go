@@ -293,8 +293,8 @@ func (c *FSx) CreateDataRepositoryTaskRequest(input *CreateDataRepositoryTaskInp
 // repository. A CreateDataRepositoryTask operation will fail if a data repository
 // is not linked to the FSx file system. To learn more about data repository
 // tasks, see Using Data Repository Tasks (https://docs.aws.amazon.com/fsx/latest/LustreGuide/data-repository-tasks.html).
-// To learn more about linking a data repository to your file system, see Step
-// 1: Create Your Amazon FSx for Lustre File System (https://docs.aws.amazon.com/fsx/latest/LustreGuide/getting-started-step1.html).
+// To learn more about linking a data repository to your file system, see Setting
+// the Export Prefix (https://docs.aws.amazon.com/fsx/latest/LustreGuide/export-data-repository.html#export-prefix).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -458,6 +458,10 @@ func (c *FSx) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 //   of IDs for security groups that are either invalid or not part of the VPC
 //   specified.
 //
+//   * InvalidPerUnitStorageThroughput
+//   An invalid value for PerUnitStorageThroughput was provided. Please create
+//   your file system again, using a valid value.
+//
 //   * ServiceLimitExceeded
 //   An error indicating that a particular service limit was exceeded. You can
 //   increase some service limits by contacting AWS Support.
@@ -466,7 +470,7 @@ func (c *FSx) CreateFileSystemRequest(input *CreateFileSystemInput) (req *reques
 //   A generic error indicating a server-side failure.
 //
 //   * MissingFileSystemConfiguration
-//   File system configuration is required for this operation.
+//   A file system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CreateFileSystem
 func (c *FSx) CreateFileSystem(input *CreateFileSystemInput) (*CreateFileSystemOutput, error) {
@@ -604,7 +608,7 @@ func (c *FSx) CreateFileSystemFromBackupRequest(input *CreateFileSystemFromBacku
 //   A generic error indicating a server-side failure.
 //
 //   * MissingFileSystemConfiguration
-//   File system configuration is required for this operation.
+//   A file system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/CreateFileSystemFromBackup
 func (c *FSx) CreateFileSystemFromBackup(input *CreateFileSystemFromBackupInput) (*CreateFileSystemFromBackupOutput, error) {
@@ -1707,7 +1711,7 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 //   No Amazon FSx file systems were found based upon supplied parameters.
 //
 //   * MissingFileSystemConfiguration
-//   File system configuration is required for this operation.
+//   A file system configuration is required for this operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/UpdateFileSystem
 func (c *FSx) UpdateFileSystem(input *UpdateFileSystemInput) (*UpdateFileSystemOutput, error) {
@@ -1768,8 +1772,8 @@ func (s *ActiveDirectoryBackupAttributes) SetDomainName(v string) *ActiveDirecto
 
 // An Active Directory error.
 type ActiveDirectoryError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The directory ID of the directory that an error pertains to.
 	//
@@ -1795,17 +1799,17 @@ func (s ActiveDirectoryError) GoString() string {
 
 func newErrorActiveDirectoryError(v protocol.ResponseMetadata) error {
 	return &ActiveDirectoryError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ActiveDirectoryError) Code() string {
+func (s *ActiveDirectoryError) Code() string {
 	return "ActiveDirectoryError"
 }
 
 // Message returns the exception's message.
-func (s ActiveDirectoryError) Message() string {
+func (s *ActiveDirectoryError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1813,22 +1817,22 @@ func (s ActiveDirectoryError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ActiveDirectoryError) OrigErr() error {
+func (s *ActiveDirectoryError) OrigErr() error {
 	return nil
 }
 
-func (s ActiveDirectoryError) Error() string {
+func (s *ActiveDirectoryError) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ActiveDirectoryError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ActiveDirectoryError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ActiveDirectoryError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ActiveDirectoryError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A backup of an Amazon FSx for Windows File Server file system. You can create
@@ -1987,8 +1991,8 @@ func (s *BackupFailureDetails) SetMessage(v string) *BackupFailureDetails {
 // Another backup is already under way. Wait for completion before initiating
 // additional backups of this file system.
 type BackupInProgress struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -2006,17 +2010,17 @@ func (s BackupInProgress) GoString() string {
 
 func newErrorBackupInProgress(v protocol.ResponseMetadata) error {
 	return &BackupInProgress{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BackupInProgress) Code() string {
+func (s *BackupInProgress) Code() string {
 	return "BackupInProgress"
 }
 
 // Message returns the exception's message.
-func (s BackupInProgress) Message() string {
+func (s *BackupInProgress) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2024,28 +2028,28 @@ func (s BackupInProgress) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BackupInProgress) OrigErr() error {
+func (s *BackupInProgress) OrigErr() error {
 	return nil
 }
 
-func (s BackupInProgress) Error() string {
+func (s *BackupInProgress) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BackupInProgress) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BackupInProgress) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BackupInProgress) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BackupInProgress) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // No Amazon FSx backups were found based upon the supplied parameters.
 type BackupNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -2063,17 +2067,17 @@ func (s BackupNotFound) GoString() string {
 
 func newErrorBackupNotFound(v protocol.ResponseMetadata) error {
 	return &BackupNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BackupNotFound) Code() string {
+func (s *BackupNotFound) Code() string {
 	return "BackupNotFound"
 }
 
 // Message returns the exception's message.
-func (s BackupNotFound) Message() string {
+func (s *BackupNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2081,28 +2085,28 @@ func (s BackupNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BackupNotFound) OrigErr() error {
+func (s *BackupNotFound) OrigErr() error {
 	return nil
 }
 
-func (s BackupNotFound) Error() string {
+func (s *BackupNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BackupNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BackupNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BackupNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BackupNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You can't delete a backup while it's being used to restore a file system.
 type BackupRestoring struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The ID of a file system being restored from the backup.
 	FileSystemId *string `min:"11" type:"string"`
@@ -2123,17 +2127,17 @@ func (s BackupRestoring) GoString() string {
 
 func newErrorBackupRestoring(v protocol.ResponseMetadata) error {
 	return &BackupRestoring{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BackupRestoring) Code() string {
+func (s *BackupRestoring) Code() string {
 	return "BackupRestoring"
 }
 
 // Message returns the exception's message.
-func (s BackupRestoring) Message() string {
+func (s *BackupRestoring) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2141,28 +2145,28 @@ func (s BackupRestoring) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BackupRestoring) OrigErr() error {
+func (s *BackupRestoring) OrigErr() error {
 	return nil
 }
 
-func (s BackupRestoring) Error() string {
+func (s *BackupRestoring) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BackupRestoring) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BackupRestoring) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BackupRestoring) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BackupRestoring) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A generic error indicating a failure with a client request.
 type BadRequest struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -2180,17 +2184,17 @@ func (s BadRequest) GoString() string {
 
 func newErrorBadRequest(v protocol.ResponseMetadata) error {
 	return &BadRequest{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequest) Code() string {
+func (s *BadRequest) Code() string {
 	return "BadRequest"
 }
 
 // Message returns the exception's message.
-func (s BadRequest) Message() string {
+func (s *BadRequest) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2198,22 +2202,22 @@ func (s BadRequest) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequest) OrigErr() error {
+func (s *BadRequest) OrigErr() error {
 	return nil
 }
 
-func (s BadRequest) Error() string {
+func (s *BadRequest) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequest) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequest) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequest) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequest) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Cancels a data repository task.
@@ -2511,12 +2515,16 @@ type CreateDataRepositoryTaskInput struct {
 
 	// (Optional) The path or paths on the Amazon FSx file system to use when the
 	// data repository task is processed. The default path is the file system root
-	// directory.
+	// directory. The paths you provide need to be relative to the mount point of
+	// the file system. If the mount point is /mnt/fsx and /mnt/fsx/path1 is a directory
+	// or file on the file system you want to export, then the path to provide is
+	// path1. If a path that you provide isn't valid, the task fails.
 	Paths []*string `type:"list"`
 
 	// Defines whether or not Amazon FSx provides a CompletionReport once the task
 	// has completed. A CompletionReport provides a detailed report on the files
 	// that Amazon FSx processed that meet the criteria specified by the Scope parameter.
+	// For more information, see Working with Task Completion Reports (https://docs.aws.amazon.com/fsx/latest/LustreGuide/task-completion-report.html).
 	//
 	// Report is a required field
 	Report *CompletionReport `type:"structure" required:"true"`
@@ -2659,12 +2667,37 @@ type CreateFileSystemFromBackupInput struct {
 
 	// A list of IDs for the security groups that apply to the specified network
 	// interfaces created for file system access. These security groups apply to
-	// all network interfaces. This value isn't returned in later describe requests.
+	// all network interfaces. This value isn't returned in later DescribeFileSystem
+	// requests.
 	SecurityGroupIds []*string `type:"list"`
 
-	// A list of IDs for the subnets that the file system will be accessible from.
-	// Currently, you can specify only one subnet. The file server is also launched
-	// in that subnet's Availability Zone.
+	// Sets the storage type for the Windows file system you're creating from a
+	// backup. Valid values are SSD and HDD.
+	//
+	//    * Set to SSD to use solid state drive storage. Supported on all Windows
+	//    deployment types.
+	//
+	//    * Set to HDD to use hard disk drive storage. Supported on SINGLE_AZ_2
+	//    and MULTI_AZ_1 Windows file system deployment types.
+	//
+	// Default value is SSD.
+	//
+	// HDD and SSD storage types have different minimum storage capacity requirements.
+	// A restored file system's storage capacity is tied to the file system that
+	// was backed up. You can create a file system that uses HDD storage from a
+	// backup of a file system that used SSD storage only if the original SSD file
+	// system had a storage capacity of at least 2000 GiB.
+	StorageType *string `type:"string" enum:"StorageType"`
+
+	// Specifies the IDs of the subnets that the file system will be accessible
+	// from. For Windows MULTI_AZ_1 file system deployment types, provide exactly
+	// two subnet IDs, one for the preferred file server and one for the standby
+	// file server. You specify one of these subnets as the preferred subnet using
+	// the WindowsConfiguration > PreferredSubnetID property.
+	//
+	// For Windows SINGLE_AZ_1 and SINGLE_AZ_2 deployment types and Lustre file
+	// systems, provide exactly one subnet ID. The file server is launched in that
+	// subnet's Availability Zone.
 	//
 	// SubnetIds is a required field
 	SubnetIds []*string `type:"list" required:"true"`
@@ -2745,6 +2778,12 @@ func (s *CreateFileSystemFromBackupInput) SetSecurityGroupIds(v []*string) *Crea
 	return s
 }
 
+// SetStorageType sets the StorageType field's value.
+func (s *CreateFileSystemFromBackupInput) SetStorageType(v string) *CreateFileSystemFromBackupInput {
+	s.StorageType = &v
+	return s
+}
+
 // SetSubnetIds sets the SubnetIds field's value.
 func (s *CreateFileSystemFromBackupInput) SetSubnetIds(v []*string) *CreateFileSystemFromBackupInput {
 	s.SubnetIds = v
@@ -2796,20 +2835,21 @@ type CreateFileSystemInput struct {
 	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
-	// The type of Amazon FSx file system to create.
+	// The type of Amazon FSx file system to create, either WINDOWS or LUSTRE.
 	//
 	// FileSystemType is a required field
 	FileSystemType *string `type:"string" required:"true" enum:"FileSystemType"`
 
 	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the
-	// file system's data for an Amazon FSx for Windows File Server file system
-	// at rest. Amazon FSx for Lustre does not support KMS encryption. For more
-	// information, see Encrypt (https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
+	// file system's data for Amazon FSx for Windows File Server file systems and
+	// Amazon FSx for Lustre PERSISTENT_1 file systems at rest. In either case,
+	// if not specified, the Amazon FSx managed key is used. The Amazon FSx for
+	// Lustre SCRATCH_1 and SCRATCH_2 file systems are always encrypted at rest
+	// using Amazon FSx managed keys. For more information, see Encrypt (https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
 	// in the AWS Key Management Service API Reference.
 	KmsKeyId *string `min:"1" type:"string"`
 
-	// The Lustre configuration for the file system being created. This value is
-	// required if FileSystemType is set to LUSTRE.
+	// The Lustre configuration for the file system being created.
 	LustreConfiguration *CreateFileSystemLustreConfiguration `type:"structure"`
 
 	// A list of IDs specifying the security groups to apply to all network interfaces
@@ -2817,25 +2857,47 @@ type CreateFileSystemInput struct {
 	// to describe the file system.
 	SecurityGroupIds []*string `type:"list"`
 
-	// The storage capacity of the file system being created.
+	// Sets the storage capacity of the file system that you're creating.
 	//
-	// For Windows file systems, valid values are 32 GiB - 65,536 GiB.
+	// For Lustre file systems:
 	//
-	// For Lustre file systems, valid values are 1,200, 2,400, 3,600, then continuing
-	// in increments of 3600 GiB.
+	//    * For SCRATCH_2 and PERSISTENT_1 deployment types, valid values are 1.2,
+	//    2.4, and increments of 2.4 TiB.
+	//
+	//    * For SCRATCH_1 deployment type, valid values are 1.2, 2.4, and increments
+	//    of 3.6 TiB.
+	//
+	// For Windows file systems:
+	//
+	//    * If StorageType=SSD, valid values are 32 GiB - 65,536 GiB (64 TiB).
+	//
+	//    * If StorageType=HDD, valid values are 2000 GiB - 65,536 GiB (64 TiB).
 	//
 	// StorageCapacity is a required field
 	StorageCapacity *int64 `type:"integer" required:"true"`
 
+	// Sets the storage type for the Amazon FSx for Windows file system you're creating.
+	// Valid values are SSD and HDD.
+	//
+	//    * Set to SSD to use solid state drive storage. SSD is supported on all
+	//    Windows deployment types.
+	//
+	//    * Set to HDD to use hard disk drive storage. HDD is supported on SINGLE_AZ_2
+	//    and MULTI_AZ_1 Windows file system deployment types.
+	//
+	// Default value is SSD. For more information, see Storage Type Options (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/optimize-fsx-tco.html#saz-maz-storage-type)
+	// in the Amazon FSx for Windows User Guide.
+	StorageType *string `type:"string" enum:"StorageType"`
+
 	// Specifies the IDs of the subnets that the file system will be accessible
 	// from. For Windows MULTI_AZ_1 file system deployment types, provide exactly
-	// two subnet IDs, one for the preferred file server and one for the standy
+	// two subnet IDs, one for the preferred file server and one for the standby
 	// file server. You specify one of these subnets as the preferred subnet using
 	// the WindowsConfiguration > PreferredSubnetID property.
 	//
-	// For Windows SINGLE_AZ_1 file system deployment types and Lustre file systems,
-	// provide exactly one subnet ID. The file server is launched in that subnet's
-	// Availability Zone.
+	// For Windows SINGLE_AZ_1 and SINGLE_AZ_2 file system deployment types and
+	// Lustre file systems, provide exactly one subnet ID. The file server is launched
+	// in that subnet's Availability Zone.
 	//
 	// SubnetIds is a required field
 	SubnetIds []*string `type:"list" required:"true"`
@@ -2844,8 +2906,7 @@ type CreateFileSystemInput struct {
 	// Name tag appears in the console as the file system name.
 	Tags []*Tag `min:"1" type:"list"`
 
-	// The Microsoft Windows configuration for the file system being created. This
-	// value is required if FileSystemType is set to WINDOWS.
+	// The Microsoft Windows configuration for the file system being created.
 	WindowsConfiguration *CreateFileSystemWindowsConfiguration `type:"structure"`
 }
 
@@ -2943,6 +3004,12 @@ func (s *CreateFileSystemInput) SetStorageCapacity(v int64) *CreateFileSystemInp
 	return s
 }
 
+// SetStorageType sets the StorageType field's value.
+func (s *CreateFileSystemInput) SetStorageType(v string) *CreateFileSystemInput {
+	s.StorageType = &v
+	return s
+}
+
 // SetSubnetIds sets the SubnetIds field's value.
 func (s *CreateFileSystemInput) SetSubnetIds(v []*string) *CreateFileSystemInput {
 	s.SubnetIds = v
@@ -2961,10 +3028,28 @@ func (s *CreateFileSystemInput) SetWindowsConfiguration(v *CreateFileSystemWindo
 	return s
 }
 
-// The Lustre configuration for the file system being created. This value is
-// required if FileSystemType is set to LUSTRE.
+// The Lustre configuration for the file system being created.
 type CreateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
+
+	// (Optional) Choose SCRATCH_1 and SCRATCH_2 deployment types when you need
+	// temporary storage and shorter-term processing of data. The SCRATCH_2 deployment
+	// type provides in-transit encryption of data and higher burst throughput capacity
+	// than SCRATCH_1.
+	//
+	// Choose PERSISTENT_1 deployment type for longer-term storage and workloads
+	// and encryption of data in transit. To learn more about deployment types,
+	// see FSx for Lustre Deployment Options (https://docs.aws.amazon.com/fsx/latest/LustreGuide/lustre-deployment-types.html).
+	//
+	// Encryption of data in-transit is automatically enabled when you access a
+	// SCRATCH_2 or PERSISTENT_1 file system from Amazon EC2 instances that support
+	// this feature (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/data- protection.html).
+	// (Default = SCRATCH_1)
+	//
+	// Encryption of data in-transit for SCRATCH_2 and PERSISTENT_1 deployment types
+	// is supported when accessed from supported instance types in supported AWS
+	// Regions. To learn more, Encrypting Data in Transit (https://docs.aws.amazon.com/fsx/latest/LustreGuide/encryption-in-transit-fsxl.html).
+	DeploymentType *string `type:"string" enum:"LustreDeploymentType"`
 
 	// (Optional) The path in Amazon S3 where the root of your Amazon FSx file system
 	// is exported. The path must use the same Amazon S3 bucket as specified in
@@ -2996,9 +3081,19 @@ type CreateFileSystemLustreConfiguration struct {
 	// be striped across is limited by the total number of disks that make up the
 	// file system.
 	//
-	// The chunk size default is 1,024 MiB (1 GiB) and can go as high as 512,000
+	// The default chunk size is 1,024 MiB (1 GiB) and can go as high as 512,000
 	// MiB (500 GiB). Amazon S3 objects have a maximum size of 5 TB.
 	ImportedFileChunkSize *int64 `min:"1" type:"integer"`
+
+	// Required for the PERSISTENT_1 deployment type, describes the amount of read
+	// and write throughput for each 1 tebibyte of storage, in MB/s/TiB. File system
+	// throughput capacity is calculated by multiplying ﬁle system storage capacity
+	// (TiB) by the PerUnitStorageThroughput (MB/s/TiB). For a 2.4 TiB ﬁle system,
+	// provisioning 50 MB/s/TiB of PerUnitStorageThroughput yields 117 MB/s of ﬁle
+	// system throughput. You pay for the amount of throughput that you provision.
+	//
+	// Valid values are 50, 100, 200.
+	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
 
 	// The preferred time to perform weekly maintenance, in the UTC time zone.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
@@ -3026,6 +3121,9 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 	if s.ImportedFileChunkSize != nil && *s.ImportedFileChunkSize < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("ImportedFileChunkSize", 1))
 	}
+	if s.PerUnitStorageThroughput != nil && *s.PerUnitStorageThroughput < 50 {
+		invalidParams.Add(request.NewErrParamMinValue("PerUnitStorageThroughput", 50))
+	}
 	if s.WeeklyMaintenanceStartTime != nil && len(*s.WeeklyMaintenanceStartTime) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("WeeklyMaintenanceStartTime", 7))
 	}
@@ -3034,6 +3132,12 @@ func (s *CreateFileSystemLustreConfiguration) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetDeploymentType sets the DeploymentType field's value.
+func (s *CreateFileSystemLustreConfiguration) SetDeploymentType(v string) *CreateFileSystemLustreConfiguration {
+	s.DeploymentType = &v
+	return s
 }
 
 // SetExportPath sets the ExportPath field's value.
@@ -3051,6 +3155,12 @@ func (s *CreateFileSystemLustreConfiguration) SetImportPath(v string) *CreateFil
 // SetImportedFileChunkSize sets the ImportedFileChunkSize field's value.
 func (s *CreateFileSystemLustreConfiguration) SetImportedFileChunkSize(v int64) *CreateFileSystemLustreConfiguration {
 	s.ImportedFileChunkSize = &v
+	return s
+}
+
+// SetPerUnitStorageThroughput sets the PerUnitStorageThroughput field's value.
+func (s *CreateFileSystemLustreConfiguration) SetPerUnitStorageThroughput(v int64) *CreateFileSystemLustreConfiguration {
+	s.PerUnitStorageThroughput = &v
 	return s
 }
 
@@ -3102,7 +3212,9 @@ type CreateFileSystemWindowsConfiguration struct {
 	// to backups. This value defaults to false. If it's set to true, all tags for
 	// the file system are copied to all automatic and user-initiated backups where
 	// the user doesn't specify tags. If this value is true, and you specify one
-	// or more tags, only the specified tags are copied to backups.
+	// or more tags, only the specified tags are copied to backups. If you specify
+	// one or more tags when creating a user-initiated backup, no tags are copied
+	// from the file system, regardless of this value.
 	CopyTagsToBackups *bool `type:"boolean"`
 
 	// The preferred time to take daily automatic backups, formatted HH:MM in the
@@ -3114,13 +3226,17 @@ type CreateFileSystemWindowsConfiguration struct {
 	//    * MULTI_AZ_1 - Deploys a high availability file system that is configured
 	//    for Multi-AZ redundancy to tolerate temporary Availability Zone (AZ) unavailability.
 	//    You can only deploy a Multi-AZ file system in AWS Regions that have a
-	//    minimum of three Availability Zones.
+	//    minimum of three Availability Zones. Also supports HDD storage type
 	//
 	//    * SINGLE_AZ_1 - (Default) Choose to deploy a file system that is configured
 	//    for single AZ redundancy.
 	//
-	// To learn more about high availability Multi-AZ file systems, see High Availability
-	// for Amazon FSx for Windows File Server (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/high-availability-multiAZ.html).
+	//    * SINGLE_AZ_2 - The latest generation Single AZ file system. Specifies
+	//    a file system that is configured for single AZ redundancy and supports
+	//    HDD storage type.
+	//
+	// For more information, see Availability and Durability: Single-AZ and Multi-AZ
+	// File Systems (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/high-availability-multiAZ.html).
 	DeploymentType *string `type:"string" enum:"WindowsDeploymentType"`
 
 	// Required when DeploymentType is set to MULTI_AZ_1. This specifies the subnet
@@ -3483,8 +3599,8 @@ func (s *DataRepositoryTask) SetType(v string) *DataRepositoryTask {
 // The data repository task could not be canceled because the task has already
 // ended.
 type DataRepositoryTaskEnded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -3502,17 +3618,17 @@ func (s DataRepositoryTaskEnded) GoString() string {
 
 func newErrorDataRepositoryTaskEnded(v protocol.ResponseMetadata) error {
 	return &DataRepositoryTaskEnded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DataRepositoryTaskEnded) Code() string {
+func (s *DataRepositoryTaskEnded) Code() string {
 	return "DataRepositoryTaskEnded"
 }
 
 // Message returns the exception's message.
-func (s DataRepositoryTaskEnded) Message() string {
+func (s *DataRepositoryTaskEnded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3520,29 +3636,29 @@ func (s DataRepositoryTaskEnded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DataRepositoryTaskEnded) OrigErr() error {
+func (s *DataRepositoryTaskEnded) OrigErr() error {
 	return nil
 }
 
-func (s DataRepositoryTaskEnded) Error() string {
+func (s *DataRepositoryTaskEnded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DataRepositoryTaskEnded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DataRepositoryTaskEnded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DataRepositoryTaskEnded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DataRepositoryTaskEnded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An existing data repository task is currently executing on the file system.
 // Wait until the existing task has completed, then create the new task.
 type DataRepositoryTaskExecuting struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -3560,17 +3676,17 @@ func (s DataRepositoryTaskExecuting) GoString() string {
 
 func newErrorDataRepositoryTaskExecuting(v protocol.ResponseMetadata) error {
 	return &DataRepositoryTaskExecuting{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DataRepositoryTaskExecuting) Code() string {
+func (s *DataRepositoryTaskExecuting) Code() string {
 	return "DataRepositoryTaskExecuting"
 }
 
 // Message returns the exception's message.
-func (s DataRepositoryTaskExecuting) Message() string {
+func (s *DataRepositoryTaskExecuting) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3578,22 +3694,22 @@ func (s DataRepositoryTaskExecuting) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DataRepositoryTaskExecuting) OrigErr() error {
+func (s *DataRepositoryTaskExecuting) OrigErr() error {
 	return nil
 }
 
-func (s DataRepositoryTaskExecuting) Error() string {
+func (s *DataRepositoryTaskExecuting) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DataRepositoryTaskExecuting) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DataRepositoryTaskExecuting) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DataRepositoryTaskExecuting) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DataRepositoryTaskExecuting) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides information about why a data repository task failed. Only populated
@@ -3668,8 +3784,8 @@ func (s *DataRepositoryTaskFilter) SetValues(v []*string) *DataRepositoryTaskFil
 
 // The data repository task or tasks you specified could not be found.
 type DataRepositoryTaskNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -3687,17 +3803,17 @@ func (s DataRepositoryTaskNotFound) GoString() string {
 
 func newErrorDataRepositoryTaskNotFound(v protocol.ResponseMetadata) error {
 	return &DataRepositoryTaskNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DataRepositoryTaskNotFound) Code() string {
+func (s *DataRepositoryTaskNotFound) Code() string {
 	return "DataRepositoryTaskNotFound"
 }
 
 // Message returns the exception's message.
-func (s DataRepositoryTaskNotFound) Message() string {
+func (s *DataRepositoryTaskNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3705,22 +3821,22 @@ func (s DataRepositoryTaskNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DataRepositoryTaskNotFound) OrigErr() error {
+func (s *DataRepositoryTaskNotFound) OrigErr() error {
 	return nil
 }
 
-func (s DataRepositoryTaskNotFound) Error() string {
+func (s *DataRepositoryTaskNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DataRepositoryTaskNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DataRepositoryTaskNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DataRepositoryTaskNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DataRepositoryTaskNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides the task status showing a running total of the total number of files
@@ -4407,8 +4523,12 @@ type FileSystem struct {
 	FileSystemType *string `type:"string" enum:"FileSystemType"`
 
 	// The ID of the AWS Key Management Service (AWS KMS) key used to encrypt the
-	// file system's data for an Amazon FSx for Windows File Server file system.
-	// Amazon FSx for Lustre does not support KMS encryption.
+	// file system's data for Amazon FSx for Windows File Server file systems and
+	// persistent Amazon FSx for Lustre file systems at rest. In either case, if
+	// not specified, the Amazon FSx managed key is used. The scratch Amazon FSx
+	// for Lustre file systems are always encrypted at rest using Amazon FSx managed
+	// keys. For more information, see Encrypt (https://docs.aws.amazon.com/kms/latest/APIReference/API_Encrypt.html)
+	// in the AWS Key Management Service API Reference.
 	KmsKeyId *string `min:"1" type:"string"`
 
 	// The lifecycle status of the file system, following are the possible values
@@ -4457,9 +4577,21 @@ type FileSystem struct {
 	// The storage capacity of the file system in gigabytes (GB).
 	StorageCapacity *int64 `type:"integer"`
 
-	// The ID of the subnet to contain the endpoint for the file system. One and
-	// only one is supported. The file system is launched in the Availability Zone
-	// associated with this subnet.
+	// The storage type of the file system. Valid values are SSD and HDD. If set
+	// to SSD, the file system uses solid state drive storage. If set to HDD, the
+	// file system uses hard disk drive storage.
+	StorageType *string `type:"string" enum:"StorageType"`
+
+	// Specifies the IDs of the subnets that the file system is accessible from.
+	// For Windows MULTI_AZ_1 file system deployment type, there are two subnet
+	// IDs, one for the preferred file server and one for the standby file server.
+	// The preferred file server subnet identified in the PreferredSubnetID property.
+	// All other file systems have only one subnet ID.
+	//
+	// For Lustre file systems, and Single-AZ Windows file systems, this is the
+	// ID of the subnet that contains the endpoint for the file system. For MULTI_AZ_1
+	// Windows file systems, the endpoint for the file system is available in the
+	// PreferredSubnetID.
 	SubnetIds []*string `type:"list"`
 
 	// The tags to associate with the file system. For more information, see Tagging
@@ -4556,6 +4688,12 @@ func (s *FileSystem) SetStorageCapacity(v int64) *FileSystem {
 	return s
 }
 
+// SetStorageType sets the StorageType field's value.
+func (s *FileSystem) SetStorageType(v string) *FileSystem {
+	s.StorageType = &v
+	return s
+}
+
 // SetSubnetIds sets the SubnetIds field's value.
 func (s *FileSystem) SetSubnetIds(v []*string) *FileSystem {
 	s.SubnetIds = v
@@ -4607,8 +4745,8 @@ func (s *FileSystemFailureDetails) SetMessage(v string) *FileSystemFailureDetail
 
 // No Amazon FSx file systems were found based upon supplied parameters.
 type FileSystemNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -4626,17 +4764,17 @@ func (s FileSystemNotFound) GoString() string {
 
 func newErrorFileSystemNotFound(v protocol.ResponseMetadata) error {
 	return &FileSystemNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s FileSystemNotFound) Code() string {
+func (s *FileSystemNotFound) Code() string {
 	return "FileSystemNotFound"
 }
 
 // Message returns the exception's message.
-func (s FileSystemNotFound) Message() string {
+func (s *FileSystemNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4644,22 +4782,22 @@ func (s FileSystemNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s FileSystemNotFound) OrigErr() error {
+func (s *FileSystemNotFound) OrigErr() error {
 	return nil
 }
 
-func (s FileSystemNotFound) Error() string {
+func (s *FileSystemNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s FileSystemNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *FileSystemNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s FileSystemNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *FileSystemNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A filter used to restrict the results of describe calls. You can use multiple
@@ -4701,8 +4839,8 @@ func (s *Filter) SetValues(v []*string) *Filter {
 // request token but different parameters settings. A client request token should
 // always uniquely identify a single request.
 type IncompatibleParameterError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -4725,17 +4863,17 @@ func (s IncompatibleParameterError) GoString() string {
 
 func newErrorIncompatibleParameterError(v protocol.ResponseMetadata) error {
 	return &IncompatibleParameterError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IncompatibleParameterError) Code() string {
+func (s *IncompatibleParameterError) Code() string {
 	return "IncompatibleParameterError"
 }
 
 // Message returns the exception's message.
-func (s IncompatibleParameterError) Message() string {
+func (s *IncompatibleParameterError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4743,28 +4881,28 @@ func (s IncompatibleParameterError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IncompatibleParameterError) OrigErr() error {
+func (s *IncompatibleParameterError) OrigErr() error {
 	return nil
 }
 
-func (s IncompatibleParameterError) Error() string {
+func (s *IncompatibleParameterError) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IncompatibleParameterError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IncompatibleParameterError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IncompatibleParameterError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IncompatibleParameterError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A generic error indicating a server-side failure.
 type InternalServerError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -4782,17 +4920,17 @@ func (s InternalServerError) GoString() string {
 
 func newErrorInternalServerError(v protocol.ResponseMetadata) error {
 	return &InternalServerError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerError) Code() string {
+func (s *InternalServerError) Code() string {
 	return "InternalServerError"
 }
 
 // Message returns the exception's message.
-func (s InternalServerError) Message() string {
+func (s *InternalServerError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4800,28 +4938,28 @@ func (s InternalServerError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerError) OrigErr() error {
+func (s *InternalServerError) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerError) Error() string {
+func (s *InternalServerError) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The path provided for data repository export isn't valid.
 type InvalidExportPath struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -4839,17 +4977,17 @@ func (s InvalidExportPath) GoString() string {
 
 func newErrorInvalidExportPath(v protocol.ResponseMetadata) error {
 	return &InvalidExportPath{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidExportPath) Code() string {
+func (s *InvalidExportPath) Code() string {
 	return "InvalidExportPath"
 }
 
 // Message returns the exception's message.
-func (s InvalidExportPath) Message() string {
+func (s *InvalidExportPath) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4857,28 +4995,28 @@ func (s InvalidExportPath) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidExportPath) OrigErr() error {
+func (s *InvalidExportPath) OrigErr() error {
 	return nil
 }
 
-func (s InvalidExportPath) Error() string {
+func (s *InvalidExportPath) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidExportPath) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidExportPath) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidExportPath) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidExportPath) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The path provided for data repository import isn't valid.
 type InvalidImportPath struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -4896,17 +5034,17 @@ func (s InvalidImportPath) GoString() string {
 
 func newErrorInvalidImportPath(v protocol.ResponseMetadata) error {
 	return &InvalidImportPath{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidImportPath) Code() string {
+func (s *InvalidImportPath) Code() string {
 	return "InvalidImportPath"
 }
 
 // Message returns the exception's message.
-func (s InvalidImportPath) Message() string {
+func (s *InvalidImportPath) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4914,22 +5052,22 @@ func (s InvalidImportPath) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidImportPath) OrigErr() error {
+func (s *InvalidImportPath) OrigErr() error {
 	return nil
 }
 
-func (s InvalidImportPath) Error() string {
+func (s *InvalidImportPath) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidImportPath) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidImportPath) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidImportPath) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidImportPath) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more network settings specified in the request are invalid. InvalidVpcId
@@ -4939,8 +5077,8 @@ func (s InvalidImportPath) RequestID() string {
 // of IDs for security groups that are either invalid or not part of the VPC
 // specified.
 type InvalidNetworkSettings struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The ID of your Amazon EC2 security group. This ID is used to control network
 	// access to the endpoint that Amazon FSx creates on your behalf in each subnet.
@@ -4970,17 +5108,17 @@ func (s InvalidNetworkSettings) GoString() string {
 
 func newErrorInvalidNetworkSettings(v protocol.ResponseMetadata) error {
 	return &InvalidNetworkSettings{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidNetworkSettings) Code() string {
+func (s *InvalidNetworkSettings) Code() string {
 	return "InvalidNetworkSettings"
 }
 
 // Message returns the exception's message.
-func (s InvalidNetworkSettings) Message() string {
+func (s *InvalidNetworkSettings) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4988,22 +5126,80 @@ func (s InvalidNetworkSettings) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidNetworkSettings) OrigErr() error {
+func (s *InvalidNetworkSettings) OrigErr() error {
 	return nil
 }
 
-func (s InvalidNetworkSettings) Error() string {
+func (s *InvalidNetworkSettings) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidNetworkSettings) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidNetworkSettings) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidNetworkSettings) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidNetworkSettings) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// An invalid value for PerUnitStorageThroughput was provided. Please create
+// your file system again, using a valid value.
+type InvalidPerUnitStorageThroughput struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A detailed error message.
+	Message_ *string `locationName:"Message" min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidPerUnitStorageThroughput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPerUnitStorageThroughput) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPerUnitStorageThroughput(v protocol.ResponseMetadata) error {
+	return &InvalidPerUnitStorageThroughput{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidPerUnitStorageThroughput) Code() string {
+	return "InvalidPerUnitStorageThroughput"
+}
+
+// Message returns the exception's message.
+func (s *InvalidPerUnitStorageThroughput) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidPerUnitStorageThroughput) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidPerUnitStorageThroughput) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidPerUnitStorageThroughput) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidPerUnitStorageThroughput) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request object for ListTagsForResource operation.
@@ -5119,6 +5315,23 @@ type LustreFileSystemConfiguration struct {
 	// in the response of the CreateFileSystem operation.
 	DataRepositoryConfiguration *DataRepositoryConfiguration `type:"structure"`
 
+	// The deployment type of the FSX for Lustre file system.
+	DeploymentType *string `type:"string" enum:"LustreDeploymentType"`
+
+	// You use the MountName value when mounting the file system.
+	//
+	// For the SCRATCH_1 deployment type, this value is always "fsx". For SCRATCH_2
+	// and PERSISTENT_1 deployment types, this value is a string that is unique
+	// within an AWS Region.
+	MountName *string `min:"1" type:"string"`
+
+	// Per unit storage throughput represents the megabytes per second of read or
+	// write throughput per 1 tebibyte of storage provisioned. File system throughput
+	// capacity is equal to Storage capacity (TiB) * PerUnitStorageThroughput (MB/s/TiB).
+	// This option is only valid for PERSISTENT_1 deployment types. Valid values
+	// are 50, 100, 200.
+	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
+
 	// The UTC time that you want to begin your weekly maintenance window.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
@@ -5139,16 +5352,34 @@ func (s *LustreFileSystemConfiguration) SetDataRepositoryConfiguration(v *DataRe
 	return s
 }
 
+// SetDeploymentType sets the DeploymentType field's value.
+func (s *LustreFileSystemConfiguration) SetDeploymentType(v string) *LustreFileSystemConfiguration {
+	s.DeploymentType = &v
+	return s
+}
+
+// SetMountName sets the MountName field's value.
+func (s *LustreFileSystemConfiguration) SetMountName(v string) *LustreFileSystemConfiguration {
+	s.MountName = &v
+	return s
+}
+
+// SetPerUnitStorageThroughput sets the PerUnitStorageThroughput field's value.
+func (s *LustreFileSystemConfiguration) SetPerUnitStorageThroughput(v int64) *LustreFileSystemConfiguration {
+	s.PerUnitStorageThroughput = &v
+	return s
+}
+
 // SetWeeklyMaintenanceStartTime sets the WeeklyMaintenanceStartTime field's value.
 func (s *LustreFileSystemConfiguration) SetWeeklyMaintenanceStartTime(v string) *LustreFileSystemConfiguration {
 	s.WeeklyMaintenanceStartTime = &v
 	return s
 }
 
-// File system configuration is required for this operation.
+// A file system configuration is required for this operation.
 type MissingFileSystemConfiguration struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -5166,17 +5397,17 @@ func (s MissingFileSystemConfiguration) GoString() string {
 
 func newErrorMissingFileSystemConfiguration(v protocol.ResponseMetadata) error {
 	return &MissingFileSystemConfiguration{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s MissingFileSystemConfiguration) Code() string {
+func (s *MissingFileSystemConfiguration) Code() string {
 	return "MissingFileSystemConfiguration"
 }
 
 // Message returns the exception's message.
-func (s MissingFileSystemConfiguration) Message() string {
+func (s *MissingFileSystemConfiguration) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5184,29 +5415,29 @@ func (s MissingFileSystemConfiguration) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s MissingFileSystemConfiguration) OrigErr() error {
+func (s *MissingFileSystemConfiguration) OrigErr() error {
 	return nil
 }
 
-func (s MissingFileSystemConfiguration) Error() string {
+func (s *MissingFileSystemConfiguration) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s MissingFileSystemConfiguration) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *MissingFileSystemConfiguration) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s MissingFileSystemConfiguration) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *MissingFileSystemConfiguration) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource specified for the tagging operation is not a resource type owned
 // by Amazon FSx. Use the API of the relevant service to perform the operation.
 type NotServiceResourceError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -5229,17 +5460,17 @@ func (s NotServiceResourceError) GoString() string {
 
 func newErrorNotServiceResourceError(v protocol.ResponseMetadata) error {
 	return &NotServiceResourceError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotServiceResourceError) Code() string {
+func (s *NotServiceResourceError) Code() string {
 	return "NotServiceResourceError"
 }
 
 // Message returns the exception's message.
-func (s NotServiceResourceError) Message() string {
+func (s *NotServiceResourceError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5247,28 +5478,28 @@ func (s NotServiceResourceError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotServiceResourceError) OrigErr() error {
+func (s *NotServiceResourceError) OrigErr() error {
 	return nil
 }
 
-func (s NotServiceResourceError) Error() string {
+func (s *NotServiceResourceError) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotServiceResourceError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotServiceResourceError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotServiceResourceError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotServiceResourceError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource specified does not support tagging.
 type ResourceDoesNotSupportTagging struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -5291,17 +5522,17 @@ func (s ResourceDoesNotSupportTagging) GoString() string {
 
 func newErrorResourceDoesNotSupportTagging(v protocol.ResponseMetadata) error {
 	return &ResourceDoesNotSupportTagging{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceDoesNotSupportTagging) Code() string {
+func (s *ResourceDoesNotSupportTagging) Code() string {
 	return "ResourceDoesNotSupportTagging"
 }
 
 // Message returns the exception's message.
-func (s ResourceDoesNotSupportTagging) Message() string {
+func (s *ResourceDoesNotSupportTagging) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5309,28 +5540,28 @@ func (s ResourceDoesNotSupportTagging) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceDoesNotSupportTagging) OrigErr() error {
+func (s *ResourceDoesNotSupportTagging) OrigErr() error {
 	return nil
 }
 
-func (s ResourceDoesNotSupportTagging) Error() string {
+func (s *ResourceDoesNotSupportTagging) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceDoesNotSupportTagging) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceDoesNotSupportTagging) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceDoesNotSupportTagging) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceDoesNotSupportTagging) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource specified by the Amazon Resource Name (ARN) can't be found.
 type ResourceNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -5353,17 +5584,17 @@ func (s ResourceNotFound) GoString() string {
 
 func newErrorResourceNotFound(v protocol.ResponseMetadata) error {
 	return &ResourceNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFound) Code() string {
+func (s *ResourceNotFound) Code() string {
 	return "ResourceNotFound"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFound) Message() string {
+func (s *ResourceNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5371,22 +5602,22 @@ func (s ResourceNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFound) OrigErr() error {
+func (s *ResourceNotFound) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFound) Error() string {
+func (s *ResourceNotFound) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The configuration of the self-managed Microsoft Active Directory (AD) directory
@@ -5674,8 +5905,8 @@ func (s *SelfManagedActiveDirectoryConfigurationUpdates) SetUserName(v string) *
 // An error indicating that a particular service limit was exceeded. You can
 // increase some service limits by contacting AWS Support.
 type ServiceLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Enumeration of the service limit that was exceeded.
 	//
@@ -5698,17 +5929,17 @@ func (s ServiceLimitExceeded) GoString() string {
 
 func newErrorServiceLimitExceeded(v protocol.ResponseMetadata) error {
 	return &ServiceLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceLimitExceeded) Code() string {
+func (s *ServiceLimitExceeded) Code() string {
 	return "ServiceLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s ServiceLimitExceeded) Message() string {
+func (s *ServiceLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5716,22 +5947,22 @@ func (s ServiceLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceLimitExceeded) OrigErr() error {
+func (s *ServiceLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s ServiceLimitExceeded) Error() string {
+func (s *ServiceLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies a key-value pair for a resource tag.
@@ -5872,8 +6103,8 @@ func (s TagResourceOutput) GoString() string {
 
 // The requested operation is not supported for this resource or API.
 type UnsupportedOperation struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A detailed error message.
 	Message_ *string `locationName:"Message" min:"1" type:"string"`
@@ -5891,17 +6122,17 @@ func (s UnsupportedOperation) GoString() string {
 
 func newErrorUnsupportedOperation(v protocol.ResponseMetadata) error {
 	return &UnsupportedOperation{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedOperation) Code() string {
+func (s *UnsupportedOperation) Code() string {
 	return "UnsupportedOperation"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedOperation) Message() string {
+func (s *UnsupportedOperation) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5909,22 +6140,22 @@ func (s UnsupportedOperation) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedOperation) OrigErr() error {
+func (s *UnsupportedOperation) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedOperation) Error() string {
+func (s *UnsupportedOperation) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedOperation) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedOperation) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedOperation) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedOperation) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request object for UntagResource action.
@@ -6245,6 +6476,8 @@ type WindowsFileSystemConfiguration struct {
 	// the file system are copied to all automatic backups and any user-initiated
 	// backups where the user doesn't specify any tags. If this value is true, and
 	// you specify one or more tags, only the specified tags are copied to backups.
+	// If you specify one or more tags when creating a user-initiated backup, no
+	// tags are copied from the file system, regardless of this value.
 	CopyTagsToBackups *bool `type:"boolean"`
 
 	// The preferred time to take daily automatic backups, in the UTC time zone.
@@ -6253,10 +6486,17 @@ type WindowsFileSystemConfiguration struct {
 	// Specifies the file system deployment type, valid values are the following:
 	//
 	//    * MULTI_AZ_1 - Specifies a high availability file system that is configured
-	//    for Multi-AZ redundancy to tolerate temporary Availability Zone (AZ) unavailability.
+	//    for Multi-AZ redundancy to tolerate temporary Availability Zone (AZ) unavailability,
+	//    and supports SSD and HDD storage.
 	//
 	//    * SINGLE_AZ_1 - (Default) Specifies a file system that is configured for
-	//    single AZ redundancy.
+	//    single AZ redundancy, only supports SSD storage.
+	//
+	//    * SINGLE_AZ_2 - Latest generation Single AZ file system. Specifies a file
+	//    system that is configured for single AZ redundancy and supports SSD and
+	//    HDD storage.
+	//
+	// For more information, see Single-AZ and Multi-AZ File Systems (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/high-availability-multiAZ.html).
 	DeploymentType *string `type:"string" enum:"WindowsDeploymentType"`
 
 	// The list of maintenance operations in progress for this file system.
@@ -6267,12 +6507,11 @@ type WindowsFileSystemConfiguration struct {
 	//
 	// Use this IP address when mounting the file system on Linux SMB clients or
 	// Windows SMB clients that are not joined to a Microsoft Active Directory.
-	// Applicable for both SINGLE_AZ_1 and MULTI_AZ_1 deployment types. This IP
-	// address is temporarily unavailable when the file system is undergoing maintenance.
+	// Applicable for all Windows file system deployment types. This IP address
+	// is temporarily unavailable when the file system is undergoing maintenance.
 	// For Linux and Windows SMB clients that are joined to an Active Directory,
-	// use the file system's DNSName instead. For more information and instruction
-	// on mapping and mounting file shares, see https://docs.aws.amazon.com/fsx/latest/WindowsGuide/accessing-file-shares.html
-	// (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/accessing-file-shares.html).
+	// use the file system's DNSName instead. For more information on mapping and
+	// mounting file shares, see Accessing File Shares (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/accessing-file-shares.html).
 	PreferredFileServerIp *string `min:"7" type:"string"`
 
 	// For MULTI_AZ_1 deployment types, it specifies the ID of the subnet where
@@ -6280,13 +6519,16 @@ type WindowsFileSystemConfiguration struct {
 	// in SubnetIds property. Amazon FSx serves traffic from this subnet except
 	// in the event of a failover to the secondary file server.
 	//
-	// For SINGLE_AZ_1 deployment types, this value is the same as that for SubnetIDs.
+	// For SINGLE_AZ_1 and SINGLE_AZ_2 deployment types, this value is the same
+	// as that for SubnetIDs. For more information, see Availability and Durability:
+	// Single-AZ and Multi-AZ File Systems (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/high-availability-multiAZ.html#single-multi-az-resources)
 	PreferredSubnetId *string `min:"15" type:"string"`
 
 	// For MULTI_AZ_1 deployment types, use this endpoint when performing administrative
 	// tasks on the file system using Amazon FSx Remote PowerShell.
 	//
-	// For SINGLE_AZ_1 deployment types, this is the DNS name of the file system.
+	// For SINGLE_AZ_1 and SINGLE_AZ_2 deployment types, this is the DNS name of
+	// the file system.
 	//
 	// This endpoint is temporarily unavailable when the file system is undergoing
 	// maintenance.
@@ -6511,6 +6753,17 @@ const (
 )
 
 const (
+	// LustreDeploymentTypeScratch1 is a LustreDeploymentType enum value
+	LustreDeploymentTypeScratch1 = "SCRATCH_1"
+
+	// LustreDeploymentTypeScratch2 is a LustreDeploymentType enum value
+	LustreDeploymentTypeScratch2 = "SCRATCH_2"
+
+	// LustreDeploymentTypePersistent1 is a LustreDeploymentType enum value
+	LustreDeploymentTypePersistent1 = "PERSISTENT_1"
+)
+
+const (
 	// ReportFormatReportCsv20191124 is a ReportFormat enum value
 	ReportFormatReportCsv20191124 = "REPORT_CSV_20191124"
 )
@@ -6538,10 +6791,22 @@ const (
 	ServiceLimitTotalUserInitiatedBackups = "TOTAL_USER_INITIATED_BACKUPS"
 )
 
+// The storage type for your Amazon FSx file system.
+const (
+	// StorageTypeSsd is a StorageType enum value
+	StorageTypeSsd = "SSD"
+
+	// StorageTypeHdd is a StorageType enum value
+	StorageTypeHdd = "HDD"
+)
+
 const (
 	// WindowsDeploymentTypeMultiAz1 is a WindowsDeploymentType enum value
 	WindowsDeploymentTypeMultiAz1 = "MULTI_AZ_1"
 
 	// WindowsDeploymentTypeSingleAz1 is a WindowsDeploymentType enum value
 	WindowsDeploymentTypeSingleAz1 = "SINGLE_AZ_1"
+
+	// WindowsDeploymentTypeSingleAz2 is a WindowsDeploymentType enum value
+	WindowsDeploymentTypeSingleAz2 = "SINGLE_AZ_2"
 )

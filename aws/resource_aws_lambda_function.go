@@ -42,6 +42,7 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimePython37,
 	lambda.RuntimePython38,
 	lambda.RuntimeRuby25,
+	lambda.RuntimeRuby27,
 }
 
 func resourceAwsLambdaFunction() *schema.Resource {
@@ -107,8 +108,9 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				ForceNew: true,
 			},
 			"handler": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"layers": {
 				Type:     schema.TypeList,
@@ -669,8 +671,6 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
 
-	d.Partial(true)
-
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
@@ -835,18 +835,12 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Lambda Function (%s) update: %s", d.Id(), err)
 		}
-
-		d.SetPartial("description")
-		d.SetPartial("handler")
-		d.SetPartial("memory_size")
-		d.SetPartial("role")
-		d.SetPartial("timeout")
 	}
 
-	if needsFunctionCodeUpdate(d) {
+	codeUpdate := needsFunctionCodeUpdate(d)
+	if codeUpdate {
 		codeReq := &lambda.UpdateFunctionCodeInput{
 			FunctionName: aws.String(d.Id()),
-			Publish:      aws.Bool(d.Get("publish").(bool)),
 		}
 
 		if v, ok := d.GetOk("filename"); ok {
@@ -878,12 +872,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
 		}
-
-		d.SetPartial("filename")
-		d.SetPartial("source_code_hash")
-		d.SetPartial("s3_bucket")
-		d.SetPartial("s3_key")
-		d.SetPartial("s3_object_version")
 	}
 
 	if d.HasChange("reserved_concurrent_executions") {
@@ -914,7 +902,17 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	d.Partial(false)
+	publish := d.Get("publish").(bool)
+	if publish && (codeUpdate || configUpdate) {
+		versionReq := &lambda.PublishVersionInput{
+			FunctionName: aws.String(d.Id()),
+		}
+
+		_, err := conn.PublishVersion(versionReq)
+		if err != nil {
+			return fmt.Errorf("Error publishing Lambda Function Version %s: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsLambdaFunctionRead(d, meta)
 }

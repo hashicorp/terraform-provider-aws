@@ -3354,6 +3354,9 @@ func (c *ServiceCatalog) DescribeServiceActionExecutionParametersRequest(input *
 
 // DescribeServiceActionExecutionParameters API operation for AWS Service Catalog.
 //
+// Finds the default parameters for a specific self-service action on a specific
+// provisioned product and returns a map of the results to the user.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5072,6 +5075,12 @@ func (c *ServiceCatalog) ListPortfolioAccessRequest(input *ListPortfolioAccessIn
 		Name:       opListPortfolioAccess,
 		HTTPMethod: "POST",
 		HTTPPath:   "/",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"PageToken"},
+			OutputTokens:    []string{"NextPageToken"},
+			LimitToken:      "PageSize",
+			TruncationToken: "",
+		},
 	}
 
 	if input == nil {
@@ -5098,6 +5107,9 @@ func (c *ServiceCatalog) ListPortfolioAccessRequest(input *ListPortfolioAccessIn
 //   * ResourceNotFoundException
 //   The specified resource was not found.
 //
+//   * InvalidParametersException
+//   One or more parameters provided to the operation are not valid.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/servicecatalog-2015-12-10/ListPortfolioAccess
 func (c *ServiceCatalog) ListPortfolioAccess(input *ListPortfolioAccessInput) (*ListPortfolioAccessOutput, error) {
 	req, out := c.ListPortfolioAccessRequest(input)
@@ -5118,6 +5130,58 @@ func (c *ServiceCatalog) ListPortfolioAccessWithContext(ctx aws.Context, input *
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+// ListPortfolioAccessPages iterates over the pages of a ListPortfolioAccess operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPortfolioAccess method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPortfolioAccess operation.
+//    pageNum := 0
+//    err := client.ListPortfolioAccessPages(params,
+//        func(page *servicecatalog.ListPortfolioAccessOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ServiceCatalog) ListPortfolioAccessPages(input *ListPortfolioAccessInput, fn func(*ListPortfolioAccessOutput, bool) bool) error {
+	return c.ListPortfolioAccessPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPortfolioAccessPagesWithContext same as ListPortfolioAccessPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ServiceCatalog) ListPortfolioAccessPagesWithContext(ctx aws.Context, input *ListPortfolioAccessInput, fn func(*ListPortfolioAccessOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPortfolioAccessInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPortfolioAccessRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPortfolioAccessOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListPortfolios = "ListPortfolios"
@@ -8840,6 +8904,14 @@ type ConstraintDetail struct {
 	// The owner of the constraint.
 	Owner *string `type:"string"`
 
+	// The identifier of the portfolio the product resides in. The constraint applies
+	// only to the instance of the product that lives within this portfolio.
+	PortfolioId *string `min:"1" type:"string"`
+
+	// The identifier of the product the constraint applies to. Note that a constraint
+	// applies to a specific instance of a product within a certain portfolio.
+	ProductId *string `min:"1" type:"string"`
+
 	// The type of constraint.
 	//
 	//    * LAUNCH
@@ -8877,6 +8949,18 @@ func (s *ConstraintDetail) SetDescription(v string) *ConstraintDetail {
 // SetOwner sets the Owner field's value.
 func (s *ConstraintDetail) SetOwner(v string) *ConstraintDetail {
 	s.Owner = &v
+	return s
+}
+
+// SetPortfolioId sets the PortfolioId field's value.
+func (s *ConstraintDetail) SetPortfolioId(v string) *ConstraintDetail {
+	s.PortfolioId = &v
+	return s
+}
+
+// SetProductId sets the ProductId field's value.
+func (s *ConstraintDetail) SetProductId(v string) *ConstraintDetail {
+	s.ProductId = &v
 	return s
 }
 
@@ -9086,9 +9170,24 @@ type CreateConstraintInput struct {
 	//
 	// LAUNCH
 	//
+	// You are required to specify either the RoleArn or the LocalRoleName but can't
+	// use both.
+	//
 	// Specify the RoleArn property as follows:
 	//
 	// {"RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole"}
+	//
+	// Specify the LocalRoleName property as follows:
+	//
+	// {"LocalRoleName": "SCBasicLaunchRole"}
+	//
+	// If you specify the LocalRoleName property, when an account uses the launch
+	// constraint, the IAM role with that name in the account will be used. This
+	// allows launch-role constraints to be account-agnostic so the administrator
+	// can create fewer resources per shared account.
+	//
+	// The given role name must exist in the account used to create the launch constraint
+	// and the account of the user who launches a product with this launch constraint.
 	//
 	// You cannot have both a LAUNCH and a STACKSET constraint.
 	//
@@ -10175,7 +10274,7 @@ type CreateServiceActionInput struct {
 	//
 	// The list of parameters in JSON format.
 	//
-	// For example: [{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}].
+	// For example: [{\"Name\":\"InstanceId\",\"Type\":\"TARGET\"}] or [{\"Name\":\"InstanceId\",\"Type\":\"TEXT_VALUE\"}].
 	//
 	// Definition is a required field
 	Definition map[string]*string `min:"1" type:"map" required:"true"`
@@ -12279,11 +12378,22 @@ func (s *DescribeRecordOutput) SetRecordOutputs(v []*RecordOutput) *DescribeReco
 type DescribeServiceActionExecutionParametersInput struct {
 	_ struct{} `type:"structure"`
 
+	// The language code.
+	//
+	//    * en - English (default)
+	//
+	//    * jp - Japanese
+	//
+	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
+	// The identifier of the provisioned product.
+	//
 	// ProvisionedProductId is a required field
 	ProvisionedProductId *string `min:"1" type:"string" required:"true"`
 
+	// The self-service action identifier.
+	//
 	// ServiceActionId is a required field
 	ServiceActionId *string `min:"1" type:"string" required:"true"`
 }
@@ -12341,6 +12451,7 @@ func (s *DescribeServiceActionExecutionParametersInput) SetServiceActionId(v str
 type DescribeServiceActionExecutionParametersOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The parameters of the self-service action.
 	ServiceActionParameters []*ExecutionParameter `type:"list"`
 }
 
@@ -12953,8 +13064,8 @@ func (s DisassociateTagOptionFromResourceOutput) GoString() string {
 
 // The specified resource is a duplicate.
 type DuplicateResourceException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -12971,17 +13082,17 @@ func (s DuplicateResourceException) GoString() string {
 
 func newErrorDuplicateResourceException(v protocol.ResponseMetadata) error {
 	return &DuplicateResourceException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DuplicateResourceException) Code() string {
+func (s *DuplicateResourceException) Code() string {
 	return "DuplicateResourceException"
 }
 
 // Message returns the exception's message.
-func (s DuplicateResourceException) Message() string {
+func (s *DuplicateResourceException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12989,22 +13100,22 @@ func (s DuplicateResourceException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DuplicateResourceException) OrigErr() error {
+func (s *DuplicateResourceException) OrigErr() error {
 	return nil
 }
 
-func (s DuplicateResourceException) Error() string {
+func (s *DuplicateResourceException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DuplicateResourceException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DuplicateResourceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DuplicateResourceException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DuplicateResourceException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type EnableAWSOrganizationsAccessInput struct {
@@ -13143,6 +13254,11 @@ type ExecuteProvisionedProductServiceActionInput struct {
 	// An idempotency token that uniquely identifies the execute request.
 	ExecuteToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
+	// A map of all self-service action parameters and their values. If a provided
+	// parameter is of a special type, such as TARGET, the provided value will override
+	// the default value generated by AWS Service Catalog. If the parameters field
+	// is not provided, no additional parameters are passed and default values will
+	// be used for any special parameters such as TARGET.
 	Parameters map[string][]*string `min:"1" type:"map"`
 
 	// The identifier of the provisioned product.
@@ -13248,13 +13364,18 @@ func (s *ExecuteProvisionedProductServiceActionOutput) SetRecordDetail(v *Record
 	return s
 }
 
+// Details of an execution parameter value that is passed to a self-service
+// action when executed on a provisioned product.
 type ExecutionParameter struct {
 	_ struct{} `type:"structure"`
 
+	// The default values for the execution parameter.
 	DefaultValues []*string `type:"list"`
 
+	// The name of the execution parameter.
 	Name *string `min:"1" type:"string"`
 
+	// The execution parameter type.
 	Type *string `min:"1" type:"string"`
 }
 
@@ -13386,8 +13507,8 @@ func (s *GetAWSOrganizationsAccessStatusOutput) SetAccessStatus(v string) *GetAW
 
 // One or more parameters provided to the operation are not valid.
 type InvalidParametersException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13404,17 +13525,17 @@ func (s InvalidParametersException) GoString() string {
 
 func newErrorInvalidParametersException(v protocol.ResponseMetadata) error {
 	return &InvalidParametersException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParametersException) Code() string {
+func (s *InvalidParametersException) Code() string {
 	return "InvalidParametersException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParametersException) Message() string {
+func (s *InvalidParametersException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13422,30 +13543,30 @@ func (s InvalidParametersException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParametersException) OrigErr() error {
+func (s *InvalidParametersException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParametersException) Error() string {
+func (s *InvalidParametersException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParametersException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParametersException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParametersException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParametersException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An attempt was made to modify a resource that is in a state that is not valid.
 // Check your resources to ensure that they are in valid states before retrying
 // the operation.
 type InvalidStateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13462,17 +13583,17 @@ func (s InvalidStateException) GoString() string {
 
 func newErrorInvalidStateException(v protocol.ResponseMetadata) error {
 	return &InvalidStateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidStateException) Code() string {
+func (s *InvalidStateException) Code() string {
 	return "InvalidStateException"
 }
 
 // Message returns the exception's message.
-func (s InvalidStateException) Message() string {
+func (s *InvalidStateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13480,22 +13601,22 @@ func (s InvalidStateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidStateException) OrigErr() error {
+func (s *InvalidStateException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidStateException) Error() string {
+func (s *InvalidStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidStateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidStateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidStateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Summary information about a product path for a user.
@@ -13553,8 +13674,8 @@ func (s *LaunchPathSummary) SetTags(v []*Tag) *LaunchPathSummary {
 // Decrease your resource use or increase your service limits and retry the
 // operation.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13571,17 +13692,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13589,22 +13710,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListAcceptedPortfolioSharesInput struct {
@@ -14181,6 +14302,17 @@ type ListPortfolioAccessInput struct {
 	//    * zh - Chinese
 	AcceptLanguage *string `type:"string"`
 
+	// The ID of an organization node the portfolio is shared with. All children
+	// of this node with an inherited portfolio share will be returned.
+	OrganizationParentId *string `min:"1" type:"string"`
+
+	// The maximum number of items to return with this call.
+	PageSize *int64 `type:"integer"`
+
+	// The page token for the next set of results. To retrieve the first set of
+	// results, use null.
+	PageToken *string `type:"string"`
+
 	// The portfolio identifier.
 	//
 	// PortfolioId is a required field
@@ -14200,6 +14332,9 @@ func (s ListPortfolioAccessInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ListPortfolioAccessInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ListPortfolioAccessInput"}
+	if s.OrganizationParentId != nil && len(*s.OrganizationParentId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("OrganizationParentId", 1))
+	}
 	if s.PortfolioId == nil {
 		invalidParams.Add(request.NewErrParamRequired("PortfolioId"))
 	}
@@ -14216,6 +14351,24 @@ func (s *ListPortfolioAccessInput) Validate() error {
 // SetAcceptLanguage sets the AcceptLanguage field's value.
 func (s *ListPortfolioAccessInput) SetAcceptLanguage(v string) *ListPortfolioAccessInput {
 	s.AcceptLanguage = &v
+	return s
+}
+
+// SetOrganizationParentId sets the OrganizationParentId field's value.
+func (s *ListPortfolioAccessInput) SetOrganizationParentId(v string) *ListPortfolioAccessInput {
+	s.OrganizationParentId = &v
+	return s
+}
+
+// SetPageSize sets the PageSize field's value.
+func (s *ListPortfolioAccessInput) SetPageSize(v int64) *ListPortfolioAccessInput {
+	s.PageSize = &v
+	return s
+}
+
+// SetPageToken sets the PageToken field's value.
+func (s *ListPortfolioAccessInput) SetPageToken(v string) *ListPortfolioAccessInput {
+	s.PageToken = &v
 	return s
 }
 
@@ -15575,8 +15728,8 @@ func (s *ListTagOptionsOutput) SetTagOptionDetails(v []*TagOptionDetail) *ListTa
 
 // The operation is not supported.
 type OperationNotSupportedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -15593,17 +15746,17 @@ func (s OperationNotSupportedException) GoString() string {
 
 func newErrorOperationNotSupportedException(v protocol.ResponseMetadata) error {
 	return &OperationNotSupportedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OperationNotSupportedException) Code() string {
+func (s *OperationNotSupportedException) Code() string {
 	return "OperationNotSupportedException"
 }
 
 // Message returns the exception's message.
-func (s OperationNotSupportedException) Message() string {
+func (s *OperationNotSupportedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15611,22 +15764,22 @@ func (s OperationNotSupportedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OperationNotSupportedException) OrigErr() error {
+func (s *OperationNotSupportedException) OrigErr() error {
 	return nil
 }
 
-func (s OperationNotSupportedException) Error() string {
+func (s *OperationNotSupportedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OperationNotSupportedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OperationNotSupportedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OperationNotSupportedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OperationNotSupportedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about the organization node.
@@ -17925,8 +18078,8 @@ func (s *ResourceDetail) SetName(v string) *ResourceDetail {
 // A resource that is currently in use. Ensure that the resource is not in use
 // and retry the operation.
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -17943,17 +18096,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -17961,28 +18114,28 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified resource was not found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -17999,17 +18152,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18017,22 +18170,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about a change to a resource attribute.
@@ -18973,8 +19126,8 @@ func (s *TagOptionDetail) SetValue(v string) *TagOptionDetail {
 // process has not been performed for this account. Please use the AWS console
 // to perform the migration process before retrying the operation.
 type TagOptionNotMigratedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -18991,17 +19144,17 @@ func (s TagOptionNotMigratedException) GoString() string {
 
 func newErrorTagOptionNotMigratedException(v protocol.ResponseMetadata) error {
 	return &TagOptionNotMigratedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TagOptionNotMigratedException) Code() string {
+func (s *TagOptionNotMigratedException) Code() string {
 	return "TagOptionNotMigratedException"
 }
 
 // Message returns the exception's message.
-func (s TagOptionNotMigratedException) Message() string {
+func (s *TagOptionNotMigratedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -19009,22 +19162,22 @@ func (s TagOptionNotMigratedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TagOptionNotMigratedException) OrigErr() error {
+func (s *TagOptionNotMigratedException) OrigErr() error {
 	return nil
 }
 
-func (s TagOptionNotMigratedException) Error() string {
+func (s *TagOptionNotMigratedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TagOptionNotMigratedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TagOptionNotMigratedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TagOptionNotMigratedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TagOptionNotMigratedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Summary information about a TagOption.
@@ -19198,9 +19351,24 @@ type UpdateConstraintInput struct {
 	//
 	// LAUNCH
 	//
+	// You are required to specify either the RoleArn or the LocalRoleName but can't
+	// use both.
+	//
 	// Specify the RoleArn property as follows:
 	//
 	// {"RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole"}
+	//
+	// Specify the LocalRoleName property as follows:
+	//
+	// {"LocalRoleName": "SCBasicLaunchRole"}
+	//
+	// If you specify the LocalRoleName property, when an account uses the launch
+	// constraint, the IAM role with that name in the account will be used. This
+	// allows launch-role constraints to be account-agnostic so the administrator
+	// can create fewer resources per shared account.
+	//
+	// The given role name must exist in the account used to create the launch constraint
+	// and the account of the user who launches a product with this launch constraint.
 	//
 	// You cannot have both a LAUNCH and a STACKSET constraint.
 	//
@@ -20019,6 +20187,9 @@ type UpdateProvisioningArtifactInput struct {
 	AcceptLanguage *string `type:"string"`
 
 	// Indicates whether the product version is active.
+	//
+	// Inactive provisioning artifacts are invisible to end users. End users cannot
+	// launch or update a provisioned product from an inactive provisioning artifact.
 	Active *bool `type:"boolean"`
 
 	// The updated description of the provisioning artifact.

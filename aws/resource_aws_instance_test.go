@@ -1131,9 +1131,8 @@ func TestAccAWSInstance_tags(t *testing.T) {
 				Config: testAccCheckInstanceConfigTags,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testAccCheckTags(&v.Tags, "test", "test2"),
-					// Guard against regression of https://github.com/hashicorp/terraform/issues/914
-					testAccCheckTags(&v.Tags, "#", ""),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test", "test2"),
 				),
 			},
 			{
@@ -1145,8 +1144,8 @@ func TestAccAWSInstance_tags(t *testing.T) {
 				Config: testAccCheckInstanceConfigTagsUpdate,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testAccCheckTags(&v.Tags, "test", ""),
-					testAccCheckTags(&v.Tags, "test2", "test3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.test2", "test3"),
 				),
 			},
 		},
@@ -2497,12 +2496,101 @@ func TestAccAWSInstance_UserData_UnspecifiedToEmptyString(t *testing.T) {
 	})
 }
 
+func TestAccAWSInstance_hibernation(t *testing.T) {
+	var instance1, instance2 ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigHibernation(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance1),
+					resource.TestCheckResourceAttr(resourceName, "hibernation", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccInstanceConfigHibernation(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance2),
+					testAccCheckInstanceRecreated(&instance1, &instance2),
+					resource.TestCheckResourceAttr(resourceName, "hibernation", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_metadataOptions(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	instanceType := "m1.small"
+
+	resource.ParallelTest(t, resource.TestCase{
+		// No subnet_id specified requires default VPC or EC2-Classic.
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckHasDefaultVpcOrEc2Classic(t)
+			testAccPreCheckOffersEc2InstanceType(t, instanceType)
+		},
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigMetadataOptions(rName, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "disabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "optional"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "1"),
+				),
+			},
+			{
+				Config: testAccInstanceConfigMetadataOptionsUpdated(rName, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_endpoint", "enabled"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.0.http_put_response_hop_limit", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckInstanceNotRecreated(t *testing.T,
 	before, after *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *before.InstanceId != *after.InstanceId {
 			t.Fatalf("AWS Instance IDs have changed. Before %s. After %s", *before.InstanceId, *after.InstanceId)
 		}
+		return nil
+	}
+}
+
+func testAccCheckInstanceRecreated(before, after *ec2.Instance) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(before.InstanceId) == aws.StringValue(after.InstanceId) {
+			return fmt.Errorf("EC2 Instance (%s) not recreated", aws.StringValue(before.InstanceId))
+		}
+
 		return nil
 	}
 }
@@ -2694,6 +2782,12 @@ func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_vpc" "default" {
@@ -2720,6 +2814,12 @@ func testAccInstanceConfigInDefaultVpcBySgId(rName string) string {
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_vpc" "default" {
@@ -4081,6 +4181,12 @@ func testAccAwsInstanceVpcConfig(rName string, mapPublicIpOnLaunch bool) string 
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -4146,6 +4252,12 @@ func testAccAwsInstanceVpcIpv6Config(rName string) string {
 data "aws_availability_zones" "current" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -4169,4 +4281,93 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName)
+}
+
+func testAccInstanceConfigHibernation(hibernation bool) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-instance-hibernation"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-instance-hibernation"
+  }
+}
+
+# must be >= m3 and have an encrypted root volume to eanble hibernation
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  hibernation   = %[1]t
+  instance_type = "m5.large"
+  subnet_id     = aws_subnet.test.id
+
+  root_block_device {
+    encrypted   = true
+    volume_size = 20
+  }
+}
+`, hibernation)
+}
+
+func testAccInstanceConfigMetadataOptions(rName, instanceType string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {
+    http_endpoint = "disabled"
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName, instanceType)
+}
+
+func testAccInstanceConfigMetadataOptionsUpdated(rName, instanceType string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+}
+`, rName, instanceType)
 }

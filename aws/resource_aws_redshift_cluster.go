@@ -641,7 +641,6 @@ func resourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
-	d.Partial(true)
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
@@ -649,8 +648,6 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Cluster (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	requestUpdate := false
@@ -770,8 +767,6 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 		if err != nil {
 			return fmt.Errorf("Error modifying Redshift Cluster IAM Roles (%s): %s", d.Id(), err)
 		}
-
-		d.SetPartial("iam_roles")
 	}
 
 	if requestUpdate || d.HasChange("iam_roles") {
@@ -824,8 +819,6 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 			}
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsRedshiftClusterRead(d, meta)
 }

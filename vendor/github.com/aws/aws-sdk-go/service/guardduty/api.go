@@ -5019,8 +5019,8 @@ func (s *AwsApiCallAction) SetServiceName(v string) *AwsApiCallAction {
 
 // Bad request exception object.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message.
 	Message_ *string `locationName:"message" type:"string"`
@@ -5041,17 +5041,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5059,22 +5059,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains information about the city associated with the IP address.
@@ -8292,6 +8292,10 @@ type InstanceDetails struct {
 	// The network interface information of the EC2 instance.
 	NetworkInterfaces []*NetworkInterface `locationName:"networkInterfaces" type:"list"`
 
+	// The Amazon Resource Name (ARN) of the AWS Outpost. Only applicable to AWS
+	// Outposts instances.
+	OutpostArn *string `locationName:"outpostArn" type:"string"`
+
 	// The platform of the EC2 instance.
 	Platform *string `locationName:"platform" type:"string"`
 
@@ -8366,6 +8370,12 @@ func (s *InstanceDetails) SetNetworkInterfaces(v []*NetworkInterface) *InstanceD
 	return s
 }
 
+// SetOutpostArn sets the OutpostArn field's value.
+func (s *InstanceDetails) SetOutpostArn(v string) *InstanceDetails {
+	s.OutpostArn = &v
+	return s
+}
+
 // SetPlatform sets the Platform field's value.
 func (s *InstanceDetails) SetPlatform(v string) *InstanceDetails {
 	s.Platform = &v
@@ -8386,8 +8396,8 @@ func (s *InstanceDetails) SetTags(v []*Tag) *InstanceDetails {
 
 // Internal server error exception object.
 type InternalServerErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The error message.
 	Message_ *string `locationName:"message" type:"string"`
@@ -8408,17 +8418,17 @@ func (s InternalServerErrorException) GoString() string {
 
 func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
 	return &InternalServerErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerErrorException) Code() string {
+func (s *InternalServerErrorException) Code() string {
 	return "InternalServerErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerErrorException) Message() string {
+func (s *InternalServerErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8426,22 +8436,22 @@ func (s InternalServerErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerErrorException) OrigErr() error {
+func (s *InternalServerErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerErrorException) Error() string {
+func (s *InternalServerErrorException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains information about the invitation to become a member account.
@@ -8822,6 +8832,8 @@ type ListFindingsInput struct {
 	//
 	//    * resource.instanceDetails.instanceId
 	//
+	//    * resource.instanceDetails.outpostArn
+	//
 	//    * resource.instanceDetails.networkInterfaces.ipv6Addresses
 	//
 	//    * resource.instanceDetails.networkInterfaces.privateIpAddresses.privateIpAddress
@@ -8871,6 +8883,8 @@ type ListFindingsInput struct {
 	//    * service.action.networkConnectionAction.localPortDetails.port
 	//
 	//    * service.action.networkConnectionAction.protocol
+	//
+	//    * service.action.networkConnectionAction.localIpDetails.ipAddressV4
 	//
 	//    * service.action.networkConnectionAction.remoteIpDetails.city.cityName
 	//
@@ -9568,6 +9582,30 @@ func (s *ListThreatIntelSetsOutput) SetThreatIntelSetIds(v []*string) *ListThrea
 	return s
 }
 
+// Contains information about the local IP address of the connection.
+type LocalIpDetails struct {
+	_ struct{} `type:"structure"`
+
+	// IPV4 remote address of the connection.
+	IpAddressV4 *string `locationName:"ipAddressV4" type:"string"`
+}
+
+// String returns the string representation
+func (s LocalIpDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LocalIpDetails) GoString() string {
+	return s.String()
+}
+
+// SetIpAddressV4 sets the IpAddressV4 field's value.
+func (s *LocalIpDetails) SetIpAddressV4(v string) *LocalIpDetails {
+	s.IpAddressV4 = &v
+	return s
+}
+
 // Contains information about the port for the local connection.
 type LocalPortDetails struct {
 	_ struct{} `type:"structure"`
@@ -9751,6 +9789,9 @@ type NetworkConnectionAction struct {
 	// Network connection direction.
 	ConnectionDirection *string `locationName:"connectionDirection" type:"string"`
 
+	// Local IP information of the connection.
+	LocalIpDetails *LocalIpDetails `locationName:"localIpDetails" type:"structure"`
+
 	// Local port information of the connection.
 	LocalPortDetails *LocalPortDetails `locationName:"localPortDetails" type:"structure"`
 
@@ -9783,6 +9824,12 @@ func (s *NetworkConnectionAction) SetBlocked(v bool) *NetworkConnectionAction {
 // SetConnectionDirection sets the ConnectionDirection field's value.
 func (s *NetworkConnectionAction) SetConnectionDirection(v string) *NetworkConnectionAction {
 	s.ConnectionDirection = &v
+	return s
+}
+
+// SetLocalIpDetails sets the LocalIpDetails field's value.
+func (s *NetworkConnectionAction) SetLocalIpDetails(v *LocalIpDetails) *NetworkConnectionAction {
+	s.LocalIpDetails = v
 	return s
 }
 
@@ -10003,6 +10050,9 @@ func (s *PortProbeAction) SetPortProbeDetails(v []*PortProbeDetail) *PortProbeAc
 type PortProbeDetail struct {
 	_ struct{} `type:"structure"`
 
+	// Local IP information of the connection.
+	LocalIpDetails *LocalIpDetails `locationName:"localIpDetails" type:"structure"`
+
 	// Local port information of the connection.
 	LocalPortDetails *LocalPortDetails `locationName:"localPortDetails" type:"structure"`
 
@@ -10018,6 +10068,12 @@ func (s PortProbeDetail) String() string {
 // GoString returns the string representation
 func (s PortProbeDetail) GoString() string {
 	return s.String()
+}
+
+// SetLocalIpDetails sets the LocalIpDetails field's value.
+func (s *PortProbeDetail) SetLocalIpDetails(v *LocalIpDetails) *PortProbeDetail {
+	s.LocalIpDetails = v
+	return s
 }
 
 // SetLocalPortDetails sets the LocalPortDetails field's value.
