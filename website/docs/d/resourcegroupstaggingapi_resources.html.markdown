@@ -37,6 +37,7 @@ The following arguments are supported:
 * `exclude_compliant_resources` - (Optional) Specifies whether to exclude resources that are compliant with the tag policy. You can use this parameter only if the `include_compliance_details` argument is also set to `true`.
 * `include_compliance_details` - (Optional) Specifies whether to include details regarding the compliance with the effective tag policy.
 * `tag_filters` - (Optional) A `tag_filters` block. documented below.
+* `resource_type_filter` - (Optional) The constraints on the resources that you want returned. The format of each resource type is `service:resourceType`. For example, specifying a resource type of ec2 returns all Amazon EC2 resources (which includes EC2 instances). Specifying a resource type of `ec2:instance` returns only EC2 instances.
 
 ### Tag Filters
 
@@ -52,7 +53,7 @@ If you don't specify a `tag_filters`, the response includes all resources that w
 
 In addition to all arguments above, the following attributes are exported:
 
-* `resource_tag_mapping_list` -  `resource_tag_mapping_list` block. documented below.
+* `resource_tag_mapping_list` -  An `resource_tag_mapping_list` block. documented below.
 
 ### Resource Tag Mapping List
 

@@ -57,7 +57,26 @@ func TestAccDataSourceAwsResourceGroupsTaggingApiResources_compliance(t *testing
 			{
 				Config: testAccDataSourceAwsResourceGroupsTaggingApiResourcesComplianceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.0.compliance_details"),
+					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.0.compliance_status", "true"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.0.resource_arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsResourceGroupsTaggingApiResources_resource_type_filter(t *testing.T) {
+	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsResourceGroupsTaggingApiResourcesResourceTypeConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.#"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "resource_tag_mapping_list.0.resource_arn"),
 				),
 			},
@@ -90,6 +109,12 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 const testAccDataSourceAwsResourceGroupsTaggingApiResourcesComplianceConfig = `
 data "aws_resourcegroupstaggingapi_resources" "test" {
   include_compliance_details  = true
-  exclude_compliant_resources = true
+  exclude_compliant_resources = false
+}
+`
+
+const testAccDataSourceAwsResourceGroupsTaggingApiResourcesResourceTypeConfig = `
+data "aws_resourcegroupstaggingapi_resources" "test" {
+  resource_type_filter = ["ec2:instance"]
 }
 `

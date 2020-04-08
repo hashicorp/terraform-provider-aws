@@ -23,6 +23,12 @@ func dataSourceAwsResourceGroupsTaggingApiResources() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"resource_type_filter": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 100,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"tag_filters": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -98,14 +104,24 @@ func dataSourceAwsResourceGroupsTaggingApiResourcesRead(d *schema.ResourceData, 
 		input.TagFilters = expandAwsResourceGroupsTaggingApiTagFilters(v.([]interface{}))
 	}
 
-	resp, err := conn.GetResources(input)
+	if v, ok := d.GetOk("resource_type_filter"); ok && v.(*schema.Set).Len() > 0 {
+		input.ResourceTypeFilters = expandStringSet(v.(*schema.Set))
+	}
+
+	var taggings []*resourcegroupstaggingapi.ResourceTagMapping
+
+	err := conn.GetResourcesPages(input, func(page *resourcegroupstaggingapi.GetResourcesOutput, lastPage bool) bool {
+		taggings = append(taggings, page.ResourceTagMappingList...)
+		return true
+	})
 	if err != nil {
 		return err
 	}
 
+
 	d.SetId(resource.UniqueId())
 
-	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingApiResourcesTagMappingList(resp.ResourceTagMappingList)); err != nil {
+	if err := d.Set("resource_tag_mapping_list", flattenAwsResourceGroupsTaggingApiResourcesTagMappingList(taggings)); err != nil {
 		return fmt.Errorf("error setting resource tag mapping list: %s", err)
 	}
 
