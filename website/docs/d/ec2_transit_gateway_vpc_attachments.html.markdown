@@ -36,7 +36,7 @@ The following arguments are supported:
 
 ### filter Argument Reference
 
-* `name` - (Required) Name of the filter check avalable value on [official documentation][1]
+* `name` - (Required) Name of the filter check available value on [official documentation][1]
 * `values` - (Required) List of one or more values for the filter.
 
 ## Attribute Reference
