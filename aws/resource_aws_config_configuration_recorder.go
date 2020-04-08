@@ -142,8 +142,9 @@ func resourceAwsConfigConfigurationRecorderDelete(d *schema.ResourceData, meta i
 	}
 	_, err := conn.DeleteConfigurationRecorder(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
+		if !isAWSErr(err, "NoSuchConfigurationRecorderException", "") {
+			return fmt.Errorf("Deleting Configuration Recorder failed: %s", err)
+		}
 	}
-
 	return nil
 }
