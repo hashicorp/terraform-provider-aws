@@ -443,7 +443,7 @@ func flattenAwsCodePipelineStageActions(actions []*codepipeline.ActionDeclaratio
 		}
 
 		if action.Namespace != nil {
-			values["namespace"] = *action.Namespace
+			values["namespace"] = aws.StringValue(action.Namespace)
 		}
 
 		actionsList = append(actionsList, values)
