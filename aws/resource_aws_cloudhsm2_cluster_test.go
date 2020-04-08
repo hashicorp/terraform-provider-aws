@@ -84,6 +84,8 @@ func testSweepCloudhsmv2Clusters(region string) error {
 }
 
 func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
+	resourceName := "aws_cloudhsm_v2_cluster.cluster"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -92,16 +94,16 @@ func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudHsmV2ClusterConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudHsmV2ClusterExists("aws_cloudhsm_v2_cluster.cluster"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "cluster_id"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "vpc_id"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "security_group_id"),
-					resource.TestCheckResourceAttrSet("aws_cloudhsm_v2_cluster.cluster", "cluster_state"),
-					resource.TestCheckResourceAttr("aws_cloudhsm_v2_cluster.cluster", "tags.%", "0"),
+					testAccCheckAWSCloudHsmV2ClusterExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "cluster_state"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				ResourceName:            "aws_cloudhsm_v2_cluster.cluster",
+				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"cluster_certificates"},
@@ -239,7 +241,7 @@ func testAccCheckAWSCloudHsmV2ClusterDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if cluster != nil && aws.StringValue(cluster.State) != "DELETED" {
+		if cluster != nil && aws.StringValue(cluster.State) != cloudhsmv2.ClusterStateDeleted {
 			return fmt.Errorf("CloudHSM cluster still exists %s", cluster)
 		}
 	}
