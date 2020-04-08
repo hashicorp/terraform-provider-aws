@@ -29,6 +29,14 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 }
 ```
 
+### Filter By Resource Type
+
+```hcl
+data "aws_resourcegroupstaggingapi_resources" "test" {
+  resource_type_filter = ["ec2:instance"]
+}
+```
+
 
 ## Argument Reference
 
@@ -53,7 +61,7 @@ If you don't specify a `tag_filters`, the response includes all resources that w
 
 In addition to all arguments above, the following attributes are exported:
 
-* `resource_tag_mapping_list` -  An `resource_tag_mapping_list` block. documented below.
+* `resource_tag_mapping_list` - A [Resource Tag Mapping List](#resource-tag-mapping-list)`resource_tag_mapping_list` block. documented below.
 
 ### Resource Tag Mapping List
 
