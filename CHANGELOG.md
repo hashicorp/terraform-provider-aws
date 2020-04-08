@@ -18,6 +18,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_cloudhsm_v2_cluster: Support tag-on-create [GH-11683]
 * resource/aws_docdb_cluster: Add `deletion_protection` argument [GH-12650]
 * resource/aws_redshift_snapshot_copy_grant: Support resource import [GH-10350]
 * resource/aws_spot_fleet_request: Add `tags` argument (support tagging of Spot Fleet Request itself) [GH-12295]
