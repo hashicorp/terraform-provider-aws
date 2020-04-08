@@ -162,10 +162,10 @@ func resourceAwsCodePipeline() *schema.Resource {
 										Optional: true,
 										Computed: true,
 									},
-      						"namespace": {
+									"namespace": {
 										Type:     schema.TypeString,
 										Optional: true,
-                  },
+									},
 								},
 							},
 						},
@@ -393,10 +393,10 @@ func expandAwsCodePipelineActions(s []interface{}) []*codepipeline.ActionDeclara
 		if r != "" {
 			action.Region = aws.String(r)
 		}
-    ns := data["namespace"].(string)
+		ns := data["namespace"].(string)
 		if len(ns) > 0 {
 			action.Namespace = aws.String(ns)
-    }
+		}
 		actions = append(actions, &action)
 	}
 	return actions
@@ -441,10 +441,10 @@ func flattenAwsCodePipelineStageActions(actions []*codepipeline.ActionDeclaratio
 		if action.Region != nil {
 			values["region"] = *action.Region
 		}
-    
-    if action.Namespace != nil {
+
+		if action.Namespace != nil {
 			values["namespace"] = *action.Namespace
-    }
+		}
 
 		actionsList = append(actionsList, values)
 	}
