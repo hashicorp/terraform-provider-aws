@@ -17,6 +17,7 @@ FEATURES:
 * **New Data Source:** `aws_cloudfront_distribution` [GH-6468]
 * **New Resource:** `aws_apigatewayv2_authorizer` [GH-9228]
 * **New Resource:** `aws_apigatewayv2_integration` [GH-8949]
+* **New Resource:** `aws_apigatewayv2_model` [GH-8912]
 
 ENHANCEMENTS:
 
