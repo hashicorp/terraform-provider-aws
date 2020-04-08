@@ -394,7 +394,7 @@ func TestAccAWSCodePipelineWithNamespace(t *testing.T) {
 			{
 				Config: testAccAWSCodePipelineConfigWithNamespace(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodePipelineExists(resourceName),
+					testAccCheckAWSCodePipelineExists(resourceName, &p1),
 					resource.TestMatchResourceAttr(resourceName, "arn",
 						regexp.MustCompile(fmt.Sprintf("^arn:aws:codepipeline:[^:]+:[0-9]{12}:test-pipeline-%s", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.type", "S3"),
@@ -1033,7 +1033,7 @@ resource "aws_codepipeline" "test" {
 
   artifact_store {
 		location = "${aws_s3_bucket.test.bucket}"
-		type     = "S3"    
+		type     = "S3"
     encryption_key {
       id   = "1234"
       type = "KMS"
@@ -1042,7 +1042,7 @@ resource "aws_codepipeline" "test" {
 	}
   artifact_store {
 		location = "${aws_s3_bucket.alternate.bucket}"
-		type     = "S3"  
+		type     = "S3"
     encryption_key {
       id   = "5678"
       type = "KMS"
@@ -1168,7 +1168,7 @@ resource "aws_codepipeline" "test" {
 
   artifact_store {
 		location = "${aws_s3_bucket.test.bucket}"
-		type     = "S3"    
+		type     = "S3"
     encryption_key {
       id   = "4321"
       type = "KMS"
@@ -1177,7 +1177,7 @@ resource "aws_codepipeline" "test" {
 	}
   artifact_store {
 		location = "${aws_s3_bucket.alternate.bucket}"
-		type     = "S3"  
+		type     = "S3"
     encryption_key {
       id   = "8765"
       type = "KMS"
