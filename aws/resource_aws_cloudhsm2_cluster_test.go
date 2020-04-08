@@ -84,7 +84,7 @@ func testSweepCloudhsmv2Clusters(region string) error {
 }
 
 func TestAccAWSCloudHsmV2Cluster_basic(t *testing.T) {
-	resourceName := "aws_cloudhsm_v2_cluster.test"
+	resourceName := "aws_cloudhsm_v2_cluster.cluster"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
