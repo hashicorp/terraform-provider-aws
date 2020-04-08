@@ -175,7 +175,12 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 	// Get the ID and store it
 	networkAcl := resp.NetworkAcl
 	d.SetId(*networkAcl.NetworkAclId)
-	log.Printf("[INFO] Network Acl ID: %s", *networkAcl.NetworkAclId)
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	// Update rules and subnet association once acl is created
 	return resourceAwsNetworkAclUpdate(d, meta)
