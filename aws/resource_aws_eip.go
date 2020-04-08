@@ -143,7 +143,7 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), nil, v); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(ec2conn, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
@@ -358,7 +358,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)

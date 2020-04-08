@@ -111,7 +111,7 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 
 		for _, keyPair := range readResp.KeyPairs {
 			if *keyPair.KeyName == d.Id() {
-				if err := keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(keyPair.KeyPairId), nil, v); err != nil {
+				if err := keyvaluetags.Ec2CreateTags(conn, aws.StringValue(keyPair.KeyPairId), v); err != nil {
 					return fmt.Errorf("error adding tags: %s", err)
 				}
 			}

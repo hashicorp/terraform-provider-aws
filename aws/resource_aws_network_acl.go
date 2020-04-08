@@ -326,7 +326,7 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {

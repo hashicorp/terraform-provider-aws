@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
@@ -59,6 +60,8 @@ func resourceAwsVpcPeeringConnectionAccepter() *schema.Resource {
 }
 
 func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
 	id := d.Get("vpc_peering_connection_id").(string)
 	d.SetId(id)
 
@@ -67,6 +70,12 @@ func resourceAwsVPCPeeringAccepterCreate(d *schema.ResourceData, meta interface{
 	}
 	if d.Id() == "" {
 		return fmt.Errorf("VPC Peering Connection %q not found", id)
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
 	}
 
 	return resourceAwsVPCPeeringUpdate(d, meta)

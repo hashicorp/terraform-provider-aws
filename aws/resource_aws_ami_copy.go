@@ -217,7 +217,7 @@ func resourceAwsAmiCopyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.Set("manage_ebs_snapshots", true)
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2UpdateTags(client, id, nil, v); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(client, id, v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}

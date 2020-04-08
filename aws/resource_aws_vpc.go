@@ -221,26 +221,7 @@ func resourceAwsVpcCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		// Handle EC2 eventual consistency on creation
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
-			err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-
-			if isAWSErr(err, "InvalidVpcID.NotFound", "") {
-				return resource.RetryableError(err)
-			}
-
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if isResourceTimeoutError(err) {
-			err = keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v)
-		}
-
-		if err != nil {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}

@@ -145,7 +145,13 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(*resp.NetworkInterface.NetworkInterfaceId)
-	log.Printf("[INFO] ENI ID: %s", d.Id())
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
+	}
+
 	return resourceAwsNetworkInterfaceUpdate(d, meta)
 }
 
@@ -404,7 +410,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
