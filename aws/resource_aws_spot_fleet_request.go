@@ -1538,10 +1538,10 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		})
 
 		if err != nil || resp == nil {
-			return 0, nil,fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+			return 0, nil, fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
 		}
 
-		return len(resp.ActiveInstances),resp.ActiveInstances, nil
+		return len(resp.ActiveInstances), resp.ActiveInstances, nil
 	}
 
 	err = resource.Retry(timeout, func() *resource.RetryError {
