@@ -214,7 +214,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName),
-				ExpectError: regexp.MustCompile(`"launch_template_configs": conflicts with launch_specification`),
+				ExpectError: regexp.MustCompile(`"launch_specification": conflicts with launch_template_configs`),
 			},
 		},
 	})
@@ -1458,8 +1458,8 @@ resource "aws_spot_fleet_request" "test" {
 
     launch_template_configs {
       launch_template_specification {
-        name = "${aws_launch_template.foo.name}"
-        version = "${aws_launch_template.foo.latest_version}"
+        name = "${aws_launch_template.test.name}"
+        version = "${aws_launch_template.test.latest_version}"
       }
     }
 
@@ -1470,7 +1470,7 @@ resource "aws_spot_fleet_request" "test" {
 
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
-resource "aws_launch_template" "foo" {
+resource "aws_launch_template" "test" {
   name = "test-launch-template-%[1]s"
   image_id = "ami-516b9131"
   instance_type = "m1.small"

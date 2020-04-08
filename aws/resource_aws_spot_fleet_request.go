@@ -1555,9 +1555,9 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
 		}
 
-		instances := []*string{}
+		var instances []*string
 		for _, instMap := range activeInsts {
-			instances = append(instances, aws.String(*instMap.InstanceId))
+			instances = append(instances, instMap.InstanceId)
 		}
 		iresp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
 			InstanceIds: instances,
