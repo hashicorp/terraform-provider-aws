@@ -15,6 +15,7 @@ provider "aws" {
 FEATURES:
 
 * **New Data Source:** `aws_cloudfront_distribution` [GH-6468]
+* **New Resource:** `aws_apigatewayv2_authorizer` [GH-9228]
 
 ENHANCEMENTS:
 
