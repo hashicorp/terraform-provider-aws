@@ -109,7 +109,7 @@ func resourceAwsPlacementGroupCreate(d *schema.ResourceData, meta interface{}) e
 			return err
 		}
 		pg := out.PlacementGroups[0]
-		if err := keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(pg.GroupId), nil, v); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(conn, aws.StringValue(pg.GroupId), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}

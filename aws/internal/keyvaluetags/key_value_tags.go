@@ -1,5 +1,6 @@
 //go:generate go run -tags generate generators/servicetags/main.go
 //go:generate go run -tags generate generators/listtags/main.go
+//go:generate go run -tags generate generators/createtags/main.go
 //go:generate go run -tags generate generators/updatetags/main.go
 
 package keyvaluetags
