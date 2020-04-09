@@ -140,6 +140,27 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validateArn,
 						},
+						"operation": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateIoTRuleDynamoDBOperation,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
+			"dynamodb_v2": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
 						"table_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -385,6 +406,7 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 				HashKeyValue: aws.String(raw["hash_key_value"].(string)),
 				RoleArn:      aws.String(raw["role_arn"].(string)),
 				TableName:    aws.String(raw["table_name"].(string)),
+				Operation:    aws.String(raw["operation"].(string)),
 			},
 		}
 		if v, ok := raw["hash_key_type"].(string); ok && v != "" {
@@ -401,6 +423,22 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		}
 		if v, ok := raw["payload_field"].(string); ok && v != "" {
 			act.DynamoDB.PayloadField = aws.String(v)
+		}
+		actions[i] = act
+		i++
+	}
+
+	// Add Dynamodb V2 actions
+
+	for _, a := range dynamoDbV2Actions {
+		raw := a.(map[string]interface{})
+		act := &iot.Action{
+			DynamoDBv2: &iot.DynamoDBv2Action{
+				PutItem: &iot.PutItemInput{
+					TableName: aws.String(raw["table_name"].(string)),
+				},
+				RoleArn: aws.String(raw["role_arn"].(string)),
+			},
 		}
 		actions[i] = act
 		i++
@@ -575,6 +613,7 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cloudwatch_alarm", flattenIoTRuleCloudWatchAlarmActions(out.Rule.Actions))
 	d.Set("cloudwatch_metric", flattenIoTRuleCloudWatchMetricActions(out.Rule.Actions))
 	d.Set("dynamodb", flattenIoTRuleDynamoDbActions(out.Rule.Actions))
+	d.Set("dynamodb_v2", flattenIoTRuleDynamoDbV2Actions(out.Rule.Actions))
 	d.Set("elasticsearch", flattenIoTRuleElasticSearchActions(out.Rule.Actions))
 	d.Set("firehose", flattenIoTRuleFirehoseActions(out.Rule.Actions))
 	d.Set("kinesis", flattenIoTRuleKinesisActions(out.Rule.Actions))

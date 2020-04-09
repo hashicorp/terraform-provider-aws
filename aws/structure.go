@@ -2788,6 +2788,7 @@ func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface
 			m["hash_key_value"] = aws.StringValue(v.HashKeyValue)
 			m["role_arn"] = aws.StringValue(v.RoleArn)
 			m["table_name"] = aws.StringValue(v.TableName)
+			m["operation"] = aws.StringValue(v.Operation)
 
 			if v.HashKeyType != nil {
 				m["hash_key_type"] = aws.StringValue(v.HashKeyType)
@@ -2808,6 +2809,23 @@ func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface
 			if v.RangeKeyValue != nil {
 				m["range_key_value"] = aws.StringValue(v.RangeKeyValue)
 			}
+
+			items = append(items, m)
+		}
+	}
+
+	return items
+}
+
+func flattenIoTRuleDynamoDbV2Actions(actions []*iot.Action) []map[string]interface{} {
+	items := make([]map[string]interface{}, 0, len(actions))
+
+	for _, a := range actions {
+		m := make(map[string]interface{})
+		v := a.DynamoDBv2
+		if v != nil {
+			m["role_arn"] = aws.StringValue(v.RoleArn)
+			m["table_name"] = aws.StringValue(v.TableName)
 
 			items = append(items, m)
 		}

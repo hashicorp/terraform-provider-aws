@@ -754,6 +754,18 @@ func validateHTTPMethod() schema.SchemaValidateFunc {
 	}, false)
 }
 
+func validateIoTRuleDynamoDBOperation(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	pattern := `^INSERT|UPDATE|DELETE$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q isn't a valid operation. Use INSERT, UPDATE, or DELETE",
+			k))
+	}
+
+	return
+}
+
 func validateLogMetricFilterName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 

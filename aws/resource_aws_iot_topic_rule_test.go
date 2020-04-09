@@ -117,6 +117,30 @@ func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
 	})
 }
 
+func TestAccAWSIoTTopicRule_dynamodbv2(t *testing.T) {
+	rName := acctest.RandString(5)
+	resourceName := "aws_iot_topic_rule.rule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTTopicRule_dynamodbV2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
@@ -481,7 +505,8 @@ resource "aws_iot_topic_rule" "rule" {
     hash_key_value = "hash_key_value"
     payload_field = "payload_field"
     role_arn = "${aws_iam_role.iot_role.arn}"
-    table_name = "table_name"
+	table_name = "table_name"
+	operation = "operation"
   }
 }
 `, rName)
@@ -505,6 +530,25 @@ resource "aws_iot_topic_rule" "rule" {
     range_key_type  = "STRING"
     role_arn = "${aws_iam_role.iot_role.arn}"
     table_name = "table_name"
+  }
+}
+`, rName)
+}
+
+func testAccAWSIoTTopicRule_dynamodbV2(rName string) string {
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+data "aws_region" "current" {}
+
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  dynamodb_v2 {
+	table_name = "table_name"
+    role_arn = "${aws_iam_role.iot_role.arn}"
   }
 }
 `, rName)
