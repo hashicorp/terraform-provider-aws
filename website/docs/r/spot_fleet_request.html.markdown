@@ -223,11 +223,12 @@ The `launch_template_configs` block supports the following:
 
 ### Overrides
 
-* `instance_type` - (Optional) The type of instance to request.
 * `availability_zone` - (Optional) The availability zone in which to place the request.
+* `instance_type` - (Optional) The type of instance to request.
+* `priority` - (Optional) The priority for the launch template override. The lower the number, the higher the priority. If no number is set, the launch template override has the lowest priority.
 * `spot_price` - (Optional) The maximum spot bid for this override request.
-* `weighted_capacity` - (Optional) The capacity added to the fleet by a fulfilled request.
 * `subnet_id` - (Optional) The subnet in which to launch the requested instance.
+* `weighted_capacity` - (Optional) The capacity added to the fleet by a fulfilled request.
 
   **Note:** Instead of statically defining these override blocks they can be passed in as a list of maps containing the above keys and their values. This allows dynamic, programmatic generation of overrides based on variable or environment data.
 
