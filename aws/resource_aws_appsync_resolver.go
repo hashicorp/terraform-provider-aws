@@ -77,6 +77,25 @@ func resourceAwsAppsyncResolver() *schema.Resource {
 					},
 				},
 			},
+			"caching_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"caching_keys": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"ttl": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -106,6 +125,10 @@ func resourceAwsAppsyncResolverCreate(d *schema.ResourceData, meta interface{}) 
 		input.PipelineConfig = &appsync.PipelineConfig{
 			Functions: expandStringList(config["functions"].([]interface{})),
 		}
+	}
+
+	if v, ok := d.GetOk("caching_config"); ok {
+		input.CachingConfig = expandAppsyncResolverCachingConfig(v.([]interface{}))
 	}
 
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
@@ -191,6 +214,10 @@ func resourceAwsAppsyncResolverUpdate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
+	if v, ok := d.GetOk("caching_config"); ok {
+		input.CachingConfig = expandAppsyncResolverCachingConfig(v.([]interface{}))
+	}
+
 	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
 	awsMutexKV.Lock(mutexKey)
 	defer awsMutexKV.Unlock(mutexKey)
@@ -242,4 +269,22 @@ func decodeAppsyncResolverID(id string) (string, string, string, error) {
 		return "", "", "", fmt.Errorf("expected ID in format ApiID-TypeName-FieldName, received: %s", id)
 	}
 	return idParts[0], idParts[1], idParts[2], nil
+}
+
+func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig {
+	if len(l) < 1 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	cachingConfig := &appsync.CachingConfig{
+		CachingKeys: expandStringList(m["caching_keys"].([]interface{})),
+	}
+
+	if v, ok := m["ttl"].(int); ok && v != 0 {
+		cachingConfig.Ttl = aws.Int64(int64(v))
+	}
+
+	return cachingConfig
 }
