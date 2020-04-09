@@ -56,13 +56,13 @@ resource "aws_spot_fleet_request" "cheap_compute" {
 
 ### Using launch templates
 
-```
+```hcl
 resource "aws_launch_template" "foo" {
-  name = "test-launch-template"
-  image_id = "${var.ami}"
+  name          = "test-launch-template"
+  image_id      = "${var.ami}"
   instance_type = "${var.instance_type}"
-  key_name = "${var.key_name}"
-  spot_price = "0.05"
+  key_name      = "${var.key_name}"
+  spot_price    = "0.05"
 }
 
 resource "aws_spot_fleet_request" "foo" {
@@ -72,10 +72,10 @@ resource "aws_spot_fleet_request" "foo" {
   valid_until     = "2019-11-04T20:44:20Z"
 
   launch_template_configs {
-      launch_template_specification {
-        id = "${aws_launch_template.foo.id}"
-        version = "${aws_launch_template.foo.latest_version}"
-      }
+    launch_template_specification {
+      id      = "${aws_launch_template.foo.id}"
+      version = "${aws_launch_template.foo.latest_version}"
+    }
   }
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -85,10 +85,9 @@ resource "aws_spot_fleet_request" "foo" {
 ~> **NOTE:** Terraform does not support the functionality where multiple `subnet_id` or `availability_zone` parameters can be specified in the same
 launch configuration block. If you want to specify multiple values, then separate launch configuration blocks should be used or launch template overrides should be configured, one per subnet:
 
+### Using multiple launch specifications
+
 ```hcl
-#
-# Launch Specification Method
-#
 resource "aws_spot_fleet_request" "foo" {
   iam_fleet_role  = "arn:aws:iam::12345678:role/spot-fleet"
   spot_price      = "0.005"
@@ -109,21 +108,22 @@ resource "aws_spot_fleet_request" "foo" {
     availability_zone = "us-west-2a"
   }
 }
+```
 
-#
-# Launch Template Method
-#
 
+### Using multiple launch configurations
+
+```hcl
 data "aws_subnet_ids" "example" {
   vpc_id = "${var.vpc_id}"
 }
 
 resource "aws_launch_template" "foo" {
-  name = "test-launch-template"
-  image_id = "${var.ami}"
+  name          = "test-launch-template"
+  image_id      = "${var.ami}"
   instance_type = "${var.instance_type}"
-  key_name = "${var.key_name}"
-  spot_price = "0.05"
+  key_name      = "${var.key_name}"
+  spot_price    = "0.05"
 }
 
 resource "aws_spot_fleet_request" "foo" {
@@ -133,20 +133,20 @@ resource "aws_spot_fleet_request" "foo" {
   valid_until     = "2019-11-04T20:44:20Z"
 
   launch_template_configs {
-      launch_template_specification {
-        id = "${aws_launch_template.foo.id}"
-        version = "${aws_launch_template.foo.latest_version}"
-      }
-      overrides {
-        subnet_id = "${data.aws_subnets.example.ids[0]}"
-      }
-      overrides {
-        subnet_id = "${data.aws_subnets.example.ids[1]}"
-      }
-      overrides {
-        subnet_id = "${data.aws_subnets.example.ids[2]}"
-      }
+    launch_template_specification {
+      id      = "${aws_launch_template.foo.id}"
+      version = "${aws_launch_template.foo.latest_version}"
     }
+    overrides {
+      subnet_id = "${data.aws_subnets.example.ids[0]}"
+    }
+    overrides {
+      subnet_id = "${data.aws_subnets.example.ids[1]}"
+    }
+    overrides {
+      subnet_id = "${data.aws_subnets.example.ids[2]}"
+    }
+  }
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
