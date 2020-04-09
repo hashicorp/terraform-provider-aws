@@ -7,6 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -27,6 +28,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 	}
 	conn := client.(*AWSClient).ec2conn
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
+	var sweeperErrs *multierror.Error
 
 	for {
 		output, err := conn.DescribeTransitGatewayPeeringAttachments(input)
@@ -59,11 +61,17 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 			}
 
 			if err != nil {
-				return fmt.Errorf("error deleting EC2 Transit Gateway Peering Attachment (%s): %s", id, err)
+				sweeperErr := fmt.Errorf("error deleting EC2 Transit Gateway Peering Attachment (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 
 			if err := waitForEc2TransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
-				return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %s", id, err)
+				sweeperErr := fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
@@ -74,7 +82,7 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSEc2TransitGatewayPeeringAttachment_basic(t *testing.T) {
