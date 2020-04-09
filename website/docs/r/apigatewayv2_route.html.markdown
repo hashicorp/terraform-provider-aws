@@ -29,7 +29,11 @@ The following arguments are supported:
 * `api_id` - (Required) The API identifier.
 * `route_key` - (Required) The route key for the route.
 * `api_key_required` - (Optional) Boolean whether an API key is required for the route. Defaults to `false`.
-* `authorization_type` - (Optional) The authorization type for the route. Valid values: `NONE`, `AWS_IAM`, `CUSTOM`. Defaults to `NONE`.
+* `authorization_scopes` - (Optional) The authorization scopes supported by this route. The scopes are used with a JWT authorizer to authorize the method invocation.
+* `authorization_type` - (Optional) The authorization type for the route.
+For WebSocket APIs, valid values are `NONE` for open access, `AWS_IAM` for using AWS IAM permissions, and `CUSTOM` for using a Lambda authorizer.
+For HTTP APIs, valid values are `NONE` for open access, or `JWT` for using JSON Web Tokens.
+Defaults to `NONE`.
 * `authorizer_id` - (Optional) The identifier of the [`aws_apigatewayv2_authorizer`](/docs/providers/aws/r/apigatewayv2_authorizer.html) resource to be associated with this route, if the authorizationType is `CUSTOM`.
 * `model_selection_expression` - (Optional) The [model selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-model-selection-expressions) for the route.
 * `operation_name` - (Optional) The operation name for the route.

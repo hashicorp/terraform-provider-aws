@@ -32,6 +32,11 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"authorization_scopes": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"authorization_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -40,6 +45,7 @@ func resourceAwsApiGatewayV2Route() *schema.Resource {
 					apigatewayv2.AuthorizationTypeNone,
 					apigatewayv2.AuthorizationTypeAwsIam,
 					apigatewayv2.AuthorizationTypeCustom,
+					apigatewayv2.AuthorizationTypeJwt,
 				}, false),
 			},
 			"authorizer_id": {
@@ -85,6 +91,9 @@ func resourceAwsApiGatewayV2RouteCreate(d *schema.ResourceData, meta interface{}
 		ApiKeyRequired:    aws.Bool(d.Get("api_key_required").(bool)),
 		AuthorizationType: aws.String(d.Get("authorization_type").(string)),
 		RouteKey:          aws.String(d.Get("route_key").(string)),
+	}
+	if v, ok := d.GetOk("authorization_scopes"); ok {
+		req.AuthorizationScopes = expandStringSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("authorizer_id"); ok {
 		req.AuthorizerId = aws.String(v.(string))
@@ -133,6 +142,9 @@ func resourceAwsApiGatewayV2RouteRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.Set("api_key_required", resp.ApiKeyRequired)
+	if err := d.Set("authorization_scopes", flattenStringSet(resp.AuthorizationScopes)); err != nil {
+		return fmt.Errorf("error setting authorization_scopes: %s", err)
+	}
 	d.Set("authorization_type", resp.AuthorizationType)
 	d.Set("authorizer_id", resp.AuthorizerId)
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
@@ -156,6 +168,9 @@ func resourceAwsApiGatewayV2RouteUpdate(d *schema.ResourceData, meta interface{}
 	}
 	if d.HasChange("api_key_required") {
 		req.ApiKeyRequired = aws.Bool(d.Get("api_key_required").(bool))
+	}
+	if d.HasChange("authorization_scopes") {
+		req.AuthorizationScopes = expandStringSet(d.Get("authorization_scopes").(*schema.Set))
 	}
 	if d.HasChange("authorization_type") {
 		req.AuthorizationType = aws.String(d.Get("authorization_type").(string))
@@ -212,8 +227,25 @@ func resourceAwsApiGatewayV2RouteImport(d *schema.ResourceData, meta interface{}
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/route-id'", d.Id())
 	}
 
-	d.SetId(parts[1])
-	d.Set("api_id", parts[0])
+	apiId := parts[0]
+	routeId := parts[1]
+
+	conn := meta.(*AWSClient).apigatewayv2conn
+
+	resp, err := conn.GetRoute(&apigatewayv2.GetRouteInput{
+		ApiId:   aws.String(apiId),
+		RouteId: aws.String(routeId),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	if aws.BoolValue(resp.ApiGatewayManaged) {
+		return nil, fmt.Errorf("API Gateway v2 route (%s) was created via quick create", routeId)
+	}
+
+	d.SetId(routeId)
+	d.Set("api_id", apiId)
 
 	return []*schema.ResourceData{d}, nil
 }
