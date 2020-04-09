@@ -616,6 +616,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iot_thing_principal_attachment":                      resourceAwsIotThingPrincipalAttachment(),
 			"aws_iot_thing_type":                                      resourceAwsIotThingType(),
 			"aws_iot_topic_rule":                                      resourceAwsIotTopicRule(),
+			"aws_iot_event_configuration":                             resourceAwsIoTEventConfiguration(),
 			"aws_iot_role_alias":                                      resourceAwsIotRoleAlias(),
 			"aws_key_pair":                                            resourceAwsKeyPair(),
 			"aws_kinesis_firehose_delivery_stream":                    resourceAwsKinesisFirehoseDeliveryStream(),
