@@ -188,6 +188,10 @@ func resourceAwsAppsyncResolverRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error setting pipeline_config: %s", err)
 	}
 
+	if err := d.Set("caching_config", flattenAppsyncCachingConfig(resp.Resolver.CachingConfig)); err != nil {
+		return fmt.Errorf("Error setting caching_config: %s", err)
+	}
+
 	return nil
 }
 

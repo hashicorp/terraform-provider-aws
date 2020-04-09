@@ -5565,6 +5565,23 @@ func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
 	return []interface{}{m}
 }
 
+func flattenAppsyncCachingConfig(c *appsync.CachingConfig) []interface{} {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.CachingKeys) == 0 && *(c.Ttl) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"caching_keys": flattenStringList(c.CachingKeys),
+		"ttl":          int(aws.Int64Value(c.Ttl)),
+	}
+
+	return []interface{}{m}
+}
+
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
 	ipAddressRequests := []*route53resolver.IpAddressRequest{}
 
