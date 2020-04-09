@@ -58,10 +58,10 @@ resource "aws_spot_fleet_request" "cheap_compute" {
 
 ```hcl
 resource "aws_launch_template" "foo" {
-  name          = "test-launch-template"
-  image_id      = "${var.ami}"
-  instance_type = "${var.instance_type}"
-  key_name      = "${var.key_name}"
+  name          = "launch-template"
+  image_id      = "ami-516b9131"
+  instance_type = "m1.small"
+  key_name      = "some-key"
   spot_price    = "0.05"
 }
 
@@ -119,10 +119,10 @@ data "aws_subnet_ids" "example" {
 }
 
 resource "aws_launch_template" "foo" {
-  name          = "test-launch-template"
-  image_id      = "${var.ami}"
-  instance_type = "${var.instance_type}"
-  key_name      = "${var.key_name}"
+  name          = "launch-template"
+  image_id      = "ami-516b9131"
+  instance_type = "m1.small"
+  key_name      = "some-key"
   spot_price    = "0.05"
 }
 
