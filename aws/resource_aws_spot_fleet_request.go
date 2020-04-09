@@ -778,7 +778,6 @@ func buildAwsSpotFleetLaunchSpecifications(
 
 func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateConfig, error) {
 	launchTemplateConfigs := d.Get("launch_template_configs").(*schema.Set)
-	log.Printf("haha %#v", launchTemplateConfigs)
 	configs := make([]*ec2.LaunchTemplateConfig, 0)
 
 	for _, launchTemplateConfig := range launchTemplateConfigs.List() {
@@ -1256,6 +1255,10 @@ func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplate
 		m["weighted_capacity"] = aws.Float64Value(override.WeightedCapacity)
 	}
 
+	if override.Priority != nil {
+		m["priority"] = aws.Float64Value(override.Priority)
+	}
+
 	return m
 }
 
@@ -1629,6 +1632,10 @@ func hashLaunchTemplateOverrides(v interface{}) int {
 	if m["weighted_capacity"] != nil {
 		buf.WriteString(fmt.Sprintf("%f-", m["weighted_capacity"].(float64)))
 	}
+	if m["priority"] != nil {
+		buf.WriteString(fmt.Sprintf("%f-", m["priority"].(float64)))
+	}
+
 	return hashcode.String(buf.String())
 }
 

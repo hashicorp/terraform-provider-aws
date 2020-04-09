@@ -210,13 +210,14 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.3492852471.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.3492852471.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.3492852471.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.3492852471.overrides.3113255372.instance_type", "t1.micro"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.3492852471.overrides.3113255372.weighted_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.3492852471.overrides.1994766569.instance_type", "m3.medium"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.3492852471.overrides.1994766569.spot_price", "0.26"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1951041615.instance_type", "t1.micro"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1951041615.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1866154075.instance_type", "m3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1866154075.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1866154075.spot_price", "0.26"),
 				),
 			},
 		},
@@ -1440,9 +1441,9 @@ resource "aws_spot_fleet_request" "test" {
 
     overrides {
       instance_type = "m3.medium"
+      priority      = 1
       spot_price    = "0.26"
     }
-
   }
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
