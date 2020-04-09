@@ -73,6 +73,14 @@ EOF
     $utils.appendError($ctx.result.body, $ctx.result.statusCode)
 #end
 EOF
+
+  caching_config {
+    caching_keys = [
+      "$context.identity.sub",
+      "$context.arguments.id"
+    ]
+    ttl = 60
+  }
 }
 
 # PIPELINE type resolver
@@ -109,6 +117,10 @@ The following arguments are supported:
 An `pipeline_config` block supports the following arguments:
 
 * `functions` - (Required) The list of Function ID.
+
+* `caching_config` - (Optional) The CachingConfig.
+  * `caching_keys` - (Optional) The list of caching key.
+  * `ttl` - (Optional) The TTL in seconds.
 
 ## Attributes Reference
 
