@@ -167,8 +167,8 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.4018047529.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.4018047529.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.overrides.#", "0"),
 				),
 			},
 		},
@@ -242,8 +242,8 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.4018047529.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.4018047529.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.overrides.#", "0"),
 				),
 			},
 			{
@@ -288,8 +288,8 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.4018047529.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.4018047529.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.overrides.#", "0"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
 				),
 			},
@@ -1324,31 +1324,31 @@ resource "aws_spot_fleet_request" "test" {
 func testAccAWSSpotFleetRequestLaunchTemplateConfig(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "test-launch-template-%[1]s"
-  image_id = "ami-516b9131"
+  name          = "tf-acc-test-launch-template"
+  image_id      = "ami-516b9131"
   instance_type = "m1.small"
-  key_name = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
 resource "aws_spot_fleet_request" "test" {
-    iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
-    target_capacity = 2
-    valid_until = %[2]q
-    terminate_instances_with_expiration = true
-    instance_interruption_behaviour = "stop"
-    wait_for_fulfillment = true
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
 
-    launch_template_configs {
-      launch_template_specification {
-        name = "${aws_launch_template.test.name}"
-        version = "${aws_launch_template.test.latest_version}"
-      }
+  launch_template_configs {
+    launch_template_specification {
+      name    = "${aws_launch_template.test.name}"
+      version = "${aws_launch_template.test.latest_version}"
     }
+  }
 
-    depends_on = ["aws_iam_policy_attachment.test-attach"]
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, rName, validUntil)
+`, validUntil)
 }
 
 func testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName string) string {
@@ -1412,40 +1412,42 @@ resource "aws_spot_fleet_request" "test" {
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name = "test-launch-template-%[1]s"
-  image_id = "ami-516b9131"
+  name          = "tf-acc-test-launch-template"
+  image_id      = "ami-516b9131"
   instance_type = "m1.small"
-  key_name = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
 resource "aws_spot_fleet_request" "test" {
-    iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
-    target_capacity = 2
-    valid_until = %[2]q
-    terminate_instances_with_expiration = true
-    instance_interruption_behaviour = "stop"
-    wait_for_fulfillment = true
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
 
-    launch_template_configs {
-      launch_template_specification {
-        name = "${aws_launch_template.test.name}"
-        version = "${aws_launch_template.test.latest_version}"
-      }
-      overrides {
-        instance_type = "t1.micro"
-        weighted_capacity = "2"
-      }
-      overrides {
-        instance_type = "m3.medium"
-        spot_price = "0.26"
-      }
-
+  launch_template_configs {
+    launch_template_specification {
+      name    = "${aws_launch_template.test.name}"
+      version = "${aws_launch_template.test.latest_version}"
     }
 
-    depends_on = ["aws_iam_policy_attachment.test-attach"]
+    overrides {
+      instance_type     = "t1.micro"
+      weighted_capacity = "2"
+    }
+
+    overrides {
+      instance_type = "m3.medium"
+      spot_price    = "0.26"
+    }
+
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, rName, validUntil)
+`, validUntil)
 }
 
 func testAccAWSSpotFleetRequestConfigExcessCapacityTermination(rName string, rInt int, validUntil string) string {

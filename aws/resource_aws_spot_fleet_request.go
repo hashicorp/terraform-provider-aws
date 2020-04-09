@@ -386,6 +386,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Computed: true,
 										ForceNew: true,
 									},
+									"priority": {
+										Type:     schema.TypeFloat,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+									},
 								},
 							},
 							Set: hashLaunchTemplateOverrides,
@@ -771,17 +777,18 @@ func buildAwsSpotFleetLaunchSpecifications(
 }
 
 func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateConfig, error) {
-	launch_template_cfgs := d.Get("launch_template_configs").(*schema.Set).List()
-	cfgs := make([]*ec2.LaunchTemplateConfig, len(launch_template_cfgs))
+	launchTemplateConfigs := d.Get("launch_template_configs").(*schema.Set)
+	log.Printf("haha %#v", launchTemplateConfigs)
+	configs := make([]*ec2.LaunchTemplateConfig, 0)
 
-	for _, launch_template_cfg := range launch_template_cfgs {
+	for _, launchTemplateConfig := range launchTemplateConfigs.List() {
 
 		ltc := &ec2.LaunchTemplateConfig{}
 
-		ltc_map := launch_template_cfg.(map[string]interface{})
+		ltcMap := launchTemplateConfig.(map[string]interface{})
 
 		//launch template spec
-		if v, ok := ltc_map["launch_template_specification"]; ok {
+		if v, ok := ltcMap["launch_template_specification"]; ok {
 			vL := v.([]interface{})
 			lts := vL[0].(map[string]interface{})
 
@@ -803,10 +810,10 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateCo
 
 		}
 
-		overrides := make([]*ec2.LaunchTemplateOverrides, 0)
-
-		if v, ok := ltc_map["overrides"]; ok {
+		if v, ok := ltcMap["overrides"]; ok && v.(*schema.Set).Len() > 0 {
 			vL := v.(*schema.Set).List()
+			overrides := make([]*ec2.LaunchTemplateOverrides, 0)
+
 			for _, v := range vL {
 				ors := v.(map[string]interface{})
 				lto := &ec2.LaunchTemplateOverrides{}
@@ -831,16 +838,20 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateCo
 					lto.WeightedCapacity = aws.Float64(v)
 				}
 
+				if v, ok := ors["priority"].(float64); ok && v > 0 {
+					lto.Priority = aws.Float64(v)
+				}
+
 				overrides = append(overrides, lto)
-
 			}
-		}
-		ltc.Overrides = overrides
 
-		cfgs = append(cfgs, ltc)
+			ltc.Overrides = overrides
+		}
+
+		configs = append(configs, ltc)
 	}
 
-	return cfgs, nil
+	return configs, nil
 }
 
 func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
@@ -869,19 +880,19 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	var err error
 
 	if launchSpecificationOk {
-		launch_specs, err := buildAwsSpotFleetLaunchSpecifications(d, meta)
+		launchSpecs, err := buildAwsSpotFleetLaunchSpecifications(d, meta)
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.LaunchSpecifications = launch_specs
+		spotFleetConfig.LaunchSpecifications = launchSpecs
 	}
 
 	if launchTemplateConfigsOk {
-		launch_templates, err := buildLaunchTemplateConfigs(d)
+		launchTemplates, err := buildLaunchTemplateConfigs(d)
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.LaunchTemplateConfigs = launch_templates
+		spotFleetConfig.LaunchTemplateConfigs = launchTemplates
 	}
 
 	if v, ok := d.GetOk("excess_capacity_termination_policy"); ok {
@@ -903,11 +914,11 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
-		valid_from, err := time.Parse(time.RFC3339, v.(string))
+		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidFrom = aws.Time(valid_from)
+		spotFleetConfig.ValidFrom = aws.Time(validFrom)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
@@ -917,8 +928,8 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		}
 		spotFleetConfig.ValidUntil = aws.Time(valid_until)
 	} else {
-		valid_until := time.Now().Add(24 * time.Hour)
-		spotFleetConfig.ValidUntil = aws.Time(valid_until)
+		validUntil := time.Now().Add(24 * time.Hour)
+		spotFleetConfig.ValidUntil = aws.Time(validUntil)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -966,12 +977,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
 		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
-			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
-		}
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "LaunchTemplateSpecification") {
-			return resource.NonRetryableError(err)
-		}
-		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "IamFleetRole") {
 			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
 		}
 		if err != nil {
@@ -1140,9 +1145,9 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	// if the request is cancelled, then it is gone
 	cancelledStates := map[string]bool{
-		"cancelled":             true,
-		"cancelled_running":     true,
-		"cancelled_terminating": true,
+		ec2.BatchStateCancelled:            true,
+		ec2.BatchStateCancelledRunning:     true,
+		ec2.BatchStateCancelledTerminating: true,
 	}
 	if _, ok := cancelledStates[*sfr.SpotFleetRequestState]; ok {
 		d.SetId("")
@@ -1532,20 +1537,20 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 		return nil
 	}
 
-	activeInstances := func(fleetRequestID string) (int, []*ec2.ActiveInstance, error) {
+	activeInstances := func(fleetRequestID string) (int, error) {
 		resp, err := conn.DescribeSpotFleetInstances(&ec2.DescribeSpotFleetInstancesInput{
 			SpotFleetRequestId: aws.String(fleetRequestID),
 		})
 
 		if err != nil || resp == nil {
-			return 0, nil, fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
+			return 0, fmt.Errorf("error reading Spot Fleet Instances (%s): %s", spotFleetRequestID, err)
 		}
 
-		return len(resp.ActiveInstances), resp.ActiveInstances, nil
+		return len(resp.ActiveInstances), nil
 	}
 
 	err = resource.Retry(timeout, func() *resource.RetryError {
-		n, activeInsts, err := activeInstances(spotFleetRequestID)
+		n, err := activeInstances(spotFleetRequestID)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -1555,30 +1560,12 @@ func deleteSpotFleetRequest(spotFleetRequestID string, terminateInstances bool, 
 			return resource.RetryableError(fmt.Errorf("fleet still has (%d) running instances", n))
 		}
 
-		var instances []*string
-		for _, instMap := range activeInsts {
-			instances = append(instances, instMap.InstanceId)
-		}
-		iresp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-			InstanceIds: instances,
-		})
-		if err != nil {
-			return resource.RetryableError(
-				fmt.Errorf("Error while trying to determine fleet status for fleet (%s): %s", spotFleetRequestID, err))
-		}
-		if len(iresp.Reservations) == 0 {
-			log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), but instances have terminated, removing", n, spotFleetRequestID)
-			return nil
-		} else {
-			log.Printf("[DEBUG] Active instance count is %d for Spot Fleet Request (%s), and at least 1 instance is still running", n, spotFleetRequestID)
-		}
-
 		log.Printf("[DEBUG] Active instance count is 0 for Spot Fleet Request (%s), removing", spotFleetRequestID)
 		return nil
 	})
 
 	if isResourceTimeoutError(err) {
-		n, _, err := activeInstances(spotFleetRequestID)
+		n, err := activeInstances(spotFleetRequestID)
 		if err != nil {
 			return err
 		}
