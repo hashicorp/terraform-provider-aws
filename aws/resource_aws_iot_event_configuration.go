@@ -13,7 +13,7 @@ const (
 	Name = "name"
 	// Name and Enable map values for event
 	ConfigurationsMap = "configurations_map"
-	// Describe Event Ouput
+	// Describe Event Output
 	DescribeEventOutput = "describe_event_output"
 )
 
@@ -24,10 +24,10 @@ const (
 */
 func resourceAwsIoTEventConfiguration() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEventConfigurationCreate,
-		Read:   resourceEventConfigurationRead,
-		Update: resourceEventConfigurationUpdate,
-		Delete: resourceEventConfigurationDelete,
+		Create: resourceAwsEventConfigurationCreate,
+		Read:   resourceAwsEventConfigurationRead,
+		Update: resourceAwsEventConfigurationUpdate,
+		Delete: resourceAwsEventConfigurationDelete,
 		Schema: map[string]*schema.Schema{
 			Name: {
 				Type:     schema.TypeString,
@@ -58,8 +58,8 @@ func resourceAwsIoTEventConfiguration() *schema.Resource {
 	}
 }
 
-func resourceEventConfigurationCreate(d *schema.ResourceData, m interface{}) error {
-	conn := m.(*iot.IoT)
+func resourceAwsEventConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*iot.IoT)
 
 	eventConfigurationsMap := make(map[string]*iot.Configuration)
 	configurationsMapActions := d.Get(ConfigurationsMap).(*schema.Set).List()
@@ -84,12 +84,12 @@ func resourceEventConfigurationCreate(d *schema.ResourceData, m interface{}) err
 
 	d.SetId(d.Get(Name).(string))
 	log.Printf("Event Configuration Created")
-	return resourceEventConfigurationRead(d, m)
+	return resourceAwsEventConfigurationRead(d, meta)
 }
 
 // Fetches all the event configurations, the output contains all the available configurations.
-func resourceEventConfigurationRead(d *schema.ResourceData, m interface{}) error {
-	conn := m.(*iot.IoT)
+func resourceAwsEventConfigurationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*iot.IoT)
 
 	out, err := conn.DescribeEventConfigurations(&iot.DescribeEventConfigurationsInput{})
 
@@ -98,13 +98,19 @@ func resourceEventConfigurationRead(d *schema.ResourceData, m interface{}) error
 		return err
 	}
 
-	d.Set(DescribeEventOutput, out.EventConfigurations)
+	eventConfigurationsOutputMap := make(map[string]bool)
+
+	for key, value := range out.EventConfigurations {
+		eventConfigurationsOutputMap[key] = *value.Enabled
+	}
+
+	d.Set(DescribeEventOutput, eventConfigurationsOutputMap)
 	return nil
 }
 
 // Updates the event configuration, when there is any update in the current state.
-func resourceEventConfigurationUpdate(d *schema.ResourceData, m interface{}) error {
-	conn := m.(*iot.IoT)
+func resourceAwsEventConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*iot.IoT)
 
 	eventConfigurationsMap := make(map[string]*iot.Configuration)
 	configurationsMapActions := d.Get(ConfigurationsMap).(*schema.Set).List()
@@ -128,10 +134,10 @@ func resourceEventConfigurationUpdate(d *schema.ResourceData, m interface{}) err
 	}
 
 	log.Printf("Event Configuration Updated")
-	return resourceEventConfigurationRead(d, m)
+	return resourceAwsEventConfigurationRead(d, meta)
 }
 
 // Any non-error return value terraform assumes the resource was deleted successfully.
-func resourceEventConfigurationDelete(d *schema.ResourceData, m interface{}) error {
+func resourceAwsEventConfigurationDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
