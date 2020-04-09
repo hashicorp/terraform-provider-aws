@@ -58,8 +58,8 @@ func resourceAwsWafv2RegexPatternSet() *schema.Resource {
 			},
 			"regular_expression_list": {
 				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
+				Optional: true,
+				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"regex_string": {
