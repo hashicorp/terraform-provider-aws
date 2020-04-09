@@ -838,7 +838,7 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateCo
 					lto.WeightedCapacity = aws.Float64(v)
 				}
 
-				if v, ok := ors["priority"].(float64); ok && v > 0 {
+				if v, ok := ors["priority"].(float64); ok {
 					lto.Priority = aws.Float64(v)
 				}
 
