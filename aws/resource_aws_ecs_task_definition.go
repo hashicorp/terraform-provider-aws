@@ -163,7 +163,6 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
-										Computed: true,
 									},
 									"driver_opts": {
 										Type:     schema.TypeMap,
@@ -593,36 +592,6 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
-
-	if v, ok := m["docker_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		m := v.([]interface{})[0].(map[string]interface{})
-
-		if v, ok := m["scope"]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-
-		if v, ok := m["autoprovision"]; ok {
-			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-
-		if v, ok := m["driver"]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-
-		if v, ok := m["driver_opts"].(map[string]interface{}); ok && len(v) > 0 {
-			for k, val := range v {
-				buf.WriteString(fmt.Sprintf("%s-", k))
-				buf.WriteString(fmt.Sprintf("%s-", val.(string)))
-			}
-		}
-
-		if v, ok := m["labels"].(map[string]interface{}); ok && len(v) > 0 {
-			for k, val := range v {
-				buf.WriteString(fmt.Sprintf("%s-", k))
-				buf.WriteString(fmt.Sprintf("%s-", val.(string)))
-			}
-		}
-	}
 
 	if v, ok := m["efs_volume_configuration"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		m := v.([]interface{})[0].(map[string]interface{})
