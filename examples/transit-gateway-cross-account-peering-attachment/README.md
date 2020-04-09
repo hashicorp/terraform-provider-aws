@@ -1,6 +1,6 @@
 # EC2 Transit Gateway Cross-Account Peering Attachment
 
-This example demonstrates how to peer two Transit Gateways in different regions. The peer transit gateway can be in your account or a different AWS account. The following AWS Regions are supported: US East (N. Virginia), US East (Ohio), US West (Oregon), Europe (Frankfurt), and Europe (Ireland).
+This example demonstrates how to peer two Transit Gateways in different regions. The peer transit gateway can be in your account or a different AWS account. Refer to AWS documentation for supported regions.
 
 See [more in the Transit Gateway Peering Attachment documentation](https://docs.aws.amazon.com/vpc/latest/tgw/tgw-peering.html).
 
