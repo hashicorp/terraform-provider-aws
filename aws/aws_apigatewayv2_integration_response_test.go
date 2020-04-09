@@ -11,20 +11,22 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSAPIGateway2IntegrationResponse_basic(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_integration_response.test"
-	integrationResourceName := "aws_api_gateway_v2_integration.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2IntegrationResponse_basic(t *testing.T) {
+	var apiId, integrationId string
+	var v apigatewayv2.GetIntegrationResponseOutput
+	resourceName := "aws_apigatewayv2_integration_response.test"
+	integrationResourceName := "aws_apigatewayv2_integration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2IntegrationResponseDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2IntegrationResponseConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationResponseExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationResponseExists(resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "/200/"),
@@ -34,7 +36,7 @@ func TestAccAWSAPIGateway2IntegrationResponse_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2IntegrationResponseImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationResponseImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -42,20 +44,45 @@ func TestAccAWSAPIGateway2IntegrationResponse_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2IntegrationResponse_AllAttributes(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_integration_response.test"
-	integrationResourceName := "aws_api_gateway_v2_integration.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2IntegrationResponse_disappears(t *testing.T) {
+	var apiId, integrationId string
+	var v apigatewayv2.GetIntegrationResponseOutput
+	resourceName := "aws_apigatewayv2_integration_response.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2IntegrationResponseDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2IntegrationResponseConfig_allAttributes(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationResponseConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationResponseExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationResponseExists(resourceName, &apiId, &integrationId, &v),
+					testAccCheckAWSAPIGatewayV2IntegrationResponseDisappears(&apiId, &integrationId, &v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2IntegrationResponse_AllAttributes(t *testing.T) {
+	var apiId, integrationId string
+	var v apigatewayv2.GetIntegrationResponseOutput
+	resourceName := "aws_apigatewayv2_integration_response.test"
+	integrationResourceName := "aws_apigatewayv2_integration.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributes(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2IntegrationResponseExists(resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "$default"),
@@ -65,9 +92,9 @@ func TestAccAWSAPIGateway2IntegrationResponse_AllAttributes(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSAPIGateway2IntegrationResponseConfig_allAttributesUpdated(rName),
+				Config: testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributesUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2IntegrationResponseExists(resourceName),
+					testAccCheckAWSAPIGatewayV2IntegrationResponseExists(resourceName, &apiId, &integrationId, &v),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
 					resource.TestCheckResourceAttrPair(resourceName, "integration_id", integrationResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "integration_response_key", "/404/"),
@@ -79,7 +106,7 @@ func TestAccAWSAPIGateway2IntegrationResponse_AllAttributes(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2IntegrationResponseImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2IntegrationResponseImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -87,11 +114,11 @@ func TestAccAWSAPIGateway2IntegrationResponse_AllAttributes(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGateway2IntegrationResponseDestroy(s *terraform.State) error {
+func testAccCheckAWSAPIGatewayV2IntegrationResponseDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_v2_integration_response" {
+		if rs.Type != "aws_apigatewayv2_integration_response" {
 			continue
 		}
 
@@ -113,7 +140,21 @@ func testAccCheckAWSAPIGateway2IntegrationResponseDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccCheckAWSAPIGateway2IntegrationResponseExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2IntegrationResponseDisappears(apiId, integrationId *string, v *apigatewayv2.GetIntegrationResponseOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+
+		_, err := conn.DeleteIntegrationResponse(&apigatewayv2.DeleteIntegrationResponseInput{
+			ApiId:                 apiId,
+			IntegrationId:         integrationId,
+			IntegrationResponseId: v.IntegrationResponseId,
+		})
+
+		return err
+	}
+}
+
+func testAccCheckAWSAPIGatewayV2IntegrationResponseExists(n string, vApiId, vIntegrationId *string, v *apigatewayv2.GetIntegrationResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -126,20 +167,26 @@ func testAccCheckAWSAPIGateway2IntegrationResponseExists(n string) resource.Test
 
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
-		_, err := conn.GetIntegrationResponse(&apigatewayv2.GetIntegrationResponseInput{
-			ApiId:                 aws.String(rs.Primary.Attributes["api_id"]),
-			IntegrationId:         aws.String(rs.Primary.Attributes["integration_id"]),
+		apiId := aws.String(rs.Primary.Attributes["api_id"])
+		integrationId := aws.String(rs.Primary.Attributes["integration_id"])
+		resp, err := conn.GetIntegrationResponse(&apigatewayv2.GetIntegrationResponseInput{
+			ApiId:                 apiId,
+			IntegrationId:         integrationId,
 			IntegrationResponseId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
 			return err
 		}
 
+		*vApiId = *apiId
+		*vIntegrationId = *integrationId
+		*v = *resp
+
 		return nil
 	}
 }
 
-func testAccAWSAPIGateway2IntegrationResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAWSAPIGatewayV2IntegrationResponseImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -150,21 +197,21 @@ func testAccAWSAPIGateway2IntegrationResponseImportStateIdFunc(resourceName stri
 	}
 }
 
-func testAccAWSAPIGateway2IntegrationResponseConfig_basic(rName string) string {
+func testAccAWSAPIGatewayV2IntegrationResponseConfig_basic(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_integration_response" "test" {
-  api_id                   = "${aws_api_gateway_v2_api.test.id}"
-  integration_id           = "${aws_api_gateway_v2_integration.test.id}"
+resource "aws_apigatewayv2_integration_response" "test" {
+  api_id                   = "${aws_apigatewayv2_api.test.id}"
+  integration_id           = "${aws_apigatewayv2_integration.test.id}"
   integration_response_key = "/200/"
 }
 `)
 }
 
-func testAccAWSAPIGateway2IntegrationResponseConfig_allAttributes(rName string) string {
+func testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributes(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_integration_response" "test" {
-  api_id                   = "${aws_api_gateway_v2_api.test.id}"
-  integration_id           = "${aws_api_gateway_v2_integration.test.id}"
+resource "aws_apigatewayv2_integration_response" "test" {
+  api_id                   = "${aws_apigatewayv2_api.test.id}"
+  integration_id           = "${aws_apigatewayv2_integration.test.id}"
   integration_response_key = "$default"
 
   content_handling_strategy     = "CONVERT_TO_TEXT"
@@ -177,11 +224,11 @@ resource "aws_api_gateway_v2_integration_response" "test" {
 `)
 }
 
-func testAccAWSAPIGateway2IntegrationResponseConfig_allAttributesUpdated(rName string) string {
+func testAccAWSAPIGatewayV2IntegrationResponseConfig_allAttributesUpdated(rName string) string {
 	return testAccAWSAPIGatewayV2IntegrationConfig_basic(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_integration_response" "test" {
-  api_id                   = "${aws_api_gateway_v2_api.test.id}"
-  integration_id           = "${aws_api_gateway_v2_integration.test.id}"
+resource "aws_apigatewayv2_integration_response" "test" {
+  api_id                   = "${aws_apigatewayv2_api.test.id}"
+  integration_id           = "${aws_apigatewayv2_integration.test.id}"
   integration_response_key = "/404/"
 
   content_handling_strategy     = "CONVERT_TO_BINARY"
