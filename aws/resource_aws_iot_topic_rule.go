@@ -348,6 +348,7 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	cloudwatchAlarmActions := d.Get("cloudwatch_alarm").(*schema.Set).List()
 	cloudwatchMetricActions := d.Get("cloudwatch_metric").(*schema.Set).List()
 	dynamoDbActions := d.Get("dynamodb").(*schema.Set).List()
+	dynamoDbV2Actions := d.Get("dynamodb_v2").(*schema.Set).List()
 	elasticsearchActions := d.Get("elasticsearch").(*schema.Set).List()
 	firehoseActions := d.Get("firehose").(*schema.Set).List()
 	kinesisActions := d.Get("kinesis").(*schema.Set).List()
@@ -358,7 +359,7 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	sqsActions := d.Get("sqs").(*schema.Set).List()
 
 	numActions := len(cloudwatchAlarmActions) + len(cloudwatchMetricActions) +
-		len(dynamoDbActions) + len(elasticsearchActions) + len(firehoseActions) +
+		len(dynamoDbActions) + len(dynamoDbV2Actions) + len(elasticsearchActions) + len(firehoseActions) +
 		len(kinesisActions) + len(lambdaActions) + len(republishActions) +
 		len(s3Actions) + len(snsActions) + len(sqsActions)
 	actions := make([]*iot.Action, numActions)

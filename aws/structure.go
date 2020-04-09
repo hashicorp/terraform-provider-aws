@@ -2825,7 +2825,7 @@ func flattenIoTRuleDynamoDbV2Actions(actions []*iot.Action) []map[string]interfa
 		v := a.DynamoDBv2
 		if v != nil {
 			m["role_arn"] = aws.StringValue(v.RoleArn)
-			m["table_name"] = aws.StringValue(v.TableName)
+			m["table_name"] = aws.StringValue(v.PutItem.TableName)
 
 			items = append(items, m)
 		}
