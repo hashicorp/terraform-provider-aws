@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_egress_only_internet_gateway: Add `tags` argument [GH-11568]
 * resource/aws_lambda_function: Support plan-time validation for `runtime` argument `dotnetcore3.1` value (support .NET Core 3.1) [GH-12712]
 * resource/aws_lambda_layer_version: Support plan-time validation for `compatible_runtimes` argument `dotnetcore3.1` value (support .NET Core 3.1) [GH-12712]
+* resource/aws_rds_global_cluster: Add `aurora-postgresql` to `engine` argument plan-time validation [GH-12401]
 * resource/aws_redshift_snapshot_copy_grant: Support resource import [GH-10350]
 * resource/aws_spot_fleet_request: Add `tags` argument (support tagging of Spot Fleet Request itself) [GH-12295]
 * resource/aws_spot_fleet_request: Support plan-time validation for `launch_specification` configuration block `ebs_block_device` `volume_type`, `iam_instance_profile_arn`, `placement_tenancy`, and `root_block_device` `volume_type` arguments [GH-12295]
