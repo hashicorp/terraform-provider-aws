@@ -1015,6 +1015,30 @@ func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckAWSSpotFleetRequestDisappears(&sfr),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSSpotFleetRequestConfigRecreated(t *testing.T,
 	before, after *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1055,6 +1079,16 @@ func testAccCheckAWSSpotFleetRequestExists(
 		*sfr = *resp.SpotFleetRequestConfigs[0]
 
 		return nil
+	}
+}
+
+func testAccCheckAWSSpotFleetRequestDisappears(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		sfrId := aws.StringValue(sfr.SpotFleetRequestId)
+		err := deleteSpotFleetRequest(sfrId, true, 5*time.Minute, conn)
+
+		return err
 	}
 }
 
