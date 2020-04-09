@@ -1,4 +1,4 @@
-## 2.57.0 (Unreleased)
+## 2.57.0 (April 09, 2020)
 
 BREAKING CHANGES:
 
@@ -14,32 +14,32 @@ provider "aws" {
 
 FEATURES:
 
-* **New Data Source:** `aws_cloudfront_distribution` [GH-6468]
-* **New Resource:** `aws_apigatewayv2_authorizer` [GH-9228]
-* **New Resource:** `aws_apigatewayv2_integration` [GH-8949]
-* **New Resource:** `aws_apigatewayv2_model` [GH-8912]
+* **New Data Source:** `aws_cloudfront_distribution` ([#6468](https://github.com/terraform-providers/terraform-provider-aws/issues/6468))
+* **New Resource:** `aws_apigatewayv2_authorizer` ([#9228](https://github.com/terraform-providers/terraform-provider-aws/issues/9228))
+* **New Resource:** `aws_apigatewayv2_integration` ([#8949](https://github.com/terraform-providers/terraform-provider-aws/issues/8949))
+* **New Resource:** `aws_apigatewayv2_model` ([#8912](https://github.com/terraform-providers/terraform-provider-aws/issues/8912))
 
 ENHANCEMENTS:
 
-* data-source/aws_lambda_layer_version: Support plan-time validation for `compatible_runtime` argument `dotnetcore3.1` value (support .NET Core 3.1) [GH-12712]
-* resource/aws_cloudhsm_v2_cluster: Support tag-on-create [GH-11683]
-* resource/aws_docdb_cluster: Add `deletion_protection` argument [GH-12650]
-* resource/aws_egress_only_internet_gateway: Add `tags` argument [GH-11568]
-* resource/aws_lambda_function: Support plan-time validation for `runtime` argument `dotnetcore3.1` value (support .NET Core 3.1) [GH-12712]
-* resource/aws_lambda_layer_version: Support plan-time validation for `compatible_runtimes` argument `dotnetcore3.1` value (support .NET Core 3.1) [GH-12712]
-* resource/aws_rds_global_cluster: Add `aurora-postgresql` to `engine` argument plan-time validation [GH-12401]
-* resource/aws_redshift_snapshot_copy_grant: Support resource import [GH-10350]
-* resource/aws_spot_fleet_request: Add `tags` argument (support tagging of Spot Fleet Request itself) [GH-12295]
-* resource/aws_spot_fleet_request: Support plan-time validation for `launch_specification` configuration block `ebs_block_device` `volume_type`, `iam_instance_profile_arn`, `placement_tenancy`, and `root_block_device` `volume_type` arguments [GH-12295]
-* resource/aws_spot_fleet_request: Support plan-time validation for `allocation_strategy`, `instance_interruption_behaviour`, and `target_group_arns` arguments [GH-12295]
-* service/ec2: Prevent eventual consistency errors tagging resources on creation [GH-12735]
+* data-source/aws_lambda_layer_version: Support plan-time validation for `compatible_runtime` argument `dotnetcore3.1` value (support .NET Core 3.1) ([#12712](https://github.com/terraform-providers/terraform-provider-aws/issues/12712))
+* resource/aws_cloudhsm_v2_cluster: Support tag-on-create ([#11683](https://github.com/terraform-providers/terraform-provider-aws/issues/11683))
+* resource/aws_docdb_cluster: Add `deletion_protection` argument ([#12650](https://github.com/terraform-providers/terraform-provider-aws/issues/12650))
+* resource/aws_egress_only_internet_gateway: Add `tags` argument ([#11568](https://github.com/terraform-providers/terraform-provider-aws/issues/11568))
+* resource/aws_lambda_function: Support plan-time validation for `runtime` argument `dotnetcore3.1` value (support .NET Core 3.1) ([#12712](https://github.com/terraform-providers/terraform-provider-aws/issues/12712))
+* resource/aws_lambda_layer_version: Support plan-time validation for `compatible_runtimes` argument `dotnetcore3.1` value (support .NET Core 3.1) ([#12712](https://github.com/terraform-providers/terraform-provider-aws/issues/12712))
+* resource/aws_rds_global_cluster: Add `aurora-postgresql` to `engine` argument plan-time validation ([#12401](https://github.com/terraform-providers/terraform-provider-aws/issues/12401))
+* resource/aws_redshift_snapshot_copy_grant: Support resource import ([#10350](https://github.com/terraform-providers/terraform-provider-aws/issues/10350))
+* resource/aws_spot_fleet_request: Add `tags` argument (support tagging of Spot Fleet Request itself) ([#12295](https://github.com/terraform-providers/terraform-provider-aws/issues/12295))
+* resource/aws_spot_fleet_request: Support plan-time validation for `launch_specification` configuration block `ebs_block_device` `volume_type`, `iam_instance_profile_arn`, `placement_tenancy`, and `root_block_device` `volume_type` arguments ([#12295](https://github.com/terraform-providers/terraform-provider-aws/issues/12295))
+* resource/aws_spot_fleet_request: Support plan-time validation for `allocation_strategy`, `instance_interruption_behaviour`, and `target_group_arns` arguments ([#12295](https://github.com/terraform-providers/terraform-provider-aws/issues/12295))
+* service/ec2: Prevent eventual consistency errors tagging resources on creation ([#12735](https://github.com/terraform-providers/terraform-provider-aws/issues/12735))
 
 BUG FIXES:
 
-* resource/aws_appautoscaling_policy: Fix error when importing DynamoDB Table Index policy [GH-11232]
-* resource/aws_db_instance: Allow creating read replica into RAM shared Subnet with VPC Security Group [GH-12700]
-* resource/aws_kms_key: Prevent eventual consistency related errors on creation [GH-12738]
-* resource/aws_lb_target_group: Automatically propose resource recreation for TCP `protocol` Target Groups when `health_check` configuration block `interval`, `protocol`, or `timeout` argument values are updated [GH-4568]
+* resource/aws_appautoscaling_policy: Fix error when importing DynamoDB Table Index policy ([#11232](https://github.com/terraform-providers/terraform-provider-aws/issues/11232))
+* resource/aws_db_instance: Allow creating read replica into RAM shared Subnet with VPC Security Group ([#12700](https://github.com/terraform-providers/terraform-provider-aws/issues/12700))
+* resource/aws_kms_key: Prevent eventual consistency related errors on creation ([#12738](https://github.com/terraform-providers/terraform-provider-aws/issues/12738))
+* resource/aws_lb_target_group: Automatically propose resource recreation for TCP `protocol` Target Groups when `health_check` configuration block `interval`, `protocol`, or `timeout` argument values are updated ([#4568](https://github.com/terraform-providers/terraform-provider-aws/issues/4568))
 
 ## 2.56.0 (April 03, 2020)
 
