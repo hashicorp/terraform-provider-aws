@@ -84,6 +84,8 @@ func resourceAwsAppmeshVirtualRouter() *schema.Resource {
 													ValidateFunc: validation.StringInSlice([]string{
 														appmesh.PortProtocolHttp,
 														appmesh.PortProtocolTcp,
+														appmesh.PortProtocolGrpc,
+														appmesh.PortProtocolHttp2,
 													}, false),
 												},
 											},
