@@ -59,7 +59,7 @@ func resourceAwsIoTEventConfiguration() *schema.Resource {
 }
 
 func resourceAwsEventConfigurationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*iot.IoT)
+	conn := meta.(*AWSClient).iotconn
 
 	eventConfigurationsMap := make(map[string]*iot.Configuration)
 	configurationsMapActions := d.Get(ConfigurationsMap).(*schema.Set).List()
@@ -89,7 +89,7 @@ func resourceAwsEventConfigurationCreate(d *schema.ResourceData, meta interface{
 
 // Fetches all the event configurations, the output contains all the available configurations.
 func resourceAwsEventConfigurationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*iot.IoT)
+	conn := meta.(*AWSClient).iotconn
 
 	out, err := conn.DescribeEventConfigurations(&iot.DescribeEventConfigurationsInput{})
 
@@ -110,7 +110,7 @@ func resourceAwsEventConfigurationRead(d *schema.ResourceData, meta interface{})
 
 // Updates the event configuration, when there is any update in the current state.
 func resourceAwsEventConfigurationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*iot.IoT)
+	conn := meta.(*AWSClient).iotconn
 
 	eventConfigurationsMap := make(map[string]*iot.Configuration)
 	configurationsMapActions := d.Get(ConfigurationsMap).(*schema.Set).List()

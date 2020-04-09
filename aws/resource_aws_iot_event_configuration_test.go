@@ -19,7 +19,6 @@ func TestAccAWSIoTEventConfiguration(t *testing.T) {
 				Config: testAccAWSIoTEventConfiguration,
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet("aws_iot_event_configuration.example", "name"),
-					resource.TestCheckResourceAttrSet("aws_iot_event_configuration.example", "configurations_map"),
 				),
 			},
 		},
@@ -27,7 +26,7 @@ func TestAccAWSIoTEventConfiguration(t *testing.T) {
 }
 
 func testAccCheckAWSEventConfiguration_basic(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*iot.IoT)
+	conn := testAccProvider.Meta().(*AWSClient).iotconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_iot_event_configuration" {
