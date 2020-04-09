@@ -32,6 +32,7 @@ ENHANCEMENTS:
 * resource/aws_spot_fleet_request: Add `tags` argument (support tagging of Spot Fleet Request itself) [GH-12295]
 * resource/aws_spot_fleet_request: Support plan-time validation for `launch_specification` configuration block `ebs_block_device` `volume_type`, `iam_instance_profile_arn`, `placement_tenancy`, and `root_block_device` `volume_type` arguments [GH-12295]
 * resource/aws_spot_fleet_request: Support plan-time validation for `allocation_strategy`, `instance_interruption_behaviour`, and `target_group_arns` arguments [GH-12295]
+* service/ec2: Prevent eventual consistency errors tagging resources on creation [GH-12735]
 
 BUG FIXES:
 
