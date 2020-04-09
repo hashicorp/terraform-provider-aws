@@ -163,6 +163,7 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
+										Computed: true,
 									},
 									"driver_opts": {
 										Type:     schema.TypeMap,
@@ -196,12 +197,6 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										ForceNew: true,
 										Optional: true,
 										Default:  "/",
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-											if new == "/" && old == "" {
-												return true
-											}
-											return false
-										},
 									},
 								},
 							},
@@ -608,10 +603,6 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 
 		if v, ok := m["autoprovision"]; ok {
 			buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-		}
-
-		if v, ok := m["scope"]; ok && v.(string) != "" {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
 
 		if v, ok := m["driver"]; ok && v.(string) != "" {

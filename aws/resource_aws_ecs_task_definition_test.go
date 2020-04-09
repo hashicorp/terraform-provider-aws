@@ -159,34 +159,6 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 	})
 }
 
-func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimalFargate(t *testing.T) {
-	var def ecs.TaskDefinition
-
-	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume-min")
-	resourceName := "aws_ecs_task_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskDefinitionWithEFSVolumeMinimalFargate(tdName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 	var def ecs.TaskDefinition
 
@@ -1417,54 +1389,6 @@ resource "aws_efs_file_system" "test" {
 
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
-
-  container_definitions = <<TASK_DEFINITION
-[
-  {
-    "name": "sleep",
-    "image": "busybox",
-    "cpu": 10,
-    "command": ["sleep","360"],
-    "memory": 10,
-    "essential": true
-  }
-]
-TASK_DEFINITION
-
-  volume {
-    name = %[1]q
-
-    efs_volume_configuration {
-      file_system_id = "${aws_efs_file_system.test.id}"
-    }
-  }
-}
-`, tdName)
-}
-
-func testAccAWSEcsTaskDefinitionWithEFSVolumeMinimalFargate(tdName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = "${aws_ecs_cluster.test.id}"
-  task_definition = "${aws_ecs_task_definition.test.arn}"
-  desired_count   = 1
-}
-
-resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
 
   container_definitions = <<TASK_DEFINITION
 [
