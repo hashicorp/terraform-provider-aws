@@ -1048,11 +1048,37 @@ resource "aws_security_group" "test" {
 
 resource "aws_mq_broker" "test" {
   broker_name        = "%s"
+<<<<<<< HEAD
   engine_type        = "ActiveMQ"
   engine_version     = "5.15.9"
   storage_type       = "ebs"
-  host_instance_type = "mq.m5.large"
-  security_groups    = ["${aws_security_group.test.id}"]
+=======
+  apply_immediately  = true
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.9"
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, sgName, brokerName)
+}
+
+func testAccMqBrokerEngineVersionUpdateConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  apply_immediately  = true
+  engine_type        = "ActiveMQ"
+  engine_version     = "5.15.9"
+  host_instance_type = "mq.t2.micro"
+  security_groups    = [aws_security_group.test.id]
 
   logs {
     general = true
@@ -1063,7 +1089,7 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
   }
 }
-`, sgName, brokerName)
+`, rName)
 }
 
 func testAccMqBrokerConfig_allFieldsDefaultVpc(sgName, cfgName, cfgBody, brokerName string) string {
