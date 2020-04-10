@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -16,6 +17,7 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,7 +25,7 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeAttachmentConfig,
+				Config: testAccVolumeAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
 					testAccCheckInstanceExists("aws_instance.test", &i),
@@ -45,6 +47,7 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -52,7 +55,7 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeAttachmentConfigSkipDestroy,
+				Config: testAccVolumeAttachmentConfigSkipDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
 					testAccCheckInstanceExists("aws_instance.test", &i),
@@ -77,6 +80,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	stopInstance := func() {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -109,14 +113,14 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeAttachmentConfigInstanceOnly,
+				Config: testAccVolumeAttachmentConfigBase(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("aws_instance.test", &i),
 				),
 			},
 			{
 				PreConfig: stopInstance,
-				Config:    testAccVolumeAttachmentConfig,
+				Config:    testAccVolumeAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "device_name", "/dev/sdh"),
 					testAccCheckInstanceExists("aws_instance.test", &i),
@@ -136,6 +140,7 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 
 func TestAccAWSVolumeAttachment_update(t *testing.T) {
 	resourceName := "aws_volume_attachment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -143,7 +148,7 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeAttachmentConfig_update(false),
+				Config: testAccVolumeAttachmentUpdateConfig(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "force_detach", "false"),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "false"),
@@ -160,7 +165,7 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccVolumeAttachmentConfig_update(true),
+				Config: testAccVolumeAttachmentUpdateConfig(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "force_detach", "true"),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
@@ -184,6 +189,7 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 	var i ec2.Instance
 	var v ec2.Volume
 	resourceName := "aws_volume_attachment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -191,7 +197,7 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckVolumeAttachmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVolumeAttachmentConfig,
+				Config: testAccVolumeAttachmentConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists("aws_instance.test", &i),
 					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
@@ -312,7 +318,8 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccVolumeAttachmentConfigInstanceOnly = `
+func testAccVolumeAttachmentInstanceOnlyConfigBase(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -328,49 +335,58 @@ resource "aws_instance" "test" {
   instance_type     = "t1.micro"
 
   tags = {
-    Name = "tf-acc-test-volume-attachment"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
-const testAccVolumeAttachmentConfig = testAccVolumeAttachmentConfigInstanceOnly + `
-resource "aws_ebs_volume" "test" {
+func testAccVolumeAttachmentConfigBase(rName string) string {
+	return testAccVolumeAttachmentInstanceOnlyConfigBase(rName) + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_instance" "test" {
+  ami               = "ami-21f78e11"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size              = 1
+  instance_type     = "t1.micro"
 
   tags = {
-    Name = "tf-acc-test-volume-attachment"
+    Name = %[1]q
   }
 }
+`, rName)
+}
 
+func testAccVolumeAttachmentConfig(rName string) string {
+	return testAccVolumeAttachmentConfigBase(rName) + fmt.Sprintf(`
 resource "aws_volume_attachment" "test" {
   device_name = "/dev/sdh"
   volume_id   = "${aws_ebs_volume.test.id}"
   instance_id = "${aws_instance.test.id}"
 }
-`
-
-const testAccVolumeAttachmentConfigSkipDestroy = testAccVolumeAttachmentConfigInstanceOnly + `
-resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size              = 1
-
-  tags = {
-    Name = "tf-acc-test-volume-attachment"
-  }
+`)
 }
 
+func testAccVolumeAttachmentConfigSkipDestroy(rName string) string {
+	return testAccVolumeAttachmentConfigBase(rName) + fmt.Sprintf(`
 data "aws_ebs_volume" "test" {
   filter {
-    name = "size"
+    name   = "size"
     values = ["${aws_ebs_volume.test.size}"]
   }
   filter {
-    name = "availability-zone"
+    name   = "availability-zone"
     values = ["${aws_ebs_volume.test.availability_zone}"]
   }
   filter {
-    name = "tag:Name"
+    name   = "tag:Name"
     values = ["tf-acc-test-volume-attachment"]
   }
 }
@@ -381,27 +397,19 @@ resource "aws_volume_attachment" "test" {
   instance_id  = "${aws_instance.test.id}"
   skip_destroy = true
 }
-`
-
-func testAccVolumeAttachmentConfig_update(detach bool) string {
-	return testAccVolumeAttachmentConfigInstanceOnly + fmt.Sprintf(`
-resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  size              = 1
-
-  tags = {
-    Name = "tf-acc-test-volume-attachment"
-  }
+`)
 }
 
+func testAccVolumeAttachmentUpdateConfig(rName string, detach bool) string {
+	return testAccVolumeAttachmentConfigBase(rName) + fmt.Sprintf(`
 resource "aws_volume_attachment" "test" {
   device_name  = "/dev/sdh"
   volume_id    = "${aws_ebs_volume.test.id}"
   instance_id  = "${aws_instance.test.id}"
-  force_detach = %t
-  skip_destroy = %t
+  force_detach = %[1]t
+  skip_destroy = %[1]t
 }
-`, detach, detach)
+`, detach)
 }
 
 func testAccAWSVolumeAttachmentImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {
