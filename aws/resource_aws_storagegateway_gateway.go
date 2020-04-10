@@ -301,7 +301,29 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Reading Storage Gateway Gateway: %s", input)
-	output, err := conn.DescribeGatewayInformation(input)
+
+	// Storage Gateway connectivity can be very flaky for recently created or modified Gateways.
+	// Allow a short retry period to see if the problem resolves itself.
+	var output *storagegateway.DescribeGatewayInformationOutput
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.DescribeGatewayInformation(input)
+
+		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.DescribeGatewayInformation(input)
+	}
+
 	if err != nil {
 		if isAWSErrStorageGatewayGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
