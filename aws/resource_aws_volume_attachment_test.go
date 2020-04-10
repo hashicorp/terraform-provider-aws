@@ -193,6 +193,8 @@ func TestAccAWSVolumeAttachment_disappears(t *testing.T) {
 			{
 				Config: testAccVolumeAttachmentConfig,
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists("aws_instance.test", &i),
+					testAccCheckVolumeExists("aws_ebs_volume.test", &v),
 					testAccCheckVolumeAttachmentExists(resourceName, &i, &v),
 					testAccCheckVolumeAttachmentDisappears(resourceName, &i, &v),
 				),
