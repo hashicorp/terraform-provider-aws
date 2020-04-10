@@ -377,7 +377,7 @@ data "aws_ebs_volume" "test" {
   }
   filter {
     name   = "tag:Name"
-    values = ["tf-acc-test-volume-attachment"]
+    values = ["%[1]s"]
   }
 }
 
@@ -387,7 +387,7 @@ resource "aws_volume_attachment" "test" {
   instance_id  = "${aws_instance.test.id}"
   skip_destroy = true
 }
-`)
+`, rName)
 }
 
 func testAccVolumeAttachmentUpdateConfig(rName string, detach bool) string {
