@@ -51,6 +51,7 @@ func resourceAwsDbProxy() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					rds.EngineFamilyMysql,
+					"POSTGRESQL",
 				}, false),
 			},
 			"idle_client_timeout": {

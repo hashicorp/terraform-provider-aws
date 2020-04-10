@@ -195,7 +195,8 @@ resource "aws_db_proxy" "test" {
 # Secrets Manager setup
 
 resource "aws_secretsmanager_secret" "test" {
-  name = "%s"
+  name                    = "%s"
+  recovery_window_in_days = 0
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
