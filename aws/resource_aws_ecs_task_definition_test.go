@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_ecs_task_definition", &resource.Sweeper{
 		Name: "aws_ecs_task_definition",
 		F:    testSweepEcsTaskDefinitions,
+		Dependencies: []string{
+			"aws_ecs_service",
+		},
 	})
 }
 
