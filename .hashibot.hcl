@@ -520,6 +520,7 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
+      ".github/*.md",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
