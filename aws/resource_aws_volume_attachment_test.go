@@ -343,19 +343,9 @@ resource "aws_instance" "test" {
 
 func testAccVolumeAttachmentConfigBase(rName string) string {
 	return testAccVolumeAttachmentInstanceOnlyConfigBase(rName) + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_instance" "test" {
-  ami               = "ami-21f78e11"
+resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  instance_type     = "t1.micro"
+  size              = 1
 
   tags = {
     Name = %[1]q
