@@ -1072,6 +1072,44 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
+				),
+			},
+			{
+				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSpotFleetRequestZeroCapacityConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "target_capacity", "0"),
+				),
+			},
+		},
+	})
+}
+
+
 func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 	t.Skip("Test fails due to test harness constraints")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2307,4 +2345,24 @@ resource "aws_spot_fleet_request" "test" {
     depends_on = ["aws_iam_policy_attachment.test"]
 }
 `, rName, validUntil)
+}
+
+func testAccAWSSpotFleetRequestZeroCapacityConfig(rName string, rInt int, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+resource "aws_spot_fleet_request" "test" {
+    iam_fleet_role = "${aws_iam_role.test-role.arn}"
+    spot_price = "0.005"
+    target_capacity = 0
+    valid_until = %[1]q
+    terminate_instances_with_expiration = true
+    instance_interruption_behaviour = "stop"
+    wait_for_fulfillment = true
+    launch_specification {
+        instance_type = "m1.small"
+        ami = "ami-516b9131"
+        key_name = "${aws_key_pair.debugging.key_name}"
+    }
+    depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`, validUntil)
 }
