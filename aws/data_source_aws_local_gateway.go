@@ -31,6 +31,7 @@ func dataSourceAwsLocalGateway() *schema.Resource {
 
 			"state": {
 				Type:     schema.TypeString,
+				Optional: true,
 				Computed: true,
 			},
 
@@ -60,8 +61,6 @@ func dataSourceAwsLocalGatewayRead(d *schema.ResourceData, meta interface{}) err
 
 	req.Filters = buildEC2AttributeFilterList(
 		map[string]string{
-			"outpost_arn": d.Get("outpost_arn").(string),
-			"owner_id":    d.Get("owner_id").(string),
 			"state":       d.Get("state").(string),
 		},
 	)
