@@ -243,3 +243,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Spot fleet request ID
 * `spot_request_state` - The state of the Spot fleet request.
+
+## Import
+
+Spot Fleet Requests can be imported using `id`, e.g.
+
+```
+$ terraform import aw_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
+```
