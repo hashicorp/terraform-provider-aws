@@ -337,6 +337,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafv2_ip_set":                              dataSourceAwsWafv2IPSet(),
 			"aws_wafv2_regex_pattern_set":                   dataSourceAwsWafv2RegexPatternSet(),
 			"aws_wafv2_rule_group":                          dataSourceAwsWafv2RuleGroup(),
+			"aws_wafv2_web_acl":                             dataSourceAwsWafv2WebACL(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
 			// Adding the Aliases for the ALB -> LB Rename
