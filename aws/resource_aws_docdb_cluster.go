@@ -160,7 +160,6 @@ func resourceAwsDocDBCluster() *schema.Resource {
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"port": {
