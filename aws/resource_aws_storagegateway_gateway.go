@@ -164,14 +164,25 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
 			response, err = client.Do(request)
+
 			if err != nil {
 				if err, ok := err.(net.Error); ok {
 					errMessage := fmt.Errorf("error making HTTP request: %s", err)
 					log.Printf("[DEBUG] retryable %s", errMessage)
 					return resource.RetryableError(errMessage)
 				}
+
 				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %s", err))
 			}
+
+			for _, retryableStatusCode := range []int{504} {
+				if response.StatusCode == retryableStatusCode {
+					errMessage := fmt.Errorf("status code in HTTP response: %d", response.StatusCode)
+					log.Printf("[DEBUG] retryable %s", errMessage)
+					return resource.RetryableError(errMessage)
+				}
+			}
+
 			return nil
 		})
 		if isResourceTimeoutError(err) {
