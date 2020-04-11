@@ -20,20 +20,17 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"qualifier": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 				Default:  "$LATEST",
 			},
 
 			"input": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.ValidateJsonString,
 			},
 
