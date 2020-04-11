@@ -490,22 +490,10 @@ resource "aws_internet_gateway" "test" {
   }
 }
 
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  subnet_id      = aws_subnet.test.id
-  route_table_id = aws_route_table.test.id
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+  route_table_id         = aws_vpc.test.main_route_table_id
 }
 
 resource "aws_security_group" "test" {
@@ -556,7 +544,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = ["aws_route.test"]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true
@@ -596,7 +584,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_CACHED_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = ["aws_route.test"]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_CACHED_latest.value
   associate_public_ip_address = true
@@ -722,24 +710,10 @@ resource "aws_internet_gateway" "test" {
   }
 }
 
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+  route_table_id         = aws_vpc.test.main_route_table_id
 }
 
 resource "aws_security_group" "test" {
@@ -815,7 +789,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = [aws_internet_gateway.test, aws_vpc_dhcp_options_association.test]
+  depends_on = [aws_route.test, aws_vpc_dhcp_options_association.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true
