@@ -5,19 +5,17 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
-	resourceName := "aws_waf_xss_match_set.xss_match_set"
+	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
@@ -54,7 +52,7 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.XssMatchSet
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
 	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(5))
-	resourceName := "aws_waf_xss_match_set.xss_match_set"
+	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
@@ -89,7 +87,7 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
 	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
-	resourceName := "aws_waf_xss_match_set.xss_match_set"
+	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
@@ -111,7 +109,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
-	resourceName := "aws_waf_xss_match_set.xss_match_set"
+	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
@@ -162,7 +160,7 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 func TestAccAWSWafXssMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
 	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
-	resourceName := "aws_waf_xss_match_set.xss_match_set"
+	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
@@ -199,7 +197,7 @@ func testAccCheckAWSWafXssMatchSetDisappears(v *waf.XssMatchSet) resource.TestCh
 
 			for _, xssMatchTuple := range v.XssMatchTuples {
 				xssMatchTupleUpdate := &waf.XssMatchSetUpdate{
-					Action: aws.String("DELETE"),
+					Action: aws.String(waf.ChangeActionDelete),
 					XssMatchTuple: &waf.XssMatchTuple{
 						FieldToMatch:       xssMatchTuple.FieldToMatch,
 						TextTransformation: xssMatchTuple.TextTransformation,
@@ -258,7 +256,7 @@ func testAccCheckAWSWafXssMatchSetExists(n string, v *waf.XssMatchSet) resource.
 
 func testAccCheckAWSWafXssMatchSetDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_waf_byte_match_set" {
+		if rs.Type != "aws_waf_xss_match_set" {
 			continue
 		}
 
@@ -275,10 +273,8 @@ func testAccCheckAWSWafXssMatchSetDestroy(s *terraform.State) error {
 		}
 
 		// Return nil if the XssMatchSet is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == waf.ErrCodeNonexistentItemException {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 				return nil
-			}
 		}
 
 		return err
@@ -289,8 +285,8 @@ func testAccCheckAWSWafXssMatchSetDestroy(s *terraform.State) error {
 
 func testAccAWSWafXssMatchSetConfig(name string) string {
 	return fmt.Sprintf(`
-resource "aws_waf_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_waf_xss_match_set" "test" {
+  name = %[1]q
 
   xss_match_tuples {
     text_transformation = "NONE"
@@ -313,8 +309,8 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
 func testAccAWSWafXssMatchSetConfigChangeName(name string) string {
 	return fmt.Sprintf(`
-resource "aws_waf_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_waf_xss_match_set" "test" {
+  name = %[1]q
 
   xss_match_tuples {
     text_transformation = "NONE"
@@ -337,8 +333,8 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
 func testAccAWSWafXssMatchSetConfig_changeTuples(name string) string {
 	return fmt.Sprintf(`
-resource "aws_waf_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_waf_xss_match_set" "test" {
+  name = %[1]q
 
   xss_match_tuples {
     text_transformation = "CMD_LINE"
@@ -362,8 +358,8 @@ resource "aws_waf_xss_match_set" "xss_match_set" {
 
 func testAccAWSWafXssMatchSetConfig_noTuples(name string) string {
 	return fmt.Sprintf(`
-resource "aws_waf_xss_match_set" "xss_match_set" {
-  name = "%s"
+resource "aws_waf_xss_match_set" "test" {
+  name = %[1]q
 }
 `, name)
 }
