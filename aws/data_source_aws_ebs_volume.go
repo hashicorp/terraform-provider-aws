@@ -21,7 +21,6 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
