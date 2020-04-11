@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 	var v waf.XssMatchSet
-	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -23,20 +23,20 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafXssMatchSetConfig(xssMatchSet),
+				Config: testAccAWSWafXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &v),
 					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`xssmatchset/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "name", xssMatchSet),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.field_to_match.2316364334.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.field_to_match.3756326843.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.field_to_match.3756326843.type", "URI"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.text_transformation", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.field_to_match.0.data", ""),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.field_to_match.0.type", "URI"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.text_transformation", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.field_to_match.0.data", ""),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.field_to_match.0.type", "QUERY_STRING"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.text_transformation", "NONE"),
 				),
 			},
 			{
@@ -50,7 +50,7 @@ func TestAccAWSWafXssMatchSet_basic(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 	var before, after waf.XssMatchSet
-	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	xssMatchSetNewName := fmt.Sprintf("xssMatchSetNewName-%s", acctest.RandString(5))
 	resourceName := "aws_waf_xss_match_set.test"
 
@@ -60,10 +60,10 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafXssMatchSetConfig(xssMatchSet),
+				Config: testAccAWSWafXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &before),
-					resource.TestCheckResourceAttr(resourceName, "name", xssMatchSet),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
 				),
 			},
@@ -86,7 +86,7 @@ func TestAccAWSWafXssMatchSet_changeNameForceNew(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 	var v waf.XssMatchSet
-	xssMatchSet := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -95,7 +95,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSWafXssMatchSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSWafXssMatchSetConfig(xssMatchSet),
+				Config: testAccAWSWafXssMatchSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &v),
 					testAccCheckAWSWafXssMatchSetDisappears(&v),
@@ -108,7 +108,7 @@ func TestAccAWSWafXssMatchSet_disappears(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 	var before, after waf.XssMatchSet
-	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	setName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -122,14 +122,14 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.field_to_match.2316364334.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.field_to_match.2316364334.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2018581549.text_transformation", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.field_to_match.3756326843.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.field_to_match.3756326843.type", "URI"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2786024938.text_transformation", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.field_to_match.0.data", ""),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.field_to_match.0.type", "QUERY_STRING"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.599421078.text_transformation", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.field_to_match.0.data", ""),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.field_to_match.0.type", "URI"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.41660541.text_transformation", "NONE"),
 				),
 			},
 			{
@@ -138,14 +138,14 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafXssMatchSetExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "name", setName),
 					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2893682529.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2893682529.field_to_match.4253810390.data", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2893682529.field_to_match.4253810390.type", "METHOD"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.2893682529.text_transformation", "HTML_ENTITY_DECODE"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.4270311415.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.4270311415.field_to_match.281401076.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.4270311415.field_to_match.281401076.type", "BODY"),
-					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.4270311415.text_transformation", "CMD_LINE"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.42378128.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.42378128.field_to_match.0.data", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.42378128.field_to_match.0.type", "METHOD"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.42378128.text_transformation", "HTML_ENTITY_DECODE"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.3815294338.field_to_match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.3815294338.field_to_match.0.data", ""),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.3815294338.field_to_match.0.type", "BODY"),
+					resource.TestCheckResourceAttr(resourceName, "xss_match_tuples.3815294338.text_transformation", "CMD_LINE"),
 				),
 			},
 			{
@@ -159,7 +159,7 @@ func TestAccAWSWafXssMatchSet_changeTuples(t *testing.T) {
 
 func TestAccAWSWafXssMatchSet_noTuples(t *testing.T) {
 	var ipset waf.XssMatchSet
-	setName := fmt.Sprintf("xssMatchSet-%s", acctest.RandString(5))
+	setName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_waf_xss_match_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -219,7 +219,7 @@ func testAccCheckAWSWafXssMatchSetDisappears(v *waf.XssMatchSet) resource.TestCh
 			return conn.DeleteXssMatchSet(opts)
 		})
 		if err != nil {
-			return fmt.Errorf("Error deleting XssMatchSet: %s", err)
+			return fmt.Errorf("Error deleting WAF XSS Match Set: %s", err)
 		}
 		return nil
 	}
@@ -233,7 +233,7 @@ func testAccCheckAWSWafXssMatchSetExists(n string, v *waf.XssMatchSet) resource.
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAF XssMatchSet ID is set")
+			return fmt.Errorf("No WAF XSS Match Set ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).wafconn

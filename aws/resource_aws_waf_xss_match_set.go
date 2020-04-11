@@ -37,7 +37,7 @@ func resourceAwsWafXssMatchSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -230,7 +230,7 @@ func diffWafXssMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate
 		updates = append(updates, &waf.XssMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].(*schema.Set).List()[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})
@@ -242,7 +242,7 @@ func diffWafXssMatchSetTuples(oldT, newT []interface{}) []*waf.XssMatchSetUpdate
 		updates = append(updates, &waf.XssMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			XssMatchTuple: &waf.XssMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].(*schema.Set).List()[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})
