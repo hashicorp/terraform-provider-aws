@@ -33,7 +33,6 @@ func TestAccAWSEcsDataSource_ecsTaskDefinition(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "placement_constraints", resourceName, "placement_constraints"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "requires_compatibilities", resourceName, "requires_compatibilities"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "proxy_configuration", resourceName, "proxy_configuration"),
-					resource.TestCheckResourceAttrPair(resourceName, "task_role_arn", "aws_iam_role.test", "arn"),
 				),
 			},
 		},
