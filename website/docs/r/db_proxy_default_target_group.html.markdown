@@ -56,7 +56,6 @@ resource "aws_db_proxy_default_target_group" "example" {
 The following arguments are supported:
 
 * `db_proxy_name` - (Required) The name of the new proxy to which to assign the target group.
-* `name` - (Optional) The name of the new target group to assign to the proxy.
 * `connection_pool_config` - (Optional) The settings that determine the size and behavior of the connection pool for the target group.
 
 `connection_pool_config` blocks support the following:
@@ -73,6 +72,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The Amazon Resource Name (ARN) for the proxy.
 * `arn` - The Amazon Resource Name (ARN) representing the target group.
+* `name` - The name of the default target group.
 
 ### Timeouts
 

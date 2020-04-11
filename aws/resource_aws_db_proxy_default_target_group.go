@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	// "github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
@@ -40,9 +40,8 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 				ValidateFunc: validateRdsIdentifier,
 			},
 			"name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validateRdsIdentifier,
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"connection_pool_config": {
 				Type:     schema.TypeList,
@@ -52,26 +51,38 @@ func resourceAwsDbProxyDefaultTargetGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"connection_borrow_timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      120,
+							ValidateFunc: validation.IntBetween(0, 3600),
 						},
 						"init_query": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Default:  "",
 						},
 						"max_connections_percent": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      100,
+							ValidateFunc: validation.IntBetween(1, 100),
 						},
 						"max_idle_connections_percent": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      50,
+							ValidateFunc: validation.IntBetween(0, 100),
 						},
 						"session_pinning_filters": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+								ValidateFunc: validation.StringInSlice([]string{
+									"EXCLUDE_VARIABLE_SETS",
+								}, false),
+							},
+							Set: schema.HashString,
 						},
 					},
 				},
@@ -118,12 +129,11 @@ func resourceAwsDbProxyDefaultTargetGroupRead(d *schema.ResourceData, meta inter
 func resourceAwsDbProxyDefaultTargetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
 
-	oName, nName := d.GetChange("name")
+	d.SetId(d.Get("db_proxy_name").(string))
 
 	params := rds.ModifyDBProxyTargetGroupInput{
 		DBProxyName:     aws.String(d.Get("db_proxy_name").(string)),
-		TargetGroupName: aws.String(oName.(string)),
-		NewName:         aws.String(nName.(string)),
+		TargetGroupName: aws.String("default"),
 	}
 
 	if v, ok := d.GetOk("connection_pool_config"); ok {
