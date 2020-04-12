@@ -55,7 +55,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					ec2.SpotInstanceTypePersistent,
 					ec2.SpotInstanceTypeOneTime,
-				},false),
+				}, false),
 			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,

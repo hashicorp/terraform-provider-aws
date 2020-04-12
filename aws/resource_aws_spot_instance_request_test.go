@@ -267,6 +267,28 @@ func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotInstanceRequest_disappears(t *testing.T) {
+	var sir ec2.SpotInstanceRequest
+	resourceName := "aws_spot_instance_request.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotInstanceRequestConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
+					testAccCheckAWSSpotInstanceRequestDisappears(&sir),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testCheckKeyPair(keyName string, sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(*terraform.State) error {
 		if sir.LaunchSpecification.KeyName == nil {
@@ -381,6 +403,19 @@ func testAccCheckAWSSpotInstanceRequestExists(
 	}
 }
 
+func testAccCheckAWSSpotInstanceRequestDisappears(sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		params := &ec2.CancelSpotInstanceRequestsInput{
+			SpotInstanceRequestIds: []*string{sir.SpotInstanceRequestId},
+		}
+		_, err := conn.CancelSpotInstanceRequests(params)
+
+		return err
+	}
+}
+
 func testAccCheckAWSSpotInstanceRequestAttributes(
 	sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -425,7 +460,7 @@ func testAccCheckAWSSpotInstanceRequest_InstanceAttributes(sir *ec2.SpotInstance
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		instance, err := resourceAwsInstanceFindByID(conn, aws.StringValue(sir.InstanceId))
 		if err != nil {
-			if isAWSErr(err, "InvalidInstanceID.NotFound" ,"") {
+			if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 				return fmt.Errorf("Spot Instance %q not found", aws.StringValue(sir.InstanceId))
 			}
 			return err
