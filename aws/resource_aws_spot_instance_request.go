@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -52,7 +51,11 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 			s["spot_type"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "persistent",
+				Default:  ec2.SpotInstanceTypePersistent,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.SpotInstanceTypePersistent,
+					ec2.SpotInstanceTypeOneTime,
+				},false),
 			}
 			s["wait_for_fulfillment"] = &schema.Schema{
 				Type:     schema.TypeBool,
@@ -248,7 +251,7 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		// If the spot request was not found, return nil so that we can show
 		// that it is gone.
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSpotInstanceRequestID.NotFound" {
+		if isAWSErr(err, "InvalidSpotInstanceRequestID.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -266,7 +269,7 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	request := resp.SpotInstanceRequests[0]
 
 	// if the request is cancelled or closed, then it is gone
-	if *request.State == "cancelled" || *request.State == "closed" {
+	if *request.State == ec2.SpotInstanceStateCancelled || *request.State == ec2.SpotInstanceStateClosed {
 		d.SetId("")
 		return nil
 	}
@@ -424,7 +427,7 @@ func SpotInstanceStateRefreshFunc(
 		})
 
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidSpotInstanceRequestID.NotFound" {
+			if isAWSErr(err, "InvalidSpotInstanceRequestID.NotFound", "") {
 				// Set this to nil as if we didn't find anything.
 				resp = nil
 			} else {
