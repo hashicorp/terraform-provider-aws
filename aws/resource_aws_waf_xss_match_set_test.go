@@ -274,7 +274,7 @@ func testAccCheckAWSWafXssMatchSetDestroy(s *terraform.State) error {
 
 		// Return nil if the XssMatchSet is already destroyed
 		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
-				return nil
+			return nil
 		}
 
 		return err
