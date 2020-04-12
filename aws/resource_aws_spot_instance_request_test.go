@@ -95,7 +95,7 @@ func TestAccAWSSpotInstanceRequest_withLaunchGroup(t *testing.T) {
 					testCheckKeyPair(rName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "spot_bid_status", "fulfilled"),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "launch_group", "terraform-test-group"),
+					resource.TestCheckResourceAttr(resourceName, "launch_group", rName),
 				),
 			},
 		},
