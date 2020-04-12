@@ -69,7 +69,6 @@ func dataSourceAwsEcsTaskDefinition() *schema.Resource {
 						"docker_volume_configuration": {
 							Type:     schema.TypeList,
 							Computed: true,
-							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"scope": {
@@ -120,7 +119,6 @@ func dataSourceAwsEcsTaskDefinition() *schema.Resource {
 			"placement_constraints": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				MaxItems: 10,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -141,7 +139,6 @@ func dataSourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 			"proxy_configuration": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
