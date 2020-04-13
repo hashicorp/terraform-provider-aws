@@ -297,6 +297,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_sfn_activity":                              dataSourceAwsSfnActivity(),
 			"aws_sfn_state_machine":                         dataSourceAwsSfnStateMachine(),
 			"aws_sns_topic":                                 dataSourceAwsSnsTopic(),
+			"aws_spot_price_history":                        dataSourceAwsSpotPriceHistory(),
 			"aws_sqs_queue":                                 dataSourceAwsSqsQueue(),
 			"aws_ssm_document":                              dataSourceAwsSsmDocument(),
 			"aws_ssm_parameter":                             dataSourceAwsSsmParameter(),
