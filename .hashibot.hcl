@@ -425,7 +425,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_route53_([^d]|d[^o]|do[^m]|dom[^a]|doma[^i]|domai[^n]|domain[^s]|domains[^_]|[^r]|r[^e]|re[^s]|res[^o]|reso[^l]|resol[^v]|resolv[^e]|resolve[^r]|resolver[^_])",
     ],
     "service/route53domains" = [
-      "aws_route53_domains_",
+      "aws_route53_domain",
     ],
     "service/route53resolver" = [
       "aws_route53_resolver_",
@@ -1079,8 +1079,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_zone*"
     ]
     "service/route53domains" = [
-      "**/*_route53_domains_*",
-      "**/route53_domains_*"
+      "**/*_route53_domain*",
+      "**/route53_domain*"
     ]
     "service/route53resolver" = [
       "**/*_route53_resolver_*",

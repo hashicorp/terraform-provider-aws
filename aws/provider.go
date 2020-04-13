@@ -1082,6 +1082,7 @@ func init() {
 		"redshift",
 		"resourcegroups",
 		"route53",
+		"route53domains",
 		"route53resolver",
 		"s3",
 		"s3control",
