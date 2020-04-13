@@ -63,7 +63,7 @@ func diffTagsRoute53Domains(oldTags, newTags map[string]interface{}) ([]*route53
 	// Is the key from oldTags in newTags
 	// No - it's a deletion
 	var deleteTags []*string
-	for k, _ := range oldTags {
+	for k := range oldTags {
 		_, ok := newTags[k]
 		if !ok {
 			deleteTags = append(deleteTags, aws.String(k))
