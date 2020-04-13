@@ -1425,9 +1425,14 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func countEMRRemainingInstances(resp *emr.ListInstancesOutput, emrClusterId string) int {
+	if resp == nil {
+		log.Printf("[ERROR] response is nil")
+		return 0
+	}
+
 	instanceCount := len(resp.Instances)
 
-	if resp == nil || instanceCount == 0 {
+	if instanceCount == 0 {
 		log.Printf("[DEBUG] No instances found for EMR Cluster (%s)", emrClusterId)
 		return 0
 	}
