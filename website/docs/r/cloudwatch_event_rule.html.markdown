@@ -64,6 +64,7 @@ The following arguments are supported:
 * `name_prefix` - (Optional) The rule's name. Conflicts with `name`.
 * `schedule_expression` - (Required, if `event_pattern` isn't specified) The scheduling expression.
 	For example, `cron(0 20 * * ? *)` or `rate(5 minutes)`.
+* `event_bus_name` - (Optional) The event bus to associate with this rule. If you omit this, the `default` event bus is used.
 * `event_pattern` - (Required, if `schedule_expression` isn't specified) Event pattern
 	described a JSON object.
 	See full documentation of [CloudWatch Events and Event Patterns](http://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CloudWatchEventsandEventPatterns.html) for details.
@@ -82,7 +83,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Cloudwatch Event Rules can be imported using the `name`, e.g.
+Cloudwatch Event Rules can be imported using the `event_bus_name/rule_name` (if you omit `event_bus_name`, the `default` event bus will be used), e.g.
 
 ```
 $ terraform import aws_cloudwatch_event_rule.console capture-console-sign-in

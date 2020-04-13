@@ -86,6 +86,7 @@ func TestAccAWSCloudWatchEventRule_basic(t *testing.T) {
 					testAccCheckCloudWatchEventRuleExists(resourceName, &rule),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(`rule/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "event_bus_name"),
 					resource.TestCheckResourceAttr(resourceName, "schedule_expression", "rate(1 hour)"),
 					resource.TestCheckResourceAttr(resourceName, "role_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -398,6 +399,7 @@ func testAccAWSCloudWatchEventRuleConfig(name string) string {
 resource "aws_cloudwatch_event_rule" "test" {
 	name = "%s"
 	schedule_expression = "rate(1 hour)"
+	event_bus_name = "default"
 }
 `, name)
 }
