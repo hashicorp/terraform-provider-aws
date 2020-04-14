@@ -42,7 +42,7 @@ resource "aws_efs_file_system" "foo_with_lifecyle_policy" {
 resource "aws_efs_file_system" "foo_with_lifecyle_policy" {
   creation_token = "my-product"
 
-    policy = <<POLICY
+  policy = <<POLICY
 {
     "Version": "2012-10-17",
     "Id": "ExamplePolicy01",
