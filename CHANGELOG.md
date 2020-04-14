@@ -1,5 +1,9 @@
 ## 2.58.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource**: `aws_apigatewayv2_integration_response` [GH-9365]
+
 ENHANCEMENTS:
 
 * data-source/aws_dynamodb_table: Add `replica` attribute (initial support for Global Tables V2 (version 2019.11.21)) [GH-12342]
