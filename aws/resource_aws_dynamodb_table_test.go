@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -1445,15 +1446,13 @@ func TestAccAWSDynamoDbTable_Replica(t *testing.T) {
 }
 
 func testAccAWSDynamoDbReplicaUpdates(rName string) string {
-	return composeConfig(
-		testAccAlternateRegionProviderConfig(),
-		fmt.Sprintf(`
+	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 data "aws_region" "alternate" {
   provider = "aws.alternate"
 }
 
 resource "aws_dynamodb_table" "test" {
-  name             = "%s"
+  name             = %[1]q
   hash_key         = "TestTableHashKey"
   billing_mode     = "PAY_PER_REQUEST"
   stream_enabled   = true
@@ -1465,10 +1464,10 @@ resource "aws_dynamodb_table" "test" {
   }
 
   replica {
-    region_name = data.aws_region.alternate.name
+    region_name = %[2]q
   }
 }
-`, rName))
+`, rName, testAccGetAlternateRegion())
 }
 
 func testAccAWSDynamoDbReplicaDeletes(rName string) string {
