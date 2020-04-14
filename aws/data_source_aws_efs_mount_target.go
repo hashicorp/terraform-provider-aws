@@ -18,7 +18,6 @@ func dataSourceAwsEfsMountTarget() *schema.Resource {
 			"mount_target_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"file_system_arn": {
 				Type:     schema.TypeString,

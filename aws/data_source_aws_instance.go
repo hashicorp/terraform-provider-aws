@@ -25,7 +25,6 @@ func dataSourceAwsInstance() *schema.Resource {
 			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"ami": {
 				Type:     schema.TypeString,

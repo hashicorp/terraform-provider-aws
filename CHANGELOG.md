@@ -1,4 +1,9 @@
 ## 2.58.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_dlm_lifecycle_policy: Ensure plan-time validation for `times` argument only allows 24 hour format [GH-12800]
+
 ## 2.57.0 (April 09, 2020)
 
 BREAKING CHANGES:

@@ -69,7 +69,6 @@ func dataSourceAwsEksCluster() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"platform_version": {
