@@ -1,5 +1,10 @@
 ## 2.58.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_dynamodb_table: Add `replica` attribute (initial support for Global Tables V2 (version 2019.11.21)) [GH-12342]
+* resource/aws_dynamodb_table: Add `replica` configuration block (initial support for Global Tables V2 (version 2019.11.21)) [GH-12342]
+
 BUG FIXES:
 
 * resource/aws_dlm_lifecycle_policy: Ensure plan-time validation for `times` argument only allows 24 hour format [GH-12800]
