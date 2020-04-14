@@ -20,14 +20,17 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"access_point_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"file_system_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"file_system_id": {
 				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -102,7 +105,7 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 func dataSourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
 	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
-		AccessPointId: aws.String(d.Id()),
+		AccessPointId: aws.String(d.Get("access_point_id").(string)),
 	})
 	if err != nil {
 		return fmt.Errorf("Error reading EFS access point %s: %s", d.Id(), err)
