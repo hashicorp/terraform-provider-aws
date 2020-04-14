@@ -175,6 +175,7 @@ github.com/aws/aws-sdk-go/service/rds
 github.com/aws/aws-sdk-go/service/redshift
 github.com/aws/aws-sdk-go/service/resourcegroups
 github.com/aws/aws-sdk-go/service/route53
+github.com/aws/aws-sdk-go/service/route53domains
 github.com/aws/aws-sdk-go/service/route53resolver
 github.com/aws/aws-sdk-go/service/s3
 github.com/aws/aws-sdk-go/service/s3/internal/arn
