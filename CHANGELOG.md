@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * data-source/aws_dynamodb_table: Add `replica` attribute (initial support for Global Tables V2 (version 2019.11.21)) [GH-12342]
 * resource/aws_dynamodb_table: Add `replica` configuration block (initial support for Global Tables V2 (version 2019.11.21)) [GH-12342]
+* resource/aws_ec2_client_vpn_endpoint: Allow two `authentication_options`  configuration blocks [GH-12819]
 
 BUG FIXES:
 
