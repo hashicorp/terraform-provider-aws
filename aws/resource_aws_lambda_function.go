@@ -192,7 +192,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 						return false
 					}
 
-					if d.HasChange("vpc_config.0.security_group_ids") || d.HasChange("vpc_config.0.subnet_ids") {
+					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
 						return false
 					}
 
