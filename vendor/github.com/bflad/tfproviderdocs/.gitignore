@@ -1,1 +1,5 @@
+*~
+.*.swp
+.idea/
+.vscode/
 dist/

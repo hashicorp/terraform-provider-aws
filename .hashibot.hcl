@@ -1,5 +1,5 @@
 poll "closed_issue_locker" "locker" {
-  schedule             = "0 50 14 * * *"
+  schedule             = "0 10 17 * * *"
   closed_for           = "720h" # 30 days
   max_issues           = 500
   sleep_between_issues = "5s"
@@ -9,21 +9,6 @@ poll "closed_issue_locker" "locker" {
 
     If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
   EOF
-}
-
-poll "stale_issue_closer" "closer" {
-    schedule = "0 22 23 * * *"
-    no_reply_in_last = "2160h" # 90 days
-    max_issues = 500
-    sleep_between_issues = "5s"
-    created_after = "2019-06-01"
-    exclude_labels = ["needs-triage", "technical-debt"]
-    extra_search_params = "reactions:<20 no:milestone no:assignee"
-    message = <<-EOF
-    I'm going to close this issue due to inactivity (_90 days_ without response ⏳ ). This helps our maintainers find and focus on the active issues.
-
-    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
-    EOF
 }
 
 behavior "deprecated_import_commenter" "hashicorp_terraform" {
@@ -99,6 +84,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/apigatewayv2" = [
       "aws_api_gateway_v2_",
+      "aws_apigatewayv2_",
     ],
     "service/applicationautoscaling" = [
       "aws_appautoscaling_",
@@ -182,6 +168,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarnotifications" = [
+      "aws_codestarnotifications_",
+    ],
     "service/cognito" = [
       "aws_cognito_",
     ],
@@ -240,6 +229,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_placement_group",
       "aws_spot",
       "aws_route(\"|`|$)",
+      "aws_vpn_",
     ],
     "service/ecr" = [
       "aws_ecr_",
@@ -337,7 +327,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_kinesis_([^f]|f[^i]|fi[^r]|fir[^e]|fire[^h]|fireh[^o]|fireho[^s]|firehos[^e]|firehose[^_])",
     ],
     "service/kinesisanalytics" = [
-      "aws_kinesisanalytics_",
+      "aws_kinesis_analytics_",
     ],
     "service/kms" = [
       "aws_kms_",
@@ -505,6 +495,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_waf_",
       "aws_wafregional_",
     ],
+    "service/wafv2" = [
+      "aws_wafv2_",
+    ],
     "service/workdocs" = [
       "aws_workdocs_",
     ],
@@ -536,6 +529,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_region*",
       "aws/provider.go",
       "aws/utils.go",
+      "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
       "website/**/ip_ranges*",
@@ -546,7 +540,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     "tests" = [
       "**/*_test.go",
       ".gometalinter.json",
-      ".travis.yml"
+      ".markdownlint.yml",
+      ".travis.yml",
+      "staticcheck.conf"
     ]
     # label services
     "service/accessanalyzer" = [
@@ -577,7 +573,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
-      "**/api_gateway_v2_*"
+      "**/*_apigatewayv2_*",
+      "**/api_gateway_v2_*",
+      "**/apigatewayv2_*"
     ]
     "service/applicationautoscaling" = [
       "**/*_appautoscaling_*",
@@ -691,6 +689,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_codestar_*",
       "**/codestar_*"
     ]
+    "service/codestarnotifications" = [
+      "**/*_codestarnotifications_*",
+      "**/codestarnotifications_*"
+    ]
     "service/cognito" = [
       "**/*_cognito_*",
       "**/cognito_*"
@@ -702,6 +704,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/configservice" = [
       "aws/*_aws_config_*",
       "website/**/config_*"
+    ]
+    "service/costandusagereportservice" = [
+      "aws/*_aws_cur_*",
+      "website/**/cur_*"
     ]
     "service/databasemigrationservice" = [
       "**/*_dms_*",
@@ -775,6 +781,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_route_table*",
       "aws/*_aws_route.*",
       "aws/*_aws_security_group*",
+      "aws/*_aws_snapshot_create_volume_permission*",
       "aws/*_aws_spot*",
       "aws/*_aws_subnet*",
       "aws/*_aws_vpc*",
@@ -802,8 +809,9 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/route_table*",
       "website/**/route.*",
       "website/**/security_group*",
+      "website/**/snapshot_create_volume_permission*",
       "website/**/spot_*",
-      "website/**/subnet.*",
+      "website/**/subnet*",
       "website/**/vpc*",
       "website/**/vpn*"
     ]
@@ -824,6 +832,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/eks_*"
     ]
     "service/elastic-transcoder" = [
+      "**/*_elastictranscoder_*",
+      "**/elastictranscoder_*",
       "**/*_elastic_transcoder_*",
       "**/elastic_transcoder_*"
     ]
@@ -935,8 +945,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/kinesis_stream*"
     ]
     "service/kinesisanalytics" = [
-      "**/*_kinesisanalytics_*",
-      "**/kinesisanalytics_*"
+      "**/*_kinesis_analytics_*",
+      "**/kinesis_analytics_*"
     ]
     "service/kms" = [
       "**/*_kms_*",
@@ -1163,6 +1173,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/waf_*",
       "**/*_wafregional_*",
       "**/wafregional_*"
+    ]
+    "service/wafv2" = [
+      "**/*_wafv2_*",
+      "**/wafv2_*",
     ]
     "service/workdocs" = [
       "**/*_workdocs_*",

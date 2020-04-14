@@ -314,8 +314,6 @@ func createActiveDirectoryService(dsconn *directoryservice.DirectoryService, d *
 }
 
 func enableDirectoryServiceSso(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) error {
-	d.SetPartial("enable_sso")
-
 	if v, ok := d.GetOk("enable_sso"); ok && v.(bool) {
 		log.Printf("[DEBUG] Enabling SSO for DS directory %q", d.Id())
 		if _, err := dsconn.EnableSso(&directoryservice.EnableSsoInput{
@@ -388,8 +386,6 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("alias"); ok {
-		d.SetPartial("alias")
-
 		input := directoryservice.CreateAliasInput{
 			DirectoryId: aws.String(d.Id()),
 			Alias:       aws.String(v.(string)),

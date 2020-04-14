@@ -1,3 +1,15 @@
+# v0.5.0
+
+ENHANCEMENTS
+
+* check: Verify sidebar navigation for missing links and mismatched link text (if legacy directory structure)
+
+# v0.4.1
+
+BUG FIXES
+
+* check: Only verify valid file extensions at end of path (e.g. support additional periods in guide paths) (#25)
+
 # v0.4.0
 
 ENHANCEMENTS

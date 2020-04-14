@@ -75,7 +75,7 @@ func (d noOpRetryer) RetryRules(_ *Request) time.Duration {
 // retryableCodes is a collection of service response codes which are retry-able
 // without any further action.
 var retryableCodes = map[string]struct{}{
-	"RequestError":            {},
+	ErrCodeRequestError:       {},
 	"RequestTimeout":          {},
 	ErrCodeResponseTimeout:    {},
 	"RequestTimeoutException": {}, // Glacier's flavor of RequestTimeout
@@ -92,6 +92,7 @@ var throttleCodes = map[string]struct{}{
 	"TooManyRequestsException":               {}, // Lambda functions
 	"PriorRequestNotComplete":                {}, // Route53
 	"TransactionInProgressException":         {},
+	"EC2ThrottledException":                  {}, // EC2
 }
 
 // credsExpiredCodes is a collection of error codes which signify the credentials
@@ -178,7 +179,7 @@ func shouldRetryError(origErr error) bool {
 		var shouldRetry bool
 		if origErr != nil {
 			shouldRetry = shouldRetryError(origErr)
-			if err.Code() == "RequestError" && !shouldRetry {
+			if err.Code() == ErrCodeRequestError && !shouldRetry {
 				return false
 			}
 		}

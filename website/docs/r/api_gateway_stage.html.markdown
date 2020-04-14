@@ -1,5 +1,5 @@
 ---
-subcategory: "API Gateway"
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_stage"
 description: |-
@@ -116,7 +116,7 @@ The following arguments are supported:
 
 #### `access_log_settings`
 
-* `destination_arn` - (Required) ARN of the log group to send the logs to. Automatically removes trailing `:*` if present.
+* `destination_arn` - (Required) The Amazon Resource Name (ARN) of the CloudWatch Logs log group or Kinesis Data Firehose delivery stream to receive access logs. If you specify a Kinesis Data Firehose delivery stream, the stream name must begin with `amazon-apigateway-`. Automatically removes trailing `:*` if present.
 * `format` - (Required) The formatting and values recorded in the logs. 
 For more information on configuring the log format rules visit the AWS [documentation](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html)
 

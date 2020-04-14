@@ -447,7 +447,7 @@ func (c *Redshift) BatchModifyClusterSnapshotsRequest(input *BatchModifyClusterS
 
 // BatchModifyClusterSnapshots API operation for Amazon Redshift.
 //
-// Modifies the settings for a list of snapshots.
+// Modifies the settings for a set of cluster snapshots.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -532,7 +532,7 @@ func (c *Redshift) CancelResizeRequest(input *CancelResizeInput) (req *request.R
 
 // CancelResize API operation for Amazon Redshift.
 //
-// Cancels a resize operation.
+// Cancels a resize operation for a cluster.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -728,7 +728,7 @@ func (c *Redshift) CreateClusterRequest(input *CreateClusterInput) (req *request
 
 // CreateCluster API operation for Amazon Redshift.
 //
-// Creates a new cluster.
+// Creates a new cluster with the specified parameters.
 //
 // To create a cluster in Virtual Private Cloud (VPC), you must provide a cluster
 // subnet group name. The cluster subnet group identifies the subnets of your
@@ -1843,7 +1843,8 @@ func (c *Redshift) CreateSnapshotScheduleRequest(input *CreateSnapshotScheduleIn
 
 // CreateSnapshotSchedule API operation for Amazon Redshift.
 //
-// Creates a new snapshot schedule.
+// Create a snapshot schedule that can be associated to a cluster and which
+// overrides the default system backup schedule.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1935,7 +1936,7 @@ func (c *Redshift) CreateTagsRequest(input *CreateTagsInput) (req *request.Reque
 
 // CreateTags API operation for Amazon Redshift.
 //
-// Adds one or more tags to a specified resource.
+// Adds tags to a cluster.
 //
 // A resource can have up to 50 tags. If you try to create more than 50 tags
 // for a resource, you will receive an error and the attempt will fail.
@@ -2026,11 +2027,12 @@ func (c *Redshift) DeleteClusterRequest(input *DeleteClusterInput) (req *request
 
 // DeleteCluster API operation for Amazon Redshift.
 //
-// Deletes a previously provisioned cluster. A successful response from the
-// web service indicates that the request was received correctly. Use DescribeClusters
-// to monitor the status of the deletion. The delete operation cannot be canceled
-// or reverted once submitted. For more information about managing clusters,
-// go to Amazon Redshift Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html)
+// Deletes a previously provisioned cluster without its final snapshot being
+// created. A successful response from the web service indicates that the request
+// was received correctly. Use DescribeClusters to monitor the status of the
+// deletion. The delete operation cannot be canceled or reverted once submitted.
+// For more information about managing clusters, go to Amazon Redshift Clusters
+// (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html)
 // in the Amazon Redshift Cluster Management Guide.
 //
 // If you want to shut down the cluster and retain it for future use, set SkipFinalClusterSnapshot
@@ -2997,8 +2999,8 @@ func (c *Redshift) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Reque
 
 // DeleteTags API operation for Amazon Redshift.
 //
-// Deletes a tag or tags from a resource. You must provide the ARN of the resource
-// from which you want to delete the tag or tags.
+// Deletes tags from a resource. You must provide the ARN of the resource from
+// which you want to delete the tag or tags.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6237,7 +6239,7 @@ func (c *Redshift) DescribeStorageRequest(input *DescribeStorageInput) (req *req
 
 // DescribeStorage API operation for Amazon Redshift.
 //
-// Returns the total amount of snapshot usage and provisioned storage in megabytes.
+// Returns account level backups storage size and provisional storage.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6704,6 +6706,9 @@ func (c *Redshift) EnableLoggingRequest(input *EnableLoggingInput) (req *request
 //   to Bucket Restrictions and Limitations (https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html)
 //   in the Amazon Simple Storage Service (S3) Developer Guide.
 //
+//   * ErrCodeInvalidClusterStateFault "InvalidClusterState"
+//   The specified cluster is not in the available state.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/EnableLogging
 func (c *Redshift) EnableLogging(input *EnableLoggingInput) (*LoggingStatus, error) {
 	req, out := c.EnableLoggingRequest(input)
@@ -7085,17 +7090,18 @@ func (c *Redshift) ModifyClusterRequest(input *ModifyClusterInput) (req *request
 
 // ModifyCluster API operation for Amazon Redshift.
 //
-// Modifies the settings for a cluster. For example, you can add another security
-// or parameter group, update the preferred maintenance window, or change the
-// master user password. Resetting a cluster password or modifying the security
-// groups associated with a cluster do not need a reboot. However, modifying
-// a parameter group requires a reboot for parameters to take effect. For more
-// information about managing clusters, go to Amazon Redshift Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html)
-// in the Amazon Redshift Cluster Management Guide.
+// Modifies the settings for a cluster.
 //
 // You can also change node type and the number of nodes to scale up or down
 // the cluster. When resizing a cluster, you must specify both the number of
 // nodes and the node type even if one of the parameters does not change.
+//
+// You can add another security or parameter group, or change the master user
+// password. Resetting a cluster password or modifying the security groups associated
+// with a cluster do not need a reboot. However, modifying a parameter group
+// requires a reboot for parameters to take effect. For more information about
+// managing clusters, go to Amazon Redshift Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html)
+// in the Amazon Redshift Cluster Management Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7407,8 +7413,7 @@ func (c *Redshift) ModifyClusterMaintenanceRequest(input *ModifyClusterMaintenan
 
 // ModifyClusterMaintenance API operation for Amazon Redshift.
 //
-// Modifies the maintenance settings of a cluster. For example, you can defer
-// a maintenance window. You can also update or cancel a deferment.
+// Modifies the maintenance settings of a cluster.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7420,6 +7425,9 @@ func (c *Redshift) ModifyClusterMaintenanceRequest(input *ModifyClusterMaintenan
 // Returned Error Codes:
 //   * ErrCodeClusterNotFoundFault "ClusterNotFound"
 //   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+//   * ErrCodeInvalidClusterStateFault "InvalidClusterState"
+//   The specified cluster is not in the available state.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ModifyClusterMaintenance
 func (c *Redshift) ModifyClusterMaintenance(input *ModifyClusterMaintenanceInput) (*ModifyClusterMaintenanceOutput, error) {
@@ -7576,6 +7584,9 @@ func (c *Redshift) ModifyClusterSnapshotRequest(input *ModifyClusterSnapshotInpu
 // ModifyClusterSnapshot API operation for Amazon Redshift.
 //
 // Modifies the settings for a snapshot.
+//
+// This exanmple modifies the manual retention period setting for a cluster
+// snapshot.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -7962,7 +7973,7 @@ func (c *Redshift) ModifyScheduledActionRequest(input *ModifyScheduledActionInpu
 
 // ModifyScheduledAction API operation for Amazon Redshift.
 //
-// Modify a scheduled action.
+// Modifies a scheduled action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8189,6 +8200,88 @@ func (c *Redshift) ModifySnapshotSchedule(input *ModifySnapshotScheduleInput) (*
 // for more information on using Contexts.
 func (c *Redshift) ModifySnapshotScheduleWithContext(ctx aws.Context, input *ModifySnapshotScheduleInput, opts ...request.Option) (*ModifySnapshotScheduleOutput, error) {
 	req, out := c.ModifySnapshotScheduleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPauseCluster = "PauseCluster"
+
+// PauseClusterRequest generates a "aws/request.Request" representing the
+// client's request for the PauseCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PauseCluster for more information on using the PauseCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PauseClusterRequest method.
+//    req, resp := client.PauseClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/PauseCluster
+func (c *Redshift) PauseClusterRequest(input *PauseClusterInput) (req *request.Request, output *PauseClusterOutput) {
+	op := &request.Operation{
+		Name:       opPauseCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PauseClusterInput{}
+	}
+
+	output = &PauseClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// PauseCluster API operation for Amazon Redshift.
+//
+// Pauses a cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation PauseCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeClusterNotFoundFault "ClusterNotFound"
+//   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+//   * ErrCodeInvalidClusterStateFault "InvalidClusterState"
+//   The specified cluster is not in the available state.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/PauseCluster
+func (c *Redshift) PauseCluster(input *PauseClusterInput) (*PauseClusterOutput, error) {
+	req, out := c.PauseClusterRequest(input)
+	return out, req.Send()
+}
+
+// PauseClusterWithContext is the same as PauseCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PauseCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) PauseClusterWithContext(ctx aws.Context, input *PauseClusterInput, opts ...request.Option) (*PauseClusterOutput, error) {
+	req, out := c.PauseClusterRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -8519,7 +8612,7 @@ func (c *Redshift) ResizeClusterRequest(input *ResizeClusterInput) (req *request
 // Elastic resize operations have the following restrictions:
 //
 //    * You can only resize clusters of the following types: dc2.large dc2.8xlarge
-//    ds2.xlarge ds2.8xlarge
+//    ds2.xlarge ds2.8xlarge ra3.4xlarge ra3.16xlarge
 //
 //    * The type of nodes that you add must match the node type for the cluster.
 //
@@ -8867,6 +8960,88 @@ func (c *Redshift) RestoreTableFromClusterSnapshot(input *RestoreTableFromCluste
 // for more information on using Contexts.
 func (c *Redshift) RestoreTableFromClusterSnapshotWithContext(ctx aws.Context, input *RestoreTableFromClusterSnapshotInput, opts ...request.Option) (*RestoreTableFromClusterSnapshotOutput, error) {
 	req, out := c.RestoreTableFromClusterSnapshotRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opResumeCluster = "ResumeCluster"
+
+// ResumeClusterRequest generates a "aws/request.Request" representing the
+// client's request for the ResumeCluster operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ResumeCluster for more information on using the ResumeCluster
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ResumeClusterRequest method.
+//    req, resp := client.ResumeClusterRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ResumeCluster
+func (c *Redshift) ResumeClusterRequest(input *ResumeClusterInput) (req *request.Request, output *ResumeClusterOutput) {
+	op := &request.Operation{
+		Name:       opResumeCluster,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ResumeClusterInput{}
+	}
+
+	output = &ResumeClusterOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ResumeCluster API operation for Amazon Redshift.
+//
+// Resumes a paused cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Redshift's
+// API operation ResumeCluster for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeClusterNotFoundFault "ClusterNotFound"
+//   The ClusterIdentifier parameter does not refer to an existing cluster.
+//
+//   * ErrCodeInvalidClusterStateFault "InvalidClusterState"
+//   The specified cluster is not in the available state.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/redshift-2012-12-01/ResumeCluster
+func (c *Redshift) ResumeCluster(input *ResumeClusterInput) (*ResumeClusterOutput, error) {
+	req, out := c.ResumeClusterRequest(input)
+	return out, req.Send()
+}
+
+// ResumeClusterWithContext is the same as ResumeCluster with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ResumeCluster for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Redshift) ResumeClusterWithContext(ctx aws.Context, input *ResumeClusterInput, opts ...request.Option) (*ResumeClusterOutput, error) {
+	req, out := c.ResumeClusterRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -10015,6 +10190,8 @@ type Cluster struct {
 	//    * incompatible-restore
 	//
 	//    * modifying
+	//
+	//    * paused
 	//
 	//    * rebooting
 	//
@@ -11242,7 +11419,7 @@ type CreateClusterInput struct {
 	// Default: A random, system-chosen Availability Zone in the region that is
 	// specified by the endpoint.
 	//
-	// Example: us-east-1d
+	// Example: us-east-2d
 	//
 	// Constraint: The specified Availability Zone must be in the same region as
 	// the current endpoint.
@@ -11431,8 +11608,8 @@ type CreateClusterInput struct {
 	// types, go to Working with Clusters (https://docs.aws.amazon.com/redshift/latest/mgmt/working-with-clusters.html#how-many-nodes)
 	// in the Amazon Redshift Cluster Management Guide.
 	//
-	// Valid Values: ds2.xlarge | ds2.8xlarge | ds2.xlarge | ds2.8xlarge | dc1.large
-	// | dc1.8xlarge | dc2.large | dc2.8xlarge
+	// Valid Values: ds2.xlarge | ds2.8xlarge | dc1.large | dc1.8xlarge | dc2.large
+	// | dc2.8xlarge | ra3.4xlarge | ra3.16xlarge
 	//
 	// NodeType is a required field
 	NodeType *string `type:"string" required:"true"`
@@ -12208,8 +12385,8 @@ type CreateEventSubscriptionInput struct {
 	// for all Amazon Redshift objects in your AWS account. You must specify a source
 	// type in order to specify source IDs.
 	//
-	// Valid values: cluster, cluster-parameter-group, cluster-security-group, and
-	// cluster-snapshot.
+	// Valid values: cluster, cluster-parameter-group, cluster-security-group, cluster-snapshot,
+	// and scheduled-action.
 	SourceType *string `type:"string"`
 
 	// The name of the event subscription to be created.
@@ -12701,8 +12878,8 @@ type CreateScheduledActionOutput struct {
 	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
 	//
 	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
-	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
-	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// Year)". For example, "cron(0 10 ? * MON *)". For more information, see Cron
+	// Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	Schedule *string `type:"string"`
 
@@ -13041,7 +13218,7 @@ type CreateTagsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) to which you want to add the tag or tags.
-	// For example, arn:aws:redshift:us-east-1:123456789:cluster:t1.
+	// For example, arn:aws:redshift:us-east-2:123456789:cluster:t1.
 	//
 	// ResourceName is a required field
 	ResourceName *string `type:"string" required:"true"`
@@ -13999,7 +14176,7 @@ type DeleteTagsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) from which you want to remove the tag or tags.
-	// For example, arn:aws:redshift:us-east-1:123456789:cluster:t1.
+	// For example, arn:aws:redshift:us-east-2:123456789:cluster:t1.
 	//
 	// ResourceName is a required field
 	ResourceName *string `type:"string" required:"true"`
@@ -15322,7 +15499,8 @@ type DescribeEventCategoriesInput struct {
 	// The source type, such as cluster or parameter group, to which the described
 	// event categories apply.
 	//
-	// Valid values: cluster, cluster-snapshot, cluster-parameter-group, and cluster-security-group.
+	// Valid values: cluster, cluster-snapshot, cluster-parameter-group, cluster-security-group,
+	// and scheduled-action.
 	SourceType *string `type:"string"`
 }
 
@@ -15933,7 +16111,8 @@ type DescribeNodeConfigurationOptionsInput struct {
 	// The action type to evaluate for possible node configurations. Specify "restore-cluster"
 	// to get configuration combinations based on an existing snapshot. Specify
 	// "recommend-node-config" to get configuration recommendations based on an
-	// existing cluster or snapshot.
+	// existing cluster or snapshot. Specify "resize-cluster" to get configuration
+	// combinations for elastic resize based on an existing cluster.
 	//
 	// ActionType is a required field
 	ActionType *string `type:"string" required:"true" enum:"ActionType"`
@@ -17129,7 +17308,7 @@ type DescribeTagsInput struct {
 	MaxRecords *int64 `type:"integer"`
 
 	// The Amazon Resource Name (ARN) for which you want to describe the tag or
-	// tags. For example, arn:aws:redshift:us-east-1:123456789:cluster:t1.
+	// tags. For example, arn:aws:redshift:us-east-2:123456789:cluster:t1.
 	ResourceName *string `type:"string"`
 
 	// The type of resource with which you want to view tags. Valid resource types
@@ -17882,8 +18061,9 @@ type EventSubscription struct {
 	// subscription.
 	SourceIdsList []*string `locationNameList:"SourceId" type:"list"`
 
-	// The source type of the events returned the Amazon Redshift event notification,
-	// such as cluster, or cluster-snapshot.
+	// The source type of the events returned by the Amazon Redshift event notification,
+	// such as cluster, cluster-snapshot, cluster-parameter-group, cluster-security-group,
+	// or scheduled-action.
 	SourceType *string `type:"string"`
 
 	// The status of the Amazon Redshift event notification subscription.
@@ -18835,11 +19015,13 @@ type ModifyClusterInput struct {
 	// in the Amazon Redshift Cluster Management Guide.
 	ElasticIp *string `type:"string"`
 
-	// Indicates whether the cluster is encrypted. If the cluster is encrypted and
-	// you provide a value for the KmsKeyId parameter, we will encrypt the cluster
-	// with the provided KmsKeyId. If you don't provide a KmsKeyId, we will encrypt
-	// with the default key. In the China region we will use legacy encryption if
-	// you specify that the cluster is encrypted.
+	// Indicates whether the cluster is encrypted. If the value is encrypted (true)
+	// and you provide a value for the KmsKeyId parameter, we encrypt the cluster
+	// with the provided KmsKeyId. If you don't provide a KmsKeyId, we encrypt with
+	// the default key. In the China region we use legacy encryption if you specify
+	// that the cluster is encrypted.
+	//
+	// If the value is not encrypted (false), then the cluster is decrypted.
 	Encrypted *bool `type:"boolean"`
 
 	// An option that specifies whether to create the cluster with enhanced VPC
@@ -18926,28 +19108,20 @@ type ModifyClusterInput struct {
 	// The new node type of the cluster. If you specify a new node type, you must
 	// also specify the number of nodes parameter.
 	//
-	// When you submit your request to resize a cluster, Amazon Redshift sets access
-	// permissions for the cluster to read-only. After Amazon Redshift provisions
-	// a new cluster according to your resize requirements, there will be a temporary
-	// outage while the old cluster is deleted and your connection is switched to
-	// the new cluster. When the new connection is complete, the original access
-	// permissions for the cluster are restored. You can use DescribeResize to track
-	// the progress of the resize request.
+	// For more information about resizing clusters, go to Resizing Clusters in
+	// Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/rs-resize-tutorial.html)
+	// in the Amazon Redshift Cluster Management Guide.
 	//
 	// Valid Values: ds2.xlarge | ds2.8xlarge | dc1.large | dc1.8xlarge | dc2.large
-	// | dc2.8xlarge
+	// | dc2.8xlarge | ra3.4xlarge | ra3.16xlarge
 	NodeType *string `type:"string"`
 
 	// The new number of nodes of the cluster. If you specify a new number of nodes,
 	// you must also specify the node type parameter.
 	//
-	// When you submit your request to resize a cluster, Amazon Redshift sets access
-	// permissions for the cluster to read-only. After Amazon Redshift provisions
-	// a new cluster according to your resize requirements, there will be a temporary
-	// outage while the old cluster is deleted and your connection is switched to
-	// the new cluster. When the new connection is complete, the original access
-	// permissions for the cluster are restored. You can use DescribeResize to track
-	// the progress of the resize request.
+	// For more information about resizing clusters, go to Resizing Clusters in
+	// Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/rs-resize-tutorial.html)
+	// in the Amazon Redshift Cluster Management Guide.
 	//
 	// Valid Values: Integer greater than 0.
 	NumberOfNodes *int64 `type:"integer"`
@@ -19608,8 +19782,8 @@ type ModifyEventSubscriptionInput struct {
 	// for all Amazon Redshift objects in your AWS account. You must specify a source
 	// type in order to specify source IDs.
 	//
-	// Valid values: cluster, cluster-parameter-group, cluster-security-group, and
-	// cluster-snapshot.
+	// Valid values: cluster, cluster-parameter-group, cluster-security-group, cluster-snapshot,
+	// and scheduled-action.
 	SourceType *string `type:"string"`
 
 	// The name of the modified Amazon Redshift event notification subscription.
@@ -19846,8 +20020,8 @@ type ModifyScheduledActionOutput struct {
 	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
 	//
 	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
-	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
-	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// Year)". For example, "cron(0 10 ? * MON *)". For more information, see Cron
+	// Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	Schedule *string `type:"string"`
 
@@ -20424,6 +20598,105 @@ func (s *Parameter) SetParameterValue(v string) *Parameter {
 // SetSource sets the Source field's value.
 func (s *Parameter) SetSource(v string) *Parameter {
 	s.Source = &v
+	return s
+}
+
+type PauseClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the cluster to be paused.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PauseClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PauseClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PauseClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PauseClusterInput"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *PauseClusterInput) SetClusterIdentifier(v string) *PauseClusterInput {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+type PauseClusterMessage struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the cluster to be paused.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PauseClusterMessage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PauseClusterMessage) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PauseClusterMessage) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PauseClusterMessage"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *PauseClusterMessage) SetClusterIdentifier(v string) *PauseClusterMessage {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+type PauseClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes a cluster.
+	Cluster *Cluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s PauseClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PauseClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *PauseClusterOutput) SetCluster(v *Cluster) *PauseClusterOutput {
+	s.Cluster = v
 	return s
 }
 
@@ -21053,9 +21326,7 @@ type ResizeClusterInput struct {
 	NodeType *string `type:"string"`
 
 	// The new number of nodes for the cluster.
-	//
-	// NumberOfNodes is a required field
-	NumberOfNodes *int64 `type:"integer" required:"true"`
+	NumberOfNodes *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -21073,9 +21344,6 @@ func (s *ResizeClusterInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ResizeClusterInput"}
 	if s.ClusterIdentifier == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
-	}
-	if s.NumberOfNodes == nil {
-		invalidParams.Add(request.NewErrParamRequired("NumberOfNodes"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -21135,9 +21403,7 @@ type ResizeClusterMessage struct {
 	NodeType *string `type:"string"`
 
 	// The new number of nodes for the cluster.
-	//
-	// NumberOfNodes is a required field
-	NumberOfNodes *int64 `type:"integer" required:"true"`
+	NumberOfNodes *int64 `type:"integer"`
 }
 
 // String returns the string representation
@@ -21155,9 +21421,6 @@ func (s *ResizeClusterMessage) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ResizeClusterMessage"}
 	if s.ClusterIdentifier == nil {
 		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
-	}
-	if s.NumberOfNodes == nil {
-		invalidParams.Add(request.NewErrParamRequired("NumberOfNodes"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -21277,7 +21540,7 @@ type RestoreFromClusterSnapshotInput struct {
 	//
 	// Default: A random, system-chosen Availability Zone.
 	//
-	// Example: us-east-1a
+	// Example: us-east-2a
 	AvailabilityZone *string `type:"string"`
 
 	// The identifier of the cluster that will be created from restoring the snapshot.
@@ -21879,6 +22142,105 @@ func (s *RestoreTableFromClusterSnapshotOutput) SetTableRestoreStatus(v *TableRe
 	return s
 }
 
+type ResumeClusterInput struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the cluster to be resumed.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResumeClusterInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResumeClusterInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResumeClusterInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResumeClusterInput"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *ResumeClusterInput) SetClusterIdentifier(v string) *ResumeClusterInput {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+type ResumeClusterMessage struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the cluster to be resumed.
+	//
+	// ClusterIdentifier is a required field
+	ClusterIdentifier *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ResumeClusterMessage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResumeClusterMessage) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResumeClusterMessage) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResumeClusterMessage"}
+	if s.ClusterIdentifier == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterIdentifier"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterIdentifier sets the ClusterIdentifier field's value.
+func (s *ResumeClusterMessage) SetClusterIdentifier(v string) *ResumeClusterMessage {
+	s.ClusterIdentifier = &v
+	return s
+}
+
+type ResumeClusterOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Describes a cluster.
+	Cluster *Cluster `type:"structure"`
+}
+
+// String returns the string representation
+func (s ResumeClusterOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResumeClusterOutput) GoString() string {
+	return s.String()
+}
+
+// SetCluster sets the Cluster field's value.
+func (s *ResumeClusterOutput) SetCluster(v *Cluster) *ResumeClusterOutput {
+	s.Cluster = v
+	return s
+}
+
 // Describes a RevisionTarget.
 type RevisionTarget struct {
 	_ struct{} `type:"structure"`
@@ -22199,8 +22561,8 @@ type ScheduledAction struct {
 	// Format of at expressions is "at(yyyy-mm-ddThh:mm:ss)". For example, "at(2016-03-04T17:27:00)".
 	//
 	// Format of cron expressions is "cron(Minutes Hours Day-of-month Month Day-of-week
-	// Year)". For example, "cron(0, 10, *, *, MON, *)". For more information, see
-	// Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
+	// Year)". For example, "cron(0 10 ? * MON *)". For more information, see Cron
+	// Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
 	Schedule *string `type:"string"`
 
@@ -22346,8 +22708,14 @@ func (s *ScheduledActionFilter) SetValues(v []*string) *ScheduledActionFilter {
 type ScheduledActionType struct {
 	_ struct{} `type:"structure"`
 
+	// An action that runs a PauseCluster API operation.
+	PauseCluster *PauseClusterMessage `type:"structure"`
+
 	// An action that runs a ResizeCluster API operation.
 	ResizeCluster *ResizeClusterMessage `type:"structure"`
+
+	// An action that runs a ResumeCluster API operation.
+	ResumeCluster *ResumeClusterMessage `type:"structure"`
 }
 
 // String returns the string representation
@@ -22363,9 +22731,19 @@ func (s ScheduledActionType) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ScheduledActionType) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ScheduledActionType"}
+	if s.PauseCluster != nil {
+		if err := s.PauseCluster.Validate(); err != nil {
+			invalidParams.AddNested("PauseCluster", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.ResizeCluster != nil {
 		if err := s.ResizeCluster.Validate(); err != nil {
 			invalidParams.AddNested("ResizeCluster", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.ResumeCluster != nil {
+		if err := s.ResumeCluster.Validate(); err != nil {
+			invalidParams.AddNested("ResumeCluster", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -22375,9 +22753,21 @@ func (s *ScheduledActionType) Validate() error {
 	return nil
 }
 
+// SetPauseCluster sets the PauseCluster field's value.
+func (s *ScheduledActionType) SetPauseCluster(v *PauseClusterMessage) *ScheduledActionType {
+	s.PauseCluster = v
+	return s
+}
+
 // SetResizeCluster sets the ResizeCluster field's value.
 func (s *ScheduledActionType) SetResizeCluster(v *ResizeClusterMessage) *ScheduledActionType {
 	s.ResizeCluster = v
+	return s
+}
+
+// SetResumeCluster sets the ResumeCluster field's value.
+func (s *ScheduledActionType) SetResumeCluster(v *ResumeClusterMessage) *ScheduledActionType {
+	s.ResumeCluster = v
 	return s
 }
 
@@ -23225,7 +23615,7 @@ type TaggedResource struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) with which the tag is associated, for example:
-	// arn:aws:redshift:us-east-1:123456789:cluster:t1.
+	// arn:aws:redshift:us-east-2:123456789:cluster:t1.
 	ResourceName *string `type:"string"`
 
 	// The type of resource with which the tag is associated. Valid resource types
@@ -23367,6 +23757,9 @@ const (
 
 	// ActionTypeRecommendNodeConfig is a ActionType enum value
 	ActionTypeRecommendNodeConfig = "recommend-node-config"
+
+	// ActionTypeResizeCluster is a ActionType enum value
+	ActionTypeResizeCluster = "resize-cluster"
 )
 
 const (
@@ -23460,6 +23853,12 @@ const (
 const (
 	// ScheduledActionTypeValuesResizeCluster is a ScheduledActionTypeValues enum value
 	ScheduledActionTypeValuesResizeCluster = "ResizeCluster"
+
+	// ScheduledActionTypeValuesPauseCluster is a ScheduledActionTypeValues enum value
+	ScheduledActionTypeValuesPauseCluster = "PauseCluster"
+
+	// ScheduledActionTypeValuesResumeCluster is a ScheduledActionTypeValues enum value
+	ScheduledActionTypeValuesResumeCluster = "ResumeCluster"
 )
 
 const (

@@ -208,7 +208,14 @@ resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "foo" {
   vpc_id = "${aws_vpc.foo.id}"
@@ -247,12 +254,6 @@ resource "aws_wafregional_web_acl_association" "bar" {
 
 func testAccCheckWafRegionalWebAclAssociationConfigResourceArnApiGatewayStage(rName string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
-
-data "aws_partition" "current" {}
-
-data "aws_region" "current" {}
-
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
@@ -315,7 +316,7 @@ resource "aws_wafregional_web_acl" "test" {
 }
 
 resource "aws_wafregional_web_acl_association" "test" {
-  resource_arn = "arn:${data.aws_partition.current.partition}:apigateway:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:/restapis/${aws_api_gateway_rest_api.test.id}/stages/${aws_api_gateway_stage.test.stage_name}"
+  resource_arn = "${aws_api_gateway_stage.test.arn}"
   web_acl_id   = "${aws_wafregional_web_acl.test.id}"
 }
 `, rName)

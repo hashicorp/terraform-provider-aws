@@ -15,8 +15,8 @@ import (
 
 func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	var conf apigateway.UsagePlanKey
-	rName := acctest.RandString(10)
-	updatedName := acctest.RandString(10)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	updatedName := acctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_api_gateway_usage_plan_key.main"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -35,6 +35,12 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "value", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccCheckAWSAPIGatewayUsagePlanKeyImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSApiGatewayUsagePlanKeyBasicUpdatedConfig(updatedName),
@@ -64,6 +70,28 @@ func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
+	var conf apigateway.UsagePlanKey
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_api_gateway_usage_plan_key.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanKeyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSApiGatewayUsagePlanKeyBasicConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayUsagePlanKeyExists(resourceName, &conf),
+					testAccCheckAWSAPIGatewayUsagePlanKeyDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayUsagePlanKeyExists(n string, res *apigateway.UsagePlanKey) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -75,7 +103,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyExists(n string, res *apigateway.Usage
 			return fmt.Errorf("No API Gateway Usage Plan Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetUsagePlanKeyInput{
 			UsagePlanId: aws.String(rs.Primary.Attributes["usage_plan_id"]),
@@ -99,7 +127,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyExists(n string, res *apigateway.Usage
 }
 
 func testAccCheckAWSAPIGatewayUsagePlanKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_usage_plan_key" {
@@ -122,7 +150,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyDestroy(s *terraform.State) error {
 		if !ok {
 			return err
 		}
-		if aws2err.Code() != "NotFoundException" {
+		if aws2err.Code() != apigateway.ErrCodeNotFoundException {
 			return err
 		}
 
@@ -130,6 +158,39 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckAWSAPIGatewayUsagePlanKeyDisappears(resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No resource ID is set")
+		}
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
+
+		input := &apigateway.DeleteUsagePlanKeyInput{
+			KeyId:       aws.String(rs.Primary.ID),
+			UsagePlanId: aws.String(rs.Primary.Attributes["usage_plan_id"]),
+		}
+		_, err := conn.DeleteUsagePlanKey(input)
+
+		return err
+	}
+}
+
+func testAccCheckAWSAPIGatewayUsagePlanKeyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["usage_plan_id"], rs.Primary.ID), nil
+	}
 }
 
 func testAccAWSAPIGatewayUsagePlanKeyConfig(rName string) string {

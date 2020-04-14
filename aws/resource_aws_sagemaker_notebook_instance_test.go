@@ -325,6 +325,49 @@ func testAccCheckAWSSagemakerNotebookInstanceName(notebook *sagemaker.DescribeNo
 	}
 }
 
+func TestAccAWSSagemakerNotebookInstance_direct_internet_access(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
+	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName, "Disabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerNotebookDirectInternetAccess(&notebook, "Disabled"),
+				),
+			},
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName, "Enabled"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerNotebookDirectInternetAccess(&notebook, "Enabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSSagemakerNotebookDirectInternetAccess(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		directInternetAccess := notebook.DirectInternetAccess
+		if *directInternetAccess != expected {
+			return fmt.Errorf("direct_internet_access setting is incorrect: %s", *notebook.DirectInternetAccess)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSSagemakerNotebookInstanceTags(notebook *sagemaker.DescribeNotebookInstanceOutput, key string, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
@@ -499,4 +542,54 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 `, notebookName, notebookName)
+}
+
+func testAccAWSSagemakerNotebookInstanceConfigDirectInternetAccess(notebookName string, directInternetAccess string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "foo" {
+	name = %[1]q
+	role_arn = "${aws_iam_role.foo.arn}"
+	instance_type = "ml.t2.medium"
+	security_groups = ["${aws_security_group.test.id}"]
+	subnet_id = "${aws_subnet.sagemaker.id}"
+	direct_internet_access = %[2]q
+}
+
+resource "aws_iam_role" "foo" {
+	name = %[1]q
+	path = "/"
+	assume_role_policy = "${data.aws_iam_policy_document.assume_role.json}"
+}
+
+data "aws_iam_policy_document" "assume_role" {
+	statement {
+		actions = [ "sts:AssumeRole" ]
+		principals {
+			type = "Service"
+			identifiers = [ "sagemaker.amazonaws.com" ]
+		}
+	}
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-sagemaker-notebook-instance-direct-internet-access"
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+}
+
+resource "aws_subnet" "sagemaker" {
+  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = "tf-acc-test-sagemaker-notebook-instance-direct-internet-access"
+  }
+}
+`, notebookName, directInternetAccess)
 }

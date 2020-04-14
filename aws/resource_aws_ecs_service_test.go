@@ -322,11 +322,6 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 	tdName := fmt.Sprintf("tf-acc-td-svc-w-rc-%s", rString)
 	svcName := fmt.Sprintf("tf-acc-svc-w-rc-%s", rString)
 
-	originalRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + clusterName + "$")
-	modifiedRegexp := regexp.MustCompile(
-		"^arn:aws:ecs:[^:]+:[0-9]+:cluster/" + uClusterName + "$")
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -336,8 +331,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(clusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", originalRegexp),
+					resource.TestCheckResourceAttrPair("aws_ecs_service.ghost", "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 
@@ -345,8 +339,7 @@ func TestAccAWSEcsService_withRenamedCluster(t *testing.T) {
 				Config: testAccAWSEcsServiceWithRenamedCluster(uClusterName, tdName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists("aws_ecs_service.ghost", &service),
-					resource.TestMatchResourceAttr(
-						"aws_ecs_service.ghost", "cluster", modifiedRegexp),
+					resource.TestCheckResourceAttrPair("aws_ecs_service.ghost", "cluster", "aws_ecs_cluster.default", "arn"),
 				),
 			},
 		},
@@ -1526,7 +1519,14 @@ resource "aws_ecs_service" "mongo" {
 
 func testAccAWSEcsServiceWithPlacementConstraint(clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ecs_cluster" "default" {
   name = "%s"
@@ -1599,7 +1599,14 @@ resource "aws_ecs_service" "mongo" {
 
 func testAccAWSEcsServiceWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, assignPublicIP string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
@@ -1689,7 +1696,14 @@ resource "aws_ecs_service" "main" {
 
 func testAccAWSEcsServiceWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, platformVersion string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
@@ -1781,7 +1795,14 @@ resource "aws_ecs_service" "main" {
 func testAccAWSEcsService_healthCheckGracePeriodSeconds(vpcNameTag, clusterName, tdName, roleName, policyName,
 	lbName, svcName string, healthCheckGracePeriodSeconds int) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
@@ -1921,7 +1942,14 @@ resource "aws_ecs_service" "with_alb" {
 
 func testAccAWSEcsService_withIamRole(clusterName, tdName, roleName, policyName, svcName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -2076,7 +2104,14 @@ func tpl_testAccAWSEcsService_withLbChanges(clusterName, tdName, image,
 	containerName string, containerPort, hostPort int, roleName, policyName string,
 	instancePort int, svcName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -2332,7 +2367,14 @@ resource "aws_ecs_service" "jenkins" {
 
 func testAccAWSEcsServiceWithAlb(clusterName, tdName, roleName, policyName, lbName, svcName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
@@ -2470,7 +2512,14 @@ resource "aws_ecs_service" "with_alb" {
 
 func testAccAWSEcsServiceWithMultipleTargetGroups(clusterName, tdName, lbName, svcName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
@@ -2603,7 +2652,14 @@ func testAccAWSEcsServiceWithNetworkConfiguration_modified(sg1Name, sg2Name, clu
 
 func tpl_testAccAWSEcsServiceWithNetworkConfiguration(sg1Name, sg2Name, clusterName, tdName, svcName string, securityGroups string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "main" {
   cidr_block = "10.10.0.0/16"
@@ -2683,10 +2739,21 @@ resource "aws_ecs_service" "main" {
 
 func testAccAWSEcsService_withServiceRegistries(rName, clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2694,6 +2761,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -2769,10 +2840,21 @@ resource "aws_ecs_service" "test" {
 
 func testAccAWSEcsService_withServiceRegistries_container(rName, clusterName, tdName, svcName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg-cont"
+  }
 }
 
 resource "aws_subnet" "test" {
@@ -2780,6 +2862,10 @@ resource "aws_subnet" "test" {
   cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)}"
   availability_zone = "${data.aws_availability_zones.test.names[count.index]}"
   vpc_id            = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-with-svc-reg"
+  }
 }
 
 resource "aws_security_group" "test" {
@@ -2921,7 +3007,14 @@ resource "aws_ecs_service" "ghost" {
 
 func testAccAWSEcsServiceConfigDeploymentControllerTypeCodeDeploy(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

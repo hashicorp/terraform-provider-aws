@@ -2,11 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"log"
 )
 
 func resourceAwsWorkspacesIpGroup() *schema.Resource {
@@ -67,10 +68,6 @@ func resourceAwsWorkspacesIpGroupCreate(d *schema.ResourceData, meta interface{}
 	if err != nil {
 		return err
 	}
-
-	//if len(tags) > 0 {
-	//	params.Tags = tags
-	//}
 
 	d.SetId(*resp.GroupId)
 
