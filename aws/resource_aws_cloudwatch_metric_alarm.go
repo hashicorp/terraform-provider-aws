@@ -522,7 +522,6 @@ func getAwsCloudWatchPutMetricAlarmInput(d *schema.ResourceData) cloudwatch.PutM
 		params.Metrics = metrics
 	}
 
-
 	if v, ok := d.GetOk("ok_actions"); ok {
 		params.OKActions = expandStringSet(v.(*schema.Set))
 	}
