@@ -1411,7 +1411,7 @@ func TestAccAWSDynamoDbTable_Replica(t *testing.T) {
 				),
 			},
 			{
-				Config:         testAccAWSDynamoDbReplicaUpdates(tableName),
+				Config:            testAccAWSDynamoDbReplicaUpdates(tableName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

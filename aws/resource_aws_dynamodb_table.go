@@ -750,12 +750,12 @@ func resourceAwsDynamoDbTableDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] DynamoDB delete table: %s", d.Id())
 
 	if replicas := d.Get("replica").(*schema.Set).List(); len(replicas) > 0 {
-			if err := deleteDynamoDbReplicas(d.Id(), replicas, conn); err != nil {
+		if err := deleteDynamoDbReplicas(d.Id(), replicas, conn); err != nil {
 			return fmt.Errorf("error deleting DynamoDB Table (%s) replicas: %s", d.Id(), err)
 		}
 	}
 
-	err = deleteAwsDynamoDbTable(d.Id(), conn)
+	err := deleteAwsDynamoDbTable(d.Id(), conn)
 	if err != nil {
 		if isAWSErr(err, dynamodb.ErrCodeResourceNotFoundException, "Requested resource not found: Table: ") {
 			return nil
