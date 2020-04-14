@@ -4189,55 +4189,6 @@ func diffDynamoDbGSI(oldGsi, newGsi []interface{}, billingMode string) (ops []*d
 	return
 }
 
-func diffDynamoDbReplicas(oldReplica, newReplica []interface{}) (ops []*dynamodb.ReplicationGroupUpdate, e error) {
-	// Transform slices into maps
-	oldReplicas := make(map[string]interface{})
-	for _, replicaData := range oldReplica {
-		m := replicaData.(map[string]interface{})
-		oldReplicas[m["region_name"].(string)] = m
-	}
-	newReplicas := make(map[string]interface{})
-	for _, replicaData := range newReplica {
-		m := replicaData.(map[string]interface{})
-		newReplicas[m["region_name"].(string)] = m
-	}
-
-	for _, data := range newReplica {
-		newMap := data.(map[string]interface{})
-		newName := newMap["region_name"].(string)
-
-		if _, exists := oldReplicas[newName]; !exists {
-			m := data.(map[string]interface{})
-			regionName := m["region_name"].(string)
-
-			ops = append(ops, &dynamodb.ReplicationGroupUpdate{
-				Create: &dynamodb.CreateReplicationGroupMemberAction{
-					RegionName: aws.String(regionName),
-				},
-			})
-		}
-	}
-
-	for _, data := range oldReplicas {
-		oldMap := data.(map[string]interface{})
-		oldName := oldMap["region_name"].(string)
-
-		_, exists := newReplicas[oldName]
-		if exists {
-			// newMap := newData.(map[string]interface{})
-			// regionName := newMap["region"].(string)
-		} else {
-			regionName := oldName
-			ops = append(ops, &dynamodb.ReplicationGroupUpdate{
-				Delete: &dynamodb.DeleteReplicationGroupMemberAction{
-					RegionName: aws.String(regionName),
-				},
-			})
-		}
-	}
-	return
-}
-
 func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{}, error) {
 	mapCopy, err := copystructure.Copy(in)
 	if err != nil {
@@ -4288,6 +4239,24 @@ func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []i
 	}
 
 	return []interface{}{m}
+}
+
+func flattenAwsDynamoDbReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescription) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"region_name": aws.StringValue(apiObject.RegionName),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
@@ -4405,16 +4374,7 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		return err
 	}
 
-	replicaList := make([]map[string]interface{}, 0, len(table.Replicas))
-	for _, replicaObject := range table.Replicas {
-		replica := map[string]interface{}{
-			"region_name": aws.StringValue(replicaObject.RegionName),
-		}
-
-		replicaList = append(replicaList, replica)
-	}
-
-	err = d.Set("replica", replicaList)
+	err = d.Set("replica", flattenAwsDynamoDbReplicaDescriptions(table.Replicas))
 	if err != nil {
 		return err
 	}

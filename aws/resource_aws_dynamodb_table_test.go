@@ -1386,7 +1386,6 @@ func testAccCheckAWSDynamoDbTableDisappears(table *dynamodb.DescribeTableOutput)
 func TestAccAWSDynamoDbTable_Replica(t *testing.T) {
 	var conf dynamodb.DescribeTableOutput
 	var providers []*schema.Provider
-	alternateRegionDataSourceName := "data.aws_region.alternate"
 	resourceName := "aws_dynamodb_table.test"
 	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
 
@@ -1408,7 +1407,6 @@ func TestAccAWSDynamoDbTable_Replica(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.name", "TestTableHashKey"),
 					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.type", "S"),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.region_name", alternateRegionDataSourceName, "name"),
 				),
 			},
 			{
@@ -1438,7 +1436,6 @@ func TestAccAWSDynamoDbTable_Replica(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.name", "TestTableHashKey"),
 					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.type", "S"),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.region_name", alternateRegionDataSourceName, "name"),
 				),
 			},
 		},
@@ -1471,7 +1468,7 @@ resource "aws_dynamodb_table" "test" {
 }
 
 func testAccAWSDynamoDbReplicaDeletes(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name         = "%s"
   hash_key     = "TestTableHashKey"
