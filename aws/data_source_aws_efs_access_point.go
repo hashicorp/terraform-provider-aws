@@ -78,18 +78,15 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 								Schema: map[string]*schema.Schema{
 									"owner_gid": {
 										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"owner_uid": {
 										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
+										Computed: true,
 									},
 									"permissions": {
 										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
+										Computed: true,
 									},
 								},
 							},
