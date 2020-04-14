@@ -18,11 +18,11 @@ output_file="markdown-link-check-output.txt"
 rm -f "$error_file" "$output_file"
 
 docker run --rm -i -t \
-  -v $(pwd)/website:/src/website:ro \
-  -v $(pwd)/.markdownlinkcheck.json:/src/.markdownlinkcheck.json:ro \
+  -v $(pwd):/github/workspace:ro \
+  -w /github/workspace \
   --entrypoint /usr/bin/find \
   markdown-link-check \
-  website -type f -name "*.md" -or -name "*.markdown" -exec ./markdown-link-check --config .markdownlinkcheck.json --quiet --verbose {} \; \
+  website -type f -name "*.md" -or -name "*.markdown" -exec /src/markdown-link-check --config .markdownlinkcheck.json --quiet --verbose {} \; \
   | tee -a "${output_file}"
 
 touch "${error_file}"
