@@ -380,23 +380,17 @@ func resourceAwsCloudWatchMetricAlarmUpdate(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsCloudWatchMetricAlarmDelete(d *schema.ResourceData, meta interface{}) error {
-	resp, err := getAwsCloudWatchMetricAlarm(d, meta)
-	if err != nil {
-		return err
-	}
-	if resp == nil {
-		log.Printf("[DEBUG] CloudWatch Metric Alarm %s is already gone", d.Id())
-		return nil
-	}
-
-	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
-
 	conn := meta.(*AWSClient).cloudwatchconn
 	params := cloudwatch.DeleteAlarmsInput{
 		AlarmNames: []*string{aws.String(d.Id())},
 	}
 
+	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
+
 	if _, err := conn.DeleteAlarms(&params); err != nil {
+		if isAWSErr(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
 		return fmt.Errorf("Error deleting CloudWatch Metric Alarm: %s", err)
 	}
 	log.Println("[INFO] CloudWatch Metric Alarm deleted")

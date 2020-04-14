@@ -356,6 +356,28 @@ func TestAccAWSCloudWatchMetricAlarm_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudWatchMetricAlarm_disappears(t *testing.T) {
+	var alarm cloudwatch.MetricAlarm
+	resourceName := "aws_cloudwatch_metric_alarm.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchMetricAlarmDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchMetricAlarmConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchMetricAlarmExists(resourceName, &alarm),
+					testAccCheckCloudWatchMetricAlarmDisappears(&alarm),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckCloudWatchMetricAlarmDimension(n, k, v string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -393,6 +415,24 @@ func testAccCheckCloudWatchMetricAlarmExists(n string, alarm *cloudwatch.MetricA
 			return fmt.Errorf("Alarm not found")
 		}
 		*alarm = *resp.MetricAlarms[0]
+
+		return nil
+	}
+}
+
+func testAccCheckCloudWatchMetricAlarmDisappears(alarm *cloudwatch.MetricAlarm) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).cloudwatchconn
+		params := &cloudwatch.DeleteAlarmsInput{
+			AlarmNames: []*string{alarm.AlarmName},
+		}
+		_, err := conn.DeleteAlarms(params)
+		if err != nil {
+			if isAWSErr(err, cloudwatch.ErrCodeResourceNotFoundException, "") {
+				return nil
+			}
+			return err
+		}
 
 		return nil
 	}
