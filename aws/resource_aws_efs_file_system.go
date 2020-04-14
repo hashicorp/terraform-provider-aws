@@ -95,6 +95,14 @@ func resourceAwsEfsFileSystem() *schema.Resource {
 				}, false),
 			},
 
+			"policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+			},
+
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -183,15 +191,23 @@ func resourceAwsEfsFileSystemCreate(d *schema.ResourceData, meta interface{}) er
 	}
 	log.Printf("[DEBUG] EFS file system %q created.", d.Id())
 
-	_, hasLifecyclePolicy := d.GetOk("lifecycle_policy")
-	if hasLifecyclePolicy {
-		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
-			FileSystemId:      aws.String(d.Id()),
-			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
+	if v, ok := d.GetOk("policy"); ok {
+		_, err := conn.PutFileSystemPolicy(&efs.PutFileSystemPolicyInput{
+			FileSystemId: aws.String(d.Id()),
+			Policy:       aws.String(v.(string)),
 		})
 		if err != nil {
-			return fmt.Errorf("Error creating lifecycle policy for EFS file system %q: %s",
-				d.Id(), err.Error())
+			return fmt.Errorf("failed to put policy for EFS file system %q: %s", d.Id(), err)
+		}
+	}
+
+	if v, ok := d.GetOk("lifecycle_policy"); ok {
+		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
+			FileSystemId:      aws.String(d.Id()),
+			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(v.([]interface{})),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to put lifecycle policy for EFS file system %q: %s", d.Id(), err)
 		}
 	}
 
@@ -233,14 +249,34 @@ func resourceAwsEfsFileSystemUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	if d.HasChange("policy") {
+		policy := d.Get("policy").(string)
+
+		if policy == "" {
+			_, err := conn.DeleteFileSystemPolicy(&efs.DeleteFileSystemPolicyInput{
+				FileSystemId: aws.String(d.Id()),
+			})
+			if err != nil {
+				return fmt.Errorf("failed to delete policy for EFS file system %q: %s", d.Id(), err)
+			}
+		} else {
+			_, err := conn.PutFileSystemPolicy(&efs.PutFileSystemPolicyInput{
+				FileSystemId: aws.String(d.Id()),
+				Policy:       aws.String(d.Get("policy").(string)),
+			})
+			if err != nil {
+				return fmt.Errorf("failed to put policy for EFS file system %q: %s", d.Id(), err)
+			}
+		}
+	}
+
 	if d.HasChange("lifecycle_policy") {
 		_, err := conn.PutLifecycleConfiguration(&efs.PutLifecycleConfigurationInput{
 			FileSystemId:      aws.String(d.Id()),
 			LifecyclePolicies: resourceAwsEfsFileSystemLifecyclePolicy(d.Get("lifecycle_policy").([]interface{})),
 		})
 		if err != nil {
-			return fmt.Errorf("Error updating lifecycle policy for EFS file system %q: %s",
-				d.Id(), err.Error())
+			return fmt.Errorf("failed to put lifecycle policy for EFS file system %q: %s", d.Id(), err)
 		}
 	}
 
@@ -309,14 +345,25 @@ func resourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
 
-	res, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+	res1, err := conn.DescribeFileSystemPolicy(&efs.DescribeFileSystemPolicyInput{
 		FileSystemId: fs.FileSystemId,
 	})
 	if err != nil {
-		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %s",
+		return fmt.Errorf("failed to describe policy for EFS file system (%s): %s",
 			aws.StringValue(fs.FileSystemId), err)
 	}
-	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies); err != nil {
+	if err := d.Set("policy", res1.Policy); err != nil {
+		return err
+	}
+
+	res2, err := conn.DescribeLifecycleConfiguration(&efs.DescribeLifecycleConfigurationInput{
+		FileSystemId: fs.FileSystemId,
+	})
+	if err != nil {
+		return fmt.Errorf("failed to describe lifecycle policy for EFS file system (%s): %s",
+			aws.StringValue(fs.FileSystemId), err)
+	}
+	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res2.LifecyclePolicies); err != nil {
 		return err
 	}
 

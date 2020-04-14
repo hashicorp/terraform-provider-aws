@@ -9,11 +9,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
-
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -315,6 +315,61 @@ func TestAccAWSEFSFileSystem_ThroughputMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"creation_token"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEFSFileSystem_policy(t *testing.T) {
+	resourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckEfsFileSystemDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEFSFileSystemConfig_policyCreate(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEFSFileSystemHasPolicy(resourceName, fmt.Sprintf(`
+					{
+						"Version": "2012-10-17",
+						"Statement": [{
+							"Sid": "",
+							"Effect": "Allow",
+							"Principal": {"AWS":"*"},
+							"Action": "elasticfilesystem:ClientMount",
+							"Resource": ["*"]
+						}]
+					}
+					`)),
+				),
+			},
+			{
+				Config: testAccAWSEFSFileSystemConfig_policyUpdate(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEFSFileSystemHasPolicy(resourceName, fmt.Sprintf(`
+					{
+						"Version": "2012-10-17",
+						"Statement": [{
+							"Sid": "",
+							"Effect": "Allow",
+							"Principal": {"AWS":"*"},
+							"Action": [
+								"elasticfilesystem:ClientMount",
+								"elasticfilesystem:ClientWrite",
+								"elasticfilesystem:ClientRootAccess"
+							],
+							"Resource": ["*"]
+						}]
+					}
+					`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -622,6 +677,41 @@ func testAccCheckEfsFileSystemLifecyclePolicy(resourceID string, expectedVal str
 	}
 }
 
+func testAccCheckAWSEFSFileSystemHasPolicy(n string, expectedPolicy string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("EFS File System %q is not found", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("EFS File System %q ID is not set", n)
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).efsconn
+
+		res, err := conn.DescribeFileSystemPolicy(&efs.DescribeFileSystemPolicyInput{
+			FileSystemId: aws.String(rs.Primary.ID),
+		})
+		if err != nil {
+			return fmt.Errorf("failed to describe file system %q policy: %s", rs.Primary.ID, err)
+		}
+
+		actualPolicy := *res.Policy
+
+		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicy, expectedPolicy)
+		if err != nil {
+			return fmt.Errorf("failed to test policy equivalence: %s", err)
+		}
+		if !equivalent {
+			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
+				expectedPolicy, actualPolicy)
+		}
+
+		return nil
+	}
+}
+
 func testAccAWSEFSFileSystemConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
@@ -781,6 +871,54 @@ resource "aws_efs_file_system" "test" {
   throughput_mode                 = "provisioned"
 }
 `, provisionedThroughputInMibps)
+}
+
+func testAccAWSEFSFileSystemConfig_policyCreate() string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "elasticfilesystem:ClientMount",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_efs_file_system" "test" {
+  policy = data.aws_iam_policy_document.test.json
+}
+`)
+}
+
+func testAccAWSEFSFileSystemConfig_policyUpdate() string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions = [
+      "elasticfilesystem:ClientMount",
+      "elasticfilesystem:ClientWrite",
+      "elasticfilesystem:ClientRootAccess",
+    ]
+
+    principals {
+      type        = "AWS"
+      identifiers = ["*"]
+    }
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_efs_file_system" "test" {
+  policy = data.aws_iam_policy_document.test.json
+}
+`)
 }
 
 func testAccAWSEFSFileSystemConfigWithLifecyclePolicy(lpName string, lpVal string) string {
