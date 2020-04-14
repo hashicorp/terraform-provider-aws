@@ -10,7 +10,7 @@ import (
 
 func TestAccDataSourceAWSEFSAccessPoint_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	dataSourceName := "data.aws_efs_file_system.test"
+	dataSourceName := "data.aws_efs_access_point.test"
 	resourceName := "aws_efs_access_point.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,7 +42,7 @@ resource "aws_efs_access_point" "test" {
   file_system_id = "${aws_efs_file_system.test.id}"
 }
 
-"data" "aws_efs_access_point" "test" {
+data "aws_efs_access_point" "test" {
   access_point_id = "${aws_efs_access_point.test.id}"
 }
 `, rName)
