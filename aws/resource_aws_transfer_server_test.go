@@ -629,43 +629,41 @@ resource "aws_internet_gateway" "test" {
 	}
 }
 
-resource "aws_default_route_table" "test" {
-	default_route_table_id = "${aws_vpc.test.default_route_table_id}"
-
-	tags = {
-		Name = "terraform-testacc-default-route-table-vpc-endpoint"
-	}
-
-	route {
-		cidr_block = "0.0.0.0/0"
-		gateway_id = "${aws_internet_gateway.test.id}"
-	}
-}
+//resource "aws_default_route_table" "test" {
+//	default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+//
+//	tags = {
+//		Name = "terraform-testacc-default-route-table-vpc-endpoint"
+//	}
+//
+//	route {
+//		cidr_block = "0.0.0.0/0"
+//		gateway_id = "${aws_internet_gateway.test.id}"
+//	}
+//}
 `
 
 const testAccAWSTransferServerConfig_VpcEndPoint = testAccAWSTransferServerConfigVPCBase + `
 data "aws_region" "current" {}
 
 resource "aws_security_group" "test" {
-	name 		= "allow-transfer-server"
-	description = "Allow TLS inbound traffic"
-	vpc_id 		= "${aws_vpc.test.id}"
-	ingress {
-		from_port       = 0
-		to_port         = 0
-		protocol        = "-1"
-		self 			= true
-	}
+  name 		  = "allow-transfer-server"
+  description = "Allow TLS inbound traffic"
+  vpc_id      = "${aws_vpc.test.id}"
+  ingress {
+  	from_port       = 0
+  	to_port         = 0
+  	protocol        = "-1"
+  	self 			= true
+  }
 }
 
 resource "aws_vpc_endpoint" "test" {
-	vpc_id = "${aws_vpc.test.id}"
-	vpc_endpoint_type = "Interface"
-	service_name = "com.amazonaws.${data.aws_region.current.name}.transfer.server"
+  vpc_id = "${aws_vpc.test.id}"
+  vpc_endpoint_type = "Interface"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.transfer.server"
 
-	security_group_ids = [
-		"${aws_security_group.test.id}",
-	]
+  security_group_ids = ["${aws_security_group.test.id}"]
 }
 
 resource "aws_transfer_server" "test" {
@@ -679,7 +677,7 @@ resource "aws_transfer_server" "test" {
 const testAccAWSTransferServerConfig_vpc = testAccAWSTransferServerConfigVPCBase + `
 data "aws_availability_zones" "test" {}
 
-resource "aws_subnet" "a" {
+resource "aws_subnet" "test1" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.0.0/24"
   availability_zone = "${data.aws_availability_zones.test.names[0]}"
@@ -689,7 +687,7 @@ resource "aws_subnet" "a" {
   }
 }
 
-resource "aws_subnet" "b" {
+resource "aws_subnet" "test2" {
   vpc_id            = "${aws_vpc.test.id}"
   cidr_block        = "10.0.1.0/24"
   availability_zone = "${data.aws_availability_zones.test.names[1]}"
@@ -699,17 +697,18 @@ resource "aws_subnet" "b" {
   }
 }
 
-resource "aws_eip" "a" {}
-
-resource "aws_eip" "b" {}
+resource "aws_eip" "test" {
+  count = 2
+  vpc   = true
+}
 
 resource "aws_transfer_server" "test" {
-	endpoint_type = "VPC"
-	endpoint_details {
-        vpc_id                 = "${aws_vpc.test.id}"
-        subnet_ids             = ["${aws_subnet.a.id}", "${aws_subnet.b.id}"]
-        address_allocation_ids = ["${aws_eip.a.id}", "${aws_eip.b.id}"]
-	}
+  endpoint_type = "VPC"
+  endpoint_details {
+      vpc_id                 = "${aws_vpc.test.id}"
+      subnet_ids             = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+      address_allocation_ids = "${aws_eip.test.*.id}"
+  }
 }
 `
 
