@@ -145,6 +145,33 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
+	rStr := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists("aws_ec2_client_vpn_endpoint.test"),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.#", "2"),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.0.type", "directory-service-authentication"),
+					resource.TestCheckResourceAttr("aws_ec2_client_vpn_endpoint.test", "authentication_options.1.type", "certificate-authentication"),
+				),
+			},
+
+			{
+				ResourceName:      "aws_ec2_client_vpn_endpoint.test",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	rStr := acctest.RandString(5)
 
@@ -339,6 +366,46 @@ resource "aws_acm_certificate" "test" {
 `, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
+func testAccEc2ClientVpnEndpointMsADBase() string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+}
+
+resource "aws_directory_service_directory" "test" {
+  name     = "corp.notexample.com"
+  password = "SuperSecretPassw0rd"
+  type     = "MicrosoftAD"
+
+  vpc_settings {
+    vpc_id     = "${aws_vpc.test.id}"
+    subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+  }
+}
+`)
+}
+
 func testAccEc2ClientVpnEndpointConfig(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -410,43 +477,8 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 
 func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = "${aws_vpc.test.id}"
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[1]}"
-}
-
-resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
-  password = "SuperSecretPassw0rd"
-  type     = "MicrosoftAD"
-
-  vpc_settings {
-    vpc_id     = "${aws_vpc.test.id}"
-    subnet_ids = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
-  }
-}
-
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() +
+		testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.test.arn}"
@@ -455,6 +487,30 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   authentication_options {
     type                = "directory-service-authentication"
     active_directory_id = "${aws_directory_service_directory.test.id}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigWithMutualAuthAndMicrosoftAD(rName string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                = "directory-service-authentication"
+    active_directory_id = "${aws_directory_service_directory.test.id}"
+  }
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
   }
 
   connection_log_options {
