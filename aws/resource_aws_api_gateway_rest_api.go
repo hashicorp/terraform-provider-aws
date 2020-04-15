@@ -483,7 +483,7 @@ func flattenApiGatewayEndpointConfiguration(endpointConfiguration *apigateway.En
 	}
 
 	if len(endpointConfiguration.VpcEndpointIds) > 0 {
-		m["vpc_endpoint_ids"] = flattenStringSet(endpointConfiguration.VpcEndpointIds)
+		m["vpc_endpoint_ids"] = aws.StringValueSlice(endpointConfiguration.VpcEndpointIds)
 	}
 
 	return []interface{}{m}
