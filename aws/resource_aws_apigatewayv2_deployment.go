@@ -11,14 +11,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-func resourceAwsApiGateway2Deployment() *schema.Resource {
+func resourceAwsApiGatewayV2Deployment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGateway2DeploymentCreate,
-		Read:   resourceAwsApiGateway2DeploymentRead,
-		Update: resourceAwsApiGateway2DeploymentUpdate,
-		Delete: resourceAwsApiGateway2DeploymentDelete,
+		Create: resourceAwsApiGatewayV2DeploymentCreate,
+		Read:   resourceAwsApiGatewayV2DeploymentRead,
+		Update: resourceAwsApiGatewayV2DeploymentUpdate,
+		Delete: resourceAwsApiGatewayV2DeploymentDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGateway2DeploymentImport,
+			State: resourceAwsApiGatewayV2DeploymentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -36,7 +36,7 @@ func resourceAwsApiGateway2Deployment() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGateway2DeploymentCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.CreateDeploymentInput{
@@ -54,10 +54,10 @@ func resourceAwsApiGateway2DeploymentCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(resp.DeploymentId))
 
-	return resourceAwsApiGateway2DeploymentRead(d, meta)
+	return resourceAwsApiGatewayV2DeploymentRead(d, meta)
 }
 
-func resourceAwsApiGateway2DeploymentRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	resp, err := conn.GetDeployment(&apigatewayv2.GetDeploymentInput{
@@ -78,7 +78,7 @@ func resourceAwsApiGateway2DeploymentRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsApiGateway2DeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.UpdateDeploymentInput{
@@ -95,10 +95,10 @@ func resourceAwsApiGateway2DeploymentUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("error updating API Gateway v2 deployment: %s", err)
 	}
 
-	return resourceAwsApiGateway2DeploymentRead(d, meta)
+	return resourceAwsApiGatewayV2DeploymentRead(d, meta)
 }
 
-func resourceAwsApiGateway2DeploymentDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2DeploymentDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 deployment (%s)", d.Id())
@@ -116,7 +116,7 @@ func resourceAwsApiGateway2DeploymentDelete(d *schema.ResourceData, meta interfa
 	return nil
 }
 
-func resourceAwsApiGateway2DeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAwsApiGatewayV2DeploymentImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 2 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/deployment-id'", d.Id())
