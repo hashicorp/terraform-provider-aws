@@ -23,10 +23,9 @@ func DeploymentDeployed(conn *apigatewayv2.ApiGatewayV2, apiId, deploymentId str
 
 	outputRaw, err := stateConf.WaitForState()
 
-	switch output := outputRaw.(type) {
-	case *apigatewayv2.GetDeploymentOutput:
-		return output, err
-	default:
-		return nil, err
+	if v, ok := outputRaw.(*apigatewayv2.GetDeploymentOutput); ok {
+		return v, err
 	}
+
+	return nil, err
 }
