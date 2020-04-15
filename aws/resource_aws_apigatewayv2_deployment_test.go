@@ -26,6 +26,7 @@ func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, "Test description"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test description"),
 				),
 			},
@@ -39,6 +40,7 @@ func TestAccAWSAPIGatewayV2Deployment_basic(t *testing.T) {
 				Config: testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, "Test description updated"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2DeploymentExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test description updated"),
 				),
 			},

@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
 )
 
 func resourceAwsApiGatewayV2Deployment() *schema.Resource {
@@ -26,6 +27,10 @@ func resourceAwsApiGatewayV2Deployment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+			},
+			"auto_deployed": {
+				Type:     schema.TypeBool,
+				Computed: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -54,16 +59,17 @@ func resourceAwsApiGatewayV2DeploymentCreate(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(resp.DeploymentId))
 
+	if _, err := waiter.DeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
+		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) creation: %s", d.Id(), err)
+	}
+
 	return resourceAwsApiGatewayV2DeploymentRead(d, meta)
 }
 
 func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	resp, err := conn.GetDeployment(&apigatewayv2.GetDeploymentInput{
-		ApiId:        aws.String(d.Get("api_id").(string)),
-		DeploymentId: aws.String(d.Id()),
-	})
+	outputRaw, _, err := waiter.DeploymentStatus(conn, d.Get("api_id").(string), d.Id())()
 	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -73,7 +79,9 @@ func resourceAwsApiGatewayV2DeploymentRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error reading API Gateway v2 deployment: %s", err)
 	}
 
-	d.Set("description", resp.Description)
+	output := outputRaw.(*apigatewayv2.GetDeploymentOutput)
+	d.Set("auto_deployed", output.AutoDeployed)
+	d.Set("description", output.Description)
 
 	return nil
 }
@@ -93,6 +101,10 @@ func resourceAwsApiGatewayV2DeploymentUpdate(d *schema.ResourceData, meta interf
 	_, err := conn.UpdateDeployment(req)
 	if err != nil {
 		return fmt.Errorf("error updating API Gateway v2 deployment: %s", err)
+	}
+
+	if _, err := waiter.DeploymentDeployed(conn, d.Get("api_id").(string), d.Id()); err != nil {
+		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) update: %s", d.Id(), err)
 	}
 
 	return resourceAwsApiGatewayV2DeploymentRead(d, meta)
