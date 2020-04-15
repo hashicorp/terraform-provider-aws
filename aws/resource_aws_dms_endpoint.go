@@ -69,6 +69,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"db2",
 					"docdb",
 					"dynamodb",
+					"elasticsearch",
 					"kinesis",
 					"mariadb",
 					"mongodb",
@@ -218,7 +219,8 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"kinesis_settings": {
+			
+			"elasticsearch_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
@@ -248,6 +250,40 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validateArn,
+					},
+				},
+			},
+			"kinesis_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"endpoint_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"error_retry_duration": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  300,
+						},
+						"full_load_error_percentage": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  10,
+						},
+						"service_access_role_arn": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 					},
 				},
@@ -310,6 +346,13 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			BucketFolder:            aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
 			BucketName:              aws.String(d.Get("s3_settings.0.bucket_name").(string)),
 			CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
+		}
+	case "elasticsearch":
+		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
+			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
+			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
+			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
+			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 		}
 	default:
 		request.Password = aws.String(d.Get("password").(string))
@@ -531,6 +574,20 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 's3')
 			hasChanges = true
 		}
+	case "elasticsearch":
+		if d.HasChange("elasticsearch_settings.0.endpoint_uri") ||
+			d.HasChange("elasticsearch_settings.0.error_retry_duration") ||
+			d.HasChange("elasticsearch_settings.0.full_load_error_percentage") ||
+			d.HasChange("elasticsearch_settings.0.service_access_role_arn") {
+			request.ElasticsearchSettings = &dms.ElasticsearchSettings{
+				ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
+				EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
+				ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
+				FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
+			}
+			request.EngineName = aws.String(d.Get("engine_name").(string))
+			hasChanges = true
+		}
 	default:
 		if d.HasChange("database_name") {
 			request.DatabaseName = aws.String(d.Get("database_name").(string))
@@ -625,6 +682,10 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		if err := d.Set("s3_settings", flattenDmsS3Settings(endpoint.S3Settings)); err != nil {
 			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
 		}
+	case "elasticsearch":
+		if err := d.Set("elasticsearch_settings", flattenDmsElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
+		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
 		d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
@@ -669,6 +730,21 @@ func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
 		"bucket_folder":             aws.StringValue(settings.BucketFolder),
 		"bucket_name":               aws.StringValue(settings.BucketName),
 		"compression_type":          aws.StringValue(settings.CompressionType),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"endpoint_uri":               aws.StringValue(settings.EndpointUri),
+		"error_retry_duration":       aws.Int64Value(settings.ErrorRetryDuration),
+		"full_load_error_percentage": aws.Int64Value(settings.FullLoadErrorPercentage),
+		"service_access_role_arn":    aws.StringValue(settings.ServiceAccessRoleArn),
 	}
 
 	return []map[string]interface{}{m}

@@ -128,6 +128,37 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 	})
 }
 
+func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
+	resourceName := "aws_dms_endpoint.dms_endpoint"
+	randId := acctest.RandString(8) + "-elasticsearch"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointElasticsearchConfig(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.endpoint_uri", "search-estest.us-west-2.es.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "300"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			//  No update step due to:
+			//  InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+		},
+	})
+}
+
 func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-kinesis"
@@ -660,18 +691,88 @@ EOF
 `, randId)
 }
 
+func dmsEndpointElasticsearchConfig(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+  endpoint_id   = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+  ssl_mode      = "none"
+
+  tags = {
+    Name   = "tf-test-elasticsearch-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  elasticsearch_settings {
+    service_access_role_arn    = "${aws_iam_role.iam_role.arn}"
+    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
+    full_load_error_percentage = 10
+    error_retry_duration       = 300
+  }
+
+  depends_on = ["aws_iam_role_policy.dms_elasticsearch_access"]
+}
+
+resource "aws_iam_role" "iam_role" {
+  name = "tf-test-iam-elasticsearch-role-%[1]s"
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_elasticsearch_access" {
+  name = "tf-test-iam-elasticsearch-role-policy-%[1]s"
+  role = "${aws_iam_role.iam_role.name}"
+
+  policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				 "es:ESHttpDelete",
+				 "es:ESHttpGet",
+				 "es:ESHttpHead",
+				 "es:ESHttpPost",
+				 "es:ESHttpPut"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+`, randId)
+}
+
 func dmsEndpointKinesisConfig(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "kinesis"
-	kinesis_settings {
-		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-		stream_arn              = "${aws_kinesis_stream.stream1.arn}"
-	}
+  endpoint_id   = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type = "target"
+  engine_name   = "kinesis"
 
-	depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
+  kinesis_settings {
+    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+    stream_arn              = "${aws_kinesis_stream.stream1.arn}"
+  }
+
+  depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
 }
 
 resource "aws_kinesis_stream" "stream1" {
@@ -685,9 +786,9 @@ resource "aws_kinesis_stream" "stream2" {
 }
 
 resource "aws_iam_role" "iam_role" {
-	name_prefix = "tf-test-iam-kinesis-role"
+  name_prefix = "tf-test-iam-kinesis-role"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -704,9 +805,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_kinesis_access" {
-	name_prefix = "tf-test-iam-kinesis-role-policy"
-	role        = "${aws_iam_role.iam_role.name}"
-	policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
+  name_prefix = "tf-test-iam-kinesis-role-policy"
+  role        = "${aws_iam_role.iam_role.name}"
+  policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
 }
 
 data "aws_iam_policy_document" "dms_kinesis_access" {
@@ -716,7 +817,6 @@ data "aws_iam_policy_document" "dms_kinesis_access" {
 		"kinesis:PutRecord",
 		"kinesis:PutRecords",
 	]
-
 	resources = [
 		"${aws_kinesis_stream.stream1.arn}",
 		"${aws_kinesis_stream.stream2.arn}",
@@ -729,15 +829,16 @@ data "aws_iam_policy_document" "dms_kinesis_access" {
 func dmsEndpointKinesisConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "kinesis"
-	kinesis_settings {
-		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-		stream_arn              = "${aws_kinesis_stream.stream2.arn}"
-	}
+  endpoint_id = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type = "target"
+  engine_name = "kinesis"
 
-	depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
+  kinesis_settings {
+    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+    stream_arn              = "${aws_kinesis_stream.stream2.arn}"
+  }
+
+  depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
 }
 
 resource "aws_kinesis_stream" "stream1" {
@@ -751,9 +852,9 @@ resource "aws_kinesis_stream" "stream2" {
 }
 
 resource "aws_iam_role" "iam_role" {
-	name_prefix = "tf-test-iam-kinesis-role"
+  name_prefix = "tf-test-iam-kinesis-role"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -770,9 +871,9 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_kinesis_access" {
-	name_prefix = "tf-test-iam-kinesis-role-policy"
-	role        = "${aws_iam_role.iam_role.name}"
-	policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
+  name_prefix = "tf-test-iam-kinesis-role-policy"
+  role        = "${aws_iam_role.iam_role.name}"
+  policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
 }
 
 data "aws_iam_policy_document" "dms_kinesis_access" {
@@ -782,7 +883,6 @@ data "aws_iam_policy_document" "dms_kinesis_access" {
 		"kinesis:PutRecord",
 		"kinesis:PutRecords",
 	]
-
 	resources = [
 		"${aws_kinesis_stream.stream1.arn}",
 		"${aws_kinesis_stream.stream2.arn}",
