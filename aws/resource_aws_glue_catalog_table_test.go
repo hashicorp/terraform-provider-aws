@@ -628,20 +628,6 @@ resource "aws_glue_catalog_table" "test" {
   name          = %[1]q
 
   storage_descriptor {
-    // bucket_columns            = []
-    // compressed                = false
-    // input_format              = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
-    // location                  = "s3://issue_bucket/issue_table"
-    // number_of_buckets         = -1
-    // output_format             = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
-    // parameters                = {}
-    // stored_as_sub_directories = false
-
-    // columns {
-    //   name = "issue_column"
-    //   type = "string"
-    // }
-
     ser_de_info {}
   }
 }
@@ -659,28 +645,6 @@ resource "aws_glue_catalog_table" "test" {
   name          = %[1]q
 
   storage_descriptor {
-    // bucket_columns            = []
-    // compressed                = false
-    // input_format              = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetInputFormat"
-    // location                  = "s3://issue_bucket/issue_table"
-    // number_of_buckets         = -1
-    // output_format             = "org.apache.hadoop.hive.ql.io.parquet.MapredParquetOutputFormat"
-    // parameters                = {}
-    // stored_as_sub_directories = false
-
-    // columns {
-    //   name = "issue_column"
-    //   type = "string"
-    // }
-
-    // ser_de_info {
-    //   name = "SerDe"
-    //   parameters            = {
-    //     "serialization.format" = "1"
-    //   }
-    //   serialization_library = "org.apache.hadoop.hive.ql.io.parquet.serde.ParquetHiveSerDe"
-    // }
-
     skewed_info {
       skewed_column_names               = []
       skewed_column_value_location_maps = {}
