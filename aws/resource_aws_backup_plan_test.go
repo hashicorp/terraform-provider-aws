@@ -550,12 +550,6 @@ func testAccCheckAwsBackupPlanRuleAttr(name string, ruleNameMap *map[string]stri
 	}
 }
 
-func testAccCheckAwsBackupPlanRuleAttrSet(name string, ruleNameMap *map[string]string, ruleName, value string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return resource.TestCheckResourceAttrSet(name, fmt.Sprintf("rule.%s.%s", (*ruleNameMap)[ruleName], value))(s)
-	}
-}
-
 func testAccAwsBackupPlanConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
