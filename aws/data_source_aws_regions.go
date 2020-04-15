@@ -54,12 +54,11 @@ func dataSourceAwsRegionsRead(d *schema.ResourceData, meta interface{}) error {
 		names = append(names, aws.StringValue(v.RegionName))
 	}
 
-	sort.Slice(names, func(i, j int) bool {
-		return names[i] < names[j]
-	})
 
 	d.SetId(time.Now().UTC().String())
-	d.Set("names", names)
+	if err := d.Set("names", names); err != nil {
+		return fmt.Errorf("error setting names: %s", err)
+	}
 
 	return nil
 }

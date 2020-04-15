@@ -26,37 +26,17 @@ func TestAccDataSourceAwsRegions_Basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsRegions_OptIn(t *testing.T) {
+func TestAccDataSourceAwsRegions_Filter(t *testing.T) {
 	resourceName := "data.aws_regions.opt_in_status"
-
-	statusOptedIn := "opted-in"
-	statusNotOptedIn := "not-opted-in"
-	statusOptInNotRequired := "opt-in-not-required"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			// This resource has to be at the very top of the test scenario due to bug in Terrafom Plugin SDK
 			{
-				Config: testAccDataSourceAwsRegionsConfig_allRegionsFiltered(statusOptedIn),
+				Config: testAccDataSourceAwsRegionsConfig_allRegionsFiltered("opt-in-not-required"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionsCheck(resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
-				),
-			},
-			{
-				Config: testAccDataSourceAwsRegionsConfig_allRegionsFiltered(statusOptInNotRequired),
-				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsRegionsCheck(resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
-				),
-			},
-			{
-				Config: testAccDataSourceAwsRegionsConfig_allRegionsFiltered(statusNotOptedIn),
-				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsRegionsCheck(resourceName),
-					resource.TestCheckNoResourceAttr(resourceName, "all_regions"),
 				),
 			},
 		},
@@ -82,11 +62,28 @@ func TestAccDataSourceAwsRegions_AllRegions(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAwsRegionsCheck(name string) resource.TestCheckFunc {
+func testAccDataSourceAwsRegionsCheck(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[resourceName]
+
 		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
+			return fmt.Errorf("root module has no resource called %s", resourceName)
+		}
+		
+		names, namesOk := attrs["names.#"]
+
+		if !namesOk {
+			return fmt.Errorf("names attribute is missing.")
+		}
+
+		namesQuantity, err := strconv.Atoi(names)
+
+		if err != nil {
+			return fmt.Errorf("error parsing names (%s) into integer: %s", names, err)
+		}
+
+		if namesQuantity == 0 {
+			return fmt.Errorf("No names found, this is probably a bug.")
 		}
 
 		return nil
