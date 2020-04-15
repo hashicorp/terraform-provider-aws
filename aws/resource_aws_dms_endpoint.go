@@ -234,19 +234,20 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
-								"JSON",
+								dms.MessageFormatValueJson,
+								dms.MessageFormatValueJsonUnformatted,
 							}, false),
-							Default: "JSON",
+							Default: dms.MessageFormatValueJson,
 						},
 						"service_access_role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 						"stream_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
 						},
 					},
 				},
@@ -650,11 +651,6 @@ func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]inter
 		"extract_doc_id":      aws.StringValue(settings.ExtractDocId),
 		"docs_to_investigate": aws.StringValue(settings.DocsToInvestigate),
 		"auth_source":         aws.StringValue(settings.AuthSource),
-	}
-
-	// The DMS API returns "scram-sha-1", cf. https://github.com/aws/aws-sdk-go/issues/2522
-	if *settings.AuthMechanism == "scram-sha-1" {
-		m["auth_mechanism"] = "scram_sha_1"
 	}
 
 	return []map[string]interface{}{m}

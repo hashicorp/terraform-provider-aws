@@ -142,7 +142,7 @@ func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream1", "arn"),
 				),
 			},
@@ -157,7 +157,7 @@ func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
 					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream2", "arn"),
 				),
 			},
