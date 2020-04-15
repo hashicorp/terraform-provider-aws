@@ -37,6 +37,54 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"elasticsearch_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"endpoint_uri": {
+							Type:     schema.TypeString,
+							Required: true,
+							// API returns this error with ModifyEndpoint:
+							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							ForceNew: true,
+						},
+						"error_retry_duration": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      300,
+							ValidateFunc: validation.IntAtLeast(0),
+							// API returns this error with ModifyEndpoint:
+							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							ForceNew: true,
+						},
+						"full_load_error_percentage": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      10,
+							ValidateFunc: validation.IntBetween(0, 100),
+							// API returns this error with ModifyEndpoint:
+							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							ForceNew: true,
+						},
+						"service_access_role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+							// API returns this error with ModifyEndpoint:
+							// InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+							ForceNew: true,
+						},
+					},
+				},
+			},
 			"endpoint_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -46,10 +94,6 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validateDmsEndpointId,
-			},
-			"service_access_role": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"endpoint_type": {
 				Type:     schema.TypeString,
@@ -87,6 +131,40 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Computed: true,
 				Optional: true,
 			},
+			"kinesis_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"message_format": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								dms.MessageFormatValueJson,
+								dms.MessageFormatValueJsonUnformatted,
+							}, false),
+							Default: dms.MessageFormatValueJson,
+						},
+						"service_access_role_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+						"stream_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
 			"kms_key_arn": {
 				Type:         schema.TypeString,
 				Computed:     true,
@@ -94,36 +172,6 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
-			"password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
-			},
-			"port": {
-				Type:     schema.TypeInt,
-				Optional: true,
-			},
-			"server_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"ssl_mode": {
-				Type:     schema.TypeString,
-				Computed: true,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					dms.DmsSslModeValueNone,
-					dms.DmsSslModeValueRequire,
-					dms.DmsSslModeValueVerifyCa,
-					dms.DmsSslModeValueVerifyFull,
-				}, false),
-			},
-			"tags": tagsSchema(),
-			"username": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			// With default values as per https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html
 			"mongodb_settings": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -168,6 +216,15 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 						},
 					},
 				},
+			},
+			"password": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
+			},
+			"port": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 			"s3_settings": {
 				Type:     schema.TypeList,
@@ -219,74 +276,29 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					},
 				},
 			},
-			
-			"elasticsearch_settings": {
-				Type:     schema.TypeList,
+			"server_name": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"message_format": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								dms.MessageFormatValueJson,
-								dms.MessageFormatValueJsonUnformatted,
-							}, false),
-							Default: dms.MessageFormatValueJson,
-						},
-						"service_access_role_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateArn,
-						},
-						"stream_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateArn,
-					},
-				},
 			},
-			"kinesis_settings": {
-				Type:     schema.TypeList,
+			"service_access_role": {
+				Type:     schema.TypeString,
 				Optional: true,
-				MaxItems: 1,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "1" && new == "0" {
-						return true
-					}
-					return false
-				},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"endpoint_uri": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"error_retry_duration": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  300,
-						},
-						"full_load_error_percentage": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  10,
-						},
-						"service_access_role_arn": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
+			},
+			"ssl_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					dms.DmsSslModeValueNone,
+					dms.DmsSslModeValueRequire,
+					dms.DmsSslModeValueVerifyCa,
+					dms.DmsSslModeValueVerifyFull,
+				}, false),
+			},
+			"tags": tagsSchema(),
+			"username": {
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 		},
 	}
@@ -307,6 +319,13 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	case "dynamodb":
 		request.DynamoDbSettings = &dms.DynamoDbSettings{
 			ServiceAccessRoleArn: aws.String(d.Get("service_access_role").(string)),
+		}
+	case "elasticsearch":
+		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
+			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
+			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
+			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
+			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 		}
 	case "kinesis":
 		request.KinesisSettings = &dms.KinesisSettings{
@@ -346,13 +365,6 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			BucketFolder:            aws.String(d.Get("s3_settings.0.bucket_folder").(string)),
 			BucketName:              aws.String(d.Get("s3_settings.0.bucket_name").(string)),
 			CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
-		}
-	case "elasticsearch":
-		request.ElasticsearchSettings = &dms.ElasticsearchSettings{
-			ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
-			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
-			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
-			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
 		}
 	default:
 		request.Password = aws.String(d.Get("password").(string))
@@ -503,9 +515,25 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			}
 			hasChanges = true
 		}
+	case "elasticsearch":
+		if d.HasChanges(
+			"elasticsearch_settings.0.endpoint_uri",
+			"elasticsearch_settings.0.error_retry_duration",
+			"elasticsearch_settings.0.full_load_error_percentage",
+			"elasticsearch_settings.0.service_access_role_arn") {
+			request.ElasticsearchSettings = &dms.ElasticsearchSettings{
+				ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
+				EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
+				ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
+				FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
+			}
+			request.EngineName = aws.String(d.Get("engine_name").(string))
+			hasChanges = true
+		}
 	case "kinesis":
-		if d.HasChange("kinesis_settings.0.service_access_role_arn") ||
-			d.HasChange("kinesis_settings.0.stream_arn") {
+		if d.HasChanges(
+			"kinesis_settings.0.service_access_role_arn",
+			"kinesis_settings.0.stream_arn") {
 			// Intentionally omitting MessageFormat, because it's rejected on ModifyEndpoint calls.
 			// "An error occurred (InvalidParameterValueException) when calling the ModifyEndpoint
 			// operation: Message format  cannot be modified for kinesis endpoints."
@@ -572,20 +600,6 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 				CompressionType:         aws.String(d.Get("s3_settings.0.compression_type").(string)),
 			}
 			request.EngineName = aws.String(d.Get("engine_name").(string)) // Must be included (should be 's3')
-			hasChanges = true
-		}
-	case "elasticsearch":
-		if d.HasChange("elasticsearch_settings.0.endpoint_uri") ||
-			d.HasChange("elasticsearch_settings.0.error_retry_duration") ||
-			d.HasChange("elasticsearch_settings.0.full_load_error_percentage") ||
-			d.HasChange("elasticsearch_settings.0.service_access_role_arn") {
-			request.ElasticsearchSettings = &dms.ElasticsearchSettings{
-				ServiceAccessRoleArn:    aws.String(d.Get("elasticsearch_settings.0.service_access_role_arn").(string)),
-				EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
-				ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
-				FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
-			}
-			request.EngineName = aws.String(d.Get("engine_name").(string))
 			hasChanges = true
 		}
 	default:
@@ -659,6 +673,10 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		} else {
 			d.Set("service_access_role", "")
 		}
+	case "elasticsearch":
+		if err := d.Set("elasticsearch_settings", flattenDmsElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
+			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
+		}
 	case "kinesis":
 		if err := d.Set("kinesis_settings", flattenDmsKinesisSettings(endpoint.KinesisSettings)); err != nil {
 			return fmt.Errorf("Error setting kinesis_settings for DMS: %s", err)
@@ -682,10 +700,6 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		if err := d.Set("s3_settings", flattenDmsS3Settings(endpoint.S3Settings)); err != nil {
 			return fmt.Errorf("Error setting s3_settings for DMS: %s", err)
 		}
-	case "elasticsearch":
-		if err := d.Set("elasticsearch_settings", flattenDmsElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
-			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
-		}
 	default:
 		d.Set("database_name", endpoint.DatabaseName)
 		d.Set("extra_connection_attributes", endpoint.ExtraConnectionAttributes)
@@ -698,6 +712,35 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 	d.Set("ssl_mode", endpoint.SslMode)
 
 	return nil
+}
+
+func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"endpoint_uri":               aws.StringValue(settings.EndpointUri),
+		"error_retry_duration":       aws.Int64Value(settings.ErrorRetryDuration),
+		"full_load_error_percentage": aws.Int64Value(settings.FullLoadErrorPercentage),
+		"service_access_role_arn":    aws.StringValue(settings.ServiceAccessRoleArn),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDmsKinesisSettings(settings *dms.KinesisSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"message_format":          aws.StringValue(settings.MessageFormat),
+		"service_access_role_arn": aws.StringValue(settings.ServiceAccessRoleArn),
+		"stream_arn":              aws.StringValue(settings.StreamArn),
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func flattenDmsMongoDbSettings(settings *dms.MongoDbSettings) []map[string]interface{} {
@@ -730,35 +773,6 @@ func flattenDmsS3Settings(settings *dms.S3Settings) []map[string]interface{} {
 		"bucket_folder":             aws.StringValue(settings.BucketFolder),
 		"bucket_name":               aws.StringValue(settings.BucketName),
 		"compression_type":          aws.StringValue(settings.CompressionType),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[string]interface{} {
-	if settings == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"endpoint_uri":               aws.StringValue(settings.EndpointUri),
-		"error_retry_duration":       aws.Int64Value(settings.ErrorRetryDuration),
-		"full_load_error_percentage": aws.Int64Value(settings.FullLoadErrorPercentage),
-		"service_access_role_arn":    aws.StringValue(settings.ServiceAccessRoleArn),
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenDmsKinesisSettings(settings *dms.KinesisSettings) []map[string]interface{} {
-	if settings == nil {
-		return []map[string]interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"message_format":          aws.StringValue(settings.MessageFormat),
-		"service_access_role_arn": aws.StringValue(settings.ServiceAccessRoleArn),
-		"stream_arn":              aws.StringValue(settings.StreamArn),
 	}
 
 	return []map[string]interface{}{m}

@@ -129,8 +129,8 @@ func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 }
 
 func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
-	resourceName := "aws_dms_endpoint.dms_endpoint"
-	randId := acctest.RandString(8) + "-elasticsearch"
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -138,7 +138,7 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 		CheckDestroy: dmsEndpointDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: dmsEndpointElasticsearchConfig(randId),
+				Config: dmsEndpointElasticsearchConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					checkDmsEndpointExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
@@ -153,8 +153,80 @@ func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"password"},
 			},
-			//  No update step due to:
-			//  InvalidParameterCombinationException: Elasticsearch endpoint cant be modified.
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "60"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			// Resource needs additional creation retry handling for the following:
+			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
+			// {
+			// 	Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 120),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		checkDmsEndpointExists(resourceName),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "120"),
+			// 	),
+			// },
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			// Resource needs additional creation retry handling for the following:
+			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
+			// {
+			// 	Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 2),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		checkDmsEndpointExists(resourceName),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "2"),
+			// 	),
+			// },
 		},
 	})
 }
@@ -691,32 +763,10 @@ EOF
 `, randId)
 }
 
-func dmsEndpointElasticsearchConfig(randId string) string {
+func dmsEndpointElasticsearchConfigBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_dms_endpoint" "dms_endpoint" {
-  endpoint_id   = "tf-test-dms-endpoint-%[1]s"
-  endpoint_type = "target"
-  engine_name   = "elasticsearch"
-  ssl_mode      = "none"
-
-  tags = {
-    Name   = "tf-test-elasticsearch-endpoint-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
-  }
-
-  elasticsearch_settings {
-    service_access_role_arn    = "${aws_iam_role.iam_role.arn}"
-    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
-    full_load_error_percentage = 10
-    error_retry_duration       = 300
-  }
-
-  depends_on = ["aws_iam_role_policy.dms_elasticsearch_access"]
-}
-
-resource "aws_iam_role" "iam_role" {
-  name = "tf-test-iam-elasticsearch-role-%[1]s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -734,9 +784,9 @@ resource "aws_iam_role" "iam_role" {
 EOF
 }
 
-resource "aws_iam_role_policy" "dms_elasticsearch_access" {
-  name = "tf-test-iam-elasticsearch-role-policy-%[1]s"
-  role = "${aws_iam_role.iam_role.name}"
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
 
   policy = <<EOF
 {
@@ -757,7 +807,66 @@ resource "aws_iam_role_policy" "dms_elasticsearch_access" {
 }
 EOF
 }
-`, randId)
+`, rName)
+}
+
+func dmsEndpointElasticsearchConfig(rName string) string {
+	return composeConfig(
+		dmsEndpointElasticsearchConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri            = "search-estest.us-west-2.es.amazonaws.com"
+    service_access_role_arn = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
+}
+
+func dmsEndpointElasticsearchConfigErrorRetryDuration(rName string, errorRetryDuration int) string {
+	return composeConfig(
+		dmsEndpointElasticsearchConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
+    error_retry_duration       = %[2]d
+    service_access_role_arn    = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, errorRetryDuration))
+}
+
+func dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {
+	return composeConfig(
+		dmsEndpointElasticsearchConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
+    full_load_error_percentage = %[2]d
+    service_access_role_arn    = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, fullLoadErrorPercentage))
 }
 
 func dmsEndpointKinesisConfig(randId string) string {
