@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -69,8 +70,8 @@ func testAccDataSourceAwsRegionsCheck(resourceName string) resource.TestCheckFun
 		if !ok {
 			return fmt.Errorf("root module has no resource called %s", resourceName)
 		}
-		
-		names, namesOk := attrs["names.#"]
+
+		names, namesOk := rs.Primary.Attributes["names.#"]
 
 		if !namesOk {
 			return fmt.Errorf("names attribute is missing.")

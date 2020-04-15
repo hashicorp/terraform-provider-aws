@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"sort"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -53,7 +52,6 @@ func dataSourceAwsRegionsRead(d *schema.ResourceData, meta interface{}) error {
 	for _, v := range response.Regions {
 		names = append(names, aws.StringValue(v.RegionName))
 	}
-
 
 	d.SetId(time.Now().UTC().String())
 	if err := d.Set("names", names); err != nil {
