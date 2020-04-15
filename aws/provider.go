@@ -475,6 +475,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dlm_lifecycle_policy":                                resourceAwsDlmLifecyclePolicy(),
 			"aws_dms_certificate":                                     resourceAwsDmsCertificate(),
 			"aws_dms_endpoint":                                        resourceAwsDmsEndpoint(),
+			"aws_dms_event_subscription":                              resourceAwsDmsEventSubscription(),
 			"aws_dms_replication_instance":                            resourceAwsDmsReplicationInstance(),
 			"aws_dms_replication_subnet_group":                        resourceAwsDmsReplicationSubnetGroup(),
 			"aws_dms_replication_task":                                resourceAwsDmsReplicationTask(),
