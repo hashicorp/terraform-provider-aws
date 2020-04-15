@@ -10,14 +10,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func resourceAwsApiGateway2RouteResponse() *schema.Resource {
+func resourceAwsApiGatewayV2RouteResponse() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsApiGateway2RouteResponseCreate,
-		Read:   resourceAwsApiGateway2RouteResponseRead,
-		Update: resourceAwsApiGateway2RouteResponseUpdate,
-		Delete: resourceAwsApiGateway2RouteResponseDelete,
+		Create: resourceAwsApiGatewayV2RouteResponseCreate,
+		Read:   resourceAwsApiGatewayV2RouteResponseRead,
+		Update: resourceAwsApiGatewayV2RouteResponseUpdate,
+		Delete: resourceAwsApiGatewayV2RouteResponseDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsApiGateway2RouteResponseImport,
+			State: resourceAwsApiGatewayV2RouteResponseImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -48,7 +48,7 @@ func resourceAwsApiGateway2RouteResponse() *schema.Resource {
 	}
 }
 
-func resourceAwsApiGateway2RouteResponseCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2RouteResponseCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.CreateRouteResponseInput{
@@ -71,10 +71,10 @@ func resourceAwsApiGateway2RouteResponseCreate(d *schema.ResourceData, meta inte
 
 	d.SetId(aws.StringValue(resp.RouteResponseId))
 
-	return resourceAwsApiGateway2RouteResponseRead(d, meta)
+	return resourceAwsApiGatewayV2RouteResponseRead(d, meta)
 }
 
-func resourceAwsApiGateway2RouteResponseRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2RouteResponseRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	resp, err := conn.GetRouteResponse(&apigatewayv2.GetRouteResponseInput{
@@ -100,7 +100,7 @@ func resourceAwsApiGateway2RouteResponseRead(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func resourceAwsApiGateway2RouteResponseUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2RouteResponseUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	req := &apigatewayv2.UpdateRouteResponseInput{
@@ -124,10 +124,10 @@ func resourceAwsApiGateway2RouteResponseUpdate(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error updating API Gateway v2 route response: %s", err)
 	}
 
-	return resourceAwsApiGateway2RouteResponseRead(d, meta)
+	return resourceAwsApiGatewayV2RouteResponseRead(d, meta)
 }
 
-func resourceAwsApiGateway2RouteResponseDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsApiGatewayV2RouteResponseDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route response (%s)", d.Id())
@@ -146,7 +146,7 @@ func resourceAwsApiGateway2RouteResponseDelete(d *schema.ResourceData, meta inte
 	return nil
 }
 
-func resourceAwsApiGateway2RouteResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceAwsApiGatewayV2RouteResponseImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	parts := strings.Split(d.Id(), "/")
 	if len(parts) != 3 {
 		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'api-id/route-id/route-response-id'", d.Id())
