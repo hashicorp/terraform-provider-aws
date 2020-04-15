@@ -73,7 +73,7 @@ func resourceAwsBackupPlan() *schema.Resource {
 							},
 						},
 						"copy_action": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -95,8 +95,9 @@ func resourceAwsBackupPlan() *schema.Resource {
 										},
 									},
 									"destination_vault_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 								},
 							},
@@ -232,6 +233,8 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 
 		if vRuleName, ok := mRule["rule_name"].(string); ok && vRuleName != "" {
 			rule.RuleName = aws.String(vRuleName)
+		} else {
+			continue
 		}
 		if vTargetVaultName, ok := mRule["target_vault_name"].(string); ok && vTargetVaultName != "" {
 			rule.TargetBackupVaultName = aws.String(vTargetVaultName)
@@ -265,7 +268,7 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 			rule.Lifecycle = lifecycle
 		}
 
-		if vCopyActions := expandBackupPlanCopyActions(mRule["copy_action"].([]interface{})); len(vCopyActions) > 0 {
+		if vCopyActions := expandBackupPlanCopyActions(mRule["copy_action"].(*schema.Set).List()); len(vCopyActions) > 0 {
 			rule.CopyActions = vCopyActions
 		}
 
@@ -329,19 +332,35 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 			}
 		}
 
-		for _, action := range rule.CopyActions {
-			mRule["copy_action"] = []interface{}{
-				map[string]interface{}{
-					"lifecycle":             flattenBackupPlanCopyActionLifecycle(action.Lifecycle),
-					"destination_vault_arn": aws.StringValue(action.DestinationBackupVaultArn),
-				},
-			}
-		}
+		mRule["copy_action"] = flattenBackupPlanCopyActions(rule.CopyActions)
 
 		vRules = append(vRules, mRule)
 	}
 
 	return schema.NewSet(backupBackupPlanHash, vRules)
+}
+
+func flattenBackupPlanCopyActions(copyActions []*backup.CopyAction) []interface{} {
+	if len(copyActions) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, copyAction := range copyActions {
+		if copyAction == nil {
+			continue
+		}
+
+		tfMap := map[string]interface{}{
+			"destination_vault_arn": aws.StringValue(copyAction.DestinationBackupVaultArn),
+			"lifecycle":             flattenBackupPlanCopyActionLifecycle(copyAction.Lifecycle),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenBackupPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle) []interface{} {
@@ -393,8 +412,8 @@ func backupBackupPlanHash(vRule interface{}) int {
 		}
 	}
 
-	if vCopyActions, ok := mRule["copy_action"].([]interface{}); ok && len(vCopyActions) > 0 && vCopyActions[0] != nil {
-		for _, a := range vCopyActions {
+	if vCopyActions, ok := mRule["copy_action"].(*schema.Set); ok && vCopyActions.Len() > 0 {
+		for _, a := range vCopyActions.List() {
 			action := a.(map[string]interface{})
 			if mLifecycle, ok := action["lifecycle"].([]interface{}); ok {
 				for _, l := range mLifecycle {

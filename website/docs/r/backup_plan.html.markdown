@@ -42,7 +42,7 @@ For **rule** the following attributes are supported:
 * `completion_window` - (Optional) The amount of time AWS Backup attempts a backup before canceling the job and returning an error.
 * `lifecycle` - (Optional) The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
 * `recovery_point_tags` - (Optional) Metadata that you can assign to help organize the resources that you create.
-* `copy_action` - (Optional) 
+* `copy_action` - (Optional) Configuration block(s) with copy operation settings. Detailed below.
 
 ### Lifecycle Arguments
 For **lifecycle** the following attributes are supported:
