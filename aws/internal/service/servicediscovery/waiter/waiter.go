@@ -23,10 +23,9 @@ func OperationSuccess(conn *servicediscovery.ServiceDiscovery, operationID strin
 
 	outputRaw, err := stateConf.WaitForState()
 
-	switch output := outputRaw.(type) {
-	case *servicediscovery.GetOperationOutput:
+	if output, ok := outputRaw.(*servicediscovery.GetOperationOutput); ok {
 		return output, err
-	default:
-		return nil, err
 	}
+
+	return nil, err
 }
