@@ -82,3 +82,5 @@ In addition to all arguments above, the following attributes are exported:
 ```
 $ terraform import aws_apigatewayv2_integration.example aabbccddee/1122334
 ```
+
+-> **Note:** The API Gateway managed integration created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
