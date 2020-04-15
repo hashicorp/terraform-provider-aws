@@ -29,14 +29,14 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringLenBetween(1, 32),
+					Type: schema.TypeString,
 				},
 			},
 
 			"idp_identifiers": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 50,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
@@ -71,6 +71,7 @@ func resourceAwsCognitoIdentityProvider() *schema.Resource {
 					cognitoidentityprovider.IdentityProviderTypeTypeGoogle,
 					cognitoidentityprovider.IdentityProviderTypeTypeLoginWithAmazon,
 					cognitoidentityprovider.IdentityProviderTypeTypeOidc,
+					cognitoidentityprovider.IdentityProviderTypeTypeSignInWithApple,
 				}, false),
 			},
 
