@@ -3,7 +3,8 @@
 FEATURES:
 
 * **New Data Source:** `aws_regions` [GH-12269]
-* **New Resource**: `aws_apigatewayv2_integration_response` [GH-9365]
+* **New Resource:** `aws_apigatewayv2_integration_response` [GH-9365]
+* **New Resource:** `aws_apigatewayv2_route` [GH-8881]
 * **New Resource:** `aws_dms_event_subscription` [GH-7170]
 
 ENHANCEMENTS:
