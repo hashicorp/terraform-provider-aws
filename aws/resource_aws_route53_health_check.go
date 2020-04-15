@@ -128,6 +128,12 @@ func resourceAwsRoute53HealthCheck() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				// The max length of the reference name is 64 characters for the API.
+				// Terraform appends a 37-character unique ID to the provided
+				// reference_name. This limits the length of the resource argument to 27.
+				//
+				// Example generated suffix: -terraform-20190122200019880700000001
+				ValidateFunc: validation.StringLenBetween(0, (64 - resource.UniqueIDSuffixLength - 11)),
 			},
 			"enable_sni": {
 				Type:     schema.TypeBool,
