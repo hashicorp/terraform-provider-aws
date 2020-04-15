@@ -72,6 +72,35 @@ func resourceAwsBackupPlan() *schema.Resource {
 								},
 							},
 						},
+						"copy_action": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lifecycle": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cold_storage_after": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"delete_after": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+											},
+										},
+									},
+									"destination_vault_arn": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"recovery_point_tags": tagsSchema(),
 					},
 				},
@@ -203,8 +232,6 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 
 		if vRuleName, ok := mRule["rule_name"].(string); ok && vRuleName != "" {
 			rule.RuleName = aws.String(vRuleName)
-		} else {
-			continue
 		}
 		if vTargetVaultName, ok := mRule["target_vault_name"].(string); ok && vTargetVaultName != "" {
 			rule.TargetBackupVaultName = aws.String(vTargetVaultName)
@@ -238,10 +265,46 @@ func expandBackupPlanRules(vRules *schema.Set) []*backup.RuleInput {
 			rule.Lifecycle = lifecycle
 		}
 
+		if vCopyActions := expandBackupPlanCopyActions(mRule["copy_action"].([]interface{})); len(vCopyActions) > 0 {
+			rule.CopyActions = vCopyActions
+		}
+
 		rules = append(rules, rule)
 	}
 
 	return rules
+}
+
+func expandBackupPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
+	actions := []*backup.CopyAction{}
+
+	for _, i := range actionList {
+		item := i.(map[string]interface{})
+		action := &backup.CopyAction{}
+
+		action.DestinationBackupVaultArn = aws.String(item["destination_vault_arn"].(string))
+		action.Lifecycle = expandBackupPlanLifecycle(item["lifecycle"].([]interface{}))
+
+		actions = append(actions, action)
+	}
+
+	return actions
+}
+
+func expandBackupPlanLifecycle(l []interface{}) *backup.Lifecycle {
+	lifecycle := new(backup.Lifecycle)
+
+	for _, i := range l {
+		lc := i.(map[string]interface{})
+		if vDeleteAfter, ok := lc["delete_after"]; ok && vDeleteAfter.(int) > 0 {
+			lifecycle.DeleteAfterDays = aws.Int64(int64(vDeleteAfter.(int)))
+		}
+		if vMoveToColdStorageAfterDays, ok := lc["cold_storage_after"]; ok && vMoveToColdStorageAfterDays.(int) > 0 {
+			lifecycle.MoveToColdStorageAfterDays = aws.Int64(int64(vMoveToColdStorageAfterDays.(int)))
+		}
+	}
+
+	return lifecycle
 }
 
 func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
@@ -266,10 +329,32 @@ func flattenBackupPlanRules(rules []*backup.Rule) *schema.Set {
 			}
 		}
 
+		for _, action := range rule.CopyActions {
+			mRule["copy_action"] = []interface{}{
+				map[string]interface{}{
+					"lifecycle":             flattenBackupPlanCopyActionLifecycle(action.Lifecycle),
+					"destination_vault_arn": aws.StringValue(action.DestinationBackupVaultArn),
+				},
+			}
+		}
+
 		vRules = append(vRules, mRule)
 	}
 
 	return schema.NewSet(backupBackupPlanHash, vRules)
+}
+
+func flattenBackupPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle) []interface{} {
+	if copyActionLifecycle == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"delete_after":       aws.Int64Value(copyActionLifecycle.DeleteAfterDays),
+		"cold_storage_after": aws.Int64Value(copyActionLifecycle.MoveToColdStorageAfterDays),
+	}
+
+	return []interface{}{m}
 }
 
 func backupBackupPlanHash(vRule interface{}) int {
@@ -305,6 +390,27 @@ func backupBackupPlanHash(vRule interface{}) int {
 		}
 		if v, ok := mLifecycle["cold_storage_after"].(int); ok {
 			buf.WriteString(fmt.Sprintf("%d-", v))
+		}
+	}
+
+	if vCopyActions, ok := mRule["copy_action"].([]interface{}); ok && len(vCopyActions) > 0 && vCopyActions[0] != nil {
+		for _, a := range vCopyActions {
+			action := a.(map[string]interface{})
+			if mLifecycle, ok := action["lifecycle"].([]interface{}); ok {
+				for _, l := range mLifecycle {
+					lifecycle := l.(map[string]interface{})
+					if v, ok := lifecycle["delete_after"].(int); ok {
+						buf.WriteString(fmt.Sprintf("%d-", v))
+					}
+					if v, ok := lifecycle["cold_storage_after"].(int); ok {
+						buf.WriteString(fmt.Sprintf("%d-", v))
+					}
+				}
+			}
+
+			if v, ok := action["destination_vault_arn"].(string); ok {
+				buf.WriteString(fmt.Sprintf("%s-", v))
+			}
 		}
 	}
 

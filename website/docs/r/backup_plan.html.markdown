@@ -36,18 +36,25 @@ The following arguments are supported:
 For **rule** the following attributes are supported:
 
 * `rule_name` - (Required) An display name for a backup rule.
-* `target_vault_name` (Required) - The name of a logical container where backups are stored.
-* `schedule` (Optional) - A CRON expression specifying when AWS Backup initiates a backup job.
-* `start_window` (Optional) - The amount of time in minutes before beginning a backup.
-* `completion_window` (Optional) - The amount of time AWS Backup attempts a backup before canceling the job and returning an error.
-* `lifecycle` (Optional) - The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
-* `recovery_point_tags` (Optional) - Metadata that you can assign to help organize the resources that you create.
+* `target_vault_name` - (Required) The name of a logical container where backups are stored.
+* `schedule` - (Optional) A CRON expression specifying when AWS Backup initiates a backup job.
+* `start_window` - (Optional) The amount of time in minutes before beginning a backup.
+* `completion_window` - (Optional) The amount of time AWS Backup attempts a backup before canceling the job and returning an error.
+* `lifecycle` - (Optional) The lifecycle defines when a protected resource is transitioned to cold storage and when it expires.  Fields documented below.
+* `recovery_point_tags` - (Optional) Metadata that you can assign to help organize the resources that you create.
+* `copy_action` - (Optional) 
 
 ### Lifecycle Arguments
 For **lifecycle** the following attributes are supported:
 
 * `cold_storage_after` - (Optional) Specifies the number of days after creation that a recovery point is moved to cold storage.
-* `delete_after` (Optional) - Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
+* `delete_after` - (Optional) Specifies the number of days after creation that a recovery point is deleted. Must be 90 days greater than `cold_storage_after`.
+
+### Copy Action Arguments
+For **copy_action** the following attributes are supported:
+
+* `lifecycle` - (Optional) The lifecycle defines when a protected resource is copied over to a backup vault and when it expires.  Fields documented above.
+* `destination_vault_arn` - (Required) An Amazon Resource Name (ARN) that uniquely identifies the destination backup vault for the copied backup.
 
 ## Attributes Reference
 

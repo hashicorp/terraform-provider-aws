@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -319,6 +320,134 @@ func TestAccAwsBackupPlan_withRecoveryPointTags(t *testing.T) {
 	})
 }
 
+func TestAccAwsBackupPlan_withCopyActions(t *testing.T) {
+	var plan backup.GetBackupPlanOutput
+	ruleNameMap := map[string]string{}
+	resourceName := "aws_backup_plan.test"
+	rName1 := fmt.Sprintf("tf-testacc-backup-%[1]s", acctest.RandString(14))
+	rName2 := fmt.Sprintf("tf-testacc-backup-%[1]s", acctest.RandString(14))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsBackupPlanConfig_copyAction(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan, &ruleNameMap),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "rule_name", rName1),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.cold_storage_after", "30"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.delete_after", "180"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttrSet(resourceName, &ruleNameMap, rName1, "copy_action.0.destination_vault_arn"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.cold_storage_after", "30"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.delete_after", "180"),
+				),
+			},
+			{
+				Config: testAccAwsBackupPlanConfig_copyActionUpdated(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan, &ruleNameMap),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "rule_name", rName1),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.cold_storage_after", "30"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.delete_after", "180"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttrSet(resourceName, &ruleNameMap, rName1, "copy_action.0.destination_vault_arn"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.cold_storage_after", "60"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.delete_after", "365"),
+				),
+			},
+			{
+				Config: testAccAwsBackupPlanConfig_basic(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan, &ruleNameMap),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "rule_name", rName1),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.#", "0"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupPlan_withCopyActionsCrossRegion(t *testing.T) {
+	var providers []*schema.Provider
+	var plan backup.GetBackupPlanOutput
+	ruleNameMap := map[string]string{}
+	resourceName := "aws_backup_plan.test"
+	rName1 := fmt.Sprintf("tf-testacc-backup-%[1]s", acctest.RandString(14))
+	rName2 := fmt.Sprintf("tf-testacc-backup-%[1]s", acctest.RandString(14))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSBackup(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAwsBackupPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsBackupPlanConfig_copyActionCrossRegion(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan, &ruleNameMap),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "rule_name", rName1),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.cold_storage_after", "30"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.delete_after", "180"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttrSet(resourceName, &ruleNameMap, rName1, "copy_action.0.destination_vault_arn"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.cold_storage_after", "30"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.delete_after", "180"),
+				),
+			},
+			{
+				Config: testAccAwsBackupPlanConfig_copyActionUpdated(rName1, rName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan, &ruleNameMap),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "rule_name", rName1),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.cold_storage_after", "30"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.0.delete_after", "180"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttrSet(resourceName, &ruleNameMap, rName1, "copy_action.0.destination_vault_arn"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.cold_storage_after", "60"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.0.lifecycle.0.delete_after", "365"),
+				),
+			},
+			{
+				Config: testAccAwsBackupPlanConfig_basic(rName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupPlanExists(resourceName, &plan, &ruleNameMap),
+					resource.TestCheckResourceAttr(resourceName, "name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "rule_name", rName1),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "lifecycle.#", "0"),
+					testAccCheckAwsBackupPlanRuleAttr(resourceName, &ruleNameMap, rName1, "copy_action.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsBackupPlan_disappears(t *testing.T) {
 	var plan backup.GetBackupPlanOutput
 	ruleNameMap := map[string]string{}
@@ -416,6 +545,12 @@ func testAccCheckAwsBackupPlanExists(name string, plan *backup.GetBackupPlanOutp
 func testAccCheckAwsBackupPlanRuleAttr(name string, ruleNameMap *map[string]string, ruleName, key, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return resource.TestCheckResourceAttr(name, fmt.Sprintf("rule.%s.%s", (*ruleNameMap)[ruleName], key), value)(s)
+	}
+}
+
+func testAccCheckAwsBackupPlanRuleAttrSet(name string, ruleNameMap *map[string]string, ruleName, value string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestCheckResourceAttrSet(name, fmt.Sprintf("rule.%s.%s", (*ruleNameMap)[ruleName], value))(s)
 	}
 }
 
@@ -649,4 +784,110 @@ resource "aws_backup_plan" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAwsBackupPlanConfig_copyAction(rName1 string, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_vault" "test2" {
+  name = %[2]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      cold_storage_after = 30
+      delete_after       = 180
+    }
+
+    copy_action {
+      lifecycle {
+        cold_storage_after = 30
+        delete_after       = 180
+	  }
+      destination_vault_arn = "${aws_backup_vault.test2.arn}"
+    }
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccAwsBackupPlanConfig_copyActionUpdated(rName1 string, rName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_vault" "test2" {
+  name = %[2]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      cold_storage_after = 30
+      delete_after       = 180
+    }
+
+    copy_action {
+      lifecycle {
+        cold_storage_after = 60
+        delete_after       = 365
+	  }
+      destination_vault_arn = "${aws_backup_vault.test2.arn}"
+    }
+  }
+}
+`, rName1, rName2)
+}
+
+func testAccAwsBackupPlanConfig_copyActionCrossRegion(rName1 string, rName2 string) string {
+	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_vault" "test2" {
+  provider = "aws.alternate"
+  name     = %[2]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+
+    lifecycle {
+      cold_storage_after = 30
+      delete_after       = 180
+    }
+
+    copy_action {
+      lifecycle {
+        cold_storage_after = 30
+        delete_after       = 180
+	  }
+      destination_vault_arn = "${aws_backup_vault.test2.arn}"
+    }
+  }
+}
+`, rName1, rName2)
 }
