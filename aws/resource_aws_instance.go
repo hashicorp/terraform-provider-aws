@@ -1255,55 +1255,35 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("root_block_device.0") && !d.IsNewResource() {
-		instance, err := resourceAwsInstanceFindByID(conn, d.Id())
-		if err != nil {
-			return fmt.Errorf("error retrieving instance %q: %w", d.Id(), err)
-		}
-		blockDevices, err := readBlockDevicesFromInstance(instance, conn)
-		if err != nil {
-			return fmt.Errorf("error retrieving volumes for instance %q: %w", d.Id(), err)
-		}
-		rd, ok := blockDevices["root"]
-		if !ok {
-			return fmt.Errorf("root volume no found for instance %q", d.Id())
-		}
+		volumeID := d.Get("root_block_device.0.volume_id").(string)
 
-		rootDevice := rd.(map[string]interface{})
-		volumeID := rootDevice["volume_id"].(string)
 		input := ec2.ModifyVolumeInput{
 			VolumeId: aws.String(volumeID),
 		}
 		modifyVolume := false
 
-		rbd := d.Get("root_block_device.0").(map[string]interface{})
-		if v, ok := rbd["volume_size"]; ok {
-			currSize := rootDevice["volume_size"].(int64)
-			volumeSize := int64(v.(int))
-			if volumeSize != currSize {
+		if d.HasChange("root_block_device.0.volume_size") {
+			if v, ok := d.Get("root_block_device.0.volume_size").(int); ok && v != 0 {
 				modifyVolume = true
-				input.Size = aws.Int64(volumeSize)
+				input.Size = aws.Int64(int64(v))
 			}
 		}
-		if v, ok := rbd["volume_type"]; ok {
-			currType := rootDevice["volume_type"].(string)
-			volumeType := v.(string)
-			if volumeType != currType {
+		if d.HasChange("root_block_device.0.volume_type") {
+			if v, ok := d.Get("root_block_device.0.volume_type").(string); ok && v != "" {
 				modifyVolume = true
-				input.VolumeType = aws.String(volumeType)
+				input.VolumeType = aws.String(v)
 			}
 		}
-		if v, ok := rbd["iops"]; ok {
-			currIOPS := rootDevice["iops"].(int64)
-			iops := int64(v.(int))
-			if iops != currIOPS {
+		if d.HasChange("root_block_device.0.iops") {
+			if v, ok := d.Get("root_block_device.0.iops").(int); ok && v != 0 {
 				modifyVolume = true
-				input.Iops = aws.Int64(iops)
+				input.Iops = aws.Int64(int64(v))
 			}
 		}
 		if modifyVolume {
-			_, err = conn.ModifyVolume(&input)
+			_, err := conn.ModifyVolume(&input)
 			if err != nil {
-				return err
+				return fmt.Errorf("error modifying EC2 Volume %q: %w", volumeID, err)
 			}
 
 			// The volume is useable once the state is "optimizing", but will not be at full performance.
@@ -1320,25 +1300,27 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 			_, err = stateConf.WaitForState()
 			if err != nil {
-				return fmt.Errorf("error waiting for volume (%s) to be modified: %s", volumeID, err)
+				return fmt.Errorf("error waiting for EC2 volume (%s) to be modified: %w", volumeID, err)
 			}
 		}
 
-		if v, ok := rbd["delete_on_termination"]; ok {
-			_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
-				InstanceId: aws.String(d.Id()),
-				BlockDeviceMappings: []*ec2.InstanceBlockDeviceMappingSpecification{
-					{
-						DeviceName: aws.String(rootDevice["device_name"].(string)),
-						Ebs: &ec2.EbsInstanceBlockDeviceSpecification{
-							// VolumeId:            aws.String(volumeID),
-							DeleteOnTermination: aws.Bool(v.(bool)),
+		if d.HasChange("root_block_device.0.delete_on_termination") {
+			deviceName := d.Get("root_block_device.0.device_name").(string)
+			if v, ok := d.Get("root_block_device.0.delete_on_termination").(bool); ok {
+				_, err := conn.ModifyInstanceAttribute(&ec2.ModifyInstanceAttributeInput{
+					InstanceId: aws.String(d.Id()),
+					BlockDeviceMappings: []*ec2.InstanceBlockDeviceMappingSpecification{
+						{
+							DeviceName: aws.String(deviceName),
+							Ebs: &ec2.EbsInstanceBlockDeviceSpecification{
+								DeleteOnTermination: aws.Bool(v),
+							},
 						},
 					},
-				},
-			})
-			if err != nil {
-				return err
+				})
+				if err != nil {
+					return fmt.Errorf("error modifying delete on termination attribute for EC2 instance %q block device %q: %w", d.Id(), deviceName, err)
+				}
 			}
 		}
 	}
