@@ -497,6 +497,8 @@ resource "aws_default_route_table" "test" {
 }
 
 const testAccDefaultRouteTable_vpc_endpoint = `
+data "aws_region" "current" {}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -515,7 +517,7 @@ resource "aws_internet_gateway" "igw" {
 
 resource "aws_vpc_endpoint" "s3" {
     vpc_id          = "${aws_vpc.test.id}"
-    service_name    = "com.amazonaws.us-west-2.s3"
+    service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
     route_table_ids = ["${aws_vpc.test.default_route_table_id}"]
 
   tags = {
