@@ -1,32 +1,32 @@
-## 2.58.0 (Unreleased)
+## 2.58.0 (April 16, 2020)
 
 FEATURES:
 
-* **New Data Source:** `aws_regions` [GH-12269]
-* **New Resource:** `aws_apigatewayv2_deployment` [GH-9245]
-* **New Resource:** `aws_apigatewayv2_domain_name` [GH-9391]
-* **New Resource:** `aws_apigatewayv2_integration_response` [GH-9365]
-* **New Resource:** `aws_apigatewayv2_route` [GH-8881]
-* **New Resource:** `aws_apigatewayv2_route_response` [GH-9373]
-* **New Resource:** `aws_apigatewayv2_stage` [GH-9232]
-* **New Resource:** `aws_dms_event_subscription` [GH-7170]
+* **New Data Source:** `aws_regions` ([#12269](https://github.com/terraform-providers/terraform-provider-aws/issues/12269))
+* **New Resource:** `aws_apigatewayv2_deployment` ([#9245](https://github.com/terraform-providers/terraform-provider-aws/issues/9245))
+* **New Resource:** `aws_apigatewayv2_domain_name` ([#9391](https://github.com/terraform-providers/terraform-provider-aws/issues/9391))
+* **New Resource:** `aws_apigatewayv2_integration_response` ([#9365](https://github.com/terraform-providers/terraform-provider-aws/issues/9365))
+* **New Resource:** `aws_apigatewayv2_route` ([#8881](https://github.com/terraform-providers/terraform-provider-aws/issues/8881))
+* **New Resource:** `aws_apigatewayv2_route_response` ([#9373](https://github.com/terraform-providers/terraform-provider-aws/issues/9373))
+* **New Resource:** `aws_apigatewayv2_stage` ([#9232](https://github.com/terraform-providers/terraform-provider-aws/issues/9232))
+* **New Resource:** `aws_dms_event_subscription` ([#7170](https://github.com/terraform-providers/terraform-provider-aws/issues/7170))
 
 ENHANCEMENTS:
 
-* data-source/aws_dynamodb_table: Add `replica` attribute (initial support for Global Tables V2 (version 2019.11.21)) [GH-12342]
-* data-source/aws_instance: Exports `volume_name` for `root_block_device` [GH-12620]
-* resource/aws_backup_plan: Add `rule` configuration block `copy_action` configuration block (support cross region copy) [GH-11923]
-* resource/aws_cognito_identity_provider: Support plan-time validation for `idp_identifiers`, `provider_name`, and `provider_type` arguments [GH-10705]
-* resource/aws_dms_endpoint: Add `elasticsearch_settings` configuration block and `elasticsearch` to `engine_name` validation (support Elasticsearch endpoints) [GH-11792]
-* resource/aws_dms_endpoint: Add `kinesis_settings` configuration block and `kinesis` to `engine_name` validation (support Kinesis endpoints) [GH-8633]
-* resource/aws_dynamodb_table: Add `replica` configuration block (initial support for Global Tables V2 (version 2019.11.21)) [GH-12342]
-* resource/aws_ec2_client_vpn_endpoint: Allow two `authentication_options`  configuration blocks [GH-12819]
-* resource/aws_instance: Allow changing root volume size without re-creating resource [GH-12620]
-* resource/aws_instance: Exports `volume_name` for `root_block_device` [GH-12620]
+* data-source/aws_dynamodb_table: Add `replica` attribute (initial support for Global Tables V2 (version 2019.11.21)) ([#12342](https://github.com/terraform-providers/terraform-provider-aws/issues/12342))
+* data-source/aws_instance: Exports `volume_name` for `root_block_device` ([#12620](https://github.com/terraform-providers/terraform-provider-aws/issues/12620))
+* resource/aws_backup_plan: Add `rule` configuration block `copy_action` configuration block (support cross region copy) ([#11923](https://github.com/terraform-providers/terraform-provider-aws/issues/11923))
+* resource/aws_cognito_identity_provider: Support plan-time validation for `idp_identifiers`, `provider_name`, and `provider_type` arguments ([#10705](https://github.com/terraform-providers/terraform-provider-aws/issues/10705))
+* resource/aws_dms_endpoint: Add `elasticsearch_settings` configuration block and `elasticsearch` to `engine_name` validation (support Elasticsearch endpoints) ([#11792](https://github.com/terraform-providers/terraform-provider-aws/issues/11792))
+* resource/aws_dms_endpoint: Add `kinesis_settings` configuration block and `kinesis` to `engine_name` validation (support Kinesis endpoints) ([#8633](https://github.com/terraform-providers/terraform-provider-aws/issues/8633))
+* resource/aws_dynamodb_table: Add `replica` configuration block (initial support for Global Tables V2 (version 2019.11.21)) ([#12342](https://github.com/terraform-providers/terraform-provider-aws/issues/12342))
+* resource/aws_ec2_client_vpn_endpoint: Allow two `authentication_options`  configuration blocks ([#12819](https://github.com/terraform-providers/terraform-provider-aws/issues/12819))
+* resource/aws_instance: Allow changing root volume size without re-creating resource ([#12620](https://github.com/terraform-providers/terraform-provider-aws/issues/12620))
+* resource/aws_instance: Exports `volume_name` for `root_block_device` ([#12620](https://github.com/terraform-providers/terraform-provider-aws/issues/12620))
 
 BUG FIXES:
 
-* resource/aws_dlm_lifecycle_policy: Ensure plan-time validation for `times` argument only allows 24 hour format [GH-12800]
+* resource/aws_dlm_lifecycle_policy: Ensure plan-time validation for `times` argument only allows 24 hour format ([#12800](https://github.com/terraform-providers/terraform-provider-aws/issues/12800))
 
 ## 2.57.0 (April 09, 2020)
 
