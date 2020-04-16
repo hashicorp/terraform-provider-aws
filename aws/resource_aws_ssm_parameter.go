@@ -2,6 +2,7 @@ package aws
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -65,7 +66,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 			},
 			"arn": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
 			},
 			"key_id": {
@@ -113,7 +113,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 }
 
 func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", d.Id())
@@ -126,7 +126,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	var resp *ssm.GetParameterOutput
 	err := resource.Retry(ssmParameterCreationValidationTimeout, func() *resource.RetryError {
 		var err error
-		resp, err = ssmconn.GetParameter(input)
+		resp, err = conn.GetParameter(input)
 
 		if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && d.IsNewResource() && d.Get("data_type").(string) == "aws:ec2:image" {
 			return resource.RetryableError(fmt.Errorf("error reading SSM Parameter (%s) after creation: this can indicate that the provided parameter value could not be validated by SSM", d.Id()))
@@ -140,7 +140,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	})
 
 	if isResourceTimeoutError(err) {
-		resp, err = ssmconn.GetParameter(input)
+		resp, err = conn.GetParameter(input)
 	}
 
 	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") && !d.IsNewResource() {
@@ -169,7 +169,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 			},
 		},
 	}
-	describeResp, err := ssmconn.DescribeParameters(describeParamsInput)
+	describeResp, err := conn.DescribeParameters(describeParamsInput)
 	if err != nil {
 		return fmt.Errorf("error describing SSM parameter: %s", err)
 	}
@@ -189,9 +189,9 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
-	d.Set("policies", detail.Policies)
+	d.Set("policies", flattenAwsSsmParameter(detail.Policies))
 
-	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
+	tags, err := keyvaluetags.SsmListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for SSM Parameter (%s): %s", name, err)
@@ -207,11 +207,11 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Deleting SSM Parameter: %s", d.Id())
 
-	_, err := ssmconn.DeleteParameter(&ssm.DeleteParameterInput{
+	_, err := conn.DeleteParameter(&ssm.DeleteParameterInput{
 		Name: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
@@ -222,7 +222,7 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 }
 
 func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Creating SSM Parameter: %s", d.Get("name").(string))
 
@@ -258,11 +258,11 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", d.Get("name"))
-	_, err := ssmconn.PutParameter(paramInput)
+	_, err := conn.PutParameter(paramInput)
 
 	if isAWSErr(err, "ValidationException", "Tier is not supported") {
 		paramInput.Tier = nil
-		_, err = ssmconn.PutParameter(paramInput)
+		_, err = conn.PutParameter(paramInput)
 	}
 
 	if err != nil {
@@ -273,7 +273,7 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.SsmUpdateTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+		if err := keyvaluetags.SsmUpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
 			return fmt.Errorf("error updating SSM Parameter (%s) tags: %s", name, err)
 		}
 	}
@@ -292,4 +292,20 @@ func shouldUpdateSsmParameter(d *schema.ResourceData) bool {
 	// Since the user has not specified a preference, obey lifecycle rules
 	// if it is not a new resource, otherwise overwrite should be set to false.
 	return !d.IsNewResource()
+}
+
+func flattenAwsSsmParameter(policies []*ssm.ParameterInlinePolicy) string {
+	if len(policies) == 0 {
+		return ""
+	}
+
+	jsonRes := make([]string, len(policies))
+
+	for _, policy := range policies {
+		jsonRes = append(jsonRes, aws.StringValue(policy.PolicyText))
+	}
+
+	policiesJSON, _ := json.Marshal(jsonRes)
+
+	return string(policiesJSON)
 }
