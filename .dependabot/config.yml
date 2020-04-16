@@ -3,3 +3,6 @@ update_configs:
   - package_manager: go:modules
     directory: /
     update_schedule: weekly
+    allowed_updates:
+      - match:
+          update_type: "security"
