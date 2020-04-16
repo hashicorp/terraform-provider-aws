@@ -19,7 +19,7 @@ func dataSourceAwsCoipPools() *schema.Resource {
 
 			"tags": tagsSchemaComputed(),
 
-			"ids": {
+			"pool_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -67,7 +67,7 @@ func dataSourceAwsCoipPoolsRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	d.SetId(time.Now().UTC().String())
-	if err := d.Set("ids", coippools); err != nil {
+	if err := d.Set("pool_ids", coippools); err != nil {
 		return fmt.Errorf("Error setting coip pool ids: %s", err)
 	}
 

@@ -41,7 +41,7 @@ func TestAccDataSourceAwsCoipPools_filters(t *testing.T) {
 				Config: testAccDataSourceAwsCoipPoolsConfig_filters(rPoolId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCoipPoolDataSourceExists("data.aws_coip_pools.selected"),
-					testCheckResourceAttrGreaterThanValue("data.aws_coip_pools.selected", "ids.#", "0"),
+					testCheckResourceAttrGreaterThanValue("data.aws_coip_pools.selected", "pool_ids.#", "0"),
 				),
 			},
 		},

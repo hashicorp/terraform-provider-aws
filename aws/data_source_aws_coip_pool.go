@@ -28,7 +28,7 @@ func dataSourceAwsCoipPool() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"id": {
+			"pool_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -47,7 +47,7 @@ func dataSourceAwsCoipPoolRead(d *schema.ResourceData, meta interface{}) error {
 	req := &ec2.DescribeCoipPoolsInput{}
 
 	var id string
-	if cid, ok := d.GetOk("id"); ok {
+	if cid, ok := d.GetOk("pool_id"); ok {
 		id = cid.(string)
 	}
 

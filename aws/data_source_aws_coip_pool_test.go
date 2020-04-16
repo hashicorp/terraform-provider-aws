@@ -24,7 +24,7 @@ func TestAccDataSourceAwsCoipPool_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsLocalGatewayConfig(rPoolId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_coip_pool.by_id", "id", rPoolId),
+					resource.TestCheckResourceAttr("data.aws_coip_pool.by_id", "pool_id", rPoolId),
 					resource.TestCheckResourceAttrSet("data.aws_coip_pool.by_id", "local_gateway_route_table_id"),
 					testCheckResourceAttrGreaterThanValue("data.aws_coip_pool.by_id", "pool_cidrs.#", "0"),
 				),
@@ -36,7 +36,7 @@ func TestAccDataSourceAwsCoipPool_basic(t *testing.T) {
 func testAccDataSourceAwsLocalGatewayConfig(rPoolId string) string {
 	return fmt.Sprintf(`
 data "aws_coip_pool" "by_id" {
-  id = "%s"
+  pool_id = "%s"
 }
 `, rPoolId)
 }
