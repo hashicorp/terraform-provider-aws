@@ -469,12 +469,20 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = ["${aws_subnet.test.id}"]
   transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
   vpc_id             = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
+  }
 }
 
 resource "aws_default_route_table" "test" {
@@ -490,40 +498,42 @@ resource "aws_default_route_table" "test" {
 
 const testAccDefaultRouteTable_vpc_endpoint = `
 resource "aws_vpc" "test" {
-    cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
   tags = {
-        Name = "terraform-testacc-default-route-table-vpc-endpoint"
-    }
+    Name = "terraform-testacc-default-route-table-vpc-endpoint"
+  }
 }
 
 resource "aws_internet_gateway" "igw" {
-    vpc_id = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
   tags = {
-        Name = "test"
-    }
+    Name = "terraform-testacc-default-route-table-vpc-endpoint"
+  }
 }
 
 resource "aws_vpc_endpoint" "s3" {
-    vpc_id = "${aws_vpc.test.id}"
-    service_name = "com.amazonaws.us-west-2.s3"
-    route_table_ids = [
-        "${aws_vpc.test.default_route_table_id}"
-    ]
+    vpc_id          = "${aws_vpc.test.id}"
+    service_name    = "com.amazonaws.us-west-2.s3"
+    route_table_ids = ["${aws_vpc.test.default_route_table_id}"]
+
+  tags = {
+    Name = "terraform-testacc-default-route-table-vpc-endpoint"
+  }
 }
 
 resource "aws_default_route_table" "foo" {
-    default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+  default_route_table_id = "${aws_vpc.test.default_route_table_id}"
 
   tags = {
         Name = "test"
-    }
+  }
 
-    route {
-        cidr_block = "0.0.0.0/0"
-        gateway_id = "${aws_internet_gateway.igw.id}"
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = "${aws_internet_gateway.igw.id}"
+  }
 }
 `
 
