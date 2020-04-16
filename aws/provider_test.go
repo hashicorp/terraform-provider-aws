@@ -596,7 +596,7 @@ func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.
 		}
 
 		if resourceState.Primary.ID == "" {
-			return fmt.Errorf("resource ID missing:: %s", resourceName)
+			return fmt.Errorf("resource ID missing: %s", resourceName)
 		}
 
 		return resource.Delete(resource.Data(resourceState.Primary), provider.Meta())
