@@ -299,13 +299,11 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 func readInstance(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-		InstanceIds: []*string{aws.String(d.Get("spot_instance_id").(string))},
-	})
+	instance, err := resourceAwsInstanceFindByID(conn, d.Get("spot_instance_id").(string))
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 			return fmt.Errorf("no instance found")
 		}
 
@@ -314,11 +312,9 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// If nothing was found, then return no state
-	if len(resp.Reservations) == 0 {
+	if instance == nil {
 		return fmt.Errorf("no instances found")
 	}
-
-	instance := resp.Reservations[0].Instances[0]
 
 	// Set these fields for connection information
 	if instance != nil {

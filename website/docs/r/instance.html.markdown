@@ -136,12 +136,12 @@ The `root_block_device` mapping supports the following:
 * `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
 * `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 
-Modifying any of the `root_block_device` settings requires resource
+Modifying any of the `root_block_device` settings other than `volume_size` requires resource
 replacement.
 
 Each `ebs_block_device` supports the following:
 
-* `device_name` - The name of the device to mount.
+* `device_name` - (Required) The name of the device to mount.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
 * `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
   or `"io1"`. (Default: `"gp2"`).
@@ -286,6 +286,8 @@ In addition to all arguments above, the following attributes are exported:
 
 For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
 e.g. `aws_instance.web.root_block_device.0.volume_id`
+
+For the `root_block_device` the `device_name` is exported.
 
 ## Import
 

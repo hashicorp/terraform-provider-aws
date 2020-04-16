@@ -96,6 +96,7 @@ interpolation.
   is only available if you've enabled DNS hostnames for your VPC.
 * `public_ip` - The public IP address assigned to the Instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip`, as this field will change after the EIP is attached.
 * `root_block_device` - The root block device mappings of the Instance
+  * `device_name` - The physical name of the device.
   * `delete_on_termination` - If the root block device will be deleted on termination.
   * `encrypted` - If the EBS volume is encrypted.
   * `iops` - `0` If the volume is not a provisioned IOPS image, otherwise the supported IOPS count.

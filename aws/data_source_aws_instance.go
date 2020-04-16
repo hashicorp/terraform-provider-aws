@@ -234,6 +234,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"encrypted": {
 							Type:     schema.TypeBool,
 							Computed: true,
