@@ -7,6 +7,7 @@ FEATURES:
 * **New Resource:** `aws_apigatewayv2_integration_response` [GH-9365]
 * **New Resource:** `aws_apigatewayv2_route` [GH-8881]
 * **New Resource:** `aws_apigatewayv2_route_response` [GH-9373]
+* **New Resource:** `aws_apigatewayv2_stage` [GH-9232]
 * **New Resource:** `aws_dms_event_subscription` [GH-7170]
 
 ENHANCEMENTS:
