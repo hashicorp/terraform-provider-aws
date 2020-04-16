@@ -2982,10 +2982,10 @@ func TestAccAWSDBInstance_CACertificateIdentifier(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: fmt.Sprintf(testAccAWSDBInstanceConfigWithCACertificateIdentifier, "rds-ca-2015"),
+				Config: fmt.Sprintf(testAccAWSDBInstanceConfigWithCACertificateIdentifier, "rds-ca-2019"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2015"),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
 				),
 			},
 			// Ensure we are able to modify the CACertIdentifier
