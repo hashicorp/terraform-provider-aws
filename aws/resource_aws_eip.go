@@ -91,6 +91,16 @@ func resourceAwsEip() *schema.Resource {
 				Optional: true,
 			},
 
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+
+			"customer_owned_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"public_ipv4_pool": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -118,6 +128,10 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("public_ipv4_pool"); ok {
 		allocOpts.PublicIpv4Pool = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
+		allocOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] EIP create configuration: %#v", allocOpts)
@@ -257,6 +271,16 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
+	if address.CustomerOwnedIpv4Pool != nil {
+		d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
+	} else {
+		d.Set("customer_owned_ipv4_pool", "")
+	}
+	if address.CustomerOwnedIp != nil {
+		d.Set("customer_owned_ip", address.CustomerOwnedIp)
+	} else {
+		d.Set("customer_owned_ip", "")
+	}
 
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.

@@ -521,6 +521,41 @@ func testAccCheckAWSEIPDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAWSEIP_COIPPool(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	poolId := os.Getenv("AWS_COIP_POOL_ID")
+	if poolId == "" {
+		t.Skip(
+			"Environment variable AWS_COIP_POOL_ID is not set. " +
+				"This environment variable must be set to the ID of " +
+				"a deployed Coip Pool to enable this test.")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfig_CoipPool(poolId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "customer_owned_ipv4_pool"),
+					resource.TestCheckResourceAttrSet(resourceName, "customer_owned_ip"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPAttributes(conf *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.PublicIp == "" {
@@ -1132,3 +1167,12 @@ resource "aws_eip" "test" {
 	instance = "${aws_instance.test.id}"
 }
 `
+
+func testAccAWSEIPConfig_CoipPool(poolId string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc                      = true
+  customer_owned_ipv4_pool = "%s"
+}
+`, poolId)
+}

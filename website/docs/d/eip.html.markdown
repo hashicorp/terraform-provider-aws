@@ -75,6 +75,8 @@ In addition to all arguments above, the following attributes are exported:
 * `public_ip` - Public IP address of Elastic IP.
 * `public_dns` - Public DNS associated with the Elastic IP address.
 * `public_ipv4_pool` - The ID of an address pool.
+* `customer_owned_ipv4_pool` - The ID of a Customer Owned IP Pool.
+* `customer_owned_ip` - Customer Owned IP.
 * `tags` - Key-value map of tags associated with Elastic IP.
 
 ~> **Note:** The data source computes the `public_dns` and `private_dns` attributes according to the [VPC DNS Guide](https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html#vpc-dns-hostnames) as they are not available with the EC2 API.
