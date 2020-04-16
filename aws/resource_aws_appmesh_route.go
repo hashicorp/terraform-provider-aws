@@ -184,74 +184,15 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													},
 												},
 
-												"method": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
-												},
-
-												"prefix": {
+												"method_name": {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: validation.StringLenBetween(0, 50),
 												},
 
-												"scheme": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appmesh.HttpScheme_Values(), false),
-												},
-											},
-										},
-									},
-
-									"retry_policy": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 0,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"http_retry_events": {
-													Type:     schema.TypeSet,
+												"service_name": {
+													Type:     schema.TypeString,
 													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-													Set:      schema.HashString,
-												},
-
-												"max_retries": {
-													Type:     schema.TypeInt,
-													Required: true,
-												},
-
-												"per_retry_timeout": {
-													Type:     schema.TypeList,
-													Required: true,
-													MinItems: 1,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"unit": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
-															},
-
-															"value": {
-																Type:     schema.TypeInt,
-																Required: true,
-															},
-														},
-													},
-												},
-
-												"tcp_retry_events": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													MinItems: 0,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-													Set:      schema.HashString,
 												},
 											},
 										},
@@ -293,12 +234,9 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"unit": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.StringInSlice([]string{
-																	appmesh.DurationUnitMs,
-																	appmesh.DurationUnitS,
-																}, false),
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 															},
 
 															"value": {
@@ -537,19 +475,9 @@ func appmeshRouteHttpRouteSchema() *schema.Schema {
 							},
 
 							"method": {
-								Type:     schema.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									appmesh.HttpMethodConnect,
-									appmesh.HttpMethodDelete,
-									appmesh.HttpMethodGet,
-									appmesh.HttpMethodHead,
-									appmesh.HttpMethodOptions,
-									appmesh.HttpMethodPatch,
-									appmesh.HttpMethodPost,
-									appmesh.HttpMethodPut,
-									appmesh.HttpMethodTrace,
-								}, false),
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(appmesh.HttpMethod_Values(), false),
 							},
 
 							"prefix": {
@@ -559,12 +487,9 @@ func appmeshRouteHttpRouteSchema() *schema.Schema {
 							},
 
 							"scheme": {
-								Type:     schema.TypeString,
-								Optional: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									appmesh.HttpSchemeHttp,
-									appmesh.HttpSchemeHttps,
-								}, false),
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(appmesh.HttpScheme_Values(), false),
 							},
 						},
 					},
@@ -598,12 +523,9 @@ func appmeshRouteHttpRouteSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"unit": {
-											Type:     schema.TypeString,
-											Required: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												appmesh.DurationUnitMs,
-												appmesh.DurationUnitS,
-											}, false),
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(appmesh.DurationUnit_Values(), false),
 										},
 
 										"value": {
