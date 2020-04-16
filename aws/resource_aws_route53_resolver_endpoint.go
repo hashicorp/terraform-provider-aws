@@ -196,7 +196,6 @@ func resourceAwsRoute53ResolverEndpointRead(d *schema.ResourceData, meta interfa
 func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	d.Partial(true)
 	if d.HasChange("name") {
 		req := &route53resolver.UpdateResolverEndpointInput{
 			ResolverEndpointId: aws.String(d.Id()),
@@ -215,8 +214,6 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		if err != nil {
 			return err
 		}
-
-		d.SetPartial("name")
 	}
 
 	if d.HasChange("ip_address") {
@@ -260,8 +257,6 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 				return err
 			}
 		}
-
-		d.SetPartial("ip_address")
 	}
 
 	if d.HasChange("tags") {
@@ -269,10 +264,8 @@ func resourceAwsRoute53ResolverEndpointUpdate(d *schema.ResourceData, meta inter
 		if err := keyvaluetags.Route53resolverUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Route53 Resolver endpoint (%s) tags: %s", d.Get("arn").(string), err)
 		}
-		d.SetPartial("tags")
 	}
 
-	d.Partial(false)
 	return resourceAwsRoute53ResolverEndpointRead(d, meta)
 }
 

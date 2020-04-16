@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - CHANGELOG.md
+    branches-ignore: # ignore all for downstream
+      - '**'
 
 jobs:
   PRCheck:

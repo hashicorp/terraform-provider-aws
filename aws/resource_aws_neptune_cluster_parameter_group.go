@@ -182,8 +182,6 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
 
-	d.Partial(true)
-
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
 		if o == nil {
@@ -223,7 +221,6 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 					return fmt.Errorf("Error modifying Neptune Cluster Parameter Group: %s", err)
 				}
 			}
-			d.SetPartial("parameter")
 		}
 	}
 
@@ -233,11 +230,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsNeptuneClusterParameterGroupRead(d, meta)
 }

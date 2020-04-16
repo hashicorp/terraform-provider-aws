@@ -178,7 +178,6 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
 	svcId := d.Id()
 
 	modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
@@ -201,8 +200,6 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		if err := vpcEndpointServiceWaitUntilAvailable(d, conn); err != nil {
 			return err
 		}
-
-		d.SetPartial("network_load_balancer_arns")
 	}
 
 	modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
@@ -214,8 +211,6 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
 			return fmt.Errorf("Error modifying VPC Endpoint Service permissions: %s", err.Error())
 		}
-
-		d.SetPartial("allowed_principals")
 	}
 
 	if d.HasChange("tags") {
@@ -226,7 +221,6 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	d.Partial(false)
 	return resourceAwsVpcEndpointServiceRead(d, meta)
 }
 

@@ -398,6 +398,13 @@ func (c *SageMaker) CreateAutoMLJobRequest(input *CreateAutoMLJobInput) (req *re
 //
 // Creates an AutoPilot job.
 //
+// After you run an AutoPilot job, you can find the best performing model by
+// calling , and then deploy that model by following the steps described in
+// Step 6.1: Deploy the Model to Amazon SageMaker Hosting Services (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html).
+//
+// For information about how to use AutoPilot, see Use AutoPilot to Automate
+// Model Development (https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-automate-model-development.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -764,8 +771,7 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 //
 // Creates an endpoint using the endpoint configuration specified in the request.
 // Amazon SageMaker uses the endpoint to provision resources and deploy models.
-// You create the endpoint configuration with the CreateEndpointConfig (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html)
-// API.
+// You create the endpoint configuration with the CreateEndpointConfig API.
 //
 // Use this API to deploy models using Amazon SageMaker hosting services.
 //
@@ -785,8 +791,7 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 // When Amazon SageMaker receives the request, it sets the endpoint status to
 // Creating. After it creates the endpoint, it sets the status to InService.
 // Amazon SageMaker can then process incoming requests for inferences. To check
-// the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
-// API.
+// the status of an endpoint, use the DescribeEndpoint API.
 //
 // If any of the models hosted at this endpoint get model data from an Amazon
 // S3 location, Amazon SageMaker uses AWS Security Token Service to download
@@ -877,8 +882,7 @@ func (c *SageMaker) CreateEndpointConfigRequest(input *CreateEndpointConfigInput
 // Creates an endpoint configuration that Amazon SageMaker hosting services
 // uses to deploy models. In the configuration, you identify one or more models,
 // created using the CreateModel API, to deploy and the resources that you want
-// Amazon SageMaker to provision. Then you call the CreateEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpoint.html)
-// API.
+// Amazon SageMaker to provision. Then you call the CreateEndpoint API.
 //
 // Use this API if you want to use Amazon SageMaker hosting services to deploy
 // models into production.
@@ -2032,9 +2036,9 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // IP addresses that you want to have access to the notebook instance. For more
 // information, see Limit Access to a Notebook Instance by IP Address (https://docs.aws.amazon.com/sagemaker/latest/dg/security_iam_id-based-policy-examples.html#nbi-ip-filter).
 //
-// The URL that you get from a call to is valid only for 5 minutes. If you try
-// to use the URL after the 5-minute limit expires, you are directed to the
-// AWS console sign-in page.
+// The URL that you get from a call to CreatePresignedNotebookInstanceUrl is
+// valid only for 5 minutes. If you try to use the URL after the 5-minute limit
+// expires, you are directed to the AWS console sign-in page.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3442,9 +3446,9 @@ func (c *SageMaker) DeleteModelRequest(input *DeleteModelInput) (req *request.Re
 // DeleteModel API operation for Amazon SageMaker Service.
 //
 // Deletes a model. The DeleteModel API deletes only the model entry that was
-// created in Amazon SageMaker when you called the CreateModel (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateModel.html)
-// API. It does not delete model artifacts, inference code, or the IAM role
-// that you specified when creating the model.
+// created in Amazon SageMaker when you called the CreateModel API. It does
+// not delete model artifacts, inference code, or the IAM role that you specified
+// when creating the model.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8635,8 +8639,7 @@ func (c *SageMaker) ListModelsRequest(input *ListModelsInput) (req *request.Requ
 
 // ListModels API operation for Amazon SageMaker Service.
 //
-// Lists models created with the CreateModel (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateModel.html)
-// API.
+// Lists models created with the CreateModel API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11942,8 +11945,7 @@ func (c *SageMaker) UpdateEndpointRequest(input *UpdateEndpointInput) (req *requ
 //
 // When Amazon SageMaker receives the request, it sets the endpoint status to
 // Updating. After updating the endpoint, it sets the status to InService. To
-// check the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
-// API.
+// check the status of an endpoint, use the DescribeEndpoint API.
 //
 // You must not delete an EndpointConfig in use by an endpoint that is live
 // or while the UpdateEndpoint or CreateEndpoint operations are being performed
@@ -12031,8 +12033,7 @@ func (c *SageMaker) UpdateEndpointWeightsAndCapacitiesRequest(input *UpdateEndpo
 // endpoint, or capacity of one variant associated with an existing endpoint.
 // When it receives the request, Amazon SageMaker sets the endpoint status to
 // Updating. After updating the endpoint, it sets the status to InService. To
-// check the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
-// API.
+// check the status of an endpoint, use the DescribeEndpoint API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12904,8 +12905,7 @@ func (s *AddTagsOutput) SetTags(v []*Tag) *AddTagsOutput {
 	return s
 }
 
-// Specifies the training algorithm to use in a CreateTrainingJob (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateTrainingJob.html)
-// request.
+// Specifies the training algorithm to use in a CreateTrainingJob request.
 //
 // For more information about algorithms provided by Amazon SageMaker, see Algorithms
 // (https://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). For information
@@ -13369,6 +13369,21 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-ImageMultiClass arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClass
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClass
 	//
+	//    * Multi-label image classification - Uses a variant of the Expectation
+	//    Maximization approach to estimate the true classes of an image based on
+	//    annotations from individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClassMultiLabel
+	//
 	//    * Semantic segmentation - Treats each pixel in an image as a multi-class
 	//    classification and treats pixel annotations from workers as "votes" for
 	//    the correct label. arn:aws:lambda:us-east-1:432418664414:function:ACS-SemanticSegmentation
@@ -13394,6 +13409,21 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-TextMultiClass
 	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-TextMultiClass arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClass
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClass
+	//
+	//    * Multi-label text classification - Uses a variant of the Expectation
+	//    Maximization approach to estimate the true classes of text based on annotations
+	//    from individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClassMultiLabel
 	//
 	//    * Named entity recognition - Groups similar selections and calculates
 	//    aggregate boundaries, resolving to most-assigned label. arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition
@@ -14017,7 +14047,9 @@ func (s *AutoMLContainerDefinition) SetModelDataUrl(v string) *AutoMLContainerDe
 type AutoMLDataSource struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 location of the data.
+	// The Amazon S3 location of the input data.
+	//
+	// The input data must be in CSV format and contain at least 1000 rows.
 	//
 	// S3DataSource is a required field
 	S3DataSource *AutoMLS3DataSource `type:"structure" required:"true"`
@@ -15280,8 +15312,8 @@ func (s *CompilationJobSummary) SetLastModifiedTime(v time.Time) *CompilationJob
 // There was a conflict when you attempted to modify an experiment, trial, or
 // trial component.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -15298,17 +15330,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15316,22 +15348,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes the container, as part of model definition.
@@ -15924,6 +15956,7 @@ type CreateAutoMLJobInput struct {
 	GenerateCandidateDefinitionsOnly *bool `type:"boolean"`
 
 	// Similar to InputDataConfig supported by Tuning. Format(s) supported: CSV.
+	// Minimum of 1000 rows.
 	//
 	// InputDataConfig is a required field
 	InputDataConfig []*AutoMLChannel `min:"1" type:"list" required:"true"`
@@ -16523,7 +16556,6 @@ type CreateEndpointConfigInput struct {
 	DataCaptureConfig *DataCaptureConfig `type:"structure"`
 
 	// The name of the endpoint configuration. You specify this name in a CreateEndpoint
-	// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpoint.html)
 	// request.
 	//
 	// EndpointConfigName is a required field
@@ -16687,8 +16719,7 @@ func (s *CreateEndpointConfigOutput) SetEndpointConfigArn(v string) *CreateEndpo
 type CreateEndpointInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of an endpoint configuration. For more information, see CreateEndpointConfig
-	// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html).
+	// The name of an endpoint configuration. For more information, see CreateEndpointConfig.
 	//
 	// EndpointConfigName is a required field
 	EndpointConfigName *string `type:"string" required:"true"`
@@ -16908,6 +16939,9 @@ type CreateFlowDefinitionInput struct {
 	// HumanLoopConfig is a required field
 	HumanLoopConfig *HumanLoopConfig `type:"structure" required:"true"`
 
+	// Container for configuring the source of human task requests.
+	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure"`
+
 	// An object containing information about where the human review results will
 	// be uploaded.
 	//
@@ -16967,6 +17001,11 @@ func (s *CreateFlowDefinitionInput) Validate() error {
 			invalidParams.AddNested("HumanLoopConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.HumanLoopRequestSource != nil {
+		if err := s.HumanLoopRequestSource.Validate(); err != nil {
+			invalidParams.AddNested("HumanLoopRequestSource", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.OutputConfig != nil {
 		if err := s.OutputConfig.Validate(); err != nil {
 			invalidParams.AddNested("OutputConfig", err.(request.ErrInvalidParams))
@@ -17004,6 +17043,12 @@ func (s *CreateFlowDefinitionInput) SetHumanLoopActivationConfig(v *HumanLoopAct
 // SetHumanLoopConfig sets the HumanLoopConfig field's value.
 func (s *CreateFlowDefinitionInput) SetHumanLoopConfig(v *HumanLoopConfig) *CreateFlowDefinitionInput {
 	s.HumanLoopConfig = v
+	return s
+}
+
+// SetHumanLoopRequestSource sets the HumanLoopRequestSource field's value.
+func (s *CreateFlowDefinitionInput) SetHumanLoopRequestSource(v *HumanLoopRequestSource) *CreateFlowDefinitionInput {
+	s.HumanLoopRequestSource = v
 	return s
 }
 
@@ -17163,7 +17208,7 @@ type CreateHyperParameterTuningJobInput struct {
 	// The HyperParameterTuningJobConfig object that describes the tuning job, including
 	// the search strategy, the objective metric used to evaluate training jobs,
 	// ranges of parameters to search, and resource limits for the tuning job. For
-	// more information, see automatic-model-tuning
+	// more information, see How Hyperparameter Tuning Works (https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-how-it-works.html).
 	//
 	// HyperParameterTuningJobConfig is a required field
 	HyperParameterTuningJobConfig *HyperParameterTuningJobConfig `type:"structure" required:"true"`
@@ -17640,10 +17685,9 @@ type CreateModelInput struct {
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 
-	// A VpcConfig (https://docs.aws.amazon.com/sagemaker/latest/dg/API_VpcConfig.html)
-	// object that specifies the VPC that you want your model to connect to. Control
-	// access to and from your model container by configuring the VPC. VpcConfig
-	// is used in hosting services and in batch transform. For more information,
+	// A VpcConfig object that specifies the VPC that you want your model to connect
+	// to. Control access to and from your model container by configuring the VPC.
+	// VpcConfig is used in hosting services and in batch transform. For more information,
 	// see Protect Endpoints by Using an Amazon Virtual Private Cloud (https://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html)
 	// and Protect Data in Batch Transform Jobs by Using an Amazon Virtual Private
 	// Cloud (https://docs.aws.amazon.com/sagemaker/latest/dg/batch-vpc.html).
@@ -17930,7 +17974,7 @@ type CreateMonitoringScheduleInput struct {
 	MonitoringScheduleName *string `min:"1" type:"string" required:"true"`
 
 	// (Optional) An array of key-value pairs. For more information, see Using Cost
-	// Allocation Tags (https://docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
+	// Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 }
@@ -18585,7 +18629,7 @@ type CreateProcessingJobInput struct {
 	StoppingCondition *ProcessingStoppingCondition `type:"structure"`
 
 	// (Optional) An array of key-value pairs. For more information, see Using Cost
-	// Allocation Tags (https://docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
+	// Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 }
@@ -19179,8 +19223,8 @@ type CreateTransformJobInput struct {
 	// request. A record is a single unit of input data that inference can be made
 	// on. For example, a single line in a CSV file is a record.
 	//
-	// To enable the batch strategy, you must set the SplitType property of the
-	// DataProcessing object to Line, RecordIO, or TFRecord.
+	// To enable the batch strategy, you must set the SplitType property to Line,
+	// RecordIO, or TFRecord.
 	//
 	// To use only one record when making an HTTP invocation request to a container,
 	// set BatchStrategy to SingleRecord and SplitType to Line.
@@ -23275,6 +23319,9 @@ type DescribeFlowDefinitionOutput struct {
 	// HumanLoopConfig is a required field
 	HumanLoopConfig *HumanLoopConfig `type:"structure" required:"true"`
 
+	// Container for configuring the source of human task requests.
+	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure"`
+
 	// An object containing information about the output file.
 	//
 	// OutputConfig is a required field
@@ -23336,6 +23383,12 @@ func (s *DescribeFlowDefinitionOutput) SetHumanLoopActivationConfig(v *HumanLoop
 // SetHumanLoopConfig sets the HumanLoopConfig field's value.
 func (s *DescribeFlowDefinitionOutput) SetHumanLoopConfig(v *HumanLoopConfig) *DescribeFlowDefinitionOutput {
 	s.HumanLoopConfig = v
+	return s
+}
+
+// SetHumanLoopRequestSource sets the HumanLoopRequestSource field's value.
+func (s *DescribeFlowDefinitionOutput) SetHumanLoopRequestSource(v *HumanLoopRequestSource) *DescribeFlowDefinitionOutput {
+	s.HumanLoopRequestSource = v
 	return s
 }
 
@@ -27846,13 +27899,17 @@ func (s *GitConfigForUpdate) SetSecretArn(v string) *GitConfigForUpdate {
 	return s
 }
 
-// Defines under what conditions SageMaker creates a human loop. Used within .
+// Defines under what conditions SageMaker creates a human loop. Used within
+// . See for the required format of activation conditions.
 type HumanLoopActivationConditionsConfig struct {
 	_ struct{} `type:"structure"`
 
 	// JSON expressing use-case specific conditions declaratively. If any condition
 	// is matched, atomic tasks are created against the configured work team. The
-	// set of conditions is different for Rekognition and Textract.
+	// set of conditions is different for Rekognition and Textract. For more information
+	// about how to structure the JSON, see JSON Schema for Human Loop Activation
+	// Conditions in Amazon Augmented AI (https://docs.aws.amazon.com/sagemaker/latest/dg/a2i-human-fallback-conditions-json-schema.html)
+	// in the Amazon SageMaker Developer Guide.
 	//
 	// HumanLoopActivationConditions is a required field
 	HumanLoopActivationConditions aws.JSONValue `type:"jsonvalue" required:"true"`
@@ -27898,11 +27955,6 @@ type HumanLoopActivationConfig struct {
 	//
 	// HumanLoopActivationConditionsConfig is a required field
 	HumanLoopActivationConditionsConfig *HumanLoopActivationConditionsConfig `type:"structure" required:"true"`
-
-	// Container for configuring the source of human task requests.
-	//
-	// HumanLoopRequestSource is a required field
-	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure" required:"true"`
 }
 
 // String returns the string representation
@@ -27921,17 +27973,9 @@ func (s *HumanLoopActivationConfig) Validate() error {
 	if s.HumanLoopActivationConditionsConfig == nil {
 		invalidParams.Add(request.NewErrParamRequired("HumanLoopActivationConditionsConfig"))
 	}
-	if s.HumanLoopRequestSource == nil {
-		invalidParams.Add(request.NewErrParamRequired("HumanLoopRequestSource"))
-	}
 	if s.HumanLoopActivationConditionsConfig != nil {
 		if err := s.HumanLoopActivationConditionsConfig.Validate(); err != nil {
 			invalidParams.AddNested("HumanLoopActivationConditionsConfig", err.(request.ErrInvalidParams))
-		}
-	}
-	if s.HumanLoopRequestSource != nil {
-		if err := s.HumanLoopRequestSource.Validate(); err != nil {
-			invalidParams.AddNested("HumanLoopRequestSource", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -27944,12 +27988,6 @@ func (s *HumanLoopActivationConfig) Validate() error {
 // SetHumanLoopActivationConditionsConfig sets the HumanLoopActivationConditionsConfig field's value.
 func (s *HumanLoopActivationConfig) SetHumanLoopActivationConditionsConfig(v *HumanLoopActivationConditionsConfig) *HumanLoopActivationConfig {
 	s.HumanLoopActivationConditionsConfig = v
-	return s
-}
-
-// SetHumanLoopRequestSource sets the HumanLoopRequestSource field's value.
-func (s *HumanLoopActivationConfig) SetHumanLoopRequestSource(v *HumanLoopRequestSource) *HumanLoopActivationConfig {
-	s.HumanLoopRequestSource = v
 	return s
 }
 
@@ -28383,9 +28421,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-NamedEntityRecognition
 	//
@@ -28403,9 +28445,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-NamedEntityRecognition
 	//
@@ -28423,9 +28469,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-NamedEntityRecognition
 	//
@@ -28443,9 +28493,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-NamedEntityRecognition
 	//
@@ -28463,9 +28517,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-NamedEntityRecognition
 	//
@@ -28483,9 +28541,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-NamedEntityRecognition
 	//
@@ -28503,9 +28565,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-NamedEntityRecognition
 	//
@@ -28523,9 +28589,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-NamedEntityRecognition
 	//
@@ -28543,9 +28613,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-NamedEntityRecognition
 	//
@@ -28563,9 +28637,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-NamedEntityRecognition
 	//
@@ -28583,9 +28661,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-NamedEntityRecognition
 	//
@@ -28603,9 +28685,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-NamedEntityRecognition
 	//
@@ -28626,7 +28712,7 @@ type HumanTaskConfig struct {
 
 	// The length of time that a task remains available for labeling by human workers.
 	// If you choose the Amazon Mechanical Turk workforce, the maximum is 12 hours
-	// (43200). The default value is 864000 seconds (1 day). For private and vendor
+	// (43200). The default value is 864000 seconds (10 days). For private and vendor
 	// workforces, the maximum is as listed.
 	TaskAvailabilityLifetimeInSeconds *int64 `min:"60" type:"integer"`
 
@@ -39254,8 +39340,8 @@ func (s *ResourceConfig) SetVolumeSizeInGB(v int64) *ResourceConfig {
 
 // Resource being accessed is in use.
 type ResourceInUse struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39272,17 +39358,17 @@ func (s ResourceInUse) GoString() string {
 
 func newErrorResourceInUse(v protocol.ResponseMetadata) error {
 	return &ResourceInUse{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUse) Code() string {
+func (s *ResourceInUse) Code() string {
 	return "ResourceInUse"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUse) Message() string {
+func (s *ResourceInUse) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39290,29 +39376,29 @@ func (s ResourceInUse) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUse) OrigErr() error {
+func (s *ResourceInUse) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUse) Error() string {
+func (s *ResourceInUse) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUse) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUse) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUse) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUse) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You have exceeded an Amazon SageMaker resource limit. For example, you might
 // have too many training jobs created.
 type ResourceLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39329,17 +39415,17 @@ func (s ResourceLimitExceeded) GoString() string {
 
 func newErrorResourceLimitExceeded(v protocol.ResponseMetadata) error {
 	return &ResourceLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceLimitExceeded) Code() string {
+func (s *ResourceLimitExceeded) Code() string {
 	return "ResourceLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s ResourceLimitExceeded) Message() string {
+func (s *ResourceLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39347,22 +39433,22 @@ func (s ResourceLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceLimitExceeded) OrigErr() error {
+func (s *ResourceLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s ResourceLimitExceeded) Error() string {
+func (s *ResourceLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies the maximum number of training jobs and parallel training jobs
@@ -39429,8 +39515,8 @@ func (s *ResourceLimits) SetMaxParallelTrainingJobs(v int64) *ResourceLimits {
 
 // Resource being access is not found.
 type ResourceNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39447,17 +39533,17 @@ func (s ResourceNotFound) GoString() string {
 
 func newErrorResourceNotFound(v protocol.ResponseMetadata) error {
 	return &ResourceNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFound) Code() string {
+func (s *ResourceNotFound) Code() string {
 	return "ResourceNotFound"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFound) Message() string {
+func (s *ResourceNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39465,22 +39551,22 @@ func (s ResourceNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFound) OrigErr() error {
+func (s *ResourceNotFound) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFound) Error() string {
+func (s *ResourceNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The instance type and quantity.
@@ -41368,7 +41454,7 @@ type TrainingJob struct {
 
 	// When true, enables managed spot training using Amazon EC2 Spot instances
 	// to run training jobs instead of on-demand instances. For more information,
-	// see model-managed-spot-training.
+	// see Managed Spot Training (https://docs.aws.amazon.com/sagemaker/latest/dg/model-managed-spot-training.html).
 	EnableManagedSpotTraining *bool `type:"boolean"`
 
 	// If the TrainingJob was created with network isolation, the value is set to
@@ -43886,7 +43972,7 @@ func (s *UiTemplate) SetContent(v string) *UiTemplate {
 type UiTemplateInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The SHA 256 hash that you used to create the request signature.
+	// The SHA-256 digest of the contents of the template.
 	ContentSha256 *string `min:"1" type:"string"`
 
 	// The URL for the user interface template.
@@ -44088,12 +44174,11 @@ type UpdateEndpointInput struct {
 	// EndpointName is a required field
 	EndpointName *string `type:"string" required:"true"`
 
-	// When you are updating endpoint resources with RetainAllVariantProperties
-	// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_UpdateEndpoint.html#SageMaker-UpdateEndpoint-request-RetainAllVariantProperties),
+	// When you are updating endpoint resources with UpdateEndpointInput$RetainAllVariantProperties,
 	// whose value is set to true, ExcludeRetainedVariantProperties specifies the
-	// list of type VariantProperty (https://docs.aws.amazon.com/sagemaker/latest/dg/API_VariantProperty.html)
-	// to override with the values provided by EndpointConfig. If you don't specify
-	// a value for ExcludeAllVariantProperties, no variant properties are overridden.
+	// list of type VariantProperty to override with the values provided by EndpointConfig.
+	// If you don't specify a value for ExcludeAllVariantProperties, no variant
+	// properties are overridden.
 	ExcludeRetainedVariantProperties []*VariantProperty `type:"list"`
 
 	// When updating endpoint resources, enables or disables the retention of variant
@@ -45487,9 +45572,8 @@ func (s *UserSettings) SetTensorBoardAppSettings(v *TensorBoardAppSettings) *Use
 
 // Specifies a production variant property type for an Endpoint.
 //
-// If you are updating an endpoint with the RetainAllVariantProperties (https://docs.aws.amazon.com/sagemaker/latest/dg/API_UpdateEndpoint.html#SageMaker-UpdateEndpoint-request-RetainAllVariantProperties)
-// option set to true, the VariantProperty objects listed in ExcludeRetainedVariantProperties
-// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_UpdateEndpoint.html#SageMaker-UpdateEndpoint-request-ExcludeRetainedVariantProperties)
+// If you are updating an endpoint with the UpdateEndpointInput$RetainAllVariantProperties
+// option set to true, the VariantProperty objects listed in UpdateEndpointInput$ExcludeRetainedVariantProperties
 // override the existing variant properties of the endpoint.
 type VariantProperty struct {
 	_ struct{} `type:"structure"`
@@ -45497,12 +45581,10 @@ type VariantProperty struct {
 	// The type of variant property. The supported values are:
 	//
 	//    * DesiredInstanceCount: Overrides the existing variant instance counts
-	//    using the InitialInstanceCount (https://docs.aws.amazon.com/sagemaker/latest/dg/API_ProductionVariant.html#SageMaker-Type-ProductionVariant-InitialInstanceCount)
-	//    values in the ProductionVariants (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html#SageMaker-CreateEndpointConfig-request-ProductionVariants).
+	//    using the ProductionVariant$InitialInstanceCount values in the CreateEndpointConfigInput$ProductionVariants.
 	//
-	//    * DesiredWeight: Overrides the existing variant weights using the InitialVariantWeight
-	//    (https://docs.aws.amazon.com/sagemaker/latest/dg/API_ProductionVariant.html#SageMaker-Type-ProductionVariant-InitialVariantWeight)
-	//    values in the ProductionVariants (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html#SageMaker-CreateEndpointConfig-request-ProductionVariants).
+	//    * DesiredWeight: Overrides the existing variant weights using the ProductionVariant$InitialVariantWeight
+	//    values in the CreateEndpointConfigInput$ProductionVariants.
 	//
 	//    * DataCaptureConfig: (Not currently supported.)
 	//
@@ -46333,9 +46415,6 @@ const (
 
 	// FlowDefinitionStatusDeleting is a FlowDefinitionStatus enum value
 	FlowDefinitionStatusDeleting = "Deleting"
-
-	// FlowDefinitionStatusDeleted is a FlowDefinitionStatus enum value
-	FlowDefinitionStatusDeleted = "Deleted"
 )
 
 const (
@@ -46773,6 +46852,9 @@ const (
 
 	// OperatorNotExists is a Operator enum value
 	OperatorNotExists = "NotExists"
+
+	// OperatorIn is a Operator enum value
+	OperatorIn = "In"
 )
 
 const (
@@ -47464,6 +47546,9 @@ const (
 
 	// TargetDeviceQcs603 is a TargetDevice enum value
 	TargetDeviceQcs603 = "qcs603"
+
+	// TargetDeviceSitaraAm57x is a TargetDevice enum value
+	TargetDeviceSitaraAm57x = "sitara_am57x"
 
 	// TargetDeviceAmbaCv22 is a TargetDevice enum value
 	TargetDeviceAmbaCv22 = "amba_cv22"

@@ -27359,6 +27359,10 @@ func (c *EC2) ExportTransitGatewayRoutesRequest(input *ExportTransitGatewayRoute
 // S3 bucket. By default, all routes are exported. Alternatively, you can filter
 // by CIDR range.
 //
+// The routes are saved to the specified bucket in a JSON file. For more information,
+// see Export Route Tables to Amazon S3 (https://docs.aws.amazon.com/vpc/latest/tgw/tgw-route-tables.html#tgw-export-route-tables)
+// in Transit Gateways.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -29439,8 +29443,10 @@ func (c *EC2) ModifyAvailabilityZoneGroupRequest(input *ModifyAvailabilityZoneGr
 
 // ModifyAvailabilityZoneGroup API operation for Amazon Elastic Compute Cloud.
 //
-// Enables or disables a Zone Group for your account. To use Local Zones, you
-// must first enable the Zone Group.
+// Enables or disables an Availability Zone group for your account.
+//
+// Use describe-availability-zones (https://docs.aws.amazon.com/AWSEC2ApiDocReef/build/server-root/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html)
+// to view the value for GroupName.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -34618,9 +34624,9 @@ func (c *EC2) RequestSpotFleetRequest(input *RequestSpotFleetInput) (req *reques
 // ensuring that the Spot Instances in your Spot Fleet are in different Spot
 // pools, you can improve the availability of your fleet.
 //
-// You can specify tags for the Spot Fleet and Spot Instances. You cannot tag
-// other resource types in a Spot Fleet request because only the spot-fleet-request
-// and instance resource types are supported.
+// You can specify tags for the Spot Fleet request and instances launched by
+// the fleet. You cannot tag other resource types in a Spot Fleet request because
+// only the spot-fleet-request and instance resource types are supported.
 //
 // For more information, see Spot Fleet Requests (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-fleet-requests.html)
 // in the Amazon EC2 User Guide for Linux Instances.
@@ -36411,9 +36417,10 @@ func (c *EC2) StopInstancesRequest(input *StopInstancesInput) (req *request.Requ
 // your Linux instance, Amazon EC2 charges a one-minute minimum for instance
 // usage, and thereafter charges per second for instance usage.
 //
-// You can't hibernate Spot Instances, and you can't stop or hibernate instance
-// store-backed instances. For information about using hibernation for Spot
-// Instances, see Hibernating Interrupted Spot Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html#hibernate-spot-instances)
+// You can't stop or hibernate instance store-backed instances. You can't use
+// the Stop action to hibernate Spot Instances, but you can specify that Amazon
+// EC2 should hibernate Spot Instances when they are interrupted. For more information,
+// see Hibernating Interrupted Spot Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/spot-interruptions.html#hibernate-spot-instances)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
 // When you stop or hibernate an instance, we shut it down. You can restart
@@ -37837,7 +37844,11 @@ type AllocateAddressInput struct {
 	// The location from which the IP address is advertised. Use this parameter
 	// to limit the address to this location.
 	//
-	// Use DescribeVpcs (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeVpcs.html)
+	// A network border group is a unique set of Availability Zones or Local Zones
+	// from where AWS advertises IP addresses and limits the addresses to the group.
+	// IP addresses cannot move between network border groups.
+	//
+	// Use DescribeAvailabilityZones (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAvailabilityZones.html)
 	// to view the network border groups.
 	//
 	// You cannot use a network border group with EC2 Classic. If you attempt this
@@ -55367,6 +55378,57 @@ type DescribeCapacityReservationsInput struct {
 	DryRun *bool `type:"boolean"`
 
 	// One or more filters.
+	//
+	//    * instance-type - The type of instance for which the Capacity Reservation
+	//    reserves capacity.
+	//
+	//    * owner-id - The ID of the AWS account that owns the Capacity Reservation.
+	//
+	//    * availability-zone-id - The Availability Zone ID of the Capacity Reservation.
+	//
+	//    * instance-platform - The type of operating system for which the Capacity
+	//    Reservation reserves capacity.
+	//
+	//    * availability-zone - The Availability Zone ID of the Capacity Reservation.
+	//
+	//    * tenancy - Indicates the tenancy of the Capacity Reservation. A Capacity
+	//    Reservation can have one of the following tenancy settings: default -
+	//    The Capacity Reservation is created on hardware that is shared with other
+	//    AWS accounts. dedicated - The Capacity Reservation is created on single-tenant
+	//    hardware that is dedicated to a single AWS account.
+	//
+	//    * state - The current state of the Capacity Reservation. A Capacity Reservation
+	//    can be in one of the following states: active- The Capacity Reservation
+	//    is active and the capacity is available for your use. expired - The Capacity
+	//    Reservation expired automatically at the date and time specified in your
+	//    request. The reserved capacity is no longer available for your use. cancelled
+	//    - The Capacity Reservation was manually cancelled. The reserved capacity
+	//    is no longer available for your use. pending - The Capacity Reservation
+	//    request was successful but the capacity provisioning is still pending.
+	//    failed - The Capacity Reservation request has failed. A request might
+	//    fail due to invalid request parameters, capacity constraints, or instance
+	//    limit constraints. Failed requests are retained for 60 minutes.
+	//
+	//    * end-date - The date and time at which the Capacity Reservation expires.
+	//    When a Capacity Reservation expires, the reserved capacity is released
+	//    and you can no longer launch instances into it. The Capacity Reservation's
+	//    state changes to expired when it reaches its end date and time.
+	//
+	//    * end-date-type - Indicates the way in which the Capacity Reservation
+	//    ends. A Capacity Reservation can have one of the following end types:
+	//    unlimited - The Capacity Reservation remains active until you explicitly
+	//    cancel it. limited - The Capacity Reservation expires automatically at
+	//    a specified date and time.
+	//
+	//    * instance-match-criteria - Indicates the type of instance launches that
+	//    the Capacity Reservation accepts. The options include: open - The Capacity
+	//    Reservation accepts all instances that have matching attributes (instance
+	//    type, platform, and Availability Zone). Instances that have matching attributes
+	//    launch into the Capacity Reservation automatically without specifying
+	//    any additional parameters. targeted - The Capacity Reservation only accepts
+	//    instances that have matching attributes (instance type, platform, and
+	//    Availability Zone), and explicitly target the Capacity Reservation. This
+	//    ensures that only permitted instances can use the reserved capacity.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return for the request in a single page.
@@ -59821,10 +59883,10 @@ type DescribeInstanceTypesInput struct {
 	//    generation instance type of an instance family. (true | false)
 	//
 	//    * ebs-info.ebs-optimized-support - Indicates whether the instance type
-	//    is EBS-optimized. (true | false)
+	//    is EBS-optimized. (supported | unsupported | default)
 	//
 	//    * ebs-info.encryption-support - Indicates whether EBS encryption is supported.
-	//    (true | false)
+	//    (supported | unsupported)
 	//
 	//    * free-tier-eligible - Indicates whether the instance type is eligible
 	//    to use in the free tier. (true | false)
@@ -60030,7 +60092,8 @@ type DescribeInstancesInput struct {
 	//    * host-id - The ID of the Dedicated Host on which the instance is running,
 	//    if applicable.
 	//
-	//    * hypervisor - The hypervisor type of the instance (ovm | xen).
+	//    * hypervisor - The hypervisor type of the instance (ovm | xen). The value
+	//    xen is used for both Xen and Nitro hypervisors.
 	//
 	//    * iam-instance-profile.arn - The instance profile associated with the
 	//    instance. Specified as an ARN.
@@ -66283,7 +66346,20 @@ type DescribeTransitGatewayPeeringAttachmentsInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// One or more filters.
+	// One or more filters. The possible values are:
+	//
+	//    * transit-gateway-attachment-id - The ID of the transit gateway attachment.
+	//
+	//    * local-owner-id - The ID of your AWS account.
+	//
+	//    * remote-owner-id - The ID of the AWS account in the remote Region that
+	//    owns the transit gateway.
+	//
+	//    * state - The state of the peering attachment (available | deleted | deleting
+	//    | failed | modifying | pendingAcceptance | pending | rollingBack | rejected
+	//    | rejecting).
+	//
+	//    * transit-gateway-id - The ID of the transit gateway.
 	Filters []*Filter `locationName:"Filter" locationNameList:"Filter" type:"list"`
 
 	// The maximum number of results to return with a single call. To retrieve the
@@ -78989,7 +79065,8 @@ type Instance struct {
 	// Indicates whether the instance is enabled for hibernation.
 	HibernationOptions *HibernationOptions `locationName:"hibernationOptions" type:"structure"`
 
-	// The hypervisor type of the instance.
+	// The hypervisor type of the instance. The value xen is used for both Xen and
+	// Nitro hypervisors.
 	Hypervisor *string `locationName:"hypervisor" type:"string" enum:"HypervisorType"`
 
 	// The IAM instance profile associated with the instance, if applicable.
@@ -84471,13 +84548,14 @@ type ModifyAvailabilityZoneGroupInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
-	// The names of the Zone Group.
+	// The name of the Availability Zone Group.
 	//
 	// GroupName is a required field
 	GroupName *string `type:"string" required:"true"`
 
-	// Indicates whether to enable or disable Zone Group membership. The valid values
-	// are opted-in.
+	// Indicates whether to enable or disable membership. The valid values are opted-in.
+	// You must contact AWS Support (https://console.aws.amazon.com/support/home#/case/create%3FissueType=customer-service%26serviceCode=general-info%26getting-started%26categoryCode=using-aws%26services)
+	// to disable an Availability Zone group.
 	//
 	// OptInStatus is a required field
 	OptInStatus *string `type:"string" required:"true" enum:"ModifyAvailabilityZoneOptInStatus"`
@@ -97451,7 +97529,10 @@ type RunInstancesInput struct {
 	CapacityReservationSpecification *CapacityReservationSpecification `type:"structure"`
 
 	// Unique, case-sensitive identifier you provide to ensure the idempotency of
-	// the request. For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
+	// the request. If you do not specify a client token, a randomly generated token
+	// is used for the request to ensure idempotency.
+	//
+	// For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	//
 	// Constraints: Maximum 64 ASCII characters
 	ClientToken *string `locationName:"clientToken" type:"string"`
@@ -101174,8 +101255,11 @@ type SpotFleetRequestConfigData struct {
 	// The key-value pair for tagging the Spot Fleet request on creation. The value
 	// for ResourceType must be spot-fleet-request, otherwise the Spot Fleet request
 	// fails. To tag instances at launch, specify the tags in the launch template
-	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#create-launch-template).
-	// For information about tagging after launch, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
+	// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#create-launch-template)
+	// (valid only if you use LaunchTemplateConfigs) or in the SpotFleetTagSpecification
+	// (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetTagSpecification.html)
+	// (valid only if you use LaunchSpecifications). For information about tagging
+	// after launch, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html#tag-resources).
 	TagSpecifications []*TagSpecification `locationName:"TagSpecification" locationNameList:"item" type:"list"`
 
 	// The number of units to request for the Spot Fleet. You can choose to set
@@ -101395,8 +101479,9 @@ func (s *SpotFleetRequestConfigData) SetValidUntil(v time.Time) *SpotFleetReques
 type SpotFleetTagSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The type of resource. Currently, the only resource types that are supported
-	// are spot-fleet-request and instance.
+	// The type of resource. Currently, the only resource type that is supported
+	// is instance. To tag the Spot Fleet request on creation, use the TagSpecifications
+	// parameter in SpotFleetRequestConfigData (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetRequestConfigData.html).
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
 
 	// The tags.
@@ -103003,10 +103088,10 @@ type TagSpecification struct {
 
 	// The type of resource to tag. Currently, the resource types that support tagging
 	// on creation are: capacity-reservation | client-vpn-endpoint | dedicated-host
-	// | fleet | fpga-image | instance | key-pair | launch-template | spot-fleet-request
-	// | placement-group | snapshot | traffic-mirror-filter | traffic-mirror-session
-	// | traffic-mirror-target | transit-gateway | transit-gateway-attachment |
-	// transit-gateway-route-table | vpc-endpoint (for interface VPC endpoints)|
+	// | fleet | fpga-image | instance | key-pair | launch-template | | natgateway
+	// | spot-fleet-request | placement-group | snapshot | traffic-mirror-filter
+	// | traffic-mirror-session | traffic-mirror-target | transit-gateway | transit-gateway-attachment
+	// | transit-gateway-route-table | vpc-endpoint (for interface VPC endpoints)|
 	// vpc-endpoint-service (for gateway VPC endpoints) | volume | vpc-flow-log.
 	//
 	// To tag a resource after it has been created, see CreateTags (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTags.html).

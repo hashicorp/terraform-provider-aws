@@ -161,6 +161,18 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"replica": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"server_side_encryption": {
 				Type:     schema.TypeList,
 				Optional: true,

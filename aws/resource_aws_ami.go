@@ -171,7 +171,6 @@ func resourceAwsAmi() *schema.Resource {
 			"manage_ebs_snapshots": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -280,7 +279,7 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(id)
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2UpdateTags(client, id, nil, v); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(client, id, v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
@@ -411,8 +410,6 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
@@ -431,10 +428,7 @@ func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		d.SetPartial("description")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsAmiRead(d, meta)
 }
