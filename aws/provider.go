@@ -192,6 +192,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_cloudtrail_service_account":                dataSourceAwsCloudTrailServiceAccount(),
 			"aws_cloudwatch_log_group":                      dataSourceAwsCloudwatchLogGroup(),
 			"aws_cognito_user_pools":                        dataSourceAwsCognitoUserPools(),
+			"aws_coip_pool":                                 dataSourceAwsCoipPool(),
+			"aws_coip_pools":                                dataSourceAwsCoipPools(),
 			"aws_codecommit_repository":                     dataSourceAwsCodeCommitRepository(),
 			"aws_cur_report_definition":                     dataSourceAwsCurReportDefinition(),
 			"aws_db_cluster_snapshot":                       dataSourceAwsDbClusterSnapshot(),
