@@ -1355,13 +1355,13 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 			}
 		}
 
-		if instance == nil {
+		if instance == nil || instance.State == nil {
 			// Sometimes AWS just has consistency issues and doesn't see
 			// our instance yet. Return an empty state.
 			return nil, "", nil
 		}
 
-		state := *instance.State.Name
+		state := aws.StringValue(instance.State.Name)
 
 		for _, failState := range failStates {
 			if state == failState {
@@ -1388,11 +1388,14 @@ func VolumeStateRefreshFunc(conn *ec2.EC2, volumeID, failState string) resource.
 			log.Printf("Error on VolumeStateRefresh: %s", err)
 			return nil, "", err
 		}
+		if resp == nil || len(resp.VolumesModifications) == 0 || resp.VolumesModifications[0] == nil {
+			return nil, "", nil
+		}
 
 		i := resp.VolumesModifications[0]
-		state := *i.ModificationState
+		state := aws.StringValue(i.ModificationState)
 		if state == failState {
-			return i, state, fmt.Errorf("Failed to reach target state. Reason: %s", *i.StatusMessage)
+			return i, state, fmt.Errorf("Failed to reach target state. Reason: %s", aws.StringValue(i.StatusMessage))
 		}
 
 		return i, state, nil
