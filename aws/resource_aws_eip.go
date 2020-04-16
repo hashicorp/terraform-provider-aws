@@ -270,17 +270,9 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
 		}
 	}
-	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
-	if address.CustomerOwnedIpv4Pool != nil {
-		d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
-	} else {
-		d.Set("customer_owned_ipv4_pool", "")
-	}
-	if address.CustomerOwnedIp != nil {
-		d.Set("customer_owned_ip", address.CustomerOwnedIp)
-	} else {
-		d.Set("customer_owned_ip", "")
-	}
+
+	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
+	d.Set("customer_owned_ip", address.CustomerOwnedIp)
 
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.

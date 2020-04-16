@@ -155,19 +155,9 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
 		}
 	}
-	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 
-	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
-	if eip.CustomerOwnedIpv4Pool != nil {
-		d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
-	} else {
-		d.Set("customer_owned_ipv4_pool", "")
-	}
-	if eip.CustomerOwnedIp != nil {
-		d.Set("customer_owned_ip", eip.CustomerOwnedIp)
-	} else {
-		d.Set("customer_owned_ip", "")
-	}
+	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
+	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eip.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
