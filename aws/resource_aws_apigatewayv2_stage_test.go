@@ -13,28 +13,31 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSAPIGateway2Stage_basic(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Stage_basic(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
@@ -47,7 +50,7 @@ func TestAccAWSAPIGateway2Stage_basic(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -55,31 +58,57 @@ func TestAccAWSAPIGateway2Stage_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Stage_AccessLogSettings(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
-	cloudWatchResourceName := "aws_cloudwatch_log_group.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Stage_disappears(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_accessLogSettings(rName, "$context.identity.sourceIp $context.requestId"),
+				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
+					testAccCheckAWSAPIGatewayV2StageDisappears(&apiId, &v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Stage_AccessLogSettings(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	cloudWatchResourceName := "aws_cloudwatch_log_group.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, "$context.identity.sourceIp $context.requestId"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccCheckAWSAPIGateway2StageAccessLogDestinationArn(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
+					testAccCheckAWSAPIGatewayV2StageAccessLogDestinationArn(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.identity.sourceIp $context.requestId"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
@@ -92,24 +121,25 @@ func TestAccAWSAPIGateway2Stage_AccessLogSettings(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2StageConfig_accessLogSettings(rName, "$context.requestId"),
+				Config: testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, "$context.requestId"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "1"),
-					testAccCheckAWSAPIGateway2StageAccessLogDestinationArn(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
+					testAccCheckAWSAPIGatewayV2StageAccessLogDestinationArn(resourceName, "access_log_settings.0.destination_arn", cloudWatchResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.0.format", "$context.requestId"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -122,29 +152,32 @@ func TestAccAWSAPIGateway2Stage_AccessLogSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Stage_ClientCertificateIdAndDescription(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
+func TestAccAWSAPIGatewayV2Stage_ClientCertificateIdAndDescription(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
 	certificateResourceName := "aws_api_gateway_client_certificate.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_clientCertificateIdAndDescription(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescription(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_certificate_id", certificateResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test stage"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
@@ -157,23 +190,24 @@ func TestAccAWSAPIGateway2Stage_ClientCertificateIdAndDescription(t *testing.T) 
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2StageConfig_clientCertificateIdAndDescriptionUpdated(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "true"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test stage updated"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
@@ -188,21 +222,24 @@ func TestAccAWSAPIGateway2Stage_ClientCertificateIdAndDescription(t *testing.T) 
 	})
 }
 
-func TestAccAWSAPIGateway2Stage_DefaultRouteSettings(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettings(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_defaultRouteSettings(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_defaultRouteSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "true"),
@@ -222,22 +259,23 @@ func TestAccAWSAPIGateway2Stage_DefaultRouteSettings(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -250,29 +288,32 @@ func TestAccAWSAPIGateway2Stage_DefaultRouteSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Stage_Deployment(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
-	deploymentResourceName := "aws_api_gateway_v2_deployment.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Stage_Deployment(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	deploymentResourceName := "aws_apigatewayv2_deployment.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_deployment(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_deployment(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "deployment_id", deploymentResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
@@ -285,7 +326,7 @@ func TestAccAWSAPIGateway2Stage_Deployment(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -293,40 +334,43 @@ func TestAccAWSAPIGateway2Stage_Deployment(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Stage_RouteSettings(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Stage_RouteSettings(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_routeSettings(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_routeSettings(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.1093142358.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.1093142358.detailed_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.1093142358.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.1093142358.route_key", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.1093142358.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.1093142358.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.data_trace_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.logging_level", "OFF"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.route_key", "$default"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.data_trace_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.detailed_metrics_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.logging_level", "ERROR"),
@@ -339,7 +383,7 @@ func TestAccAWSAPIGateway2Stage_RouteSettings(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -347,29 +391,32 @@ func TestAccAWSAPIGateway2Stage_RouteSettings(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Stage_StageVariables(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Stage_StageVariables(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_stageVariables(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_stageVariables(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
@@ -383,22 +430,23 @@ func TestAccAWSAPIGateway2Stage_StageVariables(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -411,29 +459,32 @@ func TestAccAWSAPIGateway2Stage_StageVariables(t *testing.T) {
 	})
 }
 
-func TestAccAWSAPIGateway2Stage_Tags(t *testing.T) {
-	resourceName := "aws_api_gateway_v2_stage.test"
-	rName := fmt.Sprintf("tf-testacc-apigwv2-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+func TestAccAWSAPIGatewayV2Stage_Tags(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGateway2StageDestroy,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGateway2StageConfig_tags(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(fmt.Sprintf(".+/%s", rName))),
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
@@ -447,22 +498,23 @@ func TestAccAWSAPIGateway2Stage_Tags(t *testing.T) {
 			},
 			{
 				ResourceName:      resourceName,
-				ImportStateIdFunc: testAccAWSAPIGateway2StageImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGateway2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGateway2StageExists(resourceName),
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -475,11 +527,11 @@ func TestAccAWSAPIGateway2Stage_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGateway2StageDestroy(s *terraform.State) error {
+func testAccCheckAWSAPIGatewayV2StageDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_api_gateway_v2_stage" {
+		if rs.Type != "aws_apigatewayv2_stage" {
 			continue
 		}
 
@@ -500,7 +552,20 @@ func testAccCheckAWSAPIGateway2StageDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSAPIGateway2StageExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2StageDisappears(apiId *string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
+
+		_, err := conn.DeleteStage(&apigatewayv2.DeleteStageInput{
+			ApiId:     apiId,
+			StageName: v.StageName,
+		})
+
+		return err
+	}
+}
+
+func testAccCheckAWSAPIGatewayV2StageExists(n string, vApiId *string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -513,19 +578,23 @@ func testAccCheckAWSAPIGateway2StageExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).apigatewayv2conn
 
-		_, err := conn.GetStage(&apigatewayv2.GetStageInput{
-			ApiId:     aws.String(rs.Primary.Attributes["api_id"]),
+		apiId := aws.String(rs.Primary.Attributes["api_id"])
+		resp, err := conn.GetStage(&apigatewayv2.GetStageInput{
+			ApiId:     apiId,
 			StageName: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
 			return err
 		}
 
+		*vApiId = *apiId
+		*v = *resp
+
 		return nil
 	}
 }
 
-func testAccAWSAPIGateway2StageImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -536,7 +605,7 @@ func testAccAWSAPIGateway2StageImportStateIdFunc(resourceName string) resource.I
 	}
 }
 
-func testAccCheckAWSAPIGateway2StageAccessLogDestinationArn(resourceName, resourceKey, cloudWatchResourceName, cloudWatchResourceKey string) resource.TestCheckFunc {
+func testAccCheckAWSAPIGatewayV2StageAccessLogDestinationArn(resourceName, resourceKey, cloudWatchResourceName, cloudWatchResourceKey string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		cwRs, ok := s.RootModule().Resources[cloudWatchResourceName]
 		if !ok {
@@ -551,9 +620,9 @@ func testAccCheckAWSAPIGateway2StageAccessLogDestinationArn(resourceName, resour
 	}
 }
 
-func testAccAWSAPIGateway2StageConfig_api(rName string) string {
+func testAccAWSAPIGatewayV2StageConfig_api(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_api_gateway_v2_api" "test" {
+resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
   protocol_type              = "WEBSOCKET"
   route_selection_expression = "$request.body.action"
@@ -561,17 +630,17 @@ resource "aws_api_gateway_v2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_basic(rName string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2StageConfig_basic(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 }
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_accessLogSettings(rName, format string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
+func testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, format string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -619,8 +688,8 @@ resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
   access_log_settings {
@@ -633,14 +702,14 @@ resource "aws_api_gateway_v2_stage" "test" {
 `, rName, format)
 }
 
-func testAccAWSAPIGateway2StageConfig_clientCertificateIdAndDescription(rName string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
+func testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescription(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = %[1]q
 }
 
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
   client_certificate_id = "${aws_api_gateway_client_certificate.test.id}"
@@ -649,25 +718,26 @@ resource "aws_api_gateway_v2_stage" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_clientCertificateIdAndDescriptionUpdated(rName string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
+func testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescriptionUpdated(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = %[1]q
 }
 
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
-  description           = "Test stage updated"
+  description = "Test stage updated"
+  auto_deploy = true
 }
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_defaultRouteSettings(rName string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettings(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
   default_route_settings {
@@ -681,21 +751,21 @@ resource "aws_api_gateway_v2_stage" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_deployment(rName string) string {
+func testAccAWSAPIGatewayV2StageConfig_deployment(rName string) string {
 	return testAccAWSAPIGatewayV2DeploymentConfig_basic(rName, rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
-  deployment_id = "${aws_api_gateway_v2_deployment.test.id}"
+  deployment_id = "${aws_apigatewayv2_deployment.test.id}"
 }
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_routeSettings(rName string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2StageConfig_routeSettings(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
   route_settings {
@@ -715,10 +785,10 @@ resource "aws_api_gateway_v2_stage" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_stageVariables(rName string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2StageConfig_stageVariables(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
   stage_variables = {
@@ -729,10 +799,10 @@ resource "aws_api_gateway_v2_stage" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGateway2StageConfig_tags(rName string) string {
-	return testAccAWSAPIGateway2StageConfig_api(rName) + fmt.Sprintf(`
-resource "aws_api_gateway_v2_stage" "test" {
-  api_id = "${aws_api_gateway_v2_api.test.id}"
+func testAccAWSAPIGatewayV2StageConfig_tags(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
 
   tags = {

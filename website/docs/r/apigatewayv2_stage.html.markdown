@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway v2 (WebSocket and HTTP APIs)"
 layout: "aws"
-page_title: "AWS: aws_api_gateway_v2_stage"
-sidebar_current: "docs-aws-resource-api-gateway-v2-stage"
+page_title: "AWS: aws_apigatewayv2_stage"
 description: |-
   Manages an Amazon API Gateway Version 2 stage.
 ---
 
-# Resource: aws_api_gateway_v2_stage
+# Resource: aws_apigatewayv2_stage
 
 Manages an Amazon API Gateway Version 2 stage.
 More information can be found in the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api.html).
@@ -16,9 +16,9 @@ More information can be found in the [Amazon API Gateway Developer Guide](https:
 ### Basic
 
 ```hcl
-resource "aws_api_gateway_v2_stage" "example" {
-  api_id     = "${aws_api_gateway_v2_api.example.id}"
-  name       = "example-stage"
+resource "aws_apigatewayv2_stage" "example" {
+  api_id = "${aws_apigatewayv2_api.example.id}"
+  name   = "example-stage"
 }
 ```
 
@@ -30,9 +30,11 @@ The following arguments are supported:
 * `name` - (Required) The name of the stage.
 * `access_log_settings` - (Optional) Settings for logging access in this stage.
 Use the [`aws_api_gateway_account`](/docs/providers/aws/r/api_gateway_account.html) resource to configure [permissions for CloudWatch Logging](https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-logging.html#set-up-access-logging-permissions).
+* `auto_deploy` - (Optional) Whether updates to an API automatically trigger a new deployment. Defaults to `false`.
 * `client_certificate_id` - (Optional) The identifier of a client certificate for the stage. Use the [`aws_api_gateway_client_certificate`](/docs/providers/aws/r/api_gateway_client_certificate.html) resource to configure a client certificate.
+Supported only for WebSocket APIs.
 * `default_route_settings` - (Optional) The default route settings for the stage.
-* `deployment_id` - (Optional) The deployment identifier of the stage. Use the `aws_api_gateway_v2_deployment` resource to configure a deployment.
+* `deployment_id` - (Optional) The deployment identifier of the stage. Use the `aws_apigatewayv2_deployment` resource to configure a deployment.
 * `description` - (Optional) The description for the stage.
 * `route_settings` - (Optional) Route settings for the stage.
 * `stage_variables` - (Optional) A map that defines the stage variables for the stage.
@@ -46,21 +48,23 @@ The `access_log_settings` object supports the following:
 The `default_route_settings` object supports the following:
 
 * `data_trace_enabled` - (Optional) Whether data trace logging is enabled for the default route. Affects the log entries pushed to Amazon CloudWatch Logs.
-Defaults to `false`.
+Defaults to `false`. Supported only for WebSocket APIs.
 * `detailed_metrics_enabled` - (Optional) Whether detailed metrics are enabled for the default route. Defaults to `false`.
 * `logging_level` - (Optional) The logging level for the default route. Affects the log entries pushed to Amazon CloudWatch Logs.
-Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`.
-* `throttling_burst_limit` - (Optional) The throttling burst limit for the default route. Defaults to `5000` messages.
-* `throttling_rate_limit` - (Optional) The throttling rate limit for the default route. Defaults to `10000` messages per second.
+Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebSocket APIs.
+* `throttling_burst_limit` - (Optional) The throttling burst limit for the default route.
+* `throttling_rate_limit` - (Optional) The throttling rate limit for the default route.
 
 The `route_settings` object supports the following:
 
 * `route_key` - (Required) Route key.
-* `data_trace_enabled` - (Optional) Whether data trace logging is enabled for the default route. Affects the log entries pushed to Amazon CloudWatch Logs.
-* `detailed_metrics_enabled` - (Optional) Whether detailed metrics are enabled for the default route.
-* `logging_level` - (Optional) The logging level for the default route. Affects the log entries pushed to Amazon CloudWatch Logs.
-* `throttling_burst_limit` - (Optional) The throttling burst limit for the default route.
-* `throttling_rate_limit` - (Optional) The throttling rate limit for the default route.
+* `data_trace_enabled` - (Optional) Whether data trace logging is enabled for the route. Affects the log entries pushed to Amazon CloudWatch Logs.
+Defaults to `false`. Supported only for WebSocket APIs.
+* `detailed_metrics_enabled` - (Optional) Whether detailed metrics are enabled for the route. Defaults to `false`.
+* `logging_level` - (Optional) The logging level for the route. Affects the log entries pushed to Amazon CloudWatch Logs.
+Valid values: `ERROR`, `INFO`, `OFF`. Defaults to `OFF`. Supported only for WebSocket APIs.
+* `throttling_burst_limit` - (Optional) The throttling burst limit for the route.
+* `throttling_rate_limit` - (Optional) The throttling rate limit for the route.
 
 ## Attribute Reference
 
@@ -76,8 +80,10 @@ See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigate
 
 ## Import
 
-`aws_api_gateway_v2_stage` can be imported by using the API identifier and stage name, e.g.
+`aws_apigatewayv2_stage` can be imported by using the API identifier and stage name, e.g.
 
 ```
-$ terraform import aws_api_gateway_v2_stage.example aabbccddee/example-stage
+$ terraform import aws_apigatewayv2_stage.example aabbccddee/example-stage
 ```
+
+-> **Note:** The API Gateway managed stage created as part of [_quick_create_](https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-basic-concept.html#apigateway-definition-quick-create) cannot be imported.
