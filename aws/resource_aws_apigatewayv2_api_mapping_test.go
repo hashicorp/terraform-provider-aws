@@ -42,8 +42,9 @@ func TestAccAWSAPIGatewayV2ApiMapping(t *testing.T) {
 
 func testAccAWSAPIGatewayV2ApiMapping_createCertificate(t *testing.T, rName string, certificateArn *string) {
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: nil,
 		Steps: []resource.TestStep{
 			{
 				Config: "# Dummy config.",
