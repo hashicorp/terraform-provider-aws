@@ -28,8 +28,8 @@ resource "aws_apigatewayv2_api_mapping" "example" {
 The following arguments are supported:
 
 * `api_id` - (Required) The API identifier.
-* `domain_name` - (Required) The domain name. Use the [`aws_apigatewayv2_domain_name`](/docs/providers/aws/r/api_gateway_v2_domain_name.html) resource to configure a domain name.
-* `stage` - (Required) The API stage. Use the [`aws_apigatewayv2_stage`](/docs/providers/aws/r/api_gateway_v2_stage.html) resource to configure an API stage.
+* `domain_name` - (Required) The domain name. Use the [`aws_apigatewayv2_domain_name`](/docs/providers/aws/r/apigatewayv2_domain_name.html) resource to configure a domain name.
+* `stage` - (Required) The API stage. Use the [`aws_apigatewayv2_stage`](/docs/providers/aws/r/apigatewayv2_stage.html) resource to configure an API stage.
 * `api_mapping_key` - (Optional) The [API mapping key](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-mapping-template-reference.html).
 
 ## Attribute Reference
