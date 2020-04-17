@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
 )
 
 func init() {
@@ -55,7 +56,11 @@ func testSweepAPIGatewayV2VpcLinks(region string) error {
 				continue
 			}
 
-			if err := waitForApigatewayv2VpcLinkDeletion(conn, aws.StringValue(link.VpcLinkId)); err != nil {
+			_, err = waiter.VpcLinkDeleted(conn, aws.StringValue(link.VpcLinkId))
+			if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+				continue
+			}
+			if err != nil {
 				sweeperErr := fmt.Errorf("error waiting for API Gateway v2 VPC Link (%s) deletion: %w", aws.StringValue(link.VpcLinkId), err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -210,8 +215,12 @@ func testAccCheckAWSAPIGatewayV2VpcLinkDisappears(v *apigatewayv2.GetVpcLinkOutp
 			return err
 		}
 
-		if err := waitForApigatewayv2VpcLinkDeletion(conn, aws.StringValue(v.VpcLinkId)); err != nil {
-			return err
+		_, err := waiter.VpcLinkDeleted(conn, aws.StringValue(v.VpcLinkId))
+		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+			return nil
+		}
+		if err != nil {
+			return fmt.Errorf("error waiting for API Gateway v2 VPC Link (%s) deletion: %s", aws.StringValue(v.VpcLinkId), err)
 		}
 
 		return nil

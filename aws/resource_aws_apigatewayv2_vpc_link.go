@@ -3,19 +3,14 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-)
-
-const (
-	apigatewayv2VpcLinkStatusDeleted = "DELETED"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/apigatewayv2/waiter"
 )
 
 func resourceAwsApiGatewayV2VpcLink() *schema.Resource {
@@ -75,8 +70,8 @@ func resourceAwsApiGatewayV2VpcLinkCreate(d *schema.ResourceData, meta interface
 
 	d.SetId(aws.StringValue(resp.VpcLinkId))
 
-	if err := waitForApigatewayv2VpcLinkCreation(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for API Gateway v2 VPC Link (%s) availability: %s", d.Id(), err)
+	if _, err := waiter.VpcLinkAvailable(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for API Gateway v2 deployment (%s) availability: %s", d.Id(), err)
 	}
 
 	return resourceAwsApiGatewayV2VpcLinkRead(d, meta)
@@ -85,18 +80,17 @@ func resourceAwsApiGatewayV2VpcLinkCreate(d *schema.ResourceData, meta interface
 func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
 
-	respRaw, state, err := apigatewayv2VpcLinkStateRefresh(conn, d.Id())()
-	if err != nil {
-		return fmt.Errorf("error reading API Gateway v2 VPC Link (%s): %s", d.Id(), err)
-	}
-	if state == apigatewayv2VpcLinkStatusDeleted {
+	outputRaw, _, err := waiter.VpcLinkStatus(conn, d.Id())()
+	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
 		log.Printf("[WARN] API Gateway v2 VPC Link (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("error reading API Gateway v2 VPC Link (%s): %s", d.Id(), err)
+	}
 
-	resp := respRaw.(*apigatewayv2.GetVpcLinkOutput)
-
+	output := outputRaw.(*apigatewayv2.GetVpcLinkOutput)
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
 		Service:   "apigateway",
@@ -104,14 +98,14 @@ func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}
 		Resource:  fmt.Sprintf("/vpclinks/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("name", resp.Name)
-	if err := d.Set("security_group_ids", flattenStringSet(resp.SecurityGroupIds)); err != nil {
+	d.Set("name", output.Name)
+	if err := d.Set("security_group_ids", flattenStringSet(output.SecurityGroupIds)); err != nil {
 		return fmt.Errorf("error setting security_group_ids: %s", err)
 	}
-	if err := d.Set("subnet_ids", flattenStringSet(resp.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flattenStringSet(output.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
-	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(resp.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(output.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -158,53 +152,13 @@ func resourceAwsApiGatewayV2VpcLinkDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error deleting API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
 
-	if err := waitForApigatewayv2VpcLinkDeletion(conn, d.Id()); err != nil {
+	_, err = waiter.VpcLinkDeleted(conn, d.Id())
+	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
+		return nil
+	}
+	if err != nil {
 		return fmt.Errorf("error waiting for API Gateway v2 VPC Link (%s) deletion: %s", d.Id(), err)
 	}
 
 	return nil
-}
-
-func apigatewayv2VpcLinkStateRefresh(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.GetVpcLink(&apigatewayv2.GetVpcLinkInput{
-			VpcLinkId: aws.String(vpcLinkId),
-		})
-		if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
-			return "", apigatewayv2VpcLinkStatusDeleted, nil
-		}
-		if err != nil {
-			return nil, "", err
-		}
-
-		return resp, aws.StringValue(resp.VpcLinkStatus), nil
-	}
-}
-
-func waitForApigatewayv2VpcLinkCreation(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{apigatewayv2.VpcLinkStatusPending},
-		Target:  []string{apigatewayv2.VpcLinkStatusAvailable},
-		Refresh: apigatewayv2VpcLinkStateRefresh(conn, vpcLinkId),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for API Gateway v2 VPC Link (%s) availability", vpcLinkId)
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForApigatewayv2VpcLinkDeletion(conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) error {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},
-		Target:  []string{apigatewayv2VpcLinkStatusDeleted},
-		Refresh: apigatewayv2VpcLinkStateRefresh(conn, vpcLinkId),
-		Timeout: 10 * time.Minute,
-	}
-
-	log.Printf("[DEBUG] Waiting for API Gateway v2 VPC Link (%s) deletion", vpcLinkId)
-	_, err := stateConf.WaitForState()
-
-	return err
 }
