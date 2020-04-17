@@ -133,6 +133,7 @@ The `republish` object takes the following arguments:
 
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `topic` - (Required) The name of the MQTT topic the message should be republished to.
+* `qos` - (Optional) The Quality of Service (QoS) level to use when republishing messages. Valid values are 0 or 1. The default value is 0. 
 
 The `s3` object takes the following arguments:
 
