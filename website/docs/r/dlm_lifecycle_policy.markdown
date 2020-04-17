@@ -64,7 +64,7 @@ EOF
 }
 
 resource "aws_kms_key" "dlm_cross_region_copy_cmk" {
-  description             = "Terraform %[1]s"
+  description = "Terraform %[1]s"
 
   policy = <<POLICY
 {
@@ -114,11 +114,11 @@ resource "aws_dlm_lifecycle_policy" "example" {
 
       cross_region_copy_rule {
         target_region = "us-west-2"
-        encrypted = true
-        cmk_arn = "${aws_kms_key.dlm_cross_region_copy_cmk.arn}"
-        copy_tags = true
+        encrypted     = true
+        cmk_arn       = "${aws_kms_key.dlm_cross_region_copy_cmk.arn}"
+        copy_tags     = true
         retain_rule {
-          interval = 30
+          interval      = 30
           interval_unit = "DAYS"
         }
       }
