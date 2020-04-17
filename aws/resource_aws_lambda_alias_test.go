@@ -282,7 +282,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
 resource "aws_lambda_alias" "lambda_alias_test" {
   name             = "%s"
   description      = "a sample description"
-  function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
+  function_name    = "${aws_lambda_function.lambda_function_test_create.function_name}"
   function_version = "1"
 }
 `, roleName, policyName, attachmentName, funcName, aliasName)
@@ -350,7 +350,7 @@ resource "aws_lambda_function" "lambda_function_test_create" {
 resource "aws_lambda_alias" "lambda_alias_test" {
   name             = "%s"
   description      = "a sample description"
-  function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
+  function_name    = "${aws_lambda_function.lambda_function_test_create.function_name}"
   function_version = "1"
 
   routing_config {
