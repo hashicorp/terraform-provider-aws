@@ -2926,6 +2926,7 @@ func flattenIoTRuleRepublishActions(actions []*iot.Action) []map[string]interfac
 		if v != nil {
 			result["role_arn"] = *v.RoleArn
 			result["topic"] = *v.Topic
+			result["qos"] = *v.Qos
 
 			results = append(results, result)
 		}

@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -247,6 +248,12 @@ func resourceAwsIotTopicRule() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"qos": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(0, 1),
+						},
 					},
 				},
 			},
@@ -476,6 +483,7 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 			Republish: &iot.RepublishAction{
 				RoleArn: aws.String(raw["role_arn"].(string)),
 				Topic:   aws.String(raw["topic"].(string)),
+				Qos:     aws.Int64(int64(raw["qos"].(int))),
 			},
 		}
 		i++
