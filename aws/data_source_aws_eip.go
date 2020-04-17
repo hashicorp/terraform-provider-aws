@@ -155,7 +155,7 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
 		}
 	}
-
+	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 
