@@ -1,4 +1,13 @@
 ## 2.59.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_apigatewayv2_vpc_link` [GH-12577]
+
+ENHANCEMENTS:
+
+* resource/aws_apigatewayv2_api: Add `cors_configuration`, `credentials_arn`, `route_key` and `target` attributes [GH-12452]
+
 ## 2.58.0 (April 16, 2020)
 
 FEATURES:
