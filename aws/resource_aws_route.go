@@ -558,7 +558,7 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 
 	if ipv6cidr != "" {
 		for _, route := range (*resp.RouteTables[0]).Routes {
-			if route.DestinationIpv6CidrBlock != nil && *route.DestinationIpv6CidrBlock == ipv6cidr {
+			if route.DestinationIpv6CidrBlock != nil && Ipv6CidrsEquals(aws.StringValue(route.DestinationIpv6CidrBlock), ipv6cidr) {
 				return route, nil
 			}
 		}

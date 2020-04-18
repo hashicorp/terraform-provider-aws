@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"reflect"
 	"regexp"
 	"sort"
@@ -5699,4 +5700,11 @@ func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.Targ
 	}
 
 	return vTargetIps
+}
+
+func Ipv6CidrsEquals(first, second string) bool {
+	_, firstMask, _ := net.ParseCIDR(first)
+	_, secondMask, _ := net.ParseCIDR(second)
+
+	return firstMask.String() == secondMask.String()
 }
