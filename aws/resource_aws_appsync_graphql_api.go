@@ -131,6 +131,11 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 								appsync.FieldLogLevelNone,
 							}, false),
 						},
+						"exclude_verbose_content": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -387,6 +392,7 @@ func expandAppsyncGraphqlApiLogConfig(l []interface{}) *appsync.LogConfig {
 	logConfig := &appsync.LogConfig{
 		CloudWatchLogsRoleArn: aws.String(m["cloudwatch_logs_role_arn"].(string)),
 		FieldLogLevel:         aws.String(m["field_log_level"].(string)),
+		ExcludeVerboseContent: aws.Bool(m["exclude_verbose_content"].(bool)),
 	}
 
 	return logConfig
@@ -503,6 +509,7 @@ func flattenAppsyncGraphqlApiLogConfig(logConfig *appsync.LogConfig) []interface
 	m := map[string]interface{}{
 		"cloudwatch_logs_role_arn": aws.StringValue(logConfig.CloudWatchLogsRoleArn),
 		"field_log_level":          aws.StringValue(logConfig.FieldLogLevel),
+		"exclude_verbose_content":  aws.BoolValue(logConfig.ExcludeVerboseContent),
 	}
 
 	return []interface{}{m}
