@@ -2,13 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"math"
 	"regexp"
 	"strings"
-
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -28,6 +27,21 @@ func resourceAwsCloudWatchEventTarget() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"event_bus_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+				StateFunc: func(v interface{}) string {
+					if v.(string) == "default" {
+						// "default" event bus name is not stored in the state to support the case when event_bus_name is omitted
+						return ""
+					}
+
+					return v.(string)
+				},
+			},
+
 			"rule": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -240,6 +254,10 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 		targetId = resource.UniqueId()
 		d.Set("target_id", targetId)
 	}
+	var busName string
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		busName = v.(string)
+	}
 
 	input := buildPutTargetInputStruct(d)
 
@@ -254,7 +272,7 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 			out.FailedEntries)
 	}
 
-	id := rule + "-" + targetId
+	id := prepareAwsCloudWatchEventTargetResourceId(busName, rule, targetId)
 	d.SetId(id)
 
 	log.Printf("[INFO] CloudWatch Event Target %q created", d.Id())
@@ -264,10 +282,14 @@ func resourceAwsCloudWatchEventTargetCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
-
+	var busName string
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		busName = v.(string)
+	}
 	t, err := findEventTargetById(
 		d.Get("target_id").(string),
 		d.Get("rule").(string),
+		busName,
 		nil, conn)
 	if err != nil {
 		if regexp.MustCompile(" not found$").MatchString(err.Error()) {
@@ -340,11 +362,14 @@ func resourceAwsCloudWatchEventTargetRead(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func findEventTargetById(id, rule string, nextToken *string, conn *events.CloudWatchEvents) (*events.Target, error) {
+func findEventTargetById(id, rule string, busName string, nextToken *string, conn *events.CloudWatchEvents) (*events.Target, error) {
 	input := events.ListTargetsByRuleInput{
 		Rule:      aws.String(rule),
 		NextToken: nextToken,
 		Limit:     aws.Int64(100), // Set limit to allowed maximum to prevent API throttling
+	}
+	if len(busName) > 0 {
+		input.EventBusName = aws.String(busName)
 	}
 	log.Printf("[DEBUG] Reading CloudWatch Event Target: %s", input)
 	out, err := conn.ListTargetsByRule(&input)
@@ -359,7 +384,7 @@ func findEventTargetById(id, rule string, nextToken *string, conn *events.CloudW
 	}
 
 	if out.NextToken != nil {
-		return findEventTargetById(id, rule, nextToken, conn)
+		return findEventTargetById(id, rule, busName, nextToken, conn)
 	}
 
 	return nil, fmt.Errorf("CloudWatch Event Target %q (%q) not found", id, rule)
@@ -382,9 +407,11 @@ func resourceAwsCloudWatchEventTargetUpdate(d *schema.ResourceData, meta interfa
 func resourceAwsCloudWatchEventTargetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatcheventsconn
 
+	busName := determineCloudWatchEventBusNameFromEventTargetResourceId(d.Id())
 	input := &events.RemoveTargetsInput{
-		Ids:  []*string{aws.String(d.Get("target_id").(string))},
-		Rule: aws.String(d.Get("rule").(string)),
+		Ids:          []*string{aws.String(d.Get("target_id").(string))},
+		Rule:         aws.String(d.Get("rule").(string)),
+		EventBusName: aws.String(busName),
 	}
 
 	output, err := conn.RemoveTargets(input)
@@ -443,6 +470,9 @@ func buildPutTargetInputStruct(d *schema.ResourceData) *events.PutTargetsInput {
 	input := events.PutTargetsInput{
 		Rule:    aws.String(d.Get("rule").(string)),
 		Targets: []*events.Target{e},
+	}
+	if v, ok := d.GetOk("event_bus_name"); ok {
+		input.EventBusName = aws.String(v.(string))
 	}
 
 	return &input
@@ -663,18 +693,46 @@ func flattenAwsCloudWatchInputTransformer(inputTransformer *events.InputTransfor
 	return result
 }
 
-func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idParts := strings.SplitN(d.Id(), "/", 2)
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return nil, fmt.Errorf("unexpected format (%q), expected <rule-name>/<target-id>", d.Id())
+func prepareAwsCloudWatchEventTargetResourceId(busName string, ruleName string, targetName string) string {
+	id := ruleName + "-" + targetName
+	if busName != "" && busName != "default" {
+		id = busName + "/" + id
 	}
 
-	ruleName := idParts[0]
-	targetName := idParts[1]
+	return id
+}
+func determineCloudWatchEventBusNameFromEventTargetResourceId(id string) string {
+	idParts := strings.Split(id, "/")
+	if len(idParts) == 2 {
+		return idParts[0]
+	}
 
+	return "default"
+}
+
+func resourceAwsCloudWatchEventTargetImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 3)
+	if len(idParts) < 2 || len(idParts) > 3 || idParts[0] == "" || idParts[1] == "" || (len(idParts) == 3 && idParts[2] == "") {
+		return nil, fmt.Errorf("unexpected format (%q), expected <rule-name>/<target-id> or <bus-name>/<rule-name>/<target-id>", d.Id())
+	}
+	busName := "default"
+	var ruleName string
+	var targetName string
+	if len(idParts) == 2 {
+		ruleName = idParts[0]
+		targetName = idParts[1]
+	} else {
+		busName = idParts[0]
+		ruleName = idParts[1]
+		targetName = idParts[2]
+	}
 	d.Set("target_id", targetName)
 	d.Set("rule", ruleName)
-	d.SetId(ruleName + "-" + targetName)
+	if busName != "default" {
+		d.Set("event_bus_name", busName)
+	}
+	id := prepareAwsCloudWatchEventTargetResourceId(busName, ruleName, targetName)
+	d.SetId(id)
 
 	return []*schema.ResourceData{d}, nil
 }

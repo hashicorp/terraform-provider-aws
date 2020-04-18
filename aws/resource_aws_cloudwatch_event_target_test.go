@@ -108,6 +108,7 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName1, targetID1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudWatchEventTargetExists("aws_cloudwatch_event_target.moobar", &target),
+					resource.TestCheckNoResourceAttr("aws_cloudwatch_event_target.moobar", "event_bus_name"),
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.moobar", "rule", ruleName),
 					resource.TestCheckResourceAttr("aws_cloudwatch_event_target.moobar", "target_id", targetID1),
 					resource.TestMatchResourceAttr("aws_cloudwatch_event_target.moobar", "arn",
@@ -383,7 +384,7 @@ func testAccCheckCloudWatchEventTargetExists(n string, rule *events.Target) reso
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudwatcheventsconn
 		t, err := findEventTargetById(rs.Primary.Attributes["target_id"],
-			rs.Primary.Attributes["rule"], nil, conn)
+			rs.Primary.Attributes["rule"], "", nil, conn)
 		if err != nil {
 			return fmt.Errorf("Event Target not found: %s", err)
 		}
@@ -403,7 +404,7 @@ func testAccCheckAWSCloudWatchEventTargetDestroy(s *terraform.State) error {
 		}
 
 		t, err := findEventTargetById(rs.Primary.Attributes["target_id"],
-			rs.Primary.Attributes["rule"], nil, conn)
+			rs.Primary.Attributes["rule"], "", nil, conn)
 		if err == nil {
 			return fmt.Errorf("CloudWatch Event Target %q still exists: %s",
 				rs.Primary.ID, t)
@@ -432,9 +433,10 @@ resource "aws_cloudwatch_event_rule" "foo" {
 }
 
 resource "aws_cloudwatch_event_target" "moobar" {
-  rule      = "${aws_cloudwatch_event_rule.foo.name}"
-  target_id = "%s"
-  arn       = "${aws_sns_topic.moon.arn}"
+  rule           = "${aws_cloudwatch_event_rule.foo.name}"
+  event_bus_name = "default"
+  target_id      = "%s"
+  arn            = "${aws_sns_topic.moon.arn}"
 }
 
 resource "aws_sns_topic" "moon" {
