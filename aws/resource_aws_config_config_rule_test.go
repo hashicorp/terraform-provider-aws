@@ -77,7 +77,6 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 
 	expectedName := fmt.Sprintf("tf-acc-test-%d", rInt)
 	path := "test-fixtures/lambdatest.zip"
-	expectedFunctionArn := regexp.MustCompile(fmt.Sprintf("arn:aws:lambda:[a-z0-9-]+:[0-9]{12}:function:tf_acc_lambda_awsconfig_%d", rInt))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -96,7 +95,7 @@ func testAccConfigConfigRule_customlambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maximum_execution_frequency", "Six_Hours"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_LAMBDA"),
-					resource.TestMatchResourceAttr(resourceName, "source.0.source_identifier", expectedFunctionArn),
+					resource.TestCheckResourceAttrPair(resourceName, "source.0.source_identifier", "aws_lambda_function.f", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.event_source", "aws.config"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.3026922761.message_type", "ConfigurationSnapshotDeliveryCompleted"),
