@@ -5702,7 +5702,7 @@ func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.Targ
 	return vTargetIps
 }
 
-func Ipv6CidrsEquals(first, second string) bool {
+func isIpv6CidrsEquals(first, second string) bool {
 	_, firstMask, _ := net.ParseCIDR(first)
 	_, secondMask, _ := net.ParseCIDR(second)
 
