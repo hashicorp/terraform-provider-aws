@@ -798,54 +798,52 @@ resource "aws_route" "pc" {
 
 var testAccAWSRouteConfigIpv6 = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+
   tags = {
     Name = "terraform-testacc-route-ipv6"
   }
 }
 
 resource "aws_egress_only_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_route_table" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_route" "bar" {
-	route_table_id = "${aws_route_table.foo.id}"
-	destination_ipv6_cidr_block = "::/0"
-	egress_only_gateway_id = "${aws_egress_only_internet_gateway.foo.id}"
+  route_table_id              = "${aws_route_table.foo.id}"
+  destination_ipv6_cidr_block = "::/0"
+  egress_only_gateway_id      = "${aws_egress_only_internet_gateway.foo.id}"
 }
-
-
 `)
 
 var testAccAWSRouteConfigIpv6Expanded = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+
   tags = {
     Name = "terraform-testacc-route-ipv6"
   }
 }
 
 resource "aws_egress_only_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_route_table" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_route" "bar" {
-	route_table_id = "${aws_route_table.foo.id}"
-	destination_ipv6_cidr_block = "::/0"
-	egress_only_gateway_id = "${aws_egress_only_internet_gateway.foo.id}"
+  route_table_id              = "${aws_route_table.foo.id}"
+  destination_ipv6_cidr_block = "::0/0"
+  egress_only_gateway_id      = "${aws_egress_only_internet_gateway.foo.id}"
 }
-
-
 `)
 
 var testAccAWSRouteBasicConfigChangeCidr = fmt.Sprint(`
