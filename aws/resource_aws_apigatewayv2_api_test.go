@@ -18,6 +18,9 @@ func init() {
 	resource.AddTestSweepers("aws_apigatewayv2_api", &resource.Sweeper{
 		Name: "aws_apigatewayv2_api",
 		F:    testSweepAPIGatewayV2Apis,
+		Dependencies: []string{
+			"aws_apigatewayv2_domain_name",
+		},
 	})
 }
 

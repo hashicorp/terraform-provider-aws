@@ -367,6 +367,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_api_gateway_usage_plan_key":                          resourceAwsApiGatewayUsagePlanKey(),
 			"aws_api_gateway_vpc_link":                                resourceAwsApiGatewayVpcLink(),
 			"aws_apigatewayv2_api":                                    resourceAwsApiGatewayV2Api(),
+			"aws_apigatewayv2_api_mapping":                            resourceAwsApiGatewayV2ApiMapping(),
 			"aws_apigatewayv2_authorizer":                             resourceAwsApiGatewayV2Authorizer(),
 			"aws_apigatewayv2_deployment":                             resourceAwsApiGatewayV2Deployment(),
 			"aws_apigatewayv2_domain_name":                            resourceAwsApiGatewayV2DomainName(),
