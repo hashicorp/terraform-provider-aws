@@ -351,13 +351,7 @@ func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName s
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName string) string {
-	return testAccAlternateAccountAlternateRegionProviderConfig() +
-		testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName) +
-		fmt.Sprintf(`
-data "aws_caller_identity" "peer" {
-  provider = "aws.alternate"
-}
-`)
+	return testAccAlternateAccountAlternateRegionProviderConfig() + testAccAWSEc2TransitGatewayPeeringAttachmentConfig_base(rName)
 }
 
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName string) string {
@@ -373,7 +367,7 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
 func testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName string) string {
 	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
-  peer_account_id         = "${data.aws_caller_identity.peer.account_id}"
+  peer_account_id         = "${aws_ec2_transit_gateway.peer.owner_id}"
   peer_region             = %[1]q
   peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
   transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
