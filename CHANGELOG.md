@@ -1,5 +1,9 @@
 ## 2.59.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_iam_user: The additional `force_destroy` behavior for handling signing certificates requires two additional IAM permissions (`iam:ListSigningCertificates` and `iam:DeleteSigningCertificate`). Restrictive IAM permissions for Terraform runs may require updates. [GH-10542]
+
 FEATURES:
 
 * **New Resource:** `aws_apigatewayv2_vpc_link` [GH-12577]
@@ -8,6 +12,10 @@ ENHANCEMENTS:
 
 * resource/aws_apigatewayv2_api: Add `cors_configuration`, `credentials_arn`, `route_key` and `target` attributes [GH-12452]
 * resource/aws_lambda_alias: Suppress differences for equivalent `function_name` argument values of name versus ARN [GH-12902]
+
+BUG FIXES:
+
+* resource/aws_iam_user: Ensure `force_destroy` argument removes signing certificates when enabled [GH-10542]
 
 ## 2.58.0 (April 16, 2020)
 
