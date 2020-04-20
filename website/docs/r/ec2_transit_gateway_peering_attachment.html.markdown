@@ -9,19 +9,49 @@ description: |-
 # Resource: aws_ec2_transit_gateway_peering_attachment
 
 Manages an EC2 Transit Gateway Peering Attachment.
-For examples of custom route table association and propagation, see the EC2 Transit Gateway Networking Examples Guide.
+For examples of custom route table association and propagation, see the [EC2 Transit Gateway Networking Examples Guide](https://docs.aws.amazon.com/vpc/latest/tgw/TGW_Scenarios.html).
 
 ## Example Usage
 
 ```hcl
-resource "aws_ec2_transit_gateway_peering_attachment" "example" {
-  peer_account_id         = "123456789012"
-  peer_region             = "us-east-2"
-  peer_transit_gateway_id = "tgw-12345678901234567"
-  transit_gateway_id      = "tgw-76543210987654321"
+provider "aws" {
+  alias  = "local"
+  region = "us-east-1"
+}
+
+provider "aws" {
+  alias  = "peer"
+  region = "us-west-2"
+}
+
+data "aws_region" "peer" {
+  provider = aws.peer
+}
+
+resource "aws_ec2_transit_gateway" "local" {
+  provider = aws.local
 
   tags = {
-    Name = "Example cross-account attachment"
+    Name = "Local TGW"
+  }
+}
+
+resource "aws_ec2_transit_gateway" "peer" {
+  provider = aws.peer
+
+  tags = {
+    Name = "Peer TGW"
+  }
+}
+
+resource "aws_ec2_transit_gateway_peering_attachment" "example" {
+  peer_account_id         = aws_ec2_transit_gateway.peer.owner_id
+  peer_region             = data.aws_region.peer.name
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.local.id
+
+  tags = {
+    Name = "TGW Peering Requestor"
   }
 }
 ```
