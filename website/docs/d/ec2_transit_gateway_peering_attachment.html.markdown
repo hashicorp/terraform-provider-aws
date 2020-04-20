@@ -52,7 +52,7 @@ which take the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `peer_account_id` - Identifier of the AWS account that owns the accepter Transit Gateway.
-* `peer_region` - Identifier of the AWS region that owns the accepter Transit Gateway.
-* `peer_transit_gateway_id` - Accepter EC2 Transit Gateway identifier
-* `transit_gateway_id` - Requester EC2 Transit Gateway identifier
+* `peer_account_id` - Identifier of the peer AWS account
+* `peer_region` - Identifier of the peer AWS region
+* `peer_transit_gateway_id` - Identifier of the peer EC2 Transit Gateway
+* `transit_gateway_id` - Identifier of the local EC2 Transit Gateway

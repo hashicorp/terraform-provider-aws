@@ -81,10 +81,18 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData,
 		return errors.New("error reading EC2 Transit Gateway Peering Attachment: empty result")
 	}
 
-	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
-	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
-	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
-	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
+	local := transitGatewayPeeringAttachment.RequesterTgwInfo
+	peer := transitGatewayPeeringAttachment.AccepterTgwInfo
+	
+	if aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId) == meta.(*AWSClient).accountid && aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.Region) == meta.(*AWSClient).region {
+		local = transitGatewayPeeringAttachment.AccepterTgwInfo
+		peer = transitGatewayPeeringAttachment.RequesterTgwInfo
+	}
+
+	d.Set("peer_account_id", peer.OwnerId)
+	d.Set("peer_region", peer.Region)
+	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)
+	d.Set("transit_gateway_id", local.TransitGatewayId)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
