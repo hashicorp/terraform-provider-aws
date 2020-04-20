@@ -6,6 +6,7 @@ NOTES:
 
 FEATURES:
 
+* **New Resource:** `aws_apigatewayv2_api_mapping` [GH-9461]
 * **New Resource:** `aws_apigatewayv2_vpc_link` [GH-12577]
 
 ENHANCEMENTS:
