@@ -44,6 +44,10 @@ func TestAccAWSLambdaAlias_basic(t *testing.T) {
 				ImportStateId:     fmt.Sprintf("%s/%s", funcName, aliasName),
 				ImportStateVerify: true,
 			},
+			{
+				Config:   testAccAwsLambdaAliasConfigUsingFunctionName(roleName, policyName, attachmentName, funcName, aliasName),
+				PlanOnly: true,
+			},
 		},
 	})
 }
@@ -219,8 +223,7 @@ func testAccCheckAwsLambdaAliasRoutingConfigDoesNotExist(mapping *lambda.AliasCo
 		return nil
 	}
 }
-
-func testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
+func testAccAwsLambdaAliasBaseConfig(roleName, policyName, attachmentName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
   name = "%s"
@@ -268,7 +271,13 @@ resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
   roles      = ["${aws_iam_role.iam_for_lambda.name}"]
   policy_arn = "${aws_iam_policy.policy_for_role.arn}"
 }
+`, roleName, policyName, attachmentName)
+}
 
+func testAccAwsLambdaAliasConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
+	return composeConfig(
+		testAccAwsLambdaAliasBaseConfig(roleName, policyName, attachmentName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename         = "test-fixtures/lambdatest.zip"
   function_name    = "%s"
@@ -285,58 +294,36 @@ resource "aws_lambda_alias" "lambda_alias_test" {
   function_name    = "${aws_lambda_function.lambda_function_test_create.arn}"
   function_version = "1"
 }
-`, roleName, policyName, attachmentName, funcName, aliasName)
+`, funcName, aliasName))
+}
+
+func testAccAwsLambdaAliasConfigUsingFunctionName(roleName, policyName, attachmentName, funcName, aliasName string) string {
+	return composeConfig(
+		testAccAwsLambdaAliasBaseConfig(roleName, policyName, attachmentName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "lambda_function_test_create" {
+  filename         = "test-fixtures/lambdatest.zip"
+  function_name    = "%s"
+  role             = "${aws_iam_role.iam_for_lambda.arn}"
+  handler          = "exports.example"
+  runtime          = "nodejs12.x"
+  source_code_hash = "${filebase64sha256("test-fixtures/lambdatest.zip")}"
+  publish          = "true"
+}
+
+resource "aws_lambda_alias" "lambda_alias_test" {
+  name             = "%s"
+  description      = "a sample description"
+  function_name    = "${aws_lambda_function.lambda_function_test_create.function_name}"
+  function_version = "1"
+}
+`, funcName, aliasName))
 }
 
 func testAccAwsLambdaAliasConfigWithRoutingConfig(roleName, policyName, attachmentName, funcName, aliasName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy" "policy_for_role" {
-  name        = "%s"
-  path        = "/"
-  description = "IAM policy for for Lamda alias testing"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-      {
-          "Effect": "Allow",
-          "Action": [
-            "lambda:*"
-          ],
-          "Resource": "*"
-      }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_policy_attachment" "policy_attachment_for_role" {
-  name       = "%s"
-  roles      = ["${aws_iam_role.iam_for_lambda.name}"]
-  policy_arn = "${aws_iam_policy.policy_for_role.arn}"
-}
-
+	return composeConfig(
+		testAccAwsLambdaAliasBaseConfig(roleName, policyName, attachmentName),
+		fmt.Sprintf(`
 resource "aws_lambda_function" "lambda_function_test_create" {
   filename         = "test-fixtures/lambdatest_modified.zip"
   function_name    = "%s"
@@ -359,5 +346,5 @@ resource "aws_lambda_alias" "lambda_alias_test" {
     }
   }
 }
-`, roleName, policyName, attachmentName, funcName, aliasName)
+`, funcName, aliasName))
 }
