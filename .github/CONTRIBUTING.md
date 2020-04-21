@@ -919,6 +919,8 @@ PASS
 ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
 ```
 
+Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher). 
+
 #### Writing an Acceptance Test
 
 Terraform has a framework for writing acceptance tests which minimises the
