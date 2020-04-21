@@ -146,6 +146,7 @@ The following arguments are supported:
 
 * `cloudwatch_logs_role_arn` - (Required) Amazon Resource Name of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
 * `field_log_level` - (Required) Field logging level. Valid values: `ALL`, `ERROR`, `NONE`.
+* `exclude_verbose_content` - (Optional) Set to TRUE to exclude sections that contain information such as headers, context, and evaluated mapping templates, regardless of logging  level. Valid values: `true`, `false`. Default value: `false`
 
 ### additional_authentication_provider
 
