@@ -79,5 +79,5 @@ $ terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:tcp:false
 Or by the procotol's decimal value:
 
 ```console
-$ terraform import aws_route.my_route acl-7aaabd18:100:6:false
+$ terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:6:false
 ```
