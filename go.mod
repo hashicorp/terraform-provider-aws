@@ -1,7 +1,5 @@
 module github.com/terraform-providers/terraform-provider-aws
 
-go 1.13
-
 require (
 	github.com/aws/aws-sdk-go v1.29.7
 	github.com/beevik/etree v1.1.0
