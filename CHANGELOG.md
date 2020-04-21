@@ -12,6 +12,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_apigatewayv2_api: Add `cors_configuration`, `credentials_arn`, `route_key` and `target` attributes [GH-12452]
+* resource/aws_appsync_graphql_api: Add `log_config` configuration block `exclude_verbose_content` argument [GH-12884]
 * resource/aws_lambda_alias: Suppress differences for equivalent `function_name` argument values of name versus ARN [GH-12902]
 * resource/aws_ssm_maintanance_window_target: Add plan-time validation to `resource_type` argument [GH-11783]
 
