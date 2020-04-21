@@ -18,9 +18,9 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 		Delete: resourceAwsServiceDiscoveryPrivateDnsNamespaceDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), " ")
+				idParts := strings.Split(d.Id(), ":")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAMESPACE_ID VPC-ID", d.Id())
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAMESPACE_ID:VPC_ID", d.Id())
 				}
 				d.SetId(idParts[0])
 				d.Set("vpc", idParts[1])

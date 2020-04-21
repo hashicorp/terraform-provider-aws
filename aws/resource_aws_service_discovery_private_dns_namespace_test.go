@@ -242,6 +242,6 @@ func testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName st
 		if !ok {
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
-		return fmt.Sprintf("%s %s", rs.Primary.ID, rs.Primary.Attributes["vpc"]), nil
+		return fmt.Sprintf("%s:%s", rs.Primary.ID, rs.Primary.Attributes["vpc"]), nil
 	}
 }
