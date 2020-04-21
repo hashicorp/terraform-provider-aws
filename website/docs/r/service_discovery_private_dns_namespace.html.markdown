@@ -45,5 +45,5 @@ In addition to all arguments above, the following attributes are exported:
 Service Discovery Private DNS Namespace can be imported using the namespace ID, e.g.
 
 ```
-$ terraform import aws_service_discovery_private_dns_namespace.example 0123456789
+$ terraform import aws_service_discovery_private_dns_namespace.example 0123456789 vpc-123345
 ```
