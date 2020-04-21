@@ -34,7 +34,7 @@ The following arguments are supported:
 * `name` - (Required) The name of the VPC Link.
 * `security_group_ids` - (Required) Security group IDs for the VPC Link.
 * `subnet_ids` - (Required) Subnet IDs for the VPC Link.
-* `tags` - (Optional) A mapping of tags to assign to the VPC Link.
+* `tags` - (Optional) A map of tags to assign to the VPC Link.
 
 ## Attribute Reference
 

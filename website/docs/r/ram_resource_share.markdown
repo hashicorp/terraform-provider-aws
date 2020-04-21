@@ -29,7 +29,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the resource share.
 * `allow_external_principals` - (Optional) Indicates whether principals outside your organization can be associated with a resource share.
-* `tags` - (Optional) A mapping of tags to assign to the resource share.
+* `tags` - (Optional) A map of tags to assign to the resource share.
 
 ## Attributes Reference
 

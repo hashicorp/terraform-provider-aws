@@ -226,7 +226,7 @@ The following arguments are supported:
 * `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource
 
 **ebs_options** supports the following attributes:
 

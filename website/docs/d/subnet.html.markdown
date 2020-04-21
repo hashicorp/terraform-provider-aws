@@ -63,7 +63,7 @@ subnet whose data will be exported as attributes.
 
 * `state` - (Optional) The state that the desired subnet must have.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired subnet.
 
 * `vpc_id` - (Optional) The id of the VPC that the desired subnet belongs to.

@@ -36,7 +36,7 @@ The following arguments are supported:
 
 * `domain_name` - (Required) The domain name.
 * `domain_name_configuration` - (Required) The domain name configuration.
-* `tags` - (Optional) A mapping of tags to assign to the domain name.
+* `tags` - (Optional) A map of tags to assign to the domain name.
 
 The `domain_name_configuration` object supports the following:
 

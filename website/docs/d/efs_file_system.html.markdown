@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 * `lifecycle_policy` - A file system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
 * `performance_mode` - The file system performance mode.
 * `provisioned_throughput_in_mibps` - The throughput, measured in MiB/s, that you want to provision for the file system.
-* `tags` -A mapping of tags to assign to the file system.
+* `tags` -A map of tags to assign to the file system.
 * `throughput_mode` - Throughput mode for the file system.

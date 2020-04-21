@@ -51,7 +51,7 @@ The following arguments are supported:
 * `expiration_date` - (Optional) UTC timestamp in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) by which this activation request should expire. The default value is 24 hours from resource creation time. Terraform will only perform drift detection of its value when present in a configuration.
 * `iam_role` - (Required) The IAM Role to attach to the managed instance.
 * `registration_limit` - (Optional) The maximum number of managed instances you want to register. The default value is 1 instance.
-* `tags` - (Optional) A mapping of tags to assign to the object.
+* `tags` - (Optional) A map of tags to assign to the object.
 
 ## Attributes Reference
 

@@ -54,6 +54,6 @@ In addition to all arguments above, the following attributes are exported:
 * `snapshot_id` - The snapshot_id the EBS volume is based off.
 * `volume_type` - The type of EBS volume.
 * `kms_key_id` - The ARN for the KMS encryption key.
-* `tags` - A mapping of tags for the resource.
+* `tags` - A map of tags for the resource.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-volumes.html
