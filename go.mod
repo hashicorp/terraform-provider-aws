@@ -22,3 +22,5 @@ require (
 	golang.org/x/tools v0.0.0-20200216192241-b320d3a0f5a2
 	gopkg.in/yaml.v2 v2.2.8
 )
+
+go 1.13
