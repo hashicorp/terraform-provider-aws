@@ -208,7 +208,7 @@ func TestAccAWSGlueSecurityConfiguration_S3Encryption_S3EncryptionMode_SSES3(t *
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.s3_encryption_mode", "SSE-S3"),
-					resource.TestCheckNoResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.kms_key_arn"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.s3_encryption.0.kms_key_arn", ""),
 				),
 			},
 			{
