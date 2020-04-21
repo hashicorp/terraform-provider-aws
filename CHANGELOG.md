@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_glue_security_configuration: Prevent empty string KMS Key ARN in S3 Encryption settings [GH-12898]
 * resource/aws_iam_user: Ensure `force_destroy` argument removes signing certificates when enabled [GH-10542]
 
 ## 2.58.0 (April 16, 2020)
