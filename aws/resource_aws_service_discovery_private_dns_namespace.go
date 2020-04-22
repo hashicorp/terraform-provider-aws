@@ -27,6 +27,7 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,

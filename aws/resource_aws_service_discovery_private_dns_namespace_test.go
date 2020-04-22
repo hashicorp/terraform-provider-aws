@@ -94,8 +94,7 @@ func testSweepServiceDiscoveryPrivateDnsNamespaces(region string) error {
 }
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
-	namespace := acctest.RandString(5) + ".example.com"
-	rn := "aws_service_discovery_private_dns_namespace.test"
+	rName := acctest.RandString(5) + ".example.com"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
@@ -103,12 +102,17 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(namespace),
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_service_discovery_private_dns_namespace.test",
 				ImportState:       true,
-				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(rn),
+				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc("aws_service_discovery_private_dns_namespace.test"),
 				ImportStateVerify: true,
 			},
 		},
@@ -116,8 +120,7 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 }
 
 func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
-	namespace := acctest.RandString(64-len("example.com")) + ".example.com"
-	rn := "aws_service_discovery_private_dns_namespace.test"
+	rName := acctest.RandString(64-len("example.com")) + ".example.com"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSServiceDiscovery(t) },
@@ -125,12 +128,17 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(namespace),
+				Config: testAccServiceDiscoveryPrivateDnsNamespaceConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists("aws_service_discovery_private_dns_namespace.test"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
+					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_service_discovery_private_dns_namespace.test",
 				ImportState:       true,
-				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(rn),
+				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc("aws_service_discovery_private_dns_namespace.test"),
 				ImportStateVerify: true,
 			},
 		},
@@ -177,6 +185,17 @@ func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceDestroy(s *terraform.Stat
 		}
 	}
 	return nil
+}
+
+func testAccCheckAwsServiceDiscoveryPrivateDnsNamespaceExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		return nil
+	}
 }
 
 func testAccPreCheckAWSServiceDiscovery(t *testing.T) {
