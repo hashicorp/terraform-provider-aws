@@ -15081,6 +15081,10 @@ type Connection struct {
 	//
 	//    * CONNECTION_URL - The URL for connecting to a general (non-JDBC) data
 	//    source.
+	//
+	//    * KAFKA_BOOTSTRAP_SERVERS - A comma-separated list of host and port pairs
+	//    that are the addresses of the Apache Kafka brokers in a Kafka cluster
+	//    to which a Kafka client will connect to and bootstrap itself.
 	ConnectionProperties map[string]*string `type:"map"`
 
 	// The type of the connection. Currently, only JDBC is supported; SFTP is not
@@ -15187,6 +15191,8 @@ type ConnectionInput struct {
 	//
 	//    * JDBC - Designates a connection to a database through Java Database Connectivity
 	//    (JDBC).
+	//
+	//    * KAFKA - Designates a connection to an Apache Kafka streaming platform.
 	//
 	//    * MONGODB - Designates a connection to a MongoDB document database.
 	//
@@ -24484,9 +24490,7 @@ type GetUserDefinedFunctionsInput struct {
 	CatalogId *string `min:"1" type:"string"`
 
 	// The name of the catalog database where the functions are located.
-	//
-	// DatabaseName is a required field
-	DatabaseName *string `min:"1" type:"string" required:"true"`
+	DatabaseName *string `min:"1" type:"string"`
 
 	// The maximum number of functions to return in one response.
 	MaxResults *int64 `min:"1" type:"integer"`
@@ -24516,9 +24520,6 @@ func (s *GetUserDefinedFunctionsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetUserDefinedFunctionsInput"}
 	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
-	}
-	if s.DatabaseName == nil {
-		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
 	}
 	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
@@ -34267,6 +34268,9 @@ const (
 
 	// ConnectionPropertyKeyConnectionUrl is a ConnectionPropertyKey enum value
 	ConnectionPropertyKeyConnectionUrl = "CONNECTION_URL"
+
+	// ConnectionPropertyKeyKafkaBootstrapServers is a ConnectionPropertyKey enum value
+	ConnectionPropertyKeyKafkaBootstrapServers = "KAFKA_BOOTSTRAP_SERVERS"
 )
 
 const (
@@ -34278,6 +34282,9 @@ const (
 
 	// ConnectionTypeMongodb is a ConnectionType enum value
 	ConnectionTypeMongodb = "MONGODB"
+
+	// ConnectionTypeKafka is a ConnectionType enum value
+	ConnectionTypeKafka = "KAFKA"
 )
 
 const (

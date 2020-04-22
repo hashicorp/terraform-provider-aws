@@ -349,6 +349,28 @@ func (c *SecurityHub) BatchImportFindingsRequest(input *BatchImportFindingsInput
 // The maximum allowed size for a finding is 240 Kb. An error is returned for
 // any finding larger than 240 Kb.
 //
+// After a finding is created, BatchImportFindings cannot be used to update
+// the following finding fields and objects, which Security Hub customers use
+// to manage their investigation workflow.
+//
+//    * Confidence
+//
+//    * Criticality
+//
+//    * Note
+//
+//    * RelatedFindings
+//
+//    * Severity
+//
+//    * Types
+//
+//    * UserDefinedFields
+//
+//    * VerificationState
+//
+//    * Workflow
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -388,6 +410,125 @@ func (c *SecurityHub) BatchImportFindings(input *BatchImportFindingsInput) (*Bat
 // for more information on using Contexts.
 func (c *SecurityHub) BatchImportFindingsWithContext(ctx aws.Context, input *BatchImportFindingsInput, opts ...request.Option) (*BatchImportFindingsOutput, error) {
 	req, out := c.BatchImportFindingsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opBatchUpdateFindings = "BatchUpdateFindings"
+
+// BatchUpdateFindingsRequest generates a "aws/request.Request" representing the
+// client's request for the BatchUpdateFindings operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See BatchUpdateFindings for more information on using the BatchUpdateFindings
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the BatchUpdateFindingsRequest method.
+//    req, resp := client.BatchUpdateFindingsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/securityhub-2018-10-26/BatchUpdateFindings
+func (c *SecurityHub) BatchUpdateFindingsRequest(input *BatchUpdateFindingsInput) (req *request.Request, output *BatchUpdateFindingsOutput) {
+	op := &request.Operation{
+		Name:       opBatchUpdateFindings,
+		HTTPMethod: "PATCH",
+		HTTPPath:   "/findings/batchupdate",
+	}
+
+	if input == nil {
+		input = &BatchUpdateFindingsInput{}
+	}
+
+	output = &BatchUpdateFindingsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// BatchUpdateFindings API operation for AWS SecurityHub.
+//
+// Used by Security Hub customers to update information about their investigation
+// into a finding. Requested by master accounts or member accounts. Master accounts
+// can update findings for their account and their member accounts. Member accounts
+// can update findings for their account.
+//
+// Updates from BatchUpdateFindings do not affect the value of UpdatedAt for
+// a finding.
+//
+// Master accounts can use BatchUpdateFindings to update the following finding
+// fields and objects.
+//
+//    * Confidence
+//
+//    * Criticality
+//
+//    * Note
+//
+//    * RelatedFindings
+//
+//    * Severity
+//
+//    * Types
+//
+//    * UserDefinedFields
+//
+//    * VerificationState
+//
+//    * Workflow
+//
+// Member accounts can only use BatchUpdateFindings to update the Note object.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS SecurityHub's
+// API operation BatchUpdateFindings for usage and error information.
+//
+// Returned Error Types:
+//   * InternalException
+//   Internal server error.
+//
+//   * InvalidInputException
+//   The request was rejected because you supplied an invalid or out-of-range
+//   value for an input parameter.
+//
+//   * LimitExceededException
+//   The request was rejected because it attempted to create resources beyond
+//   the current AWS account limits. The error code describes the limit exceeded.
+//
+//   * InvalidAccessException
+//   AWS Security Hub isn't enabled for the account used to make this request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/securityhub-2018-10-26/BatchUpdateFindings
+func (c *SecurityHub) BatchUpdateFindings(input *BatchUpdateFindingsInput) (*BatchUpdateFindingsOutput, error) {
+	req, out := c.BatchUpdateFindingsRequest(input)
+	return out, req.Send()
+}
+
+// BatchUpdateFindingsWithContext is the same as BatchUpdateFindings with the addition of
+// the ability to pass a context and additional request options.
+//
+// See BatchUpdateFindings for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *SecurityHub) BatchUpdateFindingsWithContext(ctx aws.Context, input *BatchUpdateFindingsInput, opts ...request.Option) (*BatchUpdateFindingsOutput, error) {
+	req, out := c.BatchUpdateFindingsRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4196,6 +4337,8 @@ func (c *SecurityHub) UpdateFindingsRequest(input *UpdateFindingsInput) (req *re
 }
 
 // UpdateFindings API operation for AWS SecurityHub.
+//
+// UpdateFindings is deprecated. Instead of UpdateFindings, use BatchUpdateFindings.
 //
 // Updates the Note and RecordState of the Security Hub-aggregated findings
 // that the filter attributes specify. Any member account that can view the
@@ -8663,6 +8806,61 @@ func (s *AwsSecurityFindingFilters) SetWorkflowStatus(v []*StringFilter) *AwsSec
 	return s
 }
 
+// Identifies a finding to update using BatchUpdateFindings.
+type AwsSecurityFindingIdentifier struct {
+	_ struct{} `type:"structure"`
+
+	// The identifier of the finding that was specified by the finding provider.
+	//
+	// Id is a required field
+	Id *string `type:"string" required:"true"`
+
+	// The ARN generated by Security Hub that uniquely identifies a product that
+	// generates findings. This can be the ARN for a third-party product that is
+	// integrated with Security Hub, or the ARN for a custom integration.
+	//
+	// ProductArn is a required field
+	ProductArn *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsSecurityFindingIdentifier) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsSecurityFindingIdentifier) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsSecurityFindingIdentifier) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsSecurityFindingIdentifier"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.ProductArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProductArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *AwsSecurityFindingIdentifier) SetId(v string) *AwsSecurityFindingIdentifier {
+	s.Id = &v
+	return s
+}
+
+// SetProductArn sets the ProductArn field's value.
+func (s *AwsSecurityFindingIdentifier) SetProductArn(v string) *AwsSecurityFindingIdentifier {
+	s.ProductArn = &v
+	return s
+}
+
 // A wrapper type for the topic's Amazon Resource Name (ARN).
 type AwsSnsTopicDetails struct {
 	_ struct{} `type:"structure"`
@@ -9176,6 +9374,277 @@ func (s *BatchImportFindingsOutput) SetFailedFindings(v []*ImportFindingsError) 
 // SetSuccessCount sets the SuccessCount field's value.
 func (s *BatchImportFindingsOutput) SetSuccessCount(v int64) *BatchImportFindingsOutput {
 	s.SuccessCount = &v
+	return s
+}
+
+type BatchUpdateFindingsInput struct {
+	_ struct{} `type:"structure"`
+
+	// The updated value for the finding confidence. Confidence is defined as the
+	// likelihood that a finding accurately identifies the behavior or issue that
+	// it was intended to identify.
+	//
+	// Confidence is scored on a 0-100 basis using a ratio scale, where 0 means
+	// zero percent confidence and 100 means 100 percent confidence.
+	Confidence *int64 `type:"integer"`
+
+	// The updated value for the level of importance assigned to the resources associated
+	// with the findings.
+	//
+	// A score of 0 means that the underlying resources have no criticality, and
+	// a score of 100 is reserved for the most critical resources.
+	Criticality *int64 `type:"integer"`
+
+	// The list of findings to update. BatchUpdateFindings can be used to update
+	// up to 100 findings at a time.
+	//
+	// For each finding, the list provides the finding identifier and the ARN of
+	// the finding provider.
+	//
+	// FindingIdentifiers is a required field
+	FindingIdentifiers []*AwsSecurityFindingIdentifier `type:"list" required:"true"`
+
+	// The updated note.
+	Note *NoteUpdate `type:"structure"`
+
+	// A list of findings that are related to the updated findings.
+	RelatedFindings []*RelatedFinding `type:"list"`
+
+	// Used to update the finding severity.
+	Severity *SeverityUpdate `type:"structure"`
+
+	// One or more finding types in the format of namespace/category/classifier
+	// that classify a finding.
+	//
+	// Valid namespace values are as follows.
+	//
+	//    * Software and Configuration Checks
+	//
+	//    * TTPs
+	//
+	//    * Effects
+	//
+	//    * Unusual Behaviors
+	//
+	//    * Sensitive Data Identifications
+	Types []*string `type:"list"`
+
+	// A list of name/value string pairs associated with the finding. These are
+	// custom, user-defined fields added to a finding.
+	UserDefinedFields map[string]*string `type:"map"`
+
+	// Indicates the veracity of a finding.
+	//
+	// The available values for VerificationState are as follows.
+	//
+	//    * UNKNOWN – The default disposition of a security finding
+	//
+	//    * TRUE_POSITIVE – The security finding is confirmed
+	//
+	//    * FALSE_POSITIVE – The security finding was determined to be a false
+	//    alarm
+	//
+	//    * BENIGN_POSITIVE – A special case of TRUE_POSITIVE where the finding
+	//    doesn't pose any threat, is expected, or both
+	VerificationState *string `type:"string" enum:"VerificationState"`
+
+	// Used to update the workflow status of a finding.
+	//
+	// The workflow status indicates the progress of the investigation into the
+	// finding.
+	Workflow *WorkflowUpdate `type:"structure"`
+}
+
+// String returns the string representation
+func (s BatchUpdateFindingsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdateFindingsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BatchUpdateFindingsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BatchUpdateFindingsInput"}
+	if s.FindingIdentifiers == nil {
+		invalidParams.Add(request.NewErrParamRequired("FindingIdentifiers"))
+	}
+	if s.FindingIdentifiers != nil {
+		for i, v := range s.FindingIdentifiers {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "FindingIdentifiers", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Note != nil {
+		if err := s.Note.Validate(); err != nil {
+			invalidParams.AddNested("Note", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.RelatedFindings != nil {
+		for i, v := range s.RelatedFindings {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "RelatedFindings", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConfidence sets the Confidence field's value.
+func (s *BatchUpdateFindingsInput) SetConfidence(v int64) *BatchUpdateFindingsInput {
+	s.Confidence = &v
+	return s
+}
+
+// SetCriticality sets the Criticality field's value.
+func (s *BatchUpdateFindingsInput) SetCriticality(v int64) *BatchUpdateFindingsInput {
+	s.Criticality = &v
+	return s
+}
+
+// SetFindingIdentifiers sets the FindingIdentifiers field's value.
+func (s *BatchUpdateFindingsInput) SetFindingIdentifiers(v []*AwsSecurityFindingIdentifier) *BatchUpdateFindingsInput {
+	s.FindingIdentifiers = v
+	return s
+}
+
+// SetNote sets the Note field's value.
+func (s *BatchUpdateFindingsInput) SetNote(v *NoteUpdate) *BatchUpdateFindingsInput {
+	s.Note = v
+	return s
+}
+
+// SetRelatedFindings sets the RelatedFindings field's value.
+func (s *BatchUpdateFindingsInput) SetRelatedFindings(v []*RelatedFinding) *BatchUpdateFindingsInput {
+	s.RelatedFindings = v
+	return s
+}
+
+// SetSeverity sets the Severity field's value.
+func (s *BatchUpdateFindingsInput) SetSeverity(v *SeverityUpdate) *BatchUpdateFindingsInput {
+	s.Severity = v
+	return s
+}
+
+// SetTypes sets the Types field's value.
+func (s *BatchUpdateFindingsInput) SetTypes(v []*string) *BatchUpdateFindingsInput {
+	s.Types = v
+	return s
+}
+
+// SetUserDefinedFields sets the UserDefinedFields field's value.
+func (s *BatchUpdateFindingsInput) SetUserDefinedFields(v map[string]*string) *BatchUpdateFindingsInput {
+	s.UserDefinedFields = v
+	return s
+}
+
+// SetVerificationState sets the VerificationState field's value.
+func (s *BatchUpdateFindingsInput) SetVerificationState(v string) *BatchUpdateFindingsInput {
+	s.VerificationState = &v
+	return s
+}
+
+// SetWorkflow sets the Workflow field's value.
+func (s *BatchUpdateFindingsInput) SetWorkflow(v *WorkflowUpdate) *BatchUpdateFindingsInput {
+	s.Workflow = v
+	return s
+}
+
+type BatchUpdateFindingsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The list of findings that were updated successfully.
+	//
+	// ProcessedFindings is a required field
+	ProcessedFindings []*AwsSecurityFindingIdentifier `type:"list" required:"true"`
+
+	// The list of findings that were not updated.
+	//
+	// UnprocessedFindings is a required field
+	UnprocessedFindings []*BatchUpdateFindingsUnprocessedFinding `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchUpdateFindingsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdateFindingsOutput) GoString() string {
+	return s.String()
+}
+
+// SetProcessedFindings sets the ProcessedFindings field's value.
+func (s *BatchUpdateFindingsOutput) SetProcessedFindings(v []*AwsSecurityFindingIdentifier) *BatchUpdateFindingsOutput {
+	s.ProcessedFindings = v
+	return s
+}
+
+// SetUnprocessedFindings sets the UnprocessedFindings field's value.
+func (s *BatchUpdateFindingsOutput) SetUnprocessedFindings(v []*BatchUpdateFindingsUnprocessedFinding) *BatchUpdateFindingsOutput {
+	s.UnprocessedFindings = v
+	return s
+}
+
+// A finding from a BatchUpdateFindings request that Security Hub was unable
+// to update.
+type BatchUpdateFindingsUnprocessedFinding struct {
+	_ struct{} `type:"structure"`
+
+	// The code associated with the error.
+	//
+	// ErrorCode is a required field
+	ErrorCode *string `type:"string" required:"true"`
+
+	// The message associated with the error.
+	//
+	// ErrorMessage is a required field
+	ErrorMessage *string `type:"string" required:"true"`
+
+	// The identifier of the finding that was not updated.
+	//
+	// FindingIdentifier is a required field
+	FindingIdentifier *AwsSecurityFindingIdentifier `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s BatchUpdateFindingsUnprocessedFinding) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BatchUpdateFindingsUnprocessedFinding) GoString() string {
+	return s.String()
+}
+
+// SetErrorCode sets the ErrorCode field's value.
+func (s *BatchUpdateFindingsUnprocessedFinding) SetErrorCode(v string) *BatchUpdateFindingsUnprocessedFinding {
+	s.ErrorCode = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *BatchUpdateFindingsUnprocessedFinding) SetErrorMessage(v string) *BatchUpdateFindingsUnprocessedFinding {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetFindingIdentifier sets the FindingIdentifier field's value.
+func (s *BatchUpdateFindingsUnprocessedFinding) SetFindingIdentifier(v *AwsSecurityFindingIdentifier) *BatchUpdateFindingsUnprocessedFinding {
+	s.FindingIdentifier = v
 	return s
 }
 
@@ -13312,6 +13781,73 @@ func (s *Severity) SetProduct(v float64) *Severity {
 	return s
 }
 
+// Updates to the severity information for a finding.
+type SeverityUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The severity value of the finding. The allowed values are the following.
+	//
+	//    * INFORMATIONAL - No issue was found.
+	//
+	//    * LOW - The issue does not require action on its own.
+	//
+	//    * MEDIUM - The issue must be addressed but not urgently.
+	//
+	//    * HIGH - The issue must be addressed as a priority.
+	//
+	//    * CRITICAL - The issue must be remediated immediately to avoid it escalating.
+	Label *string `type:"string" enum:"SeverityLabel"`
+
+	// The normalized severity for the finding. This attribute is to be deprecated
+	// in favor of Label.
+	//
+	// If you provide Normalized and do not provide Label, Label is set automatically
+	// as follows.
+	//
+	//    * 0 - INFORMATIONAL
+	//
+	//    * 1–39 - LOW
+	//
+	//    * 40–69 - MEDIUM
+	//
+	//    * 70–89 - HIGH
+	//
+	//    * 90–100 - CRITICAL
+	Normalized *int64 `type:"integer"`
+
+	// The native severity as defined by the AWS service or integrated partner product
+	// that generated the finding.
+	Product *float64 `type:"double"`
+}
+
+// String returns the string representation
+func (s SeverityUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SeverityUpdate) GoString() string {
+	return s.String()
+}
+
+// SetLabel sets the Label field's value.
+func (s *SeverityUpdate) SetLabel(v string) *SeverityUpdate {
+	s.Label = &v
+	return s
+}
+
+// SetNormalized sets the Normalized field's value.
+func (s *SeverityUpdate) SetNormalized(v int64) *SeverityUpdate {
+	s.Normalized = &v
+	return s
+}
+
+// SetProduct sets the Product field's value.
+func (s *SeverityUpdate) SetProduct(v float64) *SeverityUpdate {
+	s.Product = &v
+	return s
+}
+
 // A collection of finding attributes used to sort findings.
 type SortCriterion struct {
 	_ struct{} `type:"structure"`
@@ -14293,6 +14829,43 @@ func (s Workflow) GoString() string {
 
 // SetStatus sets the Status field's value.
 func (s *Workflow) SetStatus(v string) *Workflow {
+	s.Status = &v
+	return s
+}
+
+// Used to update information about the investigation into the finding.
+type WorkflowUpdate struct {
+	_ struct{} `type:"structure"`
+
+	// The status of the investigation into the finding. The allowed values are
+	// the following.
+	//
+	//    * NEW - The initial state of a finding, before it is reviewed.
+	//
+	//    * NOTIFIED - Indicates that you notified the resource owner about the
+	//    security issue. Used when the initial reviewer is not the resource owner,
+	//    and needs intervention from the resource owner.
+	//
+	//    * RESOLVED - The finding was reviewed and remediated and is now considered
+	//    resolved.
+	//
+	//    * SUPPRESSED - The finding will not be reviewed again and will not be
+	//    acted upon.
+	Status *string `type:"string" enum:"WorkflowStatus"`
+}
+
+// String returns the string representation
+func (s WorkflowUpdate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s WorkflowUpdate) GoString() string {
+	return s.String()
+}
+
+// SetStatus sets the Status field's value.
+func (s *WorkflowUpdate) SetStatus(v string) *WorkflowUpdate {
 	s.Status = &v
 	return s
 }
