@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -353,7 +352,7 @@ func resourceAwsDbParameterHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
 	// Store the value as a lower case string, to match how we store them in flattenParameters
-	buf.WriteString(fmt.Sprintf("%s-", strings.ToLower(m["value"].(string))))
+	buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
 
 	return hashcode.String(buf.String())
 }

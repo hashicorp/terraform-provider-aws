@@ -105,9 +105,9 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "parameter.2478663599.value", "utf8"),
 					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1899928391.name", "join_buffer_size"),
+						resourceName, "parameter.3328736458.name", "join_buffer_size"),
 					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1899928391.value", "{DBInstanceClassMemory/10000}"),
+						resourceName, "parameter.3328736458.value", "{DBInstanceClassMemory/10000}"),
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
 				),
@@ -147,9 +147,9 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "parameter.2478663599.value", "utf8"),
 					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1899928391.name", "join_buffer_size"),
+						resourceName, "parameter.3328736458.name", "join_buffer_size"),
 					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1899928391.value", "{dbInstanceClassMemory/10000}"),
+						resourceName, "parameter.3328736458.value", "{dbInstanceClassMemory/10000}"),
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
 				),

@@ -890,7 +890,7 @@ func flattenParameters(list []*rds.Parameter) []map[string]interface{} {
 			// Default empty string, guard against nil parameter values
 			r["value"] = ""
 			if i.ParameterValue != nil {
-				r["value"] = strings.ToLower(*i.ParameterValue)
+				r["value"] = *i.ParameterValue
 			}
 			if i.ApplyMethod != nil {
 				r["apply_method"] = strings.ToLower(*i.ApplyMethod)
