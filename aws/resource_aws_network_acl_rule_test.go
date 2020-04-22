@@ -169,7 +169,6 @@ func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
 
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6710
 func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testing.T) {
-	vpcResourceName := "aws_vpc.test"
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -181,17 +180,7 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(false),
 			},
 			{
-				ResourceName:      vpcResourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(true),
-			},
-			{
-				ResourceName:      vpcResourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				ResourceName:      resourceName,
@@ -658,7 +647,7 @@ resource "aws_network_acl_rule" "test" {
   icmp_type       = -1
   ipv6_cidr_block = "::/0"
   network_acl_id  = "${aws_network_acl.test.id}"
-  protocol        = 58
+  protocol        = "ipv6-icmp"
   rule_action     = "allow"
   rule_number     = 150
 }

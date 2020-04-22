@@ -31,14 +31,7 @@ func resourceAwsNetworkAclRule() *schema.Resource {
 				if err != nil {
 					return nil, err
 				}
-				protocol, err := validateProtocolArgumentValue(idParts[2])
-				if err != nil {
-					return nil, err
-				}
-				if protocol == nil {
-					return nil, fmt.Errorf("unknown protocol %s, expected one defined at %s",
-						idParts[2], "https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml)")
-				}
+				protocol := idParts[2]
 				egress, err := strconv.ParseBool(idParts[3])
 				if err != nil {
 					return nil, err
@@ -47,8 +40,7 @@ func resourceAwsNetworkAclRule() *schema.Resource {
 				d.Set("network_acl_id", networkAclID)
 				d.Set("rule_number", ruleNumber)
 				d.Set("egress", egress)
-				d.Set("protocol", protocol)
-				d.SetId(networkAclIdRuleNumberEgressHash(networkAclID, ruleNumber, egress, *protocol))
+				d.SetId(networkAclIdRuleNumberEgressHash(networkAclID, ruleNumber, egress, protocol))
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -197,11 +189,7 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		return fmt.Errorf("Error Creating Network Acl Rule: %s", err.Error())
 	}
-	d.SetId(networkAclIdRuleNumberEgressHash(
-		d.Get("network_acl_id").(string),
-		d.Get("rule_number").(int),
-		d.Get("egress").(bool),
-		p))
+	d.SetId(networkAclIdRuleNumberEgressHash(d.Get("network_acl_id").(string), d.Get("rule_number").(int), d.Get("egress").(bool), d.Get("protocol").(string)))
 
 	// It appears it might be a while until the newly created rule is visible via the
 	// API (see issue GH-4721). Retry the `findNetworkAclRule` function until it is
@@ -250,7 +238,6 @@ func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("icmp_code", strconv.FormatInt(*resp.IcmpTypeCode.Code, 10))
 		d.Set("icmp_type", strconv.FormatInt(*resp.IcmpTypeCode.Type, 10))
 	}
-
 	if resp.PortRange != nil {
 		d.Set("from_port", resp.PortRange.From)
 		d.Set("to_port", resp.PortRange.To)
@@ -346,12 +333,12 @@ func findNetworkAclRule(d *schema.ResourceData, meta interface{}) (*ec2.NetworkA
 
 }
 
-func networkAclIdRuleNumberEgressHash(networkAclId string, ruleNumber int, egress bool, protocol int) string {
+func networkAclIdRuleNumberEgressHash(networkAclId string, ruleNumber int, egress bool, protocol string) string {
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("%s-", networkAclId))
 	buf.WriteString(fmt.Sprintf("%d-", ruleNumber))
 	buf.WriteString(fmt.Sprintf("%t-", egress))
-	buf.WriteString(fmt.Sprintf("%d-", protocol))
+	buf.WriteString(fmt.Sprintf("%s-", protocol))
 	return fmt.Sprintf("nacl-%d", hashcode.String(buf.String()))
 }
 
@@ -362,19 +349,4 @@ func validateICMPArgumentValue(v interface{}, k string) (ws []string, errors []e
 		errors = append(errors, fmt.Errorf("%q must be an integer value: %q", k, value))
 	}
 	return
-}
-
-func validateProtocolArgumentValue(protocol string) (*int, error) {
-	pi := protocolIntegers()
-	if v, ok := pi[protocol]; ok {
-		return &v, nil
-	}
-	p, err := strconv.Atoi(protocol)
-	if err != nil {
-		return nil, err
-	}
-	if _, ok := protocolStrings(pi)[p]; ok {
-		return &p, nil
-	}
-	return nil, nil
 }
