@@ -347,11 +347,19 @@ func (c *RDS) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 //   * ErrCodeDBInstanceNotFoundFault "DBInstanceNotFound"
 //   DBInstanceIdentifier doesn't refer to an existing DB instance.
 //
+//   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
+//   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//
 //   * ErrCodeDBSnapshotNotFoundFault "DBSnapshotNotFound"
 //   DBSnapshotIdentifier doesn't refer to an existing DB snapshot.
 //
-//   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
-//   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//   * ErrCodeDBProxyNotFoundFault "DBProxyNotFoundFault"
+//   The specified proxy name doesn't correspond to a proxy owned by your AWS
+//   accoutn in the specified AWS Region.
+//
+//   * ErrCodeDBProxyTargetGroupNotFoundFault "DBProxyTargetGroupNotFoundFault"
+//   The specified target group isn't available for a proxy owned by your AWS
+//   account in the specified AWS Region.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/AddTagsToResource
 func (c *RDS) AddTagsToResource(input *AddTagsToResourceInput) (*AddTagsToResourceOutput, error) {
@@ -9396,6 +9404,14 @@ func (c *RDS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 //   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
 //   DBClusterIdentifier doesn't refer to an existing DB cluster.
 //
+//   * ErrCodeDBProxyNotFoundFault "DBProxyNotFoundFault"
+//   The specified proxy name doesn't correspond to a proxy owned by your AWS
+//   accoutn in the specified AWS Region.
+//
+//   * ErrCodeDBProxyTargetGroupNotFoundFault "DBProxyTargetGroupNotFoundFault"
+//   The specified target group isn't available for a proxy owned by your AWS
+//   account in the specified AWS Region.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/ListTagsForResource
 func (c *RDS) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
 	req, out := c.ListTagsForResourceRequest(input)
@@ -11908,6 +11924,14 @@ func (c *RDS) RemoveTagsFromResourceRequest(input *RemoveTagsFromResourceInput) 
 //
 //   * ErrCodeDBClusterNotFoundFault "DBClusterNotFoundFault"
 //   DBClusterIdentifier doesn't refer to an existing DB cluster.
+//
+//   * ErrCodeDBProxyNotFoundFault "DBProxyNotFoundFault"
+//   The specified proxy name doesn't correspond to a proxy owned by your AWS
+//   accoutn in the specified AWS Region.
+//
+//   * ErrCodeDBProxyTargetGroupNotFoundFault "DBProxyTargetGroupNotFoundFault"
+//   The specified target group isn't available for a proxy owned by your AWS
+//   account in the specified AWS Region.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/rds-2014-10-31/RemoveTagsFromResource
 func (c *RDS) RemoveTagsFromResource(input *RemoveTagsFromResourceInput) (*RemoveTagsFromResourceOutput, error) {
@@ -14783,16 +14807,16 @@ type CancelExportTaskOutput struct {
 
 	// The data exported from the snapshot. Valid values are the following:
 	//
-	//    * database - Export all the data of the snapshot.
+	//    * database - Export all the data from a specified database.
 	//
-	//    * database.table [table-name] - Export a table of the snapshot.
+	//    * database.table table-name - Export a table of the snapshot. This format
+	//    is valid only for RDS for MySQL, RDS for MariaDB, and Aurora MySQL.
 	//
-	//    * database.schema [schema-name] - Export a database schema of the snapshot.
-	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//    * database.schema schema-name - Export a database schema of the snapshot.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	//
-	//    * database.schema.table [table-name] - Export a table of the database
-	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
-	//    Aurora MySQL.
+	//    * database.schema.table table-name - Export a table of the database schema.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	ExportOnly []*string `type:"list"`
 
 	// A unique identifier for the snapshot export task. This ID isn't an identifier
@@ -15130,6 +15154,8 @@ type ConnectionPoolConfiguration struct {
 	// statements, use semicolons as the separator. You can also include multiple
 	// variables in a single SET statement, such as SET x=1, y=2.
 	//
+	// InitQuery is not currently supported for PostgreSQL.
+	//
 	// Default: no initialization query
 	InitQuery *string `type:"string"`
 
@@ -15223,6 +15249,8 @@ type ConnectionPoolConfigurationInfo struct {
 	// is empty by default. For multiple statements, use semicolons as the separator.
 	// You can also include multiple variables in a single SET statement, such as
 	// SET x=1, y=2.
+	//
+	// InitQuery is not currently supported for PostgreSQL.
 	InitQuery *string `type:"string"`
 
 	// The maximum size of the connection pool for each target in a target group.
@@ -19043,8 +19071,8 @@ type CreateDBProxyInput struct {
 
 	// The kinds of databases that the proxy can connect to. This value determines
 	// which database network protocol the proxy recognizes when it interprets network
-	// traffic to and from the database. Currently, this value is always MYSQL.
-	// The engine family applies to both RDS MySQL and Aurora MySQL.
+	// traffic to and from the database. The engine family applies to MySQL and
+	// PostgreSQL for both RDS and Aurora.
 	//
 	// EngineFamily is a required field
 	EngineFamily *string `type:"string" required:"true" enum:"EngineFamily"`
@@ -22457,8 +22485,7 @@ type DBProxy struct {
 	// value in the connection string for a database client application.
 	Endpoint *string `type:"string"`
 
-	// Currently, this value is always MYSQL. The engine family applies to both
-	// RDS MySQL and Aurora MySQL.
+	// The engine family applies to MySQL and PostgreSQL for both RDS and Aurora.
 	EngineFamily *string `type:"string"`
 
 	// The number of seconds a connection to the proxy can have no activity before
@@ -22615,6 +22642,9 @@ type DBProxyTarget struct {
 	// The Amazon Resource Name (ARN) for the RDS DB instance or Aurora DB cluster.
 	TargetArn *string `type:"string"`
 
+	// Information about the connection health of the RDS Proxy target.
+	TargetHealth *TargetHealth `type:"structure"`
+
 	// The DB cluster identifier when the target represents an Aurora DB cluster.
 	// This field is blank when the target represents an RDS DB instance.
 	TrackedClusterId *string `type:"string"`
@@ -22655,6 +22685,12 @@ func (s *DBProxyTarget) SetRdsResourceId(v string) *DBProxyTarget {
 // SetTargetArn sets the TargetArn field's value.
 func (s *DBProxyTarget) SetTargetArn(v string) *DBProxyTarget {
 	s.TargetArn = &v
+	return s
+}
+
+// SetTargetHealth sets the TargetHealth field's value.
+func (s *DBProxyTarget) SetTargetHealth(v *TargetHealth) *DBProxyTarget {
+	s.TargetHealth = v
 	return s
 }
 
@@ -30369,16 +30405,16 @@ type ExportTask struct {
 
 	// The data exported from the snapshot. Valid values are the following:
 	//
-	//    * database - Export all the data of the snapshot.
+	//    * database - Export all the data from a specified database.
 	//
-	//    * database.table [table-name] - Export a table of the snapshot.
+	//    * database.table table-name - Export a table of the snapshot. This format
+	//    is valid only for RDS for MySQL, RDS for MariaDB, and Aurora MySQL.
 	//
-	//    * database.schema [schema-name] - Export a database schema of the snapshot.
-	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//    * database.schema schema-name - Export a database schema of the snapshot.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	//
-	//    * database.schema.table [table-name] - Export a table of the database
-	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
-	//    Aurora MySQL.
+	//    * database.schema.table table-name - Export a table of the database schema.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	ExportOnly []*string `type:"list"`
 
 	// A unique identifier for the snapshot export task. This ID isn't an identifier
@@ -40236,16 +40272,16 @@ type StartExportTaskInput struct {
 	// The data to be exported from the snapshot. If this parameter is not provided,
 	// all the snapshot data is exported. Valid values are the following:
 	//
-	//    * database - Export all the data of the snapshot.
+	//    * database - Export all the data from a specified database.
 	//
-	//    * database.table [table-name] - Export a table of the snapshot.
+	//    * database.table table-name - Export a table of the snapshot. This format
+	//    is valid only for RDS for MySQL, RDS for MariaDB, and Aurora MySQL.
 	//
-	//    * database.schema [schema-name] - Export a database schema of the snapshot.
-	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//    * database.schema schema-name - Export a database schema of the snapshot.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	//
-	//    * database.schema.table [table-name] - Export a table of the database
-	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
-	//    Aurora MySQL.
+	//    * database.schema.table table-name - Export a table of the database schema.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	ExportOnly []*string `type:"list"`
 
 	// A unique identifier for the snapshot export task. This ID isn't an identifier
@@ -40369,16 +40405,16 @@ type StartExportTaskOutput struct {
 
 	// The data exported from the snapshot. Valid values are the following:
 	//
-	//    * database - Export all the data of the snapshot.
+	//    * database - Export all the data from a specified database.
 	//
-	//    * database.table [table-name] - Export a table of the snapshot.
+	//    * database.table table-name - Export a table of the snapshot. This format
+	//    is valid only for RDS for MySQL, RDS for MariaDB, and Aurora MySQL.
 	//
-	//    * database.schema [schema-name] - Export a database schema of the snapshot.
-	//    This value isn't valid for RDS for MySQL, RDS for MariaDB, or Aurora MySQL.
+	//    * database.schema schema-name - Export a database schema of the snapshot.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	//
-	//    * database.schema.table [table-name] - Export a table of the database
-	//    schema. This value isn't valid for RDS for MySQL, RDS for MariaDB, or
-	//    Aurora MySQL.
+	//    * database.schema.table table-name - Export a table of the database schema.
+	//    This format is valid only for RDS for PostgreSQL and Aurora PostgreSQL.
 	ExportOnly []*string `type:"list"`
 
 	// A unique identifier for the snapshot export task. This ID isn't an identifier
@@ -40843,6 +40879,57 @@ func (s *Tag) SetKey(v string) *Tag {
 // SetValue sets the Value field's value.
 func (s *Tag) SetValue(v string) *Tag {
 	s.Value = &v
+	return s
+}
+
+//
+// This is prerelease documentation for the RDS Database Proxy feature in preview
+// release. It is subject to change.
+//
+// Information about the connection health of an RDS Proxy target.
+type TargetHealth struct {
+	_ struct{} `type:"structure"`
+
+	// A description of the health of the RDS Proxy target. If the State is AVAILABLE,
+	// a description is not included.
+	Description *string `type:"string"`
+
+	// The reason for the current health State of the RDS Proxy target.
+	Reason *string `type:"string" enum:"TargetHealthReason"`
+
+	// The current state of the connection health lifecycle for the RDS Proxy target.
+	// The following is a typical lifecycle example for the states of an RDS Proxy
+	// target:
+	//
+	// registering > unavailable > available > unavailable > available
+	State *string `type:"string" enum:"TargetState"`
+}
+
+// String returns the string representation
+func (s TargetHealth) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TargetHealth) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *TargetHealth) SetDescription(v string) *TargetHealth {
+	s.Description = &v
+	return s
+}
+
+// SetReason sets the Reason field's value.
+func (s *TargetHealth) SetReason(v string) *TargetHealth {
+	s.Reason = &v
+	return s
+}
+
+// SetState sets the State field's value.
+func (s *TargetHealth) SetState(v string) *TargetHealth {
+	s.State = &v
 	return s
 }
 
@@ -41334,11 +41421,23 @@ const (
 
 	// DBProxyStatusDeleting is a DBProxyStatus enum value
 	DBProxyStatusDeleting = "deleting"
+
+	// DBProxyStatusSuspended is a DBProxyStatus enum value
+	DBProxyStatusSuspended = "suspended"
+
+	// DBProxyStatusSuspending is a DBProxyStatus enum value
+	DBProxyStatusSuspending = "suspending"
+
+	// DBProxyStatusReactivating is a DBProxyStatus enum value
+	DBProxyStatusReactivating = "reactivating"
 )
 
 const (
 	// EngineFamilyMysql is a EngineFamily enum value
 	EngineFamilyMysql = "MYSQL"
+
+	// EngineFamilyPostgresql is a EngineFamily enum value
+	EngineFamilyPostgresql = "POSTGRESQL"
 )
 
 const (
@@ -41367,6 +41466,31 @@ const (
 
 	// SourceTypeDbClusterSnapshot is a SourceType enum value
 	SourceTypeDbClusterSnapshot = "db-cluster-snapshot"
+)
+
+const (
+	// TargetHealthReasonUnreachable is a TargetHealthReason enum value
+	TargetHealthReasonUnreachable = "UNREACHABLE"
+
+	// TargetHealthReasonConnectionFailed is a TargetHealthReason enum value
+	TargetHealthReasonConnectionFailed = "CONNECTION_FAILED"
+
+	// TargetHealthReasonAuthFailure is a TargetHealthReason enum value
+	TargetHealthReasonAuthFailure = "AUTH_FAILURE"
+
+	// TargetHealthReasonPendingProxyCapacity is a TargetHealthReason enum value
+	TargetHealthReasonPendingProxyCapacity = "PENDING_PROXY_CAPACITY"
+)
+
+const (
+	// TargetStateRegistering is a TargetState enum value
+	TargetStateRegistering = "REGISTERING"
+
+	// TargetStateAvailable is a TargetState enum value
+	TargetStateAvailable = "AVAILABLE"
+
+	// TargetStateUnavailable is a TargetState enum value
+	TargetStateUnavailable = "UNAVAILABLE"
 )
 
 const (

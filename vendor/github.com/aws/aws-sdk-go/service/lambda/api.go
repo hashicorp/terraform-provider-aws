@@ -2374,7 +2374,8 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 // client, SDK, firewall, proxy, or operating system to allow for long connections
 // with timeout or keep-alive settings.
 //
-// This operation requires permission for the lambda:InvokeFunction action.
+// This operation requires permission for the lambda:InvokeFunction (https://docs.aws.amazon.com/IAM/latest/UserGuide/list_awslambda.html)
+// action.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about

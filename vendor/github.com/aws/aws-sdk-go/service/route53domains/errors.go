@@ -23,9 +23,10 @@ const (
 	// ErrCodeInvalidInput for service response error code
 	// "InvalidInput".
 	//
-	// The requested item is not acceptable. For example, for an OperationId it
-	// might refer to the ID of an operation that is already completed. For a domain
-	// name, it might not be a valid domain name or belong to the requester account.
+	// The requested item is not acceptable. For example, for APIs that accept a
+	// domain name, the request might specify a domain name that doesn't belong
+	// to the account that submitted the request. For AcceptDomainTransferFromAnotherAwsAccount,
+	// the password might be invalid.
 	ErrCodeInvalidInput = "InvalidInput"
 
 	// ErrCodeOperationLimitExceeded for service response error code
