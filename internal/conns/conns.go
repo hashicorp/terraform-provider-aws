@@ -1740,6 +1740,12 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.S3Conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if tfawserr.ErrMessageContains(r.Error, "OperationAborted", "A conflicting conditional operation is currently in progress against this resource. Please try again.") {
+			r.Retryable = aws.Bool(true)
+		}
+	})
+
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/17996
 	client.SecurityHubConn.Handlers.Retry.PushBack(func(r *request.Request) {
 		switch r.Operation.Name {
