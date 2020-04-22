@@ -51,7 +51,7 @@ resource "aws_ssm_maintenance_window_target" "target1" {
 
   targets {
     key    = "resource-groups:ResourceTypeFilters"
-    values = ["AWS::EC2::INSTANCE","AWS::EC2::VPC"]
+    values = ["AWS::EC2::INSTANCE", "AWS::EC2::VPC"]
   }
 }
 ```

@@ -3,26 +3,9 @@ package aws
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-var defaultEgressAcl = &ec2.NetworkAclEntry{
-	CidrBlock:  aws.String("0.0.0.0/0"),
-	Egress:     aws.Bool(true),
-	Protocol:   aws.String("-1"),
-	RuleAction: aws.String("allow"),
-	RuleNumber: aws.Int64(100),
-}
-var ipv6IngressAcl = &ec2.NetworkAclEntry{
-	Ipv6CidrBlock: aws.String("::/0"),
-	Egress:        aws.Bool(false),
-	Protocol:      aws.String("-1"),
-	RuleAction:    aws.String("allow"),
-	RuleNumber:    aws.Int64(101),
-}
 
 func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 	rn := "aws_default_network_acl.default"
