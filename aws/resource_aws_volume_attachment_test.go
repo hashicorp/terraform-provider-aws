@@ -13,7 +13,9 @@ import (
 )
 
 func TestAccAWSVolumeAttachment_basic(t *testing.T) {
-	rn := "aws_volume_attachment.ebs_att"
+	var i ec2.Instance
+	var v ec2.Volume
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -21,11 +23,21 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVolumeAttachmentConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "device_name", "/dev/sdh"),
+					testAccCheckInstanceExists(
+						"aws_instance.web", &i),
+					testAccCheckVolumeExists(
+						"aws_ebs_volume.example", &v),
+					testAccCheckVolumeAttachmentExists(
+						"aws_volume_attachment.ebs_att", &i, &v),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_volume_attachment.ebs_att",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
 				ImportStateVerify: true,
 			},
 		},
@@ -33,7 +45,8 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 }
 
 func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
-	rn := "aws_volume_attachment.ebs_att"
+	var i ec2.Instance
+	var v ec2.Volume
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -42,11 +55,21 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVolumeAttachmentConfigSkipDestroy,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "device_name", "/dev/sdh"),
+					testAccCheckInstanceExists(
+						"aws_instance.web", &i),
+					testAccCheckVolumeExists(
+						"aws_ebs_volume.example", &v),
+					testAccCheckVolumeAttachmentExists(
+						"aws_volume_attachment.ebs_att", &i, &v),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_volume_attachment.ebs_att",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"skip_destroy", // attribute only used on resource deletion
@@ -58,7 +81,7 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 
 func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 	var i ec2.Instance
-	rn := "aws_volume_attachment.ebs_att"
+	var v ec2.Volume
 
 	stopInstance := func() {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -100,11 +123,21 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 			{
 				PreConfig: stopInstance,
 				Config:    testAccVolumeAttachmentConfig,
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "device_name", "/dev/sdh"),
+					testAccCheckInstanceExists(
+						"aws_instance.web", &i),
+					testAccCheckVolumeExists(
+						"aws_ebs_volume.example", &v),
+					testAccCheckVolumeAttachmentExists(
+						"aws_volume_attachment.ebs_att", &i, &v),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_volume_attachment.ebs_att",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
 				ImportStateVerify: true,
 			},
 		},
@@ -112,7 +145,6 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 }
 
 func TestAccAWSVolumeAttachment_update(t *testing.T) {
-	rn := "aws_volume_attachment.ebs_att"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -120,11 +152,17 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVolumeAttachmentConfig_update(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "force_detach", "false"),
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "skip_destroy", "false"),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_volume_attachment.ebs_att",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"force_detach", // attribute only used on resource deletion
@@ -133,11 +171,17 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 			},
 			{
 				Config: testAccVolumeAttachmentConfig_update(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "force_detach", "true"),
+					resource.TestCheckResourceAttr(
+						"aws_volume_attachment.ebs_att", "skip_destroy", "true"),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_volume_attachment.ebs_att",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"force_detach", // attribute only used on resource deletion
@@ -146,6 +190,30 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckVolumeAttachmentExists(n string, i *ec2.Instance, v *ec2.Volume) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		for _, b := range i.BlockDeviceMappings {
+			if rs.Primary.Attributes["device_name"] == *b.DeviceName {
+				if b.Ebs.VolumeId != nil && rs.Primary.Attributes["volume_id"] == *b.Ebs.VolumeId {
+					// pass
+					return nil
+				}
+			}
+		}
+
+		return fmt.Errorf("Error finding instance/volume")
+	}
 }
 
 func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
