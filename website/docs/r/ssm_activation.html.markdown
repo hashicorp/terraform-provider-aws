@@ -66,3 +66,11 @@ In addition to all arguments above, the following attributes are exported:
 * `iam_role` - The IAM Role attached to the managed instance.
 * `registration_limit` - The maximum number of managed instances you want to be registered. The default value is 1 instance.
 * `registration_count` - The number of managed instances that are currently registered using this activation.
+
+## Import
+
+AWS SSM Activation can be imported using the `id`, e.g.
+
+```sh
+$ terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE
+```
