@@ -15,9 +15,8 @@ import (
 )
 
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
-	rnBaz := "aws_network_acl_rule.baz"
-	rnQux := "aws_network_acl_rule.qux"
-	rnWibble := "aws_network_acl_rule.wibble"
+	var networkAcl ec2.NetworkAcl
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -25,23 +24,28 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclRuleBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.qux", &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.wibble", &networkAcl),
+				),
 			},
 			{
-				ResourceName:      rnBaz,
+				ResourceName:      "aws_network_acl_rule.baz",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(rnBaz),
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.baz", "tcp"),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      rnQux,
+				ResourceName:      "aws_network_acl_rule.qux",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(rnQux),
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.qux", "icmp"),
 				ImportStateVerify: true,
 			},
 			{
-				ResourceName:      rnWibble,
+				ResourceName:      "aws_network_acl_rule.wibble",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(rnWibble),
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.wibble", "icmp"),
 				ImportStateVerify: true,
 			},
 		},
@@ -125,7 +129,7 @@ func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
-	rn := "aws_network_acl_rule.baz"
+	var networkAcl ec2.NetworkAcl
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -134,11 +138,14 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclRuleIpv6Config,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+				),
 			},
 			{
-				ResourceName:      rn,
+				ResourceName:      "aws_network_acl_rule.baz",
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(rn),
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.baz", "tcp"),
 				ImportStateVerify: true,
 			},
 		},
@@ -146,6 +153,7 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_network_acl_rule.test"
 
@@ -156,11 +164,14 @@ func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6ICMP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
+				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, "58"),
 				ImportStateVerify: true,
 			},
 		},
@@ -169,6 +180,9 @@ func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
 
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6710
 func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testing.T) {
+	var networkAcl ec2.NetworkAcl
+	var vpc ec2.Vpc
+	vpcResourceName := "aws_vpc.test"
 	resourceName := "aws_network_acl_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -178,14 +192,25 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "false"),
+					resource.TestCheckResourceAttr(vpcResourceName, "ipv6_cidr_block", ""),
+				),
 			},
 			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6VpcAssignGeneratedIpv6CidrBlockUpdate(true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "true"),
+					resource.TestMatchResourceAttr(vpcResourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
+					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
+				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(resourceName),
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, "tcp"),
 				ImportStateVerify: true,
 			},
 		},
@@ -647,7 +672,7 @@ resource "aws_network_acl_rule" "test" {
   icmp_type       = -1
   ipv6_cidr_block = "::/0"
   network_acl_id  = "${aws_network_acl.test.id}"
-  protocol        = "ipv6-icmp"
+  protocol        = 58
   rule_action     = "allow"
   rule_number     = 150
 }
@@ -687,7 +712,7 @@ resource "aws_network_acl_rule" "test" {
 `, ipv6Enabled)
 }
 
-func testAccAWSNetworkAclRuleImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+func testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, resourceProtocol string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -696,6 +721,10 @@ func testAccAWSNetworkAclRuleImportStateIdFunc(resourceName string) resource.Imp
 		networkAclId := rs.Primary.Attributes["network_acl_id"]
 		ruleNumber := rs.Primary.Attributes["rule_number"]
 		protocol := rs.Primary.Attributes["protocol"]
+		// Ensure the resource's ID will be determined from the original protocol value set in the resource's config
+		if protocol != resourceProtocol {
+			protocol = resourceProtocol
+		}
 		egress := rs.Primary.Attributes["egress"]
 		return fmt.Sprintf("%s:%s:%s:%s", networkAclId, ruleNumber, protocol, egress), nil
 	}

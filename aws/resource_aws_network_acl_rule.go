@@ -235,8 +235,8 @@ func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("ipv6_cidr_block", resp.Ipv6CidrBlock)
 	d.Set("egress", resp.Egress)
 	if resp.IcmpTypeCode != nil {
-		d.Set("icmp_code", strconv.FormatInt(*resp.IcmpTypeCode.Code, 10))
-		d.Set("icmp_type", strconv.FormatInt(*resp.IcmpTypeCode.Type, 10))
+		d.Set("icmp_code", strconv.FormatInt(aws.Int64Value(resp.IcmpTypeCode.Code), 10))
+		d.Set("icmp_type", strconv.FormatInt(aws.Int64Value(resp.IcmpTypeCode.Type), 10))
 	}
 	if resp.PortRange != nil {
 		d.Set("from_port", resp.PortRange.From)
