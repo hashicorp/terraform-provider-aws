@@ -49,7 +49,7 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"skip_destroy", // attribute only set and used on resource deletion
+					"skip_destroy", // attribute only used on resource deletion
 				},
 			},
 		},
@@ -127,8 +127,8 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_detach", // attribute only set and used on resource deletion
-					"skip_destroy", // attribute only set and used on resource deletion
+					"force_detach", // attribute only used on resource deletion
+					"skip_destroy", // attribute only used on resource deletion
 				},
 			},
 			{
@@ -140,8 +140,8 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(rn),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
-					"force_detach", // attribute only set and used on resource deletion
-					"skip_destroy", // attribute only set and used on resource deletion
+					"force_detach", // attribute only used on resource deletion
+					"skip_destroy", // attribute only used on resource deletion
 				},
 			},
 		},
