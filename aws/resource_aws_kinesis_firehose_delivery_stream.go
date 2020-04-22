@@ -54,6 +54,13 @@ func s3ConfigurationSchema() *schema.Schema {
 		Type:     schema.TypeList,
 		MaxItems: 1,
 		Optional: true,
+		// Ignore the drift: s3_configuration.#: "1" => "0"
+		DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+			if old == "1" && new == "0" {
+				return true
+			}
+			return false
+		},
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"bucket_arn": {
@@ -64,19 +71,16 @@ func s3ConfigurationSchema() *schema.Schema {
 				"buffer_size": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Default:  5,
 				},
 
 				"buffer_interval": {
 					Type:     schema.TypeInt,
 					Optional: true,
-					Default:  300,
 				},
 
 				"compression_format": {
 					Type:     schema.TypeString,
 					Optional: true,
-					Default:  "UNCOMPRESSED",
 				},
 
 				"kms_key_arn": {
