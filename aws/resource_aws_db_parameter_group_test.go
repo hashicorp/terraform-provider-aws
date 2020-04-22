@@ -149,7 +149,7 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "parameter.3328736458.name", "join_buffer_size"),
 					resource.TestCheckResourceAttr(
-						resourceName, "parameter.3328736458.value", "{dbInstanceClassMemory/10000}"),
+						resourceName, "parameter.3328736458.value", "{DBInstanceClassMemory/10000}"),
 					resource.TestMatchResourceAttr(
 						resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:rds:[^:]+:\\d{12}:pg:%s", groupName))),
 				),
@@ -749,7 +749,7 @@ resource "aws_db_parameter_group" "test" {
 
   parameter {
 	name  = "join_buffer_size"
-    value = "{dbInstanceClassMemory/10000}"
+    value = "{DBInstanceClassMemory/10000}"
   }
 
   parameter {
