@@ -447,6 +447,6 @@ func testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName string) 
 			return "", fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		return fmt.Sprintf("%s:%s", rs.Primary.ID, rs.Primary.Attributes["window_id"]), nil
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["window_id"], rs.Primary.ID), nil
 	}
 }

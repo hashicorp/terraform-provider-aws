@@ -19,12 +19,12 @@ func resourceAwsSsmMaintenanceWindowTarget() *schema.Resource {
 		Delete: resourceAwsSsmMaintenanceWindowTargetDelete,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				idParts := strings.Split(d.Id(), ":")
+				idParts := strings.Split(d.Id(), "/")
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-					return nil, fmt.Errorf("Unexpected format of ID (%q), expected WINDOW_TARGET_ID:WINDOW_ID", d.Id())
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected WINDOW_ID/WINDOW_TARGET_ID", d.Id())
 				}
-				d.SetId(idParts[0])
-				d.Set("window_id", idParts[1])
+				d.Set("window_id", idParts[0])
+				d.SetId(idParts[1])
 				return []*schema.ResourceData{d}, nil
 			},
 		},
