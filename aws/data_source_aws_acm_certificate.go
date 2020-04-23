@@ -76,7 +76,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		statusStrings := statuses.([]interface{})
 		params.CertificateStatuses = expandStringList(statusStrings)
 	} else {
-		params.CertificateStatuses = []*string{aws.String("ISSUED")}
+		params.CertificateStatuses = []*string{aws.String(acm.CertificateStatusIssued)}
 	}
 
 	var arns []*string
@@ -171,7 +171,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 	d.SetId(time.Now().UTC().String())
 	d.Set("arn", matchedCertificate.CertificateArn)
 
-	tags, err := keyvaluetags.AcmListTags(conn, d.Id())
+	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err)
