@@ -8,11 +8,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 // How long to sleep if a limit-exceeded event happens
@@ -54,14 +54,19 @@ func resourceAwsRoute() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"destination_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
 			},
 			"destination_ipv6_cidr_block": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsCIDR,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return isIpv6CidrsEquals(old, new)
+				},
 			},
 
 			"destination_prefix_list_id": {
@@ -318,7 +323,7 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 
 	route, err := resourceAwsRouteFindRoute(conn, routeTableId, destinationCidrBlock, destinationIpv6CidrBlock)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidRouteTableID.NotFound" {
+		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
 			log.Printf("[WARN] Route Table %q could not be found. Removing Route from state.",
 				routeTableId)
 			d.SetId("")
@@ -485,7 +490,7 @@ func resourceAwsRouteExists(d *schema.ResourceData, meta interface{}) (bool, err
 
 	res, err := conn.DescribeRouteTables(findOpts)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidRouteTableID.NotFound" {
+		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
 			log.Printf("[WARN] Route Table %q could not be found.", routeTableId)
 			return false, nil
 		}
@@ -558,7 +563,7 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 
 	if ipv6cidr != "" {
 		for _, route := range (*resp.RouteTables[0]).Routes {
-			if route.DestinationIpv6CidrBlock != nil && *route.DestinationIpv6CidrBlock == ipv6cidr {
+			if route.DestinationIpv6CidrBlock != nil && isIpv6CidrsEquals(aws.StringValue(route.DestinationIpv6CidrBlock), ipv6cidr) {
 				return route, nil
 			}
 		}
