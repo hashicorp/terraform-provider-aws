@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -432,9 +433,9 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 
 	if rgp.AutomaticFailover != nil {
 		switch strings.ToLower(*rgp.AutomaticFailover) {
-		case "disabled", "disabling":
+		case elasticache.AutomaticFailoverStatusDisabled, elasticache.AutomaticFailoverStatusDisabling:
 			d.Set("automatic_failover_enabled", false)
-		case "enabled", "enabling":
+		case elasticache.AutomaticFailoverStatusEnabled, elasticache.AutomaticFailoverStatusEnabling:
 			d.Set("automatic_failover_enabled", true)
 		default:
 			log.Printf("Unknown AutomaticFailover state %s", *rgp.AutomaticFailover)
@@ -503,16 +504,24 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		if c.AuthTokenEnabled != nil && !*c.AuthTokenEnabled {
 			d.Set("auth_token", nil)
 		}
-	}
 
-	tags, err := keyvaluetags.ElasticacheListTags(conn, d.Id())
+		arn := arn.ARN{
+			Partition: meta.(*AWSClient).partition,
+			Service:   "elasticache",
+			Region:    meta.(*AWSClient).region,
+			AccountID: meta.(*AWSClient).accountid,
+			Resource:  fmt.Sprintf("cluster:%s", aws.StringValue(c.CacheClusterId)),
+		}.String()
 
-	if err != nil {
-		return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
-	}
+		tags, err := keyvaluetags.ElasticacheListTags(conn, arn)
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		if err != nil {
+			return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
+		}
+
+		if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+			return fmt.Errorf("error setting tags: %s", err)
+		}
 	}
 
 	return nil
@@ -804,9 +813,22 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 	}
 
 	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-		if err := keyvaluetags.ElasticacheUpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+		clusters := d.Get("member_clusters").(*schema.Set).List()
+
+		for _, cluster := range clusters {
+
+			arn := arn.ARN{
+				Partition: meta.(*AWSClient).partition,
+				Service:   "elasticache",
+				Region:    meta.(*AWSClient).region,
+				AccountID: meta.(*AWSClient).accountid,
+				Resource:  fmt.Sprintf("cluster:%s", cluster),
+			}.String()
+
+			o, n := d.GetChange("tags")
+			if err := keyvaluetags.ElasticacheUpdateTags(conn, arn, o, n); err != nil {
+				return fmt.Errorf("error updating tags: %s", err)
+			}
 		}
 	}
 
