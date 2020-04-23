@@ -4,6 +4,7 @@ NOTES:
 
 * provider: Region validation now automatically supports the new `af-south-1` (Africa (Cape Town)) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-12715]
 * resource/aws_iam_user: The additional `force_destroy` behavior for handling signing certificates requires two additional IAM permissions (`iam:ListSigningCertificates` and `iam:DeleteSigningCertificate`). Restrictive IAM permissions for Terraform runs may require updates. [GH-10542]
+* resource/aws_rds_cluster: Due to recent API support for Aurora MySQL 5.7 and PostgreSQL Global Clusters which implemented the engine mode as `provisioned` instead of the previous `global` for Aurora MySQL 5.6, the resource now requires the `DescribeGlobalClusters` API call. Restrictive IAM permissions may require updates. [GH-12867]
 
 FEATURES:
 
@@ -35,6 +36,7 @@ BUG FIXES:
 * data-source/aws_launch_template: Prevent type error with `network_interfaces` `associate_public_ip_address` attribute [GH-12936]
 * resource/aws_glue_security_configuration: Prevent empty string KMS Key ARN in S3 Encryption settings [GH-12898]
 * resource/aws_iam_user: Ensure `force_destroy` argument removes signing certificates when enabled [GH-10542]
+* resource/aws_rds_cluster: Prevent unexpected `global_cluster_identifier` differences and deletion error with `aurora-mysql` and `aurora-postgresql` Global Cluster members [GH-12867]
 * resource/aws_route: Prevent not found after creation error with `destination_ipv6_cidr_block` set to `::0/0` [GH-12890]
 
 ## 2.58.0 (April 16, 2020)
