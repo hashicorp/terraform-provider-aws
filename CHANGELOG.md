@@ -12,6 +12,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data_source/aws_acm_certificate: Add `tags` output [GH-11659]
 * data-source/aws_cloudtrail_service_account: Support `af-south-1` region [GH-12967]
 * data-source/aws_elastic_beanstalk_hosted_zone: Support `af-south-1` region [GH-12967]
 * data-source/aws_elb_hosted_zone_id: Support `af-south-1` region [GH-12967]
