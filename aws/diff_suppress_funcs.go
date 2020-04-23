@@ -115,6 +115,8 @@ func suppressCloudFormationTemplateBodyDiffs(k, old, new string, d *schema.Resou
 	return normalizedOld == normalizedNew
 }
 
+var suppressOpenAPISpecificationDiffs = suppressCloudFormationTemplateBodyDiffs
+
 // suppressEqualCIDRBlockDiffs provides custom difference suppression for CIDR blocks
 // that have different string values but represent the same CIDR.
 func suppressEqualCIDRBlockDiffs(k, old, new string, d *schema.ResourceData) bool {

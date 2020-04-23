@@ -989,6 +989,8 @@ func validateCloudFormationTemplate(v interface{}, k string) (ws []string, error
 	return
 }
 
+var validateOpenAPISpecification = validateCloudFormationTemplate
+
 func validateApiGatewayIntegrationContentHandling() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		apigateway.ContentHandlingStrategyConvertToBinary,
