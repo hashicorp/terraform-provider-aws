@@ -74,3 +74,5 @@ AWS SSM Activation can be imported using the `id`, e.g.
 ```sh
 $ terraform import aws_ssm_activation.example e488f2f6-e686-4afb-8a04-ef6dfEXAMPLE
 ```
+
+-> **Note:** The `activation_code` attribute cannot be imported.
