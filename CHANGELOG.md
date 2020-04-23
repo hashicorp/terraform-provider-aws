@@ -25,6 +25,7 @@ BUG FIXES:
 * resource/aws_glue_security_configuration: Prevent empty string KMS Key ARN in S3 Encryption settings [GH-12898]
 * resource/aws_iam_user: Ensure `force_destroy` argument removes signing certificates when enabled [GH-10542]
 * resource/aws_route: Prevent not found after creation error with `destination_ipv6_cidr_block` set to `::0/0` [GH-12890]
+* resource/aws_network_acl_rule: Support import [GH-12921]
 
 ## 2.58.0 (April 16, 2020)
 
