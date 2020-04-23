@@ -25,7 +25,6 @@ func dataSourceAwsInstance() *schema.Resource {
 			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"ami": {
 				Type:     schema.TypeString,
@@ -232,6 +231,11 @@ func dataSourceAwsInstance() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"delete_on_termination": {
 							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
+						"device_name": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 

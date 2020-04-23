@@ -58,7 +58,7 @@ Elastic IP whose data will be exported as attributes.
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are several valid keys, for a full reference, check out the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeAddresses.html).
 * `id` - (Optional) The allocation id of the specific VPC EIP to retrieve. If a classic EIP is required, do NOT set `id`, only set `public_ip`
 * `public_ip` - (Optional) The public IP of the specific EIP to retrieve.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Elastic IP
+* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Elastic IP
 
 ## Attributes Reference
 

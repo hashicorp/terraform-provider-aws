@@ -20,7 +20,6 @@ func dataSourceAwsElastiCacheCluster() *schema.Resource {
 			"cluster_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					value := v.(string)
 					return strings.ToLower(value)

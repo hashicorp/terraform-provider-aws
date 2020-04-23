@@ -78,7 +78,7 @@ The following arguments are supported:
 * `home_directory_type` (Optional) The type of landing directory (folder) you want your users' home directory to be when they log into the SFTP server. If you set it to PATH, the user will see the absolute Amazon S3 bucket paths as is in their SFTP clients. If you set it `LOGICAL`, you will need to provide mappings in the `home_directory_mappings` for how you want to make S3 paths visible to your user. Allowed Values: `LOGICAL` | `PATH`.
 * `home_directory_mappings` (Optional) Logical directory mappings that specify what S3 paths and keys should be visible to your user and how you want to make them visible. You will need to specify the `entry` and `target` pair, where `entry` shows how the path is made visible and `target` is the actual S3 path. If you only specify a `target`, it will be displayed as is. You will need to also make sure that your AWS IAM Role provides access to paths in `target`. In most cases, you can use this value instead of the scope down policy to lock your user down to the designated home directory ("chroot"). To do this, you can set `entry` to `/` and set `target` to the `home_directory` parameter value.
 * `role` - (Requirement) Amazon Resource Name (ARN) of an IAM role that allows the service to controls your user’s access to your Amazon S3 bucket.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 #### Home Directory Mappings arguments
 

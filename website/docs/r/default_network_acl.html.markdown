@@ -119,7 +119,7 @@ attribute is exported from `aws_vpc`, or manually found via the AWS Console.
 notes below on managing Subnets in the Default Network ACL
 * `ingress` - (Optional) Specifies an ingress rule. Parameters defined below.
 * `egress` - (Optional) Specifies an egress rule. Parameters defined below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Both `egress` and `ingress` support the following keys:
 

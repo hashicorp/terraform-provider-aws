@@ -209,6 +209,11 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
 
 	if err != nil {
+		if isResourceNotFoundError(err) {
+			log.Printf("[WARN] %s KMS grant id not found for key id %s, removing from state file", grantId, keyId)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -306,6 +311,9 @@ func resourceAwsKmsGrantExists(d *schema.ResourceData, meta interface{}) (bool, 
 	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
 
 	if err != nil {
+		if isResourceNotFoundError(err) {
+			return false, nil
+		}
 		return true, err
 	}
 	if grant != nil {

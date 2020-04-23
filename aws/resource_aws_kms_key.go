@@ -21,7 +21,6 @@ func resourceAwsKmsKey() *schema.Resource {
 		Read:   resourceAwsKmsKeyRead,
 		Update: resourceAwsKmsKeyUpdate,
 		Delete: resourceAwsKmsKeyDelete,
-		Exists: resourceAwsKmsKeyExists,
 
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -135,7 +134,19 @@ func resourceAwsKmsKeyCreate(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(aws.StringValue(resp.KeyMetadata.KeyId))
 	d.Set("key_id", resp.KeyMetadata.KeyId)
 
-	return resourceAwsKmsKeyUpdate(d, meta)
+	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
+		if err := updateKmsKeyRotationStatus(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if enabled := d.Get("is_enabled").(bool); !enabled {
+		if err := updateKmsKeyStatus(conn, d.Id(), enabled); err != nil {
+			return err
+		}
+	}
+
+	return resourceAwsKmsKeyRead(d, meta)
 }
 
 func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
@@ -202,7 +213,26 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 	krs, _ := out.(*kms.GetKeyRotationStatusOutput)
 	d.Set("enable_key_rotation", krs.KeyRotationEnabled)
 
-	tags, err := keyvaluetags.KmsListTags(conn, d.Id())
+	var tags keyvaluetags.KeyValueTags
+	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		tags, err = keyvaluetags.KmsListTags(conn, d.Id())
+
+		if d.IsNewResource() && isAWSErr(err, kms.ErrCodeNotFoundException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		tags, err = keyvaluetags.KmsListTags(conn, d.Id())
+	}
+
 	if err != nil {
 		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
 	}
@@ -217,8 +247,7 @@ func resourceAwsKmsKeyRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsKmsKeyUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
 
-	// We expect new keys to be enabled already
-	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) && !d.IsNewResource() {
+	if d.HasChange("is_enabled") && d.Get("is_enabled").(bool) {
 		// Enable before any attributes will be modified
 		if err := updateKmsKeyStatus(conn, d.Id(), d.Get("is_enabled").(bool)); err != nil {
 			return err
@@ -271,9 +300,8 @@ func resourceAwsKmsKeyDescriptionUpdate(conn *kms.KMS, d *schema.ResourceData) e
 		Description: aws.String(description),
 		KeyId:       aws.String(keyId),
 	}
-	_, err := retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.UpdateKeyDescription(req)
-	})
+	_, err := conn.UpdateKeyDescription(req)
+
 	return err
 }
 
@@ -291,9 +319,8 @@ func resourceAwsKmsKeyPolicyUpdate(conn *kms.KMS, d *schema.ResourceData) error 
 		Policy:     aws.String(policy),
 		PolicyName: aws.String("default"),
 	}
-	_, err = retryOnAwsCode("NotFoundException", func() (interface{}, error) {
-		return conn.PutKeyPolicy(req)
-	})
+	_, err = conn.PutKeyPolicy(req)
+
 	return err
 }
 
@@ -431,30 +458,6 @@ func handleKeyRotation(conn *kms.KMS, shouldEnableRotation bool, keyId *string) 
 		})
 	}
 	return err
-}
-
-func resourceAwsKmsKeyExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).kmsconn
-
-	req := &kms.DescribeKeyInput{
-		KeyId: aws.String(d.Id()),
-	}
-	resp, err := conn.DescribeKey(req)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == "NotFoundException" {
-				return false, nil
-			}
-		}
-		return false, err
-	}
-	metadata := resp.KeyMetadata
-
-	if *metadata.KeyState == "PendingDeletion" {
-		return false, nil
-	}
-
-	return true, nil
 }
 
 func resourceAwsKmsKeyDelete(d *schema.ResourceData, meta interface{}) error {

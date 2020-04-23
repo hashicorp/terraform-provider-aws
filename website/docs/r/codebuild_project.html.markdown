@@ -235,7 +235,7 @@ The following arguments are supported:
 * `logs_config` - (Optional) Configuration for the builds to store log data to CloudWatch or S3.
 * `service_role` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role that enables AWS CodeBuild to interact with dependent AWS services on behalf of the AWS account.
 * `source_version` - (Optional) A version of the build input to be built for this project. If not specified, the latest version is used.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `vpc_config` - (Optional) Configuration for the builds to run inside a VPC. VPC config blocks are documented below.
 * `secondary_artifacts` - (Optional) A set of secondary artifacts to be used inside the build. Secondary artifacts blocks are documented below.
 * `secondary_sources` - (Optional) A set of secondary sources to be used inside the build. Secondary sources blocks are documented below.

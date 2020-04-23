@@ -2,14 +2,115 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_service_discovery_service", &resource.Sweeper{
+		Name: "aws_service_discovery_service",
+		F:    testSweepServiceDiscoveryServices,
+	})
+}
+
+func testSweepServiceDiscoveryServices(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).sdconn
+	var sweeperErrs *multierror.Error
+
+	input := &servicediscovery.ListServicesInput{}
+
+	err = conn.ListServicesPages(input, func(page *servicediscovery.ListServicesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, service := range page.Services {
+			if service == nil {
+				continue
+			}
+
+			serviceID := aws.StringValue(service.Id)
+			input := &servicediscovery.DeleteServiceInput{
+				Id: service.Id,
+			}
+
+			if aws.Int64Value(service.InstanceCount) > 0 {
+				input := &servicediscovery.ListInstancesInput{}
+
+				err := conn.ListInstancesPages(input, func(page *servicediscovery.ListInstancesOutput, isLast bool) bool {
+					if page == nil {
+						return !isLast
+					}
+
+					for _, instance := range page.Instances {
+						if instance == nil {
+							continue
+						}
+
+						instanceID := aws.StringValue(instance.Id)
+						input := &servicediscovery.DeregisterInstanceInput{
+							InstanceId: instance.Id,
+							ServiceId:  service.Id,
+						}
+
+						log.Printf("[INFO] Deregistering Service Discovery Service (%s) Instance: %s", serviceID, instanceID)
+						_, err := conn.DeregisterInstance(input)
+
+						if err != nil {
+							sweeperErr := fmt.Errorf("error deregistering Service Discovery Service (%s) Instance (%s): %w", serviceID, instanceID, err)
+							log.Printf("[ERROR] %s", sweeperErr)
+							sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+							continue
+						}
+					}
+
+					return !isLast
+				})
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error listing Service Discovery Service (%s) Instances: %w", serviceID, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+					continue
+				}
+			}
+
+			log.Printf("[INFO] Deleting Service Discovery Service: %s", serviceID)
+			_, err := conn.DeleteService(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Service Discovery Service (%s): %w", serviceID, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Service Discovery Services sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Service Discovery Services: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSServiceDiscoveryService_private(t *testing.T) {
 	resourceName := "aws_service_discovery_service.test"

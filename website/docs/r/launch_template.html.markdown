@@ -145,7 +145,7 @@ The following arguments are supported:
   `vpc_security_group_ids` instead.
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
 * `tag_specifications` - The tags to apply to the resources during launch. See [Tag Specifications](#tag-specifications) below for more details.
-* `tags` - (Optional) A mapping of tags to assign to the launch template.
+* `tags` - (Optional) A map of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance. See [Hibernation Options](#hibernation-options) below for more details.
 
@@ -174,7 +174,7 @@ The `ebs` block supports the following:
 * `iops` - The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This must be set with a `volume_type` of `"io1"`.
-* `kms_key_id` - AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
+* `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
  `encrypted` must be set to `true` when this is set.
 * `snapshot_id` - The Snapshot ID to mount.
 * `volume_size` - The size of the volume in gigabytes.
@@ -326,7 +326,7 @@ The tags to apply to the resources during launch. You can tag instances and volu
 Each `tag_specifications` block supports the following:
 
 * `resource_type` - The type of resource to tag. Valid values are `instance` and `volume`.
-* `tags` - A mapping of tags to assign to the resource.
+* `tags` - A map of tags to assign to the resource.
 
 
 ## Attributes Reference

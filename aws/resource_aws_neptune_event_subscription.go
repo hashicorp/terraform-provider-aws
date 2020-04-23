@@ -206,7 +206,6 @@ func resourceAwsNeptuneEventSubscriptionRead(d *schema.ResourceData, meta interf
 func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
 
-	d.Partial(true)
 	requestUpdate := false
 
 	req := &neptune.ModifyEventSubscriptionInput{
@@ -262,10 +261,6 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 		if err != nil {
 			return err
 		}
-		d.SetPartial("event_categories")
-		d.SetPartial("enabled")
-		d.SetPartial("sns_topic_arn")
-		d.SetPartial("source_type")
 	}
 
 	if d.HasChange("tags") {
@@ -274,8 +269,6 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 		if err := keyvaluetags.NeptuneUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Neptune Cluster Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	if d.HasChange("source_ids") {
@@ -317,10 +310,7 @@ func resourceAwsNeptuneEventSubscriptionUpdate(d *schema.ResourceData, meta inte
 				}
 			}
 		}
-		d.SetPartial("source_ids")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsNeptuneEventSubscriptionRead(d, meta)
 }

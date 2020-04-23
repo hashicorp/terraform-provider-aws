@@ -256,7 +256,7 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 // Runs and maintains a desired number of tasks from a specified task definition.
 // If the number of tasks running in a service drops below the desiredCount,
 // Amazon ECS runs another copy of the task in the specified cluster. To update
-// an existing service, see UpdateService.
+// an existing service, see the UpdateService action.
 //
 // In addition to maintaining the desired count of tasks in your service, you
 // can optionally run your service behind one or more load balancers. The load
@@ -280,7 +280,9 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 //
 //    * DAEMON - The daemon scheduling strategy deploys exactly one task on
 //    each active container instance that meets all of the task placement constraints
-//    that you specify in your cluster. When using this strategy, you don't
+//    that you specify in your cluster. The service scheduler also evaluates
+//    the task placement constraints for running tasks and will stop tasks that
+//    do not meet the placement constraints. When using this strategy, you don't
 //    need to specify a desired number of tasks, a task placement strategy,
 //    or use Service Auto Scaling policies. For more information, see Service
 //    Scheduler Concepts (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html)
@@ -5132,24 +5134,32 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 
 // UpdateService API operation for Amazon EC2 Container Service.
 //
+//
+// Updating the task placement strategies and constraints on an Amazon ECS service
+// remains in preview and is a Beta Service as defined by and subject to the
+// Beta Service Participation Service Terms located at https://aws.amazon.com/service-terms
+// (https://aws.amazon.com/service-terms) ("Beta Terms"). These Beta Terms apply
+// to your participation in this preview.
+//
 // Modifies the parameters of a service.
 //
 // For services using the rolling update (ECS) deployment controller, the desired
-// count, deployment configuration, network configuration, or task definition
-// used can be updated.
+// count, deployment configuration, network configuration, task placement constraints
+// and strategies, or task definition used can be updated.
 //
 // For services using the blue/green (CODE_DEPLOY) deployment controller, only
-// the desired count, deployment configuration, and health check grace period
-// can be updated using this API. If the network configuration, platform version,
-// or task definition need to be updated, a new AWS CodeDeploy deployment should
-// be created. For more information, see CreateDeployment (https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_CreateDeployment.html)
+// the desired count, deployment configuration, task placement constraints and
+// strategies, and health check grace period can be updated using this API.
+// If the network configuration, platform version, or task definition need to
+// be updated, a new AWS CodeDeploy deployment should be created. For more information,
+// see CreateDeployment (https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_CreateDeployment.html)
 // in the AWS CodeDeploy API Reference.
 //
 // For services using an external deployment controller, you can update only
-// the desired count and health check grace period using this API. If the launch
-// type, load balancer, network configuration, platform version, or task definition
-// need to be updated, you should create a new task set. For more information,
-// see CreateTaskSet.
+// the desired count, task placement constraints and strategies, and health
+// check grace period using this API. If the launch type, load balancer, network
+// configuration, platform version, or task definition need to be updated, you
+// should create a new task set. For more information, see CreateTaskSet.
 //
 // You can add to or subtract from the number of instantiations of a task definition
 // in a service by specifying the cluster that the service is running in and
@@ -5516,8 +5526,8 @@ func (c *ECS) UpdateTaskSetWithContext(ctx aws.Context, input *UpdateTaskSetInpu
 
 // You do not have authorization to perform the requested action.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5534,17 +5544,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5552,22 +5562,22 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing a container instance or task attachment.
@@ -5756,8 +5766,8 @@ func (s *Attribute) SetValue(v string) *Attribute {
 // of a resource with ListAttributes. You can remove existing attributes on
 // a resource with DeleteAttributes.
 type AttributeLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5774,17 +5784,17 @@ func (s AttributeLimitExceededException) GoString() string {
 
 func newErrorAttributeLimitExceededException(v protocol.ResponseMetadata) error {
 	return &AttributeLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AttributeLimitExceededException) Code() string {
+func (s *AttributeLimitExceededException) Code() string {
 	return "AttributeLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s AttributeLimitExceededException) Message() string {
+func (s *AttributeLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5792,22 +5802,22 @@ func (s AttributeLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AttributeLimitExceededException) OrigErr() error {
+func (s *AttributeLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s AttributeLimitExceededException) Error() string {
+func (s *AttributeLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AttributeLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AttributeLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AttributeLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AttributeLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The details of the Auto Scaling group for the capacity provider.
@@ -5955,8 +5965,8 @@ func (s *AwsVpcConfiguration) SetSubnets(v []*string) *AwsVpcConfiguration {
 // Your AWS account has been blocked. For more information, contact AWS Support
 // (http://aws.amazon.com/contact-us/).
 type BlockedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5973,17 +5983,17 @@ func (s BlockedException) GoString() string {
 
 func newErrorBlockedException(v protocol.ResponseMetadata) error {
 	return &BlockedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BlockedException) Code() string {
+func (s *BlockedException) Code() string {
 	return "BlockedException"
 }
 
 // Message returns the exception's message.
-func (s BlockedException) Message() string {
+func (s *BlockedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5991,22 +6001,22 @@ func (s BlockedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BlockedException) OrigErr() error {
+func (s *BlockedException) OrigErr() error {
 	return nil
 }
 
-func (s BlockedException) Error() string {
+func (s *BlockedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BlockedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BlockedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BlockedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BlockedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The details of a capacity provider.
@@ -6104,7 +6114,7 @@ type CapacityProviderStrategyItem struct {
 	// can have a base defined.
 	Base *int64 `locationName:"base" type:"integer"`
 
-	// The short name or full Amazon Resource Name (ARN) of the capacity provider.
+	// The short name of the capacity provider.
 	//
 	// CapacityProvider is a required field
 	CapacityProvider *string `locationName:"capacityProvider" type:"string" required:"true"`
@@ -6166,8 +6176,8 @@ func (s *CapacityProviderStrategyItem) SetWeight(v int64) *CapacityProviderStrat
 // or resource on behalf of a user that doesn't have permissions to use the
 // action or resource, or specifying an identifier that is not valid.
 type ClientException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6184,17 +6194,17 @@ func (s ClientException) GoString() string {
 
 func newErrorClientException(v protocol.ResponseMetadata) error {
 	return &ClientException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ClientException) Code() string {
+func (s *ClientException) Code() string {
 	return "ClientException"
 }
 
 // Message returns the exception's message.
-func (s ClientException) Message() string {
+func (s *ClientException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6202,22 +6212,22 @@ func (s ClientException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ClientException) OrigErr() error {
+func (s *ClientException) OrigErr() error {
 	return nil
 }
 
-func (s ClientException) Error() string {
+func (s *ClientException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ClientException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ClientException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ClientException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ClientException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A regional grouping of one or more container instances on which you can run
@@ -6462,8 +6472,8 @@ func (s *Cluster) SetTags(v []*Tag) *Cluster {
 // deregister the container instances before you can delete the cluster. For
 // more information, see DeregisterContainerInstance.
 type ClusterContainsContainerInstancesException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6480,17 +6490,17 @@ func (s ClusterContainsContainerInstancesException) GoString() string {
 
 func newErrorClusterContainsContainerInstancesException(v protocol.ResponseMetadata) error {
 	return &ClusterContainsContainerInstancesException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ClusterContainsContainerInstancesException) Code() string {
+func (s *ClusterContainsContainerInstancesException) Code() string {
 	return "ClusterContainsContainerInstancesException"
 }
 
 // Message returns the exception's message.
-func (s ClusterContainsContainerInstancesException) Message() string {
+func (s *ClusterContainsContainerInstancesException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6498,30 +6508,30 @@ func (s ClusterContainsContainerInstancesException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ClusterContainsContainerInstancesException) OrigErr() error {
+func (s *ClusterContainsContainerInstancesException) OrigErr() error {
 	return nil
 }
 
-func (s ClusterContainsContainerInstancesException) Error() string {
+func (s *ClusterContainsContainerInstancesException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ClusterContainsContainerInstancesException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ClusterContainsContainerInstancesException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ClusterContainsContainerInstancesException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ClusterContainsContainerInstancesException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You cannot delete a cluster that contains services. First, update the service
 // to reduce its desired task count to 0 and then delete the service. For more
 // information, see UpdateService and DeleteService.
 type ClusterContainsServicesException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6538,17 +6548,17 @@ func (s ClusterContainsServicesException) GoString() string {
 
 func newErrorClusterContainsServicesException(v protocol.ResponseMetadata) error {
 	return &ClusterContainsServicesException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ClusterContainsServicesException) Code() string {
+func (s *ClusterContainsServicesException) Code() string {
 	return "ClusterContainsServicesException"
 }
 
 // Message returns the exception's message.
-func (s ClusterContainsServicesException) Message() string {
+func (s *ClusterContainsServicesException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6556,28 +6566,28 @@ func (s ClusterContainsServicesException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ClusterContainsServicesException) OrigErr() error {
+func (s *ClusterContainsServicesException) OrigErr() error {
 	return nil
 }
 
-func (s ClusterContainsServicesException) Error() string {
+func (s *ClusterContainsServicesException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ClusterContainsServicesException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ClusterContainsServicesException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ClusterContainsServicesException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ClusterContainsServicesException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You cannot delete a cluster that has active tasks.
 type ClusterContainsTasksException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6594,17 +6604,17 @@ func (s ClusterContainsTasksException) GoString() string {
 
 func newErrorClusterContainsTasksException(v protocol.ResponseMetadata) error {
 	return &ClusterContainsTasksException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ClusterContainsTasksException) Code() string {
+func (s *ClusterContainsTasksException) Code() string {
 	return "ClusterContainsTasksException"
 }
 
 // Message returns the exception's message.
-func (s ClusterContainsTasksException) Message() string {
+func (s *ClusterContainsTasksException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6612,29 +6622,29 @@ func (s ClusterContainsTasksException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ClusterContainsTasksException) OrigErr() error {
+func (s *ClusterContainsTasksException) OrigErr() error {
 	return nil
 }
 
-func (s ClusterContainsTasksException) Error() string {
+func (s *ClusterContainsTasksException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ClusterContainsTasksException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ClusterContainsTasksException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ClusterContainsTasksException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ClusterContainsTasksException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified cluster could not be found. You can view your available clusters
 // with ListClusters. Amazon ECS clusters are Region-specific.
 type ClusterNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6651,17 +6661,17 @@ func (s ClusterNotFoundException) GoString() string {
 
 func newErrorClusterNotFoundException(v protocol.ResponseMetadata) error {
 	return &ClusterNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ClusterNotFoundException) Code() string {
+func (s *ClusterNotFoundException) Code() string {
 	return "ClusterNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ClusterNotFoundException) Message() string {
+func (s *ClusterNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6669,22 +6679,22 @@ func (s ClusterNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ClusterNotFoundException) OrigErr() error {
+func (s *ClusterNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ClusterNotFoundException) Error() string {
+func (s *ClusterNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ClusterNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ClusterNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ClusterNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ClusterNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The settings to use when creating a cluster. This parameter is used to enable
@@ -7080,10 +7090,11 @@ type ContainerDefinition struct {
 	// in the Amazon Elastic Container Service Developer Guide.
 	FirelensConfiguration *FirelensConfiguration `locationName:"firelensConfiguration" type:"structure"`
 
-	// The health check command and associated configuration parameters for the
-	// container. This parameter maps to HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
-	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
-	// and the HEALTHCHECK parameter of docker run (https://docs.docker.com/engine/reference/run/).
+	// The container health check command and associated configuration parameters
+	// for the container. This parameter maps to HealthCheck in the Create a container
+	// (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate) section
+	// of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and
+	// the HEALTHCHECK parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	HealthCheck *HealthCheck `locationName:"healthCheck" type:"structure"`
 
 	// The hostname to use for your container. This parameter maps to Hostname in
@@ -7327,10 +7338,19 @@ type ContainerDefinition struct {
 	// give up and not start. This results in the task transitioning to a STOPPED
 	// state.
 	//
-	// For tasks using the EC2 launch type, the container instances require at least
-	// version 1.26.0 of the container agent to enable a container start timeout
-	// value. However, we recommend using the latest container agent version. For
-	// information about checking your agent version and updating to the latest
+	// For tasks using the Fargate launch type, this parameter requires that the
+	// task or service uses platform version 1.3.0 or later. If this parameter is
+	// not specified, the default value of 3 minutes is used.
+	//
+	// For tasks using the EC2 launch type, if the startTimeout parameter is not
+	// specified, the value set for the Amazon ECS container agent configuration
+	// variable ECS_CONTAINER_START_TIMEOUT is used by default. If neither the startTimeout
+	// parameter or the ECS_CONTAINER_START_TIMEOUT agent configuration variable
+	// are set, then the default values of 3 minutes for Linux containers and 8
+	// minutes on Windows containers are used. Your container instances require
+	// at least version 1.26.0 of the container agent to enable a container start
+	// timeout value. However, we recommend using the latest container agent version.
+	// For information about checking your agent version and updating to the latest
 	// version, see Updating the Amazon ECS Container Agent (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
 	// in the Amazon Elastic Container Service Developer Guide. If you are using
 	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
@@ -7339,24 +7359,25 @@ type ContainerDefinition struct {
 	// agent and ecs-init. For more information, see Amazon ECS-optimized Linux
 	// AMI (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-optimized_AMI.html)
 	// in the Amazon Elastic Container Service Developer Guide.
-	//
-	// For tasks using the Fargate launch type, the task or service requires platform
-	// version 1.3.0 or later.
 	StartTimeout *int64 `locationName:"startTimeout" type:"integer"`
 
 	// Time duration (in seconds) to wait before the container is forcefully killed
 	// if it doesn't exit normally on its own.
 	//
-	// For tasks using the Fargate launch type, the max stopTimeout value is 2 minutes
-	// and the task or service requires platform version 1.3.0 or later.
+	// For tasks using the Fargate launch type, the task or service requires platform
+	// version 1.3.0 or later. The max stop timeout value is 120 seconds and if
+	// the parameter is not specified, the default value of 30 seconds is used.
 	//
-	// For tasks using the EC2 launch type, the stop timeout value for the container
-	// takes precedence over the ECS_CONTAINER_STOP_TIMEOUT container agent configuration
-	// parameter, if used. Container instances require at least version 1.26.0 of
-	// the container agent to enable a container stop timeout value. However, we
-	// recommend using the latest container agent version. For information about
-	// checking your agent version and updating to the latest version, see Updating
-	// the Amazon ECS Container Agent (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
+	// For tasks using the EC2 launch type, if the stopTimeout parameter is not
+	// specified, the value set for the Amazon ECS container agent configuration
+	// variable ECS_CONTAINER_STOP_TIMEOUT is used by default. If neither the stopTimeout
+	// parameter or the ECS_CONTAINER_STOP_TIMEOUT agent configuration variable
+	// are set, then the default values of 30 seconds for Linux containers and 30
+	// seconds on Windows containers are used. Your container instances require
+	// at least version 1.26.0 of the container agent to enable a container stop
+	// timeout value. However, we recommend using the latest container agent version.
+	// For information about checking your agent version and updating to the latest
+	// version, see Updating the Amazon ECS Container Agent (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-update.html)
 	// in the Amazon Elastic Container Service Developer Guide. If you are using
 	// an Amazon ECS-optimized Linux AMI, your instance needs at least version 1.26.0-1
 	// of the ecs-init package. If your container instances are launched from version
@@ -8399,8 +8420,7 @@ func (s *CreateCapacityProviderOutput) SetCapacityProvider(v *CapacityProvider) 
 type CreateClusterInput struct {
 	_ struct{} `type:"structure"`
 
-	// The short name or full Amazon Resource Name (ARN) of one or more capacity
-	// providers to associate with the cluster.
+	// The short name of one or more capacity providers to associate with the cluster.
 	//
 	// If specifying a capacity provider that uses an Auto Scaling group, the capacity
 	// provider must already be created and not already associated with another
@@ -8631,13 +8651,16 @@ type CreateServiceInput struct {
 
 	// The period of time, in seconds, that the Amazon ECS service scheduler should
 	// ignore unhealthy Elastic Load Balancing target health checks after a task
-	// has first started. This is only valid if your service is configured to use
-	// a load balancer. If your service's tasks take a while to start and respond
-	// to Elastic Load Balancing health checks, you can specify a health check grace
-	// period of up to 2,147,483,647 seconds. During that time, the ECS service
-	// scheduler ignores health check status. This grace period can prevent the
-	// ECS service scheduler from marking tasks as unhealthy and stopping them before
-	// they have time to come up.
+	// has first started. This is only used when your service is configured to use
+	// a load balancer. If your service has a load balancer defined and you don't
+	// specify a health check grace period value, the default value of 0 is used.
+	//
+	// If your service's tasks take a while to start and respond to Elastic Load
+	// Balancing health checks, you can specify a health check grace period of up
+	// to 2,147,483,647 seconds. During that time, the Amazon ECS service scheduler
+	// ignores health check status. This grace period can prevent the service scheduler
+	// from marking tasks as unhealthy and stopping them before they have time to
+	// come up.
 	HealthCheckGracePeriodSeconds *int64 `locationName:"healthCheckGracePeriodSeconds" type:"integer"`
 
 	// The launch type on which to run your service. For more information, see Amazon
@@ -8764,11 +8787,13 @@ type CreateServiceInput struct {
 	//
 	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
 	//    active container instance that meets all of the task placement constraints
-	//    that you specify in your cluster. When you're using this strategy, you
-	//    don't need to specify a desired number of tasks, a task placement strategy,
-	//    or use Service Auto Scaling policies. Tasks using the Fargate launch type
-	//    or the CODE_DEPLOY or EXTERNAL deployment controller types don't support
-	//    the DAEMON scheduling strategy.
+	//    that you specify in your cluster. The service scheduler also evaluates
+	//    the task placement constraints for running tasks and will stop tasks that
+	//    do not meet the placement constraints. When you're using this strategy,
+	//    you don't need to specify a desired number of tasks, a task placement
+	//    strategy, or use Service Auto Scaling policies. Tasks using the Fargate
+	//    launch type or the CODE_DEPLOY or EXTERNAL deployment controller types
+	//    don't support the DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
@@ -11061,17 +11086,58 @@ func (s *DockerVolumeConfiguration) SetScope(v string) *DockerVolumeConfiguratio
 	return s
 }
 
+// The authorization configuration details for the Amazon EFS file system.
+type EFSAuthorizationConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon EFS access point ID to use. If an access point is specified, the
+	// root directory value specified in the EFSVolumeConfiguration will be relative
+	// to the directory set for the access point. If an access point is used, transit
+	// encryption must be enabled in the EFSVolumeConfiguration. For more information,
+	// see Working with Amazon EFS Access Points (https://docs.aws.amazon.com/efs/latest/ug/efs-access-points.html)
+	// in the Amazon Elastic File System User Guide.
+	AccessPointId *string `locationName:"accessPointId" type:"string"`
+
+	// Whether or not to use the Amazon ECS task IAM role defined in a task definition
+	// when mounting the Amazon EFS file system. If enabled, transit encryption
+	// must be enabled in the EFSVolumeConfiguration. If this parameter is omitted,
+	// the default value of DISABLED is used. For more information, see Using Amazon
+	// EFS Access Points (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#efs-volume-accesspoints)
+	// in the Amazon Elastic Container Service Developer Guide.
+	Iam *string `locationName:"iam" type:"string" enum:"EFSAuthorizationConfigIAM"`
+}
+
+// String returns the string representation
+func (s EFSAuthorizationConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EFSAuthorizationConfig) GoString() string {
+	return s.String()
+}
+
+// SetAccessPointId sets the AccessPointId field's value.
+func (s *EFSAuthorizationConfig) SetAccessPointId(v string) *EFSAuthorizationConfig {
+	s.AccessPointId = &v
+	return s
+}
+
+// SetIam sets the Iam field's value.
+func (s *EFSAuthorizationConfig) SetIam(v string) *EFSAuthorizationConfig {
+	s.Iam = &v
+	return s
+}
+
 // This parameter is specified when you are using an Amazon Elastic File System
-// (Amazon EFS) file storage. Amazon EFS file systems are only supported when
-// you are using the EC2 launch type.
-//
-// EFSVolumeConfiguration remains in preview and is a Beta Service as defined
-// by and subject to the Beta Service Participation Service Terms located at
-// https://aws.amazon.com/service-terms (https://aws.amazon.com/service-terms)
-// ("Beta Terms"). These Beta Terms apply to your participation in this preview
-// of EFSVolumeConfiguration.
+// file system for task storage. For more information, see Amazon EFS Volumes
+// (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html)
+// in the Amazon Elastic Container Service Developer Guide.
 type EFSVolumeConfiguration struct {
 	_ struct{} `type:"structure"`
+
+	// The authorization configuration details for the Amazon EFS file system.
+	AuthorizationConfig *EFSAuthorizationConfig `locationName:"authorizationConfig" type:"structure"`
 
 	// The Amazon EFS file system ID to use.
 	//
@@ -11079,8 +11145,25 @@ type EFSVolumeConfiguration struct {
 	FileSystemId *string `locationName:"fileSystemId" type:"string" required:"true"`
 
 	// The directory within the Amazon EFS file system to mount as the root directory
-	// inside the host.
+	// inside the host. If this parameter is omitted, the root of the Amazon EFS
+	// volume will be used. Specifying / will have the same effect as omitting this
+	// parameter.
 	RootDirectory *string `locationName:"rootDirectory" type:"string"`
+
+	// Whether or not to enable encryption for Amazon EFS data in transit between
+	// the Amazon ECS host and the Amazon EFS server. Transit encryption must be
+	// enabled if Amazon EFS IAM authorization is used. If this parameter is omitted,
+	// the default value of DISABLED is used. For more information, see Encrypting
+	// Data in Transit (https://docs.aws.amazon.com/efs/latest/ug/encryption-in-transit.html)
+	// in the Amazon Elastic File System User Guide.
+	TransitEncryption *string `locationName:"transitEncryption" type:"string" enum:"EFSTransitEncryption"`
+
+	// The port to use when sending encrypted data between the Amazon ECS host and
+	// the Amazon EFS server. If you do not specify a transit encryption port, it
+	// will use the port selection strategy that the Amazon EFS mount helper uses.
+	// For more information, see EFS Mount Helper (https://docs.aws.amazon.com/efs/latest/ug/efs-mount-helper.html)
+	// in the Amazon Elastic File System User Guide.
+	TransitEncryptionPort *int64 `locationName:"transitEncryptionPort" type:"integer"`
 }
 
 // String returns the string representation
@@ -11106,6 +11189,12 @@ func (s *EFSVolumeConfiguration) Validate() error {
 	return nil
 }
 
+// SetAuthorizationConfig sets the AuthorizationConfig field's value.
+func (s *EFSVolumeConfiguration) SetAuthorizationConfig(v *EFSAuthorizationConfig) *EFSVolumeConfiguration {
+	s.AuthorizationConfig = v
+	return s
+}
+
 // SetFileSystemId sets the FileSystemId field's value.
 func (s *EFSVolumeConfiguration) SetFileSystemId(v string) *EFSVolumeConfiguration {
 	s.FileSystemId = &v
@@ -11115,6 +11204,18 @@ func (s *EFSVolumeConfiguration) SetFileSystemId(v string) *EFSVolumeConfigurati
 // SetRootDirectory sets the RootDirectory field's value.
 func (s *EFSVolumeConfiguration) SetRootDirectory(v string) *EFSVolumeConfiguration {
 	s.RootDirectory = &v
+	return s
+}
+
+// SetTransitEncryption sets the TransitEncryption field's value.
+func (s *EFSVolumeConfiguration) SetTransitEncryption(v string) *EFSVolumeConfiguration {
+	s.TransitEncryption = &v
+	return s
+}
+
+// SetTransitEncryptionPort sets the TransitEncryptionPort field's value.
+func (s *EFSVolumeConfiguration) SetTransitEncryptionPort(v int64) *EFSVolumeConfiguration {
+	s.TransitEncryptionPort = &v
 	return s
 }
 
@@ -11221,6 +11322,36 @@ func (s *FirelensConfiguration) SetType(v string) *FirelensConfiguration {
 // that are specified in a container definition override any Docker health checks
 // that exist in the container image (such as those specified in a parent image
 // or from the image's Dockerfile).
+//
+// You can view the health status of both individual containers and a task with
+// the DescribeTasks API operation or when viewing the task details in the console.
+//
+// The following describes the possible healthStatus values for a container:
+//
+//    * HEALTHY-The container health check has passed successfully.
+//
+//    * UNHEALTHY-The container health check has failed.
+//
+//    * UNKNOWN-The container health check is being evaluated or there is no
+//    container health check defined.
+//
+// The following describes the possible healthStatus values for a task. The
+// container health check status of nonessential containers do not have an effect
+// on the health status of a task.
+//
+//    * HEALTHY-All essential containers within the task have passed their health
+//    checks.
+//
+//    * UNHEALTHY-One or more essential containers have failed their health
+//    check.
+//
+//    * UNKNOWN-The essential containers within the task are still having their
+//    health checks evaluated or there are no container health checks defined.
+//
+// If a task is run manually, and not as part of a service, the task will continue
+// its lifecycle regardless of its health status. For tasks that are part of
+// a service, if the task reports as unhealthy then the task will be stopped
+// and the service scheduler will replace it.
 //
 // The following are notes about container health check support:
 //
@@ -11514,8 +11645,8 @@ func (s *InferenceAcceleratorOverride) SetDeviceType(v string) *InferenceAcceler
 // The specified parameter is invalid. Review the available parameters for the
 // API request.
 type InvalidParameterException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -11532,17 +11663,17 @@ func (s InvalidParameterException) GoString() string {
 
 func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameterException) Code() string {
+func (s *InvalidParameterException) Code() string {
 	return "InvalidParameterException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameterException) Message() string {
+func (s *InvalidParameterException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11550,22 +11681,22 @@ func (s InvalidParameterException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameterException) OrigErr() error {
+func (s *InvalidParameterException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameterException) Error() string {
+func (s *InvalidParameterException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameterException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameterException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The Linux capabilities for the container that are added to or dropped from
@@ -11673,8 +11804,8 @@ func (s *KeyValuePair) SetValue(v string) *KeyValuePair {
 
 // The limit for the resource has been exceeded.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -11691,17 +11822,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11709,22 +11840,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Linux-specific options that are applied to the container, such as Linux KernelCapabilities.
@@ -12884,8 +13015,10 @@ func (s *ListTasksOutput) SetTaskArns(v []*string) *ListTasksOutput {
 	return s
 }
 
-// Details on the load balancer or load balancers to use with a service or task
-// set.
+// The load balancer configuration to use with a service or task set.
+//
+// For specific notes and restrictions regarding the use of load balancers with
+// services and task sets, see the CreateService and CreateTaskSet actions.
 type LoadBalancer struct {
 	_ struct{} `type:"structure"`
 
@@ -12905,15 +13038,15 @@ type LoadBalancer struct {
 	//
 	// A load balancer name is only specified when using a Classic Load Balancer.
 	// If you are using an Application Load Balancer or a Network Load Balancer
-	// this should be omitted.
+	// the load balancer name parameter should be omitted.
 	LoadBalancerName *string `locationName:"loadBalancerName" type:"string"`
 
 	// The full Amazon Resource Name (ARN) of the Elastic Load Balancing target
 	// group or groups associated with a service or task set.
 	//
 	// A target group ARN is only specified when using an Application Load Balancer
-	// or Network Load Balancer. If you are using a Classic Load Balancer this should
-	// be omitted.
+	// or Network Load Balancer. If you are using a Classic Load Balancer the target
+	// group ARN should be omitted.
 	//
 	// For services using the ECS deployment controller, you can specify one or
 	// multiple target groups. For more information, see Registering Multiple Target
@@ -13191,8 +13324,8 @@ func (s *ManagedScaling) SetTargetCapacity(v int64) *ManagedScaling {
 // with an update. This could be because the agent running on the container
 // instance is an older or custom version that does not use our version information.
 type MissingVersionException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13209,17 +13342,17 @@ func (s MissingVersionException) GoString() string {
 
 func newErrorMissingVersionException(v protocol.ResponseMetadata) error {
 	return &MissingVersionException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s MissingVersionException) Code() string {
+func (s *MissingVersionException) Code() string {
 	return "MissingVersionException"
 }
 
 // Message returns the exception's message.
-func (s MissingVersionException) Message() string {
+func (s *MissingVersionException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13227,22 +13360,22 @@ func (s MissingVersionException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s MissingVersionException) OrigErr() error {
+func (s *MissingVersionException) OrigErr() error {
 	return nil
 }
 
-func (s MissingVersionException) Error() string {
+func (s *MissingVersionException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s MissingVersionException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *MissingVersionException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s MissingVersionException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *MissingVersionException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details on a volume mount point that is used in a container definition.
@@ -13432,8 +13565,8 @@ func (s *NetworkInterface) SetPrivateIpv4Address(v string) *NetworkInterface {
 // be because the agent is already running the latest version, or it is so old
 // that there is no update path to the current version.
 type NoUpdateAvailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13450,17 +13583,17 @@ func (s NoUpdateAvailableException) GoString() string {
 
 func newErrorNoUpdateAvailableException(v protocol.ResponseMetadata) error {
 	return &NoUpdateAvailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NoUpdateAvailableException) Code() string {
+func (s *NoUpdateAvailableException) Code() string {
 	return "NoUpdateAvailableException"
 }
 
 // Message returns the exception's message.
-func (s NoUpdateAvailableException) Message() string {
+func (s *NoUpdateAvailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13468,22 +13601,22 @@ func (s NoUpdateAvailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NoUpdateAvailableException) OrigErr() error {
+func (s *NoUpdateAvailableException) OrigErr() error {
 	return nil
 }
 
-func (s NoUpdateAvailableException) Error() string {
+func (s *NoUpdateAvailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NoUpdateAvailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NoUpdateAvailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NoUpdateAvailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NoUpdateAvailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing a constraint on task placement. For more information,
@@ -13635,8 +13768,8 @@ func (s *PlatformDevice) SetType(v string) *PlatformDevice {
 // The specified platform version does not satisfy the task definition's required
 // capabilities.
 type PlatformTaskDefinitionIncompatibilityException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13653,17 +13786,17 @@ func (s PlatformTaskDefinitionIncompatibilityException) GoString() string {
 
 func newErrorPlatformTaskDefinitionIncompatibilityException(v protocol.ResponseMetadata) error {
 	return &PlatformTaskDefinitionIncompatibilityException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s PlatformTaskDefinitionIncompatibilityException) Code() string {
+func (s *PlatformTaskDefinitionIncompatibilityException) Code() string {
 	return "PlatformTaskDefinitionIncompatibilityException"
 }
 
 // Message returns the exception's message.
-func (s PlatformTaskDefinitionIncompatibilityException) Message() string {
+func (s *PlatformTaskDefinitionIncompatibilityException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13671,28 +13804,28 @@ func (s PlatformTaskDefinitionIncompatibilityException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s PlatformTaskDefinitionIncompatibilityException) OrigErr() error {
+func (s *PlatformTaskDefinitionIncompatibilityException) OrigErr() error {
 	return nil
 }
 
-func (s PlatformTaskDefinitionIncompatibilityException) Error() string {
+func (s *PlatformTaskDefinitionIncompatibilityException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s PlatformTaskDefinitionIncompatibilityException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *PlatformTaskDefinitionIncompatibilityException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s PlatformTaskDefinitionIncompatibilityException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *PlatformTaskDefinitionIncompatibilityException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified platform version does not exist.
 type PlatformUnknownException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13709,17 +13842,17 @@ func (s PlatformUnknownException) GoString() string {
 
 func newErrorPlatformUnknownException(v protocol.ResponseMetadata) error {
 	return &PlatformUnknownException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s PlatformUnknownException) Code() string {
+func (s *PlatformUnknownException) Code() string {
 	return "PlatformUnknownException"
 }
 
 // Message returns the exception's message.
-func (s PlatformUnknownException) Message() string {
+func (s *PlatformUnknownException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13727,22 +13860,22 @@ func (s PlatformUnknownException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s PlatformUnknownException) OrigErr() error {
+func (s *PlatformUnknownException) OrigErr() error {
 	return nil
 }
 
-func (s PlatformUnknownException) Error() string {
+func (s *PlatformUnknownException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s PlatformUnknownException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *PlatformUnknownException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s PlatformUnknownException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *PlatformUnknownException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Port mappings allow containers to access ports on the host container instance
@@ -15065,8 +15198,8 @@ func (s *Resource) SetType(v string) *Resource {
 
 // The specified resource is in-use and cannot be removed.
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -15083,17 +15216,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15101,28 +15234,28 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified resource could not be found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -15139,17 +15272,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15157,22 +15290,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The type and amount of a resource to assign to a container. The supported
@@ -15676,8 +15809,8 @@ func (s *Secret) SetValueFrom(v string) *Secret {
 
 // These errors are usually caused by a server issue.
 type ServerException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -15694,17 +15827,17 @@ func (s ServerException) GoString() string {
 
 func newErrorServerException(v protocol.ResponseMetadata) error {
 	return &ServerException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServerException) Code() string {
+func (s *ServerException) Code() string {
 	return "ServerException"
 }
 
 // Message returns the exception's message.
-func (s ServerException) Message() string {
+func (s *ServerException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15712,22 +15845,22 @@ func (s ServerException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServerException) OrigErr() error {
+func (s *ServerException) OrigErr() error {
 	return nil
 }
 
-func (s ServerException) Error() string {
+func (s *ServerException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServerException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServerException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServerException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details on a service within a cluster
@@ -15831,9 +15964,11 @@ type Service struct {
 	//    and constraints to customize task placement decisions.
 	//
 	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
-	//    container instance in your cluster. When you are using this strategy,
-	//    do not specify a desired number of tasks or any task placement strategies.
-	//    Fargate tasks do not support the DAEMON scheduling strategy.
+	//    active container instance that meets all of the task placement constraints
+	//    that you specify in your cluster. The service scheduler also evaluates
+	//    the task placement constraints for running tasks and will stop tasks that
+	//    do not meet the placement constraints. Fargate tasks do not support the
+	//    DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The ARN that identifies the service. The ARN contains the arn:aws:ecs namespace,
@@ -16123,8 +16258,8 @@ func (s *ServiceEvent) SetMessage(v string) *ServiceEvent {
 // The specified service is not active. You can't update a service that is inactive.
 // If you have previously deleted a service, you can re-create it with CreateService.
 type ServiceNotActiveException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -16141,17 +16276,17 @@ func (s ServiceNotActiveException) GoString() string {
 
 func newErrorServiceNotActiveException(v protocol.ResponseMetadata) error {
 	return &ServiceNotActiveException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceNotActiveException) Code() string {
+func (s *ServiceNotActiveException) Code() string {
 	return "ServiceNotActiveException"
 }
 
 // Message returns the exception's message.
-func (s ServiceNotActiveException) Message() string {
+func (s *ServiceNotActiveException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -16159,29 +16294,29 @@ func (s ServiceNotActiveException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceNotActiveException) OrigErr() error {
+func (s *ServiceNotActiveException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceNotActiveException) Error() string {
+func (s *ServiceNotActiveException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceNotActiveException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceNotActiveException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceNotActiveException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceNotActiveException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified service could not be found. You can view your available services
 // with ListServices. Amazon ECS services are cluster-specific and Region-specific.
 type ServiceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -16198,17 +16333,17 @@ func (s ServiceNotFoundException) GoString() string {
 
 func newErrorServiceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ServiceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceNotFoundException) Code() string {
+func (s *ServiceNotFoundException) Code() string {
 	return "ServiceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ServiceNotFoundException) Message() string {
+func (s *ServiceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -16216,22 +16351,22 @@ func (s ServiceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceNotFoundException) OrigErr() error {
+func (s *ServiceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceNotFoundException) Error() string {
+func (s *ServiceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details of the service registry.
@@ -17223,8 +17358,8 @@ func (s TagResourceOutput) GoString() string {
 // instances with ListContainerInstances. Amazon ECS container instances are
 // cluster-specific and Region-specific.
 type TargetNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -17241,17 +17376,17 @@ func (s TargetNotFoundException) GoString() string {
 
 func newErrorTargetNotFoundException(v protocol.ResponseMetadata) error {
 	return &TargetNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TargetNotFoundException) Code() string {
+func (s *TargetNotFoundException) Code() string {
 	return "TargetNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s TargetNotFoundException) Message() string {
+func (s *TargetNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -17259,22 +17394,22 @@ func (s TargetNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TargetNotFoundException) OrigErr() error {
+func (s *TargetNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s TargetNotFoundException) Error() string {
+func (s *TargetNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TargetNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TargetNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TargetNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TargetNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details on a task in a cluster.
@@ -17906,7 +18041,7 @@ type TaskDefinition struct {
 	// The short name or full Amazon Resource Name (ARN) of the AWS Identity and
 	// Access Management (IAM) role that grants containers in the task permission
 	// to call AWS APIs on your behalf. For more information, see Amazon ECS Task
-	// Role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_IAM_role.html)
+	// Role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// IAM roles for tasks on Windows require that the -EnableTaskIAMRole option
@@ -18490,8 +18625,8 @@ func (s *TaskSet) SetUpdatedAt(v time.Time) *TaskSet {
 // sets with DescribeTaskSets. Task sets are specific to each cluster, service
 // and Region.
 type TaskSetNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -18508,17 +18643,17 @@ func (s TaskSetNotFoundException) GoString() string {
 
 func newErrorTaskSetNotFoundException(v protocol.ResponseMetadata) error {
 	return &TaskSetNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TaskSetNotFoundException) Code() string {
+func (s *TaskSetNotFoundException) Code() string {
 	return "TaskSetNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s TaskSetNotFoundException) Message() string {
+func (s *TaskSetNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18526,22 +18661,22 @@ func (s TaskSetNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TaskSetNotFoundException) OrigErr() error {
+func (s *TaskSetNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s TaskSetNotFoundException) Error() string {
+func (s *TaskSetNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TaskSetNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TaskSetNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TaskSetNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TaskSetNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The container path, mount options, and size of the tmpfs mount.
@@ -18682,8 +18817,8 @@ func (s *Ulimit) SetSoftLimit(v int64) *Ulimit {
 
 // The specified task is not supported in this Region.
 type UnsupportedFeatureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -18700,17 +18835,17 @@ func (s UnsupportedFeatureException) GoString() string {
 
 func newErrorUnsupportedFeatureException(v protocol.ResponseMetadata) error {
 	return &UnsupportedFeatureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedFeatureException) Code() string {
+func (s *UnsupportedFeatureException) Code() string {
 	return "UnsupportedFeatureException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedFeatureException) Message() string {
+func (s *UnsupportedFeatureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18718,22 +18853,22 @@ func (s UnsupportedFeatureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedFeatureException) OrigErr() error {
+func (s *UnsupportedFeatureException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedFeatureException) Error() string {
+func (s *UnsupportedFeatureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedFeatureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedFeatureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedFeatureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedFeatureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -19064,8 +19199,8 @@ func (s *UpdateContainerInstancesStateOutput) SetFailures(v []*Failure) *UpdateC
 // process can get stuck in that state. However, when the agent reconnects,
 // it resumes where it stopped previously.
 type UpdateInProgressException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -19082,17 +19217,17 @@ func (s UpdateInProgressException) GoString() string {
 
 func newErrorUpdateInProgressException(v protocol.ResponseMetadata) error {
 	return &UpdateInProgressException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UpdateInProgressException) Code() string {
+func (s *UpdateInProgressException) Code() string {
 	return "UpdateInProgressException"
 }
 
 // Message returns the exception's message.
-func (s UpdateInProgressException) Message() string {
+func (s *UpdateInProgressException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -19100,22 +19235,22 @@ func (s UpdateInProgressException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UpdateInProgressException) OrigErr() error {
+func (s *UpdateInProgressException) OrigErr() error {
 	return nil
 }
 
-func (s UpdateInProgressException) Error() string {
+func (s *UpdateInProgressException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UpdateInProgressException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UpdateInProgressException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UpdateInProgressException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UpdateInProgressException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UpdateServiceInput struct {
@@ -19124,9 +19259,28 @@ type UpdateServiceInput struct {
 	// The capacity provider strategy to update the service to use.
 	//
 	// If the service is using the default capacity provider strategy for the cluster,
-	// the service can be updated to use one or more capacity providers. However,
-	// when a service is using a non-default capacity provider strategy, the service
-	// cannot be updated to use the cluster's default capacity provider strategy.
+	// the service can be updated to use one or more capacity providers as opposed
+	// to the default capacity provider strategy. However, when a service is using
+	// a capacity provider strategy that is not the default capacity provider strategy,
+	// the service cannot be updated to use the cluster's default capacity provider
+	// strategy.
+	//
+	// A capacity provider strategy consists of one or more capacity providers along
+	// with the base and weight to assign to them. A capacity provider must be associated
+	// with the cluster to be used in a capacity provider strategy. The PutClusterCapacityProviders
+	// API is used to associate a capacity provider with a cluster. Only capacity
+	// providers with an ACTIVE or UPDATING status can be used.
+	//
+	// If specifying a capacity provider that uses an Auto Scaling group, the capacity
+	// provider must already be created. New capacity providers can be created with
+	// the CreateCapacityProvider API operation.
+	//
+	// To use a AWS Fargate capacity provider, specify either the FARGATE or FARGATE_SPOT
+	// capacity providers. The AWS Fargate capacity providers are available to all
+	// accounts and only need to be associated with a cluster to be used.
+	//
+	// The PutClusterCapacityProviders API operation is used to update the list
+	// of available capacity providers for a cluster after the cluster is created.
 	CapacityProviderStrategy []*CapacityProviderStrategyItem `locationName:"capacityProviderStrategy" type:"list"`
 
 	// The short name or full Amazon Resource Name (ARN) of the cluster that your
@@ -19162,6 +19316,25 @@ type UpdateServiceInput struct {
 
 	// An object representing the network configuration for a task or service.
 	NetworkConfiguration *NetworkConfiguration `locationName:"networkConfiguration" type:"structure"`
+
+	// An array of task placement constraint objects to update the service to use.
+	// If no value is specified, the existing placement constraints for the service
+	// will remain unchanged. If this value is specified, it will override any existing
+	// placement constraints defined for the service. To remove all existing placement
+	// constraints, specify an empty array.
+	//
+	// You can specify a maximum of 10 constraints per task (this limit includes
+	// constraints in the task definition and those specified at runtime).
+	PlacementConstraints []*PlacementConstraint `locationName:"placementConstraints" type:"list"`
+
+	// The task placement strategy objects to update the service to use. If no value
+	// is specified, the existing placement strategy for the service will remain
+	// unchanged. If this value is specified, it will override the existing placement
+	// strategy defined for the service. To remove an existing placement strategy,
+	// specify an empty object.
+	//
+	// You can specify a maximum of five strategy rules per service.
+	PlacementStrategy []*PlacementStrategy `locationName:"placementStrategy" type:"list"`
 
 	// The platform version on which your tasks in the service are running. A platform
 	// version is only specified for tasks using the Fargate launch type. If a platform
@@ -19260,6 +19433,18 @@ func (s *UpdateServiceInput) SetHealthCheckGracePeriodSeconds(v int64) *UpdateSe
 // SetNetworkConfiguration sets the NetworkConfiguration field's value.
 func (s *UpdateServiceInput) SetNetworkConfiguration(v *NetworkConfiguration) *UpdateServiceInput {
 	s.NetworkConfiguration = v
+	return s
+}
+
+// SetPlacementConstraints sets the PlacementConstraints field's value.
+func (s *UpdateServiceInput) SetPlacementConstraints(v []*PlacementConstraint) *UpdateServiceInput {
+	s.PlacementConstraints = v
+	return s
+}
+
+// SetPlacementStrategy sets the PlacementStrategy field's value.
+func (s *UpdateServiceInput) SetPlacementStrategy(v []*PlacementStrategy) *UpdateServiceInput {
+	s.PlacementStrategy = v
 	return s
 }
 
@@ -19821,6 +20006,22 @@ const (
 
 	// DeviceCgroupPermissionMknod is a DeviceCgroupPermission enum value
 	DeviceCgroupPermissionMknod = "mknod"
+)
+
+const (
+	// EFSAuthorizationConfigIAMEnabled is a EFSAuthorizationConfigIAM enum value
+	EFSAuthorizationConfigIAMEnabled = "ENABLED"
+
+	// EFSAuthorizationConfigIAMDisabled is a EFSAuthorizationConfigIAM enum value
+	EFSAuthorizationConfigIAMDisabled = "DISABLED"
+)
+
+const (
+	// EFSTransitEncryptionEnabled is a EFSTransitEncryption enum value
+	EFSTransitEncryptionEnabled = "ENABLED"
+
+	// EFSTransitEncryptionDisabled is a EFSTransitEncryption enum value
+	EFSTransitEncryptionDisabled = "DISABLED"
 )
 
 const (
