@@ -270,9 +270,9 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		params.EngineVersion = aws.String(v.(string))
 	}
 
-	preferred_azs := d.Get("availability_zones").(*schema.Set).List()
-	if len(preferred_azs) > 0 {
-		azs := expandStringList(preferred_azs)
+	preferred_azs := d.Get("availability_zones").(*schema.Set)
+	if preferred_azs.Len() > 0 {
+		azs := expandStringSet(preferred_azs)
 		params.PreferredCacheClusterAZs = azs
 	}
 
@@ -463,11 +463,22 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 			return err
 		}
 
-		if len(res.CacheClusters) == 0 {
+		clusters := res.CacheClusters
+		if len(clusters) == 0 {
 			return nil
 		}
 
-		c := res.CacheClusters[0]
+		var azs []*string
+		for _, cluster := range clusters {
+			azs = append(azs, cluster.PreferredAvailabilityZone)
+		}
+
+		err = d.Set("availability_zones", flattenStringSet(azs))
+		if err != nil {
+			return fmt.Errorf("error setting availability_zones: %s", err)
+		}
+
+		c := clusters[0]
 		d.Set("node_type", c.CacheNodeType)
 		d.Set("engine", c.Engine)
 		d.Set("engine_version", c.EngineVersion)
