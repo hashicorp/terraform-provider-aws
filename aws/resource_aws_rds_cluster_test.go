@@ -1074,7 +1074,7 @@ func TestAccAWSRDSCluster_EngineVersionWithPrimaryInstance(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSCluster_GlobalClusterIdentifier(t *testing.T) {
+func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global(t *testing.T) {
 	var dbCluster1 rds.DBCluster
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1087,7 +1087,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier(rName),
+				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
@@ -1109,7 +1109,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSCluster_GlobalClusterIdentifier_Add(t *testing.T) {
+func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Add(t *testing.T) {
 	var dbCluster1 rds.DBCluster
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1140,14 +1140,14 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_Add(t *testing.T) {
 				},
 			},
 			{
-				Config:      testAccAWSRDSClusterConfig_GlobalClusterIdentifier(rName),
+				Config:      testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName),
 				ExpectError: regexp.MustCompile(`Existing RDS Clusters cannot be added to an existing RDS Global Cluster`),
 			},
 		},
 	})
 }
 
-func TestAccAWSRDSCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
+func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Remove(t *testing.T) {
 	var dbCluster1 rds.DBCluster
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1160,7 +1160,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier(rName),
+				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
@@ -1189,7 +1189,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_Remove(t *testing.T) {
 	})
 }
 
-func TestAccAWSRDSCluster_GlobalClusterIdentifier_Update(t *testing.T) {
+func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Global_Update(t *testing.T) {
 	var dbCluster1 rds.DBCluster
 
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1203,7 +1203,7 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier_Update(rName, globalClusterResourceName1),
+				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterResourceName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
 					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName1, "id"),
@@ -1222,8 +1222,43 @@ func TestAccAWSRDSCluster_GlobalClusterIdentifier_Update(t *testing.T) {
 				},
 			},
 			{
-				Config:      testAccAWSRDSClusterConfig_GlobalClusterIdentifier_Update(rName, globalClusterResourceName2),
+				Config:      testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterResourceName2),
 				ExpectError: regexp.MustCompile(`Existing RDS Clusters cannot be migrated between existing RDS Global Clusters`),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSCluster_GlobalClusterIdentifier_EngineMode_Provisioned(t *testing.T) {
+	var dbCluster1 rds.DBCluster
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	globalClusterResourceName := "aws_rds_global_cluster.test"
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Provisioned(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSClusterExists(resourceName, &dbCluster1),
+					resource.TestCheckResourceAttrPair(resourceName, "global_cluster_identifier", globalClusterResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"cluster_identifier_prefix",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_identifier",
+				},
 			},
 		},
 	})
@@ -3009,7 +3044,7 @@ resource "aws_rds_cluster" "test" {
 `, rName)
 }
 
-func testAccAWSRDSClusterConfig_GlobalClusterIdentifier(rName string) string {
+func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   global_cluster_identifier = %q
@@ -3026,7 +3061,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, rName)
 }
 
-func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_Update(rName, globalClusterIdentifierResourceName string) string {
+func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Global_Update(rName, globalClusterIdentifierResourceName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_global_cluster" "test" {
   count = 2
@@ -3043,6 +3078,26 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot       = true
 }
 `, rName, rName, globalClusterIdentifierResourceName)
+}
+
+func testAccAWSRDSClusterConfig_GlobalClusterIdentifier_EngineMode_Provisioned(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_global_cluster" "test" {
+  engine                    = "aurora-postgresql"
+  engine_version            = "10.11"
+  global_cluster_identifier = %[1]q
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier        = %[1]q
+  engine                    = aws_rds_global_cluster.test.engine
+  engine_version            = aws_rds_global_cluster.test.engine_version
+  global_cluster_identifier = aws_rds_global_cluster.test.id
+  master_password           = "barbarbarbar"
+  master_username           = "foo"
+  skip_final_snapshot       = true
+}
+`, rName)
 }
 
 func testAccAWSRDSClusterConfig_ScalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int, timeoutAction string) string {
