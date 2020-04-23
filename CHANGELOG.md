@@ -12,6 +12,11 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Support `af-south-1` region [GH-12967]
+* data-source/aws_elastic_beanstalk_hosted_zone: Support `af-south-1` region [GH-12967]
+* data-source/aws_elb_hosted_zone_id: Support `af-south-1` region [GH-12967]
+* data-source/aws_elb_service_account: Support `af-south-1` region [GH-12967]
+* data-source/aws_s3_bucket: Support `af-south-1` region for `hosted_zone_id` attribute [GH-12967]
 * provider: Support automatic region validation for `af-south-1` [GH-12715]
 * resource/aws_apigatewayv2_api: Add `cors_configuration`, `credentials_arn`, `route_key` and `target` attributes [GH-12452]
 * resource/aws_appsync_graphql_api: Add `log_config` configuration block `exclude_verbose_content` argument [GH-12884]
@@ -19,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_lambda_alias: Suppress differences for equivalent `function_name` argument values of name versus ARN [GH-12902]
 * resource/aws_network_acl_rule: Support import [GH-12921]
 * resource/aws_route: Add plan-time validation for `destination_cidr_block` and `destination_ipv6_cidr_block` arguments [GH-12890]
+* resource/aws_s3_bucket: Support `me-south-1` region for `hosted_zone_id` attribute [GH-12967]
 * resource/aws_service_discovery_private_dns_namespace: Support import [GH-12929]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation to `resource_type` argument [GH-11783]
 * resource/aws_volume_attachment: Support import [GH-12948]
