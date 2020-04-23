@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"io/ioutil"
+	"path"
+	"testing"
+
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"io/ioutil"
-	"path"
-	"testing"
 )
 
 func TestAccDataSourceAWSS3DownloadBucketObject_basic(t *testing.T) {
@@ -34,6 +35,7 @@ func TestAccDataSourceAWSS3DownloadBucketObject_basic(t *testing.T) {
 				Config: conf,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsS3DownloadedObjectExists(fileName, "Hello World"),
+					resource.TestCheckResourceAttr("data.aws_s3_download_bucket_object.obj", "filename", fileName),
 				),
 			},
 		},

@@ -72,5 +72,8 @@ func dataSourceAwsS3DownloadBucketObjectRead(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error writing content from s3://%s to %s: %s", uniqueID, fileName, err)
 	}
 
+	d.SetId(fileName)
+	d.Set("version_id", out.VersionId)
+
 	return nil
 }
