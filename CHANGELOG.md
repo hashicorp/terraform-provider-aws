@@ -32,6 +32,7 @@ ENHANCEMENTS:
 * resource/aws_ssm_activation: Support import [GH-12933]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation to `resource_type` argument [GH-11783]
 * resource/aws_volume_attachment: Support import [GH-12948]
+* resource/aws_waf_ipset: Add plan-time validation for `ip_set_descriptors` configuration block arguments [GH-12775]
 * resource/aws_wafregional_web_acl: Add plan-time validation to various arguments [GH-12793]
 
 BUG FIXES:
