@@ -103,7 +103,7 @@ The following arguments are supported:
 * `associate_with_private_ip` - (Optional) A user specified primary or secondary private IP address to
   associate with the Elastic IP address. If no private IP address is specified,
   the Elastic IP address is associated with the primary private IP address.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`. This option is only available for VPC EIPs.
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID,

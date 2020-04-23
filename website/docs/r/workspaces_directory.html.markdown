@@ -55,7 +55,7 @@ The following arguments are supported:
 
 * `directory_id` - (Required) The directory identifier for registration in WorkSpaces service.
 * `subnet_ids` - (Optional) The identifiers of the subnets where the directory resides.
-* `tags` – (Optional) A mapping of tags assigned to the WorkSpaces directory.
+* `tags` – (Optional) A map of tags assigned to the WorkSpaces directory.
 * `self_service_permissions` – (Optional) The permissions to enable or disable self-service capabilities.
 
 `self_service_permissions` supports the following:
