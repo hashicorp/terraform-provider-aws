@@ -28,6 +28,7 @@ ENHANCEMENTS:
 * resource/aws_route: Add plan-time validation for `destination_cidr_block` and `destination_ipv6_cidr_block` arguments [GH-12890]
 * resource/aws_s3_bucket: Support `af-south-1` region for `hosted_zone_id` attribute [GH-12967]
 * resource/aws_service_discovery_private_dns_namespace: Support import [GH-12929]
+* resource/aws_ssm_activation: Support import [GH-12933]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation to `resource_type` argument [GH-11783]
 * resource/aws_volume_attachment: Support import [GH-12948]
 
