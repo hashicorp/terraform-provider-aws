@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_network_acl_rule: Support import [GH-12921]
 * resource/aws_route: Add plan-time validation for `destination_cidr_block` and `destination_ipv6_cidr_block` arguments [GH-12890]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation to `resource_type` argument [GH-11783]
+* resource/aws_volume_attachment: Support import [GH-12948]
 
 BUG FIXES:
 
