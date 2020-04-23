@@ -20,6 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_launch_template: Prevent type error with `network_interfaces` `associate_public_ip_address` attribute [GH-12936]
 * resource/aws_glue_security_configuration: Prevent empty string KMS Key ARN in S3 Encryption settings [GH-12898]
 * resource/aws_iam_user: Ensure `force_destroy` argument removes signing certificates when enabled [GH-10542]
 
