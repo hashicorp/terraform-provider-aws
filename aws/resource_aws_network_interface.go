@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -40,9 +41,10 @@ func resourceAwsNetworkInterface() *schema.Resource {
 			},
 
 			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 
 			"private_dns_name": {
@@ -54,8 +56,11 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv4Address,
+				},
+				Set: schema.HashString,
 			},
 
 			"private_ips_count": {
@@ -119,10 +124,13 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				ConflictsWith: []string{"ipv6_addresses"},
 			},
 			"ipv6_addresses": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				Computed:      true,
-				Elem:          &schema.Schema{Type: schema.TypeString},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv6Address,
+				},
 				Set:           schema.HashString,
 				ConflictsWith: []string{"ipv6_address_count"},
 			},
