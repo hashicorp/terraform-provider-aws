@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
@@ -15,6 +16,17 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespace() *schema.Resource {
 		Create: resourceAwsServiceDiscoveryPrivateDnsNamespaceCreate,
 		Read:   resourceAwsServiceDiscoveryPrivateDnsNamespaceRead,
 		Delete: resourceAwsServiceDiscoveryPrivateDnsNamespaceDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), ":")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAMESPACE_ID:VPC_ID", d.Id())
+				}
+				d.SetId(idParts[0])
+				d.Set("vpc", idParts[1])
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -115,6 +127,7 @@ func resourceAwsServiceDiscoveryPrivateDnsNamespaceRead(d *schema.ResourceData, 
 
 	d.Set("description", resp.Namespace.Description)
 	d.Set("arn", resp.Namespace.Arn)
+	d.Set("name", resp.Namespace.Name)
 	if resp.Namespace.Properties != nil {
 		d.Set("hosted_zone", resp.Namespace.Properties.DnsProperties.HostedZoneId)
 	}
