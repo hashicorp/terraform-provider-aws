@@ -1,7 +1,7 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_download_bucket_object"
-sidebar_current: "docs-aws-datasource-s3-download-bucket-object"
 description: |-
     Downloads a bucket object to be used as a local file
 ---
@@ -12,8 +12,7 @@ The S3 Download Bucket Object Data Source allows download of a file to the disk 
 
 ## Example Usage
 
-The following example retrieves a text object (which must have a `Content-Type`
-value starting with `text/`) and uses it as the `user_data` for an EC2 instance:
+The following example retrieves a zip file from S3 and uses that file for a Lambda function
 
 ```hcl
 data "aws_s3_download_bucket_object" "lambda_file" {
@@ -23,7 +22,7 @@ data "aws_s3_download_bucket_object" "lambda_file" {
 }
 
 resource "aws_lambda_function" "example" {
-  filename      = "lambda_file.zip"
+  filename      = data.aws_s3_download_bucket_object.lambda_file.filename
   function_name = "example"
   handler       = "lambda_handler.lambda_handler"
   runtime       = "python3.7"
