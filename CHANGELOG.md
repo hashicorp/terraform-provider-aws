@@ -22,6 +22,7 @@ ENHANCEMENTS:
 * provider: Support automatic region validation for `af-south-1` [GH-12715]
 * resource/aws_apigatewayv2_api: Add `cors_configuration`, `credentials_arn`, `route_key` and `target` attributes [GH-12452]
 * resource/aws_appsync_graphql_api: Add `log_config` configuration block `exclude_verbose_content` argument [GH-12884]
+* resource/aws_config_configuration_recorder: Prevent error during deletion operation when resource is missing [GH-12734]
 * resource/aws_default_network_acl: Support import [GH-12924]
 * resource/aws_lambda_alias: Suppress differences for equivalent `function_name` argument values of name versus ARN [GH-12902]
 * resource/aws_network_acl_rule: Support import [GH-12921]
