@@ -16,6 +16,7 @@ ENHANCEMENTS:
 * resource/aws_apigatewayv2_api: Add `cors_configuration`, `credentials_arn`, `route_key` and `target` attributes [GH-12452]
 * resource/aws_appsync_graphql_api: Add `log_config` configuration block `exclude_verbose_content` argument [GH-12884]
 * resource/aws_lambda_alias: Suppress differences for equivalent `function_name` argument values of name versus ARN [GH-12902]
+* resource/aws_route: Add plan-time validation for `destination_cidr_block` and `destination_ipv6_cidr_block` arguments [GH-12890]
 * resource/aws_ssm_maintenance_window_target: Add plan-time validation to `resource_type` argument [GH-11783]
 
 BUG FIXES:
@@ -23,6 +24,7 @@ BUG FIXES:
 * data-source/aws_launch_template: Prevent type error with `network_interfaces` `associate_public_ip_address` attribute [GH-12936]
 * resource/aws_glue_security_configuration: Prevent empty string KMS Key ARN in S3 Encryption settings [GH-12898]
 * resource/aws_iam_user: Ensure `force_destroy` argument removes signing certificates when enabled [GH-10542]
+* resource/aws_route: Prevent not found after creation error with `destination_ipv6_cidr_block` set to `::0/0` [GH-12890]
 
 ## 2.58.0 (April 16, 2020)
 
