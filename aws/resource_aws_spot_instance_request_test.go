@@ -687,6 +687,7 @@ resource "aws_spot_instance_request" "test" {
   key_name             = "${aws_key_pair.test.key_name}"
   spot_price           = "0.05"
   wait_for_fulfillment = true
+  subnet_id            = "${aws_subnet.test.id}"
 
   tags = {
     Name = %[1]q
