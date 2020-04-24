@@ -1192,22 +1192,11 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	if len(config.LaunchTemplateConfigs) > 0 {
-		d.Set("launch_template_config.0.launch_template_specification.0", flattenFleetLaunchTemplateSpecification(config.LaunchTemplateConfigs[0].LaunchTemplateSpecification))
-		d.Set("launch_template_config.0.overrides", setLaunchTemplateOverrides(config.LaunchTemplateConfigs[0].Overrides))
-	} else {
-		d.Set("launch_template_config.0.launch_template_specification.0", nil)
+	if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
-}
-
-func setLaunchTemplateOverrides(overrides []*ec2.LaunchTemplateOverrides) *schema.Set {
-	overrideSet := &schema.Set{F: hashLaunchTemplateOverrides}
-	for _, override := range overrides {
-		overrideSet.Add(flattenSpotFleetRequestLaunchTemplateOverrides(override))
-	}
-	return overrideSet
 }
 
 func flattenSpotFleetRequestLaunchTemplateOverrides(override *ec2.LaunchTemplateOverrides) map[string]interface{} {
@@ -1626,4 +1615,58 @@ func hashEbsBlockDevice(v interface{}) int {
 		buf.WriteString(fmt.Sprintf("%s-", id.(string)))
 	}
 	return hashcode.String(buf.String())
+}
+
+func flattenFleetLaunchTemplateConfig(ltcs []*ec2.LaunchTemplateConfig) []map[string]interface{} {
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	for _, ltc := range ltcs {
+		ltcRes := map[string]interface{}{}
+
+		if ltc.LaunchTemplateSpecification != nil {
+			ltcRes["launch_template_specification"] = flattenFleetLaunchTemplateSpecification(ltc.LaunchTemplateSpecification)
+		}
+
+		if ltc.Overrides != nil {
+			ltcRes["overrides"] = flattenLaunchTemplateOverrides(ltc.Overrides)
+		}
+	}
+
+	result = append(result, attrs)
+
+	return result
+}
+
+func flattenFleetLaunchTemplateSpecification(flt *ec2.FleetLaunchTemplateSpecification) []map[string]interface{} {
+	attrs := map[string]interface{}{}
+	result := make([]map[string]interface{}, 0)
+
+	// unlike autoscaling.LaunchTemplateConfiguration, FleetLaunchTemplateSpecs only return what was set
+	if flt.LaunchTemplateId != nil {
+		attrs["id"] = aws.StringValue(flt.LaunchTemplateId)
+	}
+
+	if flt.LaunchTemplateName != nil {
+		attrs["name"] = aws.StringValue(flt.LaunchTemplateName)
+	}
+
+	// version is returned only if it was previously set
+	if flt.Version != nil {
+		attrs["version"] = aws.StringValue(flt.Version)
+	} else {
+		attrs["version"] = nil
+	}
+
+	result = append(result, attrs)
+
+	return result
+}
+
+func flattenLaunchTemplateOverrides(overrides []*ec2.LaunchTemplateOverrides) *schema.Set {
+	overrideSet := &schema.Set{F: hashLaunchTemplateOverrides}
+	for _, override := range overrides {
+		overrideSet.Add(flattenSpotFleetRequestLaunchTemplateOverrides(override))
+	}
+	return overrideSet
 }

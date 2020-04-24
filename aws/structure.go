@@ -4684,31 +4684,6 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	return result
 }
 
-func flattenFleetLaunchTemplateSpecification(flt *ec2.FleetLaunchTemplateSpecification) []map[string]interface{} {
-	attrs := map[string]interface{}{}
-	result := make([]map[string]interface{}, 0)
-
-	// unlike autoscaling.LaunchTemplateConfiguration, FleetLaunchTemplateSpecs only return what was set
-	if flt.LaunchTemplateId != nil {
-		attrs["id"] = aws.StringValue(flt.LaunchTemplateId)
-	}
-
-	if flt.LaunchTemplateName != nil {
-		attrs["name"] = aws.StringValue(flt.LaunchTemplateName)
-	}
-
-	// version is returned only if it was previously set
-	if flt.Version != nil {
-		attrs["version"] = aws.StringValue(flt.Version)
-	} else {
-		attrs["version"] = nil
-	}
-
-	result = append(result, attrs)
-
-	return result
-}
-
 func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {
 	// When the VPC Peering Connection is pending acceptance,
 	// the details about accepter and/or requester peering
