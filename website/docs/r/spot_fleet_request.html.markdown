@@ -230,8 +230,6 @@ The `launch_template_config` block supports the following:
 * `subnet_id` - (Optional) The subnet in which to launch the requested instance.
 * `weighted_capacity` - (Optional) The capacity added to the fleet by a fulfilled request.
 
-  **Note:** Instead of statically defining these override blocks they can be passed in as a list of maps containing the above keys and their values. This allows dynamic, programmatic generation of overrides based on variable or environment data.
-
 ### Timeouts
 
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
