@@ -105,7 +105,7 @@ The following arguments are supported:
   the Elastic IP address is associated with the primary private IP address.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `public_ipv4_pool` - (Optional) EC2 IPv4 address pool identifier or `amazon`. This option is only available for VPC EIPs.
-* `customer_owned_ipv4_pool` - (Optional) The  ID  of a customer-owned address pool.
+* `customer_owned_ipv4_pool` - The  ID  of a customer-owned address pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 
 ~> **NOTE:** You can specify either the `instance` ID or the `network_interface` ID,
 but not both. Including both will **not** return an error from the AWS API, but will
