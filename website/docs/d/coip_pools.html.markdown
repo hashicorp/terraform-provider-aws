@@ -15,17 +15,17 @@ This resource can be useful for getting back a list of COIP Pool Ids for a regio
 The following shows outputing all COIP Pool Ids.
 
 ```hcl
-data "aws_vpcs" "foo" {}
+data "aws_coip_pools" "foo" {}
 
 output "foo" {
-  value = "${data.aws_vpcs.foo.ids}"
+  value = "${data.aws_coip_pools.foo.ids}"
 }
 ```
 
 ## Argument Reference
 
 * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
-  a pair on the desired vpcs.
+  a pair on the desired aws_coip_pools.
 
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -40,4 +40,4 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the COIP Pool Ids found. This data source will fail if none are found.
+* `pool_ids` - A list of all the COIP Pool Ids found. This data source will fail if none are found.
