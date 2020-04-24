@@ -1390,7 +1390,7 @@ resource "aws_launch_template" "test1" {
 resource "aws_launch_template" "test2" {
   name          = "%[2]s-2"
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "${data.aws_ec2_instance_type_offering.available.test}"
+  instance_type = "${data.aws_ec2_instance_type_offering.test.instance_type}"
   key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
