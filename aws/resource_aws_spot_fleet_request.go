@@ -330,21 +330,18 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 									"id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Computed:     true,
 										ForceNew:     true,
 										ValidateFunc: validateLaunchTemplateId,
 									},
 									"name": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Computed:     true,
 										ForceNew:     true,
 										ValidateFunc: validateLaunchTemplateName,
 									},
 									"version": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Computed:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.StringLenBetween(1, 255),
 									},
@@ -847,10 +844,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
 	_, launchTemplateConfigsOk := d.GetOk("launch_template_config")
-
-	if !launchSpecificationOk && !launchTemplateConfigsOk {
-		return fmt.Errorf("One of `launch_specification` or `launch_template` must be set for a fleet request")
-	}
 
 	// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetRequestConfigData
 	spotFleetConfig := &ec2.SpotFleetRequestConfigData{

@@ -194,8 +194,12 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.1500071693.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.1500071693.launch_template_specification.0.name", fmt.Sprintf("%s-1", rName)),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.1500071693.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.4234226785.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.4234226785.launch_template_specification.0.name", fmt.Sprintf("%s-2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.4234226785.overrides.#", "0"),
 				),
 			},
 		},
@@ -1356,14 +1360,14 @@ resource "aws_spot_fleet_request" "test" {
 func testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
-  name          = "%[2]s-1"
+  name          = "tf-acc-test-1"
   image_id      = "ami-516b9131"
   instance_type = "m1.small"
   key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
 resource "aws_launch_template" "test2" {
-  name          = "%[2]s-2"
+  name          = "tf-acc-test-2"
   image_id      = "ami-516b9131"
   instance_type = "t3.small"
   key_name      = "${aws_key_pair.debugging.key_name}"

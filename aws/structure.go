@@ -4690,16 +4690,16 @@ func flattenFleetLaunchTemplateSpecification(flt *ec2.FleetLaunchTemplateSpecifi
 
 	// unlike autoscaling.LaunchTemplateConfiguration, FleetLaunchTemplateSpecs only return what was set
 	if flt.LaunchTemplateId != nil {
-		attrs["id"] = *flt.LaunchTemplateId
+		attrs["id"] = aws.StringValue(flt.LaunchTemplateId)
 	}
 
 	if flt.LaunchTemplateName != nil {
-		attrs["name"] = *flt.LaunchTemplateName
+		attrs["name"] = aws.StringValue(flt.LaunchTemplateName)
 	}
 
 	// version is returned only if it was previously set
 	if flt.Version != nil {
-		attrs["version"] = *flt.Version
+		attrs["version"] = aws.StringValue(flt.Version)
 	} else {
 		attrs["version"] = nil
 	}
