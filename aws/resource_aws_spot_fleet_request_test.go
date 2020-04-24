@@ -208,7 +208,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName),
-				ExpectError: regexp.MustCompile(`"launch_specification": conflicts with launch_template_config`),
+				ExpectError: regexp.MustCompile(`"launch_specification": only one of .+`),
 			},
 		},
 	})
@@ -1371,6 +1371,15 @@ func testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName string, rInt i
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
 		testAccAWSSpotFleetRequestLaunchTemplateConfigBase() +
 		fmt.Sprintf(`
+data "aws_ec2_instance_type_offering" "test" {
+  filter {
+    name   = "instance-type"
+    values = ["t1.micro"]
+  }
+
+  preferred_instance_types = ["t1.micro"]
+}
+
 resource "aws_launch_template" "test1" {
   name          = "%[2]s-1"
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
@@ -1381,7 +1390,7 @@ resource "aws_launch_template" "test1" {
 resource "aws_launch_template" "test2" {
   name          = "%[2]s-2"
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.test}"
   key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
