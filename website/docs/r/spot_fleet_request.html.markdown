@@ -209,7 +209,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 The `launch_template_config` block supports the following:
 
 * `launch_template_specification` - (Required) Launch template specification. See [Launch Template Specification](#launch-template-specification) below for more details.
-* `overrides` - (Optional) One or more overide configurations. See [Overrides](#overrides) below for more details. 
+* `overrides` - (Optional) One or more override configurations. See [Overrides](#overrides) below for more details. 
 
 ### Launch Template Specification
 
