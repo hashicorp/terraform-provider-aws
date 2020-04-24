@@ -385,27 +385,19 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &before),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_price", "0.005"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "1"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.005"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 				),
 			},
 			{
 				Config: testAccAWSSpotFleetRequestConfigChangeSpotBidPrice(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &after),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "1"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_price", "0.01"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.01"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
 				),
 			},
@@ -498,12 +490,9 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "1"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 				),
 			},
 		},
@@ -525,16 +514,11 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigWithAzs(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.1991689378.availability_zone", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.19404370.availability_zone", "us-west-2b"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.availability_zone", "us-west-2a"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.19404370.availability_zone", "us-west-2b"),
 				),
 			},
 		},
@@ -556,12 +540,9 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigWithSubnet(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "2"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
 			},
 		},
@@ -583,20 +564,13 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigMultipleInstanceTypesinSameAz(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.1991689378.instance_type", "m1.small"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.1991689378.availability_zone", "us-west-2a"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.590403189.instance_type", "m3.large"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.590403189.availability_zone", "us-west-2a"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.instance_type", "m1.small"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.availability_zone", "us-west-2a"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.instance_type", "m3.large"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.availability_zone", "us-west-2a"),
 				),
 			},
 		},
@@ -641,12 +615,9 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 			{
 				Config: testAccAWSSpotFleetRequestConfigMultipleInstanceTypesinSameSubnet(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "2"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
 			},
 		},
@@ -668,22 +639,14 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigOverridingSpotPrice(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_price", "0.035"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.4143232216.spot_price", "0.01"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.4143232216.instance_type", "m3.large"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.1991689378.spot_price", ""), //there will not be a value here since it's not overriding
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.1991689378.instance_type", "m1.small"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.035"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.4143232216.spot_price", "0.01"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.4143232216.instance_type", "m3.large"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.spot_price", ""), //there will not be a value here since it's not overriding
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.instance_type", "m1.small"),
 				),
 			},
 		},
@@ -705,12 +668,9 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigWithoutSpotPrice(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "2"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
 			},
 		},
@@ -732,14 +692,10 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigDiversifiedAllocation(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "allocation_strategy", "diversified"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "diversified"),
 				),
 			},
 		},
@@ -761,16 +717,11 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigMultipleInstancePools(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "allocation_strategy", "lowestPrice"),
-					resource.TestCheckResourceAttr(
-						resourceName, "instance_pools_to_use_count", "2"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "lowestPrice"),
+					resource.TestCheckResourceAttr(resourceName, "instance_pools_to_use_count", "2"),
 				),
 			},
 		},
@@ -807,20 +758,13 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 				Config: testAccAWSSpotFleetRequestConfigWithWeightedCapacity(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					fulfillSleep(),
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.4120185872.weighted_capacity", "3"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.4120185872.instance_type", "r3.large"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.590403189.weighted_capacity", "6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "launch_specification.590403189.instance_type", "m3.large"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.4120185872.weighted_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.4120185872.instance_type", "r3.large"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.weighted_capacity", "6"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.instance_type", "m3.large"),
 				),
 			},
 		},
@@ -982,10 +926,8 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigWithTargetGroups(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
 				),
