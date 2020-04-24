@@ -60,27 +60,17 @@ func dataSourceAwsLocalGatewayRouteTableRead(d *schema.ResourceData, meta interf
 		req.LocalGatewayRouteTableIds = []*string{aws.String(id)}
 	}
 
-	filters := map[string]string{}
+	req.Filters = buildEC2AttributeFilterList(
+		map[string]string{
+			"local-gateway-id": d.Get("local_gateway_id").(string),
+			"outpost-arn":      d.Get("outpost_arn").(string),
+			"state":            d.Get("state").(string),
+		},
+	)
 
-	if v, ok := d.GetOk("local_gateway_id"); ok {
-		filters["local-gateway-id"] = v.(string)
-	}
-
-	if v, ok := d.GetOk("outpost_arn"); ok {
-		filters["outpost-arn"] = v.(string)
-	}
-
-	if v, ok := d.GetOk("state"); ok {
-		filters["state"] = v.(string)
-	}
-
-	req.Filters = buildEC2AttributeFilterList(filters)
-
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, buildEC2TagFilterList(
-			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
-		)...)
-	}
+	req.Filters = append(req.Filters, buildEC2TagFilterList(
+		keyvaluetags.New(d.Get("tags").(map[string]interface{})).Ec2Tags(),
+	)...)
 
 	req.Filters = append(req.Filters, buildEC2CustomFilterList(
 		d.Get("filter").(*schema.Set),
