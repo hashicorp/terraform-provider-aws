@@ -310,13 +310,15 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 						},
 					},
 				},
-				Set: hashLaunchSpecification,
+				Set:          hashLaunchSpecification,
+				AtLeastOneOf: []string{"launch_specification", "launch_template_config"},
 			},
 			"launch_template_config": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"launch_specification"},
+				AtLeastOneOf:  []string{"launch_specification", "launch_template_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"launch_template_specification": {

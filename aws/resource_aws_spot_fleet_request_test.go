@@ -175,6 +175,33 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *testing.T) {
 	rName := acctest.RandString(10)
 
@@ -1324,6 +1351,50 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
 `, validUntil)
+}
+
+func testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName string, rInt int, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+resource "aws_launch_template" "test1" {
+  name          = "%[2]s-1"
+  image_id      = "ami-516b9131"
+  instance_type = "m1.small"
+  key_name      = "${aws_key_pair.debugging.key_name}"
+}
+
+resource "aws_launch_template" "test2" {
+  name          = "%[2]s-2"
+  image_id      = "ami-516b9131"
+  instance_type = "t3.small"
+  key_name      = "${aws_key_pair.debugging.key_name}"
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+
+  launch_template_config {
+    launch_template_specification {
+      name    = "${aws_launch_template.test1.name}"
+      version = "${aws_launch_template.test1.latest_version}"
+    }
+  }
+
+  launch_template_config {
+    launch_template_specification {
+      name    = "${aws_launch_template.test2.name}"
+      version = "${aws_launch_template.test2.latest_version}"
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName string) string {
