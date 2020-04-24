@@ -1454,11 +1454,11 @@ resource "aws_spot_fleet_request" "test" {
       version = "${aws_launch_template.test.latest_version}"
     }
     overrides {
-      instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+      instance_type = "t1.micro"
       weighted_capacity = "2"
     }
     overrides {
-      instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+      instance_type = "m3.medium"
       spot_price = "0.26"
     }
   }
@@ -1498,12 +1498,12 @@ resource "aws_spot_fleet_request" "test" {
     }
 
     overrides {
-      instance_type     = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+      instance_type     = "t1.micro"
       weighted_capacity = "2"
     }
 
     overrides {
-      instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+      instance_type = "m3.medium"
       priority      = 1
       spot_price    = "0.26"
     }
