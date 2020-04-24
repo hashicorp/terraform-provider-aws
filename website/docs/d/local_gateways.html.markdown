@@ -29,7 +29,7 @@ output "foo" {
 ## Argument Reference
 
 * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
-  a pair on the desired vpcs.
+  a pair on the desired local_gateways.
 
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -40,8 +40,8 @@ which take the following arguments:
   [the underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeLocalGateways.html).
 
 * `values` - (Required) Set of values that are accepted for the given field.
-  A VPC will be selected if any one of the given values matches.
+  A Local Gateway will be selected if any one of the given values matches.
 
 ## Attributes Reference
 
-* `ids` - A list of all the VPC Ids found. This data source will fail if none are found.
+* `ids` - A list of all the Local Gateway Ids found. This data source will fail if none are found.

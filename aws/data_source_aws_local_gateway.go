@@ -85,10 +85,10 @@ func dataSourceAwsLocalGatewayRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 	if resp == nil || len(resp.LocalGateways) == 0 {
-		return fmt.Errorf("no matching VPC found")
+		return fmt.Errorf("no matching Local Gateway found")
 	}
 	if len(resp.LocalGateways) > 1 {
-		return fmt.Errorf("multiple Local Gateways matched; use additional constraints to reduce matches to a single VPC")
+		return fmt.Errorf("multiple Local Gateways matched; use additional constraints to reduce matches to a single Local Gateway")
 	}
 
 	localGateway := resp.LocalGateways[0]

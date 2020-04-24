@@ -57,7 +57,7 @@ func dataSourceAwsLocalGatewaysRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if resp == nil || len(resp.LocalGateways) == 0 {
-		return fmt.Errorf("no matching VPC found")
+		return fmt.Errorf("no matching Local Gateways found")
 	}
 
 	localgateways := make([]string, 0)

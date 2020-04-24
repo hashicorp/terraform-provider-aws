@@ -26,13 +26,10 @@ func TestAccDataSourceAwsLocalGateway_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsLocalGatewayConfig(localGatewayId),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(
-						dsResourceName, "id", localGatewayId),
+					resource.TestCheckResourceAttr(dsResourceName, "id", localGatewayId),
 					testAccCheckResourceAttrAccountID(dsResourceName, "owner_id"),
-					resource.TestCheckResourceAttrSet(
-						dsResourceName, "state"),
-					resource.TestCheckResourceAttrSet(
-						dsResourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrSet(dsResourceName, "state"),
+					resource.TestCheckResourceAttrSet(dsResourceName, "outpost_arn"),
 				),
 			},
 		},
