@@ -122,11 +122,11 @@ func resourceAwsDbSnapshotCreate(d *schema.ResourceData, meta interface{}) error
 		Tags:                 tags,
 	}
 
-	_, err := conn.CreateDBSnapshot(params)
+	resp, err := conn.CreateDBSnapshot(params)
 	if err != nil {
 		return fmt.Errorf("Error creating AWS DB Snapshot %s: %s", dBInstanceIdentifier, err)
 	}
-	d.SetId(d.Get("db_snapshot_identifier").(string))
+	d.SetId(aws.StringValue(resp.DBSnapshot.DBSnapshotIdentifier))
 
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"creating"},
