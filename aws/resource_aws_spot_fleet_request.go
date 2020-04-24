@@ -338,7 +338,6 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 										Optional:      true,
 										Computed:      true,
 										ForceNew:      true,
-										ConflictsWith: []string{"launch_template_configs.0.launch_template_specification.0.id"},
 										ValidateFunc:  validateLaunchTemplateName,
 									},
 									"version": {
