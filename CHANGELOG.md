@@ -4,6 +4,7 @@ ENHANCEMENTS:
 
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
+* resource/aws_mq_broker: Support import [GH-11841]
 * resource/aws_placement_group: Support tag-on-create [GH-12963]
 
 ## 2.59.0 (April 23, 2020)
