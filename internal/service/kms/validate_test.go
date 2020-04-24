@@ -42,7 +42,7 @@ func TestValidName(t *testing.T) {
 	}{
 		{
 			Value:    "alias/aws/s3",
-			ErrCount: 0,
+			ErrCount: 1,
 		},
 		{
 			Value:    "alias/hashicorp",

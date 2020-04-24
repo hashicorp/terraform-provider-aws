@@ -21,6 +21,11 @@ func validGrantName(v interface{}, k string) (ws []string, es []error) {
 
 func validName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
+
+	if regexp.MustCompile(`^(alias\/aws)`).MatchString(value) {
+		es = append(es, fmt.Errorf("%q cannot begin with reserved AWS CMK prefix 'alias/aws'", k))
+	}
+
 	if !regexp.MustCompile(`^(alias\/)[a-zA-Z0-9:/_-]+$`).MatchString(value) {
 		es = append(es, fmt.Errorf(
 			"%q must begin with 'alias/' and be comprised of only [a-zA-Z0-9:/_-]", k))
