@@ -337,10 +337,8 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 			{
 				Config: testAccAWSSpotFleetRequestConfigFleetType(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSSpotFleetRequestExists(
-						resourceName, &sfr),
-					resource.TestCheckResourceAttr(
-						resourceName, "spot_request_state", "active"),
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "request"),
 				),
 			},
