@@ -1193,8 +1193,10 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if len(config.LaunchTemplateConfigs) > 0 {
+		if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
+			return fmt.Errorf("error setting tags: %s", err)
+		}
 	}
 
 	return nil
@@ -1619,7 +1621,6 @@ func hashEbsBlockDevice(v interface{}) int {
 }
 
 func flattenFleetLaunchTemplateConfig(ltcs []*ec2.LaunchTemplateConfig) []map[string]interface{} {
-	attrs := map[string]interface{}{}
 	result := make([]map[string]interface{}, 0)
 
 	for _, ltc := range ltcs {
@@ -1632,9 +1633,9 @@ func flattenFleetLaunchTemplateConfig(ltcs []*ec2.LaunchTemplateConfig) []map[st
 		if ltc.Overrides != nil {
 			ltcRes["overrides"] = flattenLaunchTemplateOverrides(ltc.Overrides)
 		}
-	}
 
-	result = append(result, attrs)
+		result = append(result, ltcRes)
+	}
 
 	return result
 }
