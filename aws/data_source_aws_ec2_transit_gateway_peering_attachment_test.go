@@ -9,12 +9,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter(t *testing.T) {
+func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_sameAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -26,7 +25,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter(t *testing.T)
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter(rName),
+				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_region", dataSourceName, "peer_region"),
@@ -38,13 +37,12 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter(t *testing.T)
 		},
 	})
 }
-
-func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID(t *testing.T) {
+func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Filter_differentAccount(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
-
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -56,7 +54,34 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID(rName),
+				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_differentAccount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "peer_region", testAccGetRegion()),
+					resource.TestCheckResourceAttrPair(transitGatewayResourceName, "owner_id", dataSourceName, "peer_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "peer_transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", dataSourceName, "transit_gateway_id"),
+				),
+			},
+		},
+	})
+}
+func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_sameAccount(t *testing.T) {
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
+	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSEc2TransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_region", dataSourceName, "peer_region"),
@@ -68,13 +93,39 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID(t *testing.T) {
 		},
 	})
 }
-
+func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_ID_differentAccount(t *testing.T) {
+	var providers []*schema.Provider
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
+	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSEc2TransitGateway(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSEc2TransitGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_differentAccount(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "peer_region", testAccGetRegion()),
+					resource.TestCheckResourceAttrPair(transitGatewayResourceName, "owner_id", dataSourceName, "peer_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", dataSourceName, "peer_transit_gateway_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", dataSourceName, "transit_gateway_id"),
+				),
+			},
+		},
+	})
+}
 func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 	var providers []*schema.Provider
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	dataSourceName := "data.aws_ec2_transit_gateway_peering_attachment.test"
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -86,7 +137,7 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 		CheckDestroy:      testAccCheckAWSEc2TransitGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigTags(rName),
+				Config: testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigTags_sameAccount(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "peer_account_id", dataSourceName, "peer_account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_region", dataSourceName, "peer_region"),
@@ -99,22 +150,32 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_base(rName string) string {
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName string) string {
 	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
 resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
   peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
   transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
-
   tags = {
     Name = %[2]q
   }
 }
 `, testAccGetAlternateRegion(), rName)
 }
-
-func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_base(rName) + fmt.Sprintf(`
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_differentAccount_base(rName string) string {
+	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName) + fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_region             = %[1]q
+  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
+  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
+  tags = {
+    Name = %[2]q
+  }
+}
+`, testAccGetAlternateRegion(), rName)
+}
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_sameAccount(rName string) string {
+	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName) + fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   filter {
     name   = "transit-gateway-attachment-id"
@@ -123,21 +184,38 @@ data "aws_ec2_transit_gateway_peering_attachment" "test" {
 }
 `)
 }
-
-func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_base(rName) + fmt.Sprintf(`
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_sameAccount(rName string) string {
+	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName) + fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
 }
 `)
 }
-
-func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigTags(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_base(rName) + fmt.Sprintf(`
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigTags_sameAccount(rName string) string {
+	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName) + fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   tags = {
     Name = "${aws_ec2_transit_gateway_peering_attachment.test.tags["Name"]}"
   }
+}
+`)
+}
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_differentAccount(rName string) string {
+	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_differentAccount_base(rName) + fmt.Sprintf(`
+data "aws_ec2_transit_gateway_peering_attachment" "test" {
+  provider = "aws.alternate"
+  filter {
+    name   = "transit-gateway-attachment-id"
+    values = ["${aws_ec2_transit_gateway_peering_attachment.test.id}"]
+  }
+}
+`)
+}
+func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_differentAccount(rName string) string {
+	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_differentAccount_base(rName) + fmt.Sprintf(`
+data "aws_ec2_transit_gateway_peering_attachment" "test" {
+  provider = "aws.alternate"
+  id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
 }
 `)
 }

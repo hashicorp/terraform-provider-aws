@@ -83,7 +83,7 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData,
 
 	local := transitGatewayPeeringAttachment.RequesterTgwInfo
 	peer := transitGatewayPeeringAttachment.AccepterTgwInfo
-	
+
 	if aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId) == meta.(*AWSClient).accountid && aws.StringValue(transitGatewayPeeringAttachment.AccepterTgwInfo.Region) == meta.(*AWSClient).region {
 		local = transitGatewayPeeringAttachment.AccepterTgwInfo
 		peer = transitGatewayPeeringAttachment.RequesterTgwInfo
