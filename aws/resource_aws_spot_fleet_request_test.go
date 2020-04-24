@@ -193,7 +193,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2826857687.launch_template_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2826857687.launch_template_specification.0.name", "tf-acc-test-1"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2826857687.overrides.#", "0"),
