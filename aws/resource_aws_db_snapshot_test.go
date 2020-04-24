@@ -89,6 +89,7 @@ func TestAccAWSDBSnapshot_basic(t *testing.T) {
 				Config: testAccAwsDbSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
 				),
 			},
