@@ -563,7 +563,7 @@ func waitForEc2TransitGatewayPeeringAttachmentCreation(conn *ec2.EC2, transitGat
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
 			ec2.TransitGatewayAttachmentStatePending,
-			"initiatingRequest",
+			"initiatingRequest", // No ENUM currently exists in the SDK for the state given by AWS
 		},
 		Target: []string{
 			ec2.TransitGatewayAttachmentStatePendingAcceptance,
