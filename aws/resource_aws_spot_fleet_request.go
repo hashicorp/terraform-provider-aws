@@ -857,8 +857,6 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		TagSpecifications:                ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSpotFleetRequest),
 	}
 
-	var err error
-
 	if launchSpecificationOk {
 		launchSpecs, err := buildAwsSpotFleetLaunchSpecifications(d, meta)
 		if err != nil {
@@ -953,8 +951,8 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	// Since IAM is eventually consistent, we retry creation as a newly created role may not
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
-	err = resource.Retry(10*time.Minute, func() *resource.RetryError {
-		resp, err = conn.RequestSpotFleet(spotFleetOpts)
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		_, err := conn.RequestSpotFleet(spotFleetOpts)
 
 		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
 			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
