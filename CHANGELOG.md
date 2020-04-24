@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_placement_group: Support tag-on-create [GH-12963]
 
