@@ -167,8 +167,6 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
 				),
 			},
 		},
@@ -194,12 +192,6 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2826857687.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2826857687.launch_template_specification.0.name", "tf-acc-test-1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2826857687.overrides.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.225839035.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.225839035.launch_template_specification.0.name", "tf-acc-test-2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.225839035.overrides.#", "0"),
 				),
 			},
 		},
@@ -241,14 +233,6 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1951041615.instance_type", "t1.micro"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1951041615.weighted_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1866154075.instance_type", "m3.medium"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1866154075.priority", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1866154075.spot_price", "0.26"),
 				),
 			},
 		},
@@ -274,8 +258,6 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
 				),
 			},
 			{
@@ -320,8 +302,6 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
 				),
 			},
@@ -1327,12 +1307,42 @@ resource "aws_spot_fleet_request" "test" {
 `, validUntil)
 }
 
+func testAccAWSSpotFleetRequestLaunchTemplateConfigBase() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["t3.micro", "t2.micro"]
+  }
+
+  preferred_instance_types = ["t3.micro", "t2.micro"]
+}
+`)
+}
+
 func testAccAWSSpotFleetRequestLaunchTemplateConfig(rName string, rInt int, validUntil string) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		testAccAWSSpotFleetRequestLaunchTemplateConfigBase() +
+		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name          = "tf-acc-test-launch-template"
-  image_id      = "ami-516b9131"
-  instance_type = "m1.small"
+  name          = %[2]q
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
@@ -1354,22 +1364,24 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, validUntil)
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName string, rInt int, validUntil string) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		testAccAWSSpotFleetRequestLaunchTemplateConfigBase() +
+		fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
-  name          = "tf-acc-test-1"
-  image_id      = "ami-516b9131"
-  instance_type = "m1.small"
+  name          = "%[2]s-1"
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
 resource "aws_launch_template" "test2" {
-  name          = "tf-acc-test-2"
-  image_id      = "ami-516b9131"
-  instance_type = "t3.small"
+  name          = "%[2]s-2"
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
@@ -1398,11 +1410,11 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, validUntil)
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName string) string {
-	return fmt.Sprintf(`
+	return testAccAWSSpotFleetRequestLaunchTemplateConfigBase() + fmt.Sprintf(`
 resource "aws_iam_role" "test-role" {
     name = "test-role-%[1]s"
     assume_role_policy = <<EOF
@@ -1426,45 +1438,47 @@ EOF
 }
 
 resource "aws_launch_template" "test" {
-  name = "test-launch-template-%[1]s"
-  image_id = "ami-516b9131"
-  instance_type = "m1.small"
+  name          = %[1]q
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
 }
 
 resource "aws_spot_fleet_request" "test" {
-    iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
-    target_capacity = 2
+  iam_fleet_role = "${aws_iam_role.test-role.arn}"
+  spot_price = "0.005"
+  target_capacity = 2
 
-    launch_template_config {
-      launch_template_specification {
-        name = "${aws_launch_template.test.name}"
-        version = "${aws_launch_template.test.latest_version}"
-      }
-      overrides {
-        instance_type = "t1.micro"
-        weighted_capacity = "2"
-      }
-      overrides {
-        instance_type = "m3.medium"
-        spot_price = "0.26"
-      }
+  launch_template_config {
+    launch_template_specification {
+      name = "${aws_launch_template.test.name}"
+      version = "${aws_launch_template.test.latest_version}"
     }
+    overrides {
+      instance_type = "t1.micro"
+      weighted_capacity = "2"
+    }
+    overrides {
+      instance_type = "m3.medium"
+      spot_price = "0.26"
+    }
+  }
 
-    launch_specification {
-        instance_type = "m1.small"
-        ami = "ami-516b9131"
-    }
+  launch_specification {
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  }
 }
 `, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int, validUntil string) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		testAccAWSSpotFleetRequestLaunchTemplateConfigBase() +
+		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  name          = "tf-acc-test-launch-template"
-  image_id      = "ami-516b9131"
-  instance_type = "m1.small"
+  name          = %[2]q
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name      = "${aws_key_pair.debugging.key_name}"
 }
 
@@ -1497,7 +1511,7 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, validUntil)
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestConfigExcessCapacityTermination(rName string, rInt int, validUntil string) string {
