@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -56,7 +55,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"launch_specification": {
 				Type:          schema.TypeSet,
 				Optional:      true,
-				ConflictsWith: []string{"launch_template_configs"},
+				ConflictsWith: []string{"launch_template_config"},
 				ForceNew:      true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -313,7 +312,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				},
 				Set: hashLaunchSpecification,
 			},
-			"launch_template_configs": {
+			"launch_template_config": {
 				Type:          schema.TypeSet,
 				Optional:      true,
 				ForceNew:      true,
@@ -327,18 +326,18 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"id": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										Computed:      true,
-										ForceNew:      true,
-										ValidateFunc:  validateLaunchTemplateId,
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validateLaunchTemplateId,
 									},
 									"name": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										Computed:      true,
-										ForceNew:      true,
-										ValidateFunc:  validateLaunchTemplateName,
+										Type:         schema.TypeString,
+										Optional:     true,
+										Computed:     true,
+										ForceNew:     true,
+										ValidateFunc: validateLaunchTemplateName,
 									},
 									"version": {
 										Type:         schema.TypeString,
@@ -764,7 +763,7 @@ func buildAwsSpotFleetLaunchSpecifications(
 }
 
 func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateConfig, error) {
-	launchTemplateConfigs := d.Get("launch_template_configs").(*schema.Set)
+	launchTemplateConfigs := d.Get("launch_template_config").(*schema.Set)
 	configs := make([]*ec2.LaunchTemplateConfig, 0)
 
 	for _, launchTemplateConfig := range launchTemplateConfigs.List() {
@@ -845,7 +844,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).ec2conn
 
 	_, launchSpecificationOk := d.GetOk("launch_specification")
-	_, launchTemplateConfigsOk := d.GetOk("launch_template_configs")
+	_, launchTemplateConfigsOk := d.GetOk("launch_template_config")
 
 	if !launchSpecificationOk && !launchTemplateConfigsOk {
 		return fmt.Errorf("One of `launch_specification` or `launch_template` must be set for a fleet request")
@@ -1203,10 +1202,10 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if len(config.LaunchTemplateConfigs) > 0 {
-		d.Set("launch_template_configs.0.launch_template_specification.0", flattenFleetLaunchTemplateSpecification(config.LaunchTemplateConfigs[0].LaunchTemplateSpecification))
-		d.Set("launch_template_configs.0.overrides", setLaunchTemplateOverrides(config.LaunchTemplateConfigs[0].Overrides))
+		d.Set("launch_template_config.0.launch_template_specification.0", flattenFleetLaunchTemplateSpecification(config.LaunchTemplateConfigs[0].LaunchTemplateSpecification))
+		d.Set("launch_template_config.0.overrides", setLaunchTemplateOverrides(config.LaunchTemplateConfigs[0].Overrides))
 	} else {
-		d.Set("launch_template_configs.0.launch_template_specification.0", nil)
+		d.Set("launch_template_config.0.launch_template_specification.0", nil)
 	}
 
 	return nil

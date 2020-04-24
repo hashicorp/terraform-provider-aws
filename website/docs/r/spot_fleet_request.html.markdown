@@ -71,7 +71,7 @@ resource "aws_spot_fleet_request" "foo" {
   target_capacity = 2
   valid_until     = "2019-11-04T20:44:20Z"
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       id      = "${aws_launch_template.foo.id}"
       version = "${aws_launch_template.foo.latest_version}"
@@ -132,7 +132,7 @@ resource "aws_spot_fleet_request" "foo" {
   target_capacity = 2
   valid_until     = "2019-11-04T20:44:20Z"
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       id      = "${aws_launch_template.foo.id}"
       version = "${aws_launch_template.foo.latest_version}"
@@ -164,7 +164,7 @@ terminateInstancesWithExpiration.
 * `replace_unhealthy_instances` - (Optional) Indicates whether Spot fleet should replace unhealthy instances. Default `false`.
 * `launch_specification` - (Optional) Used to define the launch configuration of the
   spot-fleet request. Can be specified multiple times to define different bids
-across different markets and instance types. Conflicts with `launch_template_configs`. At least one of `launch_specification` or `launch_template_configs` is required.
+across different markets and instance types. Conflicts with `launch_template_config`. At least one of `launch_specification` or `launch_template_config` is required.
 
     **Note:** This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
@@ -172,7 +172,7 @@ across different markets and instance types. Conflicts with `launch_template_con
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used and it have
     a additional parameter `iam_instance_profile_arn` takes `aws_iam_instance_profile` attribute `arn` as input.
 
-* `launch_template_configs` - (Optional) Launch template configuration block. See [Launch Template Configs](#launch-template-configs) below for more details. Conflicts with `launch_specification`. At least one of `launch_specification` or `launch_template_configs` is required.
+* `launch_template_config` - (Optional) Launch template configuration block. See [Launch Template Configs](#launch-template-configs) below for more details. Conflicts with `launch_specification`. At least one of `launch_specification` or `launch_template_config` is required.
 * `spot_price` - (Optional; Default: On-demand price) The maximum bid price per unit hour.
 * `wait_for_fulfillment` - (Optional; Default: false) If set, Terraform will
   wait for the Spot Request to be fulfilled, and will throw an error if the
@@ -206,7 +206,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 
 ### Launch Template Configs
 
-The `launch_template_configs` block supports the following:
+The `launch_template_config` block supports the following:
 
 * `launch_template_specification` - (Required) Launch template specification. See [Launch Template Specification](#launch-template-specification) below for more details.
 * `overrides` - (Optional) One or more overide configurations. See [Overrides](#overrides) below for more details. 

@@ -166,9 +166,9 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
 				),
 			},
 		},
@@ -185,7 +185,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName),
-				ExpectError: regexp.MustCompile(`"launch_specification": conflicts with launch_template_configs`),
+				ExpectError: regexp.MustCompile(`"launch_specification": conflicts with launch_template_config`),
 			},
 		},
 	})
@@ -209,15 +209,15 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1951041615.instance_type", "t1.micro"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1951041615.weighted_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1866154075.instance_type", "m3.medium"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1866154075.priority", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.2247196053.overrides.1866154075.spot_price", "0.26"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1951041615.instance_type", "t1.micro"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1951041615.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1866154075.instance_type", "m3.medium"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1866154075.priority", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.2247196053.overrides.1866154075.spot_price", "0.26"),
 				),
 			},
 		},
@@ -242,9 +242,9 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
 				),
 			},
 			{
@@ -288,9 +288,9 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.launch_template_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template_configs.795271135.overrides.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.launch_template_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.795271135.overrides.#", "0"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
 				),
 			},
@@ -1374,7 +1374,7 @@ resource "aws_spot_fleet_request" "test" {
   instance_interruption_behaviour     = "stop"
   wait_for_fulfillment                = true
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       name    = "${aws_launch_template.test.name}"
       version = "${aws_launch_template.test.latest_version}"
@@ -1421,7 +1421,7 @@ resource "aws_spot_fleet_request" "test" {
     spot_price = "0.005"
     target_capacity = 2
 
-    launch_template_configs {
+    launch_template_config {
       launch_template_specification {
         name = "${aws_launch_template.test.name}"
         version = "${aws_launch_template.test.latest_version}"
@@ -1462,7 +1462,7 @@ resource "aws_spot_fleet_request" "test" {
   instance_interruption_behaviour     = "stop"
   wait_for_fulfillment                = true
 
-  launch_template_configs {
+  launch_template_config {
     launch_template_specification {
       name    = "${aws_launch_template.test.name}"
       version = "${aws_launch_template.test.latest_version}"
