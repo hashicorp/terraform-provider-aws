@@ -953,6 +953,9 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		var err error
 		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
+		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "Duplicate: Parameter combination") {
+			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request: %s", err))
+		}
 		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
 			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
 		}
