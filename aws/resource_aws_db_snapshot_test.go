@@ -89,7 +89,7 @@ func TestAccAWSDBSnapshot_basic(t *testing.T) {
 				Config: testAccAwsDbSnapshotConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDbSnapshotExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(rName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "db_snapshot_arn", "rds", regexp.MustCompile(`snapshot:.+`)),
 				),
 			},
 			{
@@ -241,26 +241,26 @@ func testAccCheckDbSnapshotDisappears(snapshot *rds.DBSnapshot) resource.TestChe
 	}
 }
 
-func testAccAwsDbSnapshotConfig(rName string) string {
+func testAccAwsDbSnapshotConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  allocated_storage = 10
-  engine            = "MySQL"
-  engine_version    = "5.6.35"
-  instance_class    = "db.t2.micro"
-  name              = "baz"
-  password          = "barbarbarbar"
-  username          = "foo"
-
-  maintenance_window = "Fri:09:00-Fri:09:30"
-
+  allocated_storage       = 10
+  engine                  = "MySQL"
+  engine_version          = "5.6.35"
+  instance_class          = "db.t2.micro"
+  name                    = "baz"
+  identifier              = %[1]q
+  password                = "barbarbarbar"
+  username                = "foo"
+  maintenance_window      = "Fri:09:00-Fri:09:30"
   backup_retention_period = 0
-
-  parameter_group_name = "default.mysql5.6"
-
-  skip_final_snapshot = true
+  parameter_group_name    = "default.mysql5.6"
+  skip_final_snapshot     = true
+}`, rName)
 }
 
+func testAccAwsDbSnapshotConfig(rName string) string {
+	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = "${aws_db_instance.test.id}"
   db_snapshot_identifier = %[1]q
@@ -269,25 +269,7 @@ resource "aws_db_snapshot" "test" {
 }
 
 func testAccAwsDbSnapshotConfigTags1(rName, tag1Key, tag1Value string) string {
-	return fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  allocated_storage = 10
-  engine = "MySQL"
-  engine_version = "5.6.35"
-  instance_class = "db.t2.micro"
-  name = "baz"
-  password = "barbarbarbar"
-  username = "foo"
-
-  maintenance_window = "Fri:09:00-Fri:09:30"
-
-  backup_retention_period = 0
-
-  parameter_group_name = "default.mysql5.6"
-
-  skip_final_snapshot = true
-}
-
+	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = "${aws_db_instance.test.id}"
   db_snapshot_identifier = %[1]q
@@ -300,25 +282,7 @@ resource "aws_db_snapshot" "test" {
 }
 
 func testAccAwsDbSnapshotConfigTags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return fmt.Sprintf(`
-resource "aws_db_instance" "test" {
-  allocated_storage = 10
-  engine = "MySQL"
-  engine_version = "5.6.35"
-  instance_class = "db.t2.micro"
-  name = "baz"
-  password = "barbarbarbar"
-  username = "foo"
-
-  maintenance_window = "Fri:09:00-Fri:09:30"
-
-  backup_retention_period = 0
-
-  parameter_group_name = "default.mysql5.6"
-
-  skip_final_snapshot = true
-}
-
+	return testAccAwsDbSnapshotConfigBase(rName) + fmt.Sprintf(`
 resource "aws_db_snapshot" "test" {
   db_instance_identifier = "${aws_db_instance.test.id}"
   db_snapshot_identifier = %[1]q
