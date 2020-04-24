@@ -1,4 +1,9 @@
 ## 2.60.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_key_pair: Support tag-on-create [GH-12962]
+
 ## 2.59.0 (April 23, 2020)
 
 NOTES:
