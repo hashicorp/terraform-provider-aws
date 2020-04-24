@@ -30,56 +30,50 @@ func testSweepEc2TransitGatewayPeeringAttachments(region string) error {
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.DescribeTransitGatewayPeeringAttachments(input)
+	err = conn.DescribeTransitGatewayPeeringAttachmentsPages(input,
+		func(page *ec2.DescribeTransitGatewayPeeringAttachmentsOutput, lastPage bool) bool {
+			for _, transitGatewayPeeringAttachment := range page.TransitGatewayPeeringAttachments {
+				if aws.StringValue(transitGatewayPeeringAttachment.State) == ec2.TransitGatewayAttachmentStateDeleted {
+					continue
+				}
 
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
-			return nil
-		}
+				id := aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId)
 
-		if err != nil {
-			return fmt.Errorf("error retrieving EC2 Transit Gateway Peering Attachments: %s", err)
-		}
+				input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{
+					TransitGatewayAttachmentId: aws.String(id),
+				}
 
-		for _, transitGatewayPeeringAttachment := range output.TransitGatewayPeeringAttachments {
-			if aws.StringValue(transitGatewayPeeringAttachment.State) == ec2.TransitGatewayAttachmentStateDeleted {
-				continue
+				log.Printf("[INFO] Deleting EC2 Transit Gateway Peering Attachment: %s", id)
+				_, err := conn.DeleteTransitGatewayPeeringAttachment(input)
+
+				if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
+					continue
+				}
+
+				if err != nil {
+					sweeperErr := fmt.Errorf("error deleting EC2 Transit Gateway Peering Attachment (%s): %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+					continue
+				}
+
+				if err := waitForEc2TransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
+					sweeperErr := fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %w", id, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+					continue
+				}
 			}
+			return !lastPage
+		})
 
-			id := aws.StringValue(transitGatewayPeeringAttachment.TransitGatewayAttachmentId)
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Transit Gateway Peering Attachment sweep for %s: %s", region, err)
+		return nil
+	}
 
-			input := &ec2.DeleteTransitGatewayPeeringAttachmentInput{
-				TransitGatewayAttachmentId: aws.String(id),
-			}
-
-			log.Printf("[INFO] Deleting EC2 Transit Gateway Peering Attachment: %s", id)
-			_, err := conn.DeleteTransitGatewayPeeringAttachment(input)
-
-			if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
-				continue
-			}
-
-			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting EC2 Transit Gateway Peering Attachment (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-
-			if err := waitForEc2TransitGatewayPeeringAttachmentDeletion(conn, id); err != nil {
-				sweeperErr := fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) deletion: %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
+	if err != nil {
+		return fmt.Errorf("error retrieving EC2 Transit Gateway Peering Attachments: %s", err)
 	}
 
 	return sweeperErrs.ErrorOrNil()
