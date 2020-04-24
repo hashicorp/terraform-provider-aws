@@ -54,8 +54,9 @@ func testSweepWorkspacesDirectories(region string) error {
 // These tests need to be serialized, because they all rely on the IAM Role `workspaces_DefaultRole`.
 func TestAccAwsWorkspacesDirectory(t *testing.T) {
 	testCases := map[string]func(t *testing.T){
-		"basic":     testAccAwsWorkspacesDirectory_basic,
-		"subnetIds": testAccAwsWorkspacesDirectory_subnetIds,
+		"basic":      testAccAwsWorkspacesDirectory_basic,
+		"disappears": testAccAwsWorkspacesDirectory_disappears,
+		"subnetIds":  testAccAwsWorkspacesDirectory_subnetIds,
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -66,6 +67,7 @@ func TestAccAwsWorkspacesDirectory(t *testing.T) {
 }
 
 func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
 
@@ -77,7 +79,7 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 			{
 				Config: testAccWorkspacesDirectoryConfigA(booster),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesDirectoryExists(resourceName),
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
@@ -94,7 +96,7 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 			{
 				Config: testAccWorkspacesDirectoryConfigB(booster),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesDirectoryExists(resourceName),
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "true"),
@@ -109,7 +111,7 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 			{
 				Config: testAccWorkspacesDirectoryConfigC(booster),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesDirectoryExists(resourceName),
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.change_compute_type", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.increase_volume_size", "false"),
@@ -128,7 +130,30 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	})
 }
 
+func testAccAwsWorkspacesDirectory_disappears(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
+	booster := acctest.RandString(8)
+	resourceName := "aws_workspaces_directory.main"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesDirectoryConfigA(booster),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					testAccCheckAwsWorkspacesDirectoryDisappears(&v),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
 
@@ -140,7 +165,7 @@ func testAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 			{
 				Config: testAccWorkspacesDirectoryConfig_subnetIds(booster),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWorkspacesDirectoryExists(resourceName),
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 				),
 			},
@@ -181,7 +206,13 @@ func testAccCheckAwsWorkspacesDirectoryDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsWorkspacesDirectoryExists(n string) resource.TestCheckFunc {
+func testAccCheckAwsWorkspacesDirectoryDisappears(v *workspaces.WorkspaceDirectory) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return workspacesDirectoryDelete(aws.StringValue(v.DirectoryId), testAccProvider.Meta().(*AWSClient).workspacesconn)
+	}
+}
+
+func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceDirectory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -201,6 +232,7 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string) resource.TestCheckFunc {
 		}
 
 		if *resp.Directories[0].DirectoryId == rs.Primary.ID {
+			*v = *resp.Directories[0]
 			return nil
 		}
 
@@ -293,6 +325,11 @@ data "aws_region" "current" {}
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 locals {
@@ -310,7 +347,7 @@ locals {
      Name = "tf-testacc-workspaces-directory-%s"
    }
  }
- 
+
  resource "aws_subnet" "primary" {
    vpc_id = "${aws_vpc.main.id}"
    availability_zone_id = "${local.workspaces_az_ids[0]}"
@@ -320,7 +357,7 @@ locals {
      Name = "tf-testacc-workspaces-directory-%s-primary"
    }
  }
- 
+
  resource "aws_subnet" "secondary" {
    vpc_id = "${aws_vpc.main.id}"
    availability_zone_id = "${local.workspaces_az_ids[1]}"

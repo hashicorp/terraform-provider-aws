@@ -279,10 +279,10 @@ func TestAccAWSEksNodeGroup_ReleaseVersion(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEksNodeGroupConfigReleaseVersion(rName, "1.14.7-20190927"),
+				Config: testAccAWSEksNodeGroupConfigReleaseVersion(rName, "1.14.8-20191213"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup1),
-					resource.TestCheckResourceAttr(resourceName, "release_version", "1.14.7-20190927"),
+					resource.TestCheckResourceAttr(resourceName, "release_version", "1.14.8-20191213"),
 				),
 			},
 			{
@@ -641,6 +641,11 @@ func testAccAWSEksNodeGroupConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_partition" "current" {}

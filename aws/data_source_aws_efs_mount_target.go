@@ -18,7 +18,6 @@ func dataSourceAwsEfsMountTarget() *schema.Resource {
 			"mount_target_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"file_system_arn": {
 				Type:     schema.TypeString,
@@ -101,9 +100,7 @@ func dataSourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if err := d.Set("dns_name", resourceAwsEfsMountTargetDnsName(*mt.FileSystemId, meta.(*AWSClient).region, meta.(*AWSClient).dnsSuffix)); err != nil {
-		return fmt.Errorf("Error setting dns_name error: %#v", err)
-	}
+	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
 
 	return nil
 }

@@ -3647,7 +3647,7 @@ type AddTagsInput struct {
 	// ResourceArns is a required field
 	ResourceArns []*string `type:"list" required:"true"`
 
-	// The tags. Each resource can have a maximum of 10 tags.
+	// The tags.
 	//
 	// Tags is a required field
 	Tags []*Tag `min:"1" type:"list" required:"true"`
@@ -4190,9 +4190,30 @@ type CreateListenerInput struct {
 	// Protocol is a required field
 	Protocol *string `type:"string" required:"true" enum:"ProtocolEnum"`
 
-	// [HTTPS and TLS listeners] The security policy that defines which ciphers
-	// and protocols are supported. The default is the current predefined security
-	// policy.
+	// [HTTPS and TLS listeners] The security policy that defines which protocols
+	// and ciphers are supported. The following are the possible values:
+	//
+	//    * ELBSecurityPolicy-2016-08
+	//
+	//    * ELBSecurityPolicy-TLS-1-0-2015-04
+	//
+	//    * ELBSecurityPolicy-TLS-1-1-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-1-1-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-Res-2019-08
+	//
+	// For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
+	// in the Application Load Balancers Guide and Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-tls-listener.html#describe-ssl-policies)
+	// in the Network Load Balancers Guide.
 	SslPolicy *string `type:"string"`
 }
 
@@ -5733,7 +5754,7 @@ type DescribeSSLPoliciesOutput struct {
 	// Otherwise, this is null.
 	NextMarker *string `type:"string"`
 
-	// Information about the policies.
+	// Information about the security policies.
 	SslPolicies []*SslPolicy `type:"list"`
 }
 
@@ -5762,7 +5783,8 @@ func (s *DescribeSSLPoliciesOutput) SetSslPolicies(v []*SslPolicy) *DescribeSSLP
 type DescribeTagsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Names (ARN) of the resources.
+	// The Amazon Resource Names (ARN) of the resources. You can specify up to 20
+	// resources in a single call.
 	//
 	// ResourceArns is a required field
 	ResourceArns []*string `type:"list" required:"true"`
@@ -6356,8 +6378,8 @@ type Listener struct {
 	// The protocol for connections from clients to the load balancer.
 	Protocol *string `type:"string" enum:"ProtocolEnum"`
 
-	// [HTTPS or TLS listener] The security policy that defines which ciphers and
-	// protocols are supported. The default is the current predefined security policy.
+	// [HTTPS or TLS listener] The security policy that defines which protocols
+	// and ciphers are supported.
 	SslPolicy *string `type:"string"`
 }
 
@@ -6622,7 +6644,8 @@ type LoadBalancerAttribute struct {
 	//    (true) or routed to targets (false). The default is false.
 	//
 	//    * routing.http2.enabled - Indicates whether HTTP/2 is enabled. The value
-	//    is true or false. The default is true.
+	//    is true or false. The default is true. Elastic Load Balancing requires
+	//    that message header names contain only alphanumeric characters and hyphens.
 	//
 	// The following attributes are supported by only Network Load Balancers:
 	//
@@ -6781,8 +6804,29 @@ type ModifyListenerInput struct {
 	Protocol *string `type:"string" enum:"ProtocolEnum"`
 
 	// [HTTPS and TLS listeners] The security policy that defines which protocols
-	// and ciphers are supported. For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
-	// in the Application Load Balancers Guide.
+	// and ciphers are supported. The following are the possible values:
+	//
+	//    * ELBSecurityPolicy-2016-08
+	//
+	//    * ELBSecurityPolicy-TLS-1-0-2015-04
+	//
+	//    * ELBSecurityPolicy-TLS-1-1-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-2017-01
+	//
+	//    * ELBSecurityPolicy-TLS-1-2-Ext-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-2018-06
+	//
+	//    * ELBSecurityPolicy-FS-1-1-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-2019-08
+	//
+	//    * ELBSecurityPolicy-FS-1-2-Res-2019-08
+	//
+	// For more information, see Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/application/create-https-listener.html#describe-ssl-policies)
+	// in the Application Load Balancers Guide and Security Policies (https://docs.aws.amazon.com/elasticloadbalancing/latest/network/create-tls-listener.html#describe-ssl-policies)
+	// in the Network Load Balancers Guide.
 	SslPolicy *string `type:"string"`
 }
 
@@ -8760,14 +8804,21 @@ type TargetGroupAttribute struct {
 
 	// The name of the attribute.
 	//
-	// The following attribute is supported by both Application Load Balancers and
-	// Network Load Balancers:
+	// The following attributes are supported by both Application Load Balancers
+	// and Network Load Balancers:
 	//
 	//    * deregistration_delay.timeout_seconds - The amount of time, in seconds,
 	//    for Elastic Load Balancing to wait before changing the state of a deregistering
 	//    target from draining to unused. The range is 0-3600 seconds. The default
 	//    value is 300 seconds. If the target is a Lambda function, this attribute
 	//    is not supported.
+	//
+	//    * stickiness.enabled - Indicates whether sticky sessions are enabled.
+	//    The value is true or false. The default is false.
+	//
+	//    * stickiness.type - The type of sticky sessions. The possible values are
+	//    lb_cookie for Application Load Balancers or source_ip for Network Load
+	//    Balancers.
 	//
 	// The following attributes are supported by Application Load Balancers if the
 	// target is not a Lambda function:
@@ -8781,12 +8832,6 @@ type TargetGroupAttribute struct {
 	//    traffic to the target group. After this time period ends, the target receives
 	//    its full share of traffic. The range is 30-900 seconds (15 minutes). Slow
 	//    start mode is disabled by default.
-	//
-	//    * stickiness.enabled - Indicates whether sticky sessions are enabled.
-	//    The value is true or false. The default is false.
-	//
-	//    * stickiness.type - The type of sticky sessions. The possible value is
-	//    lb_cookie.
 	//
 	//    * stickiness.lb_cookie.duration_seconds - The time period, in seconds,
 	//    during which requests from a client should be routed to the same target.

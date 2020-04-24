@@ -226,7 +226,7 @@ The following arguments are supported:
 * `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource
 
 **ebs_options** supports the following attributes:
 
@@ -255,7 +255,7 @@ The following arguments are supported:
 * `dedicated_master_type` - (Optional) Instance type of the dedicated master nodes in the cluster.
 * `dedicated_master_count` - (Optional) Number of dedicated master nodes in the cluster
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Documented below.
-* `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
+* `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
 
 **zone_awareness_config** supports the following attributes:
 

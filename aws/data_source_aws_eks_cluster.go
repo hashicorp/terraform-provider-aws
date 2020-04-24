@@ -22,7 +22,6 @@ func dataSourceAwsEksCluster() *schema.Resource {
 			},
 			"certificate_authority": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -70,7 +69,6 @@ func dataSourceAwsEksCluster() *schema.Resource {
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
 			"platform_version": {
@@ -88,7 +86,6 @@ func dataSourceAwsEksCluster() *schema.Resource {
 			"tags": tagsSchemaComputed(),
 			"vpc_config": {
 				Type:     schema.TypeList,
-				MaxItems: 1,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

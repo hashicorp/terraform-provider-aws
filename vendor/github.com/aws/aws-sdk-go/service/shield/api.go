@@ -97,7 +97,7 @@ func (c *Shield) AssociateDRTLogBucketRequest(input *AssociateDRTLogBucketInput)
 //
 //   * AccessDeniedForDependencyException
 //   In order to grant the necessary access to the DDoS Response Team, the user
-//   submitting AssociateDRTRole must have the iam:PassRole permission. This error
+//   submitting the request must have the iam:PassRole permission. This error
 //   indicates the user did not have the appropriate permissions. For more information,
 //   see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 //
@@ -225,7 +225,7 @@ func (c *Shield) AssociateDRTRoleRequest(input *AssociateDRTRoleInput) (req *req
 //
 //   * AccessDeniedForDependencyException
 //   In order to grant the necessary access to the DDoS Response Team, the user
-//   submitting AssociateDRTRole must have the iam:PassRole permission. This error
+//   submitting the request must have the iam:PassRole permission. This error
 //   indicates the user did not have the appropriate permissions. For more information,
 //   see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 //
@@ -253,6 +253,111 @@ func (c *Shield) AssociateDRTRole(input *AssociateDRTRoleInput) (*AssociateDRTRo
 // for more information on using Contexts.
 func (c *Shield) AssociateDRTRoleWithContext(ctx aws.Context, input *AssociateDRTRoleInput, opts ...request.Option) (*AssociateDRTRoleOutput, error) {
 	req, out := c.AssociateDRTRoleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAssociateHealthCheck = "AssociateHealthCheck"
+
+// AssociateHealthCheckRequest generates a "aws/request.Request" representing the
+// client's request for the AssociateHealthCheck operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociateHealthCheck for more information on using the AssociateHealthCheck
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociateHealthCheckRequest method.
+//    req, resp := client.AssociateHealthCheckRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/AssociateHealthCheck
+func (c *Shield) AssociateHealthCheckRequest(input *AssociateHealthCheckInput) (req *request.Request, output *AssociateHealthCheckOutput) {
+	op := &request.Operation{
+		Name:       opAssociateHealthCheck,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssociateHealthCheckInput{}
+	}
+
+	output = &AssociateHealthCheckOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// AssociateHealthCheck API operation for AWS Shield.
+//
+// Adds health-based detection to the Shield Advanced protection for a resource.
+// Shield Advanced health-based detection uses the health of your AWS resource
+// to improve responsiveness and accuracy in attack detection and mitigation.
+//
+// You define the health check in Route 53 and then associate it with your Shield
+// Advanced protection. For more information, see Shield Advanced Health-Based
+// Detection (https://docs.aws.amazon.com/waf/latest/developerguide/ddos-overview.html#ddos-advanced-health-check-option)
+// in the AWS WAF and AWS Shield Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Shield's
+// API operation AssociateHealthCheck for usage and error information.
+//
+// Returned Error Types:
+//   * InternalErrorException
+//   Exception that indicates that a problem occurred with the service infrastructure.
+//   You can retry the request.
+//
+//   * LimitsExceededException
+//   Exception that indicates that the operation would exceed a limit.
+//
+//   Type is the type of limit that would be exceeded.
+//
+//   Limit is the threshold that would be exceeded.
+//
+//   * ResourceNotFoundException
+//   Exception indicating the specified resource does not exist.
+//
+//   * InvalidParameterException
+//   Exception that indicates that the parameters passed to the API are invalid.
+//
+//   * OptimisticLockException
+//   Exception that indicates that the protection state has been modified by another
+//   client. You can retry the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/AssociateHealthCheck
+func (c *Shield) AssociateHealthCheck(input *AssociateHealthCheckInput) (*AssociateHealthCheckOutput, error) {
+	req, out := c.AssociateHealthCheckRequest(input)
+	return out, req.Send()
+}
+
+// AssociateHealthCheckWithContext is the same as AssociateHealthCheck with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociateHealthCheck for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Shield) AssociateHealthCheckWithContext(ctx aws.Context, input *AssociateHealthCheckInput, opts ...request.Option) (*AssociateHealthCheckOutput, error) {
+	req, out := c.AssociateHealthCheckRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1156,7 +1261,7 @@ func (c *Shield) DisassociateDRTLogBucketRequest(input *DisassociateDRTLogBucket
 //
 //   * AccessDeniedForDependencyException
 //   In order to grant the necessary access to the DDoS Response Team, the user
-//   submitting AssociateDRTRole must have the iam:PassRole permission. This error
+//   submitting the request must have the iam:PassRole permission. This error
 //   indicates the user did not have the appropriate permissions. For more information,
 //   see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 //
@@ -1283,6 +1388,105 @@ func (c *Shield) DisassociateDRTRole(input *DisassociateDRTRoleInput) (*Disassoc
 // for more information on using Contexts.
 func (c *Shield) DisassociateDRTRoleWithContext(ctx aws.Context, input *DisassociateDRTRoleInput, opts ...request.Option) (*DisassociateDRTRoleOutput, error) {
 	req, out := c.DisassociateDRTRoleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDisassociateHealthCheck = "DisassociateHealthCheck"
+
+// DisassociateHealthCheckRequest generates a "aws/request.Request" representing the
+// client's request for the DisassociateHealthCheck operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DisassociateHealthCheck for more information on using the DisassociateHealthCheck
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DisassociateHealthCheckRequest method.
+//    req, resp := client.DisassociateHealthCheckRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DisassociateHealthCheck
+func (c *Shield) DisassociateHealthCheckRequest(input *DisassociateHealthCheckInput) (req *request.Request, output *DisassociateHealthCheckOutput) {
+	op := &request.Operation{
+		Name:       opDisassociateHealthCheck,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DisassociateHealthCheckInput{}
+	}
+
+	output = &DisassociateHealthCheckOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DisassociateHealthCheck API operation for AWS Shield.
+//
+// Removes health-based detection from the Shield Advanced protection for a
+// resource. Shield Advanced health-based detection uses the health of your
+// AWS resource to improve responsiveness and accuracy in attack detection and
+// mitigation.
+//
+// You define the health check in Route 53 and then associate or disassociate
+// it with your Shield Advanced protection. For more information, see Shield
+// Advanced Health-Based Detection (https://docs.aws.amazon.com/waf/latest/developerguide/ddos-overview.html#ddos-advanced-health-check-option)
+// in the AWS WAF and AWS Shield Developer Guide (https://docs.aws.amazon.com/waf/latest/developerguide/).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Shield's
+// API operation DisassociateHealthCheck for usage and error information.
+//
+// Returned Error Types:
+//   * InternalErrorException
+//   Exception that indicates that a problem occurred with the service infrastructure.
+//   You can retry the request.
+//
+//   * InvalidParameterException
+//   Exception that indicates that the parameters passed to the API are invalid.
+//
+//   * ResourceNotFoundException
+//   Exception indicating the specified resource does not exist.
+//
+//   * OptimisticLockException
+//   Exception that indicates that the protection state has been modified by another
+//   client. You can retry the request.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/shield-2016-06-02/DisassociateHealthCheck
+func (c *Shield) DisassociateHealthCheck(input *DisassociateHealthCheckInput) (*DisassociateHealthCheckOutput, error) {
+	req, out := c.DisassociateHealthCheckRequest(input)
+	return out, req.Send()
+}
+
+// DisassociateHealthCheckWithContext is the same as DisassociateHealthCheck with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DisassociateHealthCheck for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Shield) DisassociateHealthCheckWithContext(ctx aws.Context, input *DisassociateHealthCheckInput, opts ...request.Option) (*DisassociateHealthCheckOutput, error) {
+	req, out := c.DisassociateHealthCheckRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1736,8 +1940,8 @@ func (c *Shield) UpdateSubscriptionWithContext(ctx aws.Context, input *UpdateSub
 // Exception that indicates the specified AttackId does not exist, or the requester
 // does not have the appropriate permissions to access the AttackId.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -1754,17 +1958,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1772,31 +1976,31 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // In order to grant the necessary access to the DDoS Response Team, the user
-// submitting AssociateDRTRole must have the iam:PassRole permission. This error
+// submitting the request must have the iam:PassRole permission. This error
 // indicates the user did not have the appropriate permissions. For more information,
 // see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 type AccessDeniedForDependencyException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -1813,17 +2017,17 @@ func (s AccessDeniedForDependencyException) GoString() string {
 
 func newErrorAccessDeniedForDependencyException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedForDependencyException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedForDependencyException) Code() string {
+func (s *AccessDeniedForDependencyException) Code() string {
 	return "AccessDeniedForDependencyException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedForDependencyException) Message() string {
+func (s *AccessDeniedForDependencyException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1831,22 +2035,22 @@ func (s AccessDeniedForDependencyException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedForDependencyException) OrigErr() error {
+func (s *AccessDeniedForDependencyException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedForDependencyException) Error() string {
+func (s *AccessDeniedForDependencyException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedForDependencyException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedForDependencyException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedForDependencyException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedForDependencyException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type AssociateDRTLogBucketInput struct {
@@ -1962,6 +2166,80 @@ func (s AssociateDRTRoleOutput) String() string {
 
 // GoString returns the string representation
 func (s AssociateDRTRoleOutput) GoString() string {
+	return s.String()
+}
+
+type AssociateHealthCheckInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the health check to associate with the
+	// protection.
+	//
+	// HealthCheckArn is a required field
+	HealthCheckArn *string `min:"1" type:"string" required:"true"`
+
+	// The unique identifier (ID) for the Protection object to add the health check
+	// association to.
+	//
+	// ProtectionId is a required field
+	ProtectionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociateHealthCheckInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateHealthCheckInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociateHealthCheckInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociateHealthCheckInput"}
+	if s.HealthCheckArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("HealthCheckArn"))
+	}
+	if s.HealthCheckArn != nil && len(*s.HealthCheckArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckArn", 1))
+	}
+	if s.ProtectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProtectionId"))
+	}
+	if s.ProtectionId != nil && len(*s.ProtectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProtectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHealthCheckArn sets the HealthCheckArn field's value.
+func (s *AssociateHealthCheckInput) SetHealthCheckArn(v string) *AssociateHealthCheckInput {
+	s.HealthCheckArn = &v
+	return s
+}
+
+// SetProtectionId sets the ProtectionId field's value.
+func (s *AssociateHealthCheckInput) SetProtectionId(v string) *AssociateHealthCheckInput {
+	s.ProtectionId = &v
+	return s
+}
+
+type AssociateHealthCheckOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociateHealthCheckOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociateHealthCheckOutput) GoString() string {
 	return s.String()
 }
 
@@ -2833,6 +3111,80 @@ func (s DisassociateDRTRoleOutput) GoString() string {
 	return s.String()
 }
 
+type DisassociateHealthCheckInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the health check that is associated with
+	// the protection.
+	//
+	// HealthCheckArn is a required field
+	HealthCheckArn *string `min:"1" type:"string" required:"true"`
+
+	// The unique identifier (ID) for the Protection object to remove the health
+	// check association from.
+	//
+	// ProtectionId is a required field
+	ProtectionId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DisassociateHealthCheckInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateHealthCheckInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DisassociateHealthCheckInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DisassociateHealthCheckInput"}
+	if s.HealthCheckArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("HealthCheckArn"))
+	}
+	if s.HealthCheckArn != nil && len(*s.HealthCheckArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("HealthCheckArn", 1))
+	}
+	if s.ProtectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ProtectionId"))
+	}
+	if s.ProtectionId != nil && len(*s.ProtectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ProtectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHealthCheckArn sets the HealthCheckArn field's value.
+func (s *DisassociateHealthCheckInput) SetHealthCheckArn(v string) *DisassociateHealthCheckInput {
+	s.HealthCheckArn = &v
+	return s
+}
+
+// SetProtectionId sets the ProtectionId field's value.
+func (s *DisassociateHealthCheckInput) SetProtectionId(v string) *DisassociateHealthCheckInput {
+	s.ProtectionId = &v
+	return s
+}
+
+type DisassociateHealthCheckOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DisassociateHealthCheckOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisassociateHealthCheckOutput) GoString() string {
+	return s.String()
+}
+
 // Contact information that the DRT can use to contact you during a suspected
 // attack.
 type EmergencyContact struct {
@@ -2918,8 +3270,8 @@ func (s *GetSubscriptionStateOutput) SetSubscriptionState(v string) *GetSubscrip
 // Exception that indicates that a problem occurred with the service infrastructure.
 // You can retry the request.
 type InternalErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -2936,17 +3288,17 @@ func (s InternalErrorException) GoString() string {
 
 func newErrorInternalErrorException(v protocol.ResponseMetadata) error {
 	return &InternalErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalErrorException) Code() string {
+func (s *InternalErrorException) Code() string {
 	return "InternalErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalErrorException) Message() string {
+func (s *InternalErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2954,29 +3306,29 @@ func (s InternalErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalErrorException) OrigErr() error {
+func (s *InternalErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalErrorException) Error() string {
+func (s *InternalErrorException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Exception that indicates that the operation would not cause any change to
 // occur.
 type InvalidOperationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -2993,17 +3345,17 @@ func (s InvalidOperationException) GoString() string {
 
 func newErrorInvalidOperationException(v protocol.ResponseMetadata) error {
 	return &InvalidOperationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidOperationException) Code() string {
+func (s *InvalidOperationException) Code() string {
 	return "InvalidOperationException"
 }
 
 // Message returns the exception's message.
-func (s InvalidOperationException) Message() string {
+func (s *InvalidOperationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3011,29 +3363,29 @@ func (s InvalidOperationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidOperationException) OrigErr() error {
+func (s *InvalidOperationException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidOperationException) Error() string {
+func (s *InvalidOperationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidOperationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidOperationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidOperationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidOperationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Exception that indicates that the NextToken specified in the request is invalid.
 // Submit the request using the NextToken value that was returned in the response.
 type InvalidPaginationTokenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3050,17 +3402,17 @@ func (s InvalidPaginationTokenException) GoString() string {
 
 func newErrorInvalidPaginationTokenException(v protocol.ResponseMetadata) error {
 	return &InvalidPaginationTokenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidPaginationTokenException) Code() string {
+func (s *InvalidPaginationTokenException) Code() string {
 	return "InvalidPaginationTokenException"
 }
 
 // Message returns the exception's message.
-func (s InvalidPaginationTokenException) Message() string {
+func (s *InvalidPaginationTokenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3068,28 +3420,28 @@ func (s InvalidPaginationTokenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidPaginationTokenException) OrigErr() error {
+func (s *InvalidPaginationTokenException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidPaginationTokenException) Error() string {
+func (s *InvalidPaginationTokenException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidPaginationTokenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidPaginationTokenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidPaginationTokenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidPaginationTokenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Exception that indicates that the parameters passed to the API are invalid.
 type InvalidParameterException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3106,17 +3458,17 @@ func (s InvalidParameterException) GoString() string {
 
 func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
 	return &InvalidParameterException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameterException) Code() string {
+func (s *InvalidParameterException) Code() string {
 	return "InvalidParameterException"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameterException) Message() string {
+func (s *InvalidParameterException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3124,29 +3476,29 @@ func (s InvalidParameterException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameterException) OrigErr() error {
+func (s *InvalidParameterException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameterException) Error() string {
+func (s *InvalidParameterException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameterException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameterException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Exception that indicates that the resource is invalid. You might not have
 // access to the resource, or the resource might not exist.
 type InvalidResourceException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3163,17 +3515,17 @@ func (s InvalidResourceException) GoString() string {
 
 func newErrorInvalidResourceException(v protocol.ResponseMetadata) error {
 	return &InvalidResourceException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidResourceException) Code() string {
+func (s *InvalidResourceException) Code() string {
 	return "InvalidResourceException"
 }
 
 // Message returns the exception's message.
-func (s InvalidResourceException) Message() string {
+func (s *InvalidResourceException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3181,22 +3533,22 @@ func (s InvalidResourceException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidResourceException) OrigErr() error {
+func (s *InvalidResourceException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidResourceException) Error() string {
+func (s *InvalidResourceException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidResourceException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidResourceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidResourceException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidResourceException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies how many protections of a given type you can create.
@@ -3238,8 +3590,8 @@ func (s *Limit) SetType(v string) *Limit {
 //
 // Limit is the threshold that would be exceeded.
 type LimitsExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Limit *int64 `type:"long"`
 
@@ -3260,17 +3612,17 @@ func (s LimitsExceededException) GoString() string {
 
 func newErrorLimitsExceededException(v protocol.ResponseMetadata) error {
 	return &LimitsExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitsExceededException) Code() string {
+func (s *LimitsExceededException) Code() string {
 	return "LimitsExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitsExceededException) Message() string {
+func (s *LimitsExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3278,22 +3630,22 @@ func (s LimitsExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitsExceededException) OrigErr() error {
+func (s *LimitsExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitsExceededException) Error() string {
+func (s *LimitsExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitsExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitsExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitsExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitsExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListAttacksInput struct {
@@ -3520,8 +3872,8 @@ func (s *ListProtectionsOutput) SetProtections(v []*Protection) *ListProtections
 // of your subscription. This exception indicates that you are attempting to
 // change AutoRenew prior to that period.
 type LockedSubscriptionException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3538,17 +3890,17 @@ func (s LockedSubscriptionException) GoString() string {
 
 func newErrorLockedSubscriptionException(v protocol.ResponseMetadata) error {
 	return &LockedSubscriptionException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LockedSubscriptionException) Code() string {
+func (s *LockedSubscriptionException) Code() string {
 	return "LockedSubscriptionException"
 }
 
 // Message returns the exception's message.
-func (s LockedSubscriptionException) Message() string {
+func (s *LockedSubscriptionException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3556,22 +3908,22 @@ func (s LockedSubscriptionException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LockedSubscriptionException) OrigErr() error {
+func (s *LockedSubscriptionException) OrigErr() error {
 	return nil
 }
 
-func (s LockedSubscriptionException) Error() string {
+func (s *LockedSubscriptionException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LockedSubscriptionException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LockedSubscriptionException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LockedSubscriptionException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LockedSubscriptionException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The mitigation applied to a DDoS attack.
@@ -3600,8 +3952,8 @@ func (s *Mitigation) SetMitigationName(v string) *Mitigation {
 
 // The ARN of the role that you specifed does not exist.
 type NoAssociatedRoleException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3618,17 +3970,17 @@ func (s NoAssociatedRoleException) GoString() string {
 
 func newErrorNoAssociatedRoleException(v protocol.ResponseMetadata) error {
 	return &NoAssociatedRoleException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NoAssociatedRoleException) Code() string {
+func (s *NoAssociatedRoleException) Code() string {
 	return "NoAssociatedRoleException"
 }
 
 // Message returns the exception's message.
-func (s NoAssociatedRoleException) Message() string {
+func (s *NoAssociatedRoleException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3636,29 +3988,29 @@ func (s NoAssociatedRoleException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NoAssociatedRoleException) OrigErr() error {
+func (s *NoAssociatedRoleException) OrigErr() error {
 	return nil
 }
 
-func (s NoAssociatedRoleException) Error() string {
+func (s *NoAssociatedRoleException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NoAssociatedRoleException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NoAssociatedRoleException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NoAssociatedRoleException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NoAssociatedRoleException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Exception that indicates that the protection state has been modified by another
 // client. You can retry the request.
 type OptimisticLockException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3675,17 +4027,17 @@ func (s OptimisticLockException) GoString() string {
 
 func newErrorOptimisticLockException(v protocol.ResponseMetadata) error {
 	return &OptimisticLockException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OptimisticLockException) Code() string {
+func (s *OptimisticLockException) Code() string {
 	return "OptimisticLockException"
 }
 
 // Message returns the exception's message.
-func (s OptimisticLockException) Message() string {
+func (s *OptimisticLockException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3693,27 +4045,31 @@ func (s OptimisticLockException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OptimisticLockException) OrigErr() error {
+func (s *OptimisticLockException) OrigErr() error {
 	return nil
 }
 
-func (s OptimisticLockException) Error() string {
+func (s *OptimisticLockException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OptimisticLockException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OptimisticLockException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OptimisticLockException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OptimisticLockException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object that represents a resource that is under DDoS protection.
 type Protection struct {
 	_ struct{} `type:"structure"`
+
+	// The unique identifier (ID) for the Route 53 health check that's associated
+	// with the protection.
+	HealthCheckIds []*string `type:"list"`
 
 	// The unique identifier (ID) of the protection.
 	Id *string `min:"1" type:"string"`
@@ -3733,6 +4089,12 @@ func (s Protection) String() string {
 // GoString returns the string representation
 func (s Protection) GoString() string {
 	return s.String()
+}
+
+// SetHealthCheckIds sets the HealthCheckIds field's value.
+func (s *Protection) SetHealthCheckIds(v []*string) *Protection {
+	s.HealthCheckIds = v
+	return s
 }
 
 // SetId sets the Id field's value.
@@ -3755,8 +4117,8 @@ func (s *Protection) SetResourceArn(v string) *Protection {
 
 // Exception indicating the specified resource already exists.
 type ResourceAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3773,17 +4135,17 @@ func (s ResourceAlreadyExistsException) GoString() string {
 
 func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ResourceAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceAlreadyExistsException) Code() string {
+func (s *ResourceAlreadyExistsException) Code() string {
 	return "ResourceAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ResourceAlreadyExistsException) Message() string {
+func (s *ResourceAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3791,28 +4153,28 @@ func (s ResourceAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceAlreadyExistsException) OrigErr() error {
+func (s *ResourceAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceAlreadyExistsException) Error() string {
+func (s *ResourceAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Exception indicating the specified resource does not exist.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3829,17 +4191,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3847,22 +4209,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The attack information for the specified SubResource.

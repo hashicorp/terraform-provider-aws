@@ -1900,8 +1900,8 @@ func (c *AccessAnalyzer) UpdateFindingsWithContext(ctx aws.Context, input *Updat
 
 // You do not have sufficient access to perform this action.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -1918,17 +1918,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -1936,22 +1936,22 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains details about the analyzed resource.
@@ -1985,6 +1985,11 @@ type AnalyzedResource struct {
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `locationName:"resourceArn" type:"string" required:"true"`
+
+	// The AWS account ID that owns the resource.
+	//
+	// ResourceOwnerAccount is a required field
+	ResourceOwnerAccount *string `locationName:"resourceOwnerAccount" type:"string" required:"true"`
 
 	// The type of the resource that was analyzed.
 	//
@@ -2049,6 +2054,12 @@ func (s *AnalyzedResource) SetResourceArn(v string) *AnalyzedResource {
 	return s
 }
 
+// SetResourceOwnerAccount sets the ResourceOwnerAccount field's value.
+func (s *AnalyzedResource) SetResourceOwnerAccount(v string) *AnalyzedResource {
+	s.ResourceOwnerAccount = &v
+	return s
+}
+
 // SetResourceType sets the ResourceType field's value.
 func (s *AnalyzedResource) SetResourceType(v string) *AnalyzedResource {
 	s.ResourceType = &v
@@ -2082,6 +2093,11 @@ type AnalyzedResourceSummary struct {
 	// ResourceArn is a required field
 	ResourceArn *string `locationName:"resourceArn" type:"string" required:"true"`
 
+	// The AWS account ID that owns the resource.
+	//
+	// ResourceOwnerAccount is a required field
+	ResourceOwnerAccount *string `locationName:"resourceOwnerAccount" type:"string" required:"true"`
+
 	// The type of resource that was analyzed.
 	//
 	// ResourceType is a required field
@@ -2101,6 +2117,12 @@ func (s AnalyzedResourceSummary) GoString() string {
 // SetResourceArn sets the ResourceArn field's value.
 func (s *AnalyzedResourceSummary) SetResourceArn(v string) *AnalyzedResourceSummary {
 	s.ResourceArn = &v
+	return s
+}
+
+// SetResourceOwnerAccount sets the ResourceOwnerAccount field's value.
+func (s *AnalyzedResourceSummary) SetResourceOwnerAccount(v string) *AnalyzedResourceSummary {
+	s.ResourceOwnerAccount = &v
 	return s
 }
 
@@ -2134,6 +2156,23 @@ type AnalyzerSummary struct {
 	//
 	// Name is a required field
 	Name *string `locationName:"name" min:"1" type:"string" required:"true"`
+
+	// The status of the analyzer. An Active analyzer successfully monitors supported
+	// resources and generates new findings. The analyzer is Disabled when a user
+	// action, such as removing trusted access for IAM Access Analyzer from AWS
+	// Organizations, causes the analyzer to stop generating new findings. The status
+	// is Creating when the analyzer creation is in progress and Failed when the
+	// analyzer creation has failed.
+	//
+	// Status is a required field
+	Status *string `locationName:"status" type:"string" required:"true" enum:"AnalyzerStatus"`
+
+	// The statusReason provides more details about the current status of the analyzer.
+	// For example, if the creation for the analyzer fails, a Failed status is displayed.
+	// For an analyzer with organization as the type, this failure can be due to
+	// an issue with creating the service-linked roles required in the member accounts
+	// of the AWS organization.
+	StatusReason *StatusReason `locationName:"statusReason" type:"structure"`
 
 	// The tags added to the analyzer.
 	Tags map[string]*string `locationName:"tags" type:"map"`
@@ -2182,6 +2221,18 @@ func (s *AnalyzerSummary) SetLastResourceAnalyzedAt(v time.Time) *AnalyzerSummar
 // SetName sets the Name field's value.
 func (s *AnalyzerSummary) SetName(v string) *AnalyzerSummary {
 	s.Name = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AnalyzerSummary) SetStatus(v string) *AnalyzerSummary {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *AnalyzerSummary) SetStatusReason(v *StatusReason) *AnalyzerSummary {
+	s.StatusReason = v
 	return s
 }
 
@@ -2258,8 +2309,8 @@ func (s *ArchiveRuleSummary) SetUpdatedAt(v time.Time) *ArchiveRuleSummary {
 
 // A conflict exception error.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -2286,17 +2337,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2304,22 +2355,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Creates an analyzer.
@@ -2805,6 +2856,11 @@ type Finding struct {
 	// The resource that an external principal has access to.
 	Resource *string `locationName:"resource" type:"string"`
 
+	// The AWS account ID that owns the resource.
+	//
+	// ResourceOwnerAccount is a required field
+	ResourceOwnerAccount *string `locationName:"resourceOwnerAccount" type:"string" required:"true"`
+
 	// The type of the resource reported in the finding.
 	//
 	// ResourceType is a required field
@@ -2885,6 +2941,12 @@ func (s *Finding) SetResource(v string) *Finding {
 	return s
 }
 
+// SetResourceOwnerAccount sets the ResourceOwnerAccount field's value.
+func (s *Finding) SetResourceOwnerAccount(v string) *Finding {
+	s.ResourceOwnerAccount = &v
+	return s
+}
+
 // SetResourceType sets the ResourceType field's value.
 func (s *Finding) SetResourceType(v string) *Finding {
 	s.ResourceType = &v
@@ -2944,6 +3006,11 @@ type FindingSummary struct {
 
 	// The resource that the external principal has access to.
 	Resource *string `locationName:"resource" type:"string"`
+
+	// The AWS account ID that owns the resource.
+	//
+	// ResourceOwnerAccount is a required field
+	ResourceOwnerAccount *string `locationName:"resourceOwnerAccount" type:"string" required:"true"`
 
 	// The type of the resource that the external principal has access to.
 	//
@@ -3022,6 +3089,12 @@ func (s *FindingSummary) SetPrincipal(v map[string]*string) *FindingSummary {
 // SetResource sets the Resource field's value.
 func (s *FindingSummary) SetResource(v string) *FindingSummary {
 	s.Resource = &v
+	return s
+}
+
+// SetResourceOwnerAccount sets the ResourceOwnerAccount field's value.
+func (s *FindingSummary) SetResourceOwnerAccount(v string) *FindingSummary {
+	s.ResourceOwnerAccount = &v
 	return s
 }
 
@@ -3423,8 +3496,8 @@ func (s *InlineArchiveRule) SetRuleName(v string) *InlineArchiveRule {
 
 // Internal server error.
 type InternalServerException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -3444,17 +3517,17 @@ func (s InternalServerException) GoString() string {
 
 func newErrorInternalServerException(v protocol.ResponseMetadata) error {
 	return &InternalServerException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerException) Code() string {
+func (s *InternalServerException) Code() string {
 	return "InternalServerException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerException) Message() string {
+func (s *InternalServerException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3462,22 +3535,22 @@ func (s InternalServerException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerException) OrigErr() error {
+func (s *InternalServerException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerException) Error() string {
+func (s *InternalServerException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Retrieves a list of resources that have been analyzed.
@@ -3942,8 +4015,8 @@ func (s *ListTagsForResourceOutput) SetTags(v map[string]*string) *ListTagsForRe
 
 // The specified resource could not be found.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -3970,17 +4043,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3988,28 +4061,28 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Service quote met error.
 type ServiceQuotaExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -4036,17 +4109,17 @@ func (s ServiceQuotaExceededException) GoString() string {
 
 func newErrorServiceQuotaExceededException(v protocol.ResponseMetadata) error {
 	return &ServiceQuotaExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceQuotaExceededException) Code() string {
+func (s *ServiceQuotaExceededException) Code() string {
 	return "ServiceQuotaExceededException"
 }
 
 // Message returns the exception's message.
-func (s ServiceQuotaExceededException) Message() string {
+func (s *ServiceQuotaExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4054,22 +4127,22 @@ func (s ServiceQuotaExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceQuotaExceededException) OrigErr() error {
+func (s *ServiceQuotaExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceQuotaExceededException) Error() string {
+func (s *ServiceQuotaExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceQuotaExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceQuotaExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceQuotaExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceQuotaExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The criteria used to sort.
@@ -4173,6 +4246,36 @@ func (s StartResourceScanOutput) GoString() string {
 	return s.String()
 }
 
+// Provides more details about the current status of the analyzer. For example,
+// if the creation for the analyzer fails, a Failed status is displayed. For
+// an analyzer with organization as the type, this failure can be due to an
+// issue with creating the service-linked roles required in the member accounts
+// of the AWS organization.
+type StatusReason struct {
+	_ struct{} `type:"structure"`
+
+	// The reason code for the current status of the analyzer.
+	//
+	// Code is a required field
+	Code *string `locationName:"code" type:"string" required:"true" enum:"ReasonCode"`
+}
+
+// String returns the string representation
+func (s StatusReason) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StatusReason) GoString() string {
+	return s.String()
+}
+
+// SetCode sets the Code field's value.
+func (s *StatusReason) SetCode(v string) *StatusReason {
+	s.Code = &v
+	return s
+}
+
 // Adds a tag to the specified resource.
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
@@ -4246,8 +4349,8 @@ func (s TagResourceOutput) GoString() string {
 
 // Throttling limit exceeded error.
 type ThrottlingException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -4267,17 +4370,17 @@ func (s ThrottlingException) GoString() string {
 
 func newErrorThrottlingException(v protocol.ResponseMetadata) error {
 	return &ThrottlingException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ThrottlingException) Code() string {
+func (s *ThrottlingException) Code() string {
 	return "ThrottlingException"
 }
 
 // Message returns the exception's message.
-func (s ThrottlingException) Message() string {
+func (s *ThrottlingException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4285,22 +4388,22 @@ func (s ThrottlingException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ThrottlingException) OrigErr() error {
+func (s *ThrottlingException) OrigErr() error {
 	return nil
 }
 
-func (s ThrottlingException) Error() string {
+func (s *ThrottlingException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ThrottlingException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ThrottlingException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ThrottlingException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ThrottlingException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Removes a tag from the specified resource.
@@ -4579,8 +4682,8 @@ func (s UpdateFindingsOutput) GoString() string {
 
 // Validation exception error.
 type ValidationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A list of fields that didn't validate.
 	FieldList []*ValidationExceptionField `locationName:"fieldList" type:"list"`
@@ -4605,17 +4708,17 @@ func (s ValidationException) GoString() string {
 
 func newErrorValidationException(v protocol.ResponseMetadata) error {
 	return &ValidationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ValidationException) Code() string {
+func (s *ValidationException) Code() string {
 	return "ValidationException"
 }
 
 // Message returns the exception's message.
-func (s ValidationException) Message() string {
+func (s *ValidationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4623,22 +4726,22 @@ func (s ValidationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ValidationException) OrigErr() error {
+func (s *ValidationException) OrigErr() error {
 	return nil
 }
 
-func (s ValidationException) Error() string {
+func (s *ValidationException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ValidationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ValidationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains information about a validation exception.
@@ -4679,6 +4782,20 @@ func (s *ValidationExceptionField) SetName(v string) *ValidationExceptionField {
 }
 
 const (
+	// AnalyzerStatusActive is a AnalyzerStatus enum value
+	AnalyzerStatusActive = "ACTIVE"
+
+	// AnalyzerStatusCreating is a AnalyzerStatus enum value
+	AnalyzerStatusCreating = "CREATING"
+
+	// AnalyzerStatusDisabled is a AnalyzerStatus enum value
+	AnalyzerStatusDisabled = "DISABLED"
+
+	// AnalyzerStatusFailed is a AnalyzerStatus enum value
+	AnalyzerStatusFailed = "FAILED"
+)
+
+const (
 	// FindingStatusActive is a FindingStatus enum value
 	FindingStatusActive = "ACTIVE"
 
@@ -4706,6 +4823,20 @@ const (
 )
 
 const (
+	// ReasonCodeAwsServiceAccessDisabled is a ReasonCode enum value
+	ReasonCodeAwsServiceAccessDisabled = "AWS_SERVICE_ACCESS_DISABLED"
+
+	// ReasonCodeDelegatedAdministratorDeregistered is a ReasonCode enum value
+	ReasonCodeDelegatedAdministratorDeregistered = "DELEGATED_ADMINISTRATOR_DEREGISTERED"
+
+	// ReasonCodeOrganizationDeleted is a ReasonCode enum value
+	ReasonCodeOrganizationDeleted = "ORGANIZATION_DELETED"
+
+	// ReasonCodeServiceLinkedRoleCreationFailed is a ReasonCode enum value
+	ReasonCodeServiceLinkedRoleCreationFailed = "SERVICE_LINKED_ROLE_CREATION_FAILED"
+)
+
+const (
 	// ResourceTypeAwsIamRole is a ResourceType enum value
 	ResourceTypeAwsIamRole = "AWS::IAM::Role"
 
@@ -4728,6 +4859,9 @@ const (
 const (
 	// TypeAccount is a Type enum value
 	TypeAccount = "ACCOUNT"
+
+	// TypeOrganization is a Type enum value
+	TypeOrganization = "ORGANIZATION"
 )
 
 const (
