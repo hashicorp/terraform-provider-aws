@@ -18,6 +18,9 @@ func resourceAwsDbSnapshot() *schema.Resource {
 		Read:   resourceAwsDbSnapshotRead,
 		Update: resourceAwsDbSnapshotUpdate,
 		Delete: resourceAwsDbSnapshotDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -163,9 +166,12 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 
 	snapshot := resp.DBSnapshots[0]
 
+	arn := aws.StringValue(snapshot.DBSnapshotArn)
+	d.Set("db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
+	d.Set("db_instance_identifier", snapshot.DBInstanceIdentifier)
 	d.Set("allocated_storage", snapshot.AllocatedStorage)
 	d.Set("availability_zone", snapshot.AvailabilityZone)
-	d.Set("db_snapshot_arn", snapshot.DBSnapshotArn)
+	d.Set("db_snapshot_arn", arn)
 	d.Set("encrypted", snapshot.Encrypted)
 	d.Set("engine", snapshot.Engine)
 	d.Set("engine_version", snapshot.EngineVersion)
@@ -180,10 +186,10 @@ func resourceAwsDbSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("status", snapshot.Status)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags, err := keyvaluetags.RdsListTags(conn, d.Get("db_snapshot_arn").(string))
+	tags, err := keyvaluetags.RdsListTags(conn, arn)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for RDS DB Snapshot (%s): %s", d.Get("db_snapshot_arn").(string), err)
+		return fmt.Errorf("error listing tags for RDS DB Snapshot (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
