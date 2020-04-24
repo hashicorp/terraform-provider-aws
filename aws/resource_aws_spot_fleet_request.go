@@ -744,12 +744,12 @@ func readSpotFleetBlockDeviceMappingsFromConfig(
 func buildAwsSpotFleetLaunchSpecifications(
 	d *schema.ResourceData, meta interface{}) ([]*ec2.SpotFleetLaunchSpecification, error) {
 
-	user_specs := d.Get("launch_specification").(*schema.Set).List()
-	specs := make([]*ec2.SpotFleetLaunchSpecification, len(user_specs))
-	for i, user_spec := range user_specs {
-		user_spec_map := user_spec.(map[string]interface{})
+	userSpecs := d.Get("launch_specification").(*schema.Set).List()
+	specs := make([]*ec2.SpotFleetLaunchSpecification, len(userSpecs))
+	for i, userSpec := range userSpecs {
+		userSpecMap := userSpec.(map[string]interface{})
 		// panic: interface conversion: interface {} is map[string]interface {}, not *schema.ResourceData
-		opts, err := buildSpotFleetLaunchSpecification(user_spec_map, meta)
+		opts, err := buildSpotFleetLaunchSpecification(userSpecMap, meta)
 		if err != nil {
 			return nil, err
 		}
@@ -898,11 +898,11 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		valid_until, err := time.Parse(time.RFC3339, v.(string))
+		validUntil, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotFleetConfig.ValidUntil = aws.Time(valid_until)
+		spotFleetConfig.ValidUntil = aws.Time(validUntil)
 	} else {
 		validUntil := time.Now().Add(24 * time.Hour)
 		spotFleetConfig.ValidUntil = aws.Time(validUntil)
