@@ -53,10 +53,9 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			// http://docs.aws.amazon.com/sdk-for-go/api/service/ec2.html#type-SpotFleetLaunchSpecification
 			// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html
 			"launch_specification": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ConflictsWith: []string{"launch_template_config"},
-				ForceNew:      true,
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"vpc_security_group_ids": {
@@ -311,14 +310,13 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 					},
 				},
 				Set:          hashLaunchSpecification,
-				AtLeastOneOf: []string{"launch_specification", "launch_template_config"},
+				ExactlyOneOf: []string{"launch_specification", "launch_template_config"},
 			},
 			"launch_template_config": {
-				Type:          schema.TypeSet,
-				Optional:      true,
-				ForceNew:      true,
-				ConflictsWith: []string{"launch_specification"},
-				AtLeastOneOf:  []string{"launch_specification", "launch_template_config"},
+				Type:         schema.TypeSet,
+				Optional:     true,
+				ForceNew:     true,
+				ExactlyOneOf: []string{"launch_specification", "launch_template_config"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"launch_template_specification": {
