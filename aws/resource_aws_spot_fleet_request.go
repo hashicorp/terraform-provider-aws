@@ -950,7 +950,8 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	// take effect immediately, resulting in an InvalidSpotFleetRequestConfig error
 	var resp *ec2.RequestSpotFleetOutput
 	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.RequestSpotFleet(spotFleetOpts)
+		var err error
+		resp, err = conn.RequestSpotFleet(spotFleetOpts)
 
 		if isAWSErr(err, "InvalidSpotFleetRequestConfig", "") {
 			return resource.RetryableError(fmt.Errorf("Error creating Spot fleet request, retrying: %s", err))
