@@ -133,6 +133,14 @@ func TestAccAWSDBSnapshot_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
+			{
+				Config: testAccAwsDbSnapshotConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDbSnapshotExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
 		},
 	})
 }
