@@ -34,9 +34,9 @@ func TestAccAWSVolumeAttachment_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_volume_attachment.ebs_att",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -64,9 +64,9 @@ func TestAccAWSVolumeAttachment_skipDestroy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_volume_attachment.ebs_att",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"skip_destroy", // attribute only used on resource deletion
@@ -129,9 +129,9 @@ func TestAccAWSVolumeAttachment_attachStopped(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_volume_attachment.ebs_att",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -155,9 +155,9 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_volume_attachment.ebs_att",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"force_detach", // attribute only used on resource deletion
@@ -172,9 +172,9 @@ func TestAccAWSVolumeAttachment_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      "aws_volume_attachment.ebs_att",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc("aws_volume_attachment.ebs_att"),
+				ImportStateIdFunc: testAccAWSVolumeAttachmentImportStateIDFunc(resourceName),
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"force_detach", // attribute only used on resource deletion
