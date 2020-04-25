@@ -1,7 +1,7 @@
 ---
+subcategory: "Route53 Domains"
 layout: "aws"
 page_title: "AWS: aws_route53domains_domain"
-sidebar_current: "docs-aws-resource-route53-domain"
 description: |-
   Manages a Route53 Domain
 ---
