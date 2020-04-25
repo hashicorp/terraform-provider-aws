@@ -20,11 +20,11 @@ const (
 )
 
 const (
-	DestinationTypeS3            = "s3"
-	DestinationTypeExtendedS3    = "extended_s3"
-	DestinationTypeElasticsearch = "elasticsearch"
-	DestinationTypeRedshift      = "redshift"
-	DestinationTypeSplunk        = "splunk"
+	firehoseDestinationTypeS3            = "s3"
+	firehoseDestinationTypeExtendedS3    = "extended_s3"
+	firehoseDestinationTypeElasticsearch = "elasticsearch"
+	firehoseDestinationTypeRedshift      = "redshift"
+	firehoseDestinationTypeSplunk        = "splunk"
 )
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
@@ -649,7 +649,7 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	if len(s.Destinations) > 0 {
 		destination := s.Destinations[0]
 		if destination.RedshiftDestinationDescription != nil {
-			d.Set("destination", DestinationTypeRedshift)
+			d.Set("destination", firehoseDestinationTypeRedshift)
 			configuredPassword := d.Get("redshift_configuration.0.password").(string)
 			if err := d.Set("redshift_configuration", flattenFirehoseRedshiftConfiguration(destination.RedshiftDestinationDescription, configuredPassword)); err != nil {
 				return fmt.Errorf("error setting redshift_configuration: %s", err)
@@ -658,7 +658,7 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
 		} else if destination.ElasticsearchDestinationDescription != nil {
-			d.Set("destination", DestinationTypeElasticsearch)
+			d.Set("destination", firehoseDestinationTypeElasticsearch)
 			if err := d.Set("elasticsearch_configuration", flattenFirehoseElasticsearchConfiguration(destination.ElasticsearchDestinationDescription)); err != nil {
 				return fmt.Errorf("error setting elasticsearch_configuration: %s", err)
 			}
@@ -666,20 +666,20 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
 		} else if destination.SplunkDestinationDescription != nil {
-			d.Set("destination", DestinationTypeSplunk)
+			d.Set("destination", firehoseDestinationTypeSplunk)
 			if err := d.Set("splunk_configuration", flattenFirehoseSplunkConfiguration(destination.SplunkDestinationDescription)); err != nil {
 				return fmt.Errorf("error setting splunk_configuration: %s", err)
 			}
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.SplunkDestinationDescription.S3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
-		} else if d.Get("destination").(string) == DestinationTypeS3 {
-			d.Set("destination", DestinationTypeS3)
+		} else if d.Get("destination").(string) == firehoseDestinationTypeS3 {
+			d.Set("destination", firehoseDestinationTypeS3)
 			if err := d.Set("s3_configuration", flattenFirehoseS3Configuration(destination.S3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting s3_configuration: %s", err)
 			}
 		} else {
-			d.Set("destination", DestinationTypeExtendedS3)
+			d.Set("destination", firehoseDestinationTypeExtendedS3)
 			if err := d.Set("extended_s3_configuration", flattenFirehoseExtendedS3Configuration(destination.ExtendedS3DestinationDescription)); err != nil {
 				return fmt.Errorf("error setting extended_s3_configuration: %s", err)
 			}
@@ -777,11 +777,11 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 					return strings.ToLower(value)
 				},
 				ValidateFunc: validation.StringInSlice([]string{
-					DestinationTypeS3,
-					DestinationTypeExtendedS3,
-					DestinationTypeRedshift,
-					DestinationTypeElasticsearch,
-					DestinationTypeSplunk,
+					firehoseDestinationTypeS3,
+					firehoseDestinationTypeExtendedS3,
+					firehoseDestinationTypeRedshift,
+					firehoseDestinationTypeElasticsearch,
+					firehoseDestinationTypeSplunk,
 				}, false),
 			},
 
@@ -2171,27 +2171,27 @@ func resourceAwsKinesisFirehoseDeliveryStreamCreate(d *schema.ResourceData, meta
 		createInput.DeliveryStreamType = aws.String(firehose.DeliveryStreamTypeDirectPut)
 	}
 
-	if d.Get("destination").(string) == DestinationTypeExtendedS3 {
+	if d.Get("destination").(string) == firehoseDestinationTypeExtendedS3 {
 		extendedS3Config := createExtendedS3Config(d)
 		createInput.ExtendedS3DestinationConfiguration = extendedS3Config
 	} else {
 		s3Config := createS3Config(d)
 
-		if d.Get("destination").(string) == DestinationTypeS3 {
+		if d.Get("destination").(string) == firehoseDestinationTypeS3 {
 			createInput.S3DestinationConfiguration = s3Config
-		} else if d.Get("destination").(string) == DestinationTypeElasticsearch {
+		} else if d.Get("destination").(string) == firehoseDestinationTypeElasticsearch {
 			esConfig, err := createElasticsearchConfig(d, s3Config)
 			if err != nil {
 				return err
 			}
 			createInput.ElasticsearchDestinationConfiguration = esConfig
-		} else if d.Get("destination").(string) == DestinationTypeRedshift {
+		} else if d.Get("destination").(string) == firehoseDestinationTypeRedshift {
 			rc, err := createRedshiftConfig(d, s3Config)
 			if err != nil {
 				return err
 			}
 			createInput.RedshiftDestinationConfiguration = rc
-		} else if d.Get("destination").(string) == DestinationTypeSplunk {
+		} else if d.Get("destination").(string) == firehoseDestinationTypeSplunk {
 			rc, err := createSplunkConfig(d, s3Config)
 			if err != nil {
 				return err
@@ -2265,7 +2265,7 @@ func validateAwsKinesisFirehoseSchema(d *schema.ResourceData) error {
 	_, s3Exists := d.GetOk("s3_configuration")
 	_, extendedS3Exists := d.GetOk("extended_s3_configuration")
 
-	if d.Get("destination").(string) == DestinationTypeExtendedS3 {
+	if d.Get("destination").(string) == firehoseDestinationTypeExtendedS3 {
 		if !extendedS3Exists {
 			return fmt.Errorf(
 				"When destination is 'extended_s3', extended_s3_configuration is required",
@@ -2307,27 +2307,27 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 		DestinationId:                  aws.String(d.Get("destination_id").(string)),
 	}
 
-	if d.Get("destination").(string) == DestinationTypeExtendedS3 {
+	if d.Get("destination").(string) == firehoseDestinationTypeExtendedS3 {
 		extendedS3Config := updateExtendedS3Config(d)
 		updateInput.ExtendedS3DestinationUpdate = extendedS3Config
 	} else {
 		s3Config := updateS3Config(d)
 
-		if d.Get("destination").(string) == DestinationTypeS3 {
+		if d.Get("destination").(string) == firehoseDestinationTypeS3 {
 			updateInput.S3DestinationUpdate = s3Config
-		} else if d.Get("destination").(string) == DestinationTypeElasticsearch {
+		} else if d.Get("destination").(string) == firehoseDestinationTypeElasticsearch {
 			esUpdate, err := updateElasticsearchConfig(d, s3Config)
 			if err != nil {
 				return err
 			}
 			updateInput.ElasticsearchDestinationUpdate = esUpdate
-		} else if d.Get("destination").(string) == DestinationTypeRedshift {
+		} else if d.Get("destination").(string) == firehoseDestinationTypeRedshift {
 			rc, err := updateRedshiftConfig(d, s3Config)
 			if err != nil {
 				return err
 			}
 			updateInput.RedshiftDestinationUpdate = rc
-		} else if d.Get("destination").(string) == DestinationTypeSplunk {
+		} else if d.Get("destination").(string) == firehoseDestinationTypeSplunk {
 			rc, err := updateSplunkConfig(d, s3Config)
 			if err != nil {
 				return err
