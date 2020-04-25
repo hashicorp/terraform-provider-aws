@@ -143,7 +143,7 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[INFO] EIP ID: %s (domain: %v)", d.Id(), *allocResp.Domain)
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), nil, v); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(ec2conn, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding tags: %s", err)
 		}
 	}
@@ -251,9 +251,9 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		dashIP := strings.Replace(*address.PublicIp, ".", "-", -1)
 
 		if region == "us-east-1" {
-			d.Set("public_dns", fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", dashIP))
+			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.compute-1", dashIP)))
 		} else {
-			d.Set("public_dns", fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", dashIP, region))
+			d.Set("public_dns", meta.(*AWSClient).PartitionHostname(fmt.Sprintf("ec2-%s.%s.compute", dashIP, region)))
 		}
 	}
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
@@ -358,7 +358,7 @@ func resourceAwsEipUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Ec2UpdateTags(ec2conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EIP (%s) tags: %s", d.Id(), err)

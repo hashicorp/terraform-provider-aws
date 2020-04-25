@@ -124,7 +124,6 @@ func resourceAwsRedshiftSubnetGroupRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
-	d.Partial(true)
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
@@ -132,8 +131,6 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
 	if d.HasChange("subnet_ids") || d.HasChange("description") {
@@ -158,8 +155,6 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 			return err
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsRedshiftSubnetGroupRead(d, meta)
 }

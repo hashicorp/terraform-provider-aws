@@ -281,8 +281,6 @@ func flattenSageMakerVpcConfigResponse(vpcConfig *sagemaker.VpcConfig) []map[str
 func resourceAwsSagemakerModelUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sagemakerconn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
@@ -290,8 +288,6 @@ func resourceAwsSagemakerModelUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error updating Sagemaker Model (%s) tags: %s", d.Id(), err)
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsSagemakerModelRead(d, meta)
 }

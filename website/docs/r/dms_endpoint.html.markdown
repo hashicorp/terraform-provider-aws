@@ -53,18 +53,20 @@ The following arguments are supported:
     - Must not contain two consecutive hyphens
 
 * `endpoint_type` - (Required) The type of endpoint. Can be one of `source | target`.
-* `engine_name` - (Required) The type of engine for the endpoint. Can be one of `aurora | azuredb | db2 | docdb | dynamodb | mariadb | mongodb | mysql | oracle | postgres | redshift | s3 | sqlserver | sybase`.
+* `engine_name` - (Required) The type of engine for the endpoint. Can be one of `aurora | aurora-postgresql| azuredb | db2 | docdb | dynamodb | elasticsearch | kinesis | mariadb | mongodb | mysql | oracle | postgres | redshift | s3 | sqlserver | sybase`.
 * `extra_connection_attributes` - (Optional) Additional attributes associated with the connection. For available attributes see [Using Extra Connection Attributes with AWS Database Migration Service](http://docs.aws.amazon.com/dms/latest/userguide/CHAP_Introduction.ConnectionAttributes.html).
 * `kms_key_arn` - (Required when `engine_name` is `mongodb`, optional otherwise) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `password` - (Optional) The password to be used to login to the endpoint database.
 * `port` - (Optional) The port used by the endpoint database.
 * `server_name` - (Optional) The host name of the server.
 * `ssl_mode` - (Optional, Default: none) The SSL mode to use for the connection. Can be one of `none | require | verify-ca | verify-full`
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `username` - (Optional) The user name to be used to login to the endpoint database.
 * `service_access_role` - (Optional) The Amazon Resource Name (ARN) used by the service access IAM role for dynamodb endpoints.
 * `mongodb_settings` - (Optional) Settings for the source MongoDB endpoint. Available settings are `auth_type` (default: `password`), `auth_mechanism` (default: `default`), `nesting_level` (default: `none`), `extract_doc_id` (default: `false`), `docs_to_investigate` (default: `1000`) and `auth_source` (default: `admin`). For more details, see [Using MongoDB as a Source for AWS DMS](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html).
 * `s3_settings` - (Optional) Settings for the target S3 endpoint. Available settings are `service_access_role_arn`, `external_table_definition`, `csv_row_delimiter` (default: `\\n`), `csv_delimiter` (default: `,`), `bucket_folder`, `bucket_name` and `compression_type` (default: `NONE`). For more details, see [Using Amazon S3 as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.S3.html).
+* `elasticsearch_settings` - (Optional) Settings for the target Elasticsearch. Available settings are `service_access_role_arn`, `endpoint_uri`, `error_retry_duration` (default: `300`) and `full_load_error_percentage` (default: `10`). For more details, see [Using an Amazon Elasticsearch Service Cluster as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html).
+* `kinesis_settings` - (Optional) Settings for the target Kinesis endpoint. Available settings are `message_format`, `service_access_role_arn`, and `stream_arn`. For more details, see [Using Amazon Kinesis Data Streams as a Target for AWS Database Migration Service](https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html).
 
 ## Attributes Reference
 

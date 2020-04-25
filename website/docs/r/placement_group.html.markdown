@@ -26,7 +26,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the placement group.
 * `strategy` - (Required) The placement strategy.
-* `tags` - (Optional) Key-value mapping of resource tags.
+* `tags` - (Optional) Key-value map of resource tags.
 
 
 ## Attributes Reference

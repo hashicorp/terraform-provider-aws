@@ -131,6 +131,11 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 								appsync.FieldLogLevelNone,
 							}, false),
 						},
+						"exclude_verbose_content": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 					},
 				},
 			},
@@ -199,6 +204,10 @@ func resourceAwsAppsyncGraphqlApi() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tagsSchema(),
+			"xray_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 		},
 	}
 }
@@ -229,6 +238,10 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().AppsyncTags()
+	}
+
+	if v, ok := d.GetOk("xray_enabled"); ok {
+		input.XrayEnabled = aws.Bool(v.(bool))
 	}
 
 	resp, err := conn.CreateGraphqlApi(input)
@@ -292,6 +305,10 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
+	if err := d.Set("xray_enabled", aws.BoolValue(resp.GraphqlApi.XrayEnabled)); err != nil {
+		return fmt.Errorf("error setting xray_enabled: %s", err)
+	}
+
 	return nil
 }
 
@@ -326,6 +343,10 @@ func resourceAwsAppsyncGraphqlApiUpdate(d *schema.ResourceData, meta interface{}
 
 	if v, ok := d.GetOk("additional_authentication_provider"); ok {
 		input.AdditionalAuthenticationProviders = expandAppsyncGraphqlApiAdditionalAuthProviders(v.([]interface{}), meta.(*AWSClient).region)
+	}
+
+	if v, ok := d.GetOk("xray_enabled"); ok {
+		input.XrayEnabled = aws.Bool(v.(bool))
 	}
 
 	_, err := conn.UpdateGraphqlApi(input)
@@ -371,6 +392,7 @@ func expandAppsyncGraphqlApiLogConfig(l []interface{}) *appsync.LogConfig {
 	logConfig := &appsync.LogConfig{
 		CloudWatchLogsRoleArn: aws.String(m["cloudwatch_logs_role_arn"].(string)),
 		FieldLogLevel:         aws.String(m["field_log_level"].(string)),
+		ExcludeVerboseContent: aws.Bool(m["exclude_verbose_content"].(bool)),
 	}
 
 	return logConfig
@@ -487,6 +509,7 @@ func flattenAppsyncGraphqlApiLogConfig(logConfig *appsync.LogConfig) []interface
 	m := map[string]interface{}{
 		"cloudwatch_logs_role_arn": aws.StringValue(logConfig.CloudWatchLogsRoleArn),
 		"field_log_level":          aws.StringValue(logConfig.FieldLogLevel),
+		"exclude_verbose_content":  aws.BoolValue(logConfig.ExcludeVerboseContent),
 	}
 
 	return []interface{}{m}

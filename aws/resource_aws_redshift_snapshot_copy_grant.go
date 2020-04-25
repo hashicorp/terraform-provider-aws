@@ -15,13 +15,15 @@ import (
 
 func resourceAwsRedshiftSnapshotCopyGrant() *schema.Resource {
 	return &schema.Resource{
-		// There is no API for updating/modifying grants, hence no Update
-		// Instead changes to most fields will force a new resource
 		Create: resourceAwsRedshiftSnapshotCopyGrantCreate,
 		Read:   resourceAwsRedshiftSnapshotCopyGrantRead,
 		Update: resourceAwsRedshiftSnapshotCopyGrantUpdate,
 		Delete: resourceAwsRedshiftSnapshotCopyGrantDelete,
 		Exists: resourceAwsRedshiftSnapshotCopyGrantExists,
+
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -115,19 +117,13 @@ func resourceAwsRedshiftSnapshotCopyGrantRead(d *schema.ResourceData, meta inter
 func resourceAwsRedshiftSnapshotCopyGrantUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
 
-	d.Partial(true)
-
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Snapshot Copy Grant (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsRedshiftSnapshotCopyGrantRead(d, meta)
 }
@@ -267,27 +263,13 @@ func findAwsRedshiftSnapshotCopyGrant(conn *redshift.Redshift, grantName string,
 		input.SnapshotCopyGrantName = aws.String(grantName)
 	}
 
-	var out *redshift.DescribeSnapshotCopyGrantsOutput
-	var err error
-	var grant *redshift.SnapshotCopyGrant
+	out, err := conn.DescribeSnapshotCopyGrants(&input)
 
-	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
-		out, err = conn.DescribeSnapshotCopyGrants(&input)
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		out, err = conn.DescribeSnapshotCopyGrants(&input)
-	}
 	if err != nil {
 		return nil, err
 	}
 
-	grant = getAwsRedshiftSnapshotCopyGrant(out.SnapshotCopyGrants, grantName)
+	grant := getAwsRedshiftSnapshotCopyGrant(out.SnapshotCopyGrants, grantName)
 	if grant != nil {
 		return grant, nil
 	} else if out.Marker != nil {

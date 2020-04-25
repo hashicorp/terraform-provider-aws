@@ -138,7 +138,7 @@ func resourceAwsVpcDhcpOptionsCreate(d *schema.ResourceData, meta interface{}) e
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v.(map[string]interface{})); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v.(map[string]interface{})); err != nil {
 			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}

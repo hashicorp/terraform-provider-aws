@@ -18,7 +18,6 @@ func dataSourceAwsDbInstance() *schema.Resource {
 			"db_instance_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"tags": tagsSchemaComputed(),

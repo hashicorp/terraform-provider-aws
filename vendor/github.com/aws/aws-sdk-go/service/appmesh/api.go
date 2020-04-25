@@ -179,6 +179,8 @@ func (c *AppMesh) CreateRouteRequest(input *CreateRouteInput) (req *request.Requ
 // If your route matches a request, you can distribute traffic to one or more
 // target virtual nodes with relative weighting.
 //
+// For more information about routes, see Routes (https://docs.aws.amazon.com/app-mesh/latest/userguide/routes.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -305,6 +307,8 @@ func (c *AppMesh) CreateVirtualNodeRequest(input *CreateVirtualNodeInput) (req *
 // override the node.cluster value that is set by APPMESH_VIRTUAL_NODE_NAME
 // with the APPMESH_VIRTUAL_NODE_CLUSTER environment variable.
 //
+// For more information about virtual nodes, see Virtual Nodes (https://docs.aws.amazon.com/app-mesh/latest/userguide/virtual_nodes.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -419,6 +423,8 @@ func (c *AppMesh) CreateVirtualRouterRequest(input *CreateVirtualRouterInput) (r
 // mesh. After you create your virtual router, create and associate routes for
 // your virtual router that direct incoming requests to different virtual nodes.
 //
+// For more information about virtual routers, see Virtual Routers (https://docs.aws.amazon.com/app-mesh/latest/userguide/virtual_routers.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -531,6 +537,8 @@ func (c *AppMesh) CreateVirtualServiceRequest(input *CreateVirtualServiceInput) 
 // services call your virtual service by its virtualServiceName, and those requests
 // are routed to the virtual node or virtual router that is specified as the
 // provider for the virtual service.
+//
+// For more information about virtual services, see Virtual Services (https://docs.aws.amazon.com/app-mesh/latest/userguide/virtual_services.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3461,10 +3469,49 @@ func (s *Backend) SetVirtualService(v *VirtualServiceBackend) *Backend {
 	return s
 }
 
+// An object that represents the default properties for a backend.
+type BackendDefaults struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a client policy.
+	ClientPolicy *ClientPolicy `locationName:"clientPolicy" type:"structure"`
+}
+
+// String returns the string representation
+func (s BackendDefaults) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BackendDefaults) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BackendDefaults) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BackendDefaults"}
+	if s.ClientPolicy != nil {
+		if err := s.ClientPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ClientPolicy", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientPolicy sets the ClientPolicy field's value.
+func (s *BackendDefaults) SetClientPolicy(v *ClientPolicy) *BackendDefaults {
+	s.ClientPolicy = v
+	return s
+}
+
 // The request syntax was malformed. Check your request syntax and try again.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3481,17 +3528,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3499,30 +3546,129 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// An object that represents a client policy.
+type ClientPolicy struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a Transport Layer Security (TLS) client policy.
+	Tls *ClientPolicyTls `locationName:"tls" type:"structure"`
+}
+
+// String returns the string representation
+func (s ClientPolicy) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientPolicy) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ClientPolicy) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ClientPolicy"}
+	if s.Tls != nil {
+		if err := s.Tls.Validate(); err != nil {
+			invalidParams.AddNested("Tls", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTls sets the Tls field's value.
+func (s *ClientPolicy) SetTls(v *ClientPolicyTls) *ClientPolicy {
+	s.Tls = v
+	return s
+}
+
+// An object that represents a Transport Layer Security (TLS) client policy.
+type ClientPolicyTls struct {
+	_ struct{} `type:"structure"`
+
+	Enforce *bool `locationName:"enforce" type:"boolean"`
+
+	Ports []*int64 `locationName:"ports" type:"list"`
+
+	// An object that represents a Transport Layer Security (TLS) validation context.
+	//
+	// Validation is a required field
+	Validation *TlsValidationContext `locationName:"validation" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ClientPolicyTls) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientPolicyTls) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ClientPolicyTls) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ClientPolicyTls"}
+	if s.Validation == nil {
+		invalidParams.Add(request.NewErrParamRequired("Validation"))
+	}
+	if s.Validation != nil {
+		if err := s.Validation.Validate(); err != nil {
+			invalidParams.AddNested("Validation", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnforce sets the Enforce field's value.
+func (s *ClientPolicyTls) SetEnforce(v bool) *ClientPolicyTls {
+	s.Enforce = &v
+	return s
+}
+
+// SetPorts sets the Ports field's value.
+func (s *ClientPolicyTls) SetPorts(v []*int64) *ClientPolicyTls {
+	s.Ports = v
+	return s
+}
+
+// SetValidation sets the Validation field's value.
+func (s *ClientPolicyTls) SetValidation(v *TlsValidationContext) *ClientPolicyTls {
+	s.Validation = v
+	return s
 }
 
 // The request contains a client token that was used for a previous update resource
 // call with different specifications. Try the request again with a new client
 // token.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -3539,17 +3685,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -3557,22 +3703,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type CreateMeshInput struct {
@@ -3687,6 +3833,8 @@ type CreateRouteInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// RouteName is a required field
 	RouteName *string `locationName:"routeName" min:"1" type:"string" required:"true"`
 
@@ -3719,6 +3867,9 @@ func (s *CreateRouteInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.RouteName == nil {
 		invalidParams.Add(request.NewErrParamRequired("RouteName"))
@@ -3766,6 +3917,12 @@ func (s *CreateRouteInput) SetClientToken(v string) *CreateRouteInput {
 // SetMeshName sets the MeshName field's value.
 func (s *CreateRouteInput) SetMeshName(v string) *CreateRouteInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *CreateRouteInput) SetMeshOwner(v string) *CreateRouteInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -3826,6 +3983,8 @@ type CreateVirtualNodeInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// An object that represents the specification of a virtual node.
 	//
 	// Spec is a required field
@@ -3855,6 +4014,9 @@ func (s *CreateVirtualNodeInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.Spec == nil {
 		invalidParams.Add(request.NewErrParamRequired("Spec"))
@@ -3896,6 +4058,12 @@ func (s *CreateVirtualNodeInput) SetClientToken(v string) *CreateVirtualNodeInpu
 // SetMeshName sets the MeshName field's value.
 func (s *CreateVirtualNodeInput) SetMeshName(v string) *CreateVirtualNodeInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *CreateVirtualNodeInput) SetMeshOwner(v string) *CreateVirtualNodeInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -3950,6 +4118,8 @@ type CreateVirtualRouterInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// An object that represents the specification of a virtual router.
 	//
 	// Spec is a required field
@@ -3979,6 +4149,9 @@ func (s *CreateVirtualRouterInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.Spec == nil {
 		invalidParams.Add(request.NewErrParamRequired("Spec"))
@@ -4020,6 +4193,12 @@ func (s *CreateVirtualRouterInput) SetClientToken(v string) *CreateVirtualRouter
 // SetMeshName sets the MeshName field's value.
 func (s *CreateVirtualRouterInput) SetMeshName(v string) *CreateVirtualRouterInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *CreateVirtualRouterInput) SetMeshOwner(v string) *CreateVirtualRouterInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4074,6 +4253,8 @@ type CreateVirtualServiceInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// An object that represents the specification of a virtual service.
 	//
 	// Spec is a required field
@@ -4103,6 +4284,9 @@ func (s *CreateVirtualServiceInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.Spec == nil {
 		invalidParams.Add(request.NewErrParamRequired("Spec"))
@@ -4141,6 +4325,12 @@ func (s *CreateVirtualServiceInput) SetClientToken(v string) *CreateVirtualServi
 // SetMeshName sets the MeshName field's value.
 func (s *CreateVirtualServiceInput) SetMeshName(v string) *CreateVirtualServiceInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *CreateVirtualServiceInput) SetMeshOwner(v string) *CreateVirtualServiceInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4257,6 +4447,8 @@ type DeleteRouteInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// RouteName is a required field
 	RouteName *string `location:"uri" locationName:"routeName" min:"1" type:"string" required:"true"`
 
@@ -4283,6 +4475,9 @@ func (s *DeleteRouteInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.RouteName == nil {
 		invalidParams.Add(request.NewErrParamRequired("RouteName"))
 	}
@@ -4305,6 +4500,12 @@ func (s *DeleteRouteInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DeleteRouteInput) SetMeshName(v string) *DeleteRouteInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DeleteRouteInput) SetMeshOwner(v string) *DeleteRouteInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4351,6 +4552,8 @@ type DeleteVirtualNodeInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// VirtualNodeName is a required field
 	VirtualNodeName *string `location:"uri" locationName:"virtualNodeName" min:"1" type:"string" required:"true"`
 }
@@ -4374,6 +4577,9 @@ func (s *DeleteVirtualNodeInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.VirtualNodeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualNodeName"))
 	}
@@ -4390,6 +4596,12 @@ func (s *DeleteVirtualNodeInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DeleteVirtualNodeInput) SetMeshName(v string) *DeleteVirtualNodeInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DeleteVirtualNodeInput) SetMeshOwner(v string) *DeleteVirtualNodeInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4430,6 +4642,8 @@ type DeleteVirtualRouterInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// VirtualRouterName is a required field
 	VirtualRouterName *string `location:"uri" locationName:"virtualRouterName" min:"1" type:"string" required:"true"`
 }
@@ -4453,6 +4667,9 @@ func (s *DeleteVirtualRouterInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.VirtualRouterName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualRouterName"))
 	}
@@ -4469,6 +4686,12 @@ func (s *DeleteVirtualRouterInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DeleteVirtualRouterInput) SetMeshName(v string) *DeleteVirtualRouterInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DeleteVirtualRouterInput) SetMeshOwner(v string) *DeleteVirtualRouterInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4509,6 +4732,8 @@ type DeleteVirtualServiceInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// VirtualServiceName is a required field
 	VirtualServiceName *string `location:"uri" locationName:"virtualServiceName" type:"string" required:"true"`
 }
@@ -4532,6 +4757,9 @@ func (s *DeleteVirtualServiceInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.VirtualServiceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualServiceName"))
 	}
@@ -4548,6 +4776,12 @@ func (s *DeleteVirtualServiceInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DeleteVirtualServiceInput) SetMeshName(v string) *DeleteVirtualServiceInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DeleteVirtualServiceInput) SetMeshOwner(v string) *DeleteVirtualServiceInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4587,6 +4821,8 @@ type DescribeMeshInput struct {
 
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
+
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
 }
 
 // String returns the string representation
@@ -4608,6 +4844,9 @@ func (s *DescribeMeshInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4618,6 +4857,12 @@ func (s *DescribeMeshInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DescribeMeshInput) SetMeshName(v string) *DescribeMeshInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DescribeMeshInput) SetMeshOwner(v string) *DescribeMeshInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4652,6 +4897,8 @@ type DescribeRouteInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// RouteName is a required field
 	RouteName *string `location:"uri" locationName:"routeName" min:"1" type:"string" required:"true"`
 
@@ -4678,6 +4925,9 @@ func (s *DescribeRouteInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.RouteName == nil {
 		invalidParams.Add(request.NewErrParamRequired("RouteName"))
 	}
@@ -4700,6 +4950,12 @@ func (s *DescribeRouteInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DescribeRouteInput) SetMeshName(v string) *DescribeRouteInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DescribeRouteInput) SetMeshOwner(v string) *DescribeRouteInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4746,6 +5002,8 @@ type DescribeVirtualNodeInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// VirtualNodeName is a required field
 	VirtualNodeName *string `location:"uri" locationName:"virtualNodeName" min:"1" type:"string" required:"true"`
 }
@@ -4769,6 +5027,9 @@ func (s *DescribeVirtualNodeInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.VirtualNodeName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualNodeName"))
 	}
@@ -4785,6 +5046,12 @@ func (s *DescribeVirtualNodeInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DescribeVirtualNodeInput) SetMeshName(v string) *DescribeVirtualNodeInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DescribeVirtualNodeInput) SetMeshOwner(v string) *DescribeVirtualNodeInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4825,6 +5092,8 @@ type DescribeVirtualRouterInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// VirtualRouterName is a required field
 	VirtualRouterName *string `location:"uri" locationName:"virtualRouterName" min:"1" type:"string" required:"true"`
 }
@@ -4848,6 +5117,9 @@ func (s *DescribeVirtualRouterInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.VirtualRouterName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualRouterName"))
 	}
@@ -4864,6 +5136,12 @@ func (s *DescribeVirtualRouterInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DescribeVirtualRouterInput) SetMeshName(v string) *DescribeVirtualRouterInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DescribeVirtualRouterInput) SetMeshOwner(v string) *DescribeVirtualRouterInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -4904,6 +5182,8 @@ type DescribeVirtualServiceInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// VirtualServiceName is a required field
 	VirtualServiceName *string `location:"uri" locationName:"virtualServiceName" type:"string" required:"true"`
 }
@@ -4927,6 +5207,9 @@ func (s *DescribeVirtualServiceInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.VirtualServiceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualServiceName"))
 	}
@@ -4943,6 +5226,12 @@ func (s *DescribeVirtualServiceInput) Validate() error {
 // SetMeshName sets the MeshName field's value.
 func (s *DescribeVirtualServiceInput) SetMeshName(v string) *DescribeVirtualServiceInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *DescribeVirtualServiceInput) SetMeshOwner(v string) *DescribeVirtualServiceInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -5125,8 +5414,8 @@ func (s *FileAccessLog) SetPath(v string) *FileAccessLog {
 
 // You don't have permissions to perform this action.
 type ForbiddenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5143,17 +5432,17 @@ func (s ForbiddenException) GoString() string {
 
 func newErrorForbiddenException(v protocol.ResponseMetadata) error {
 	return &ForbiddenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ForbiddenException) Code() string {
+func (s *ForbiddenException) Code() string {
 	return "ForbiddenException"
 }
 
 // Message returns the exception's message.
-func (s ForbiddenException) Message() string {
+func (s *ForbiddenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5161,22 +5450,22 @@ func (s ForbiddenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ForbiddenException) OrigErr() error {
+func (s *ForbiddenException) OrigErr() error {
 	return nil
 }
 
-func (s ForbiddenException) Error() string {
+func (s *ForbiddenException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ForbiddenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ForbiddenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ForbiddenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ForbiddenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object that represents a retry policy. Specify at least one value for
@@ -5265,7 +5554,7 @@ func (s *GrpcRetryPolicy) SetTcpRetryEvents(v []*string) *GrpcRetryPolicy {
 	return s
 }
 
-// An object that represents a GRPC route type.
+// An object that represents a gRPC route type.
 type GrpcRoute struct {
 	_ struct{} `type:"structure"`
 
@@ -5885,7 +6174,7 @@ func (s *HttpRetryPolicy) SetTcpRetryEvents(v []*string) *HttpRetryPolicy {
 	return s
 }
 
-// An object that represents an HTTP or HTTP2 route type.
+// An object that represents an HTTP or HTTP/2 route type.
 type HttpRoute struct {
 	_ struct{} `type:"structure"`
 
@@ -6156,8 +6445,8 @@ func (s *HttpRouteMatch) SetScheme(v string) *HttpRouteMatch {
 // The request processing has failed because of an unknown error, exception,
 // or failure.
 type InternalServerErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6174,17 +6463,17 @@ func (s InternalServerErrorException) GoString() string {
 
 func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
 	return &InternalServerErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerErrorException) Code() string {
+func (s *InternalServerErrorException) Code() string {
 	return "InternalServerErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerErrorException) Message() string {
+func (s *InternalServerErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6192,30 +6481,30 @@ func (s InternalServerErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerErrorException) OrigErr() error {
+func (s *InternalServerErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerErrorException) Error() string {
+func (s *InternalServerErrorException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You have exceeded a service limit for your account. For more information,
 // see Service Limits (https://docs.aws.amazon.com/app-mesh/latest/userguide/service_limits.html)
 // in the AWS App Mesh User Guide.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6232,17 +6521,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6250,22 +6539,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListMeshesInput struct {
@@ -6350,6 +6639,8 @@ type ListRoutesInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
 	// VirtualRouterName is a required field
@@ -6378,6 +6669,9 @@ func (s *ListRoutesInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 	if s.VirtualRouterName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualRouterName"))
 	}
@@ -6400,6 +6694,12 @@ func (s *ListRoutesInput) SetLimit(v int64) *ListRoutesInput {
 // SetMeshName sets the MeshName field's value.
 func (s *ListRoutesInput) SetMeshName(v string) *ListRoutesInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *ListRoutesInput) SetMeshOwner(v string) *ListRoutesInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -6540,6 +6840,8 @@ type ListVirtualNodesInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 }
 
@@ -6565,6 +6867,9 @@ func (s *ListVirtualNodesInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6581,6 +6886,12 @@ func (s *ListVirtualNodesInput) SetLimit(v int64) *ListVirtualNodesInput {
 // SetMeshName sets the MeshName field's value.
 func (s *ListVirtualNodesInput) SetMeshName(v string) *ListVirtualNodesInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *ListVirtualNodesInput) SetMeshOwner(v string) *ListVirtualNodesInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -6629,6 +6940,8 @@ type ListVirtualRoutersInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 }
 
@@ -6654,6 +6967,9 @@ func (s *ListVirtualRoutersInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6670,6 +6986,12 @@ func (s *ListVirtualRoutersInput) SetLimit(v int64) *ListVirtualRoutersInput {
 // SetMeshName sets the MeshName field's value.
 func (s *ListVirtualRoutersInput) SetMeshName(v string) *ListVirtualRoutersInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *ListVirtualRoutersInput) SetMeshOwner(v string) *ListVirtualRoutersInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -6718,6 +7040,8 @@ type ListVirtualServicesInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 }
 
@@ -6743,6 +7067,9 @@ func (s *ListVirtualServicesInput) Validate() error {
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
 	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6759,6 +7086,12 @@ func (s *ListVirtualServicesInput) SetLimit(v int64) *ListVirtualServicesInput {
 // SetMeshName sets the MeshName field's value.
 func (s *ListVirtualServicesInput) SetMeshName(v string) *ListVirtualServicesInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *ListVirtualServicesInput) SetMeshOwner(v string) *ListVirtualServicesInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -6810,6 +7143,10 @@ type Listener struct {
 	//
 	// PortMapping is a required field
 	PortMapping *PortMapping `locationName:"portMapping" type:"structure" required:"true"`
+
+	// An object that represents the Transport Layer Security (TLS) properties for
+	// a listener.
+	Tls *ListenerTls `locationName:"tls" type:"structure"`
 }
 
 // String returns the string representation
@@ -6838,6 +7175,11 @@ func (s *Listener) Validate() error {
 			invalidParams.AddNested("PortMapping", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tls != nil {
+		if err := s.Tls.Validate(); err != nil {
+			invalidParams.AddNested("Tls", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6854,6 +7196,218 @@ func (s *Listener) SetHealthCheck(v *HealthCheckPolicy) *Listener {
 // SetPortMapping sets the PortMapping field's value.
 func (s *Listener) SetPortMapping(v *PortMapping) *Listener {
 	s.PortMapping = v
+	return s
+}
+
+// SetTls sets the Tls field's value.
+func (s *Listener) SetTls(v *ListenerTls) *Listener {
+	s.Tls = v
+	return s
+}
+
+// An object that represents the Transport Layer Security (TLS) properties for
+// a listener.
+type ListenerTls struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a listener's Transport Layer Security (TLS) certificate.
+	//
+	// Certificate is a required field
+	Certificate *ListenerTlsCertificate `locationName:"certificate" type:"structure" required:"true"`
+
+	// Mode is a required field
+	Mode *string `locationName:"mode" type:"string" required:"true" enum:"ListenerTlsMode"`
+}
+
+// String returns the string representation
+func (s ListenerTls) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTls) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTls) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTls"}
+	if s.Certificate == nil {
+		invalidParams.Add(request.NewErrParamRequired("Certificate"))
+	}
+	if s.Mode == nil {
+		invalidParams.Add(request.NewErrParamRequired("Mode"))
+	}
+	if s.Certificate != nil {
+		if err := s.Certificate.Validate(); err != nil {
+			invalidParams.AddNested("Certificate", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificate sets the Certificate field's value.
+func (s *ListenerTls) SetCertificate(v *ListenerTlsCertificate) *ListenerTls {
+	s.Certificate = v
+	return s
+}
+
+// SetMode sets the Mode field's value.
+func (s *ListenerTls) SetMode(v string) *ListenerTls {
+	s.Mode = &v
+	return s
+}
+
+// An object that represents an AWS Certicate Manager (ACM) certificate.
+type ListenerTlsAcmCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateArn is a required field
+	CertificateArn *string `locationName:"certificateArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListenerTlsAcmCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsAcmCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsAcmCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsAcmCertificate"}
+	if s.CertificateArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *ListenerTlsAcmCertificate) SetCertificateArn(v string) *ListenerTlsAcmCertificate {
+	s.CertificateArn = &v
+	return s
+}
+
+// An object that represents a listener's Transport Layer Security (TLS) certificate.
+type ListenerTlsCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents an AWS Certicate Manager (ACM) certificate.
+	Acm *ListenerTlsAcmCertificate `locationName:"acm" type:"structure"`
+
+	// An object that represents a local file certificate. The certificate must
+	// meet specific requirements and you must have proxy authorization enabled.
+	// For more information, see Transport Layer Security (TLS) (https://docs.aws.amazon.com/app-mesh/latest/userguide/virtual-node-tls.html#virtual-node-tls-prerequisites).
+	File *ListenerTlsFileCertificate `locationName:"file" type:"structure"`
+}
+
+// String returns the string representation
+func (s ListenerTlsCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsCertificate"}
+	if s.Acm != nil {
+		if err := s.Acm.Validate(); err != nil {
+			invalidParams.AddNested("Acm", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.File != nil {
+		if err := s.File.Validate(); err != nil {
+			invalidParams.AddNested("File", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcm sets the Acm field's value.
+func (s *ListenerTlsCertificate) SetAcm(v *ListenerTlsAcmCertificate) *ListenerTlsCertificate {
+	s.Acm = v
+	return s
+}
+
+// SetFile sets the File field's value.
+func (s *ListenerTlsCertificate) SetFile(v *ListenerTlsFileCertificate) *ListenerTlsCertificate {
+	s.File = v
+	return s
+}
+
+// An object that represents a local file certificate. The certificate must
+// meet specific requirements and you must have proxy authorization enabled.
+// For more information, see Transport Layer Security (TLS) (https://docs.aws.amazon.com/app-mesh/latest/userguide/virtual-node-tls.html#virtual-node-tls-prerequisites).
+type ListenerTlsFileCertificate struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateChain is a required field
+	CertificateChain *string `locationName:"certificateChain" min:"1" type:"string" required:"true"`
+
+	// PrivateKey is a required field
+	PrivateKey *string `locationName:"privateKey" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListenerTlsFileCertificate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListenerTlsFileCertificate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListenerTlsFileCertificate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListenerTlsFileCertificate"}
+	if s.CertificateChain == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateChain"))
+	}
+	if s.CertificateChain != nil && len(*s.CertificateChain) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificateChain", 1))
+	}
+	if s.PrivateKey == nil {
+		invalidParams.Add(request.NewErrParamRequired("PrivateKey"))
+	}
+	if s.PrivateKey != nil && len(*s.PrivateKey) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PrivateKey", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateChain sets the CertificateChain field's value.
+func (s *ListenerTlsFileCertificate) SetCertificateChain(v string) *ListenerTlsFileCertificate {
+	s.CertificateChain = &v
+	return s
+}
+
+// SetPrivateKey sets the PrivateKey field's value.
+func (s *ListenerTlsFileCertificate) SetPrivateKey(v string) *ListenerTlsFileCertificate {
+	s.PrivateKey = &v
 	return s
 }
 
@@ -7014,6 +7568,12 @@ type MeshRef struct {
 
 	// MeshName is a required field
 	MeshName *string `locationName:"meshName" min:"1" type:"string" required:"true"`
+
+	// MeshOwner is a required field
+	MeshOwner *string `locationName:"meshOwner" min:"12" type:"string" required:"true"`
+
+	// ResourceOwner is a required field
+	ResourceOwner *string `locationName:"resourceOwner" min:"12" type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -7035,6 +7595,18 @@ func (s *MeshRef) SetArn(v string) *MeshRef {
 // SetMeshName sets the MeshName field's value.
 func (s *MeshRef) SetMeshName(v string) *MeshRef {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *MeshRef) SetMeshOwner(v string) *MeshRef {
+	s.MeshOwner = &v
+	return s
+}
+
+// SetResourceOwner sets the ResourceOwner field's value.
+func (s *MeshRef) SetResourceOwner(v string) *MeshRef {
+	s.ResourceOwner = &v
 	return s
 }
 
@@ -7102,8 +7674,8 @@ func (s *MeshStatus) SetStatus(v string) *MeshStatus {
 
 // The specified resource doesn't exist. Check your request syntax and try again.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7120,17 +7692,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7138,22 +7710,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object that represents a port mapping.
@@ -7211,8 +7783,8 @@ func (s *PortMapping) SetProtocol(v string) *PortMapping {
 // You can't delete the specified resource because it's in use or required by
 // another resource.
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7229,17 +7801,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7247,22 +7819,22 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object that represents metadata for a resource.
@@ -7277,6 +7849,12 @@ type ResourceMetadata struct {
 
 	// LastUpdatedAt is a required field
 	LastUpdatedAt *time.Time `locationName:"lastUpdatedAt" type:"timestamp" required:"true"`
+
+	// MeshOwner is a required field
+	MeshOwner *string `locationName:"meshOwner" min:"12" type:"string" required:"true"`
+
+	// ResourceOwner is a required field
+	ResourceOwner *string `locationName:"resourceOwner" min:"12" type:"string" required:"true"`
 
 	// Uid is a required field
 	Uid *string `locationName:"uid" type:"string" required:"true"`
@@ -7310,6 +7888,18 @@ func (s *ResourceMetadata) SetCreatedAt(v time.Time) *ResourceMetadata {
 // SetLastUpdatedAt sets the LastUpdatedAt field's value.
 func (s *ResourceMetadata) SetLastUpdatedAt(v time.Time) *ResourceMetadata {
 	s.LastUpdatedAt = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *ResourceMetadata) SetMeshOwner(v string) *ResourceMetadata {
+	s.MeshOwner = &v
+	return s
+}
+
+// SetResourceOwner sets the ResourceOwner field's value.
+func (s *ResourceMetadata) SetResourceOwner(v string) *ResourceMetadata {
+	s.ResourceOwner = &v
 	return s
 }
 
@@ -7410,6 +8000,12 @@ type RouteRef struct {
 	// MeshName is a required field
 	MeshName *string `locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	// MeshOwner is a required field
+	MeshOwner *string `locationName:"meshOwner" min:"12" type:"string" required:"true"`
+
+	// ResourceOwner is a required field
+	ResourceOwner *string `locationName:"resourceOwner" min:"12" type:"string" required:"true"`
+
 	// RouteName is a required field
 	RouteName *string `locationName:"routeName" min:"1" type:"string" required:"true"`
 
@@ -7439,6 +8035,18 @@ func (s *RouteRef) SetMeshName(v string) *RouteRef {
 	return s
 }
 
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *RouteRef) SetMeshOwner(v string) *RouteRef {
+	s.MeshOwner = &v
+	return s
+}
+
+// SetResourceOwner sets the ResourceOwner field's value.
+func (s *RouteRef) SetResourceOwner(v string) *RouteRef {
+	s.ResourceOwner = &v
+	return s
+}
+
 // SetRouteName sets the RouteName field's value.
 func (s *RouteRef) SetRouteName(v string) *RouteRef {
 	s.RouteName = &v
@@ -7455,13 +8063,13 @@ func (s *RouteRef) SetVirtualRouterName(v string) *RouteRef {
 type RouteSpec struct {
 	_ struct{} `type:"structure"`
 
-	// An object that represents a GRPC route type.
+	// An object that represents a gRPC route type.
 	GrpcRoute *GrpcRoute `locationName:"grpcRoute" type:"structure"`
 
-	// An object that represents an HTTP or HTTP2 route type.
+	// An object that represents an HTTP or HTTP/2 route type.
 	Http2Route *HttpRoute `locationName:"http2Route" type:"structure"`
 
-	// An object that represents an HTTP or HTTP2 route type.
+	// An object that represents an HTTP or HTTP/2 route type.
 	HttpRoute *HttpRoute `locationName:"httpRoute" type:"structure"`
 
 	Priority *int64 `locationName:"priority" type:"integer"`
@@ -7622,8 +8230,8 @@ func (s *ServiceDiscovery) SetDns(v *DnsServiceDiscovery) *ServiceDiscovery {
 
 // The request has failed due to a temporary failure of the service.
 type ServiceUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7640,17 +8248,17 @@ func (s ServiceUnavailableException) GoString() string {
 
 func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
 	return &ServiceUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceUnavailableException) Code() string {
+func (s *ServiceUnavailableException) Code() string {
 	return "ServiceUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ServiceUnavailableException) Message() string {
+func (s *ServiceUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7658,22 +8266,22 @@ func (s ServiceUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceUnavailableException) OrigErr() error {
+func (s *ServiceUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceUnavailableException) Error() string {
+func (s *ServiceUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Optional metadata that you apply to a resource to assist with categorization
@@ -7893,12 +8501,195 @@ func (s *TcpRouteAction) SetWeightedTargets(v []*WeightedTarget) *TcpRouteAction
 	return s
 }
 
+// An object that represents a Transport Layer Security (TLS) validation context.
+type TlsValidationContext struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a Transport Layer Security (TLS) validation context
+	// trust.
+	//
+	// Trust is a required field
+	Trust *TlsValidationContextTrust `locationName:"trust" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s TlsValidationContext) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContext) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContext) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContext"}
+	if s.Trust == nil {
+		invalidParams.Add(request.NewErrParamRequired("Trust"))
+	}
+	if s.Trust != nil {
+		if err := s.Trust.Validate(); err != nil {
+			invalidParams.AddNested("Trust", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTrust sets the Trust field's value.
+func (s *TlsValidationContext) SetTrust(v *TlsValidationContextTrust) *TlsValidationContext {
+	s.Trust = v
+	return s
+}
+
+// An object that represents a TLS validation context trust for an AWS Certicate
+// Manager (ACM) certificate.
+type TlsValidationContextAcmTrust struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateAuthorityArns is a required field
+	CertificateAuthorityArns []*string `locationName:"certificateAuthorityArns" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TlsValidationContextAcmTrust) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContextAcmTrust) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContextAcmTrust) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContextAcmTrust"}
+	if s.CertificateAuthorityArns == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateAuthorityArns"))
+	}
+	if s.CertificateAuthorityArns != nil && len(s.CertificateAuthorityArns) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificateAuthorityArns", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateAuthorityArns sets the CertificateAuthorityArns field's value.
+func (s *TlsValidationContextAcmTrust) SetCertificateAuthorityArns(v []*string) *TlsValidationContextAcmTrust {
+	s.CertificateAuthorityArns = v
+	return s
+}
+
+// An object that represents a Transport Layer Security (TLS) validation context
+// trust for a local file.
+type TlsValidationContextFileTrust struct {
+	_ struct{} `type:"structure"`
+
+	// CertificateChain is a required field
+	CertificateChain *string `locationName:"certificateChain" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s TlsValidationContextFileTrust) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContextFileTrust) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContextFileTrust) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContextFileTrust"}
+	if s.CertificateChain == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificateChain"))
+	}
+	if s.CertificateChain != nil && len(*s.CertificateChain) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificateChain", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificateChain sets the CertificateChain field's value.
+func (s *TlsValidationContextFileTrust) SetCertificateChain(v string) *TlsValidationContextFileTrust {
+	s.CertificateChain = &v
+	return s
+}
+
+// An object that represents a Transport Layer Security (TLS) validation context
+// trust.
+type TlsValidationContextTrust struct {
+	_ struct{} `type:"structure"`
+
+	// An object that represents a TLS validation context trust for an AWS Certicate
+	// Manager (ACM) certificate.
+	Acm *TlsValidationContextAcmTrust `locationName:"acm" type:"structure"`
+
+	// An object that represents a Transport Layer Security (TLS) validation context
+	// trust for a local file.
+	File *TlsValidationContextFileTrust `locationName:"file" type:"structure"`
+}
+
+// String returns the string representation
+func (s TlsValidationContextTrust) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsValidationContextTrust) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TlsValidationContextTrust) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TlsValidationContextTrust"}
+	if s.Acm != nil {
+		if err := s.Acm.Validate(); err != nil {
+			invalidParams.AddNested("Acm", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.File != nil {
+		if err := s.File.Validate(); err != nil {
+			invalidParams.AddNested("File", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAcm sets the Acm field's value.
+func (s *TlsValidationContextTrust) SetAcm(v *TlsValidationContextAcmTrust) *TlsValidationContextTrust {
+	s.Acm = v
+	return s
+}
+
+// SetFile sets the File field's value.
+func (s *TlsValidationContextTrust) SetFile(v *TlsValidationContextFileTrust) *TlsValidationContextTrust {
+	s.File = v
+	return s
+}
+
 // The maximum request rate permitted by the App Mesh APIs has been exceeded
 // for your account. For best results, use an increasing or variable sleep interval
 // between requests.
 type TooManyRequestsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7915,17 +8706,17 @@ func (s TooManyRequestsException) GoString() string {
 
 func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
 	return &TooManyRequestsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyRequestsException) Code() string {
+func (s *TooManyRequestsException) Code() string {
 	return "TooManyRequestsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyRequestsException) Message() string {
+func (s *TooManyRequestsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7933,30 +8724,30 @@ func (s TooManyRequestsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyRequestsException) OrigErr() error {
+func (s *TooManyRequestsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyRequestsException) Error() string {
+func (s *TooManyRequestsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyRequestsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyRequestsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request exceeds the maximum allowed number of tags allowed per resource.
 // The current limit is 50 user tags per resource. You must reduce the number
 // of tags in the request. None of the tags in this request were applied.
 type TooManyTagsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7973,17 +8764,17 @@ func (s TooManyTagsException) GoString() string {
 
 func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
 	return &TooManyTagsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyTagsException) Code() string {
+func (s *TooManyTagsException) Code() string {
 	return "TooManyTagsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyTagsException) Message() string {
+func (s *TooManyTagsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7991,22 +8782,22 @@ func (s TooManyTagsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyTagsException) OrigErr() error {
+func (s *TooManyTagsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyTagsException) Error() string {
+func (s *TooManyTagsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyTagsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyTagsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyTagsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyTagsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -8165,6 +8956,8 @@ type UpdateRouteInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// RouteName is a required field
 	RouteName *string `location:"uri" locationName:"routeName" min:"1" type:"string" required:"true"`
 
@@ -8195,6 +8988,9 @@ func (s *UpdateRouteInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.RouteName == nil {
 		invalidParams.Add(request.NewErrParamRequired("RouteName"))
@@ -8232,6 +9028,12 @@ func (s *UpdateRouteInput) SetClientToken(v string) *UpdateRouteInput {
 // SetMeshName sets the MeshName field's value.
 func (s *UpdateRouteInput) SetMeshName(v string) *UpdateRouteInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *UpdateRouteInput) SetMeshOwner(v string) *UpdateRouteInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -8286,6 +9088,8 @@ type UpdateVirtualNodeInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// An object that represents the specification of a virtual node.
 	//
 	// Spec is a required field
@@ -8313,6 +9117,9 @@ func (s *UpdateVirtualNodeInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.Spec == nil {
 		invalidParams.Add(request.NewErrParamRequired("Spec"))
@@ -8344,6 +9151,12 @@ func (s *UpdateVirtualNodeInput) SetClientToken(v string) *UpdateVirtualNodeInpu
 // SetMeshName sets the MeshName field's value.
 func (s *UpdateVirtualNodeInput) SetMeshName(v string) *UpdateVirtualNodeInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *UpdateVirtualNodeInput) SetMeshOwner(v string) *UpdateVirtualNodeInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -8392,6 +9205,8 @@ type UpdateVirtualRouterInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// An object that represents the specification of a virtual router.
 	//
 	// Spec is a required field
@@ -8419,6 +9234,9 @@ func (s *UpdateVirtualRouterInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.Spec == nil {
 		invalidParams.Add(request.NewErrParamRequired("Spec"))
@@ -8450,6 +9268,12 @@ func (s *UpdateVirtualRouterInput) SetClientToken(v string) *UpdateVirtualRouter
 // SetMeshName sets the MeshName field's value.
 func (s *UpdateVirtualRouterInput) SetMeshName(v string) *UpdateVirtualRouterInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *UpdateVirtualRouterInput) SetMeshOwner(v string) *UpdateVirtualRouterInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -8498,6 +9322,8 @@ type UpdateVirtualServiceInput struct {
 	// MeshName is a required field
 	MeshName *string `location:"uri" locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	MeshOwner *string `location:"querystring" locationName:"meshOwner" min:"12" type:"string"`
+
 	// An object that represents the specification of a virtual service.
 	//
 	// Spec is a required field
@@ -8525,6 +9351,9 @@ func (s *UpdateVirtualServiceInput) Validate() error {
 	}
 	if s.MeshName != nil && len(*s.MeshName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MeshName", 1))
+	}
+	if s.MeshOwner != nil && len(*s.MeshOwner) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("MeshOwner", 12))
 	}
 	if s.Spec == nil {
 		invalidParams.Add(request.NewErrParamRequired("Spec"))
@@ -8556,6 +9385,12 @@ func (s *UpdateVirtualServiceInput) SetClientToken(v string) *UpdateVirtualServi
 // SetMeshName sets the MeshName field's value.
 func (s *UpdateVirtualServiceInput) SetMeshName(v string) *UpdateVirtualServiceInput {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *UpdateVirtualServiceInput) SetMeshOwner(v string) *UpdateVirtualServiceInput {
+	s.MeshOwner = &v
 	return s
 }
 
@@ -8672,6 +9507,12 @@ type VirtualNodeRef struct {
 	// MeshName is a required field
 	MeshName *string `locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	// MeshOwner is a required field
+	MeshOwner *string `locationName:"meshOwner" min:"12" type:"string" required:"true"`
+
+	// ResourceOwner is a required field
+	ResourceOwner *string `locationName:"resourceOwner" min:"12" type:"string" required:"true"`
+
 	// VirtualNodeName is a required field
 	VirtualNodeName *string `locationName:"virtualNodeName" min:"1" type:"string" required:"true"`
 }
@@ -8695,6 +9536,18 @@ func (s *VirtualNodeRef) SetArn(v string) *VirtualNodeRef {
 // SetMeshName sets the MeshName field's value.
 func (s *VirtualNodeRef) SetMeshName(v string) *VirtualNodeRef {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *VirtualNodeRef) SetMeshOwner(v string) *VirtualNodeRef {
+	s.MeshOwner = &v
+	return s
+}
+
+// SetResourceOwner sets the ResourceOwner field's value.
+func (s *VirtualNodeRef) SetResourceOwner(v string) *VirtualNodeRef {
+	s.ResourceOwner = &v
 	return s
 }
 
@@ -8748,6 +9601,9 @@ func (s *VirtualNodeServiceProvider) SetVirtualNodeName(v string) *VirtualNodeSe
 type VirtualNodeSpec struct {
 	_ struct{} `type:"structure"`
 
+	// An object that represents the default properties for a backend.
+	BackendDefaults *BackendDefaults `locationName:"backendDefaults" type:"structure"`
+
 	Backends []*Backend `locationName:"backends" type:"list"`
 
 	Listeners []*Listener `locationName:"listeners" type:"list"`
@@ -8773,6 +9629,11 @@ func (s VirtualNodeSpec) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *VirtualNodeSpec) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "VirtualNodeSpec"}
+	if s.BackendDefaults != nil {
+		if err := s.BackendDefaults.Validate(); err != nil {
+			invalidParams.AddNested("BackendDefaults", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Backends != nil {
 		for i, v := range s.Backends {
 			if v == nil {
@@ -8808,6 +9669,12 @@ func (s *VirtualNodeSpec) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetBackendDefaults sets the BackendDefaults field's value.
+func (s *VirtualNodeSpec) SetBackendDefaults(v *BackendDefaults) *VirtualNodeSpec {
+	s.BackendDefaults = v
+	return s
 }
 
 // SetBackends sets the Backends field's value.
@@ -8978,6 +9845,12 @@ type VirtualRouterRef struct {
 	// MeshName is a required field
 	MeshName *string `locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	// MeshOwner is a required field
+	MeshOwner *string `locationName:"meshOwner" min:"12" type:"string" required:"true"`
+
+	// ResourceOwner is a required field
+	ResourceOwner *string `locationName:"resourceOwner" min:"12" type:"string" required:"true"`
+
 	// VirtualRouterName is a required field
 	VirtualRouterName *string `locationName:"virtualRouterName" min:"1" type:"string" required:"true"`
 }
@@ -9001,6 +9874,18 @@ func (s *VirtualRouterRef) SetArn(v string) *VirtualRouterRef {
 // SetMeshName sets the MeshName field's value.
 func (s *VirtualRouterRef) SetMeshName(v string) *VirtualRouterRef {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *VirtualRouterRef) SetMeshOwner(v string) *VirtualRouterRef {
+	s.MeshOwner = &v
+	return s
+}
+
+// SetResourceOwner sets the ResourceOwner field's value.
+func (s *VirtualRouterRef) SetResourceOwner(v string) *VirtualRouterRef {
+	s.ResourceOwner = &v
 	return s
 }
 
@@ -9124,6 +10009,9 @@ func (s *VirtualRouterStatus) SetStatus(v string) *VirtualRouterStatus {
 type VirtualServiceBackend struct {
 	_ struct{} `type:"structure"`
 
+	// An object that represents a client policy.
+	ClientPolicy *ClientPolicy `locationName:"clientPolicy" type:"structure"`
+
 	// VirtualServiceName is a required field
 	VirtualServiceName *string `locationName:"virtualServiceName" type:"string" required:"true"`
 }
@@ -9144,11 +10032,22 @@ func (s *VirtualServiceBackend) Validate() error {
 	if s.VirtualServiceName == nil {
 		invalidParams.Add(request.NewErrParamRequired("VirtualServiceName"))
 	}
+	if s.ClientPolicy != nil {
+		if err := s.ClientPolicy.Validate(); err != nil {
+			invalidParams.AddNested("ClientPolicy", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetClientPolicy sets the ClientPolicy field's value.
+func (s *VirtualServiceBackend) SetClientPolicy(v *ClientPolicy) *VirtualServiceBackend {
+	s.ClientPolicy = v
+	return s
 }
 
 // SetVirtualServiceName sets the VirtualServiceName field's value.
@@ -9286,6 +10185,12 @@ type VirtualServiceRef struct {
 	// MeshName is a required field
 	MeshName *string `locationName:"meshName" min:"1" type:"string" required:"true"`
 
+	// MeshOwner is a required field
+	MeshOwner *string `locationName:"meshOwner" min:"12" type:"string" required:"true"`
+
+	// ResourceOwner is a required field
+	ResourceOwner *string `locationName:"resourceOwner" min:"12" type:"string" required:"true"`
+
 	// VirtualServiceName is a required field
 	VirtualServiceName *string `locationName:"virtualServiceName" type:"string" required:"true"`
 }
@@ -9309,6 +10214,18 @@ func (s *VirtualServiceRef) SetArn(v string) *VirtualServiceRef {
 // SetMeshName sets the MeshName field's value.
 func (s *VirtualServiceRef) SetMeshName(v string) *VirtualServiceRef {
 	s.MeshName = &v
+	return s
+}
+
+// SetMeshOwner sets the MeshOwner field's value.
+func (s *VirtualServiceRef) SetMeshOwner(v string) *VirtualServiceRef {
+	s.MeshOwner = &v
+	return s
+}
+
+// SetResourceOwner sets the ResourceOwner field's value.
+func (s *VirtualServiceRef) SetResourceOwner(v string) *VirtualServiceRef {
+	s.ResourceOwner = &v
 	return s
 }
 
@@ -9505,6 +10422,17 @@ const (
 
 	// HttpSchemeHttps is a HttpScheme enum value
 	HttpSchemeHttps = "https"
+)
+
+const (
+	// ListenerTlsModeDisabled is a ListenerTlsMode enum value
+	ListenerTlsModeDisabled = "DISABLED"
+
+	// ListenerTlsModePermissive is a ListenerTlsMode enum value
+	ListenerTlsModePermissive = "PERMISSIVE"
+
+	// ListenerTlsModeStrict is a ListenerTlsMode enum value
+	ListenerTlsModeStrict = "STRICT"
 )
 
 const (

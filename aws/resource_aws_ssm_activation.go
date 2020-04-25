@@ -18,6 +18,9 @@ func resourceAwsSsmActivation() *schema.Resource {
 		Create: resourceAwsSsmActivationCreate,
 		Read:   resourceAwsSsmActivationRead,
 		Delete: resourceAwsSsmActivationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -39,7 +42,7 @@ func resourceAwsSsmActivation() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.ValidateRFC3339TimeString,
+				ValidateFunc: validation.IsRFC3339Time,
 			},
 			"iam_role": {
 				Type:     schema.TypeString,

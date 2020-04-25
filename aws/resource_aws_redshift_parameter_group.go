@@ -165,8 +165,6 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
 
-	d.Partial(true)
-
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
 		if o == nil {
@@ -197,7 +195,6 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 				return fmt.Errorf("Error modifying Redshift Parameter Group: %s", err)
 			}
 		}
-		d.SetPartial("parameter")
 	}
 
 	if d.HasChange("tags") {
@@ -206,11 +203,8 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
-	d.Partial(false)
 	return resourceAwsRedshiftParameterGroupRead(d, meta)
 }
 

@@ -25,7 +25,6 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"encrypted": {
@@ -36,7 +35,6 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,
@@ -62,7 +60,6 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"transition_to_ia": {
@@ -146,8 +143,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 		return err
 	}
 
-	region := meta.(*AWSClient).region
-	dnsSuffix := meta.(*AWSClient).dnsSuffix
-	err = d.Set("dns_name", resourceAwsEfsDnsName(*fs.FileSystemId, region, dnsSuffix))
-	return err
+	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
+
+	return nil
 }

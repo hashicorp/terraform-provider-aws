@@ -145,7 +145,7 @@ func TestAccAWSELB_fullCharacterRange(t *testing.T) {
 func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
-	rName := fmt.Sprintf("terraform-access-logs-bucket-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-access-logs-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -185,7 +185,7 @@ func TestAccAWSELB_AccessLogs_enabled(t *testing.T) {
 func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 	var conf elb.LoadBalancerDescription
 	resourceName := "aws_elb.test"
-	rName := fmt.Sprintf("terraform-access-logs-bucket-%d", acctest.RandInt())
+	rName := fmt.Sprintf("tf-test-access-logs-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -199,7 +199,6 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 					testAccCheckAWSELBExists(resourceName, &conf),
 				),
 			},
-
 			{
 				Config: testAccAWSELBAccessLogsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -210,7 +209,6 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
 				),
 			},
-
 			{
 				Config: testAccAWSELBAccessLogs,
 				Check: resource.ComposeTestCheckFunc(
@@ -1109,6 +1107,11 @@ func testAccCheckAWSELBExists(n string, res *elb.LoadBalancerDescription) resour
 const testAccAWSELBConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1129,6 +1132,11 @@ func testAccAWSELBConfigTags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1154,6 +1162,11 @@ func testAccAWSELBConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) str
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1179,6 +1192,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBFullRangeOfCharacters = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1197,6 +1215,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBAccessLogs = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1212,39 +1235,7 @@ resource "aws_elb" "test" {
 `
 
 func testAccAWSELBAccessLogsOn(r string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-data "aws_elb_service_account" "current" {}
-
-data "aws_partition" "current" {}
-
-resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket        = "%s"
-  acl           = "private"
-  force_destroy = true
-
-  policy = <<EOF
-{
-  "Id": "Policy1446577137248",
-  "Statement": [
-    {
-      "Action": "s3:PutObject",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "${data.aws_elb_service_account.current.arn}"
-      },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%s/*",
-      "Sid": "Stmt1446575236270"
-    }
-  ],
-  "Version": "2012-10-17"
-}
-EOF
-}
-
+	return `
 resource "aws_elb" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
 
@@ -1257,24 +1248,59 @@ resource "aws_elb" "test" {
 
   access_logs {
     interval = 5
-    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
+    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
   }
 }
-`, r, r)
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+` + testAccAWSELBAccessLogsCommon(r)
 }
 
 func testAccAWSELBAccessLogsDisabled(r string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+	return `
+resource "aws_elb" "test" {
+  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
+
+  listener {
+    instance_port     = 8000
+    instance_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
+  }
+
+  access_logs {
+    interval = 5
+    bucket   = "${aws_s3_bucket.accesslogs_bucket.bucket}"
+    enabled  = false
+  }
 }
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+` + testAccAWSELBAccessLogsCommon(r)
+}
+
+func testAccAWSELBAccessLogsCommon(r string) string {
+	return fmt.Sprintf(`
 data "aws_elb_service_account" "current" {}
 
 data "aws_partition" "current" {}
 
-resource "aws_s3_bucket" "acceslogs_bucket" {
-  bucket        = "%s"
+resource "aws_s3_bucket" "accesslogs_bucket" {
+  bucket        = "%[1]s"
   acl           = "private"
   force_destroy = true
 
@@ -1288,7 +1314,7 @@ resource "aws_s3_bucket" "acceslogs_bucket" {
       "Principal": {
         "AWS": "${data.aws_elb_service_account.current.arn}"
       },
-      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%s/*",
+      "Resource": "arn:${data.aws_partition.current.partition}:s3:::%[1]s/*",
       "Sid": "Stmt1446575236270"
     }
   ],
@@ -1296,29 +1322,17 @@ resource "aws_s3_bucket" "acceslogs_bucket" {
 }
 EOF
 }
-
-resource "aws_elb" "test" {
-  availability_zones = ["${data.aws_availability_zones.available.names[0]}", "${data.aws_availability_zones.available.names[1]}", "${data.aws_availability_zones.available.names[2]}"]
-
-  listener {
-    instance_port     = 8000
-    instance_protocol = "http"
-    lb_port           = 80
-    lb_protocol       = "http"
-  }
-
-  access_logs {
-    interval = 5
-    bucket   = "${aws_s3_bucket.acceslogs_bucket.bucket}"
-    enabled  = false
-  }
-}
-`, r, r)
+`, r)
 }
 
 const testAccAWSELB_namePrefix = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1337,6 +1351,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBGeneratedName = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1354,6 +1373,11 @@ resource "aws_elb" "test" {
 const testAccAWSELB_zeroValueName = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1377,6 +1401,11 @@ output "lb_name" {
 const testAccAWSELBConfig_AvailabilityZonesUpdate = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1409,6 +1438,11 @@ data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1433,6 +1467,11 @@ resource "aws_instance" "test" {
 const testAccAWSELBConfigHealthCheck = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1458,6 +1497,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigHealthCheck_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1483,6 +1527,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigListener_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1500,6 +1549,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigListener_multipleListeners = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1524,6 +1578,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigIdleTimeout = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1543,6 +1602,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigIdleTimeout_update = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1562,6 +1626,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigConnectionDraining = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1582,6 +1651,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigConnectionDraining_update_timeout = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1602,6 +1676,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigConnectionDraining_update_disable = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1621,6 +1700,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfigSecurityGroups = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_elb" "test" {
@@ -1652,7 +1736,14 @@ resource "aws_security_group" "test" {
 
 func testAccELBConfig_Listener_IAMServerCertificate(certName, certificate, key, lbProtocol string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -1676,7 +1767,14 @@ resource "aws_elb" "test" {
 
 func testAccELBConfig_Listener_IAMServerCertificate_AddInvalidListener(certName, certificate, key string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_iam_server_certificate" "test_cert" {
   name             = "%[1]s"
@@ -1710,6 +1808,11 @@ resource "aws_elb" "test" {
 const testAccAWSELBConfig_subnets = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "azelb" {
@@ -1781,6 +1884,11 @@ resource "aws_internet_gateway" "gw" {
 const testAccAWSELBConfig_subnet_swap = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "azelb" {

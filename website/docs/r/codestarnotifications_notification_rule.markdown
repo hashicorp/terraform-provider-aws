@@ -19,7 +19,6 @@ resource "aws_codecommit_repository" "code" {
 
 resource "aws_sns_topic" "notif" {
   name = "notification"
-
 }
 
 data "aws_iam_policy_document" "notif_access" {
@@ -62,8 +61,8 @@ The following arguments are supported:
   For list of allowed events see [here](https://docs.aws.amazon.com/codestar-notifications/latest/userguide/concepts.html#concepts-api).
 * `name` - (Required) The name of notification rule.
 * `resource` - (Required) The ARN of the resource to associate with the notification rule.
-* `status` - (Optional) The status of the notification rule. Possible balues are `ENABLED` and `DISABLED`, default is `ENABLED`.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `status` - (Optional) The status of the notification rule. Possible values are `ENABLED` and `DISABLED`, default is `ENABLED`.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `target` - (Optional) Configuration blocks containing notification target information. Can be specified multiple times. At least one target must be specified on creation.
 
 An `target` block supports the following arguments:
