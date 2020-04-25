@@ -350,11 +350,6 @@ data "aws_ec2_instance_type_offering" "available" {
     values = ["t3.micro", "t2.micro"]
   }
 
-  filter {
-    name   = "location"
-    values = [aws_subnet.test.availability_zone]
-  }
-
   location_type            = "availability-zone"
   preferred_instance_types = ["t3.micro", "t2.micro"]
 }
