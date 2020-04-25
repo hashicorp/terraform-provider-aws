@@ -1770,7 +1770,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   depends_on  = [aws_iam_role_policy.firehose]
-  name        = "tf-acc-test-%[1]d"
+  name        = "terraform-kinesis-firehose-%[1]d"
   destination = "s3"
 
   s3_configuration {
