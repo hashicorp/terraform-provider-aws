@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform/helper/validation"
 )
 
-func resourceAwsRoute53DomainContactDetail() *schema.Schema {
+func resourceAwsRoute53DomainsDomainContactDetail() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
@@ -81,12 +81,12 @@ func resourceAwsRoute53DomainContactDetail() *schema.Schema {
 	}
 }
 
-func resourceAwsRoute53Domain() *schema.Resource {
+func resourceAwsRoute53DomainsDomain() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsRoute53DomainCreate,
-		Read:   resourceAwsRoute53DomainRead,
-		Update: resourceAwsRoute53DomainUpdate,
-		Delete: resourceAwsRoute53DomainDelete,
+		Create: resourceAwsRoute53DomainsDomainCreate,
+		Read:   resourceAwsRoute53DomainsDomainRead,
+		Update: resourceAwsRoute53DomainsDomainUpdate,
+		Delete: resourceAwsRoute53DomainsDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -105,7 +105,7 @@ func resourceAwsRoute53Domain() *schema.Resource {
 				Computed: true,
 			},
 
-			"admin_contact": resourceAwsRoute53DomainContactDetail(),
+			"admin_contact": resourceAwsRoute53DomainsDomainContactDetail(),
 
 			"admin_privacy": {
 				Type:     schema.TypeBool,
@@ -158,7 +158,7 @@ func resourceAwsRoute53Domain() *schema.Resource {
 				Computed: true,
 			},
 
-			"registrant_contact": resourceAwsRoute53DomainContactDetail(),
+			"registrant_contact": resourceAwsRoute53DomainsDomainContactDetail(),
 
 			"registrant_privacy": {
 				Type:     schema.TypeBool,
@@ -178,7 +178,7 @@ func resourceAwsRoute53Domain() *schema.Resource {
 
 			"tags": tagsSchemaComputed(),
 
-			"tech_contact": resourceAwsRoute53DomainContactDetail(),
+			"tech_contact": resourceAwsRoute53DomainsDomainContactDetail(),
 
 			"tech_privacy": {
 				Type:     schema.TypeBool,
@@ -211,13 +211,13 @@ func resourceAwsRoute53Domain() *schema.Resource {
 	}
 }
 
-func resourceAwsRoute53DomainCreate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsRoute53DomainsDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	domainName := d.Get("domain_name").(string)
 	d.SetId(domainName)
-	return resourceAwsRoute53DomainRead(d, meta)
+	return resourceAwsRoute53DomainsDomainRead(d, meta)
 }
 
-func resourceAwsRoute53DomainRead(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsRoute53DomainsDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53domainsconn
 
 	log.Printf("[DEBUG] Get domain details for Route 53 Domain: %s", d.Id())
@@ -237,17 +237,17 @@ func resourceAwsRoute53DomainRead(d *schema.ResourceData, meta interface{}) erro
 	// Unpack response
 	d.Set("abuse_contact_email", out.AbuseContactEmail)
 	d.Set("abuse_contact_phone", out.AbuseContactPhone)
-	d.Set("admin_contact", resourceAwsRoute53DomainFlattenContactDetail(out.AdminContact))
+	d.Set("admin_contact", resourceAwsRoute53DomainsDomainFlattenContactDetail(out.AdminContact))
 	d.Set("admin_privacy", out.AdminPrivacy)
 	d.Set("auto_renew", out.AutoRenew)
 	d.Set("creation_date", out.CreationDate)
 	d.Set("expiration_date", out.ExpirationDate)
-	d.Set("name_servers", resourceAwsRoute53DomainFlattenNameservers(out.Nameservers))
-	d.Set("registrant_contact", resourceAwsRoute53DomainFlattenContactDetail(out.RegistrantContact))
+	d.Set("name_servers", resourceAwsRoute53DomainsDomainFlattenNameservers(out.Nameservers))
+	d.Set("registrant_contact", resourceAwsRoute53DomainsDomainFlattenContactDetail(out.RegistrantContact))
 	d.Set("registrant_privacy", out.RegistrantPrivacy)
 	d.Set("registrar_name", out.RegistrarName)
 	d.Set("registrar_url", out.RegistrarUrl)
-	d.Set("tech_contact", resourceAwsRoute53DomainFlattenContactDetail(out.TechContact))
+	d.Set("tech_contact", resourceAwsRoute53DomainsDomainFlattenContactDetail(out.TechContact))
 	d.Set("tech_privacy", out.TechPrivacy)
 	d.Set("updated_date", out.UpdatedDate)
 	d.Set("whois_server", out.WhoIsServer)
@@ -280,7 +280,7 @@ func resourceAwsRoute53DomainRead(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func resourceAwsRoute53DomainExpandNameservers(in []interface{}) []*route53domains.Nameserver {
+func resourceAwsRoute53DomainsDomainExpandNameservers(in []interface{}) []*route53domains.Nameserver {
 	nameservers := []*route53domains.Nameserver{}
 	for _, mRaw := range in {
 		m := mRaw.(map[string]interface{})
@@ -294,7 +294,7 @@ func resourceAwsRoute53DomainExpandNameservers(in []interface{}) []*route53domai
 	return nameservers
 }
 
-func resourceAwsRoute53DomainFlattenNameservers(in []*route53domains.Nameserver) []map[string]interface{} {
+func resourceAwsRoute53DomainsDomainFlattenNameservers(in []*route53domains.Nameserver) []map[string]interface{} {
 	var out = make([]map[string]interface{}, len(in), len(in))
 	for i, v := range in {
 		m := make(map[string]interface{})
@@ -305,7 +305,7 @@ func resourceAwsRoute53DomainFlattenNameservers(in []*route53domains.Nameserver)
 	return out
 }
 
-func resourceAwsRoute53DomainFlattenExtraParams(in []*route53domains.ExtraParam) []map[string]interface{} {
+func resourceAwsRoute53DomainsDomainFlattenExtraParams(in []*route53domains.ExtraParam) []map[string]interface{} {
 	var out = make([]map[string]interface{}, len(in), len(in))
 	for i, v := range in {
 		m := make(map[string]interface{})
@@ -316,7 +316,7 @@ func resourceAwsRoute53DomainFlattenExtraParams(in []*route53domains.ExtraParam)
 	return out
 }
 
-func resourceAwsRoute53DomainFlattenContactDetail(in *route53domains.ContactDetail) []interface{} {
+func resourceAwsRoute53DomainsDomainFlattenContactDetail(in *route53domains.ContactDetail) []interface{} {
 	m := make(map[string]interface{})
 	if in.AddressLine1 != nil {
 		m["address_line_1"] = *in.AddressLine1
@@ -337,7 +337,7 @@ func resourceAwsRoute53DomainFlattenContactDetail(in *route53domains.ContactDeta
 		m["email"] = *in.Email
 	}
 	// if in.ExtraParams != nil {
-	// 	m["extra_params"] = resourceAwsRoute53DomainFlattenExtraParams(in.ExtraParams)
+	// 	m["extra_params"] = resourceAwsRoute53DomainsDomainFlattenExtraParams(in.ExtraParams)
 	// }
 	if in.Fax != nil {
 		m["fax"] = *in.Fax
@@ -365,7 +365,7 @@ func resourceAwsRoute53DomainFlattenContactDetail(in *route53domains.ContactDeta
 	return out
 }
 
-func resourceAwsRoute53DomainUpdate(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsRoute53DomainsDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53domainsconn
 
 	// Changes to tags
@@ -407,7 +407,7 @@ func resourceAwsRoute53DomainUpdate(d *schema.ResourceData, meta interface{}) er
 			if err != nil {
 				return fmt.Errorf("Error enabling domain transfer lock for Route 53 domain (%s), error: %s", d.Id(), err)
 			}
-			if err := resourceAwsRoute53DomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 			}
 		} else {
@@ -418,7 +418,7 @@ func resourceAwsRoute53DomainUpdate(d *schema.ResourceData, meta interface{}) er
 			if err != nil {
 				return fmt.Errorf("Error disabling domain transfer lock for Route 53 domain (%s), error: %s", d.Id(), err)
 			}
-			if err := resourceAwsRoute53DomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 			}
 		}
@@ -438,7 +438,7 @@ func resourceAwsRoute53DomainUpdate(d *schema.ResourceData, meta interface{}) er
 		if err != nil {
 			return fmt.Errorf("Error updating domain contact privacy settings for Route 53 domain (%s), error: %s", d.Id(), err)
 		}
-		if err := resourceAwsRoute53DomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 		}
 	}
@@ -448,31 +448,31 @@ func resourceAwsRoute53DomainUpdate(d *schema.ResourceData, meta interface{}) er
 		log.Printf("[DEBUG] Updating domain name servers for Route 53 domain (%s)", d.Id())
 		out, err := conn.UpdateDomainNameservers(&route53domains.UpdateDomainNameserversInput{
 			DomainName:  aws.String(d.Id()),
-			Nameservers: resourceAwsRoute53DomainExpandNameservers(d.Get("name_servers").([]interface{})),
+			Nameservers: resourceAwsRoute53DomainsDomainExpandNameservers(d.Get("name_servers").([]interface{})),
 		})
 		if err != nil {
 			return fmt.Errorf("Error updating domain name servers for Route 53 domain (%s), error: %s", d.Id(), err)
 		}
-		if err := resourceAwsRoute53DomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := resourceAwsRoute53DomainsDomainWaitForOperation(conn, *out.OperationId, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("Error waiting for Route 53 domain operation (%s) on domain (%s) to complete: %s", out.OperationId, d.Id(), err)
 		}
 	}
 
-	return resourceAwsRoute53DomainRead(d, meta)
+	return resourceAwsRoute53DomainsDomainRead(d, meta)
 }
 
-func resourceAwsRoute53DomainDelete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsRoute53DomainsDomainDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Deletion of Route 53 Domain is a no-op")
 	return nil
 }
 
-func resourceAwsRoute53DomainWaitForOperation(conn *route53domains.Route53Domains, operationId string, timeout time.Duration) error {
+func resourceAwsRoute53DomainsDomainWaitForOperation(conn *route53domains.Route53Domains, operationId string, timeout time.Duration) error {
 	log.Printf("Waiting for Route 53 domain operation (%s)...", operationId)
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{route53domains.OperationStatusSubmitted, route53domains.OperationStatusInProgress},
 		Target:  []string{route53domains.OperationStatusSuccessful},
-		Refresh: resourceAwsRoute53DomainOperationStateRefreshFunc(conn, operationId),
+		Refresh: resourceAwsRoute53DomainsDomainOperationStateRefreshFunc(conn, operationId),
 		Timeout: timeout,
 	}
 
@@ -484,7 +484,7 @@ func resourceAwsRoute53DomainWaitForOperation(conn *route53domains.Route53Domain
 	return nil
 }
 
-func resourceAwsRoute53DomainOperationStateRefreshFunc(conn *route53domains.Route53Domains, operationId string) resource.StateRefreshFunc {
+func resourceAwsRoute53DomainsDomainOperationStateRefreshFunc(conn *route53domains.Route53Domains, operationId string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := conn.GetOperationDetail(&route53domains.GetOperationDetailInput{
 			OperationId: aws.String(operationId),

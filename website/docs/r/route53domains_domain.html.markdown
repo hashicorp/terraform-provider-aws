@@ -1,19 +1,19 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_route53_domain"
+page_title: "AWS: aws_route53domains_domain"
 sidebar_current: "docs-aws-resource-route53-domain"
 description: |-
   Manages a Route53 Domain
 ---
 
-# Resource: aws_route53_domain
+# Resource: aws_route53domains_domain
 
 Manages a Route53 Domain.
 
 ## Example Usage
 
 ```hcl
-resource "aws_route53_domain" "dev" {
+resource "aws_route53domains_domain" "dev" {
   name = "dev.example.com"
 
   tags = {
@@ -72,5 +72,5 @@ In addition to all arguments above, the following attributes are exported:
 Route53 Domains can be imported using the `domain id`, e.g.
 
 ```
-$ terraform import aws_route53_domain.mydomain example.com
+$ terraform import aws_route53domains_domain.mydomain example.com
 ```
