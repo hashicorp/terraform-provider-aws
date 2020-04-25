@@ -222,10 +222,10 @@ func testAccCheckVolumeAttachmentExists(n string, i *ec2.Instance, v *ec2.Volume
 		}
 
 		for _, b := range i.BlockDeviceMappings {
-			if rs.Primary.Attributes["device_name"] == *b.DeviceName {
+			if rs.Primary.Attributes["device_name"] == aws.StringValue(b.DeviceName) {
 				if b.Ebs.VolumeId != nil &&
-					rs.Primary.Attributes["volume_id"] == *b.Ebs.VolumeId &&
-					rs.Primary.Attributes["volume_id"] == *v.VolumeId {
+					rs.Primary.Attributes["volume_id"] == aws.StringValue(b.Ebs.VolumeId) &&
+					rs.Primary.Attributes["volume_id"] == aws.StringValue(v.VolumeId) {
 					// pass
 					return nil
 				}
@@ -329,10 +329,40 @@ data "aws_availability_zones" "available" {
   }
 }
 
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["t3.micro", "t2.micro"]
+  }
+
+  filter {
+    name   = "location"
+    values = [aws_subnet.test.availability_zone]
+  }
+
+  location_type            = "availability-zone"
+  preferred_instance_types = ["t3.micro", "t2.micro"]
+}
+
 resource "aws_instance" "test" {
-  ami               = "ami-21f78e11"
+  ami               = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  instance_type     = "t1.micro"
+  instance_type     = "${data.aws_ec2_instance_type_offering.available.instance_type}"
 
   tags = {
     Name = %[1]q
