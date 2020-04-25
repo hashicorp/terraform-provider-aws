@@ -36,7 +36,7 @@ func resourceAwsRedshiftSubnetGroup() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
 					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`(?i)^default$`), "must not start with \"default\""),
+					validation.StringNotInSlice([]string{"default"}, false),
 				),
 			},
 
