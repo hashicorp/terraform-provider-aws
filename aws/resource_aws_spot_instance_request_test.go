@@ -567,14 +567,32 @@ resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
+
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+}
+
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["t3.micro", "t2.micro"]
+  }
+  location_type            = "availability-zone"
+  preferred_instance_types = ["t3.micro", "t2.micro"]
+}
 `, rName)
 }
 
 func testAccAWSSpotInstanceRequestConfig(rName string) string {
 	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "ami-4fccb37f"
-  instance_type        = "m1.small"
+  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name             = "${aws_key_pair.test.key_name}"
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -589,8 +607,8 @@ resource "aws_spot_instance_request" "test" {
 func testAccAWSSpotInstanceRequestConfigValidUntil(rName string, validUntil string) string {
 	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "ami-4fccb37f"
-  instance_type        = "m1.small"
+  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name             = "${aws_key_pair.test.key_name}"
   spot_price           = "0.05"
   valid_until          = %[2]q
@@ -606,8 +624,8 @@ resource "aws_spot_instance_request" "test" {
 func testAccAWSSpotInstanceRequestConfig_withoutSpotPrice(rName string) string {
 	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "ami-4fccb37f"
-  instance_type        = "m1.small"
+  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name             = "${aws_key_pair.test.key_name}"
   wait_for_fulfillment = true
 
@@ -621,8 +639,8 @@ resource "aws_spot_instance_request" "test" {
 func testAccAWSSpotInstanceRequestConfig_withLaunchGroup(rName string) string {
 	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                  = "ami-4fccb37f"
-  instance_type        = "m1.small"
+  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name             = "${aws_key_pair.test.key_name}"
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -638,8 +656,8 @@ resource "aws_spot_instance_request" "test" {
 func testAccAWSSpotInstanceRequestConfig_withBlockDuration(rName string) string {
 	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
 resource "aws_spot_instance_request" "test" {
-  ami                    = "ami-4fccb37f"
-  instance_type          = "m1.small"
+  ami                    = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type          = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name               = "${aws_key_pair.test.key_name}"
   spot_price             = "0.05"
   wait_for_fulfillment   = true
@@ -682,8 +700,8 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                  = "ami-4fccb37f"
-  instance_type        = "m1.small"
+  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name             = "${aws_key_pair.test.key_name}"
   spot_price           = "0.05"
   wait_for_fulfillment = true
@@ -709,8 +727,8 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                         = "ami-4fccb37f"
-  instance_type               = "m1.small"
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type               = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   spot_price                  = "0.05"
   wait_for_fulfillment        = true
   subnet_id                   = "${aws_subnet.test.id}"
@@ -761,14 +779,9 @@ data "aws_ami" "test" {
   }
 }
 
-resource "aws_key_pair" "foo" {
-  key_name   = "tf-acctest-%d"
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAq6U3HQYC4g8WzU147gZZ7CKQH8TgYn3chZGRPxaGmHW1RUwsyEs0nmombmIhwxudhJ4ehjqXsDLoQpd6+c7BuLgTMvbv8LgE9LX53vnljFe1dsObsr/fYLvpU9LTlo8HgHAqO5ibNdrAUvV31ronzCZhms/Gyfdaue88Fd0/YnsZVGeOZPayRkdOHSpqme2CBrpa8myBeL1CWl0LkDG4+YCURjbaelfyZlIApLYKy3FcCan9XQFKaL32MJZwCgzfOvWIMtYcU8QtXMgnA3/I3gXk8YDUJv5P4lj0s/PJXuTM8DygVAUtebNwPuinS7wwonm5FXcWMuVGsVpG5K7FGQ== tf-acc-winpasswordtest"
-}
-
-resource "aws_spot_instance_request" "foo" {
-  ami                  = data.aws_ami.win2016core.id
-  instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
+resource "aws_spot_instance_request" "test" {
+  ami                  = "${data.aws_ami.test.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   spot_price           = "0.05"
   key_name             = aws_key_pair.foo.key_name
   wait_for_fulfillment = true
@@ -777,21 +790,12 @@ resource "aws_spot_instance_request" "foo" {
 `, rInt))
 }
 
-func testAccAWSSpotInstanceRequestInterruptConfig(interruption_behavior string) string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableEc2InstanceTypeForRegion("c5.large", "c4.large"),
-		fmt.Sprintf(`
-resource "aws_spot_instance_request" "foo" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-
-  # base price is $0.067 hourly, so bidding above that should theoretically
-  # always fulfill
-  spot_price = "0.07"
-
-  # we wait for fulfillment because we want to inspect the launched instance
-  # and verify termination behavior
+func testAccAWSSpotInstanceRequestInterruptConfig(interruptionBehavior string) string {
+	return fmt.Sprintf(`
+resource "aws_spot_instance_request" "test" {
+  ami                  = "${data.aws_ami.test.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  spot_price           = "0.07"
   wait_for_fulfillment = true
 
   instance_interruption_behaviour = "%s"
