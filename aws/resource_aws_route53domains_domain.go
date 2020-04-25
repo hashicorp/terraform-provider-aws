@@ -294,7 +294,7 @@ func resourceAwsRoute53DomainsDomainExpandNameservers(in []interface{}) []*route
 }
 
 func resourceAwsRoute53DomainsDomainFlattenNameservers(in []*route53domains.Nameserver) []map[string]interface{} {
-	var out = make([]map[string]interface{}, len(in), len(in))
+	var out = make([]map[string]interface{}, len(in))
 	for i, v := range in {
 		m := make(map[string]interface{})
 		m["glue_ips"] = flattenStringList(v.GlueIps)
@@ -304,16 +304,16 @@ func resourceAwsRoute53DomainsDomainFlattenNameservers(in []*route53domains.Name
 	return out
 }
 
-func resourceAwsRoute53DomainsDomainFlattenExtraParams(in []*route53domains.ExtraParam) []map[string]interface{} {
-	var out = make([]map[string]interface{}, len(in), len(in))
-	for i, v := range in {
-		m := make(map[string]interface{})
-		m["name"] = v.Name
-		m["value"] = v.Value
-		out[i] = m
-	}
-	return out
-}
+// func resourceAwsRoute53DomainsDomainFlattenExtraParams(in []*route53domains.ExtraParam) []map[string]interface{} {
+// 	var out = make([]map[string]interface{}, len(in))
+// 	for i, v := range in {
+// 		m := make(map[string]interface{})
+// 		m["name"] = v.Name
+// 		m["value"] = v.Value
+// 		out[i] = m
+// 	}
+// 	return out
+// }
 
 func resourceAwsRoute53DomainsDomainFlattenContactDetail(in *route53domains.ContactDetail) []interface{} {
 	m := make(map[string]interface{})
