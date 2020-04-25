@@ -46,7 +46,10 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.All(validation.StringLenBetween(1, 128), validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]")),
+				ValidateFunc:  validation.All(
+					validation.StringLenBetween(1, 128), 
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"name_prefix": {
@@ -54,7 +57,10 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.All(validation.StringLenBetween(1, 64), validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]")),
+				ValidateFunc:  validation.All(
+					validation.StringLenBetween(1, 64), 
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"path": {
