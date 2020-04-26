@@ -20,7 +20,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 		Read:   resourceAwsSsmParameterRead,
 		Update: resourceAwsSsmParameterPut,
 		Delete: resourceAwsSsmParameterDelete,
-		Exists: resourceAwsSmmParameterExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -93,22 +92,6 @@ func resourceAwsSsmParameter() *schema.Resource {
 	}
 }
 
-func resourceAwsSmmParameterExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	ssmconn := meta.(*AWSClient).ssmconn
-	_, err := ssmconn.GetParameter(&ssm.GetParameterInput{
-		Name:           aws.String(d.Id()),
-		WithDecryption: aws.Bool(false),
-	})
-	if err != nil {
-		if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") {
-			return false, nil
-		}
-		return false, err
-	}
-
-	return true, nil
-}
-
 func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
 
@@ -118,8 +101,13 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		Name:           aws.String(d.Id()),
 		WithDecryption: aws.Bool(true),
 	})
+	if isAWSErr(err, ssm.ErrCodeParameterNotFound, "") {
+		log.Printf("[WARN] SSM Parameter (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return fmt.Errorf("error getting SSM parameter: %s", err)
+		return fmt.Errorf("error reading SSM Parameter (%s): %w", d.Id(), err)
 	}
 
 	param := resp.Parameter
