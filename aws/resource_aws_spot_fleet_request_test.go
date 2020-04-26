@@ -1179,7 +1179,7 @@ EOF
 }
 
 resource "aws_iam_policy" "test-policy" {
-  name        = "test-policy-%[2]d"
+  name        = %[1]q
   path        = "/"
   description = "Spot Fleet Request ACCTest Policy"
 
@@ -1203,7 +1203,7 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-  name       = "test-attachment-%[2]d"
+  name       = %[1]q
   roles      = ["${aws_iam_role.test-role.name}"]
   policy_arn = "${aws_iam_policy.test-policy.arn}"
 }
