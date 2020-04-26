@@ -319,28 +319,13 @@ func testAccCheckVolumeAttachmentDestroy(s *terraform.State) error {
 }
 
 func testAccVolumeAttachmentInstanceOnlyConfigBase(rName string) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
-  }
-}
-
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
   }
 }
 
