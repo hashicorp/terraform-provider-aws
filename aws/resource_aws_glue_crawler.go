@@ -22,7 +22,6 @@ func resourceAwsGlueCrawler() *schema.Resource {
 		Read:   resourceAwsGlueCrawlerRead,
 		Update: resourceAwsGlueCrawlerUpdate,
 		Delete: resourceAwsGlueCrawlerDelete,
-		Exists: resourceAwsGlueCrawlerExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -661,21 +660,4 @@ func resourceAwsGlueCrawlerDelete(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error deleting Glue crawler: %s", err.Error())
 	}
 	return nil
-}
-
-func resourceAwsGlueCrawlerExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	glueConn := meta.(*AWSClient).glueconn
-
-	input := &glue.GetCrawlerInput{
-		Name: aws.String(d.Id()),
-	}
-
-	_, err := glueConn.GetCrawler(input)
-	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
 }
