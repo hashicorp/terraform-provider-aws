@@ -2055,23 +2055,12 @@ resource "aws_spot_fleet_request" "test" {
 
 func testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceKmsKeyId(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+
+  tags = {
+   Name = %[2]q
+  }
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -2103,28 +2092,17 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, validUntil)
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceKmsKeyId(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+
+  tags = {
+   Name = %[2]q
+  }
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -2149,7 +2127,7 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, validUntil)
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName string, rInt int, validUntil string) string {
