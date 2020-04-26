@@ -200,6 +200,7 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 
 func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *testing.T) {
 	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -207,7 +208,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *tes
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName),
+				Config:      testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName, rInt),
 				ExpectError: regexp.MustCompile(`"launch_specification": only one of .+`),
 			},
 		},
@@ -1132,7 +1133,7 @@ func testAccPreCheckAWSEc2SpotFleetRequest(t *testing.T) {
 }
 
 func testAccAWSSpotFleetRequestConfigBase(rName string, rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1141,9 +1142,13 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-resource "aws_key_pair" "debugging" {
+resource "aws_key_pair" "test" {
   key_name   = "tmp-key-%[1]s"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+
+  tags = {
+   Name = %[1]q
+  }
 }
 
 resource "aws_iam_role" "test-role" {
@@ -1167,6 +1172,10 @@ resource "aws_iam_role" "test-role" {
   ]
 }
 EOF
+
+  tags = {
+   Name = %[1]q
+  }
 }
 
 resource "aws_iam_policy" "test-policy" {
@@ -1198,6 +1207,15 @@ resource "aws_iam_policy_attachment" "test-attach" {
   roles      = ["${aws_iam_role.test-role.name}"]
   policy_arn = "${aws_iam_policy.test-policy.arn}"
 }
+
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["t3.micro", "t2.micro"]
+  }
+
+  preferred_instance_types = ["t3.micro", "t2.micro"]
+}
 `, rName, rInt)
 }
 
@@ -1214,7 +1232,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1234,7 +1252,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     tags = {
       %[2]q = %[3]q
@@ -1257,7 +1275,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     tags = {
       %[2]q = %[3]q
@@ -1280,7 +1298,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         associate_public_ip_address = true
     }
 	depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1307,43 +1325,14 @@ resource "aws_spot_fleet_request" "test" {
 `, validUntil)
 }
 
-func testAccAWSSpotFleetRequestLaunchTemplateConfigBase() string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
-data "aws_ec2_instance_type_offering" "available" {
-  filter {
-    name   = "instance-type"
-    values = ["t3.micro", "t2.micro"]
-  }
-
-  preferred_instance_types = ["t3.micro", "t2.micro"]
-}
-`)
-}
-
 func testAccAWSSpotFleetRequestLaunchTemplateConfig(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
-		testAccAWSSpotFleetRequestLaunchTemplateConfigBase() +
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[2]q
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name      = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -1369,7 +1358,6 @@ resource "aws_spot_fleet_request" "test" {
 
 func testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
-		testAccAWSSpotFleetRequestLaunchTemplateConfigBase() +
 		fmt.Sprintf(`
 data "aws_ec2_instance_type_offering" "test" {
   filter {
@@ -1384,14 +1372,14 @@ resource "aws_launch_template" "test1" {
   name          = "%[2]s-1"
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name      = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 }
 
 resource "aws_launch_template" "test2" {
   name          = "%[2]s-2"
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "${data.aws_ec2_instance_type_offering.test.instance_type}"
-  key_name      = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -1422,30 +1410,8 @@ resource "aws_spot_fleet_request" "test" {
 `, validUntil, rName)
 }
 
-func testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName string) string {
-	return testAccAWSSpotFleetRequestLaunchTemplateConfigBase() + fmt.Sprintf(`
-resource "aws_iam_role" "test-role" {
-    name = "test-role-%[1]s"
-    assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
-        ]
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
+func testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName string, rInt int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
@@ -1482,13 +1448,12 @@ resource "aws_spot_fleet_request" "test" {
 
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
-		testAccAWSSpotFleetRequestLaunchTemplateConfigBase() +
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[2]q
   image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name      = "${aws_key_pair.debugging.key_name}"
+  key_name      = "${aws_key_pair.test.key_name}"
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -1617,7 +1582,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         iam_instance_profile_arn = "${aws_iam_instance_profile.test-iam-instance-profile1.arn}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1637,7 +1602,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1656,13 +1621,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[1]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1707,13 +1672,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.bar.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1769,7 +1734,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1836,7 +1801,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1856,13 +1821,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1898,13 +1863,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1924,13 +1889,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         spot_price = "0.01"
     }
@@ -1950,13 +1915,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1977,19 +1942,19 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -2010,19 +1975,19 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -2042,14 +2007,14 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "6"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "3"
     }
@@ -2256,7 +2221,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
 		placement_tenancy = "dedicated"
 		placement_group = "${aws_placement_group.test.name}"
     }
