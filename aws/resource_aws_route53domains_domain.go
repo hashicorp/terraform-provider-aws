@@ -17,7 +17,6 @@ func resourceAwsRoute53DomainsDomainContactDetail() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Computed: true,
-		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"address_line_1": {
@@ -214,11 +213,13 @@ func resourceAwsRoute53DomainsDomain() *schema.Resource {
 func resourceAwsRoute53DomainsDomainCreate(d *schema.ResourceData, meta interface{}) error {
 	domainName := d.Get("domain_name").(string)
 	d.SetId(domainName)
-	return resourceAwsRoute53DomainsDomainRead(d, meta)
+	return resourceAwsRoute53DomainsDomainUpdate(d, meta)
 }
 
 func resourceAwsRoute53DomainsDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53domainsconn
+
+	d.Set("domain_name", d.Id())
 
 	log.Printf("[DEBUG] Get domain details for Route 53 Domain: %s", d.Id())
 	out, err := conn.GetDomainDetail(&route53domains.GetDomainDetailInput{
@@ -240,8 +241,8 @@ func resourceAwsRoute53DomainsDomainRead(d *schema.ResourceData, meta interface{
 	d.Set("admin_contact", resourceAwsRoute53DomainsDomainFlattenContactDetail(out.AdminContact))
 	d.Set("admin_privacy", out.AdminPrivacy)
 	d.Set("auto_renew", out.AutoRenew)
-	d.Set("creation_date", out.CreationDate)
-	d.Set("expiration_date", out.ExpirationDate)
+	d.Set("creation_date", out.CreationDate.String())
+	d.Set("expiration_date", out.ExpirationDate.String())
 	d.Set("name_servers", resourceAwsRoute53DomainsDomainFlattenNameservers(out.Nameservers))
 	d.Set("registrant_contact", resourceAwsRoute53DomainsDomainFlattenContactDetail(out.RegistrantContact))
 	d.Set("registrant_privacy", out.RegistrantPrivacy)
@@ -249,7 +250,7 @@ func resourceAwsRoute53DomainsDomainRead(d *schema.ResourceData, meta interface{
 	d.Set("registrar_url", out.RegistrarUrl)
 	d.Set("tech_contact", resourceAwsRoute53DomainsDomainFlattenContactDetail(out.TechContact))
 	d.Set("tech_privacy", out.TechPrivacy)
-	d.Set("updated_date", out.UpdatedDate)
+	// d.Set("updated_date", out.UpdatedDate.String())
 	d.Set("whois_server", out.WhoIsServer)
 
 	if err := d.Set("status_list", flattenStringList(out.StatusList)); err != nil {
@@ -422,8 +423,6 @@ func resourceAwsRoute53DomainsDomainUpdate(d *schema.ResourceData, meta interfac
 			}
 		}
 	}
-
-	// Changes to domain contact
 
 	// Changes to domain contact privacy
 	if d.HasChange("admin_privacy") || d.HasChange("registrant_privacy") || d.HasChange("tech_privacy") {
