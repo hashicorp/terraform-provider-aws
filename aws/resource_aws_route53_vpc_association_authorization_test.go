@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -15,12 +15,12 @@ import (
 func TestAccAWSRoute53VpcAssociationAuthorization_basic(t *testing.T) {
 	var zone route53.HostedZone
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53VPCAssociationAuthorizationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53VPCAssociationAuthorizationConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53VPCAssociationAuthorizationExists("aws_route53_vpc_association_authorization.peer", &zone),
@@ -49,7 +49,7 @@ func TestAccAWSRoute53VPCAssociationAuthorization_region(t *testing.T) {
 		ProviderFactories: providerFactories,
 		CheckDestroy:      testAccCheckRoute53VPCAssociationAuthorizationDestroyWithProviders(&providers),
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccRoute53ZoneAssociationRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53VPCAssociationAuthorizationExistsWithProviders("aws_route53_vpc_association_authorization.peer", &zone, &providers),
@@ -84,7 +84,10 @@ func testAccCheckRoute53VPCAssociationAuthorizationDestroyWithProvider(s *terraf
 			continue
 		}
 
-		zone_id, vpc_id := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+		zone_id, vpc_id, err := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
 
 		req := route53.ListVPCAssociationAuthorizationsInput{HostedZoneId: aws.String(zone_id)}
 		res, err := conn.ListVPCAssociationAuthorizations(&req)
@@ -136,7 +139,12 @@ func testAccCheckRoute53VPCAssociationAuthorizationExistsWithProvider(s *terrafo
 		return fmt.Errorf("No VPC association authorization ID is set")
 	}
 
-	zone_id, vpc_id := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+	zone_id, vpc_id, err := resourceAwsRoute53ZoneAssociationParseId(rs.Primary.ID)
+
+	if err != nil {
+		return err
+	}
+
 	conn := provider.Meta().(*AWSClient).r53conn
 
 	req := route53.ListVPCAssociationAuthorizationsInput{HostedZoneId: aws.String(zone_id)}

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -41,6 +42,13 @@ func resourceAwsRoute53ZoneAssociation() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+
+			"cross_account": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -61,30 +69,77 @@ func resourceAwsRoute53ZoneAssociationCreate(d *schema.ResourceData, meta interf
 	}
 
 	log.Printf("[DEBUG] Associating Route53 Private Zone %s with VPC %s with region %s", *req.HostedZoneId, *req.VPC.VPCId, *req.VPC.VPCRegion)
-	var err error
-	resp, err := r53.AssociateVPCWithHostedZone(req)
-	if err != nil {
-		return err
+
+	zone_id := d.Get("zone_id").(string)
+	vpc_id := d.Get("vpc_id").(string)
+
+	// Ignore errors that indicate we're already associated with this hosted zone. We will use this to determine the
+	// current state of the account when we are associating with a hosted zone in another account.
+	//
+	// If the Route53 API ever add's the ability to determine current associations of an account then this should be
+	// replaced to use that.
+	exists := fmt.Sprintf(`ConflictingDomainExists: The VPC %s .* associated with the hosted zone %s .*`, vpc_id, zone_id)
+
+	resp, apiErr := r53.AssociateVPCWithHostedZone(req)
+	if apiErr != nil {
+		// Ignore already associated errors if the hosted zone isn't in our account
+		if d.Get("cross_account").(bool) {
+			match, compileErr := regexp.Match(exists, []byte(apiErr.Error()))
+			if compileErr != nil {
+				return compileErr
+			} else if !match {
+				return apiErr
+			}
+		} else {
+			return apiErr
+		}
 	}
 
 	// Store association id
 	d.SetId(fmt.Sprintf("%s:%s", *req.HostedZoneId, *req.VPC.VPCId))
 
-	// Wait until we are done initializing
+	var refreshFunc func() (result interface{}, state string, err error)
+
+	if d.Get("cross_account").(bool) {
+		// In a cross a
+		refreshFunc = func() (result interface{}, state string, err error) {
+			_, apiErr := r53.AssociateVPCWithHostedZone(req)
+
+			if apiErr == nil {
+				// call succeeded because we're associated yet
+				return true, "PENDING", nil
+			} else {
+				if match, compileErr := regexp.Match(exists, []byte(apiErr.Error())); match {
+					if compileErr != nil {
+						return nil, "UNKNOWN", compileErr
+					}
+					// call errored because we're associated
+					return true, "INSYNC", nil
+				}
+			}
+
+			// call errored for some other reason
+			return nil, "UNKNOWN", apiErr
+		}
+	} else {
+		// Wait until we are done initializing
+		refreshFunc = func() (result interface{}, state string, err error) {
+			changeRequest := &route53.GetChangeInput{
+				Id: aws.String(cleanChangeID(*resp.ChangeInfo.Id)),
+			}
+			return resourceAwsGoRoute53Wait(r53, changeRequest)
+		}
+	}
+
 	wait := resource.StateChangeConf{
 		Delay:      30 * time.Second,
 		Pending:    []string{"PENDING"},
 		Target:     []string{"INSYNC"},
 		Timeout:    10 * time.Minute,
 		MinTimeout: 2 * time.Second,
-		Refresh: func() (result interface{}, state string, err error) {
-			changeRequest := &route53.GetChangeInput{
-				Id: aws.String(cleanChangeID(*resp.ChangeInfo.Id)),
-			}
-			return resourceAwsGoRoute53Wait(r53, changeRequest)
-		},
+		Refresh:    refreshFunc,
 	}
-	_, err = wait.WaitForState()
+	_, err := wait.WaitForState()
 	if err != nil {
 		return err
 	}
@@ -101,27 +156,34 @@ func resourceAwsRoute53ZoneAssociationRead(d *schema.ResourceData, meta interfac
 		return err
 	}
 
-	vpc, err := route53GetZoneAssociation(conn, zoneID, vpcID)
+	// We can't read cross account zones so just use the info currently in the state file
+	if d.Get("cross_account").(bool) {
+		d.Set("vpc_id", vpcID)
+		d.Set("vpc_region", d.Get("vpc_region").(string))
+		d.Set("zone_id", zoneID)
+	} else {
+		vpc, err := route53GetZoneAssociation(conn, zoneID, vpcID)
 
-	if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
-		log.Printf("[WARN] Route 53 Hosted Zone (%s) not found, removing from state", zoneID)
-		d.SetId("")
-		return nil
+		if isAWSErr(err, route53.ErrCodeNoSuchHostedZone, "") {
+			log.Printf("[WARN] Route 53 Hosted Zone (%s) not found, removing from state", zoneID)
+			d.SetId("")
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error getting Route 53 Hosted Zone (%s): %s", zoneID, err)
+		}
+
+		if vpc == nil {
+			log.Printf("[WARN] Route 53 Hosted Zone (%s) Association (%s) not found, removing from state", zoneID, vpcID)
+			d.SetId("")
+			return nil
+		}
+
+		d.Set("vpc_id", vpc.VPCId)
+		d.Set("vpc_region", vpc.VPCRegion)
+		d.Set("zone_id", zoneID)
 	}
-
-	if err != nil {
-		return fmt.Errorf("error getting Route 53 Hosted Zone (%s): %s", zoneID, err)
-	}
-
-	if vpc == nil {
-		log.Printf("[WARN] Route 53 Hosted Zone (%s) Association (%s) not found, removing from state", zoneID, vpcID)
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("vpc_id", vpc.VPCId)
-	d.Set("vpc_region", vpc.VPCRegion)
-	d.Set("zone_id", zoneID)
 
 	return nil
 }

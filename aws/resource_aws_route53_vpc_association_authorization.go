@@ -5,7 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	//"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -18,19 +19,19 @@ func resourceAwsRoute53VPCAssociationAuthorization() *schema.Resource {
 		Delete: resourceAwsRoute53VPCAssociationAuthorizationDelete,
 
 		Schema: map[string]*schema.Schema{
-			"zone_id": &schema.Schema{
+			"zone_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"vpc_id": &schema.Schema{
+			"vpc_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"vpc_region": &schema.Schema{
+			"vpc_region": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -58,7 +59,11 @@ func resourceAwsRoute53VPCAssociationAuthorizationCreate(d *schema.ResourceData,
 	var err error
 	_, err = r53.CreateVPCAssociationAuthorization(req)
 	if err != nil {
-		return err
+		log.Println("sadafasdf", d.Get("zone_id").(string))
+		log.Println("asdfasdf", d.Get("zone_id").(string))
+		if !strings.Contains(err.Error(), d.Get("zone_id").(string)) {
+			return err
+		}
 	}
 
 	// Store association id
