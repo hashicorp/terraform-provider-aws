@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
-	"log"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"log"
 )
 
 func resourceAwsDefaultRouteTable() *schema.Resource {
@@ -15,6 +15,12 @@ func resourceAwsDefaultRouteTable() *schema.Resource {
 		Read:   resourceAwsDefaultRouteTableRead,
 		Update: resourceAwsRouteTableUpdate,
 		Delete: resourceAwsDefaultRouteTableDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("vpc_id", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"default_route_table_id": {
@@ -122,6 +128,14 @@ func resourceAwsDefaultRouteTableCreate(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] Revoking default routes for Default Route Table for %s", d.Id())
 	if err := revokeAllRouteTableRules(d.Id(), meta); err != nil {
 		return err
+	}
+
+	// To address a side-effect of [GH-12735] such that tags are only updated on existing resources,
+	// we create the tags here before calling the regular AWS Route Table's UPDATE
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
 	}
 
 	return resourceAwsRouteTableUpdate(d, meta)

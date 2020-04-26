@@ -43,6 +43,12 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -73,26 +79,33 @@ func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
 
 func TestAccAWSDefaultRouteTable_Route(t *testing.T) {
 	var v ec2.RouteTable
+	resourceName := "aws_default_route_table.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_default_route_table.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDefaultRouteTableConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists("aws_default_route_table.foo", &v),
-					testAccCheckResourceAttrAccountID("aws_default_route_table.foo", "owner_id"),
+					testAccCheckRouteTableExists(resourceName, &v),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccDefaultRouteTableConfig_noRouteBlock,
 				Check: resource.ComposeTestCheckFunc(
 					// The route block from the previous step should still be
 					// present, because no blocks means "ignore existing blocks".
-					resource.TestCheckResourceAttr("aws_default_route_table.foo", "route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 				),
 			},
 			{
@@ -100,7 +113,7 @@ func TestAccAWSDefaultRouteTable_Route(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					// This config uses attribute syntax to set zero routes
 					// explicitly, so should remove the one we created before.
-					resource.TestCheckResourceAttr("aws_default_route_table.foo", "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
 				),
 			},
 		},
@@ -109,10 +122,11 @@ func TestAccAWSDefaultRouteTable_Route(t *testing.T) {
 
 func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 	var v ec2.RouteTable
+	resourceName := "aws_default_route_table.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_default_route_table.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -120,8 +134,14 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 				Config: testAccDefaultRouteTable_change,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(
-						"aws_default_route_table.foo", &v),
+						resourceName, &v),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 
 			// This config will swap out the original Default Route Table and replace
@@ -133,7 +153,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 				Config: testAccDefaultRouteTable_change_mod,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(
-						"aws_default_route_table.foo", &v),
+						resourceName, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -156,16 +176,23 @@ func TestAccAWSDefaultRouteTable_Route_TransitGatewayID(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable1),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
 
 func TestAccAWSDefaultRouteTable_vpc_endpoint(t *testing.T) {
 	var v ec2.RouteTable
+	resourceName := "aws_default_route_table.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_default_route_table.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
@@ -173,8 +200,14 @@ func TestAccAWSDefaultRouteTable_vpc_endpoint(t *testing.T) {
 				Config: testAccDefaultRouteTable_vpc_endpoint,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(
-						"aws_default_route_table.foo", &v),
+						resourceName, &v),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -491,3 +524,14 @@ resource "aws_default_route_table" "foo" {
     }
 }
 `
+
+func testAccAWSDefaultRouteTableImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return rs.Primary.Attributes["vpc_id"], nil
+	}
+}
