@@ -230,6 +230,7 @@ func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefres
 
 func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(d.Id())},
@@ -265,7 +266,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("size", aws.Int64Value(volume.Size))
 	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

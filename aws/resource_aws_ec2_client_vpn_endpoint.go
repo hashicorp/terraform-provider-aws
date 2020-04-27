@@ -181,6 +181,8 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	var err error
 
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
@@ -232,7 +234,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting connection_log_options: %s", err)
 	}
 
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().Map())
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}

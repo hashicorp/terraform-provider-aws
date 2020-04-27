@@ -153,6 +153,7 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	ec2conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	domain := resourceAwsEipDomain(d)
 	id := d.Id()
@@ -273,7 +274,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		d.SetId(*address.AllocationId)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(address.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(address.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -204,6 +204,7 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
@@ -242,7 +243,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(stage.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(stage.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

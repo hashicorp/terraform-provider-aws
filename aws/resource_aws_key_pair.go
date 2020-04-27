@@ -99,6 +99,8 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &ec2.DescribeKeyPairsInput{
 		KeyNames: []*string{aws.String(d.Id())},
 	}
@@ -116,7 +118,7 @@ func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 			d.Set("key_name", keyPair.KeyName)
 			d.Set("fingerprint", keyPair.KeyFingerprint)
 			d.Set("key_pair_id", keyPair.KeyPairId)
-			if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(keyPair.Tags).IgnoreAws().Map()); err != nil {
+			if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(keyPair.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 				return fmt.Errorf("error setting tags: %s", err)
 			}
 			return nil

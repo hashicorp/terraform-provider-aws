@@ -926,6 +926,7 @@ func resourceAwsSpotFleetRequestFulfillmentRefreshFunc(id string, conn *ec2.EC2)
 func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) error {
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotFleetRequests.html
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSpotFleetRequestsInput{
 		SpotFleetRequestIds: []*string{aws.String(d.Id())},
@@ -1015,7 +1016,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("instance_interruption_behaviour", config.InstanceInterruptionBehavior)
 	d.Set("fleet_type", config.Type)
 	d.Set("launch_specification", launchSpec)
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(sfr.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(sfr.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -111,6 +111,7 @@ func resourceAwsSmmParameterExists(d *schema.ResourceData, meta interface{}) (bo
 
 func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Parameter: %s", d.Id())
 
@@ -164,7 +165,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", name, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

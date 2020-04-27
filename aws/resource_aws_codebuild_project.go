@@ -1067,6 +1067,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 
 func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.BatchGetProjects(&codebuild.BatchGetProjectsInput{
 		Names: []*string{
@@ -1135,7 +1136,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		d.Set("badge_url", "")
 	}
 
-	if err := d.Set("tags", keyvaluetags.CodebuildKeyValueTags(project.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.CodebuildKeyValueTags(project.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -567,6 +567,7 @@ func lbTargetGroupSuffixFromARN(arn *string) string {
 // flattenAwsLbTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
 func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", lbTargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
@@ -656,7 +657,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

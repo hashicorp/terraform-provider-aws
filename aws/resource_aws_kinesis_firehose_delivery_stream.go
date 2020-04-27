@@ -2356,6 +2356,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 
 func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).firehoseconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
 	resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
@@ -2383,7 +2384,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

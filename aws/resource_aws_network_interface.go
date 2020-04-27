@@ -156,8 +156,9 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: []*string{aws.String(d.Id())},
 	}
@@ -206,7 +207,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

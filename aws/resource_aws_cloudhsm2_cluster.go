@@ -220,6 +220,7 @@ func resourceAwsCloudHsmV2ClusterCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudhsmv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	cluster, err := describeCloudHsmV2Cluster(conn, d.Id())
 
@@ -249,7 +250,7 @@ func resourceAwsCloudHsmV2ClusterRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error saving Subnet IDs to state for CloudHSMv2 Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Cloudhsmv2KeyValueTags(cluster.TagList).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Cloudhsmv2KeyValueTags(cluster.TagList).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

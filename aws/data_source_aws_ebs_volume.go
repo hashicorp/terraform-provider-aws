@@ -141,7 +141,7 @@ func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volu
 	d.Set("snapshot_id", volume.SnapshotId)
 	d.Set("volume_type", volume.VolumeType)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

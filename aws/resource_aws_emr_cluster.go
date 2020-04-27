@@ -961,6 +961,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 	emrconn := meta.(*AWSClient).emrconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &emr.DescribeClusterInput{
 		ClusterId: aws.String(d.Id()),
@@ -1037,7 +1038,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting master_instance_group: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.EmrKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EmrKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error settings tags: %s", err)
 	}
 
