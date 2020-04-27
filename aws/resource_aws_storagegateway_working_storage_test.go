@@ -70,6 +70,7 @@ func TestDecodeStorageGatewayWorkingStorageID(t *testing.T) {
 func TestAccAWSStorageGatewayWorkingStorage_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_working_storage.test"
+	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +84,7 @@ func TestAccAWSStorageGatewayWorkingStorage_Basic(t *testing.T) {
 				Config: testAccAWSStorageGatewayWorkingStorageConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayWorkingStorageExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 				),
 			},
