@@ -2987,22 +2987,6 @@ func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
-func TestInstanceTenancySchema(t *testing.T) {
-	actualSchema := resourceAwsInstance().Schema["tenancy"]
-	expectedSchema := &schema.Schema{
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	}
-	if !reflect.DeepEqual(actualSchema, expectedSchema) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			actualSchema,
-			expectedSchema)
-	}
-}
-
 func TestInstanceHostIDSchema(t *testing.T) {
 	actualSchema := resourceAwsInstance().Schema["host_id"]
 	expectedSchema := &schema.Schema{
