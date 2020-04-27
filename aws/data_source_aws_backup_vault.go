@@ -17,11 +17,11 @@ func dataSourceAwsBackupVault() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"kms_key_arn": {
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"arn": {
+			"kms_key_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -47,9 +47,9 @@ func dataSourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	d.SetId(aws.StringValue(resp.BackupVaultName))
-	d.Set("name", resp.BackupVaultName)
-	d.Set("kms_key_arn", resp.EncryptionKeyArn)
 	d.Set("arn", resp.BackupVaultArn)
+	d.Set("kms_key_arn", resp.EncryptionKeyArn)
+	d.Set("name", resp.BackupVaultName)
 	d.Set("recovery_points", resp.NumberOfRecoveryPoints)
 
 	tags, err := keyvaluetags.BackupListTags(conn, aws.StringValue(resp.BackupVaultArn))

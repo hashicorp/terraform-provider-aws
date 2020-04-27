@@ -20,38 +20,16 @@ func dataSourceAwsBackupSelection() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"iam_role_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"selection_tag": {
-				Type:     schema.TypeSet,
-				Optional: true,
+			"name": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"key": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"value": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
 			"resources": {
 				Type:     schema.TypeSet,
-				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
@@ -73,26 +51,9 @@ func dataSourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	d.SetId(aws.StringValue(resp.SelectionId))
-	d.Set("name", resp.BackupSelection.SelectionName)
 	d.Set("iam_role_arn", resp.BackupSelection.IamRoleArn)
+	d.Set("name", resp.BackupSelection.SelectionName)
 
-	if resp.BackupSelection.ListOfTags != nil {
-		tags := make([]map[string]interface{}, 0)
-
-		for _, r := range resp.BackupSelection.ListOfTags {
-			m := make(map[string]interface{})
-
-			m["type"] = aws.StringValue(r.ConditionType)
-			m["key"] = aws.StringValue(r.ConditionKey)
-			m["value"] = aws.StringValue(r.ConditionValue)
-
-			tags = append(tags, m)
-		}
-
-		if err := d.Set("selection_tag", tags); err != nil {
-			return fmt.Errorf("error setting selection tag: %s", err)
-		}
-	}
 	if resp.BackupSelection.Resources != nil {
 		if err := d.Set("resources", aws.StringValueSlice(resp.BackupSelection.Resources)); err != nil {
 			return fmt.Errorf("error setting resources: %s", err)
