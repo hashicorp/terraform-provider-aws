@@ -38,11 +38,6 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepter() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"transit_gateway_default_route_table_association": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,18 +72,6 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterCreate(d *schema.Resou
 		}
 	}
 
-	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
-	if err != nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): %s", transitGatewayID, err)
-	}
-
-	if transitGateway.Options == nil {
-		return fmt.Errorf("error describing EC2 Transit Gateway (%s): missing options", transitGatewayID)
-	}
-
-	if err := ec2TransitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-		return fmt.Errorf("error updating EC2 Transit Gateway Attachment (%s) Route Table (%s) association: %s", d.Id(), aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), err)
-	}
 
 	return resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead(d, meta)
 }
