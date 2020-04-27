@@ -71,8 +71,10 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterCreate(d *schema.Resou
 		return fmt.Errorf("error waiting for EC2 Transit Gateway Peering Attachment (%s) availability: %s", d.Id(), err)
 	}
 
-	if err := setTags(conn, d); err != nil {
-		return fmt.Errorf("error updating EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error updating EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	transitGateway, err := ec2DescribeTransitGateway(conn, transitGatewayID)
@@ -142,7 +144,11 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead(d *schema.Resourc
 	d.Set("peer_account_id", (transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId != nil))
 	d.Set("peer_region", (transitGatewayPeeringAttachment.AccepterTgwInfo.Region != nil))
 	d.Set("peer_transit_gateway_id", (transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId != nil))
-	d.Set("tags", (transitGatewayPeeringAttachment.Tags))
+	
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("transit_gateway_id", (transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId))
 
 	return nil
@@ -171,7 +177,9 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterUpdate(d *schema.Resou
 	}
 
 	if d.HasChange("tags") {
-		if err := setTags(conn, d); err != nil {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Transit Gateway Peering Attachment (%s) tags: %s", d.Id(), err)
 		}
 	}
