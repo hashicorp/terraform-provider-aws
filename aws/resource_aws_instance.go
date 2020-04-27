@@ -13,7 +13,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -105,10 +104,11 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"private_ip": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Computed:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 
 			"source_dest_check": {
@@ -288,7 +288,8 @@ func resourceAwsInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv6Address,
 				},
 			},
 
@@ -297,6 +298,11 @@ func resourceAwsInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.TenancyDedicated,
+					ec2.TenancyDefault,
+					ec2.TenancyHost,
+				}, false),
 			},
 			"host_id": {
 				Type:     schema.TypeString,
@@ -382,6 +388,13 @@ func resourceAwsInstance() *schema.Resource {
 							Optional: true,
 							Computed: true,
 							ForceNew: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ec2.VolumeTypeStandard,
+								ec2.VolumeTypeIo1,
+								ec2.VolumeTypeGp2,
+								ec2.VolumeTypeSc1,
+								ec2.VolumeTypeSt1,
+							}, false),
 						},
 
 						"volume_id": {
@@ -486,6 +499,13 @@ func resourceAwsInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ec2.VolumeTypeStandard,
+								ec2.VolumeTypeIo1,
+								ec2.VolumeTypeGp2,
+								ec2.VolumeTypeSc1,
+								ec2.VolumeTypeSt1,
+							}, false),
 						},
 
 						"volume_id": {
@@ -645,7 +665,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 	// where a user uses group ids in security_groups for the Default VPC.
 	//   See https://github.com/hashicorp/terraform/issues/3798
 	if isAWSErr(err, "InvalidParameterValue", "groupId is invalid") {
-		return fmt.Errorf("Error launching instance, possible mismatch of Security Group IDs and Names. See AWS Instance docs here: %s.\n\n\tAWS Error: %s", "https://terraform.io/docs/providers/aws/r/instance.html", err.(awserr.Error).Message())
+		return fmt.Errorf("Error launching instance, possible mismatch of Security Group IDs and Names. See AWS Instance docs here: %s.\n\n\tAWS Error: %w", "https://terraform.io/docs/providers/aws/r/instance.html", err)
 	}
 	if err != nil {
 		return fmt.Errorf("Error launching source instance: %s", err)
@@ -667,9 +687,11 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		aws.StringValue(instance.InstanceId))
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending},
-		Target:     []string{ec2.InstanceStateNameRunning},
-		Refresh:    InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{ec2.InstanceStateNameTerminated, ec2.InstanceStateNameShuttingDown}),
+		Pending: []string{ec2.InstanceStateNamePending},
+		Target:  []string{ec2.InstanceStateNameRunning},
+		Refresh: InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{
+			ec2.InstanceStateNameTerminated,
+			ec2.InstanceStateNameShuttingDown}),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -709,7 +731,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -1075,14 +1097,10 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok {
-					// Tolerate InvalidParameterCombination error in Classic, otherwise
-					// return the error
-					if ec2err.Code() != "InvalidParameterCombination" {
-						return err
-					}
-					log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", ec2err.Message())
+				if isAWSErr(err, "InvalidParameterCombination", "") {
+					return err
 				}
+				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
 			}
 		}
 	}
@@ -1164,7 +1182,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 
 		stateConf := &resource.StateChangeConf{
 			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
-			Target:     []string{"running"},
+			Target:     []string{ec2.InstanceStateNameRunning},
 			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			Delay:      10 * time.Second,
@@ -1297,9 +1315,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			// Optimization can take hours. e.g. a full 1 TiB drive takes approximately 6 hours to optimize,
 			// according to https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/monitoring-volume-modifications.html
 			stateConf := &resource.StateChangeConf{
-				Pending:    []string{"modifying"},
-				Target:     []string{"completed", "optimizing"},
-				Refresh:    VolumeStateRefreshFunc(conn, volumeID, "failed"),
+				Pending:    []string{ec2.VolumeModificationStateModifying},
+				Target:     []string{ec2.VolumeModificationStateCompleted, ec2.VolumeModificationStateOptimizing},
+				Refresh:    VolumeStateRefreshFunc(conn, volumeID, ec2.VolumeModificationStateFailed),
 				Timeout:    d.Timeout(schema.TimeoutUpdate),
 				Delay:      30 * time.Second,
 				MinTimeout: 30 * time.Second,
@@ -2153,7 +2171,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
-		if isAWSErr(err, ec2.UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound, "") {
+		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 			return nil
 		}
 		return err
@@ -2166,7 +2184,8 @@ func waitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) er
 	log.Printf("[DEBUG] Waiting for instance (%s) to become stopped", id)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning, ec2.InstanceStateNameShuttingDown, ec2.InstanceStateNameStopped, ec2.InstanceStateNameStopping},
+		Pending: []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning,
+			ec2.InstanceStateNameShuttingDown, ec2.InstanceStateNameStopped, ec2.InstanceStateNameStopping},
 		Target:     []string{ec2.InstanceStateNameStopped},
 		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
 		Timeout:    timeout,
@@ -2187,7 +2206,8 @@ func waitForInstanceDeletion(conn *ec2.EC2, id string, timeout time.Duration) er
 	log.Printf("[DEBUG] Waiting for instance (%s) to become terminated", id)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning, ec2.InstanceStateNameShuttingDown, ec2.InstanceStateNameStopped, ec2.InstanceStateNameStopping},
+		Pending: []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning,
+			ec2.InstanceStateNameShuttingDown, ec2.InstanceStateNameStopped, ec2.InstanceStateNameStopping},
 		Target:     []string{ec2.InstanceStateNameTerminated},
 		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
 		Timeout:    timeout,
