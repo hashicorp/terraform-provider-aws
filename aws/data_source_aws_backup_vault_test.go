@@ -45,16 +45,16 @@ data "aws_backup_vault" "test" {
 func testAccAwsBackupVaultDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%d"
 
-	tags = {
-		up   = "down"
-		left = "right"
-	}
+  tags = {
+    up   = "down"
+    left = "right"
+  }
 }
 
 data "aws_backup_vault" "test" {
-	name = aws_backup_vault.test.name
+  name = aws_backup_vault.test.name
 }
 `, rInt)
 }

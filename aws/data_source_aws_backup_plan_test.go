@@ -43,27 +43,27 @@ data "aws_backup_plan" "test" {
 func testAccAwsBackupPlanDataSourceConfig_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%[1]d"
+  name = "tf_acc_test_backup_vault_%[1]d"
 }
 
 resource "aws_backup_plan" "test" {
-	name = "tf_acc_test_backup_plan_%[1]d"
+  name = "tf_acc_test_backup_plan_%[1]d"
 
-	rule {
-		rule_name         = "tf_acc_test_backup_rule_%[1]d"
-		target_vault_name = "${aws_backup_vault.test.name}"
-		schedule          = "cron(0 12 * * ? *)"
-	}
+  rule {
+    rule_name         = "tf_acc_test_backup_rule_%[1]d"
+    target_vault_name = "${aws_backup_vault.test.name}"
+    schedule          = "cron(0 12 * * ? *)"
+  }
 
-	tags = {
-		Name = "Value%[1]d"
-		Key2 = "Value2b"
-		Key3 = "Value3"
-	  }
+  tags = {
+    Name = "Value%[1]d"
+    Key2 = "Value2b"
+    Key3 = "Value3"
+  }
 }
 
 data "aws_backup_plan" "test" {
-	plan_id = aws_backup_plan.test.id
+  plan_id = aws_backup_plan.test.id
 }
 `, rInt)
 }
