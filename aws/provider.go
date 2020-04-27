@@ -590,6 +590,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_guardduty_invite_accepter":                           resourceAwsGuardDutyInviteAccepter(),
 			"aws_guardduty_ipset":                                     resourceAwsGuardDutyIpset(),
 			"aws_guardduty_member":                                    resourceAwsGuardDutyMember(),
+			"aws_guardduty_organization_admin_account":                resourceAwsGuardDutyOrganizationAdminAccount(),
+			"aws_guardduty_organization_configuration":                resourceAwsGuardDutyOrganizationConfiguration(),
 			"aws_guardduty_threatintelset":                            resourceAwsGuardDutyThreatintelset(),
 			"aws_iam_access_key":                                      resourceAwsIamAccessKey(),
 			"aws_iam_account_alias":                                   resourceAwsIamAccountAlias(),
