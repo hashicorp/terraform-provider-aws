@@ -32,7 +32,7 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.4037960608.type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptors.4037960608.value", "192.0.7.0/24"),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`ipset/.+`)),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile("ipset/.+$")),
 				),
 			},
 			{
