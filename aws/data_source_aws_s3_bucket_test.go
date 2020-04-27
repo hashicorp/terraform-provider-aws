@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -11,7 +10,6 @@ import (
 
 func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	arnRegexp := regexp.MustCompile(`^arn:aws[\w-]*:s3:::`)
 	region := testAccGetRegion()
 	hostedZoneID, _ := HostedZoneIDForRegion(region)
 
@@ -23,14 +21,11 @@ func TestAccDataSourceS3Bucket_basic(t *testing.T) {
 				Config: testAccAWSDataSourceS3BucketConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("data.aws_s3_bucket.bucket"),
-					resource.TestMatchResourceAttr("data.aws_s3_bucket.bucket", "arn", arnRegexp),
+					resource.TestCheckResourceAttrPair("data.aws_s3_bucket.bucket", "arn", "aws_s3_bucket.bucket", "arn"),
 					resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "region", region),
-					testAccCheckS3BucketDomainName(
-						"data.aws_s3_bucket.bucket", "bucket_domain_name", testAccBucketName(rInt)),
-					resource.TestCheckResourceAttr(
-						"data.aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, region)),
-					resource.TestCheckResourceAttr(
-						"data.aws_s3_bucket.bucket", "hosted_zone_id", hostedZoneID),
+					testAccCheckS3BucketDomainName("data.aws_s3_bucket.bucket", "bucket_domain_name", testAccBucketName(rInt)),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "bucket_regional_domain_name", testAccBucketRegionalDomainName(rInt, region)),
+					resource.TestCheckResourceAttr("data.aws_s3_bucket.bucket", "hosted_zone_id", hostedZoneID),
 					resource.TestCheckNoResourceAttr("data.aws_s3_bucket.bucket", "website_endpoint"),
 				),
 			},
@@ -50,10 +45,8 @@ func TestAccDataSourceS3Bucket_website(t *testing.T) {
 				Config: testAccAWSDataSourceS3BucketWebsiteConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketExists("data.aws_s3_bucket.bucket"),
-					testAccCheckAWSS3BucketWebsite(
-						"data.aws_s3_bucket.bucket", "index.html", "error.html", "", ""),
-					testAccCheckS3BucketWebsiteEndpoint(
-						"data.aws_s3_bucket.bucket", "website_endpoint", testAccBucketName(rInt), region),
+					testAccCheckAWSS3BucketWebsite("data.aws_s3_bucket.bucket", "index.html", "error.html", "", ""),
+					testAccCheckS3BucketWebsiteEndpoint("data.aws_s3_bucket.bucket", "website_endpoint", testAccBucketName(rInt), region),
 				),
 			},
 		},
