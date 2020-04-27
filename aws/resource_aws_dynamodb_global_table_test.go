@@ -40,8 +40,7 @@ func TestAccAWSDynamoDbGlobalTable_basic(t *testing.T) {
 					testAccCheckAwsDynamoDbGlobalTableExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", tableName),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "arn",
-						regexp.MustCompile("^arn:aws:dynamodb::[0-9]{12}:global-table/[a-z0-9-]+$")),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "dynamodb", regexp.MustCompile("global-table/[a-z0-9-]+$")),
 				),
 			},
 			{
