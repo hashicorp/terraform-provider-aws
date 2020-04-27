@@ -110,7 +110,7 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
+func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 	var p codepipeline.PipelineDeclaration
 	name := acctest.RandString(10)
 	resourceName := "aws_codepipeline.test"
@@ -121,10 +121,10 @@ func TestAccAWSCodePipeline_emptyArtifacts(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodePipelineConfig_emptyArtifacts(name),
+				Config: testAccAWSCodePipelineConfig_emptyStageArtifacts(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodePipelineExists(resourceName, &p),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s", name))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexp.MustCompile(fmt.Sprintf("test-pipeline-%s$", name))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -715,7 +715,7 @@ resource "aws_codepipeline" "test" {
 `, rName))
 }
 
-func testAccAWSCodePipelineConfig_emptyArtifacts(rName string) string {
+func testAccAWSCodePipelineConfig_emptyStageArtifacts(rName string) string {
 	return composeConfig(
 		testAccAWSCodePipelineS3DefaultBucket(rName),
 		testAccAWSCodePipelineServiceIAMRole(rName),
