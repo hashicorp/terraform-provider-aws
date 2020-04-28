@@ -76,7 +76,7 @@ func resourceAwsKmsExternalKey() *schema.Resource {
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 32768),
-					validation.ValidateJsonString,
+					validation.StringIsJSON,
 				),
 			},
 			"tags": tagsSchema(),

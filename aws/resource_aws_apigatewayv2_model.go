@@ -52,7 +52,7 @@ func resourceAwsApiGatewayV2Model() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 32768),
-					validation.ValidateJsonString,
+					validation.StringIsJSON,
 				),
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
