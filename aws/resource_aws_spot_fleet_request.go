@@ -25,7 +25,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		SchemaVersion: 1,
