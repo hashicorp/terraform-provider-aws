@@ -1,5 +1,11 @@
 ## 2.60.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_backup_plan` [GH-13035]
+* **New Data Source:** `aws_backup_selection` [GH-13035]
+* **New Data Source:** `aws_backup_vault` [GH-13035]
+
 ENHANCEMENTS:
 
 * data-source/aws_elb_hosted_zone_id: Add `us-gov-east-1` and `us-gov-west-1` region values [GH-12976]
