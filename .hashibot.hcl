@@ -1,10 +1,13 @@
-queued_behavior "release_commenter" "releases" {
-  repo_prefix = "terraform-provider-"
+poll "closed_issue_locker" "locker" {
+  schedule             = "0 10 17 * * *"
+  closed_for           = "720h" # 30 days
+  max_issues           = 500
+  sleep_between_issues = "5s"
 
   message = <<-EOF
-    This has been released in [version ${var.release_version} of the Terraform AWS provider](${var.changelog_link}). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
+    I'm going to lock this issue because it has been closed for _30 days_ ⏳. This helps our maintainers find and focus on the active issues.
 
-    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
+    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
   EOF
 }
 
@@ -32,6 +35,20 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
   EOF
 }
 
+behavior "opened_pull_request_labeler" "triage" {
+  labels = ["needs-triage"]
+}
+
+queued_behavior "release_commenter" "releases" {
+  repo_prefix = "terraform-provider-"
+
+  message = <<-EOF
+    This has been released in [version ${var.release_version} of the Terraform AWS provider](${var.changelog_link}). Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
+
+    For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/new/choose) following the template for triage. Thanks!
+  EOF
+}
+
 # Catch the following in issues:
 # *aws_XXX
 # * aws_XXX
@@ -46,6 +63,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
   regexp = "(\\* ?`?|- ?`?|data \"|resource \")aws_(\\w+)"
 
   label_map = {
+    "service/accessanalyzer" = [
+      "aws_accessanalyzer_",
+    ],
     "service/acm" = [
       "aws_acm_",
     ],
@@ -64,6 +84,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/apigatewayv2" = [
       "aws_api_gateway_v2_",
+      "aws_apigatewayv2_",
     ],
     "service/applicationautoscaling" = [
       "aws_appautoscaling_",
@@ -121,7 +142,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_cloudsearch_",
     ],
     "service/cloudtrail" = [
-      "aws_cloudtrail_",
+      "aws_cloudtrail",
     ],
     "service/cloudwatch" = [
       "aws_cloudwatch_([^e]|e[^v]|ev[^e]|eve[^n]|even[^t]|event[^_]|[^l]|l[^o]|lo[^g]|log[^_])",
@@ -147,6 +168,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarnotifications" = [
+      "aws_codestarnotifications_",
+    ],
     "service/cognito" = [
       "aws_cognito_",
     ],
@@ -155,6 +179,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/databasemigrationservice" = [
       "aws_dms_",
+    ],
+    "service/dataexchange" = [
+      "aws_dataexchange_",
     ],
     "service/datapipeline" = [
       "aws_datapipeline_",
@@ -200,8 +227,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_main_route_table_association",
       "aws_network_interface",
       "aws_placement_group",
+      "aws_prefix_list",
       "aws_spot",
       "aws_route(\"|`|$)",
+      "aws_vpn_",
     ],
     "service/ecr" = [
       "aws_ecr_",
@@ -276,11 +305,20 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iam" = [
       "aws_iam_",
     ],
+    "service/imagebuilder" = [
+      "aws_imagebuilder_",
+    ],
     "service/inspector" = [
       "aws_inspector_",
     ],
     "service/iot" = [
       "aws_iot_",
+    ],
+    "service/iotanalytics" = [
+      "aws_iotanalytics_",
+    ],
+    "service/iotevents" = [
+      "aws_iotevents_",
     ],
     "service/kafka" = [
       "aws_msk_",
@@ -290,7 +328,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_kinesis_([^f]|f[^i]|fi[^r]|fir[^e]|fire[^h]|fireh[^o]|fireho[^s]|firehos[^e]|firehose[^_])",
     ],
     "service/kinesisanalytics" = [
-      "aws_kinesisanalytics_",
+      "aws_kinesis_analytics_",
     ],
     "service/kms" = [
       "aws_kms_",
@@ -312,6 +350,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/macie" = [
       "aws_macie_",
+    ],
+    "service/marketplacecatalog" = [
+      "aws_marketplace_catalog_",
     ],
     "service/mediaconnect" = [
       "aws_media_connect_",
@@ -385,7 +426,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_route53_([^d]|d[^o]|do[^m]|dom[^a]|doma[^i]|domai[^n]|domain[^s]|domains[^_]|[^r]|r[^e]|re[^s]|res[^o]|reso[^l]|resol[^v]|resolv[^e]|resolve[^r]|resolver[^_])",
     ],
     "service/route53domains" = [
-      "aws_route53_domains_",
+      "aws_route53domains_",
     ],
     "service/route53resolver" = [
       "aws_route53_resolver_",
@@ -455,6 +496,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_waf_",
       "aws_wafregional_",
     ],
+    "service/wafv2" = [
+      "aws_wafv2_",
+    ],
     "service/workdocs" = [
       "aws_workdocs_",
     ],
@@ -477,6 +521,7 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
+      ".github/*.md",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -486,6 +531,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_region*",
       "aws/provider.go",
       "aws/utils.go",
+      "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
       "website/**/ip_ranges*",
@@ -496,9 +542,15 @@ behavior "pull_request_path_labeler" "service_labels" {
     "tests" = [
       "**/*_test.go",
       ".gometalinter.json",
-      ".travis.yml"
+      ".markdownlint.yml",
+      ".travis.yml",
+      "staticcheck.conf"
     ]
     # label services
+    "service/accessanalyzer" = [
+      "**/*_accessanalyzer_*",
+      "**/accessanalyzer_*"
+    ]
     "service/acm" = [
       "**/*_acm_*",
       "**/acm_*"
@@ -517,11 +569,15 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigateway" = [
       "**/*_api_gateway_[^v][^2][^_]*",
-      "**/api_gateway_[^v][^2][^_]*"
+      "**/*_api_gateway_vpc_link*",
+      "**/api_gateway_[^v][^2][^_]*",
+      "**/api_gateway_vpc_link*"
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
-      "**/api_gateway_v2_*"
+      "**/*_apigatewayv2_*",
+      "**/api_gateway_v2_*",
+      "**/apigatewayv2_*"
     ]
     "service/applicationautoscaling" = [
       "**/*_appautoscaling_*",
@@ -548,7 +604,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/appsync_*"
     ]
     "service/athena" = [
-      "service/athena",
+      "**/*_athena_*",
       "**/athena_*"
     ]
     "service/autoscaling" = [
@@ -598,8 +654,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/cloudsearch_*"
     ]
     "service/cloudtrail" = [
-      "**/*_cloudtrail_*",
-      "**/cloudtrail_*"
+      "**/*_cloudtrail*",
+      "**/cloudtrail*"
     ]
     "service/cloudwatch" = [
       "**/*_cloudwatch_dashboard*",
@@ -635,6 +691,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_codestar_*",
       "**/codestar_*"
     ]
+    "service/codestarnotifications" = [
+      "**/*_codestarnotifications_*",
+      "**/codestarnotifications_*"
+    ]
     "service/cognito" = [
       "**/*_cognito_*",
       "**/cognito_*"
@@ -647,9 +707,17 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_config_*",
       "website/**/config_*"
     ]
+    "service/costandusagereportservice" = [
+      "aws/*_aws_cur_*",
+      "website/**/cur_*"
+    ]
     "service/databasemigrationservice" = [
       "**/*_dms_*",
       "**/dms_*"
+    ]
+    "service/dataexchange" = [
+      "**/*_dataexchange_*",
+      "**/dataexchange_*",
     ]
     "service/datapipeline" = [
       "**/*_datapipeline_*",
@@ -712,9 +780,11 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_network_acl*",
       "aws/*_aws_network_interface*",
       "aws/*_aws_placement_group*",
+      "aws/*_aws_prefix_list*",
       "aws/*_aws_route_table*",
       "aws/*_aws_route.*",
       "aws/*_aws_security_group*",
+      "aws/*_aws_snapshot_create_volume_permission*",
       "aws/*_aws_spot*",
       "aws/*_aws_subnet*",
       "aws/*_aws_vpc*",
@@ -739,11 +809,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/network_acl*",
       "website/**/network_interface*",
       "website/**/placement_group*",
+      "website/**/prefix_list*",
       "website/**/route_table*",
       "website/**/route.*",
       "website/**/security_group*",
+      "website/**/snapshot_create_volume_permission*",
       "website/**/spot_*",
-      "website/**/subnet.*",
+      "website/**/subnet*",
       "website/**/vpc*",
       "website/**/vpn*"
     ]
@@ -764,6 +836,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/eks_*"
     ]
     "service/elastic-transcoder" = [
+      "**/*_elastictranscoder_*",
+      "**/elastictranscoder_*",
       "**/*_elastic_transcoder_*",
       "**/elastic_transcoder_*"
     ]
@@ -846,6 +920,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iam_*",
       "**/iam_*"
     ]
+    "service/imagebuilder" = [
+      "**/*_imagebuilder_*",
+      "**/imagebuilder_*"
+    ]
     "service/inspector" = [
       "**/*_inspector_*",
       "**/inspector_*"
@@ -853,6 +931,14 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/iot" = [
       "**/*_iot_*",
       "**/iot_*"
+    ]
+    "service/iotanalytics" = [
+      "**/*_iotanalytics_*",
+      "**/iotanalytics_*"
+    ]
+    "service/iotevents" = [
+      "**/*_iotevents_*",
+      "**/iotevents_*"
     ]
     "service/kafka" = [
       "**/*_msk_*",
@@ -863,8 +949,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/kinesis_stream*"
     ]
     "service/kinesisanalytics" = [
-      "**/*_kinesisanalytics_*",
-      "**/kinesisanalytics_*"
+      "**/*_kinesis_analytics_*",
+      "**/kinesis_analytics_*"
     ]
     "service/kms" = [
       "**/*_kms_*",
@@ -893,6 +979,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/macie" = [
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/marketplacecatalog" = [
+      "**/*_marketplace_catalog_*",
+      "**/marketplace_catalog_*"
     ]
     "service/mediaconnect" = [
       "**/*_media_connect_*",
@@ -950,6 +1040,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/qldb" = [
+      "**/*_qldb_*",
+      "**/qldb_*"
+    ]
     "service/quicksight" = [
       "**/*_quicksight_*",
       "**/quicksight_*"
@@ -989,12 +1083,12 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_zone*"
     ]
     "service/route53domains" = [
-      "**/*_route53_domains_*",
-      "**/route53_domains_*"
+      "**/*_route53domains_*",
+      "**/route53domains_*"
     ]
     "service/route53resolver" = [
-      "**/*_route53resolver_*",
-      "**/route53resolver_*"
+      "**/*_route53_resolver_*",
+      "**/route53_resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",
@@ -1083,6 +1177,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/waf_*",
       "**/*_wafregional_*",
       "**/wafregional_*"
+    ]
+    "service/wafv2" = [
+      "**/*_wafv2_*",
+      "**/wafv2_*",
     ]
     "service/workdocs" = [
       "**/*_workdocs_*",

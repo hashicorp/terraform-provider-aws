@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_route_table"
 description: |-
@@ -39,7 +40,7 @@ in conjunction with any Route resources. Doing so will cause
 a conflict of rule settings and will overwrite routes.
 
 
-## Example usage with tags:
+## Example usage with tags
 
 ```hcl
 resource "aws_default_route_table" "r" {
@@ -62,7 +63,7 @@ The following arguments are supported:
 * `default_route_table_id` - (Required) The ID of the Default Routing Table.
 * `route` - (Optional) A list of route objects. Their keys are documented below.
   This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
 ### route Argument Reference

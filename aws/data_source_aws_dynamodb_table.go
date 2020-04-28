@@ -3,7 +3,6 @@ package aws
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
@@ -140,16 +139,11 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 			"stream_view_type": {
 				Type:     schema.TypeString,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
-					value := v.(string)
-					return strings.ToUpper(value)
-				},
 			},
 			"tags": tagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_name": {
@@ -167,6 +161,18 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"replica": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"server_side_encryption": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -176,6 +182,10 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"kms_key_arn": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -188,7 +198,6 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {

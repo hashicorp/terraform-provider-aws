@@ -1,4 +1,5 @@
 ---
+subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_broker"
 description: |-
@@ -59,7 +60,7 @@ The following arguments are supported:
 * `deployment_mode` - (Optional) The deployment mode of the broker. Supported: `SINGLE_INSTANCE` and `ACTIVE_STANDBY_MULTI_AZ`. Defaults to `SINGLE_INSTANCE`.
 * `encryption_options` - (Optional) Configuration block containing encryption options. See below.
 * `engine_type` - (Required) The type of broker engine. Currently, Amazon MQ supports only `ActiveMQ`.
-* `engine_version` - (Required) The version of the broker engine. Currently, See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions.
+* `engine_version` - (Required) The version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions.
 * `host_instance_type` - (Required) The broker's instance type. e.g. `mq.t2.micro` or `mq.m4.large`
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Required) The list of security group IDs assigned to the broker.
@@ -67,7 +68,7 @@ The following arguments are supported:
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
 * `logs` - (Optional) Logging configuration of the broker. See below.
 * `user` - (Optional) The list of all ActiveMQ usernames for the specified broker. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Nested Fields
 
@@ -119,4 +120,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MQ Broker is currently not importable.
+MQ Brokers can be imported using their broker id, e.g.
+
+```
+$ terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

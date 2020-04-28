@@ -1,4 +1,5 @@
 ---
+subcategory: "ACM"
 layout: "aws"
 page_title: "AWS: aws_acm_certificate"
 description: |-
@@ -19,7 +20,7 @@ Most commonly, this resource is used to together with [`aws_route53_record`](rou
 [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
-Domain validation through E-Mail is also supported but should be avoided as it requires a manual step outside
+Domain validation through email is also supported but should be avoided as it requires a manual step outside
 of Terraform.
 
 It's recommended to specify `create_before_destroy = true` in a [lifecycle][1] block to replace a certificate
@@ -44,7 +45,7 @@ resource "aws_acm_certificate" "cert" {
 }
 ```
 
-### Importation of existing certificate
+### Importing an existing certificate
 
 ```hcl
 resource "tls_private_key" "example" {
@@ -92,7 +93,7 @@ The following arguments are supported:
   * `domain_name` - (Required) A domain name for which the certificate should be issued
   * `certificate_authority_arn` - (Required) ARN of an ACMPCA
   * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## options Configuration Block
 

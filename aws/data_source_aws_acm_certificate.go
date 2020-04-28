@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsAcmCertificate() *schema.Resource {
@@ -53,6 +54,7 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
@@ -74,7 +76,7 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 		statusStrings := statuses.([]interface{})
 		params.CertificateStatuses = expandStringList(statusStrings)
 	} else {
-		params.CertificateStatuses = []*string{aws.String("ISSUED")}
+		params.CertificateStatuses = []*string{aws.String(acm.CertificateStatusIssued)}
 	}
 
 	var arns []*string
@@ -168,6 +170,16 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(time.Now().UTC().String())
 	d.Set("arn", matchedCertificate.CertificateArn)
+
+	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

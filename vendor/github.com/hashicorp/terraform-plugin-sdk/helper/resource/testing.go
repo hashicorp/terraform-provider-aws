@@ -2,6 +2,7 @@ package resource
 
 import (
 	"bytes"
+	"errors"
 	"flag"
 	"fmt"
 	"io"
@@ -19,8 +20,7 @@ import (
 	"github.com/hashicorp/errwrap"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/logutils"
-	"github.com/mitchellh/colorstring"
-
+	"github.com/hashicorp/terraform-plugin-sdk/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/addrs"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/command/format"
@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/internal/states"
 	"github.com/hashicorp/terraform-plugin-sdk/internal/tfdiags"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/mitchellh/colorstring"
 )
 
 // flagSweep is a flag available when running tests on the command line. It
@@ -54,12 +55,9 @@ import (
 // destroyed.
 
 var flagSweep = flag.String("sweep", "", "List of Regions to run available Sweepers")
+var flagSweepAllowFailures = flag.Bool("sweep-allow-failures", false, "Enable to allow Sweeper Tests to continue after failures")
 var flagSweepRun = flag.String("sweep-run", "", "Comma seperated list of Sweeper Tests to run")
 var sweeperFuncs map[string]*Sweeper
-
-// map of sweepers that have ran, and the success/fail status based on any error
-// raised
-var sweeperRunList map[string]bool
 
 // type SweeperFunc is a signature for a function that acts as a sweeper. It
 // accepts a string for the region that the sweeper is to be ran in. This
@@ -105,26 +103,67 @@ func TestMain(m *testing.M) {
 
 		// get filtered list of sweepers to run based on sweep-run flag
 		sweepers := filterSweepers(*flagSweepRun, sweeperFuncs)
-		for _, region := range regions {
-			region = strings.TrimSpace(region)
-			// reset sweeperRunList for each region
-			sweeperRunList = map[string]bool{}
 
-			log.Printf("[DEBUG] Running Sweepers for region (%s):\n", region)
-			for _, sweeper := range sweepers {
-				if err := runSweeperWithRegion(region, sweeper); err != nil {
-					log.Fatalf("[ERR] error running (%s): %s", sweeper.Name, err)
-				}
-			}
-
-			log.Printf("Sweeper Tests ran:\n")
-			for s, _ := range sweeperRunList {
-				fmt.Printf("\t- %s\n", s)
-			}
+		if _, err := runSweepers(regions, sweepers, *flagSweepAllowFailures); err != nil {
+			os.Exit(1)
 		}
 	} else {
+		if acctest.TestHelper != nil {
+			defer acctest.TestHelper.Close()
+		}
 		os.Exit(m.Run())
 	}
+}
+
+func runSweepers(regions []string, sweepers map[string]*Sweeper, allowFailures bool) (map[string]map[string]error, error) {
+	var sweeperErrorFound bool
+	sweeperRunList := make(map[string]map[string]error)
+
+	for _, region := range regions {
+		region = strings.TrimSpace(region)
+
+		var regionSweeperErrorFound bool
+		regionSweeperRunList := make(map[string]error)
+
+		log.Printf("[DEBUG] Running Sweepers for region (%s):\n", region)
+		for _, sweeper := range sweepers {
+			if err := runSweeperWithRegion(region, sweeper, sweepers, regionSweeperRunList, allowFailures); err != nil {
+				if allowFailures {
+					continue
+				}
+
+				sweeperRunList[region] = regionSweeperRunList
+				return sweeperRunList, fmt.Errorf("sweeper (%s) for region (%s) failed: %s", sweeper.Name, region, err)
+			}
+		}
+
+		log.Printf("Sweeper Tests ran successfully:\n")
+		for sweeper, sweeperErr := range regionSweeperRunList {
+			if sweeperErr == nil {
+				fmt.Printf("\t- %s\n", sweeper)
+			} else {
+				regionSweeperErrorFound = true
+			}
+		}
+
+		if regionSweeperErrorFound {
+			sweeperErrorFound = true
+			log.Printf("Sweeper Tests ran unsuccessfully:\n")
+			for sweeper, sweeperErr := range regionSweeperRunList {
+				if sweeperErr != nil {
+					fmt.Printf("\t- %s: %s\n", sweeper, sweeperErr)
+				}
+			}
+		}
+
+		sweeperRunList[region] = regionSweeperRunList
+	}
+
+	if sweeperErrorFound {
+		return sweeperRunList, errors.New("at least one sweeper failed")
+	}
+
+	return sweeperRunList, nil
 }
 
 // filterSweepers takes a comma seperated string listing the names of sweepers
@@ -139,29 +178,61 @@ func filterSweepers(f string, source map[string]*Sweeper) map[string]*Sweeper {
 	}
 
 	sweepers := make(map[string]*Sweeper)
-	for name, sweeper := range source {
+	for name := range source {
 		for _, s := range filterSlice {
 			if strings.Contains(strings.ToLower(name), s) {
-				sweepers[name] = sweeper
+				for foundName, foundSweeper := range filterSweeperWithDependencies(name, source) {
+					sweepers[foundName] = foundSweeper
+				}
 			}
 		}
 	}
 	return sweepers
 }
 
+// filterSweeperWithDependencies recursively returns sweeper and all dependencies.
+// Since filterSweepers performs fuzzy matching, this function is used
+// to perform exact sweeper and dependency lookup.
+func filterSweeperWithDependencies(name string, source map[string]*Sweeper) map[string]*Sweeper {
+	result := make(map[string]*Sweeper)
+
+	currentSweeper, ok := source[name]
+	if !ok {
+		log.Printf("[WARN] Sweeper has dependency (%s), but that sweeper was not found", name)
+		return result
+	}
+
+	result[name] = currentSweeper
+
+	for _, dependency := range currentSweeper.Dependencies {
+		for foundName, foundSweeper := range filterSweeperWithDependencies(dependency, source) {
+			result[foundName] = foundSweeper
+		}
+	}
+
+	return result
+}
+
 // runSweeperWithRegion recieves a sweeper and a region, and recursively calls
 // itself with that region for every dependency found for that sweeper. If there
 // are no dependencies, invoke the contained sweeper fun with the region, and
 // add the success/fail status to the sweeperRunList.
-func runSweeperWithRegion(region string, s *Sweeper) error {
+func runSweeperWithRegion(region string, s *Sweeper, sweepers map[string]*Sweeper, sweeperRunList map[string]error, allowFailures bool) error {
 	for _, dep := range s.Dependencies {
-		if depSweeper, ok := sweeperFuncs[dep]; ok {
+		if depSweeper, ok := sweepers[dep]; ok {
 			log.Printf("[DEBUG] Sweeper (%s) has dependency (%s), running..", s.Name, dep)
-			if err := runSweeperWithRegion(region, depSweeper); err != nil {
+			err := runSweeperWithRegion(region, depSweeper, sweepers, sweeperRunList, allowFailures)
+
+			if err != nil {
+				if allowFailures {
+					log.Printf("[ERROR] Error running Sweeper (%s) in region (%s): %s", depSweeper.Name, region, err)
+					continue
+				}
+
 				return err
 			}
 		} else {
-			log.Printf("[DEBUG] Sweeper (%s) has dependency (%s), but that sweeper was not found", s.Name, dep)
+			log.Printf("[WARN] Sweeper (%s) has dependency (%s), but that sweeper was not found", s.Name, dep)
 		}
 	}
 
@@ -170,11 +241,14 @@ func runSweeperWithRegion(region string, s *Sweeper) error {
 		return nil
 	}
 
+	log.Printf("[DEBUG] Running Sweeper (%s) in region (%s)", s.Name, region)
+
 	runE := s.F(region)
-	if runE == nil {
-		sweeperRunList[s.Name] = true
-	} else {
-		sweeperRunList[s.Name] = false
+
+	sweeperRunList[s.Name] = runE
+
+	if runE != nil {
+		log.Printf("[ERROR] Error running Sweeper (%s) in region (%s): %s", s.Name, region, runE)
 	}
 
 	return runE
@@ -254,6 +328,11 @@ type TestCase struct {
 	// IDRefreshIgnore is a list of configuration keys that will be ignored.
 	IDRefreshName   string
 	IDRefreshIgnore []string
+
+	// DisableBinaryDriver forces this test case to run using the legacy test
+	// driver, even if the binary test driver has been enabled.
+	// This property will be removed in version 2.0.0 of the SDK.
+	DisableBinaryDriver bool
 }
 
 // TestStep is a single apply sequence of a test, done within the
@@ -477,11 +556,6 @@ func Test(t TestT, c TestCase) {
 		return
 	}
 
-	// Run the PreCheck if we have it
-	if c.PreCheck != nil {
-		c.PreCheck()
-	}
-
 	// get instances of all providers, so we can use the individual
 	// resources to shim the state during the tests.
 	providers := make(map[string]terraform.ResourceProvider)
@@ -491,6 +565,32 @@ func Test(t TestT, c TestCase) {
 			t.Fatal(err)
 		}
 		providers[name] = p
+	}
+
+	if acctest.TestHelper != nil && c.DisableBinaryDriver == false {
+		// auto-configure all providers
+		for _, p := range providers {
+			err = p.Configure(terraform.NewResourceConfigRaw(nil))
+			if err != nil {
+				t.Fatal(err)
+			}
+		}
+
+		// Run the PreCheck if we have it.
+		// This is done after the auto-configure to allow providers
+		// to override the default auto-configure parameters.
+		if c.PreCheck != nil {
+			c.PreCheck()
+		}
+
+		// inject providers for ImportStateVerify
+		RunNewTest(t.(*testing.T), c, providers)
+		return
+	} else {
+		// run the PreCheck if we have it
+		if c.PreCheck != nil {
+			c.PreCheck()
+		}
 	}
 
 	providerResolver, err := testProviderResolver(c)
@@ -773,12 +873,12 @@ func testIDOnlyRefresh(c TestCase, opts terraform.ContextOpts, step TestStep, r 
 	expected := r.Primary.Attributes
 	// Remove fields we're ignoring
 	for _, v := range c.IDRefreshIgnore {
-		for k, _ := range actual {
+		for k := range actual {
 			if strings.HasPrefix(k, v) {
 				delete(actual, k)
 			}
 		}
-		for k, _ := range expected {
+		for k := range expected {
 			if strings.HasPrefix(k, v) {
 				delete(expected, k)
 			}

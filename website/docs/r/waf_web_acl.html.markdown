@@ -1,4 +1,5 @@
 ---
+subcategory: "WAF"
 layout: "aws"
 page_title: "AWS: aws_waf_web_acl"
 description: |-
@@ -87,7 +88,7 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the web ACL.
 * `rules` - (Optional) Configuration blocks containing rules to associate with the web ACL and the settings for each rule. Detailed below.
 * `logging_configuration` - (Optional) Configuration block to enable WAF logging. Detailed below.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 ### `default_action` Configuration Block
 
@@ -128,6 +129,7 @@ See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ActivatedRule.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the WAF WebACL.
+* `arn` - The ARN of the WAF WebACL.
 
 ## Import
 
