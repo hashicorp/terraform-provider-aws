@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* data-source/aws_elb_hosted_zone_id: Add `us-gov-east-1` and `us-gov-west-1` region values [GH-12976]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_mq_broker: Support import [GH-11841]
