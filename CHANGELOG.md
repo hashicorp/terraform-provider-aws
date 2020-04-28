@@ -6,11 +6,11 @@ ENHANCEMENTS:
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_mq_broker: Support import [GH-11841]
 * resource/aws_placement_group: Support tag-on-create [GH-12963]
-* resource/aws_waf_xss_match_set: Add plan-time validation for `xss_match_tuple` configuration block arguments [GH-13024]
+* resource/aws_wafregional_xss_match_set: Add plan-time validation for `xss_match_tuple` configuration block arguments [GH-13024]
 
 BUG FIXES:
 
-* resource/aws_wafregional_xss_match_set: Prevent crash with `xss_match_tuple` since version 2.59.0 [GH-13024]
+* resource/aws_wafregional_xss_match_set: Prevent crash with `xss_match_tuple` configuration block since version 2.59.0 [GH-13024]
 
 ## 2.59.0 (April 23, 2020)
 
