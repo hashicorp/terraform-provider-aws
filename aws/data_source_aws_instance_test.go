@@ -90,6 +90,7 @@ func TestAccAWSInstanceDataSource_gp2IopsDevice(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.#", resourceName, "root_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.volume_size", resourceName, "root_block_device.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.volume_type", resourceName, "root_block_device.0.volume_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.device_name", resourceName, "root_block_device.0.device_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.iops", resourceName, "root_block_device.0.iops"),
 				),
 			},
@@ -113,6 +114,7 @@ func TestAccAWSInstanceDataSource_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.#", resourceName, "root_block_device.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.volume_size", resourceName, "root_block_device.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.volume_type", resourceName, "root_block_device.0.volume_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "root_block_device.0.device_name", resourceName, "root_block_device.0.device_name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_block_device.#", resourceName, "ebs_block_device.#"),
 					//resource.TestCheckResourceAttrPair(datasourceName, "ephemeral_block_device.#", resourceName, "ephemeral_block_device.#"),
 					// ephemeral block devices don't get saved properly due to API limitations, so this can't actually be tested right now
@@ -438,6 +440,34 @@ func TestAccAWSInstanceDataSource_creditSpecification(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "credit_specification.#", resourceName, "credit_specification.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "credit_specification.0.cpu_credits", resourceName, "credit_specification.0.cpu_credits"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSInstanceDataSource_metadataOptions(t *testing.T) {
+	resourceName := "aws_instance.test"
+	datasourceName := "data.aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	instanceType := "m1.small"
+
+	resource.ParallelTest(t, resource.TestCase{
+		// No subnet_id specified requires default VPC or EC2-Classic.
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckHasDefaultVpcOrEc2Classic(t)
+			testAccPreCheckOffersEc2InstanceType(t, instanceType)
+		},
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceDataSourceConfig_metadataOptions(rName, instanceType),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.#", resourceName, "metadata_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
+					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_tokens", resourceName, "metadata_options.0.http_tokens"),
+					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_put_response_hop_limit", resourceName, "metadata_options.0.http_put_response_hop_limit"),
 				),
 			},
 		},
@@ -834,4 +864,27 @@ data "aws_instance" "test" {
   instance_id = "${aws_instance.test.id}"
 }
 `)
+}
+
+func testAccInstanceDataSourceConfig_metadataOptions(rName, instanceType string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = %[2]q
+
+  tags = {
+    Name = %[1]q
+  }
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
+}
+
+data "aws_instance" "test" {
+  instance_id = aws_instance.test.id
+}
+`, rName, instanceType)
 }

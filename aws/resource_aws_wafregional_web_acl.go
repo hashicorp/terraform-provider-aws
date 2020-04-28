@@ -42,6 +42,11 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								waf.WafActionTypeAllow,
+								waf.WafActionTypeBlock,
+								waf.WafActionTypeCount,
+							}, false),
 						},
 					},
 				},
@@ -53,8 +58,9 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"log_destination": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"redacted_fields": {
 							Type:     schema.TypeList,
@@ -74,6 +80,15 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 												"type": {
 													Type:     schema.TypeString,
 													Required: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														waf.MatchFieldTypeAllQueryArgs,
+														waf.MatchFieldTypeBody,
+														waf.MatchFieldTypeHeader,
+														waf.MatchFieldTypeMethod,
+														waf.MatchFieldTypeQueryString,
+														waf.MatchFieldTypeSingleQueryArg,
+														waf.MatchFieldTypeUri,
+													}, false),
 												},
 											},
 										},
@@ -103,6 +118,11 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											waf.WafActionTypeAllow,
+											waf.WafActionTypeBlock,
+											waf.WafActionTypeCount,
+										}, false),
 									},
 								},
 							},
@@ -116,6 +136,10 @@ func resourceAwsWafRegionalWebAcl() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											waf.WafOverrideActionTypeCount,
+											waf.WafOverrideActionTypeNone,
+										}, false),
 									},
 								},
 							},

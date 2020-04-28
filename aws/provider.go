@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // Provider returns a terraform.ResourceProvider.
@@ -90,20 +91,29 @@ func Provider() terraform.ResourceProvider {
 
 			"endpoints": endpointsSchema(),
 
-			"ignore_tag_prefixes": {
-				Type:        schema.TypeSet,
-				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "Resource tag key prefixes to ignore across all resources.",
-			},
-
 			"ignore_tags": {
-				Type:        schema.TypeSet,
+				Type:        schema.TypeList,
 				Optional:    true,
-				Elem:        &schema.Schema{Type: schema.TypeString},
-				Set:         schema.HashString,
-				Description: "Resource tag keys to ignore across all resources.",
+				MaxItems:    1,
+				Description: "Configuration block with settings to ignore resource tags across all resources.",
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"keys": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Set:         schema.HashString,
+							Description: "Resource tag keys to ignore across all resources.",
+						},
+						"key_prefixes": {
+							Type:        schema.TypeSet,
+							Optional:    true,
+							Elem:        &schema.Schema{Type: schema.TypeString},
+							Set:         schema.HashString,
+							Description: "Resource tag key prefixes to ignore across all resources.",
+						},
+					},
+				},
 			},
 
 			"insecure": {
@@ -177,6 +187,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_canonical_user_id":                         dataSourceAwsCanonicalUserId(),
 			"aws_cloudformation_export":                     dataSourceAwsCloudFormationExport(),
 			"aws_cloudformation_stack":                      dataSourceAwsCloudFormationStack(),
+			"aws_cloudfront_distribution":                   dataSourceAwsCloudFrontDistribution(),
 			"aws_cloudhsm_v2_cluster":                       dataSourceCloudHsmV2Cluster(),
 			"aws_cloudtrail_service_account":                dataSourceAwsCloudTrailServiceAccount(),
 			"aws_cloudwatch_log_group":                      dataSourceAwsCloudwatchLogGroup(),
@@ -269,6 +280,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_redshift_cluster":                          dataSourceAwsRedshiftCluster(),
 			"aws_redshift_service_account":                  dataSourceAwsRedshiftServiceAccount(),
 			"aws_region":                                    dataSourceAwsRegion(),
+			"aws_regions":                                   dataSourceAwsRegions(),
 			"aws_route":                                     dataSourceAwsRoute(),
 			"aws_route_table":                               dataSourceAwsRouteTable(),
 			"aws_route_tables":                              dataSourceAwsRouteTables(),
@@ -355,6 +367,17 @@ func Provider() terraform.ResourceProvider {
 			"aws_api_gateway_usage_plan_key":                          resourceAwsApiGatewayUsagePlanKey(),
 			"aws_api_gateway_vpc_link":                                resourceAwsApiGatewayVpcLink(),
 			"aws_apigatewayv2_api":                                    resourceAwsApiGatewayV2Api(),
+			"aws_apigatewayv2_api_mapping":                            resourceAwsApiGatewayV2ApiMapping(),
+			"aws_apigatewayv2_authorizer":                             resourceAwsApiGatewayV2Authorizer(),
+			"aws_apigatewayv2_deployment":                             resourceAwsApiGatewayV2Deployment(),
+			"aws_apigatewayv2_domain_name":                            resourceAwsApiGatewayV2DomainName(),
+			"aws_apigatewayv2_integration":                            resourceAwsApiGatewayV2Integration(),
+			"aws_apigatewayv2_integration_response":                   resourceAwsApiGatewayV2IntegrationResponse(),
+			"aws_apigatewayv2_model":                                  resourceAwsApiGatewayV2Model(),
+			"aws_apigatewayv2_route":                                  resourceAwsApiGatewayV2Route(),
+			"aws_apigatewayv2_route_response":                         resourceAwsApiGatewayV2RouteResponse(),
+			"aws_apigatewayv2_stage":                                  resourceAwsApiGatewayV2Stage(),
+			"aws_apigatewayv2_vpc_link":                               resourceAwsApiGatewayV2VpcLink(),
 			"aws_app_cookie_stickiness_policy":                        resourceAwsAppCookieStickinessPolicy(),
 			"aws_appautoscaling_target":                               resourceAwsAppautoscalingTarget(),
 			"aws_appautoscaling_policy":                               resourceAwsAppautoscalingPolicy(),
@@ -459,6 +482,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_dlm_lifecycle_policy":                                resourceAwsDlmLifecyclePolicy(),
 			"aws_dms_certificate":                                     resourceAwsDmsCertificate(),
 			"aws_dms_endpoint":                                        resourceAwsDmsEndpoint(),
+			"aws_dms_event_subscription":                              resourceAwsDmsEventSubscription(),
 			"aws_dms_replication_instance":                            resourceAwsDmsReplicationInstance(),
 			"aws_dms_replication_subnet_group":                        resourceAwsDmsReplicationSubnetGroup(),
 			"aws_dms_replication_task":                                resourceAwsDmsReplicationTask(),
@@ -491,6 +515,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ebs_snapshot":                                        resourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_copy":                                   resourceAwsEbsSnapshotCopy(),
 			"aws_ebs_volume":                                          resourceAwsEbsVolume(),
+			"aws_ec2_availability_zone_group":                         resourceAwsEc2AvailabilityZoneGroup(),
 			"aws_ec2_capacity_reservation":                            resourceAwsEc2CapacityReservation(),
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
@@ -750,6 +775,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_default_security_group":                              resourceAwsDefaultSecurityGroup(),
 			"aws_security_group_rule":                                 resourceAwsSecurityGroupRule(),
 			"aws_securityhub_account":                                 resourceAwsSecurityHubAccount(),
+			"aws_securityhub_member":                                  resourceAwsSecurityHubMember(),
 			"aws_securityhub_product_subscription":                    resourceAwsSecurityHubProductSubscription(),
 			"aws_securityhub_standards_subscription":                  resourceAwsSecurityHubStandardsSubscription(),
 			"aws_servicecatalog_portfolio":                            resourceAwsServiceCatalogPortfolio(),
@@ -1066,6 +1092,7 @@ func init() {
 		"redshift",
 		"resourcegroups",
 		"route53",
+		"route53domains",
 		"route53resolver",
 		"s3",
 		"s3control",
@@ -1106,6 +1133,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Region:                  d.Get("region").(string),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
+		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
 		Insecure:                d.Get("insecure").(bool),
 		SkipCredsValidation:     d.Get("skip_credentials_validation").(bool),
 		SkipGetEC2Platforms:     d.Get("skip_get_ec2_platforms").(bool),
@@ -1146,18 +1174,6 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		endpoints := endpointsSetI.(map[string]interface{})
 		for _, endpointServiceName := range endpointServiceNames {
 			config.Endpoints[endpointServiceName] = endpoints[endpointServiceName].(string)
-		}
-	}
-
-	if v, ok := d.GetOk("ignore_tag_prefixes"); ok {
-		for _, ignoreTagPrefixRaw := range v.(*schema.Set).List() {
-			config.IgnoreTagPrefixes = append(config.IgnoreTagPrefixes, ignoreTagPrefixRaw.(string))
-		}
-	}
-
-	if v, ok := d.GetOk("ignore_tags"); ok {
-		for _, ignoreTagRaw := range v.(*schema.Set).List() {
-			config.IgnoreTags = append(config.IgnoreTags, ignoreTagRaw.(string))
 		}
 	}
 
@@ -1237,4 +1253,23 @@ func endpointsSchema() *schema.Schema {
 			Schema: endpointsAttributes,
 		},
 	}
+}
+
+func expandProviderIgnoreTags(l []interface{}) *keyvaluetags.IgnoreConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	ignoreConfig := &keyvaluetags.IgnoreConfig{}
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["keys"].(*schema.Set); ok {
+		ignoreConfig.Keys = keyvaluetags.New(v.List())
+	}
+
+	if v, ok := m["key_prefixes"].(*schema.Set); ok {
+		ignoreConfig.KeyPrefixes = keyvaluetags.New(v.List())
+	}
+
+	return ignoreConfig
 }

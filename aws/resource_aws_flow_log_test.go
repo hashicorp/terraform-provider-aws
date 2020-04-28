@@ -34,6 +34,7 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
@@ -105,6 +106,7 @@ func TestAccAWSFlowLog_SubnetID(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", "cloud-watch-logs"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_group_name", cloudwatchLogGroupResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "600"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_type", "ALL"),
 				),
@@ -190,6 +192,33 @@ func TestAccAWSFlowLog_LogDestinationType_S3_Invalid(t *testing.T) {
 			{
 				Config:      testAccFlowLogConfig_LogDestinationType_S3_Invalid(rName),
 				ExpectError: regexp.MustCompile(`Access Denied for LogDestination`),
+			},
+		},
+	})
+}
+
+func TestAccAWSFlowLog_LogDestinationType_MaxAggregationInterval(t *testing.T) {
+	var flowLog ec2.FlowLog
+	resourceName := "aws_flow_log.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckFlowLogDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFlowLogConfig_MaxAggregationInterval(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFlowLogExists(resourceName, &flowLog),
+					testAccCheckAWSFlowLogAttributes(&flowLog),
+					resource.TestCheckResourceAttr(resourceName, "max_aggregation_interval", "60"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -491,6 +520,7 @@ resource "aws_flow_log" "test" {
 }
 `, rName)
 }
+
 func testAccFlowLogConfig_LogFormat(rName string) string {
 	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -523,7 +553,7 @@ resource "aws_s3_bucket" "test" {
 	bucket        = %[1]q
 	force_destroy = true
   }
-  
+
 
 resource "aws_flow_log" "test" {
   log_destination      = "${aws_s3_bucket.test.arn}"
@@ -620,4 +650,44 @@ resource "aws_flow_log" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccFlowLogConfig_MaxAggregationInterval(rName string) string {
+	return testAccFlowLogConfigBase(rName) + fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": [
+          "ec2.amazonaws.com"
+        ]
+      },
+      "Action": [
+        "sts:AssumeRole"
+      ]
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_flow_log" "test" {
+  iam_role_arn   = "${aws_iam_role.test.arn}"
+  log_group_name = "${aws_cloudwatch_log_group.test.name}"
+  traffic_type   = "ALL"
+  vpc_id         = "${aws_vpc.test.id}"
+
+  max_aggregation_interval = 60
+}
+`, rName)
 }

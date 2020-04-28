@@ -70,7 +70,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 												"interval": {
 													Type:         schema.TypeInt,
 													Required:     true,
-													ValidateFunc: validation.IntInSlice([]int{2, 3, 4, 6, 8, 12, 24}),
+													ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
 												},
 												"interval_unit": {
 													Type:     schema.TypeString,
@@ -87,7 +87,7 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.StringMatch(regexp.MustCompile("^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
+														ValidateFunc: validation.StringMatch(regexp.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
 													},
 												},
 											},

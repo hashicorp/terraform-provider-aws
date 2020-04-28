@@ -342,25 +342,21 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if d.HasChange("preferred_maintenance_window") {
-		d.SetPartial("preferred_maintenance_window")
 		req.PreferredMaintenanceWindow = aws.String(d.Get("preferred_maintenance_window").(string))
 		requestUpdate = true
 	}
 
 	if d.HasChange("auto_minor_version_upgrade") {
-		d.SetPartial("auto_minor_version_upgrade")
 		req.AutoMinorVersionUpgrade = aws.Bool(d.Get("auto_minor_version_upgrade").(bool))
 		requestUpdate = true
 	}
 
 	if d.HasChange("promotion_tier") {
-		d.SetPartial("promotion_tier")
 		req.PromotionTier = aws.Int64(int64(d.Get("promotion_tier").(int)))
 		requestUpdate = true
 	}
 
 	if d.HasChange("ca_cert_identifier") {
-		d.SetPartial("ca_cert_identifier")
 		req.CACertificateIdentifier = aws.String(d.Get("ca_cert_identifier").(string))
 		requestUpdate = true
 	}
@@ -410,7 +406,6 @@ func resourceAwsDocDBClusterInstanceUpdate(d *schema.ResourceData, meta interfac
 			return fmt.Errorf("error updating DocumentDB Cluster Instance (%s) tags: %s", d.Get("arn").(string), err)
 		}
 
-		d.SetPartial("tags")
 	}
 
 	return resourceAwsDocDBClusterInstanceRead(d, meta)

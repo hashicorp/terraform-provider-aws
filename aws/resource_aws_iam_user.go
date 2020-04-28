@@ -224,6 +224,10 @@ func resourceAwsIamUserDelete(d *schema.ResourceData, meta interface{}) error {
 		if err := deleteAwsIamUserLoginProfile(iamconn, d.Id()); err != nil {
 			return fmt.Errorf("error removing IAM User (%s) login profile: %s", d.Id(), err)
 		}
+
+		if err := deleteAwsIamUserSigningCertificates(iamconn, d.Id()); err != nil {
+			return fmt.Errorf("error removing IAM User (%s) signing certificate: %s", d.Id(), err)
+		}
 	}
 
 	deleteUserInput := &iam.DeleteUserInput{
@@ -431,6 +435,36 @@ func deleteAwsIamUserAccessKeys(svc *iam.IAM, username string) error {
 		})
 		if err != nil {
 			return fmt.Errorf("Error deleting access key %s: %s", k, err)
+		}
+	}
+
+	return nil
+}
+
+func deleteAwsIamUserSigningCertificates(svc *iam.IAM, userName string) error {
+	var certificateIDList []string
+
+	listInput := &iam.ListSigningCertificatesInput{
+		UserName: aws.String(userName),
+	}
+	err := svc.ListSigningCertificatesPages(listInput,
+		func(page *iam.ListSigningCertificatesOutput, lastPage bool) bool {
+			for _, c := range page.Certificates {
+				certificateIDList = append(certificateIDList, aws.StringValue(c.CertificateId))
+			}
+			return !lastPage
+		})
+	if err != nil {
+		return fmt.Errorf("Error removing signing certificates of user %s: %s", userName, err)
+	}
+
+	for _, c := range certificateIDList {
+		_, err := svc.DeleteSigningCertificate(&iam.DeleteSigningCertificateInput{
+			CertificateId: aws.String(c),
+			UserName:      aws.String(userName),
+		})
+		if err != nil {
+			return fmt.Errorf("Error deleting signing certificate %s: %s", c, err)
 		}
 	}
 

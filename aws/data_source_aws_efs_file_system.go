@@ -25,7 +25,6 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"encrypted": {
@@ -36,7 +35,6 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"kms_key_id": {
 				Type:     schema.TypeString,

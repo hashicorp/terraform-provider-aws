@@ -9,6 +9,7 @@ import (
 // See http://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region
 // See https://docs.amazonaws.cn/en_us/general/latest/gr/rande.html#elb_region
 var elbHostedZoneIdPerRegionMap = map[string]string{
+	"af-south-1":     "Z268VQBMOI5EKX",
 	"ap-east-1":      "Z3DQVH9N71FHZ0",
 	"ap-northeast-1": "Z14GRHDCWA56QT",
 	"ap-northeast-2": "ZWKZPGTI48KDX",

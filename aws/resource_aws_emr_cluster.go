@@ -492,7 +492,7 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Set: resourceAwsEMRClusterInstanceGroupHash,
 			},
 			"bootstrap_action": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Resource{
@@ -860,7 +860,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if v, ok := d.GetOk("bootstrap_action"); ok {
-		bootstrapActions := v.(*schema.Set).List()
+		bootstrapActions := v.([]interface{})
 		params.BootstrapActions = expandBootstrapActions(bootstrapActions)
 	}
 	if v, ok := d.GetOk("step"); ok {
@@ -1425,9 +1425,14 @@ func resourceAwsEMRClusterDelete(d *schema.ResourceData, meta interface{}) error
 }
 
 func countEMRRemainingInstances(resp *emr.ListInstancesOutput, emrClusterId string) int {
+	if resp == nil {
+		log.Printf("[ERROR] response is nil")
+		return 0
+	}
+
 	instanceCount := len(resp.Instances)
 
-	if resp == nil || instanceCount == 0 {
+	if instanceCount == 0 {
 		log.Printf("[DEBUG] No instances found for EMR Cluster (%s)", emrClusterId)
 		return 0
 	}

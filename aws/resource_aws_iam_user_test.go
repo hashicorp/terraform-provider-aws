@@ -408,6 +408,35 @@ func TestAccAWSUser_ForceDestroy_SSHKey(t *testing.T) {
 	})
 }
 
+func TestAccAWSUser_ForceDestroy_SigningCertificate(t *testing.T) {
+	var user iam.GetUserOutput
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSUserDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSUserConfigForceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSUserExists(resourceName, &user),
+					testAccCheckAWSUserUploadSigningCertificate(&user),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy"},
+			},
+		},
+	})
+}
+
 func TestAccAWSUser_nameChange(t *testing.T) {
 	var conf iam.GetUserOutput
 
@@ -785,6 +814,27 @@ func testAccCheckAWSUserUploadsSSHKey(getUserOutput *iam.GetUserOutput) resource
 		_, err = iamconn.UploadSSHPublicKey(input)
 		if err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) SSH key: %s", *getUserOutput.User.UserName, err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSUserUploadSigningCertificate(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
+
+		signingCertificate, err := ioutil.ReadFile("./test-fixtures/iam-ssl-unix-line-endings.pem")
+		if err != nil {
+			return fmt.Errorf("error reading signing certificate fixture: %s", err)
+		}
+		input := &iam.UploadSigningCertificateInput{
+			CertificateBody: aws.String(string(signingCertificate)),
+			UserName:        getUserOutput.User.UserName,
+		}
+
+		if _, err := iamconn.UploadSigningCertificate(input); err != nil {
+			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %s", aws.StringValue(getUserOutput.User.UserName), err)
 		}
 
 		return nil

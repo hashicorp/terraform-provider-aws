@@ -731,7 +731,12 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.S3BucketUpdateTags(s3conn, d.Id(), o, n); err != nil {
+		// Retry due to S3 eventual consistency
+		_, err := retryOnAwsCode(s3.ErrCodeNoSuchBucket, func() (interface{}, error) {
+			terr := keyvaluetags.S3BucketUpdateTags(s3conn, d.Id(), o, n)
+			return nil, terr
+		})
+		if err != nil {
 			return fmt.Errorf("error updating S3 Bucket (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -2477,7 +2482,12 @@ func validateS3BucketName(value string, region string) error {
 
 func grantHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
 	if v, ok := m["id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -2495,7 +2505,12 @@ func grantHash(v interface{}) int {
 
 func expirationHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
 	if v, ok := m["date"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -2510,7 +2525,12 @@ func expirationHash(v interface{}) int {
 
 func transitionHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
 	if v, ok := m["date"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -2525,7 +2545,11 @@ func transitionHash(v interface{}) int {
 
 func rulesHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
 
 	if v, ok := m["id"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
@@ -2553,7 +2577,12 @@ func rulesHash(v interface{}) int {
 
 func replicationRuleFilterHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
+
 	if v, ok := m["prefix"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
@@ -2565,7 +2594,11 @@ func replicationRuleFilterHash(v interface{}) int {
 
 func destinationHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
 
 	if v, ok := m["bucket"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
@@ -2586,12 +2619,12 @@ func destinationHash(v interface{}) int {
 }
 
 func accessControlTranslationHash(v interface{}) int {
-	// v is nil if empty access_control_translation is given.
-	if v == nil {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
 		return 0
 	}
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
 
 	if v, ok := m["owner"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
@@ -2600,12 +2633,12 @@ func accessControlTranslationHash(v interface{}) int {
 }
 
 func sourceSelectionCriteriaHash(v interface{}) int {
-	// v is nil if empty source_selection_criteria is given.
-	if v == nil {
+	var buf bytes.Buffer
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
 		return 0
 	}
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
 
 	if v, ok := m["sse_kms_encrypted_objects"].(*schema.Set); ok && v.Len() > 0 {
 		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v.List()[0])))
@@ -2615,7 +2648,11 @@ func sourceSelectionCriteriaHash(v interface{}) int {
 
 func sourceSseKmsObjectsHash(v interface{}) int {
 	var buf bytes.Buffer
-	m := v.(map[string]interface{})
+	m, ok := v.(map[string]interface{})
+
+	if !ok {
+		return 0
+	}
 
 	if v, ok := m["enabled"]; ok {
 		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))

@@ -39,7 +39,7 @@ The following arguments are supported:
 
 * `db_instance_identifier` - (Required) The DB Instance Identifier from which to take the snapshot.
 * `db_snapshot_identifier` - (Required) The Identifier for the snapshot.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 
 ## Attributes Reference
@@ -61,3 +61,11 @@ In addition to all arguments above, the following attributes are exported:
 * `status` - Specifies the status of this DB snapshot.
 * `storage_type` - Specifies the storage type associated with DB snapshot.
 * `vpc_id` - Specifies the storage type associated with DB snapshot.
+
+## Import
+
+`aws_db_snapshot` can be imported by using the snapshot identifier, e.g.
+
+```
+$ terraform import aws_db_snapshot.example my-snapshot
+```

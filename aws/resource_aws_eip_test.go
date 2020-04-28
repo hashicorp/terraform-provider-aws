@@ -903,7 +903,12 @@ resource "aws_eip" "test" {
 
 const testAccAWSEIPNetworkInterfaceConfig = `
 data "aws_availability_zones" "available" {
-	state = "available"
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -942,6 +947,11 @@ resource "aws_eip" "test" {
 const testAccAWSEIPMultiNetworkInterfaceConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
   
 resource "aws_vpc" "test" {

@@ -355,6 +355,35 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				},
 			},
 
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled, ec2.LaunchTemplateInstanceMetadataEndpointStateDisabled}, false),
+						},
+						"http_tokens": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice([]string{ec2.LaunchTemplateHttpTokensStateOptional, ec2.LaunchTemplateHttpTokensStateRequired}, false),
+						},
+						"http_put_response_hop_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.IntBetween(1, 64),
+						},
+					},
+				},
+			},
+
 			"monitoring": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -513,6 +542,19 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+			"hibernation_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configured": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -697,6 +739,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting license_specification: %s", err)
 	}
 
+	if err := d.Set("metadata_options", flattenLaunchTemplateInstanceMetadataOptions(ltData.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
+	}
+
 	if err := d.Set("monitoring", getMonitoring(ltData.Monitoring)); err != nil {
 		return fmt.Errorf("error setting monitoring: %s", err)
 	}
@@ -707,6 +753,10 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 
 	if err := d.Set("placement", getPlacement(ltData.Placement)); err != nil {
 		return fmt.Errorf("error setting placement: %s", err)
+	}
+
+	if err := d.Set("hibernation_options", flattenLaunchTemplateHibernationOptions(ltData.HibernationOptions)); err != nil {
+		return fmt.Errorf("error setting hibernation_options: %s", err)
 	}
 
 	if err := d.Set("tag_specifications", getTagSpecifications(ltData.TagSpecifications)); err != nil {
@@ -939,6 +989,46 @@ func getLicenseSpecifications(licenseSpecifications []*ec2.LaunchTemplateLicense
 	return s
 }
 
+func expandLaunchTemplateInstanceMetadataOptions(l []interface{}) *ec2.LaunchTemplateInstanceMetadataOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.LaunchTemplateInstanceMetadataOptionsRequest{
+		HttpEndpoint: aws.String(m["http_endpoint"].(string)),
+	}
+
+	if m["http_endpoint"].(string) == ec2.LaunchTemplateInstanceMetadataEndpointStateEnabled {
+		// These parameters are not allowed unless HttpEndpoint is enabled
+
+		if v, ok := m["http_tokens"].(string); ok && v != "" {
+			opts.HttpTokens = aws.String(v)
+		}
+
+		if v, ok := m["http_put_response_hop_limit"].(int); ok && v != 0 {
+			opts.HttpPutResponseHopLimit = aws.Int64(int64(v))
+		}
+	}
+
+	return opts
+}
+
+func flattenLaunchTemplateInstanceMetadataOptions(opts *ec2.LaunchTemplateInstanceMetadataOptions) []interface{} {
+	if opts == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"http_endpoint":               aws.StringValue(opts.HttpEndpoint),
+		"http_put_response_hop_limit": aws.Int64Value(opts.HttpPutResponseHopLimit),
+		"http_tokens":                 aws.StringValue(opts.HttpTokens),
+	}
+
+	return []interface{}{m}
+}
+
 func getMonitoring(m *ec2.LaunchTemplatesMonitoring) []interface{} {
 	s := []interface{}{}
 	if m != nil {
@@ -1021,6 +1111,31 @@ func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
 			"spread_domain":     aws.StringValue(p.SpreadDomain),
 			"tenancy":           aws.StringValue(p.Tenancy),
 		})
+	}
+	return s
+}
+
+func expandLaunchTemplateHibernationOptions(l []interface{}) *ec2.LaunchTemplateHibernationOptionsRequest {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	opts := &ec2.LaunchTemplateHibernationOptionsRequest{
+		Configured: aws.Bool(m["configured"].(bool)),
+	}
+
+	return opts
+}
+
+func flattenLaunchTemplateHibernationOptions(m *ec2.LaunchTemplateHibernationOptions) []interface{} {
+	s := []interface{}{}
+	if m != nil {
+		mo := map[string]interface{}{
+			"configured": aws.BoolValue(m.Configured),
+		}
+		s = append(s, mo)
 	}
 	return s
 }
@@ -1174,6 +1289,10 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		opts.LicenseSpecifications = licenseSpecifications
 	}
 
+	if v, ok := d.GetOk("metadata_options"); ok {
+		opts.MetadataOptions = expandLaunchTemplateInstanceMetadataOptions(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("monitoring"); ok {
 		m := v.([]interface{})
 		if len(m) > 0 && m[0] != nil {
@@ -1209,6 +1328,10 @@ func buildLaunchTemplateData(d *schema.ResourceData) (*ec2.RequestLaunchTemplate
 		if len(p) > 0 && p[0] != nil {
 			opts.Placement = readPlacementFromConfig(p[0].(map[string]interface{}))
 		}
+	}
+
+	if v, ok := d.GetOk("hibernation_options"); ok {
+		opts.HibernationOptions = expandLaunchTemplateHibernationOptions(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("tag_specifications"); ok {
