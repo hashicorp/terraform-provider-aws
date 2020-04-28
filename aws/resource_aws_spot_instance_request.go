@@ -19,6 +19,9 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 		Read:   resourceAwsSpotInstanceRequestRead,
 		Delete: resourceAwsSpotInstanceRequestDelete,
 		Update: resourceAwsSpotInstanceRequestUpdate,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -158,19 +161,19 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("valid_from"); ok {
-		valid_from, err := time.Parse(time.RFC3339, v.(string))
+		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotOpts.ValidFrom = aws.Time(valid_from)
+		spotOpts.ValidFrom = aws.Time(validFrom)
 	}
 
 	if v, ok := d.GetOk("valid_until"); ok {
-		valid_until, err := time.Parse(time.RFC3339, v.(string))
+		validUntil, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
 			return err
 		}
-		spotOpts.ValidUntil = aws.Time(valid_until)
+		spotOpts.ValidUntil = aws.Time(validUntil)
 	}
 
 	// Placement GroupName can only be specified when instanceInterruptionBehavior is not set or set to 'terminate'
@@ -342,7 +345,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 			return err
 		}
 
-		var ipv6Addresses []string
+		var ipv6Addresses []*string
 		if len(instance.NetworkInterfaces) > 0 {
 			for _, ni := range instance.NetworkInterfaces {
 				if *ni.Attachment.DeviceIndex == 0 {
@@ -352,7 +355,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 					d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
 
 					for _, address := range ni.Ipv6Addresses {
-						ipv6Addresses = append(ipv6Addresses, *address.Ipv6Address)
+						ipv6Addresses = append(ipv6Addresses, address.Ipv6Address)
 					}
 				}
 			}
@@ -361,7 +364,7 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 			d.Set("primary_network_interface_id", "")
 		}
 
-		if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
+		if err := d.Set("ipv6_addresses", flattenStringSet(ipv6Addresses)); err != nil {
 			log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
 		}
 
