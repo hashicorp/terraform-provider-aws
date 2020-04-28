@@ -1220,7 +1220,9 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 			for _, tg := range lbConf.TargetGroupsConfig.TargetGroups {
 				flatTgs = append(flatTgs, tg.Arn)
 			}
-			d.Set("target_group_arns", flattenStringSet(flatTgs))
+			if err := d.Set("target_group_arns", flattenStringSet(flatTgs)); err != nil {
+				return fmt.Errorf("error setting target_group_arns: %s", err)
+			}
 		}
 	}
 
