@@ -3,6 +3,8 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math/big"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -50,6 +52,12 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					oldFloat, _ := strconv.ParseFloat(old, 64)
+					newFloat, _ := strconv.ParseFloat(new, 64)
+
+					return big.NewFloat(oldFloat).Cmp(big.NewFloat(newFloat)) == 0
+				},
 			}
 			s["spot_type"] = &schema.Schema{
 				Type:     schema.TypeString,
@@ -298,6 +306,31 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("instance_interruption_behaviour", request.InstanceInterruptionBehavior)
 	d.Set("valid_from", aws.TimeValue(request.ValidFrom).Format(time.RFC3339))
 	d.Set("valid_until", aws.TimeValue(request.ValidUntil).Format(time.RFC3339))
+	d.Set("spot_type", request.Type)
+	d.Set("spot_price", request.SpotPrice)
+	d.Set("key_name", request.LaunchSpecification.KeyName)
+	d.Set("instance_type", request.LaunchSpecification.InstanceType)
+	d.Set("ami", request.LaunchSpecification.ImageId)
+
+	var sgs []*string
+	for _, sg := range request.LaunchSpecification.SecurityGroups {
+		sgs = append(sgs, sg.GroupId)
+	}
+
+	if err := d.Set("vpc_security_group_ids", flattenStringSet(sgs)); err != nil {
+		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
+	}
+
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getAwsEc2InstancePasswordData(*request.InstanceId, conn)
+		if err != nil {
+			return err
+		}
+		d.Set("password_data", passwordData)
+	} else {
+		d.Set("get_password_data", false)
+		d.Set("password_data", nil)
+	}
 
 	return nil
 }
@@ -322,62 +355,62 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("no instances found")
 	}
 
-	// Set these fields for connection information
-	if instance != nil {
-		d.Set("public_dns", instance.PublicDnsName)
-		d.Set("public_ip", instance.PublicIpAddress)
-		d.Set("private_dns", instance.PrivateDnsName)
-		d.Set("private_ip", instance.PrivateIpAddress)
+	d.Set("public_dns", instance.PublicDnsName)
+	d.Set("public_ip", instance.PublicIpAddress)
+	d.Set("private_dns", instance.PrivateDnsName)
+	d.Set("private_ip", instance.PrivateIpAddress)
+	d.Set("source_dest_check", instance.SourceDestCheck)
 
-		// set connection information
-		if instance.PublicIpAddress != nil {
-			d.SetConnInfo(map[string]string{
-				"type": "ssh",
-				"host": *instance.PublicIpAddress,
-			})
-		} else if instance.PrivateIpAddress != nil {
-			d.SetConnInfo(map[string]string{
-				"type": "ssh",
-				"host": *instance.PrivateIpAddress,
-			})
-		}
-		if err := readBlockDevices(d, instance, conn); err != nil {
-			return err
-		}
+	// set connection information
+	if instance.PublicIpAddress != nil {
+		d.SetConnInfo(map[string]string{
+			"type": "ssh",
+			"host": *instance.PublicIpAddress,
+		})
+	} else if instance.PrivateIpAddress != nil {
+		d.SetConnInfo(map[string]string{
+			"type": "ssh",
+			"host": *instance.PrivateIpAddress,
+		})
+	}
+	if err := readBlockDevices(d, instance, conn); err != nil {
+		return err
+	}
 
-		var ipv6Addresses []*string
-		if len(instance.NetworkInterfaces) > 0 {
-			for _, ni := range instance.NetworkInterfaces {
-				if *ni.Attachment.DeviceIndex == 0 {
-					d.Set("subnet_id", ni.SubnetId)
-					d.Set("primary_network_interface_id", ni.NetworkInterfaceId)
-					d.Set("associate_public_ip_address", ni.Association != nil)
-					d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
+	if len(instance.NetworkInterfaces) > 0 {
+		for _, ni := range instance.NetworkInterfaces {
+			if *ni.Attachment.DeviceIndex == 0 {
+				d.Set("subnet_id", ni.SubnetId)
+				d.Set("network_interface_id", ni.NetworkInterfaceId)
+				d.Set("associate_public_ip_address", ni.Association != nil)
+				d.Set("ipv6_address_count", len(ni.Ipv6Addresses))
 
-					for _, address := range ni.Ipv6Addresses {
-						ipv6Addresses = append(ipv6Addresses, address.Ipv6Address)
-					}
+				var ipv6Addresses []*string
+
+				for _, address := range ni.Ipv6Addresses {
+					ipv6Addresses = append(ipv6Addresses, address.Ipv6Address)
+				}
+
+				if err := d.Set("ipv6_addresses", flattenStringSet(ipv6Addresses)); err != nil {
+					log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
 				}
 			}
-		} else {
-			d.Set("subnet_id", instance.SubnetId)
-			d.Set("primary_network_interface_id", "")
 		}
+	} else {
+		d.Set("subnet_id", instance.SubnetId)
+		d.Set("primary_network_interface_id", "")
+		d.Set("network_interface_id", "")
+	}
 
-		if err := d.Set("ipv6_addresses", flattenStringSet(ipv6Addresses)); err != nil {
-			log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
+	if d.Get("get_password_data").(bool) {
+		passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
+		if err != nil {
+			return err
 		}
-
-		if d.Get("get_password_data").(bool) {
-			passwordData, err := getAwsEc2InstancePasswordData(*instance.InstanceId, conn)
-			if err != nil {
-				return err
-			}
-			d.Set("password_data", passwordData)
-		} else {
-			d.Set("get_password_data", false)
-			d.Set("password_data", nil)
-		}
+		d.Set("password_data", passwordData)
+	} else {
+		d.Set("get_password_data", false)
+		d.Set("password_data", nil)
 	}
 
 	return nil
