@@ -48,7 +48,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc:  validation.All(
+				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
 					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
 				),
@@ -58,7 +58,7 @@ func resourceAwsIamPolicy() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.All(
+				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 96),
 					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
 				),
