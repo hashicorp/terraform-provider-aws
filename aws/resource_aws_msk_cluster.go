@@ -1034,19 +1034,23 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).kafkaconn
 
 	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
-	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-		ClusterArn: aws.String(d.Id()),
-	})
+	err := deleteMskCluster(conn, d.Id())
 	if err != nil {
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
 		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
-
 	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
+}
+
+func deleteMskCluster(conn *kafka.Kafka, arn string) error {
+	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
+		ClusterArn: aws.String(arn),
+	})
+	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		return nil
+	}
+	return err
 }
 
 func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {

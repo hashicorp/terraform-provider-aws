@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -23,37 +24,64 @@ func init() {
 }
 
 func testSweepMskClusters(region string) error {
+	conn, err := sharedKafkaClientForRegion(region)
+	if err != nil {
+		return err
+	}
+
+	var sweeperErrs *multierror.Error
+
+	err = listAllMskClusterPages(conn, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, cluster := range page.ClusterInfoList {
+			log.Printf("[INFO] Deleting Msk cluster: %s", aws.StringValue(cluster.ClusterName))
+			err := deleteMskCluster(conn, aws.StringValue(cluster.ClusterArn))
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting Msk cluster (%s): %w", aws.StringValue(cluster.ClusterName), err))
+				continue
+			}
+			err = resourceAwsMskClusterDeleteWaiter(conn, aws.StringValue(cluster.ClusterArn))
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error waiting to delete Msk cluster (%s): %w", aws.StringValue(cluster.ClusterName), err))
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping MSK Cluster sweeper for %q: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing MSK Clusters: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+// generate
+func sharedKafkaClientForRegion(region string) (*kafka.Kafka, error) {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return nil, fmt.Errorf("error getting client: %s", err)
 	}
+	return serviceConnectionKafka(client), nil
+}
 
-	conn := client.(*AWSClient).kafkaconn
+// generate
+func serviceConnectionKafka(client interface{}) *kafka.Kafka {
+	return client.(*AWSClient).kafkaconn
+}
 
-	out, err := conn.ListClusters(&kafka.ListClustersInput{})
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] skipping msk cluster domain sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving MSK clusters: %s", err)
-	}
-
-	for _, cluster := range out.ClusterInfoList {
-		log.Printf("[INFO] Deleting Msk cluster: %s", *cluster.ClusterName)
-		_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-			ClusterArn: cluster.ClusterArn,
-		})
-		if err != nil {
-			log.Printf("[ERROR] Failed to delete MSK cluster %s: %s", *cluster.ClusterName, err)
-			continue
-		}
-		err = resourceAwsMskClusterDeleteWaiter(conn, *cluster.ClusterArn)
-		if err != nil {
-			log.Printf("[ERROR] failed to wait for deletion of MSK cluster %s: %s", *cluster.ClusterName, err)
-		}
-	}
-	return nil
+// generate
+func listAllMskClusterPages(conn *kafka.Kafka, fn func(*kafka.ListClustersOutput, bool) bool) error {
+	return conn.ListClustersPages(&kafka.ListClustersInput{}, fn)
 }
 
 func TestAccAWSMskCluster_basic(t *testing.T) {
