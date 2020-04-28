@@ -4,14 +4,22 @@ ENHANCEMENTS:
 
 * data-source/aws_elb_hosted_zone_id: Add `us-gov-east-1` and `us-gov-west-1` region values [GH-12976]
 * resource/aws_db_snapshot: Support import [GH-12978]
+* resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_mq_broker: Support import [GH-11841]
 * resource/aws_placement_group: Support tag-on-create [GH-12963]
+* resource/aws_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_spot_fleet_request: Add `launch_template_config` configuration block (Support EC2 Launch Templates) [GH-12732]
 * resource/aws_wafregional_xss_match_set: Add plan-time validation for `xss_match_tuple` configuration block arguments [GH-13024]
 
 BUG FIXES:
 
+* resource/aws_default_route_table: Proper tag on resource creation [GH-12858]
+* resource/aws_fsx_windows_file_system: Prevent panic when update includes `self_managed_active_directory` settings [GH-12630]
+* resource/aws_glue_catalog_table: Prevent various panics with empty configuration blocks [GH-12611]
+* resource/aws_kinesis_firehose_delivery_stream: Prevent panic with empty `processing_configuration` configuration block [GH-12613]
+* resource/aws_lb_listener: Prevent panics on creation and refresh when API throttled [GH-12617]
+* resource/aws_route53_zone: Prevent panic with APIs missing `ChangeInfo` during creation (best effort fix for LocalStack) [GH-12634]
 * resource/aws_wafregional_xss_match_set: Prevent crash with `xss_match_tuple` configuration block since version 2.59.0 [GH-13024]
 
 ## 2.59.0 (April 23, 2020)

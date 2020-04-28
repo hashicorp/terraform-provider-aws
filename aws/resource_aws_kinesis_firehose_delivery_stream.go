@@ -1728,7 +1728,7 @@ func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfigur
 
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
 	config := s3["processing_configuration"].([]interface{})
-	if len(config) == 0 {
+	if len(config) == 0 || config[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
 		return &firehose.ProcessingConfiguration{

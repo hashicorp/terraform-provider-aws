@@ -410,7 +410,7 @@ func expandFsxSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fs
 
 	data := l[0].(map[string]interface{})
 	req := &fsx.SelfManagedActiveDirectoryConfigurationUpdates{
-		DnsIps:   expandStringList(data["dns_ips"].([]interface{})),
+		DnsIps:   expandStringSet(data["dns_ips"].(*schema.Set)),
 		Password: aws.String(data["password"].(string)),
 		UserName: aws.String(data["username"].(string)),
 	}
