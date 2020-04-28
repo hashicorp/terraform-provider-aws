@@ -2821,6 +2821,9 @@ type AddOutputRequest struct {
 	// The stream ID that you want to use for this transport. This parameter applies
 	// only to Zixi-based streams.
 	StreamId *string `locationName:"streamId" type:"string"`
+
+	// The name of the VPC interface attachment to use for this output.
+	VpcInterfaceAttachment *VpcInterfaceAttachment `locationName:"vpcInterfaceAttachment" type:"structure"`
 }
 
 // String returns the string representation
@@ -2914,6 +2917,12 @@ func (s *AddOutputRequest) SetSmoothingLatency(v int64) *AddOutputRequest {
 // SetStreamId sets the StreamId field's value.
 func (s *AddOutputRequest) SetStreamId(v string) *AddOutputRequest {
 	s.StreamId = &v
+	return s
+}
+
+// SetVpcInterfaceAttachment sets the VpcInterfaceAttachment field's value.
+func (s *AddOutputRequest) SetVpcInterfaceAttachment(v *VpcInterfaceAttachment) *AddOutputRequest {
+	s.VpcInterfaceAttachment = v
 	return s
 }
 
@@ -4568,6 +4577,9 @@ type Output struct {
 
 	// Attributes related to the transport stream that are used in the output.
 	Transport *Transport `locationName:"transport" type:"structure"`
+
+	// The name of the VPC interface attachment to use for this output.
+	VpcInterfaceAttachment *VpcInterfaceAttachment `locationName:"vpcInterfaceAttachment" type:"structure"`
 }
 
 // String returns the string representation
@@ -4637,6 +4649,12 @@ func (s *Output) SetPort(v int64) *Output {
 // SetTransport sets the Transport field's value.
 func (s *Output) SetTransport(v *Transport) *Output {
 	s.Transport = v
+	return s
+}
+
+// SetVpcInterfaceAttachment sets the VpcInterfaceAttachment field's value.
+func (s *Output) SetVpcInterfaceAttachment(v *VpcInterfaceAttachment) *Output {
+	s.VpcInterfaceAttachment = v
 	return s
 }
 
@@ -6122,6 +6140,9 @@ type UpdateFlowOutputInput struct {
 	// The stream ID that you want to use for this transport. This parameter applies
 	// only to Zixi-based streams.
 	StreamId *string `locationName:"streamId" type:"string"`
+
+	// The name of the VPC interface attachment to use for this output.
+	VpcInterfaceAttachment *VpcInterfaceAttachment `locationName:"vpcInterfaceAttachment" type:"structure"`
 }
 
 // String returns the string representation
@@ -6225,6 +6246,12 @@ func (s *UpdateFlowOutputInput) SetSmoothingLatency(v int64) *UpdateFlowOutputIn
 // SetStreamId sets the StreamId field's value.
 func (s *UpdateFlowOutputInput) SetStreamId(v string) *UpdateFlowOutputInput {
 	s.StreamId = &v
+	return s
+}
+
+// SetVpcInterfaceAttachment sets the VpcInterfaceAttachment field's value.
+func (s *UpdateFlowOutputInput) SetVpcInterfaceAttachment(v *VpcInterfaceAttachment) *UpdateFlowOutputInput {
+	s.VpcInterfaceAttachment = v
 	return s
 }
 
@@ -6515,6 +6542,30 @@ func (s *VpcInterface) SetSecurityGroupIds(v []*string) *VpcInterface {
 // SetSubnetId sets the SubnetId field's value.
 func (s *VpcInterface) SetSubnetId(v string) *VpcInterface {
 	s.SubnetId = &v
+	return s
+}
+
+// The settings for attaching a VPC interface to an output.
+type VpcInterfaceAttachment struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the VPC interface to use for this output.
+	VpcInterfaceName *string `locationName:"vpcInterfaceName" type:"string"`
+}
+
+// String returns the string representation
+func (s VpcInterfaceAttachment) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VpcInterfaceAttachment) GoString() string {
+	return s.String()
+}
+
+// SetVpcInterfaceName sets the VpcInterfaceName field's value.
+func (s *VpcInterfaceAttachment) SetVpcInterfaceName(v string) *VpcInterfaceAttachment {
+	s.VpcInterfaceName = &v
 	return s
 }
 

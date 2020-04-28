@@ -10728,9 +10728,9 @@ func (c *SageMaker) SearchRequest(input *SearchInput) (req *request.Request, out
 
 // Search API operation for Amazon SageMaker Service.
 //
-// Finds Amazon SageMaker resources that match a search query. Matching resource
-// objects are returned as a list of SearchResult objects in the response. You
-// can sort the search results by any resource property in a ascending or descending
+// Finds Amazon SageMaker resources that match a search query. Matching resources
+// are returned as a list of SearchRecord objects in the response. You can sort
+// the search results by any resource property in a ascending or descending
 // order.
 //
 // You can query against the following value types: numeric, text, Boolean,
@@ -16939,7 +16939,8 @@ type CreateFlowDefinitionInput struct {
 	// HumanLoopConfig is a required field
 	HumanLoopConfig *HumanLoopConfig `type:"structure" required:"true"`
 
-	// Container for configuring the source of human task requests.
+	// Container for configuring the source of human task requests. Use to specify
+	// if Amazon Rekognition or Amazon Textract is used as an integration source.
 	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure"`
 
 	// An object containing information about where the human review results will
@@ -23319,7 +23320,8 @@ type DescribeFlowDefinitionOutput struct {
 	// HumanLoopConfig is a required field
 	HumanLoopConfig *HumanLoopConfig `type:"structure" required:"true"`
 
-	// Container for configuring the source of human task requests.
+	// Container for configuring the source of human task requests. Used to specify
+	// if Amazon Rekognition or Amazon Textract is used as an integration source.
 	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure"`
 
 	// An object containing information about the output file.
@@ -26987,7 +26989,7 @@ func (s *EndpointSummary) SetLastModifiedTime(v time.Time) *EndpointSummary {
 	return s
 }
 
-// A summary of the properties of an experiment as returned by the Search API.
+// The properties of an experiment as returned by the Search API.
 type Experiment struct {
 	_ struct{} `type:"structure"`
 
@@ -27349,15 +27351,11 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 }
 
 // A conditional statement for a search expression that includes a resource
-// property, a Boolean operator, and a value.
-//
-// If you don't specify an Operator and a Value, the filter searches for only
-// the specified property. For example, defining a Filter for the FailureReason
-// for the TrainingJob Resource searches for training job objects that have
-// a value in the FailureReason field.
+// property, a Boolean operator, and a value. Resources that match the statement
+// are returned in the results from the Search API.
 //
 // If you specify a Value, but not an Operator, Amazon SageMaker uses the equals
-// operator as the default.
+// operator.
 //
 // In search, there are several property types:
 //
@@ -27371,7 +27369,7 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 //
 // "Name": "Metrics.accuracy",
 //
-// "Operator": "GREATER_THAN",
+// "Operator": "GreaterThan",
 //
 // "Value": "0.9"
 //
@@ -27390,7 +27388,7 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 //
 // "Name": "HyperParameters.learning_rate",
 //
-// "Operator": "LESS_THAN",
+// "Operator": "LessThan",
 //
 // "Value": "0.5"
 //
@@ -27398,13 +27396,12 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 //
 // Tags
 //
-// To define a tag filter, enter a value with the form "Tags.<key>".
+// To define a tag filter, enter a value with the form Tags.<key>.
 type Filter struct {
 	_ struct{} `type:"structure"`
 
-	// A property name. For example, TrainingJobName. For the list of valid property
-	// names returned in a search result for each supported resource, see TrainingJob
-	// properties. You must specify a valid property name for the resource.
+	// A resource property name. For example, TrainingJobName. For valid property
+	// names, see SearchRecord. You must specify a valid property for the resource.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -27414,44 +27411,53 @@ type Filter struct {
 	//
 	// Equals
 	//
-	// The specified resource in Name equals the specified Value.
+	// The value of Name equals Value.
 	//
 	// NotEquals
 	//
-	// The specified resource in Name does not equal the specified Value.
+	// The value of Name doesn't equal Value.
 	//
 	// GreaterThan
 	//
-	// The specified resource in Name is greater than the specified Value. Not supported
-	// for text-based properties.
+	// The value of Name is greater than Value. Not supported for text properties.
 	//
 	// GreaterThanOrEqualTo
 	//
-	// The specified resource in Name is greater than or equal to the specified
-	// Value. Not supported for text-based properties.
+	// The value of Name is greater than or equal to Value. Not supported for text
+	// properties.
 	//
 	// LessThan
 	//
-	// The specified resource in Name is less than the specified Value. Not supported
-	// for text-based properties.
+	// The value of Name is less than Value. Not supported for text properties.
 	//
 	// LessThanOrEqualTo
 	//
-	// The specified resource in Name is less than or equal to the specified Value.
-	// Not supported for text-based properties.
+	// The value of Name is less than or equal to Value. Not supported for text
+	// properties.
 	//
 	// Contains
 	//
-	// Only supported for text-based properties. The word-list of the property contains
-	// the specified Value. A SearchExpression can include only one Contains operator.
+	// The value of Name contains the string Value. A SearchExpression can include
+	// only one Contains operator. Only supported for text properties.
 	//
-	// If you have specified a filter Value, the default is Equals.
+	// Exists
+	//
+	// The Name property exists.
+	//
+	// NotExists
+	//
+	// The Name property does not exist.
+	//
+	// In
+	//
+	// The value of Name is one of the comma delimited strings in Value. Only supported
+	// for text properties.
 	Operator *string `type:"string" enum:"Operator"`
 
-	// A value used with Resource and Operator to determine if objects satisfy the
-	// filter's condition. For numerical properties, Value must be an integer or
-	// floating-point decimal. For timestamp properties, Value must be an ISO 8601
-	// date-time string of the following format: YYYY-mm-dd'T'HH:MM:SS.
+	// A value used with Name and Operator to determine which resources satisfy
+	// the filter's condition. For numerical properties, Value must be an integer
+	// or floating-point decimal. For timestamp properties, Value must be an ISO
+	// 8601 date-time string of the following format: YYYY-mm-dd'T'HH:MM:SS.
 	Value *string `min:"1" type:"string"`
 }
 
@@ -27718,7 +27724,7 @@ func (s *FlowDefinitionSummary) SetFlowDefinitionStatus(v string) *FlowDefinitio
 type GetSearchSuggestionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Amazon SageMaker resource to Search for.
+	// The name of the Amazon SageMaker resource to search for.
 	//
 	// Resource is a required field
 	Resource *string `type:"string" required:"true" enum:"ResourceType"`
@@ -37040,22 +37046,16 @@ func (s *MonitoringStoppingCondition) SetMaxRuntimeInSeconds(v int64) *Monitorin
 	return s
 }
 
-// Defines a list of NestedFilters objects. To satisfy the conditions specified
-// in the NestedFilters call, a resource must satisfy the conditions of all
-// of the filters.
+// A list of nested Filter objects. A resource must satisfy the conditions of
+// all filters to be included in the results returned from the Search API.
 //
-// For example, you could define a NestedFilters using the training job's InputDataConfig
-// property to filter on Channel objects.
+// For example, to filter on a training job's InputDataConfig property with
+// a specific channel name and S3Uri prefix, define the following filters:
 //
-// A NestedFilters object contains multiple filters. For example, to find all
-// training jobs whose name contains train and that have cat/data in their S3Uri
-// (specified in InputDataConfig), you need to create a NestedFilters object
-// that specifies the InputDataConfig property with the following Filter objects:
+//    * '{Name:"InputDataConfig.ChannelName", "Operator":"Equals", "Value":"train"}',
 //
-//    * '{Name:"InputDataConfig.ChannelName", "Operator":"EQUALS", "Value":"train"}',
-//
-//    * '{Name:"InputDataConfig.DataSource.S3DataSource.S3Uri", "Operator":"CONTAINS",
-//    "Value":"cat/data"}'
+//    * '{Name:"InputDataConfig.DataSource.S3DataSource.S3Uri", "Operator":"Contains",
+//    "Value":"mybucket/catdata"}'
 type NestedFilters struct {
 	_ struct{} `type:"structure"`
 
@@ -38004,6 +38004,232 @@ func (s *ProcessingInput) SetS3Input(v *ProcessingS3Input) *ProcessingInput {
 	return s
 }
 
+// An Amazon SageMaker processing job that is used to analyze data and evaluate
+// models. For more information, see Process Data and Evaluate Models (https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html).
+type ProcessingJob struct {
+	_ struct{} `type:"structure"`
+
+	// Configuration to run a processing job in a specified container image.
+	AppSpecification *AppSpecification `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the AutoML job associated with this processing
+	// job.
+	AutoMLJobArn *string `min:"1" type:"string"`
+
+	// The time the processing job was created.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// Sets the environment variables in the Docker container.
+	Environment map[string]*string `type:"map"`
+
+	// A string, up to one KB in size, that contains metadata from the processing
+	// container when the processing job exits.
+	ExitMessage *string `type:"string"`
+
+	// Configuration for the experiment.
+	ExperimentConfig *ExperimentConfig `type:"structure"`
+
+	// A string, up to one KB in size, that contains the reason a processing job
+	// failed, if it failed.
+	FailureReason *string `type:"string"`
+
+	// The time the processing job was last modified.
+	LastModifiedTime *time.Time `type:"timestamp"`
+
+	// The ARN of a monitoring schedule for an endpoint associated with this processing
+	// job.
+	MonitoringScheduleArn *string `type:"string"`
+
+	// Networking options for a job, such as network traffic encryption between
+	// containers, whether to allow inbound and outbound network calls to and from
+	// containers, and the VPC subnets and security groups to use for VPC-enabled
+	// jobs.
+	NetworkConfig *NetworkConfig `type:"structure"`
+
+	// The time that the processing job ended.
+	ProcessingEndTime *time.Time `type:"timestamp"`
+
+	// For each input, data is downloaded from S3 into the processing container
+	// before the processing job begins running if "S3InputMode" is set to File.
+	ProcessingInputs []*ProcessingInput `type:"list"`
+
+	// The ARN of the processing job.
+	ProcessingJobArn *string `type:"string"`
+
+	// The name of the processing job.
+	ProcessingJobName *string `min:"1" type:"string"`
+
+	// The status of the processing job.
+	ProcessingJobStatus *string `type:"string" enum:"ProcessingJobStatus"`
+
+	// The output configuration for the processing job.
+	ProcessingOutputConfig *ProcessingOutputConfig `type:"structure"`
+
+	// Identifies the resources, ML compute instances, and ML storage volumes to
+	// deploy for a processing job. In distributed training, you specify more than
+	// one instance.
+	ProcessingResources *ProcessingResources `type:"structure"`
+
+	// The time that the processing job started.
+	ProcessingStartTime *time.Time `type:"timestamp"`
+
+	// The ARN of the role used to create the processing job.
+	RoleArn *string `min:"20" type:"string"`
+
+	// Specifies a time limit for how long the processing job is allowed to run.
+	StoppingCondition *ProcessingStoppingCondition `type:"structure"`
+
+	// An array of key-value pairs. For more information, see Using Cost Allocation
+	// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
+	// in the AWS Billing and Cost Management User Guide.
+	Tags []*Tag `type:"list"`
+
+	// The ARN of the training job associated with this processing job.
+	TrainingJobArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ProcessingJob) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProcessingJob) GoString() string {
+	return s.String()
+}
+
+// SetAppSpecification sets the AppSpecification field's value.
+func (s *ProcessingJob) SetAppSpecification(v *AppSpecification) *ProcessingJob {
+	s.AppSpecification = v
+	return s
+}
+
+// SetAutoMLJobArn sets the AutoMLJobArn field's value.
+func (s *ProcessingJob) SetAutoMLJobArn(v string) *ProcessingJob {
+	s.AutoMLJobArn = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *ProcessingJob) SetCreationTime(v time.Time) *ProcessingJob {
+	s.CreationTime = &v
+	return s
+}
+
+// SetEnvironment sets the Environment field's value.
+func (s *ProcessingJob) SetEnvironment(v map[string]*string) *ProcessingJob {
+	s.Environment = v
+	return s
+}
+
+// SetExitMessage sets the ExitMessage field's value.
+func (s *ProcessingJob) SetExitMessage(v string) *ProcessingJob {
+	s.ExitMessage = &v
+	return s
+}
+
+// SetExperimentConfig sets the ExperimentConfig field's value.
+func (s *ProcessingJob) SetExperimentConfig(v *ExperimentConfig) *ProcessingJob {
+	s.ExperimentConfig = v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *ProcessingJob) SetFailureReason(v string) *ProcessingJob {
+	s.FailureReason = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *ProcessingJob) SetLastModifiedTime(v time.Time) *ProcessingJob {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetMonitoringScheduleArn sets the MonitoringScheduleArn field's value.
+func (s *ProcessingJob) SetMonitoringScheduleArn(v string) *ProcessingJob {
+	s.MonitoringScheduleArn = &v
+	return s
+}
+
+// SetNetworkConfig sets the NetworkConfig field's value.
+func (s *ProcessingJob) SetNetworkConfig(v *NetworkConfig) *ProcessingJob {
+	s.NetworkConfig = v
+	return s
+}
+
+// SetProcessingEndTime sets the ProcessingEndTime field's value.
+func (s *ProcessingJob) SetProcessingEndTime(v time.Time) *ProcessingJob {
+	s.ProcessingEndTime = &v
+	return s
+}
+
+// SetProcessingInputs sets the ProcessingInputs field's value.
+func (s *ProcessingJob) SetProcessingInputs(v []*ProcessingInput) *ProcessingJob {
+	s.ProcessingInputs = v
+	return s
+}
+
+// SetProcessingJobArn sets the ProcessingJobArn field's value.
+func (s *ProcessingJob) SetProcessingJobArn(v string) *ProcessingJob {
+	s.ProcessingJobArn = &v
+	return s
+}
+
+// SetProcessingJobName sets the ProcessingJobName field's value.
+func (s *ProcessingJob) SetProcessingJobName(v string) *ProcessingJob {
+	s.ProcessingJobName = &v
+	return s
+}
+
+// SetProcessingJobStatus sets the ProcessingJobStatus field's value.
+func (s *ProcessingJob) SetProcessingJobStatus(v string) *ProcessingJob {
+	s.ProcessingJobStatus = &v
+	return s
+}
+
+// SetProcessingOutputConfig sets the ProcessingOutputConfig field's value.
+func (s *ProcessingJob) SetProcessingOutputConfig(v *ProcessingOutputConfig) *ProcessingJob {
+	s.ProcessingOutputConfig = v
+	return s
+}
+
+// SetProcessingResources sets the ProcessingResources field's value.
+func (s *ProcessingJob) SetProcessingResources(v *ProcessingResources) *ProcessingJob {
+	s.ProcessingResources = v
+	return s
+}
+
+// SetProcessingStartTime sets the ProcessingStartTime field's value.
+func (s *ProcessingJob) SetProcessingStartTime(v time.Time) *ProcessingJob {
+	s.ProcessingStartTime = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *ProcessingJob) SetRoleArn(v string) *ProcessingJob {
+	s.RoleArn = &v
+	return s
+}
+
+// SetStoppingCondition sets the StoppingCondition field's value.
+func (s *ProcessingJob) SetStoppingCondition(v *ProcessingStoppingCondition) *ProcessingJob {
+	s.StoppingCondition = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ProcessingJob) SetTags(v []*Tag) *ProcessingJob {
+	s.Tags = v
+	return s
+}
+
+// SetTrainingJobArn sets the TrainingJobArn field's value.
+func (s *ProcessingJob) SetTrainingJobArn(v string) *ProcessingJob {
+	s.TrainingJobArn = &v
+	return s
+}
+
 // Summary of information about a processing job.
 type ProcessingJobSummary struct {
 	_ struct{} `type:"structure"`
@@ -38279,7 +38505,7 @@ type ProcessingS3Input struct {
 	// LocalPath is a required field
 	LocalPath *string `type:"string" required:"true"`
 
-	// Whether to use Gzip compresion for Amazon S3 storage.
+	// Whether to use Gzip compression for Amazon S3 storage.
 	S3CompressionType *string `type:"string" enum:"ProcessingS3CompressionType"`
 
 	// Whether the data stored in Amazon S3 is FullyReplicated or ShardedByS3Key.
@@ -38295,7 +38521,7 @@ type ProcessingS3Input struct {
 	// S3DataType is a required field
 	S3DataType *string `type:"string" required:"true" enum:"ProcessingS3DataType"`
 
-	// Wether to use File or Pipe input mode. In File mode, Amazon SageMaker copies
+	// Whether to use File or Pipe input mode. In File mode, Amazon SageMaker copies
 	// the data from the input source onto the local Amazon Elastic Block Store
 	// (Amazon EBS) volumes before starting your training algorithm. This is the
 	// most commonly used input mode. In Pipe mode, Amazon SageMaker streams input
@@ -39936,13 +40162,12 @@ func (s *SearchExpression) SetSubExpressions(v []*SearchExpression) *SearchExpre
 type SearchInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of results to return in a SearchResponse.
+	// The maximum number of results to return.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// If more than MaxResults resource objects match the specified SearchExpression,
-	// the SearchResponse includes a NextToken. The NextToken can be passed to the
-	// next SearchRequest to continue retrieving results for the specified SearchExpression
-	// and Sort parameters.
+	// If more than MaxResults resources match the specified SearchExpression, the
+	// response includes a NextToken. The NextToken can be passed to the next SearchRequest
+	// to continue retrieving results.
 	NextToken *string `type:"string"`
 
 	// The name of the Amazon SageMaker resource to search for.
@@ -39950,8 +40175,8 @@ type SearchInput struct {
 	// Resource is a required field
 	Resource *string `type:"string" required:"true" enum:"ResourceType"`
 
-	// A Boolean conditional statement. Resource objects must satisfy this condition
-	// to be included in search results. You must provide at least one subexpression,
+	// A Boolean conditional statement. Resources must satisfy this condition to
+	// be included in search results. You must provide at least one subexpression,
 	// filter, or nested filter. The maximum number of recursive SubExpressions,
 	// NestedFilters, and Filters that can be included in a SearchExpression object
 	// is 50.
@@ -40044,7 +40269,7 @@ type SearchOutput struct {
 	// in the next request.
 	NextToken *string `type:"string"`
 
-	// A list of SearchResult objects.
+	// A list of SearchRecord objects.
 	Results []*SearchRecord `type:"list"`
 }
 
@@ -40070,20 +40295,20 @@ func (s *SearchOutput) SetResults(v []*SearchRecord) *SearchOutput {
 	return s
 }
 
-// An individual search result record that contains a single resource object.
+// A single resource returned as part of the Search API response.
 type SearchRecord struct {
 	_ struct{} `type:"structure"`
 
-	// A summary of the properties of an experiment.
+	// The properties of an experiment.
 	Experiment *Experiment `type:"structure"`
 
-	// A TrainingJob object that is returned as part of a Search request.
+	// The properties of a training job.
 	TrainingJob *TrainingJob `type:"structure"`
 
-	// A summary of the properties of a trial.
+	// The properties of a trial.
 	Trial *Trial `type:"structure"`
 
-	// A summary of the properties of a trial component.
+	// The properties of a trial component.
 	TrialComponent *TrialComponent `type:"structure"`
 }
 
@@ -42920,7 +43145,7 @@ func (s *TransformS3DataSource) SetS3Uri(v string) *TransformS3DataSource {
 	return s
 }
 
-// A summary of the properties of a trial as returned by the Search API.
+// The properties of a trial as returned by the Search API.
 type Trial struct {
 	_ struct{} `type:"structure"`
 
@@ -43039,8 +43264,7 @@ func (s *Trial) SetTrialName(v string) *Trial {
 	return s
 }
 
-// A summary of the properties of a trial component as returned by the Search
-// API.
+// The properties of a trial component as returned by the Search API.
 type TrialComponent struct {
 	_ struct{} `type:"structure"`
 
@@ -43082,10 +43306,10 @@ type TrialComponent struct {
 	// not have any parents.
 	Parents []*Parent `type:"list"`
 
-	// The source of the trial component.
+	// The Amazon Resource Name (ARN) and job type of the source of the component.
 	Source *TrialComponentSource `type:"structure"`
 
-	// The source of the trial component.>
+	// Details of the source of the component.
 	SourceDetail *TrialComponentSourceDetail `type:"structure"`
 
 	// When the component started.
@@ -43431,7 +43655,7 @@ type TrialComponentSimpleSummary struct {
 	// The name of the trial component.
 	TrialComponentName *string `min:"1" type:"string"`
 
-	// The source of the trial component.
+	// The Amazon Resource Name (ARN) and job type of the source of a trial component.
 	TrialComponentSource *TrialComponentSource `type:"structure"`
 }
 
@@ -43475,11 +43699,11 @@ func (s *TrialComponentSimpleSummary) SetTrialComponentSource(v *TrialComponentS
 	return s
 }
 
-// The source of the trial component.
+// The Amazon Resource Name (ARN) and job type of the source of a trial component.
 type TrialComponentSource struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the source.
+	// The source ARN.
 	//
 	// SourceArn is a required field
 	SourceArn *string `type:"string" required:"true"`
@@ -43510,14 +43734,18 @@ func (s *TrialComponentSource) SetSourceType(v string) *TrialComponentSource {
 	return s
 }
 
-// Detailed information about the source of a trial component.
+// Detailed information about the source of a trial component. Either ProcessingJob
+// or TrainingJob is returned.
 type TrialComponentSourceDetail struct {
 	_ struct{} `type:"structure"`
+
+	// Information about a processing job that's the source of a trial component.
+	ProcessingJob *ProcessingJob `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the source.
 	SourceArn *string `type:"string"`
 
-	// Contains information about a training job.
+	// Information about a training job that's the source of a trial component.
 	TrainingJob *TrainingJob `type:"structure"`
 }
 
@@ -43529,6 +43757,12 @@ func (s TrialComponentSourceDetail) String() string {
 // GoString returns the string representation
 func (s TrialComponentSourceDetail) GoString() string {
 	return s.String()
+}
+
+// SetProcessingJob sets the ProcessingJob field's value.
+func (s *TrialComponentSourceDetail) SetProcessingJob(v *ProcessingJob) *TrialComponentSourceDetail {
+	s.ProcessingJob = v
+	return s
 }
 
 // SetSourceArn sets the SourceArn field's value.
@@ -43618,7 +43852,7 @@ type TrialComponentSummary struct {
 	// The name of the trial component.
 	TrialComponentName *string `min:"1" type:"string"`
 
-	// The source of the trial component.
+	// The Amazon Resource Name (ARN) and job type of the source of a trial component.
 	TrialComponentSource *TrialComponentSource `type:"structure"`
 }
 
@@ -46435,6 +46669,9 @@ const (
 
 	// FrameworkXgboost is a Framework enum value
 	FrameworkXgboost = "XGBOOST"
+
+	// FrameworkTflite is a Framework enum value
+	FrameworkTflite = "TFLITE"
 )
 
 const (
@@ -47661,6 +47898,21 @@ const (
 
 	// TrainingInstanceTypeMlC518xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+
+	// TrainingInstanceTypeMlC5nXlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5nXlarge = "ml.c5n.xlarge"
+
+	// TrainingInstanceTypeMlC5n2xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n2xlarge = "ml.c5n.2xlarge"
+
+	// TrainingInstanceTypeMlC5n4xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n4xlarge = "ml.c5n.4xlarge"
+
+	// TrainingInstanceTypeMlC5n9xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n9xlarge = "ml.c5n.9xlarge"
+
+	// TrainingInstanceTypeMlC5n18xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n18xlarge = "ml.c5n.18xlarge"
 )
 
 const (
@@ -47808,6 +48060,12 @@ const (
 
 	// TrialComponentPrimaryStatusFailed is a TrialComponentPrimaryStatus enum value
 	TrialComponentPrimaryStatusFailed = "Failed"
+
+	// TrialComponentPrimaryStatusStopping is a TrialComponentPrimaryStatus enum value
+	TrialComponentPrimaryStatusStopping = "Stopping"
+
+	// TrialComponentPrimaryStatusStopped is a TrialComponentPrimaryStatus enum value
+	TrialComponentPrimaryStatusStopped = "Stopped"
 )
 
 const (

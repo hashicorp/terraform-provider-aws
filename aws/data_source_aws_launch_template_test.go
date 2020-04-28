@@ -103,6 +103,41 @@ func TestAccAWSLaunchTemplateDataSource_metadataOptions(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplateDataSource_associatePublicIPAddress(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_launch_template.test"
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_associatePublicIpAddress(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.associate_public_ip_address", resourceName, "network_interfaces.0.associate_public_ip_address"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_associatePublicIpAddress(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.associate_public_ip_address", resourceName, "network_interfaces.0.associate_public_ip_address"),
+				),
+			},
+			{
+				Config: testAccAWSLaunchTemplateDataSourceConfig_associatePublicIpAddress(rName, "null"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.#", resourceName, "network_interfaces.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "network_interfaces.0.associate_public_ip_address", resourceName, "network_interfaces.0.associate_public_ip_address"),
+				),
+			},
+		},
+	})
+}
+
 func testAccAWSLaunchTemplateDataSourceConfig_Basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_launch_template" "test" {
@@ -165,4 +200,20 @@ data "aws_launch_template" "test" {
   name = aws_launch_template.test.name
 }
 `, rName)
+}
+
+func testAccAWSLaunchTemplateDataSourceConfig_associatePublicIpAddress(rName, associatePublicIPAddress string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  network_interfaces {
+	associate_public_ip_address = %[2]s
+  }
+}
+
+data "aws_launch_template" "test" {
+  name = aws_launch_template.test.name
+}
+`, rName, associatePublicIPAddress)
 }

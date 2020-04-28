@@ -60,7 +60,7 @@ The given filters must match exactly one VPC endpoint service whose data will be
 * `service` - (Optional) The common name of an AWS service (e.g. `s3`).
 * `service_name` - (Optional) The service name that is specified when creating a VPC endpoint. For AWS services the service name is usually in the form `com.amazonaws.<region>.<service>` (the SageMaker Notebook service is an exception to this rule, the service name is in the form `aws.sagemaker.<region>.notebook`).
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
+* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired VPC Endpoint Service.
 
 ~> **NOTE:** Specifying `service` will not work for non-AWS services or AWS services that don't follow the standard `service_name` pattern of `com.amazonaws.<region>.<service>`.
 
@@ -83,5 +83,5 @@ In addition to all arguments above, the following attributes are exported:
 * `private_dns_name` - The private DNS name for the service.
 * `service_id` - The ID of the endpoint service.
 * `service_type` - The service type, `Gateway` or `Interface`.
-* `tags` - A mapping of tags assigned to the resource.
+* `tags` - A map of tags assigned to the resource.
 * `vpc_endpoint_policy_supported` - Whether or not the service supports endpoint policies - `true` or `false`.

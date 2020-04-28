@@ -1506,6 +1506,92 @@ func (c *IoTEvents) UpdateInputWithContext(ctx aws.Context, input *UpdateInputIn
 	return out, req.Send()
 }
 
+const opVerifyResourcesExistForTagris = "VerifyResourcesExistForTagris"
+
+// VerifyResourcesExistForTagrisRequest generates a "aws/request.Request" representing the
+// client's request for the VerifyResourcesExistForTagris operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See VerifyResourcesExistForTagris for more information on using the VerifyResourcesExistForTagris
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the VerifyResourcesExistForTagrisRequest method.
+//    req, resp := client.VerifyResourcesExistForTagrisRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/VerifyResourcesExistForTagris
+func (c *IoTEvents) VerifyResourcesExistForTagrisRequest(input *VerifyResourcesExistForTagrisInput) (req *request.Request, output *VerifyResourcesExistForTagrisOutput) {
+	op := &request.Operation{
+		Name:       opVerifyResourcesExistForTagris,
+		HTTPMethod: "GET",
+		HTTPPath:   "/internal/tags/resource-status",
+	}
+
+	if input == nil {
+		input = &VerifyResourcesExistForTagrisInput{}
+	}
+
+	output = &VerifyResourcesExistForTagrisOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// VerifyResourcesExistForTagris API operation for AWS IoT Events.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT Events's
+// API operation VerifyResourcesExistForTagris for usage and error information.
+//
+// Returned Error Types:
+//   * TagrisAccessDeniedException
+//
+//   * TagrisInternalServiceException
+//
+//   * TagrisInvalidArnException
+//
+//   * TagrisInvalidParameterException
+//
+//   * TagrisPartialResourcesExistResultsException
+//
+//   * TagrisThrottledException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/iotevents-2018-07-27/VerifyResourcesExistForTagris
+func (c *IoTEvents) VerifyResourcesExistForTagris(input *VerifyResourcesExistForTagrisInput) (*VerifyResourcesExistForTagrisOutput, error) {
+	req, out := c.VerifyResourcesExistForTagrisRequest(input)
+	return out, req.Send()
+}
+
+// VerifyResourcesExistForTagrisWithContext is the same as VerifyResourcesExistForTagris with the addition of
+// the ability to pass a context and additional request options.
+//
+// See VerifyResourcesExistForTagris for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoTEvents) VerifyResourcesExistForTagrisWithContext(ctx aws.Context, input *VerifyResourcesExistForTagrisInput, opts ...request.Option) (*VerifyResourcesExistForTagrisOutput, error) {
+	req, out := c.VerifyResourcesExistForTagrisRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // Sends an AWS IoT Events input, passing in information about the detector
 // model instance and the event that triggered the action.
 type Action struct {
@@ -1515,6 +1601,10 @@ type Action struct {
 	//
 	// InputName is a required field
 	InputName *string `locationName:"inputName" min:"1" type:"string" required:"true"`
+
+	// You can configure the action payload when you send a message to an AWS IoT
+	// Events input.
+	Payload *Payload `locationName:"payload" type:"structure"`
 }
 
 // String returns the string representation
@@ -1536,6 +1626,11 @@ func (s *Action) Validate() error {
 	if s.InputName != nil && len(*s.InputName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("InputName", 1))
 	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -1549,6 +1644,12 @@ func (s *Action) SetInputName(v string) *Action {
 	return s
 }
 
+// SetPayload sets the Payload field's value.
+func (s *Action) SetPayload(v *Payload) *Action {
+	s.Payload = v
+	return s
+}
+
 // An action to be performed when the condition is TRUE.
 type ActionData struct {
 	_ struct{} `type:"structure"`
@@ -1556,13 +1657,35 @@ type ActionData struct {
 	// Information needed to clear the timer.
 	ClearTimer *ClearTimerAction `locationName:"clearTimer" type:"structure"`
 
+	// Writes to the DynamoDB table that you created. The default action payload
+	// contains all attribute-value pairs that have the information about the detector
+	// model instance and the event that triggered the action. You can also customize
+	// the payload (https://docs.aws.amazon.com/iotevents/latest/apireference/API_Payload.html).
+	// One column of the DynamoDB table receives all attribute-value pairs in the
+	// payload that you specify. For more information, see Actions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-event-actions.html)
+	// in AWS IoT Events Developer Guide.
+	DynamoDB *DynamoDBAction `locationName:"dynamoDB" type:"structure"`
+
+	// Writes to the DynamoDB table that you created. The default action payload
+	// contains all attribute-value pairs that have the information about the detector
+	// model instance and the event that triggered the action. You can also customize
+	// the payload (https://docs.aws.amazon.com/iotevents/latest/apireference/API_Payload.html).
+	// A separate column of the DynamoDB table receives one attribute-value pair
+	// in the payload that you specify. For more information, see Actions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-event-actions.html)
+	// in AWS IoT Events Developer Guide.
+	DynamoDBv2 *DynamoDBv2Action `locationName:"dynamoDBv2" type:"structure"`
+
 	// Sends information about the detector model instance and the event that triggered
 	// the action to an Amazon Kinesis Data Firehose delivery stream.
 	Firehose *FirehoseAction `locationName:"firehose" type:"structure"`
 
-	// Sends an AWS IoT Events input, passing in information about the detector
-	// model instance and the event that triggered the action.
+	// Sends AWS IoT Events input, which passes information about the detector model
+	// instance and the event that triggered the action.
 	IotEvents *Action `locationName:"iotEvents" type:"structure"`
+
+	// Sends information about the detector model instance and the event that triggered
+	// the action to an AWS IoT SiteWise asset property.
+	IotSiteWise *IotSiteWiseAction `locationName:"iotSiteWise" type:"structure"`
 
 	// Publishes an MQTT message with the given topic to the AWS IoT message broker.
 	IotTopicPublish *IotTopicPublishAction `locationName:"iotTopicPublish" type:"structure"`
@@ -1606,6 +1729,16 @@ func (s *ActionData) Validate() error {
 			invalidParams.AddNested("ClearTimer", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.DynamoDB != nil {
+		if err := s.DynamoDB.Validate(); err != nil {
+			invalidParams.AddNested("DynamoDB", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DynamoDBv2 != nil {
+		if err := s.DynamoDBv2.Validate(); err != nil {
+			invalidParams.AddNested("DynamoDBv2", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.Firehose != nil {
 		if err := s.Firehose.Validate(); err != nil {
 			invalidParams.AddNested("Firehose", err.(request.ErrInvalidParams))
@@ -1614,6 +1747,11 @@ func (s *ActionData) Validate() error {
 	if s.IotEvents != nil {
 		if err := s.IotEvents.Validate(); err != nil {
 			invalidParams.AddNested("IotEvents", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.IotSiteWise != nil {
+		if err := s.IotSiteWise.Validate(); err != nil {
+			invalidParams.AddNested("IotSiteWise", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.IotTopicPublish != nil {
@@ -1664,6 +1802,18 @@ func (s *ActionData) SetClearTimer(v *ClearTimerAction) *ActionData {
 	return s
 }
 
+// SetDynamoDB sets the DynamoDB field's value.
+func (s *ActionData) SetDynamoDB(v *DynamoDBAction) *ActionData {
+	s.DynamoDB = v
+	return s
+}
+
+// SetDynamoDBv2 sets the DynamoDBv2 field's value.
+func (s *ActionData) SetDynamoDBv2(v *DynamoDBv2Action) *ActionData {
+	s.DynamoDBv2 = v
+	return s
+}
+
 // SetFirehose sets the Firehose field's value.
 func (s *ActionData) SetFirehose(v *FirehoseAction) *ActionData {
 	s.Firehose = v
@@ -1673,6 +1823,12 @@ func (s *ActionData) SetFirehose(v *FirehoseAction) *ActionData {
 // SetIotEvents sets the IotEvents field's value.
 func (s *ActionData) SetIotEvents(v *Action) *ActionData {
 	s.IotEvents = v
+	return s
+}
+
+// SetIotSiteWise sets the IotSiteWise field's value.
+func (s *ActionData) SetIotSiteWise(v *IotSiteWiseAction) *ActionData {
+	s.IotSiteWise = v
 	return s
 }
 
@@ -1715,6 +1871,211 @@ func (s *ActionData) SetSns(v *SNSTopicPublishAction) *ActionData {
 // SetSqs sets the Sqs field's value.
 func (s *ActionData) SetSqs(v *SqsAction) *ActionData {
 	s.Sqs = v
+	return s
+}
+
+// A structure that contains timestamp information. For more information, see
+// TimeInNanos (https://docs.aws.amazon.com/iot-sitewise/latest/APIReference/API_TimeInNanos.html)
+// in the AWS IoT SiteWise API Reference.
+//
+// For parameters that are string data type, you can specify the following options:
+//
+//    * Use a string. For example, the timeInSeconds value can be '1586400675'.
+//
+//    * Use an expression. For example, the timeInSeconds value can be '${$input.TemperatureInput.sensorData.timestamp/1000}'.
+//    For more information, see Expressions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-expressions.html)
+//    in the AWS IoT Events Developer Guide.
+type AssetPropertyTimestamp struct {
+	_ struct{} `type:"structure"`
+
+	// The nanosecond offset converted from timeInSeconds. The valid range is between
+	// 0-999999999. You can also specify an expression.
+	OffsetInNanos *string `locationName:"offsetInNanos" type:"string"`
+
+	// The timestamp, in seconds, in the Unix epoch format. The valid range is between
+	// 1-31556889864403199. You can also specify an expression.
+	//
+	// TimeInSeconds is a required field
+	TimeInSeconds *string `locationName:"timeInSeconds" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssetPropertyTimestamp) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssetPropertyTimestamp) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssetPropertyTimestamp) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssetPropertyTimestamp"}
+	if s.TimeInSeconds == nil {
+		invalidParams.Add(request.NewErrParamRequired("TimeInSeconds"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOffsetInNanos sets the OffsetInNanos field's value.
+func (s *AssetPropertyTimestamp) SetOffsetInNanos(v string) *AssetPropertyTimestamp {
+	s.OffsetInNanos = &v
+	return s
+}
+
+// SetTimeInSeconds sets the TimeInSeconds field's value.
+func (s *AssetPropertyTimestamp) SetTimeInSeconds(v string) *AssetPropertyTimestamp {
+	s.TimeInSeconds = &v
+	return s
+}
+
+// A structure that contains value information. For more information, see AssetPropertyValue
+// (https://docs.aws.amazon.com/iot-sitewise/latest/APIReference/API_AssetPropertyValue.html)
+// in the AWS IoT SiteWise API Reference.
+//
+// For parameters that are string data type, you can specify the following options:
+//
+//    * Use a string. For example, the quality value can be 'GOOD'.
+//
+//    * Use an expression. For example, the quality value can be $input.TemperatureInput.sensorData.quality
+//    . For more information, see Expressions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-expressions.html)
+//    in the AWS IoT Events Developer Guide.
+type AssetPropertyValue struct {
+	_ struct{} `type:"structure"`
+
+	// The quality of the asset property value. The value must be GOOD, BAD, or
+	// UNCERTAIN. You can also specify an expression.
+	Quality *string `locationName:"quality" type:"string"`
+
+	// The timestamp associated with the asset property value. The default is the
+	// current event time.
+	Timestamp *AssetPropertyTimestamp `locationName:"timestamp" type:"structure"`
+
+	// The value to send to an asset property.
+	//
+	// Value is a required field
+	Value *AssetPropertyVariant `locationName:"value" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AssetPropertyValue) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssetPropertyValue) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssetPropertyValue) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssetPropertyValue"}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+	if s.Timestamp != nil {
+		if err := s.Timestamp.Validate(); err != nil {
+			invalidParams.AddNested("Timestamp", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetQuality sets the Quality field's value.
+func (s *AssetPropertyValue) SetQuality(v string) *AssetPropertyValue {
+	s.Quality = &v
+	return s
+}
+
+// SetTimestamp sets the Timestamp field's value.
+func (s *AssetPropertyValue) SetTimestamp(v *AssetPropertyTimestamp) *AssetPropertyValue {
+	s.Timestamp = v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *AssetPropertyValue) SetValue(v *AssetPropertyVariant) *AssetPropertyValue {
+	s.Value = v
+	return s
+}
+
+// A structure that contains an asset property value. For more information,
+// see Variant (https://docs.aws.amazon.com/iot-sitewise/latest/APIReference/API_Variant.html)
+// in the AWS IoT SiteWise API Reference.
+//
+// You must specify one of the following value types, depending on the dataType
+// of the specified asset property. For more information, see AssetProperty
+// (https://docs.aws.amazon.com/iot-sitewise/latest/APIReference/API_AssetProperty.html)
+// in the AWS IoT SiteWise API Reference.
+//
+// For parameters that are string data type, you can specify the following options:
+//
+//    * Use a string. For example, the doubleValue value can be '47.9'.
+//
+//    * Use an expression. For example, the doubleValue value can be $input.TemperatureInput.sensorData.temperature.
+//    For more information, see Expressions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-expressions.html)
+//    in the AWS IoT Events Developer Guide.
+type AssetPropertyVariant struct {
+	_ struct{} `type:"structure"`
+
+	// The asset property value is a Boolean value that must be TRUE or FALSE. You
+	// can also specify an expression. If you use an expression, the evaluated result
+	// should be a Boolean value.
+	BooleanValue *string `locationName:"booleanValue" type:"string"`
+
+	// The asset property value is a double. You can also specify an expression.
+	// If you use an expression, the evaluated result should be a double.
+	DoubleValue *string `locationName:"doubleValue" type:"string"`
+
+	// The asset property value is an integer. You can also specify an expression.
+	// If you use an expression, the evaluated result should be an integer.
+	IntegerValue *string `locationName:"integerValue" type:"string"`
+
+	// The asset property value is a string. You can also specify an expression.
+	// If you use an expression, the evaluated result should be a string.
+	StringValue *string `locationName:"stringValue" type:"string"`
+}
+
+// String returns the string representation
+func (s AssetPropertyVariant) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssetPropertyVariant) GoString() string {
+	return s.String()
+}
+
+// SetBooleanValue sets the BooleanValue field's value.
+func (s *AssetPropertyVariant) SetBooleanValue(v string) *AssetPropertyVariant {
+	s.BooleanValue = &v
+	return s
+}
+
+// SetDoubleValue sets the DoubleValue field's value.
+func (s *AssetPropertyVariant) SetDoubleValue(v string) *AssetPropertyVariant {
+	s.DoubleValue = &v
+	return s
+}
+
+// SetIntegerValue sets the IntegerValue field's value.
+func (s *AssetPropertyVariant) SetIntegerValue(v string) *AssetPropertyVariant {
+	s.IntegerValue = &v
+	return s
+}
+
+// SetStringValue sets the StringValue field's value.
+func (s *AssetPropertyVariant) SetStringValue(v string) *AssetPropertyVariant {
+	s.StringValue = &v
 	return s
 }
 
@@ -2478,11 +2839,15 @@ type DetectorModelConfiguration struct {
 	// are executed.
 	EvaluationMethod *string `locationName:"evaluationMethod" type:"string" enum:"EvaluationMethod"`
 
-	// The input attribute key used to identify a device or system to create a detector
-	// (an instance of the detector model) and then to route each input received
-	// to the appropriate detector (instance). This parameter uses a JSON-path expression
-	// in the message payload of each input to specify the attribute-value pair
-	// that is used to identify the device associated with the input.
+	// The value used to identify a detector instance. When a device or system sends
+	// input, a new detector instance with a unique key value is created. AWS IoT
+	// Events can continue to route input to its corresponding detector instance
+	// based on this identifying information.
+	//
+	// This parameter uses a JSON-path expression to select the attribute-value
+	// pair in the message payload that is used for identification. To route the
+	// message to the correct detector instance, the device must send a message
+	// payload that contains the same attribute-value.
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The time the detector model was last updated.
@@ -2766,6 +3131,267 @@ func (s *DetectorModelVersionSummary) SetStatus(v string) *DetectorModelVersionS
 	return s
 }
 
+// Defines an action to write to the Amazon DynamoDB table that you created.
+// The standard action payload contains all attribute-value pairs that have
+// the information about the detector model instance and the event that triggered
+// the action. You can also customize the payload (https://docs.aws.amazon.com/iotevents/latest/apireference/API_Payload.html).
+// One column of the DynamoDB table receives all attribute-value pairs in the
+// payload that you specify.
+//
+// The tableName and hashKeyField values must match the table name and the partition
+// key of the DynamoDB table.
+//
+// If the DynamoDB table also has a sort key, you must specify rangeKeyField.
+// The rangeKeyField value must match the sort key.
+//
+// The hashKeyValue and rangeKeyValue use substitution templates. These templates
+// provide data at runtime. The syntax is ${sql-expression}.
+//
+// You can use expressions for parameters that are string data type. For more
+// information, see Expressions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-expressions.html)
+// in the AWS IoT Events Developer Guide.
+//
+// If the defined payload type is a string, DynamoDBAction writes non-JSON data
+// to the DynamoDB table as binary data. The DynamoDB console displays the data
+// as Base64-encoded text. The payloadField is <payload-field>_raw.
+type DynamoDBAction struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the hash key (also called the partition key).
+	//
+	// HashKeyField is a required field
+	HashKeyField *string `locationName:"hashKeyField" type:"string" required:"true"`
+
+	// The data type for the hash key (also called the partition key). You can specify
+	// the following values:
+	//
+	//    * STRING - The hash key is a string.
+	//
+	//    * NUMBER - The hash key is a number.
+	//
+	// If you don't specify hashKeyType, the default value is STRING.
+	HashKeyType *string `locationName:"hashKeyType" type:"string"`
+
+	// The value of the hash key (also called the partition key).
+	//
+	// HashKeyValue is a required field
+	HashKeyValue *string `locationName:"hashKeyValue" type:"string" required:"true"`
+
+	// The type of operation to perform. You can specify the following values:
+	//
+	//    * INSERT - Insert data as a new item into the DynamoDB table. This item
+	//    uses the specified hash key as a partition key. If you specified a range
+	//    key, the item uses the range key as a sort key.
+	//
+	//    * UPDATE - Update an existing item of the DynamoDB table with new data.
+	//    This item's partition key must match the specified hash key. If you specified
+	//    a range key, the range key must match the item's sort key.
+	//
+	//    * DELETE - Delete an existing item of the DynamoDB table. This item's
+	//    partition key must match the specified hash key. If you specified a range
+	//    key, the range key must match the item's sort key.
+	//
+	// If you don't specify this parameter, AWS IoT Events triggers the INSERT operation.
+	Operation *string `locationName:"operation" type:"string"`
+
+	// Information needed to configure the payload.
+	//
+	// By default, AWS IoT Events generates a standard payload in JSON for any action.
+	// This action payload contains all attribute-value pairs that have the information
+	// about the detector model instance and the event triggered the action. To
+	// configure the action payload, you can use contentExpression.
+	Payload *Payload `locationName:"payload" type:"structure"`
+
+	// The name of the DynamoDB column that receives the action payload.
+	//
+	// If you don't specify this parameter, the name of the DynamoDB column is payload.
+	PayloadField *string `locationName:"payloadField" type:"string"`
+
+	// The name of the range key (also called the sort key).
+	RangeKeyField *string `locationName:"rangeKeyField" type:"string"`
+
+	// The data type for the range key (also called the sort key), You can specify
+	// the following values:
+	//
+	//    * STRING - The range key is a string.
+	//
+	//    * NUMBER - The range key is number.
+	//
+	// If you don't specify rangeKeyField, the default value is STRING.
+	RangeKeyType *string `locationName:"rangeKeyType" type:"string"`
+
+	// The value of the range key (also called the sort key).
+	RangeKeyValue *string `locationName:"rangeKeyValue" type:"string"`
+
+	// The name of the DynamoDB table.
+	//
+	// TableName is a required field
+	TableName *string `locationName:"tableName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DynamoDBAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DynamoDBAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DynamoDBAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DynamoDBAction"}
+	if s.HashKeyField == nil {
+		invalidParams.Add(request.NewErrParamRequired("HashKeyField"))
+	}
+	if s.HashKeyValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("HashKeyValue"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetHashKeyField sets the HashKeyField field's value.
+func (s *DynamoDBAction) SetHashKeyField(v string) *DynamoDBAction {
+	s.HashKeyField = &v
+	return s
+}
+
+// SetHashKeyType sets the HashKeyType field's value.
+func (s *DynamoDBAction) SetHashKeyType(v string) *DynamoDBAction {
+	s.HashKeyType = &v
+	return s
+}
+
+// SetHashKeyValue sets the HashKeyValue field's value.
+func (s *DynamoDBAction) SetHashKeyValue(v string) *DynamoDBAction {
+	s.HashKeyValue = &v
+	return s
+}
+
+// SetOperation sets the Operation field's value.
+func (s *DynamoDBAction) SetOperation(v string) *DynamoDBAction {
+	s.Operation = &v
+	return s
+}
+
+// SetPayload sets the Payload field's value.
+func (s *DynamoDBAction) SetPayload(v *Payload) *DynamoDBAction {
+	s.Payload = v
+	return s
+}
+
+// SetPayloadField sets the PayloadField field's value.
+func (s *DynamoDBAction) SetPayloadField(v string) *DynamoDBAction {
+	s.PayloadField = &v
+	return s
+}
+
+// SetRangeKeyField sets the RangeKeyField field's value.
+func (s *DynamoDBAction) SetRangeKeyField(v string) *DynamoDBAction {
+	s.RangeKeyField = &v
+	return s
+}
+
+// SetRangeKeyType sets the RangeKeyType field's value.
+func (s *DynamoDBAction) SetRangeKeyType(v string) *DynamoDBAction {
+	s.RangeKeyType = &v
+	return s
+}
+
+// SetRangeKeyValue sets the RangeKeyValue field's value.
+func (s *DynamoDBAction) SetRangeKeyValue(v string) *DynamoDBAction {
+	s.RangeKeyValue = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DynamoDBAction) SetTableName(v string) *DynamoDBAction {
+	s.TableName = &v
+	return s
+}
+
+// Defines an action to write to the Amazon DynamoDB table that you created.
+// The default action payload contains all attribute-value pairs that have the
+// information about the detector model instance and the event that triggered
+// the action. You can also customize the payload (https://docs.aws.amazon.com/iotevents/latest/apireference/API_Payload.html).
+// A separate column of the DynamoDB table receives one attribute-value pair
+// in the payload that you specify.
+//
+// The type value for Payload must be JSON.
+//
+// You can use expressions for parameters that are strings. For more information,
+// see Expressions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-expressions.html)
+// in the AWS IoT Events Developer Guide.
+type DynamoDBv2Action struct {
+	_ struct{} `type:"structure"`
+
+	// Information needed to configure the payload.
+	//
+	// By default, AWS IoT Events generates a standard payload in JSON for any action.
+	// This action payload contains all attribute-value pairs that have the information
+	// about the detector model instance and the event triggered the action. To
+	// configure the action payload, you can use contentExpression.
+	Payload *Payload `locationName:"payload" type:"structure"`
+
+	// The name of the DynamoDB table.
+	//
+	// TableName is a required field
+	TableName *string `locationName:"tableName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DynamoDBv2Action) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DynamoDBv2Action) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DynamoDBv2Action) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DynamoDBv2Action"}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPayload sets the Payload field's value.
+func (s *DynamoDBv2Action) SetPayload(v *Payload) *DynamoDBv2Action {
+	s.Payload = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DynamoDBv2Action) SetTableName(v string) *DynamoDBv2Action {
+	s.TableName = &v
+	return s
+}
+
 // Specifies the actions to be performed when the condition evaluates to TRUE.
 type Event struct {
 	_ struct{} `type:"structure"`
@@ -2845,6 +3471,10 @@ type FirehoseAction struct {
 	// DeliveryStreamName is a required field
 	DeliveryStreamName *string `locationName:"deliveryStreamName" type:"string" required:"true"`
 
+	// You can configure the action payload when you send a message to an Amazon
+	// Kinesis Data Firehose delivery stream.
+	Payload *Payload `locationName:"payload" type:"structure"`
+
 	// A character separator that is used to separate records written to the Kinesis
 	// Data Firehose delivery stream. Valid values are: '\n' (newline), '\t' (tab),
 	// '\r\n' (Windows newline), ',' (comma).
@@ -2867,6 +3497,11 @@ func (s *FirehoseAction) Validate() error {
 	if s.DeliveryStreamName == nil {
 		invalidParams.Add(request.NewErrParamRequired("DeliveryStreamName"))
 	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2877,6 +3512,12 @@ func (s *FirehoseAction) Validate() error {
 // SetDeliveryStreamName sets the DeliveryStreamName field's value.
 func (s *FirehoseAction) SetDeliveryStreamName(v string) *FirehoseAction {
 	s.DeliveryStreamName = &v
+	return s
+}
+
+// SetPayload sets the Payload field's value.
+func (s *FirehoseAction) SetPayload(v *Payload) *FirehoseAction {
+	s.Payload = v
 	return s
 }
 
@@ -3237,6 +3878,101 @@ func (s *InvalidRequestException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Sends information about the detector model instance and the event that triggered
+// the action to a specified asset property in AWS IoT SiteWise.
+//
+// You must specify either propertyAlias or both assetId and propertyId to identify
+// the target asset property in AWS IoT SiteWise.
+//
+// For parameters that are string data type, you can specify the following options:
+//
+//    * Use a string. For example, the propertyAlias value can be '/company/windfarm/3/turbine/7/temperature'.
+//
+//    * Use an expression. For example, the propertyAlias value can be 'company/windfarm/${$input.TemperatureInput.sensorData.windfarmID}/turbine/${$input.TemperatureInput.sensorData.turbineID}/temperature'.
+//    For more information, see Expressions (https://docs.aws.amazon.com/iotevents/latest/developerguide/iotevents-expressions.html)
+//    in the AWS IoT Events Developer Guide.
+type IotSiteWiseAction struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the asset that has the specified property. You can specify an expression.
+	AssetId *string `locationName:"assetId" type:"string"`
+
+	// A unique identifier for this entry. You can use the entry ID to track which
+	// data entry causes an error in case of failure. The default is a new unique
+	// identifier. You can also specify an expression.
+	EntryId *string `locationName:"entryId" type:"string"`
+
+	// The alias of the asset property. You can also specify an expression.
+	PropertyAlias *string `locationName:"propertyAlias" type:"string"`
+
+	// The ID of the asset property. You can specify an expression.
+	PropertyId *string `locationName:"propertyId" type:"string"`
+
+	// The value to send to the asset property. This value contains timestamp, quality,
+	// and value (TQV) information.
+	//
+	// PropertyValue is a required field
+	PropertyValue *AssetPropertyValue `locationName:"propertyValue" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s IotSiteWiseAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IotSiteWiseAction) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *IotSiteWiseAction) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "IotSiteWiseAction"}
+	if s.PropertyValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("PropertyValue"))
+	}
+	if s.PropertyValue != nil {
+		if err := s.PropertyValue.Validate(); err != nil {
+			invalidParams.AddNested("PropertyValue", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAssetId sets the AssetId field's value.
+func (s *IotSiteWiseAction) SetAssetId(v string) *IotSiteWiseAction {
+	s.AssetId = &v
+	return s
+}
+
+// SetEntryId sets the EntryId field's value.
+func (s *IotSiteWiseAction) SetEntryId(v string) *IotSiteWiseAction {
+	s.EntryId = &v
+	return s
+}
+
+// SetPropertyAlias sets the PropertyAlias field's value.
+func (s *IotSiteWiseAction) SetPropertyAlias(v string) *IotSiteWiseAction {
+	s.PropertyAlias = &v
+	return s
+}
+
+// SetPropertyId sets the PropertyId field's value.
+func (s *IotSiteWiseAction) SetPropertyId(v string) *IotSiteWiseAction {
+	s.PropertyId = &v
+	return s
+}
+
+// SetPropertyValue sets the PropertyValue field's value.
+func (s *IotSiteWiseAction) SetPropertyValue(v *AssetPropertyValue) *IotSiteWiseAction {
+	s.PropertyValue = v
+	return s
+}
+
 // Information required to publish the MQTT message through the AWS IoT message
 // broker.
 type IotTopicPublishAction struct {
@@ -3248,6 +3984,10 @@ type IotTopicPublishAction struct {
 	//
 	// MqttTopic is a required field
 	MqttTopic *string `locationName:"mqttTopic" min:"1" type:"string" required:"true"`
+
+	// You can configure the action payload when you publish a message to an AWS
+	// IoT Core topic.
+	Payload *Payload `locationName:"payload" type:"structure"`
 }
 
 // String returns the string representation
@@ -3269,6 +4009,11 @@ func (s *IotTopicPublishAction) Validate() error {
 	if s.MqttTopic != nil && len(*s.MqttTopic) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("MqttTopic", 1))
 	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3282,6 +4027,12 @@ func (s *IotTopicPublishAction) SetMqttTopic(v string) *IotTopicPublishAction {
 	return s
 }
 
+// SetPayload sets the Payload field's value.
+func (s *IotTopicPublishAction) SetPayload(v *Payload) *IotTopicPublishAction {
+	s.Payload = v
+	return s
+}
+
 // Calls a Lambda function, passing in information about the detector model
 // instance and the event that triggered the action.
 type LambdaAction struct {
@@ -3291,6 +4042,10 @@ type LambdaAction struct {
 	//
 	// FunctionArn is a required field
 	FunctionArn *string `locationName:"functionArn" min:"1" type:"string" required:"true"`
+
+	// You can configure the action payload when you send a message to a Lambda
+	// function.
+	Payload *Payload `locationName:"payload" type:"structure"`
 }
 
 // String returns the string representation
@@ -3312,6 +4067,11 @@ func (s *LambdaAction) Validate() error {
 	if s.FunctionArn != nil && len(*s.FunctionArn) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("FunctionArn", 1))
 	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3322,6 +4082,12 @@ func (s *LambdaAction) Validate() error {
 // SetFunctionArn sets the FunctionArn field's value.
 func (s *LambdaAction) SetFunctionArn(v string) *LambdaAction {
 	s.FunctionArn = &v
+	return s
+}
+
+// SetPayload sets the Payload field's value.
+func (s *LambdaAction) SetPayload(v *Payload) *LambdaAction {
+	s.Payload = v
 	return s
 }
 
@@ -3945,6 +4711,71 @@ func (s *OnInputLifecycle) SetTransitionEvents(v []*TransitionEvent) *OnInputLif
 	return s
 }
 
+// Information needed to configure the payload.
+//
+// By default, AWS IoT Events generates a standard payload in JSON for any action.
+// This action payload contains all attribute-value pairs that have the information
+// about the detector model instance and the event triggered the action. To
+// configure the action payload, you can use contentExpression.
+type Payload struct {
+	_ struct{} `type:"structure"`
+
+	// The content of the payload. You can use a string expression that includes
+	// quoted strings ('<string>'), variables ($variable.<variable-name>), input
+	// values ($input.<input-name>.<path-to-datum>), string concatenations, and
+	// quoted strings that contain ${} as the content. The recommended maximum size
+	// of a content expression is 1 KB.
+	//
+	// ContentExpression is a required field
+	ContentExpression *string `locationName:"contentExpression" min:"1" type:"string" required:"true"`
+
+	// The value of the payload type can be either STRING or JSON.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"PayloadType"`
+}
+
+// String returns the string representation
+func (s Payload) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Payload) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Payload) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Payload"}
+	if s.ContentExpression == nil {
+		invalidParams.Add(request.NewErrParamRequired("ContentExpression"))
+	}
+	if s.ContentExpression != nil && len(*s.ContentExpression) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ContentExpression", 1))
+	}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetContentExpression sets the ContentExpression field's value.
+func (s *Payload) SetContentExpression(v string) *Payload {
+	s.ContentExpression = &v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *Payload) SetType(v string) *Payload {
+	s.Type = &v
+	return s
+}
+
 type PutLoggingOptionsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4003,7 +4834,8 @@ func (s PutLoggingOptionsOutput) GoString() string {
 }
 
 // Information required to reset the timer. The timer is reset to the previously
-// evaluated result of the duration.
+// evaluated result of the duration. The duration expression isn't reevaluated
+// when you reset the timer.
 type ResetTimerAction struct {
 	_ struct{} `type:"structure"`
 
@@ -4226,6 +5058,10 @@ func (s *ResourceNotFoundException) RequestID() string {
 type SNSTopicPublishAction struct {
 	_ struct{} `type:"structure"`
 
+	// You can configure the action payload when you send a message as an Amazon
+	// SNS push notification.
+	Payload *Payload `locationName:"payload" type:"structure"`
+
 	// The ARN of the Amazon SNS target where the message is sent.
 	//
 	// TargetArn is a required field
@@ -4251,11 +5087,22 @@ func (s *SNSTopicPublishAction) Validate() error {
 	if s.TargetArn != nil && len(*s.TargetArn) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TargetArn", 1))
 	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetPayload sets the Payload field's value.
+func (s *SNSTopicPublishAction) SetPayload(v *Payload) *SNSTopicPublishAction {
+	s.Payload = v
+	return s
 }
 
 // SetTargetArn sets the TargetArn field's value.
@@ -4334,7 +5181,7 @@ type SetTimerAction struct {
 	DurationExpression *string `locationName:"durationExpression" min:"1" type:"string"`
 
 	// The number of seconds until the timer expires. The minimum value is 60 seconds
-	// to ensure accuracy.
+	// to ensure accuracy. The maximum value is 31622400 seconds.
 	//
 	// Deprecated: seconds is deprecated. You can use durationExpression for SetTimerAction. The value of seconds can be used as a string expression for durationExpression.
 	Seconds *int64 `locationName:"seconds" min:"1" deprecated:"true" type:"integer"`
@@ -4459,13 +5306,17 @@ func (s *SetVariableAction) SetVariableName(v string) *SetVariableAction {
 type SqsAction struct {
 	_ struct{} `type:"structure"`
 
+	// You can configure the action payload when you send a message to an Amazon
+	// SQS queue.
+	Payload *Payload `locationName:"payload" type:"structure"`
+
 	// The URL of the SQS queue where the data is written.
 	//
 	// QueueUrl is a required field
 	QueueUrl *string `locationName:"queueUrl" type:"string" required:"true"`
 
 	// Set this to TRUE if you want the data to be base-64 encoded before it is
-	// written to the queue.
+	// written to the queue. Otherwise, set this to FALSE.
 	UseBase64 *bool `locationName:"useBase64" type:"boolean"`
 }
 
@@ -4485,11 +5336,22 @@ func (s *SqsAction) Validate() error {
 	if s.QueueUrl == nil {
 		invalidParams.Add(request.NewErrParamRequired("QueueUrl"))
 	}
+	if s.Payload != nil {
+		if err := s.Payload.Validate(); err != nil {
+			invalidParams.AddNested("Payload", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetPayload sets the Payload field's value.
+func (s *SqsAction) SetPayload(v *Payload) *SqsAction {
+	s.Payload = v
+	return s
 }
 
 // SetQueueUrl sets the QueueUrl field's value.
@@ -4723,6 +5585,402 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+type TagrisAccessDeniedException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TagrisAccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagrisAccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagrisAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &TagrisAccessDeniedException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TagrisAccessDeniedException) Code() string {
+	return "TagrisAccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s *TagrisAccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TagrisAccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s *TagrisAccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TagrisAccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TagrisAccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type TagrisInternalServiceException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TagrisInternalServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagrisInternalServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagrisInternalServiceException(v protocol.ResponseMetadata) error {
+	return &TagrisInternalServiceException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TagrisInternalServiceException) Code() string {
+	return "TagrisInternalServiceException"
+}
+
+// Message returns the exception's message.
+func (s *TagrisInternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TagrisInternalServiceException) OrigErr() error {
+	return nil
+}
+
+func (s *TagrisInternalServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TagrisInternalServiceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TagrisInternalServiceException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type TagrisInvalidArnException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	SweepListItem *TagrisSweepListItem `locationName:"sweepListItem" type:"structure"`
+}
+
+// String returns the string representation
+func (s TagrisInvalidArnException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagrisInvalidArnException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagrisInvalidArnException(v protocol.ResponseMetadata) error {
+	return &TagrisInvalidArnException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TagrisInvalidArnException) Code() string {
+	return "TagrisInvalidArnException"
+}
+
+// Message returns the exception's message.
+func (s *TagrisInvalidArnException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TagrisInvalidArnException) OrigErr() error {
+	return nil
+}
+
+func (s *TagrisInvalidArnException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TagrisInvalidArnException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TagrisInvalidArnException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type TagrisInvalidParameterException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TagrisInvalidParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagrisInvalidParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagrisInvalidParameterException(v protocol.ResponseMetadata) error {
+	return &TagrisInvalidParameterException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TagrisInvalidParameterException) Code() string {
+	return "TagrisInvalidParameterException"
+}
+
+// Message returns the exception's message.
+func (s *TagrisInvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TagrisInvalidParameterException) OrigErr() error {
+	return nil
+}
+
+func (s *TagrisInvalidParameterException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TagrisInvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TagrisInvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type TagrisPartialResourcesExistResultsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	ResourceExistenceInformation map[string]*string `locationName:"resourceExistenceInformation" type:"map"`
+}
+
+// String returns the string representation
+func (s TagrisPartialResourcesExistResultsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagrisPartialResourcesExistResultsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagrisPartialResourcesExistResultsException(v protocol.ResponseMetadata) error {
+	return &TagrisPartialResourcesExistResultsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TagrisPartialResourcesExistResultsException) Code() string {
+	return "TagrisPartialResourcesExistResultsException"
+}
+
+// Message returns the exception's message.
+func (s *TagrisPartialResourcesExistResultsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TagrisPartialResourcesExistResultsException) OrigErr() error {
+	return nil
+}
+
+func (s *TagrisPartialResourcesExistResultsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TagrisPartialResourcesExistResultsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TagrisPartialResourcesExistResultsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type TagrisSweepListItem struct {
+	_ struct{} `type:"structure"`
+
+	TagrisAccountId *string `min:"12" type:"string"`
+
+	TagrisAmazonResourceName *string `min:"1" type:"string"`
+
+	TagrisInternalId *string `type:"string"`
+
+	TagrisVersion *int64 `type:"long"`
+}
+
+// String returns the string representation
+func (s TagrisSweepListItem) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagrisSweepListItem) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagrisSweepListItem) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagrisSweepListItem"}
+	if s.TagrisAccountId != nil && len(*s.TagrisAccountId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("TagrisAccountId", 12))
+	}
+	if s.TagrisAmazonResourceName != nil && len(*s.TagrisAmazonResourceName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TagrisAmazonResourceName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTagrisAccountId sets the TagrisAccountId field's value.
+func (s *TagrisSweepListItem) SetTagrisAccountId(v string) *TagrisSweepListItem {
+	s.TagrisAccountId = &v
+	return s
+}
+
+// SetTagrisAmazonResourceName sets the TagrisAmazonResourceName field's value.
+func (s *TagrisSweepListItem) SetTagrisAmazonResourceName(v string) *TagrisSweepListItem {
+	s.TagrisAmazonResourceName = &v
+	return s
+}
+
+// SetTagrisInternalId sets the TagrisInternalId field's value.
+func (s *TagrisSweepListItem) SetTagrisInternalId(v string) *TagrisSweepListItem {
+	s.TagrisInternalId = &v
+	return s
+}
+
+// SetTagrisVersion sets the TagrisVersion field's value.
+func (s *TagrisSweepListItem) SetTagrisVersion(v int64) *TagrisSweepListItem {
+	s.TagrisVersion = &v
+	return s
+}
+
+type TagrisThrottledException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TagrisThrottledException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagrisThrottledException) GoString() string {
+	return s.String()
+}
+
+func newErrorTagrisThrottledException(v protocol.ResponseMetadata) error {
+	return &TagrisThrottledException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TagrisThrottledException) Code() string {
+	return "TagrisThrottledException"
+}
+
+// Message returns the exception's message.
+func (s *TagrisThrottledException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TagrisThrottledException) OrigErr() error {
+	return nil
+}
+
+func (s *TagrisThrottledException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TagrisThrottledException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TagrisThrottledException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request could not be completed due to throttling.
@@ -5211,6 +6469,75 @@ func (s *UpdateInputOutput) SetInputConfiguration(v *InputConfiguration) *Update
 	return s
 }
 
+type VerifyResourcesExistForTagrisInput struct {
+	_ struct{} `type:"structure"`
+
+	// TagrisSweepList is a required field
+	TagrisSweepList []*TagrisSweepListItem `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s VerifyResourcesExistForTagrisInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VerifyResourcesExistForTagrisInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VerifyResourcesExistForTagrisInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VerifyResourcesExistForTagrisInput"}
+	if s.TagrisSweepList == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagrisSweepList"))
+	}
+	if s.TagrisSweepList != nil {
+		for i, v := range s.TagrisSweepList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TagrisSweepList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTagrisSweepList sets the TagrisSweepList field's value.
+func (s *VerifyResourcesExistForTagrisInput) SetTagrisSweepList(v []*TagrisSweepListItem) *VerifyResourcesExistForTagrisInput {
+	s.TagrisSweepList = v
+	return s
+}
+
+type VerifyResourcesExistForTagrisOutput struct {
+	_ struct{} `type:"structure"`
+
+	// TagrisSweepListResult is a required field
+	TagrisSweepListResult map[string]*string `type:"map" required:"true"`
+}
+
+// String returns the string representation
+func (s VerifyResourcesExistForTagrisOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VerifyResourcesExistForTagrisOutput) GoString() string {
+	return s.String()
+}
+
+// SetTagrisSweepListResult sets the TagrisSweepListResult field's value.
+func (s *VerifyResourcesExistForTagrisOutput) SetTagrisSweepListResult(v map[string]*string) *VerifyResourcesExistForTagrisOutput {
+	s.TagrisSweepListResult = v
+	return s
+}
+
 const (
 	// DetectorModelVersionStatusActive is a DetectorModelVersionStatus enum value
 	DetectorModelVersionStatusActive = "ACTIVE"
@@ -5265,4 +6592,20 @@ const (
 
 	// LoggingLevelDebug is a LoggingLevel enum value
 	LoggingLevelDebug = "DEBUG"
+)
+
+const (
+	// PayloadTypeString is a PayloadType enum value
+	PayloadTypeString = "STRING"
+
+	// PayloadTypeJson is a PayloadType enum value
+	PayloadTypeJson = "JSON"
+)
+
+const (
+	// TagrisStatusActive is a TagrisStatus enum value
+	TagrisStatusActive = "ACTIVE"
+
+	// TagrisStatusNotActive is a TagrisStatus enum value
+	TagrisStatusNotActive = "NOT_ACTIVE"
 )

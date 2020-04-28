@@ -18,6 +18,9 @@ func resourceAwsSsmActivation() *schema.Resource {
 		Create: resourceAwsSsmActivationCreate,
 		Read:   resourceAwsSsmActivationRead,
 		Delete: resourceAwsSsmActivationDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
