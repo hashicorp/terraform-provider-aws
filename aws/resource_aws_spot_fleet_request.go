@@ -23,7 +23,10 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		Delete: resourceAwsSpotFleetRequestDelete,
 		Update: resourceAwsSpotFleetRequestUpdate,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("instance_pools_to_use_count", 1)
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
