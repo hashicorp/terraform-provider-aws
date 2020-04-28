@@ -1198,7 +1198,7 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 
 	if len(config.LaunchTemplateConfigs) > 0 {
 		if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
-			return fmt.Errorf("error setting tags: %s", err)
+			return fmt.Errorf("error setting launch_template_config: %s", err)
 		}
 	}
 
