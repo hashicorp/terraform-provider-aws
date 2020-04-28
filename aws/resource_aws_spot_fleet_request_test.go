@@ -198,22 +198,6 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSSpotFleetRequest_launchTemplateConflictLaunchSpecification(t *testing.T) {
-	rName := acctest.RandString(10)
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName, rInt),
-				ExpectError: regexp.MustCompile(`"launch_specification": only one of .+`),
-			},
-		},
-	})
-}
 
 func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
@@ -1410,41 +1394,6 @@ resource "aws_spot_fleet_request" "test" {
 `, validUntil, rName)
 }
 
-func testAccAWSSpotFleetRequestLaunchTemplateConflictLaunchSpecification(rName string, rInt int) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
-resource "aws_launch_template" "test" {
-  name          = %[1]q
-  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-}
-
-resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role = "${aws_iam_role.test-role.arn}"
-  spot_price = "0.005"
-  target_capacity = 2
-
-  launch_template_config {
-    launch_template_specification {
-      name = "${aws_launch_template.test.name}"
-      version = "${aws_launch_template.test.latest_version}"
-    }
-    overrides {
-      instance_type = "t1.micro"
-      weighted_capacity = "2"
-    }
-    overrides {
-      instance_type = "m3.medium"
-      spot_price = "0.26"
-    }
-  }
-
-  launch_specification {
-    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-    instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  }
-}
-`, rName)
-}
 
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
