@@ -1212,7 +1212,9 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 			for _, lb := range lbConf.ClassicLoadBalancersConfig.ClassicLoadBalancers {
 				flatLbs = append(flatLbs, lb.Name)
 			}
-			d.Set("load_balancers", flattenStringSet(flatLbs))
+			if err := d.Set("load_balancers", flattenStringSet(flatLbs)); err != nil {
+				return fmt.Errorf("error setting load_balancers: %s", err)
+			}
 		}
 
 		if lbConf.TargetGroupsConfig != nil {
