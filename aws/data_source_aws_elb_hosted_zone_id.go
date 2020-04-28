@@ -29,6 +29,8 @@ var elbHostedZoneIdPerRegionMap = map[string]string{
 	"sa-east-1":      "Z2P70J7HTTTPLU",
 	"us-east-1":      "Z35SXDOTRQ7X7K",
 	"us-east-2":      "Z3AADJGX6KTTL2",
+	"us-gov-east-1":  "Z166TLBEWOO7G0",
+	"us-gov-west-1":  "Z33AYJ8TM3BH4J",
 	"us-west-1":      "Z368ELLRRE2KJ0",
 	"us-west-2":      "Z1H1FL5HABSF5",
 }
