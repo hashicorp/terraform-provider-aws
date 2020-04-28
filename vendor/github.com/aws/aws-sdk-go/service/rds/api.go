@@ -12193,6 +12193,15 @@ func (c *RDS) RestoreDBClusterFromS3Request(input *RestoreDBClusterFromS3Input) 
 // Data to an Amazon Aurora MySQL DB Cluster (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/AuroraMySQL.Migrating.html)
 // in the Amazon Aurora User Guide.
 //
+// This action only restores the DB cluster, not the DB instances for that DB
+// cluster. You must invoke the CreateDBInstance action to create DB instances
+// for the restored DB cluster, specifying the identifier of the restored DB
+// cluster in DBClusterIdentifier. You can create DB instances only after the
+// RestoreDBClusterFromS3 action has completed and the DB cluster is available.
+//
+// For more information on Amazon Aurora, see What Is Amazon Aurora? (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html)
+// in the Amazon Aurora User Guide.
+//
 // This action only applies to Aurora DB clusters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -12335,6 +12344,8 @@ func (c *RDS) RestoreDBClusterFromSnapshotRequest(input *RestoreDBClusterFromSna
 //
 // For more information on Amazon Aurora, see What Is Amazon Aurora? (https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/CHAP_AuroraOverview.html)
 // in the Amazon Aurora User Guide.
+//
+// This action only applies to Aurora DB clusters.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -28966,6 +28977,13 @@ func (s *DescribeOptionGroupsOutput) SetOptionGroupsList(v []*OptionGroup) *Desc
 type DescribeOrderableDBInstanceOptionsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The Availability Zone group associated with a Local Zone. Specify this parameter
+	// to retrieve available offerings for the Local Zones in the group.
+	//
+	// Omit this parameter to show the available offerings in the specified AWS
+	// Region.
+	AvailabilityZoneGroup *string `type:"string"`
+
 	// The DB instance class filter value. Specify this parameter to show only the
 	// available offerings matching the specified DB instance class.
 	DBInstanceClass *string `type:"string"`
@@ -29035,6 +29053,12 @@ func (s *DescribeOrderableDBInstanceOptionsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAvailabilityZoneGroup sets the AvailabilityZoneGroup field's value.
+func (s *DescribeOrderableDBInstanceOptionsInput) SetAvailabilityZoneGroup(v string) *DescribeOrderableDBInstanceOptionsInput {
+	s.AvailabilityZoneGroup = &v
+	return s
 }
 
 // SetDBInstanceClass sets the DBInstanceClass field's value.
@@ -34785,6 +34809,9 @@ func (s *OptionVersion) SetVersion(v string) *OptionVersion {
 type OrderableDBInstanceOption struct {
 	_ struct{} `type:"structure"`
 
+	// The Availability Zone group for a DB instance.
+	AvailabilityZoneGroup *string `type:"string"`
+
 	// A list of Availability Zones for a DB instance.
 	AvailabilityZones []*AvailabilityZone `locationNameList:"AvailabilityZone" type:"list"`
 
@@ -34854,8 +34881,8 @@ type OrderableDBInstanceOption struct {
 	// True if a DB instance supports Performance Insights, otherwise false.
 	SupportsPerformanceInsights *bool `type:"boolean"`
 
-	// Whether or not Amazon RDS can automatically scale storage for DB instances
-	// that use the specified instance class.
+	// Whether Amazon RDS can automatically scale storage for DB instances that
+	// use the specified DB instance class.
 	SupportsStorageAutoscaling *bool `type:"boolean"`
 
 	// Indicates whether a DB instance supports encrypted storage.
@@ -34873,6 +34900,12 @@ func (s OrderableDBInstanceOption) String() string {
 // GoString returns the string representation
 func (s OrderableDBInstanceOption) GoString() string {
 	return s.String()
+}
+
+// SetAvailabilityZoneGroup sets the AvailabilityZoneGroup field's value.
+func (s *OrderableDBInstanceOption) SetAvailabilityZoneGroup(v string) *OrderableDBInstanceOption {
+	s.AvailabilityZoneGroup = &v
+	return s
 }
 
 // SetAvailabilityZones sets the AvailabilityZones field's value.

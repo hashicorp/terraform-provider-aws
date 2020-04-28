@@ -60,14 +60,12 @@ func (c *ECR) BatchCheckLayerAvailabilityRequest(input *BatchCheckLayerAvailabil
 // Checks the availability of one or more image layers in a repository.
 //
 // When an image is pushed to a repository, each image layer is checked to verify
-// if it has been uploaded before. If it is, then the image layer is skipped.
+// if it has been uploaded before. If it has been uploaded, then the image layer
+// is skipped.
 //
-// When an image is pulled from a repository, each image layer is checked once
-// to verify it is available to be pulled.
-//
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -347,9 +345,9 @@ func (c *ECR) CompleteLayerUploadRequest(input *CompleteLayerUploadInput) (req *
 // When an image is pushed, the CompleteLayerUpload API is called once per each
 // new image layer to verify that the upload has completed.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1375,11 +1373,11 @@ func (c *ECR) GetDownloadUrlForLayerRequest(input *GetDownloadUrlForLayerInput) 
 // layer. You can only get URLs for image layers that are referenced in an image.
 //
 // When an image is pulled, the GetDownloadUrlForLayer API is called once per
-// image layer.
+// image layer that is not already cached.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1807,12 +1805,12 @@ func (c *ECR) InitiateLayerUploadRequest(input *InitiateLayerUploadInput) (req *
 // Notifies Amazon ECR that you intend to upload an image layer.
 //
 // When an image is pushed, the InitiateLayerUpload API is called once per image
-// layer that has not already been uploaded. Whether an image layer has been
-// uploaded before is determined by the BatchCheckLayerAvailability API action.
+// layer that has not already been uploaded. Whether or not an image layer has
+// been uploaded is determined by the BatchCheckLayerAvailability API action.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2141,12 +2139,12 @@ func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, outpu
 // Creates or updates the image manifest and tags associated with an image.
 //
 // When an image is pushed and all new image layers have been uploaded, the
-// PutImage API is called once to create or update the image manifest and tags
-// associated with the image.
+// PutImage API is called once to create or update the image manifest and the
+// tags associated with the image.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2174,6 +2172,9 @@ func (c *ECR) PutImageRequest(input *PutImageInput) (req *request.Request, outpu
 //   * LayersNotFoundException
 //   The specified layers could not be found, or the specified layer is not valid
 //   for this repository.
+//
+//   * ReferencedImagesNotFoundException
+//   The manifest list is referencing an image that does not exist.
 //
 //   * LimitExceededException
 //   The operation did not succeed because it would have exceeded a service limit
@@ -2624,6 +2625,15 @@ func (c *ECR) StartImageScanRequest(input *StartImageScanInput) (req *request.Re
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
+//   * UnsupportedImageTypeException
+//   The image is of a type that cannot be scanned.
+//
+//   * LimitExceededException
+//   The operation did not succeed because it would have exceeded a service limit
+//   for your account. For more information, see Amazon ECR Default Service Limits
+//   (https://docs.aws.amazon.com/AmazonECR/latest/userguide/service_limits.html)
+//   in the Amazon Elastic Container Registry User Guide.
+//
 //   * RepositoryNotFoundException
 //   The specified repository could not be found. Check the spelling of the specified
 //   repository and ensure that you are performing operations on the correct registry.
@@ -2994,9 +3004,9 @@ func (c *ECR) UploadLayerPartRequest(input *UploadLayerPartInput) (req *request.
 // size of each image layer part can be 20971520 bytes (or about 20MB). The
 // UploadLayerPart API is called once per each new image layer part.
 //
-// This operation is used by the Amazon ECR proxy, and it is not intended for
-// general use by customers for pulling and pushing images. In most cases, you
-// should use the docker CLI to pull, tag, and push images.
+// This operation is used by the Amazon ECR proxy and is not generally used
+// by customers for pulling and pushing images. In most cases, you should use
+// the docker CLI to pull, tag, and push images.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5188,6 +5198,9 @@ type ImageDetail struct {
 
 	// The size, in bytes, of the image in the repository.
 	//
+	// If the image is a manifest list, this will be the max size of all manifests
+	// in the list.
+	//
 	// Beginning with Docker version 1.9, the Docker client compresses image layers
 	// before pushing them to a V2 Docker registry. The output of the docker images
 	// command shows the uncompressed image size, so it may return a larger image
@@ -7342,6 +7355,62 @@ func (s *PutLifecyclePolicyOutput) SetRepositoryName(v string) *PutLifecyclePoli
 	return s
 }
 
+// The manifest list is referencing an image that does not exist.
+type ReferencedImagesNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ReferencedImagesNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ReferencedImagesNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorReferencedImagesNotFoundException(v protocol.ResponseMetadata) error {
+	return &ReferencedImagesNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ReferencedImagesNotFoundException) Code() string {
+	return "ReferencedImagesNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ReferencedImagesNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ReferencedImagesNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ReferencedImagesNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ReferencedImagesNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ReferencedImagesNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // An object representing a repository.
 type Repository struct {
 	_ struct{} `type:"structure"`
@@ -8287,6 +8356,62 @@ func (s *TooManyTagsException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The image is of a type that cannot be scanned.
+type UnsupportedImageTypeException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedImageTypeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedImageTypeException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedImageTypeException(v protocol.ResponseMetadata) error {
+	return &UnsupportedImageTypeException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnsupportedImageTypeException) Code() string {
+	return "UnsupportedImageTypeException"
+}
+
+// Message returns the exception's message.
+func (s *UnsupportedImageTypeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnsupportedImageTypeException) OrigErr() error {
+	return nil
+}
+
+func (s *UnsupportedImageTypeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnsupportedImageTypeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnsupportedImageTypeException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
@@ -8612,6 +8737,9 @@ const (
 
 	// ImageFailureCodeMissingDigestAndTag is a ImageFailureCode enum value
 	ImageFailureCodeMissingDigestAndTag = "MissingDigestAndTag"
+
+	// ImageFailureCodeImageReferencedByManifestList is a ImageFailureCode enum value
+	ImageFailureCodeImageReferencedByManifestList = "ImageReferencedByManifestList"
 )
 
 const (

@@ -39795,15 +39795,17 @@ func (s *ResourceNotFound) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// The instance type and quantity.
+// The instance type and the Amazon Resource Name (ARN) of the image created
+// on the instance. The ARN is stored as metadata in Amazon SageMaker Studio
+// notebooks.
 type ResourceSpec struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the environment.
-	EnvironmentArn *string `type:"string"`
-
 	// The instance type.
 	InstanceType *string `type:"string" enum:"AppInstanceType"`
+
+	// The Amazon Resource Name (ARN) of the image created on the instance.
+	SageMakerImageArn *string `type:"string"`
 }
 
 // String returns the string representation
@@ -39816,15 +39818,15 @@ func (s ResourceSpec) GoString() string {
 	return s.String()
 }
 
-// SetEnvironmentArn sets the EnvironmentArn field's value.
-func (s *ResourceSpec) SetEnvironmentArn(v string) *ResourceSpec {
-	s.EnvironmentArn = &v
-	return s
-}
-
 // SetInstanceType sets the InstanceType field's value.
 func (s *ResourceSpec) SetInstanceType(v string) *ResourceSpec {
 	s.InstanceType = &v
+	return s
+}
+
+// SetSageMakerImageArn sets the SageMakerImageArn field's value.
+func (s *ResourceSpec) SetSageMakerImageArn(v string) *ResourceSpec {
+	s.SageMakerImageArn = &v
 	return s
 }
 
