@@ -747,7 +747,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	} else if coreInstanceCount > 0 && coreInstanceType != "" {
 		coreInstanceGroupConfig := &emr.InstanceGroupConfig{
 			InstanceCount: aws.Int64(int64(d.Get("core_instance_count").(int))),
-			InstanceRole:  aws.String("CORE"),
+			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
 			InstanceType:  aws.String(d.Get("core_instance_type").(string)),
 		}
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, coreInstanceGroupConfig)
