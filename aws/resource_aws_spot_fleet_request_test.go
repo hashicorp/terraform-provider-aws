@@ -187,6 +187,12 @@ func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -237,6 +243,12 @@ func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -261,6 +273,12 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
 				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
