@@ -198,7 +198,6 @@ func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
 	})
 }
 
-
 func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandString(10)
@@ -1393,7 +1392,6 @@ resource "aws_spot_fleet_request" "test" {
 }
 `, validUntil, rName)
 }
-
 
 func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
