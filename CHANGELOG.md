@@ -6,6 +6,7 @@ ENHANCEMENTS:
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_mq_broker: Support import [GH-11841]
 * resource/aws_placement_group: Support tag-on-create [GH-12963]
+* resource/aws_spot_fleet_request: Add `launch_template_config` configuration block (Support EC2 Launch Templates) [GH-12732]
 * resource/aws_wafregional_xss_match_set: Add plan-time validation for `xss_match_tuple` configuration block arguments [GH-13024]
 
 BUG FIXES:
