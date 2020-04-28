@@ -16,6 +16,7 @@ BUG FIXES:
 
 * resource/aws_default_route_table: Proper tag on resource creation [GH-12858]
 * resource/aws_kinesis_firehose_delivery_stream: Prevent panic with empty `processing_configuration` configuration block [GH-12613]
+* resource/aws_lb_listener: Prevent panics on creation and refresh when API throttled [GH-12617]
 * resource/aws_wafregional_xss_match_set: Prevent crash with `xss_match_tuple` configuration block since version 2.59.0 [GH-13024]
 
 ## 2.59.0 (April 23, 2020)
