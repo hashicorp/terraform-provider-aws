@@ -12,6 +12,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_kinesis_firehose_delivery_stream: Prevent panic with empty `processing_configuration` configuration block [GH-12613]
 * resource/aws_wafregional_xss_match_set: Prevent crash with `xss_match_tuple` configuration block since version 2.59.0 [GH-13024]
 
 ## 2.59.0 (April 23, 2020)
