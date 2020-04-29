@@ -279,6 +279,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
 				),
 			},
@@ -809,6 +810,43 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "user_data"},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_outpost(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"associate_public_ip_address"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigOutpost(outpostArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						resourceName, &v),
+					resource.TestCheckResourceAttr(
+						resourceName, "outpost_arn", outpostArn),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3359,6 +3397,41 @@ resource "aws_instance" "test" {
   user_data                   = "3dc39dda39be1205215e776bad998da361a5955d"
 }
 `)
+}
+
+func testAccInstanceConfigOutpost(outpostArn string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceOutpostConfig(outpostArn) + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type               = "m5.large"
+  subnet_id                   = "${aws_subnet.test.id}"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 8
+  }
+}
+`)
+}
+
+func testAccAwsInstanceOutpostConfig(outpostArn string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = "${aws_vpc.test.id}"
+  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
+  outpost_arn             = "%s"
+}
+`, outpostArn)
 }
 
 func testAccInstanceConfigPlacementGroup(rName string) string {
