@@ -81,6 +81,22 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"directory_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ip_group_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -175,7 +191,9 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	d.Set("workspace_security_group_id", dir.WorkspaceSecurityGroupId)
 	d.Set("iam_role_id", dir.IamRoleId)
 	d.Set("registration_code", dir.RegistrationCode)
-
+	d.Set("directory_name", dir.DirectoryName)
+	d.Set("directory_type", dir.DirectoryType)
+	d.Set("alias", dir.Alias)
 	if err := d.Set("self_service_permissions", flattenSelfServicePermissions(dir.SelfservicePermissions)); err != nil {
 		return fmt.Errorf("error setting self_service_permissions: %s", err)
 	}

@@ -71,6 +71,7 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
+	directoryResourceName := "aws_directory_service_directory.main"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -88,7 +89,9 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.%", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "workspace_security_group_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
