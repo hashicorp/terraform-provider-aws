@@ -16,6 +16,10 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	StorageGatewayGatewayConnected = "GatewayConnected"
+)
+
 func resourceAwsStorageGatewayGateway() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsStorageGatewayGatewayCreate,
@@ -222,28 +226,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 	d.SetId(aws.StringValue(output.GatewayARN))
 
-	// Gateway activations can take a few minutes
-	gwInput := &storagegateway.DescribeGatewayInformationInput{
-		GatewayARN: aws.String(d.Id()),
-	}
-	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.DescribeGatewayInformation(gwInput)
-		if err != nil {
-			if isAWSErr(err, storagegateway.ErrorCodeGatewayNotConnected, "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DescribeGatewayInformation(gwInput)
-	}
-	if err != nil {
+	if _, err := WaitForStorageGatewayGatewayConnected(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for Storage Gateway Gateway activation: %s", err)
 	}
 
@@ -301,7 +284,9 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Reading Storage Gateway Gateway: %s", input)
+
 	output, err := conn.DescribeGatewayInformation(input)
+
 	if err != nil {
 		if isAWSErrStorageGatewayGatewayNotFound(err) {
 			log.Printf("[WARN] Storage Gateway Gateway %q not found - removing from state", d.Id())
@@ -481,4 +466,44 @@ func isAWSErrStorageGatewayGatewayNotFound(err error) bool {
 		return true
 	}
 	return false
+}
+
+func StorageGatewayGatewayConnectedStatus(conn *storagegateway.StorageGateway, gatewayARN string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &storagegateway.DescribeGatewayInformationInput{
+			GatewayARN: aws.String(gatewayARN),
+		}
+
+		output, err := conn.DescribeGatewayInformation(input)
+
+		if isAWSErr(err, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway is not connected") {
+			return output, storagegateway.ErrorCodeGatewayNotConnected, nil
+		}
+
+		if err != nil {
+			return output, "", err
+		}
+
+		return output, StorageGatewayGatewayConnected, nil
+	}
+}
+
+func WaitForStorageGatewayGatewayConnected(conn *storagegateway.StorageGateway, gatewayARN string, timeout time.Duration) (*storagegateway.DescribeGatewayInformationOutput, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:                   []string{storagegateway.ErrorCodeGatewayNotConnected},
+		Target:                    []string{StorageGatewayGatewayConnected},
+		Refresh:                   StorageGatewayGatewayConnectedStatus(conn, gatewayARN),
+		Timeout:                   timeout,
+		MinTimeout:                10 * time.Second,
+		ContinuousTargetOccurence: 6, // Gateway activations can take a few seconds and can trigger a reboot of the Gateway
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	switch output := outputRaw.(type) {
+	case *storagegateway.DescribeGatewayInformationOutput:
+		return output, err
+	default:
+		return nil, err
+	}
 }
