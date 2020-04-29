@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -5131,22 +5132,6 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
-// testAccAvailableEc2InstanceTypeForRegion returns the configuration for a data source that describes
-// the first available EC2 instance type offering in the current region from a list of preferred instance types.
-// The data source is named 'available'.
-func testAccAvailableEc2InstanceTypeForRegion(preferredInstanceTypes ...string) string {
-	return fmt.Sprintf(`
-data "aws_ec2_instance_type_offering" "available" {
-  filter {
-    name   = "instance-type"
-    values = ["%[1]v"]
-  }
-
-  preferred_instance_types = ["%[1]v"]
-}
-`, strings.Join(preferredInstanceTypes, "\", \""))
-}
-
 const testAccAwsEc2InstanceConfigDynamicEBSBlockDevices = `
 resource "aws_instance" "test" {
   ami           = "ami-55a7ea65"
@@ -5163,3 +5148,49 @@ resource "aws_instance" "test" {
   }
 }
 `
+
+// testAccAvailableEc2InstanceTypeForRegion returns the configuration for a data source that describes
+// the first available EC2 instance type offering in the current region from a list of preferred instance types.
+// The data source is named 'available'.
+func testAccAvailableEc2InstanceTypeForRegion(preferredInstanceTypes ...string) string {
+	return fmt.Sprintf(`
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["%[1]v"]
+  }
+
+  preferred_instance_types = ["%[1]v"]
+}
+`, strings.Join(preferredInstanceTypes, "\", \""))
+}
+
+// testAccAvailableEc2InstanceTypeForAvailabilityZone returns the configuration for a data source that describes
+// the first available EC2 instance type offering in the specified availability zone from a list of preferred instance types.
+// The first argument is either an Availability Zone name or Terraform configuration reference to one, e.g.
+//   * data.aws_availability_zones.available.names[0]
+//   * aws_subnet.test.availability_zone
+//   * us-west-2a
+// The data source is named 'available'.
+func testAccAvailableEc2InstanceTypeForAvailabilityZone(availabilityZoneName string, preferredInstanceTypes ...string) string {
+	if !strings.Contains(availabilityZoneName, ".") {
+		availabilityZoneName = strconv.Quote(availabilityZoneName)
+	}
+
+	return fmt.Sprintf(`
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["%[2]v"]
+  }
+
+  filter {
+    name   = "location"
+    values = [%[1]s]
+  }
+
+  location_type            = "availability-zone"
+  preferred_instance_types = ["%[2]v"]
+}
+`, availabilityZoneName, strings.Join(preferredInstanceTypes, "\", \""))
+}
