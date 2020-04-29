@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * data-source/aws_elb_hosted_zone_id: Support `eu-south-1` region [GH-13061]
 * data-source/aws_elb_service_account: Support `eu-south-1` region [GH-13061]
 * data-source/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
+* data-source/aws_subnet: Add `outposts_arn` attribute [GH-12097]
 * provider: Support automatic region validation for `eu-south-1` [GH-12970]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
@@ -30,6 +31,7 @@ ENHANCEMENTS:
 * resource/aws_route53_health_check: Support plan-time validation for `reference_name` argument [GH-12873]
 * resource/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * resource/aws_spot_fleet_request: Add `launch_template_config` configuration block (Support EC2 Launch Templates) [GH-12732]
+* resource/aws_subnet: Add `outposts_arn` attribute [GH-12097]
 * resource/aws_wafregional_xss_match_set: Add plan-time validation for `xss_match_tuple` configuration block arguments [GH-13024]
 
 BUG FIXES:
