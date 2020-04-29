@@ -450,19 +450,17 @@ func TestAccAWSInstanceDataSource_metadataOptions(t *testing.T) {
 	resourceName := "aws_instance.test"
 	datasourceName := "data.aws_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	instanceType := "m1.small"
 
 	resource.ParallelTest(t, resource.TestCase{
 		// No subnet_id specified requires default VPC or EC2-Classic.
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasDefaultVpcOrEc2Classic(t)
-			testAccPreCheckOffersEc2InstanceType(t, instanceType)
 		},
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceDataSourceConfig_metadataOptions(rName, instanceType),
+				Config: testAccInstanceDataSourceConfig_metadataOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.#", resourceName, "metadata_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "metadata_options.0.http_endpoint", resourceName, "metadata_options.0.http_endpoint"),
@@ -866,11 +864,14 @@ data "aws_instance" "test" {
 `)
 }
 
-func testAccInstanceDataSourceConfig_metadataOptions(rName, instanceType string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+func testAccInstanceDataSourceConfig_metadataOptions(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = %[2]q
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
     Name = %[1]q
@@ -886,5 +887,5 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`, rName, instanceType)
+`, rName))
 }

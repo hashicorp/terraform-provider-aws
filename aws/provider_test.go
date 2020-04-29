@@ -1236,24 +1236,6 @@ func testAccHasDefaultVpc(t *testing.T) bool {
 	return true
 }
 
-// testAccPreCheckOffersEc2InstanceType checks that the test region offers the specified EC2 instance type.
-func testAccPreCheckOffersEc2InstanceType(t *testing.T, instanceType string) {
-	client := testAccProvider.Meta().(*AWSClient)
-
-	resp, err := client.ec2conn.DescribeInstanceTypeOfferings(&ec2.DescribeInstanceTypeOfferingsInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
-			"instance-type": instanceType,
-		}),
-		LocationType: aws.String(ec2.LocationTypeRegion),
-	})
-	if testAccPreCheckSkipError(err) || len(resp.InstanceTypeOfferings) == 0 {
-		t.Skipf("skipping tests; %s does not offer EC2 instance type: %s", client.region, instanceType)
-	}
-	if err != nil {
-		t.Fatalf("error describing EC2 instance type offerings: %s", err)
-	}
-}
-
 func testAccAWSProviderConfigEndpoints(endpoints string) string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
