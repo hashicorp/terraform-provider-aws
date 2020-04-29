@@ -182,8 +182,6 @@ func resourceAwsRDSClusterParameterGroupRead(d *schema.ResourceData, meta interf
 func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	rdsconn := meta.(*AWSClient).rdsconn
 
-	d.Partial(true)
-
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
 		if o == nil {
@@ -271,10 +269,7 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 		if err := keyvaluetags.RdsUpdateTags(rdsconn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating RDS Cluster Parameter Group (%s) tags: %s", d.Id(), err)
 		}
-		d.SetPartial("tags")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsRDSClusterParameterGroupRead(d, meta)
 }
