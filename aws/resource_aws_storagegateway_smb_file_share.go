@@ -103,6 +103,10 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 					storagegateway.ObjectACLPublicReadWrite,
 				}, false),
 			},
+			"path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"read_only": {
 				Type:     schema.TypeBool,
 				Optional: true,

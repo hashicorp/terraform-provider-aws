@@ -37,6 +37,7 @@ func TestAccAWSStorageGatewaySmbFileShare_Authentication_ActiveDirectory(t *test
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
 					resource.TestMatchResourceAttr(resourceName, "location_arn", regexp.MustCompile(`^arn:`)),
 					resource.TestCheckResourceAttr(resourceName, "object_acl", storagegateway.ObjectACLPrivate),
+					resource.TestMatchResourceAttr(resourceName, "path", regexp.MustCompile(`^/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "read_only", "false"),
 					resource.TestCheckResourceAttr(resourceName, "requester_pays", "false"),
 					resource.TestMatchResourceAttr(resourceName, "role_arn", regexp.MustCompile(`^arn:`)),
