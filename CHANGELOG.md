@@ -1,5 +1,9 @@
 ## 2.60.0 (Unreleased)
 
+NOTES:
+
+* provider: Region validation now automatically supports the new `eu-south-1` (Europe (Milan)) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-12970]
+
 FEATURES:
 
 * **New Data Source:** `aws_backup_plan` [GH-13035]
@@ -9,6 +13,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_elb_hosted_zone_id: Add `us-gov-east-1` and `us-gov-west-1` region values [GH-12976]
+* provider: Support automatic region validation for `eu-south-1` [GH-12970]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_elasticsearch_domain: Support customizable update timeout [GH-12916]
