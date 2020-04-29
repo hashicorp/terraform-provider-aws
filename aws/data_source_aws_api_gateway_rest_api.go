@@ -59,7 +59,7 @@ func dataSourceAwsApiGatewayRestApi() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"vpc_endpoint_ids": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
