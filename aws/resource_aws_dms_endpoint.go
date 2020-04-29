@@ -114,6 +114,7 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 					"docdb",
 					"dynamodb",
 					"elasticsearch",
+					"kafka",
 					"kinesis",
 					"mariadb",
 					"mongodb",
@@ -130,6 +131,31 @@ func resourceAwsDmsEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
+			},
+			"kafka_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if old == "1" && new == "0" {
+						return true
+					}
+					return false
+				},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"broker": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
+						"topic": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "kafka-default-topic",
+						},
+					},
+				},
 			},
 			"kinesis_settings": {
 				Type:     schema.TypeList,
@@ -326,6 +352,11 @@ func resourceAwsDmsEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 			EndpointUri:             aws.String(d.Get("elasticsearch_settings.0.endpoint_uri").(string)),
 			ErrorRetryDuration:      aws.Int64(int64(d.Get("elasticsearch_settings.0.error_retry_duration").(int))),
 			FullLoadErrorPercentage: aws.Int64(int64(d.Get("elasticsearch_settings.0.full_load_error_percentage").(int))),
+		}
+	case "kafka":
+		request.KafkaSettings = &dms.KafkaSettings{
+			Broker: aws.String(d.Get("kafka_settings.0.broker").(string)),
+			Topic:  aws.String(d.Get("kafka_settings.0.topic").(string)),
 		}
 	case "kinesis":
 		request.KinesisSettings = &dms.KinesisSettings{
@@ -530,6 +561,17 @@ func resourceAwsDmsEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 			request.EngineName = aws.String(d.Get("engine_name").(string))
 			hasChanges = true
 		}
+	case "kafka":
+		if d.HasChanges(
+			"kafka_settings.0.broker",
+			"kafka_settings.0.topic") {
+			request.KafkaSettings = &dms.KafkaSettings{
+				Broker: aws.String(d.Get("kafka_settings.0.broker").(string)),
+				Topic:  aws.String(d.Get("kafka_settings.0.topic").(string)),
+			}
+			request.EngineName = aws.String(d.Get("engine_name").(string))
+			hasChanges = true
+		}
 	case "kinesis":
 		if d.HasChanges(
 			"kinesis_settings.0.service_access_role_arn",
@@ -677,6 +719,10 @@ func resourceAwsDmsEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoi
 		if err := d.Set("elasticsearch_settings", flattenDmsElasticsearchSettings(endpoint.ElasticsearchSettings)); err != nil {
 			return fmt.Errorf("Error setting elasticsearch for DMS: %s", err)
 		}
+	case "kafka":
+		if err := d.Set("kafka_settings", flattenDmsKafkaSettings(endpoint.KafkaSettings)); err != nil {
+			return fmt.Errorf("Error setting kafka_settings for DMS: %s", err)
+		}
 	case "kinesis":
 		if err := d.Set("kinesis_settings", flattenDmsKinesisSettings(endpoint.KinesisSettings)); err != nil {
 			return fmt.Errorf("Error setting kinesis_settings for DMS: %s", err)
@@ -724,6 +770,19 @@ func flattenDmsElasticsearchSettings(settings *dms.ElasticsearchSettings) []map[
 		"error_retry_duration":       aws.Int64Value(settings.ErrorRetryDuration),
 		"full_load_error_percentage": aws.Int64Value(settings.FullLoadErrorPercentage),
 		"service_access_role_arn":    aws.StringValue(settings.ServiceAccessRoleArn),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenDmsKafkaSettings(settings *dms.KafkaSettings) []map[string]interface{} {
+	if settings == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"broker": aws.StringValue(settings.Broker),
+		"topic":  aws.StringValue(settings.Topic),
 	}
 
 	return []map[string]interface{}{m}
