@@ -23,6 +23,7 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * data-source/aws_subnet: Add `outposts_arn` attribute [GH-12097]
 * provider: Support automatic region validation for `eu-south-1` [GH-12970]
+* resource/aws_api_gateway_stage: Ignore `NotFoundException` error on destroy [GH-12826]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_default_route_table: Support import [GH-13030]
