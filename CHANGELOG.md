@@ -21,6 +21,7 @@ ENHANCEMENTS:
 * provider: Support automatic region validation for `eu-south-1` [GH-12970]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
+* resource/aws_default_route_table: Support import [GH-13030]
 * resource/aws_elasticsearch_domain: Support customizable update timeout [GH-12916]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_mq_broker: Support import [GH-11841]
