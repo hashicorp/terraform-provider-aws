@@ -86,7 +86,7 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 						},
 
 						"listener": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
 							MinItems: 0,
 							MaxItems: 1,
@@ -173,7 +173,6 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 									},
 								},
 							},
-							Set: appmeshVirtualNodeListenerHash,
 						},
 
 						"logging": {

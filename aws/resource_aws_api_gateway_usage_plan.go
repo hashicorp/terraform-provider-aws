@@ -55,7 +55,7 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 			},
 
 			"quota_settings": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{
@@ -85,7 +85,7 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 			},
 
 			"throttle_settings": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				Elem: &schema.Resource{

@@ -324,7 +324,7 @@ func vpcPeeringConnectionRefreshState(conn *ec2.EC2, id string) resource.StateRe
 
 func vpcPeeringConnectionOptionsSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Optional: true,
 		Computed: true,
 		MaxItems: 1,

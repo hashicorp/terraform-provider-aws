@@ -90,7 +90,7 @@ func resourceAwsSesEventDestination() *schema.Resource {
 			},
 
 			"kinesis_destination": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      true,
 				MaxItems:      1,
@@ -111,7 +111,7 @@ func resourceAwsSesEventDestination() *schema.Resource {
 			},
 
 			"sns_destination": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				MaxItems:      1,
 				Optional:      true,
 				ForceNew:      true,

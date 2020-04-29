@@ -342,7 +342,7 @@ func resourceAwsEcsService() *schema.Resource {
 			},
 
 			"service_registries": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,

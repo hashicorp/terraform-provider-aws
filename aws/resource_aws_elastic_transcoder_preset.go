@@ -26,7 +26,7 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 			},
 
 			"audio": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
@@ -62,7 +62,7 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 				},
 			},
 			"audio_codec_options": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
@@ -112,7 +112,7 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 			},
 
 			"thumbnails": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
@@ -170,7 +170,7 @@ func resourceAwsElasticTranscoderPreset() *schema.Resource {
 			},
 
 			"video": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,

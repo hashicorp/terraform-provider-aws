@@ -289,9 +289,8 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Optional: true,
 						},
 						"expiration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
-							Set:      expirationHash,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -313,10 +312,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 							},
 						},
 						"noncurrent_version_expiration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
-							Set:      expirationHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"days": {
@@ -422,11 +420,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
 									"destination": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										MaxItems: 1,
 										MinItems: 1,
 										Required: true,
-										Set:      destinationHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"account_id": {
@@ -477,19 +474,17 @@ func resourceAwsS3Bucket() *schema.Resource {
 										},
 									},
 									"source_selection_criteria": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										MaxItems: 1,
-										Set:      sourceSelectionCriteriaHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"sse_kms_encrypted_objects": {
-													Type:     schema.TypeSet,
+													Type:     schema.TypeList,
 													Optional: true,
 													MinItems: 1,
 													MaxItems: 1,
-													Set:      sourceSseKmsObjectsHash,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"enabled": {

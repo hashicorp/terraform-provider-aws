@@ -1200,7 +1200,7 @@ var awsMutexKV = mutexkv.NewMutexKV()
 
 func assumeRoleSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{

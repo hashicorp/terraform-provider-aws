@@ -23,7 +23,7 @@ const (
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		MaxItems: 1,
 		Optional: true,
 		Computed: true,

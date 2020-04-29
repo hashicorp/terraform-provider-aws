@@ -35,7 +35,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 
 			// ContentConfig also requires ThumbnailConfig
 			"content_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,
@@ -102,7 +102,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 			},
 
 			"notifications": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -144,7 +144,7 @@ func resourceAwsElasticTranscoderPipeline() *schema.Resource {
 			},
 
 			"thumbnail_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				MaxItems: 1,

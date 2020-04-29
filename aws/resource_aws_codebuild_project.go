@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -160,7 +159,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Computed: true,
 			},
 			"environment": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -256,7 +255,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeBuildProjectEnvironmentHash,
 			},
 			"logs_config": {
 				Type:     schema.TypeList,
@@ -474,7 +472,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Required: true,
 			},
 			"source": {
-				Type: schema.TypeSet,
+				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth": {
@@ -549,7 +547,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				},
 				Required: true,
 				MaxItems: 1,
-				Set:      resourceAwsCodeBuildProjectSourceHash,
 			},
 			"source_version": {
 				Type:     schema.TypeString,
@@ -1553,40 +1550,6 @@ func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
 			}
 			buf.WriteString(fmt.Sprintf("%s-", ev["value"].(string)))
 		}
-	}
-
-	return hashcode.String(buf.String())
-}
-
-func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-	if v, ok := m["source_identifier"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
-	}
-	if v, ok := m["buildspec"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["location"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["git_clone_depth"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
-	}
-	if v, ok := m["git_submodules_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		m := v.([]interface{})[0].(map[string]interface{})
-
-		if v, ok := m["fetch_submodules"]; ok {
-			buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
-		}
-	}
-	if v, ok := m["insecure_ssl"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
-	}
-	if v, ok := m["report_build_status"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
 	}
 
 	return hashcode.String(buf.String())

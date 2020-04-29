@@ -33,7 +33,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 				ForceNew: true,
 			},
 			"default_action": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{

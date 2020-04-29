@@ -59,7 +59,7 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				ForceNew: true,
 			},
 			"instance_types": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,

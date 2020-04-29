@@ -87,7 +87,7 @@ func resourceAwsFsxLustreFileSystem() *schema.Resource {
 				ValidateFunc: validation.IntAtLeast(1200),
 			},
 			"subnet_ids": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 				MinItems: 1,
