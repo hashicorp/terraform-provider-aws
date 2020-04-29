@@ -49,7 +49,7 @@ func resourceAwsGuardDutyOrganizationAdminAccountCreate(d *schema.ResourceData, 
 	d.SetId(adminAccountID)
 
 	if _, err := waiter.AdminAccountEnabled(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) enable: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to enable: %w", d.Id(), err)
 	}
 
 	return resourceAwsGuardDutyOrganizationAdminAccountRead(d, meta)
@@ -89,7 +89,7 @@ func resourceAwsGuardDutyOrganizationAdminAccountDelete(d *schema.ResourceData, 
 	}
 
 	if _, err := waiter.AdminAccountNotFound(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) disable: %w", d.Id(), err)
+		return fmt.Errorf("error waiting for GuardDuty Organization Admin Account (%s) to disable: %w", d.Id(), err)
 	}
 
 	return nil
@@ -111,7 +111,7 @@ func getGuardDutyOrganizationAdminAccount(conn *guardduty.GuardDuty, adminAccoun
 
 			if aws.StringValue(adminAccount.AdminAccountId) == adminAccountID {
 				result = adminAccount
-				break
+				return false
 			}
 		}
 

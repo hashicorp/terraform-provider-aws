@@ -48,7 +48,7 @@ func getOrganizationAdminAccount(conn *guardduty.GuardDuty, adminAccountID strin
 
 			if aws.StringValue(adminAccount.AdminAccountId) == adminAccountID {
 				result = adminAccount
-				break
+				return false
 			}
 		}
 
