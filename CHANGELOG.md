@@ -44,6 +44,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_api_gateway_rest_api: Prevent error with VPC Endpoint configured APIs [GH-12825]
 * resource/aws_appautoscaling_scheduled_action: Prevent error on refresh with multiple resources using the same scheduled action name [GH-12699]
 * resource/aws_batch_job_queue: Prevent panic when `ComputeEnvironmentOrder` is updated outside Terraform [GH-12632]
 * resource/aws_default_route_table: Proper tag on resource creation [GH-12858]
