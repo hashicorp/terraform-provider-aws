@@ -67,6 +67,12 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
+			},
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -95,6 +101,9 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 	if value, ok := d.GetOk("snapshot_id"); ok {
 		request.SnapshotId = aws.String(value.(string))
+	}
+	if value, ok := d.GetOk("outpost_arn"); ok {
+		request.OutpostArn = aws.String(value.(string))
 	}
 
 	// IOPs are only valid, and required for, storage type io1. The current minimu
@@ -264,6 +273,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", aws.StringValue(volume.KmsKeyId))
 	d.Set("size", aws.Int64Value(volume.Size))
 	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
+	d.Set("outpost_arn", aws.StringValue(volume.OutpostArn))
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
