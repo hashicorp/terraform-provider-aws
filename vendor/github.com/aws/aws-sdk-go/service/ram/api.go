@@ -1005,6 +1005,9 @@ func (c *RAM) GetResourcePoliciesRequest(input *GetResourcePoliciesInput) (req *
 //   * InvalidParameterException
 //   A parameter is not valid.
 //
+//   * ResourceArnNotFoundException
+//   An Amazon Resource Name (ARN) was not found.
+//
 //   * ServerInternalException
 //   The service could not respond to the request due to an internal problem.
 //
@@ -1308,6 +1311,9 @@ func (c *RAM) GetResourceShareInvitationsRequest(input *GetResourceShareInvitati
 //
 //   * MalformedArnException
 //   The format of an Amazon Resource Name (ARN) is not valid.
+//
+//   * UnknownResourceException
+//   A specified resource was not found.
 //
 //   * InvalidNextTokenException
 //   The specified value for NextToken is not valid.
@@ -2051,6 +2057,94 @@ func (c *RAM) ListResourceSharePermissionsWithContext(ctx aws.Context, input *Li
 	return out, req.Send()
 }
 
+const opListResourceTypes = "ListResourceTypes"
+
+// ListResourceTypesRequest generates a "aws/request.Request" representing the
+// client's request for the ListResourceTypes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListResourceTypes for more information on using the ListResourceTypes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListResourceTypesRequest method.
+//    req, resp := client.ListResourceTypesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04/ListResourceTypes
+func (c *RAM) ListResourceTypesRequest(input *ListResourceTypesInput) (req *request.Request, output *ListResourceTypesOutput) {
+	op := &request.Operation{
+		Name:       opListResourceTypes,
+		HTTPMethod: "POST",
+		HTTPPath:   "/listresourcetypes",
+	}
+
+	if input == nil {
+		input = &ListResourceTypesInput{}
+	}
+
+	output = &ListResourceTypesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListResourceTypes API operation for AWS Resource Access Manager.
+//
+// Lists the shareable resource types supported by AWS RAM.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Resource Access Manager's
+// API operation ListResourceTypes for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidNextTokenException
+//   The specified value for NextToken is not valid.
+//
+//   * InvalidParameterException
+//   A parameter is not valid.
+//
+//   * ServerInternalException
+//   The service could not respond to the request due to an internal problem.
+//
+//   * ServiceUnavailableException
+//   The service is not available.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04/ListResourceTypes
+func (c *RAM) ListResourceTypes(input *ListResourceTypesInput) (*ListResourceTypesOutput, error) {
+	req, out := c.ListResourceTypesRequest(input)
+	return out, req.Send()
+}
+
+// ListResourceTypesWithContext is the same as ListResourceTypes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListResourceTypes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *RAM) ListResourceTypesWithContext(ctx aws.Context, input *ListResourceTypesInput, opts ...request.Option) (*ListResourceTypesOutput, error) {
+	req, out := c.ListResourceTypesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opListResources = "ListResources"
 
 // ListResourcesRequest generates a "aws/request.Request" representing the
@@ -2287,6 +2381,9 @@ func (c *RAM) PromoteResourceShareCreatedFromPolicyRequest(input *PromoteResourc
 //
 //   * ServiceUnavailableException
 //   The service is not available.
+//
+//   * UnknownResourceException
+//   A specified resource was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ram-2018-01-04/PromoteResourceShareCreatedFromPolicy
 func (c *RAM) PromoteResourceShareCreatedFromPolicy(input *PromoteResourceShareCreatedFromPolicyInput) (*PromoteResourceShareCreatedFromPolicyOutput, error) {
@@ -4569,9 +4666,11 @@ type ListPrincipalsInput struct {
 
 	// The resource type.
 	//
-	// Valid values: ec2:CapacityReservation | ec2:Subnet | ec2:TrafficMirrorTarget
-	// | ec2:TransitGateway | license-manager:LicenseConfiguration | rds:Cluster
-	// | route53resolver:ResolverRule I resource-groups:Group
+	// Valid values: codebuild:Project | codebuild:ReportGroup | ec2:CapacityReservation
+	// | ec2:DedicatedHost | ec2:Subnet | ec2:TrafficMirrorTarget | ec2:TransitGateway
+	// | imagebuilder:Component | imagebuilder:Image | imagebuilder:ImageRecipe
+	// | license-manager:LicenseConfiguration I resource-groups:Group | rds:Cluster
+	// | route53resolver:ResolverRule
 	ResourceType *string `locationName:"resourceType" type:"string"`
 }
 
@@ -4769,6 +4868,85 @@ func (s *ListResourceSharePermissionsOutput) SetPermissions(v []*ResourceSharePe
 	return s
 }
 
+type ListResourceTypesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The maximum number of results to return with a single call. To retrieve the
+	// remaining results, make another call with the returned nextToken value.
+	MaxResults *int64 `locationName:"maxResults" min:"1" type:"integer"`
+
+	// The token for the next page of results.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListResourceTypesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListResourceTypesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListResourceTypesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListResourceTypesInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListResourceTypesInput) SetMaxResults(v int64) *ListResourceTypesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListResourceTypesInput) SetNextToken(v string) *ListResourceTypesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListResourceTypesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The token to use to retrieve the next page of results. This value is null
+	// when there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+
+	// The shareable resource types supported by AWS RAM.
+	ResourceTypes []*ServiceNameAndResourceType `locationName:"resourceTypes" type:"list"`
+}
+
+// String returns the string representation
+func (s ListResourceTypesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListResourceTypesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListResourceTypesOutput) SetNextToken(v string) *ListResourceTypesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceTypes sets the ResourceTypes field's value.
+func (s *ListResourceTypesOutput) SetResourceTypes(v []*ServiceNameAndResourceType) *ListResourceTypesOutput {
+	s.ResourceTypes = v
+	return s
+}
+
 type ListResourcesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -4795,9 +4973,11 @@ type ListResourcesInput struct {
 
 	// The resource type.
 	//
-	// Valid values: ec2:CapacityReservation | ec2:Subnet | ec2:TrafficMirrorTarget
-	// | ec2:TransitGateway | license-manager:LicenseConfiguration | rds:Cluster
-	// | route53resolver:ResolverRule | resource-groups:Group
+	// Valid values: codebuild:Project | codebuild:ReportGroup | ec2:CapacityReservation
+	// | ec2:DedicatedHost | ec2:Subnet | ec2:TrafficMirrorTarget | ec2:TransitGateway
+	// | imagebuilder:Component | imagebuilder:Image | imagebuilder:ImageRecipe
+	// | license-manager:LicenseConfiguration I resource-groups:Group | rds:Cluster
+	// | route53resolver:ResolverRule
 	ResourceType *string `locationName:"resourceType" type:"string"`
 }
 
@@ -6236,6 +6416,40 @@ func (s *ServerInternalException) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *ServerInternalException) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// Information about the shareable resource types and the AWS services to which
+// they belong.
+type ServiceNameAndResourceType struct {
+	_ struct{} `type:"structure"`
+
+	// The shareable resource types.
+	ResourceType *string `locationName:"resourceType" type:"string"`
+
+	// The name of the AWS services to which the resources belong.
+	ServiceName *string `locationName:"serviceName" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceNameAndResourceType) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceNameAndResourceType) GoString() string {
+	return s.String()
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *ServiceNameAndResourceType) SetResourceType(v string) *ServiceNameAndResourceType {
+	s.ResourceType = &v
+	return s
+}
+
+// SetServiceName sets the ServiceName field's value.
+func (s *ServiceNameAndResourceType) SetServiceName(v string) *ServiceNameAndResourceType {
+	s.ServiceName = &v
+	return s
 }
 
 // The service is not available.
