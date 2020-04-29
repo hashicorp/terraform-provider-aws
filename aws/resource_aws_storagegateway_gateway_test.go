@@ -345,6 +345,34 @@ func TestAccAWSStorageGatewayGateway_GatewayTimezone(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_GatewayVpcEndpoint(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+	vpcEndpointResourceName := "aws_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_GatewayVpcEndpoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_vpc_endpoint", vpcEndpointResourceName, "dns_entry.0.dns_name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -668,6 +696,30 @@ resource "aws_storagegateway_gateway" "test" {
   gateway_type       = "FILE_S3"
 }
 `, rName, gatewayTimezone)
+}
+
+func testAccAWSStorageGatewayGatewayConfig_GatewayVpcEndpoint(rName string) string {
+	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "storagegateway" {
+  service = "storagegateway"
+}
+
+resource "aws_vpc_endpoint" "test" {
+  security_group_ids = [aws_security_group.test.id]
+  service_name       = data.aws_vpc_endpoint_service.storagegateway.service_name
+  subnet_ids         = [aws_subnet.test.id]
+  vpc_endpoint_type  = data.aws_vpc_endpoint_service.storagegateway.service_type
+  vpc_id             = aws_vpc.test.id
+}
+
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address   = aws_instance.test.public_ip
+  gateway_name         = %[1]q
+  gateway_timezone     = "GMT"
+  gateway_type         = "CACHED"
+  gateway_vpc_endpoint = aws_vpc_endpoint.test.dns_entry[0].dns_name
+}
+`, rName)
 }
 
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
