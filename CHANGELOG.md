@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_default_route_table: Support import [GH-13030]
+* resource/aws_dms_endpoint: Add `kafka_settings` configuration block and `kafka` to `engine_name` argument validation [GH-12835]
 * resource/aws_ebs_volume: Add `outpost_arn` argument [GH-12439]
 * resource/aws_elasticsearch_domain: Support customizable update timeout [GH-12916]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
