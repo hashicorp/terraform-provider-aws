@@ -12,7 +12,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudtrail_service_account: Support `eu-south-1` region [GH-13061]
+* data-source/aws_elastic_beanstalk_hosted_zone: Support `eu-south-1` region [GH-13061]
 * data-source/aws_elb_hosted_zone_id: Add `us-gov-east-1` and `us-gov-west-1` region values [GH-12976]
+* data-source/aws_elb_hosted_zone_id: Support `eu-south-1` region [GH-13061]
+* data-source/aws_elb_service_account: Support `eu-south-1` region [GH-13061]
+* data-source/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * provider: Support automatic region validation for `eu-south-1` [GH-12970]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
@@ -22,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_placement_group: Support tag-on-create [GH-12963]
 * resource/aws_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_route53_health_check: Support plan-time validation for `reference_name` argument [GH-12873]
+* resource/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * resource/aws_spot_fleet_request: Add `launch_template_config` configuration block (Support EC2 Launch Templates) [GH-12732]
 * resource/aws_wafregional_xss_match_set: Add plan-time validation for `xss_match_tuple` configuration block arguments [GH-13024]
 
