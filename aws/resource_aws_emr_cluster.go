@@ -212,10 +212,9 @@ func resourceAwsEMRCluster() *schema.Resource {
 							Computed: true,
 						},
 						"instance_profile": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validateArn,
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
 						},
 						"service_access_security_group": {
 							Type:     schema.TypeString,
@@ -594,10 +593,9 @@ func resourceAwsEMRCluster() *schema.Resource {
 				},
 			},
 			"service_role": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
 			},
 			"scale_down_behavior": {
 				Type:     schema.TypeString,
@@ -615,10 +613,9 @@ func resourceAwsEMRCluster() *schema.Resource {
 				Optional: true,
 			},
 			"autoscaling_role": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: validateArn,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Optional: true,
 			},
 			"visible_to_all_users": {
 				Type:     schema.TypeBool,
