@@ -22,11 +22,9 @@ func TestAccDataSourceAwsKmsAlias_AwsService(t *testing.T) {
 				Config: testAccDataSourceAwsKmsAlias_name(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsKmsAliasCheckExists(resourceName),
-					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:kms:[^:]+:[^:]+:%s$", name))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "kms", name),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					//lintignore:AWSAT001
-					resource.TestMatchResourceAttr(resourceName, "target_key_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:kms:[^:]+:[^:]+:key/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}$"))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "target_key_arn", "kms", regexp.MustCompile(`key/[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}`)),
 					resource.TestMatchResourceAttr(resourceName, "target_key_id", regexp.MustCompile(fmt.Sprintf("^[a-z0-9]{8}-([a-z0-9]{4}-){3}[a-z0-9]{12}$"))),
 				),
 			},
