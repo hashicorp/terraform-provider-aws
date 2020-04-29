@@ -22,6 +22,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_batch_job_queue: Prevent panic when `ComputeEnvironmentOrder` is updated outside Terraform [GH-12632]
 * resource/aws_default_route_table: Proper tag on resource creation [GH-12858]
 * resource/aws_fsx_windows_file_system: Prevent panic when update includes `self_managed_active_directory` settings [GH-12630]
 * resource/aws_glue_catalog_table: Prevent various panics with empty configuration blocks [GH-12611]
