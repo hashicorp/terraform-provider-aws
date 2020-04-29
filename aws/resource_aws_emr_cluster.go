@@ -723,7 +723,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	// DEPRECATED: Remove in a future major version
 	if v, ok := d.GetOk("master_instance_type"); ok {
 		masterInstanceGroupConfig := &emr.InstanceGroupConfig{
-			InstanceRole:  aws.String("MASTER"),
+			InstanceRole:  aws.String(emr.InstanceRoleTypeMaster),
 			InstanceType:  aws.String(v.(string)),
 			InstanceCount: aws.Int64(1),
 		}
@@ -744,7 +744,7 @@ func resourceAwsEMRClusterCreate(d *schema.ResourceData, meta interface{}) error
 	} else if coreInstanceCount > 0 && coreInstanceType != "" {
 		coreInstanceGroupConfig := &emr.InstanceGroupConfig{
 			InstanceCount: aws.Int64(int64(d.Get("core_instance_count").(int))),
-			InstanceRole:  aws.String("CORE"),
+			InstanceRole:  aws.String(emr.InstanceRoleTypeCore),
 			InstanceType:  aws.String(d.Get("core_instance_type").(string)),
 		}
 		instanceConfig.InstanceGroups = append(instanceConfig.InstanceGroups, coreInstanceGroupConfig)
@@ -1125,10 +1125,7 @@ func resourceAwsEMRClusterRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).emrconn
 
-	d.Partial(true)
-
 	if d.HasChange("core_instance_count") {
-		d.SetPartial("core_instance_count")
 		log.Printf("[DEBUG] Modify EMR cluster")
 		groups, err := fetchAllEMRInstanceGroups(conn, d.Id())
 		if err != nil {
@@ -1182,7 +1179,6 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("visible_to_all_users") {
-		d.SetPartial("visible_to_all_users")
 		_, errModify := conn.SetVisibleToAllUsers(&emr.SetVisibleToAllUsersInput{
 			JobFlowIds:        []*string{aws.String(d.Id())},
 			VisibleToAllUsers: aws.Bool(d.Get("visible_to_all_users").(bool)),
@@ -1194,7 +1190,6 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("termination_protection") {
-		d.SetPartial("termination_protection")
 		_, errModify := conn.SetTerminationProtection(&emr.SetTerminationProtectionInput{
 			JobFlowIds:           []*string{aws.String(d.Id())},
 			TerminationProtected: aws.Bool(d.Get("termination_protection").(bool)),
@@ -1354,7 +1349,6 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 	}
 
 	if d.HasChange("step_concurrency_level") {
-		d.SetPartial("step_concurrency_level")
 		_, errModify := conn.ModifyCluster(&emr.ModifyClusterInput{
 			ClusterId:            aws.String(d.Id()),
 			StepConcurrencyLevel: aws.Int64(int64(d.Get("step_concurrency_level").(int))),
@@ -1364,8 +1358,6 @@ func resourceAwsEMRClusterUpdate(d *schema.ResourceData, meta interface{}) error
 			return errModify
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsEMRClusterRead(d, meta)
 }
