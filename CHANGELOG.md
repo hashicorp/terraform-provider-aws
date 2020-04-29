@@ -13,6 +13,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_cloudtrail_service_account: Support `eu-south-1` region [GH-13061]
+* data-source/aws_ebs_volume: Add `outpost_arn` attribute [GH-12439]
 * data-source/aws_elastic_beanstalk_hosted_zone: Support `eu-south-1` region [GH-13061]
 * data-source/aws_elb_hosted_zone_id: Add `us-gov-east-1` and `us-gov-west-1` region values [GH-12976]
 * data-source/aws_elb_hosted_zone_id: Support `eu-south-1` region [GH-13061]
@@ -23,6 +24,7 @@ ENHANCEMENTS:
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_default_route_table: Support import [GH-13030]
+* resource/aws_ebs_volume: Add `outpost_arn` argument [GH-12439]
 * resource/aws_elasticsearch_domain: Support customizable update timeout [GH-12916]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_mq_broker: Support import [GH-11841]
