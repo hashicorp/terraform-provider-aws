@@ -22,6 +22,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_appautoscaling_scheduled_action: Prevent error on refresh with multiple resources using the same scheduled action name [GH-12699]
 * resource/aws_batch_job_queue: Prevent panic when `ComputeEnvironmentOrder` is updated outside Terraform [GH-12632]
 * resource/aws_default_route_table: Proper tag on resource creation [GH-12858]
 * resource/aws_efs_file_system: Prevent panic with empty `lifecycle_policy` configuration block [GH-12640]
