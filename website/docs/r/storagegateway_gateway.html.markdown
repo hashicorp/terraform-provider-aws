@@ -60,8 +60,6 @@ resource "aws_storagegateway_gateway" "example" {
 }
 ```
 
-
-
 ## Argument Reference
 
 ~> **NOTE:** One of `activation_key` or `gateway_ip_address` must be provided for resource creation (gateway activation). Neither is required for resource import. If using `gateway_ip_address`, Terraform must be able to make an HTTP (port 80) GET request to the specified IP address from where it is running.

@@ -53,7 +53,6 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 			"gateway_vpc_endpoint": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"gateway_id": {
