@@ -90,7 +90,7 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 }
 
 func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta interface{}) error {
-	glueconn := meta.(*AWSClient).glueconn
+	conn := meta.(*AWSClient).glueconn
 	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
 	dbName := d.Get("database_name").(string)
 	funcName := d.Get("name").(string)
@@ -101,7 +101,7 @@ func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta inter
 		FunctionInput: expandAwsGlueUserDefinedFunctionInput(d),
 	}
 
-	_, err := glueconn.CreateUserDefinedFunction(input)
+	_, err := conn.CreateUserDefinedFunction(input)
 	if err != nil {
 		return fmt.Errorf("error creating Glue User Defined Function: %s", err)
 	}
@@ -112,7 +112,7 @@ func resourceAwsGlueUserDefinedFunctionCreate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
-	glueconn := meta.(*AWSClient).glueconn
+	conn := meta.(*AWSClient).glueconn
 
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
 	if err != nil {
@@ -128,7 +128,7 @@ func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta inter
 
 	if d.HasChange("owner_name") || d.HasChange("owner_type") ||
 		d.HasChange("class_name") || d.HasChange("resource_uris") {
-		if _, err := glueconn.UpdateUserDefinedFunction(input); err != nil {
+		if _, err := conn.UpdateUserDefinedFunction(input); err != nil {
 			return err
 		}
 	}
@@ -137,7 +137,7 @@ func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta inter
 }
 
 func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interface{}) error {
-	glueconn := meta.(*AWSClient).glueconn
+	conn := meta.(*AWSClient).glueconn
 
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
 	if err != nil {
@@ -150,7 +150,7 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 		FunctionName: aws.String(funcName),
 	}
 
-	out, err := glueconn.GetUserDefinedFunction(input)
+	out, err := conn.GetUserDefinedFunction(input)
 	if err != nil {
 
 		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
@@ -180,14 +180,14 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 }
 
 func resourceAwsGlueUserDefinedFunctionDelete(d *schema.ResourceData, meta interface{}) error {
-	glueconn := meta.(*AWSClient).glueconn
+	conn := meta.(*AWSClient).glueconn
 	catalogID, dbName, funcName, err := readAwsGlueUDFID(d.Id())
 	if err != nil {
 		return err
 	}
 
 	log.Printf("[DEBUG] Glue User Defined Function: %s", d.Id())
-	_, err = glueconn.DeleteUserDefinedFunction(&glue.DeleteUserDefinedFunctionInput{
+	_, err = conn.DeleteUserDefinedFunction(&glue.DeleteUserDefinedFunctionInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		FunctionName: aws.String(funcName),

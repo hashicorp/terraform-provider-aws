@@ -13,7 +13,6 @@ import (
 )
 
 func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
-	var udf glue.UserDefinedFunction
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	updated := "test"
 	resourceName := "aws_glue_user_defined_function.test"
@@ -27,7 +26,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
+					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", rName),
@@ -43,7 +42,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, updated),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
+					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", updated),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", updated),
@@ -55,7 +54,6 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 }
 
 func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
-	var udf glue.UserDefinedFunction
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_glue_user_defined_function.test"
 
@@ -68,7 +66,7 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 				Config:  testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
+					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
 			},
@@ -81,7 +79,7 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 				Config:  testAccGlueUserDefinedFunctionResourceURIConfig2(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
+					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "2"),
 				),
 			},
@@ -89,9 +87,31 @@ func TestAccAWSGlueUserDefinedFunction_resource_uri(t *testing.T) {
 				Config:  testAccGlueUserDefinedFunctionResourceURIConfig1(rName),
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlueUserDefinedFunctionExists(resourceName, &udf),
+					testAccCheckGlueUserDefinedFunctionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "resource_uris.#", "1"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_glue_user_defined_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueUDFDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccGlueUserDefinedFunctionBasicConfig(rName, rName),
+				Destroy: false,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckGlueUserDefinedFunctionDisappears(resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -194,7 +214,7 @@ resource "aws_glue_user_defined_function" "test" {
 `, rName)
 }
 
-func testAccCheckGlueUserDefinedFunctionExists(name string, udf *glue.UserDefinedFunction) resource.TestCheckFunc {
+func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -210,8 +230,8 @@ func testAccCheckGlueUserDefinedFunctionExists(name string, udf *glue.UserDefine
 			return err
 		}
 
-		glueconn := testAccProvider.Meta().(*AWSClient).glueconn
-		out, err := glueconn.GetUserDefinedFunction(&glue.GetUserDefinedFunctionInput{
+		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		out, err := conn.GetUserDefinedFunction(&glue.GetUserDefinedFunctionInput{
 			CatalogId:    aws.String(catalogId),
 			DatabaseName: aws.String(dbName),
 			FunctionName: aws.String(funcName),
@@ -230,8 +250,33 @@ func testAccCheckGlueUserDefinedFunctionExists(name string, udf *glue.UserDefine
 				*out.UserDefinedFunction.FunctionName, funcName)
 		}
 
-		*udf = *out.UserDefinedFunction
-
 		return nil
+	}
+}
+
+func testAccCheckGlueUserDefinedFunctionDisappears(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		catalogId, dbName, funcName, err := readAwsGlueUDFID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		_, err = conn.DeleteUserDefinedFunction(&glue.DeleteUserDefinedFunctionInput{
+			CatalogId:    aws.String(catalogId),
+			DatabaseName: aws.String(dbName),
+			FunctionName: aws.String(funcName),
+		})
+
+		return err
 	}
 }
