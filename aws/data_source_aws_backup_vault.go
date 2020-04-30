@@ -36,6 +36,8 @@ func dataSourceAwsBackupVault() *schema.Resource {
 
 func dataSourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).backupconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	name := d.Get("name").(string)
 	input := &backup.DescribeBackupVaultInput{
 		BackupVaultName: aws.String(name),
@@ -56,7 +58,7 @@ func dataSourceAwsBackupVaultRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("error listing tags for Backup Vault (%s): %s", name, err)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
