@@ -319,6 +319,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"spot_instance_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											ec2.SpotInstanceTypeOneTime,
+											ec2.SpotInstanceTypePersistent,
+										}, false),
 									},
 									"valid_until": {
 										Type:         schema.TypeString,
@@ -440,20 +444,27 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv6Address,
+							},
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"private_ip_address": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsIPv4Address,
 						},
 						"ipv4_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv4Address,
+							},
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,

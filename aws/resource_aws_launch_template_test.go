@@ -714,6 +714,32 @@ func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
+func TestAccAWSLaunchTemplate_partition(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfigPartition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.partition_number", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_networkInterface_ipv6Addresses(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1338,6 +1364,28 @@ resource "aws_launch_template" "test" {
   network_interfaces {
     network_interface_id = "${aws_network_interface.test.id}"
     ipv4_address_count = 2
+  }
+}
+`, rName)
+}
+
+func testAccAWSLaunchTemplateConfigPartition(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "partition"
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  placement {
+    group_name       = "${aws_placement_group.test.name}"
+    partition_number = 1
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName)
