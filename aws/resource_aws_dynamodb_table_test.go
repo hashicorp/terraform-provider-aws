@@ -326,9 +326,10 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("TerraformTestTable-")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSDynamoDbTableDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbConfig_basic(rName),
@@ -680,9 +681,10 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSDynamoDbTableDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdate(name),
@@ -725,9 +727,10 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSDynamoDbTableDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdate(name),
@@ -802,9 +805,10 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 	name := acctest.RandString(10)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDynamoDbTableDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSDynamoDbTableDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbConfigGsiUpdatedOtherAttributes(name),
@@ -1395,8 +1399,9 @@ func TestAccAWSDynamoDbTable_Replica(t *testing.T) {
 			testAccMultipleRegionsPreCheck(t)
 			testAccAlternateRegionPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
+		ProviderFactories:   testAccProviderFactories(&providers),
+		CheckDestroy:        testAccCheckAWSDynamoDbTableDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDynamoDbReplicaUpdates(tableName),

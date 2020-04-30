@@ -16,9 +16,10 @@ func TestAccAWSKmsGrant_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSKmsGrantDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsGrant_Basic(rName, "\"Encrypt\", \"Decrypt\""),
@@ -47,9 +48,10 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSKmsGrantDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsGrant_withConstraints(rName, "encryption_context_equals", `foo = "bar"
@@ -144,9 +146,10 @@ func TestAccAWSKmsGrant_ARN(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSKmsGrantDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSKmsGrantDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSKmsGrant_ARN(rName, "\"Encrypt\", \"Decrypt\""),

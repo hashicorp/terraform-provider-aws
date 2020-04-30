@@ -18,9 +18,10 @@ func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecretsManagerSecretVersionConfig_SecretString(rName),
@@ -49,9 +50,10 @@ func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
 	secretResourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecretsManagerSecretVersionConfig_SecretBinary(rName),
@@ -79,9 +81,10 @@ func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
 	resourceName := "aws_secretsmanager_secret_version.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecretsManagerSecretVersionConfig_VersionStages_Single(rName),

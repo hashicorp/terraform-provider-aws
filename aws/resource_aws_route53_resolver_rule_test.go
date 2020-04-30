@@ -210,6 +210,7 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ResolverRuleConfig_forward(name),
@@ -275,6 +276,7 @@ func TestAccAwsRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ResolverRuleConfig_forward(name),

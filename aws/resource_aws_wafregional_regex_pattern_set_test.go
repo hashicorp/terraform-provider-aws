@@ -39,6 +39,7 @@ func testAccAWSWafRegionalRegexPatternSet_basic(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexPatternSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalRegexPatternSetConfig(patternSetName),
@@ -68,6 +69,7 @@ func testAccAWSWafRegionalRegexPatternSet_changePatterns(t *testing.T) {
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalRegexPatternSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalRegexPatternSetConfig(patternSetName),

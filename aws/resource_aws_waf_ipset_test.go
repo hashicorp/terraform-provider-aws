@@ -21,9 +21,10 @@ func TestAccAWSWafIPSet_basic(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafIPSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafIPSetConfig(rName),
@@ -73,9 +74,10 @@ func TestAccAWSWafIPSet_changeNameForceNew(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafIPSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafIPSetConfig(rName),
@@ -110,9 +112,10 @@ func TestAccAWSWafIPSet_changeDescriptors(t *testing.T) {
 	resourceName := "aws_waf_ipset.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafIPSetDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafIPSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafIPSetConfig(rName),
