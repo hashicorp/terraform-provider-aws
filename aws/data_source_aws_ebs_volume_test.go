@@ -117,7 +117,7 @@ resource "aws_ebs_volume" "test" {
   }
 }
 
-data "aws_ebs_volume" "ebs_volume" {
+data "aws_ebs_volume" "test" {
   most_recent = true
   filter {
     name = "tag:Name"
