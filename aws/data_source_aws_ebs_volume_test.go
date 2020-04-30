@@ -44,7 +44,7 @@ func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEbsVolumeDataSourceID(dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "volume_type", resourceName, "volume_type"),
+					resource.TestCheckResourceAttr(dataSourceName, "volume_type", "gp2"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 				),
 			},
