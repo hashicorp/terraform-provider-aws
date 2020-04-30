@@ -317,6 +317,7 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -325,7 +326,7 @@ func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 		CheckDestroy:  testAccCheckVolumeDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEbsVolumeConfigMultiAttach,
+				Config: testAccAwsEbsVolumeConfigMultiAttach(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "multi_attach", "false"),
@@ -750,7 +751,8 @@ resource "aws_ebs_volume" "test" {
 `, outpostArn)
 }
 
-const testAccAwsEbsVolumeConfigMultiAttach = `
+func testAccAwsEbsVolumeConfigMultiAttach(rName string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -762,8 +764,14 @@ data "aws_availability_zones" "available" {
 
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type         = "io1"
-  multi_attach = true
-  size         = 1
+  type              = "io1"
+  multi_attach      = true
+  size              = 4
+  iops              = 100
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
