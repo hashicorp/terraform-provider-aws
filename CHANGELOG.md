@@ -3,12 +3,15 @@
 NOTES:
 
 * provider: Region validation now automatically supports the new `eu-south-1` (Europe (Milan)) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-12970]
+* provider: Ignore tags functionality across all data sources and resources (except `aws_autoscaling_group`) via the provider-level `ignore_tags` configuration block has been enabled and this functionality is no longer considered in preview. [GH-13039]
 
 FEATURES:
 
 * **New Data Source:** `aws_backup_plan` [GH-13035]
 * **New Data Source:** `aws_backup_selection` [GH-13035]
 * **New Data Source:** `aws_backup_vault` [GH-13035]
+* **New Resource:** `aws_guardduty_organization_admin_account` [GH-13034]
+* **New Resource:** `aws_guardduty_organization_configuration` [GH-13034]
 
 ENHANCEMENTS:
 
@@ -23,11 +26,15 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * data-source/aws_subnet: Add `outposts_arn` attribute [GH-12097]
 * provider: Support automatic region validation for `eu-south-1` [GH-12970]
+* provider: Implement ignore tags functionality across all data sources and resources (except `aws_autoscaling_group`) [GH-13039]
+* resource/aws_api_gateway_stage: Ignore `NotFoundException` error on destroy [GH-12826]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
 * resource/aws_default_route_table: Support import [GH-13030]
+* resource/aws_dms_endpoint: Add `kafka_settings` configuration block and `kafka` to `engine_name` argument validation [GH-12835]
 * resource/aws_ebs_volume: Add `outpost_arn` argument [GH-12439]
 * resource/aws_elasticsearch_domain: Support customizable update timeout [GH-12916]
+* resource/aws_glue_connection: Support `MONGODB` for `connection_type` argument [GH-13011]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_instance: Add `outpost_arn` attribute [GH-12330]
 * resource/aws_mq_broker: Support import [GH-11841]
@@ -37,12 +44,15 @@ ENHANCEMENTS:
 * resource/aws_route53_health_check: Support plan-time validation for `reference_name` argument [GH-12873]
 * resource/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * resource/aws_spot_fleet_request: Add `launch_template_config` configuration block (Support EC2 Launch Templates) [GH-12732]
+* resource/aws_spot_fleet_request: Support import [GH-12767]
+* resource/aws_storagegateway_gateway: Add `gateway_vpc_endpoint` argument [GH-9966]
 * resource/aws_storagegateway_smb_file_share: Add `path` attribute [GH-12623]
 * resource/aws_subnet: Add `outposts_arn` argument [GH-12097]
 * resource/aws_wafregional_xss_match_set: Add plan-time validation for `xss_match_tuple` configuration block arguments [GH-13024]
 
 BUG FIXES:
 
+* data-source/aws_api_gateway_rest_api: Prevent error with VPC Endpoint configured APIs [GH-12825]
 * resource/aws_appautoscaling_scheduled_action: Prevent error on refresh with multiple resources using the same scheduled action name [GH-12699]
 * resource/aws_batch_job_queue: Prevent panic when `ComputeEnvironmentOrder` is updated outside Terraform [GH-12632]
 * resource/aws_default_route_table: Proper tag on resource creation [GH-12858]
@@ -50,6 +60,8 @@ BUG FIXES:
 * resource/aws_fsx_windows_file_system: Prevent panic when update includes `self_managed_active_directory` settings [GH-12630]
 * resource/aws_glue_catalog_table: Prevent various panics with empty configuration blocks [GH-12611]
 * resource/aws_kinesis_firehose_delivery_stream: Prevent panic with empty `processing_configuration` configuration block [GH-12613]
+* resource/aws_kms_external_key: Prevent `MalformedPolicyDocumentException` errors on creation by retrying for up to 2 minutes to wait for IAM change propagation [GH-12863]
+* resource/aws_kms_key: Prevent `MalformedPolicyDocumentException` errors on creation by retrying for up to 2 minutes to wait for IAM change propagation [GH-12863]
 * resource/aws_lb_listener: Prevent panics on creation and refresh when API throttled [GH-12617]
 * resource/aws_route53_zone: Prevent panic with APIs missing `ChangeInfo` during creation (best effort fix for LocalStack) [GH-12634]
 * resource/aws_storagegateway_gateway: Perform multiple connectivity checks after activation to wait if the underlying server (e.g. EC2 Instance) is automatically rebooted [GH-12772]

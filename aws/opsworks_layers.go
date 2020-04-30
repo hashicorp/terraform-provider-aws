@@ -248,7 +248,9 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	return &schema.Resource{
 		Read: func(d *schema.ResourceData, meta interface{}) error {
 			client := meta.(*AWSClient).opsworksconn
-			return lt.Read(d, client)
+			ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+			return lt.Read(d, client, ignoreTagsConfig)
 		},
 		Create: func(d *schema.ResourceData, meta interface{}) error {
 			client := meta.(*AWSClient).opsworksconn
@@ -256,7 +258,9 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 		},
 		Update: func(d *schema.ResourceData, meta interface{}) error {
 			client := meta.(*AWSClient).opsworksconn
-			return lt.Update(d, client)
+			ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+			return lt.Update(d, client, ignoreTagsConfig)
 		},
 		Delete: func(d *schema.ResourceData, meta interface{}) error {
 			client := meta.(*AWSClient).opsworksconn
@@ -270,7 +274,7 @@ func (lt *opsworksLayerType) SchemaResource() *schema.Resource {
 	}
 }
 
-func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWorks) error {
+func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWorks, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
 
 	req := &opsworks.DescribeLayersInput{
 		LayerIds: []*string{
@@ -349,7 +353,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 		return fmt.Errorf("error listing tags for Opsworks Layer (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -357,6 +361,7 @@ func (lt *opsworksLayerType) Read(d *schema.ResourceData, client *opsworks.OpsWo
 }
 
 func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.OpsWorks, meta interface{}) error {
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &opsworks.CreateLayerInput{
 		AutoAssignElasticIps:        aws.Bool(d.Get("auto_assign_elastic_ips").(bool)),
@@ -420,10 +425,10 @@ func (lt *opsworksLayerType) Create(d *schema.ResourceData, client *opsworks.Ops
 		}
 	}
 
-	return lt.Read(d, client)
+	return lt.Read(d, client, ignoreTagsConfig)
 }
 
-func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.OpsWorks) error {
+func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.OpsWorks, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
 
 	req := &opsworks.UpdateLayerInput{
 		LayerId:                     aws.String(d.Id()),
@@ -495,7 +500,7 @@ func (lt *opsworksLayerType) Update(d *schema.ResourceData, client *opsworks.Ops
 		}
 	}
 
-	return lt.Read(d, client)
+	return lt.Read(d, client, ignoreTagsConfig)
 }
 
 func (lt *opsworksLayerType) Delete(d *schema.ResourceData, client *opsworks.OpsWorks) error {

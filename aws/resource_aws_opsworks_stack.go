@@ -270,6 +270,8 @@ func resourceAwsOpsworksSetStackCustomCookbooksSource(d *schema.ResourceData, v 
 
 func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).opsworksconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	var conErr error
 	if v := d.Get("stack_endpoint").(string); v != "" {
 		client, conErr = opsworksConnForRegion(v, meta)
@@ -374,7 +376,7 @@ func resourceAwsOpsworksStackRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error listing tags for Opsworks stack (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

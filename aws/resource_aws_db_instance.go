@@ -1257,7 +1257,10 @@ func resourceAwsDbInstanceCreate(d *schema.ResourceData, meta interface{}) error
 }
 
 func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	v, err := resourceAwsDbInstanceRetrieve(d.Id(), meta.(*AWSClient).rdsconn)
+	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	v, err := resourceAwsDbInstanceRetrieve(d.Id(), conn)
 
 	if err != nil {
 		return err
@@ -1338,10 +1341,6 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
 	}
 
-	// list tags for resource
-	// set tags
-	conn := meta.(*AWSClient).rdsconn
-
 	arn := aws.StringValue(v.DBInstanceArn)
 	d.Set("arn", arn)
 
@@ -1351,7 +1350,7 @@ func resourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

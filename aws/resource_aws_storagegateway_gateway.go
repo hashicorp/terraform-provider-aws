@@ -50,6 +50,11 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				ForceNew:      true,
 				ConflictsWith: []string{"gateway_ip_address"},
 			},
+			"gateway_vpc_endpoint": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"gateway_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -158,6 +163,10 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		}
 
 		requestURL := fmt.Sprintf("http://%s/?activationRegion=%s", gatewayIpAddress, region)
+		if v, ok := d.GetOk("gateway_vpc_endpoint"); ok {
+			requestURL = fmt.Sprintf("%s&vpcEndpoint=%s", requestURL, v.(string))
+		}
+
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
 		request, err := http.NewRequest("GET", requestURL, nil)
 		if err != nil {
@@ -289,6 +298,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeGatewayInformationInput{
 		GatewayARN: aws.String(d.Id()),
@@ -307,7 +317,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error reading Storage Gateway Gateway: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(output.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -340,6 +350,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	d.Set("gateway_name", output.GatewayName)
 	d.Set("gateway_timezone", output.GatewayTimezone)
 	d.Set("gateway_type", output.GatewayType)
+	d.Set("gateway_vpc_endpoint", output.VPCEndpoint)
 
 	// The Storage Gateway API currently provides no way to read this value
 	// We allow Terraform to passthrough the configuration value into the state

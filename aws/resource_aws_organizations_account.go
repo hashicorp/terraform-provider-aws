@@ -175,6 +175,8 @@ func resourceAwsOrganizationsAccountCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).organizationsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describeOpts := &organizations.DescribeAccountInput{
 		AccountId: aws.String(d.Id()),
 	}
@@ -216,7 +218,7 @@ func resourceAwsOrganizationsAccountRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for AWS Organizations Account (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

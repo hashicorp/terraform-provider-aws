@@ -465,7 +465,7 @@ func TestAccAwsBackupPlan_disappears(t *testing.T) {
 				Config: testAccAwsBackupPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupPlanExists(resourceName, &plan, &ruleNameMap),
-					testAccCheckAwsBackupPlanDisappears(&plan),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupPlan(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -494,20 +494,6 @@ func testAccCheckAwsBackupPlanDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAwsBackupPlanDisappears(backupPlan *backup.GetBackupPlanOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
-
-		input := &backup.DeleteBackupPlanInput{
-			BackupPlanId: backupPlan.BackupPlanId,
-		}
-
-		_, err := conn.DeleteBackupPlan(input)
-
-		return err
-	}
 }
 
 func testAccCheckAwsBackupPlanExists(name string, plan *backup.GetBackupPlanOutput, ruleNameMap *map[string]string) resource.TestCheckFunc {

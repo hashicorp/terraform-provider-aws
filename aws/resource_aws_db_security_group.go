@@ -141,6 +141,8 @@ func resourceAwsDbSecurityGroupCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	sg, err := resourceAwsDbSecurityGroupRetrieve(d, meta)
 	if err != nil {
 		return err
@@ -186,7 +188,7 @@ func resourceAwsDbSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error listing tags for RDS DB Security Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

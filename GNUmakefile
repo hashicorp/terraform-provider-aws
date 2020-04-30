@@ -68,6 +68,7 @@ lint:
 		-AT007 \
 		-AT008 \
 		-AWSR001 \
+		-AWSR002 \
 		-R002 \
 		-R004 \
 		-R006 \
@@ -142,6 +143,9 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
+website-link-check:
+	@scripts/markdown-link-check.sh
+
 website-lint:
 	@echo "==> Checking website against linters..."
 	@misspell -error -source=text website/ || (echo; \
@@ -171,5 +175,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-lint-fix website-test depscheck docscheck
+.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
 

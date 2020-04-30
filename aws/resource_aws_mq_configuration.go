@@ -104,6 +104,7 @@ func resourceAwsMqConfigurationCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).mqconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[INFO] Reading MQ Configuration %s", d.Id())
 	out, err := conn.DescribeConfiguration(&mq.DescribeConfigurationInput{
@@ -140,7 +141,7 @@ func resourceAwsMqConfigurationRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("data", string(b))
 
-	if err := d.Set("tags", keyvaluetags.MqKeyValueTags(out.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.MqKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

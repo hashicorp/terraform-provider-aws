@@ -214,6 +214,7 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SNS Topic Attributes for %s", d.Id())
 	attributeOutput, err := snsconn.GetTopicAttributes(&sns.GetTopicAttributesInput{
@@ -257,7 +258,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

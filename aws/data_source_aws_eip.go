@@ -70,6 +70,7 @@ func dataSourceAwsEip() *schema.Resource {
 
 func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeAddressesInput{}
 
@@ -149,7 +150,7 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eip.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

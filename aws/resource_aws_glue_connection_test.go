@@ -89,6 +89,39 @@ func TestAccAWSGlueConnection_Basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
+	var connection glue.Connection
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_MongoDB(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.CONNECTION_URL", "mongodb://testdb.com:27017/databasename"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "MONGODB"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueConnection_Description(t *testing.T) {
 	var connection glue.Connection
 
@@ -434,6 +467,22 @@ resource "aws_glue_connection" "test" {
     PASSWORD            = "testpassword"
     USERNAME            = "testusername"
   }
+
+  name = "%s"
+}
+`, rName)
+}
+
+func testAccAWSGlueConnectionConfig_MongoDB(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  connection_properties = {
+    CONNECTION_URL = "mongodb://testdb.com:27017/databasename"
+    PASSWORD       = "testpassword"
+    USERNAME       = "testusername"
+  }
+  
+  connection_type = "MONGODB"
 
   name = "%s"
 }

@@ -115,6 +115,7 @@ func resourceAwsVPCPeeringCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient)
+	ignoreTagsConfig := client.IgnoreTagsConfig
 
 	pcRaw, statusCode, err := vpcPeeringConnectionRefreshState(client.ec2conn, d.Id())()
 	// Allow a failed VPC Peering Connection to fallthrough,
@@ -168,7 +169,7 @@ func resourceAwsVPCPeeringRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting VPC Peering Connection requester information: %s", err)
 	}
 
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(pc.Tags).IgnoreAws().Map())
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(pc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("Error setting VPC Peering Connection tags: %s", err)
 	}
