@@ -714,7 +714,7 @@ func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_partition(t *testing.T) {
+func TestAccAWSLaunchTemplate_placement_partitionNum(t *testing.T) {
 	var template ec2.LaunchTemplate
 	resourceName := "aws_launch_template.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -725,7 +725,7 @@ func TestAccAWSLaunchTemplate_partition(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLaunchTemplateConfigPartition(rName),
+				Config: testAccAWSLaunchTemplateConfigPartition(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "placement.0.partition_number", "1"),
@@ -735,6 +735,13 @@ func TestAccAWSLaunchTemplate_partition(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfigPartition(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.partition_number", "2"),
+				),
 			},
 		},
 	})
@@ -1369,7 +1376,7 @@ resource "aws_launch_template" "test" {
 `, rName)
 }
 
-func testAccAWSLaunchTemplateConfigPartition(rName string) string {
+func testAccAWSLaunchTemplateConfigPartition(rName string, partNum int) string {
 	return fmt.Sprintf(`
 resource "aws_placement_group" "test" {
   name     = %[1]q
@@ -1381,14 +1388,14 @@ resource "aws_launch_template" "test" {
 
   placement {
     group_name       = "${aws_placement_group.test.name}"
-    partition_number = 1
+    partition_number = %[2]d
   }
 
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+`, rName, partNum)
 }
 
 const testAccAWSLaunchTemplateConfig_networkInterfaceAddresses = `

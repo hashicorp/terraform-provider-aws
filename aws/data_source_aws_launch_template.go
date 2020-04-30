@@ -322,10 +322,6 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"host_resource_group_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
 						"partition_number": {
 							Type:     schema.TypeInt,
 							Computed: true,

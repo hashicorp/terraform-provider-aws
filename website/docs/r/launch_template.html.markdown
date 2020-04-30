@@ -312,7 +312,6 @@ The `placement` block supports the following:
 * `host_id` - The ID of the Dedicated Host for the instance.
 * `spread_domain` - Reserved for future use.
 * `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
-* `host_resource_group_arn` - The ARN of the host resource group in which to launch the instances.
 * `partition_number` - The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.
 
 ### Hibernation Options

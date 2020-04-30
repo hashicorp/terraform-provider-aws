@@ -513,11 +513,6 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 								ec2.TenancyHost,
 							}, false),
 						},
-						"host_resource_group_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validateArn,
-						},
 						"partition_number": {
 							Type:     schema.TypeInt,
 							Optional: true,
