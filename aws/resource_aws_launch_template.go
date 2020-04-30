@@ -1127,14 +1127,13 @@ func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
 	var s []interface{}
 	if p != nil {
 		s = append(s, map[string]interface{}{
-			"affinity":                aws.StringValue(p.Affinity),
-			"availability_zone":       aws.StringValue(p.AvailabilityZone),
-			"group_name":              aws.StringValue(p.GroupName),
-			"host_id":                 aws.StringValue(p.HostId),
-			"spread_domain":           aws.StringValue(p.SpreadDomain),
-			"tenancy":                 aws.StringValue(p.Tenancy),
-			"partition_number":        aws.Int64Value(p.PartitionNumber),
-			"host_resource_group_arn": aws.StringValue(p.HostResourceGroupArn),
+			"affinity":          aws.StringValue(p.Affinity),
+			"availability_zone": aws.StringValue(p.AvailabilityZone),
+			"group_name":        aws.StringValue(p.GroupName),
+			"host_id":           aws.StringValue(p.HostId),
+			"spread_domain":     aws.StringValue(p.SpreadDomain),
+			"tenancy":           aws.StringValue(p.Tenancy),
+			"partition_number":  aws.Int64Value(p.PartitionNumber),
 		})
 	}
 	return s
@@ -1706,10 +1705,6 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 
 	if v, ok := p["tenancy"].(string); ok && v != "" {
 		placement.Tenancy = aws.String(v)
-	}
-
-	if v, ok := p["host_resource_group_arn"].(string); ok && v != "" {
-		placement.HostResourceGroupArn = aws.String(v)
 	}
 
 	if v, ok := p["partition_number"].(int); ok {
