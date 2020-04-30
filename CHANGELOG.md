@@ -3,6 +3,7 @@
 NOTES:
 
 * provider: Region validation now automatically supports the new `eu-south-1` (Europe (Milan)) region. For AWS operations to work in the new region, the region must be explicitly enabled as outlined in the [AWS Documentation](https://docs.aws.amazon.com/general/latest/gr/rande-manage.html#rande-manage-enable). When the region is not enabled, the Terraform AWS Provider will return errors during credential validation (e.g. `error validating provider credentials: error calling sts:GetCallerIdentity: InvalidClientTokenId: The security token included in the request is invalid`) or AWS operations will throw their own errors (e.g. `data.aws_availability_zones.current: Error fetching Availability Zones: AuthFailure: AWS was not able to validate the provided access credentials`). [GH-12970]
+* provider: Ignore tags functionality across all data sources and resources (except `aws_autoscaling_group`) via the provider-level `ignore_tags` configuration block has been enabled and this functionality is no longer considered in preview. [GH-13039]
 
 FEATURES:
 
@@ -25,6 +26,7 @@ ENHANCEMENTS:
 * data-source/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * data-source/aws_subnet: Add `outposts_arn` attribute [GH-12097]
 * provider: Support automatic region validation for `eu-south-1` [GH-12970]
+* provider: Implement ignore tags functionality across all data sources and resources (except `aws_autoscaling_group`) [GH-13039]
 * resource/aws_api_gateway_stage: Ignore `NotFoundException` error on destroy [GH-12826]
 * resource/aws_db_snapshot: Support import [GH-12978]
 * resource/aws_default_route_table: Add plan-time validation to `cidr_block` and `ipv6_cidr_block` arguments [GH-12858]
