@@ -200,9 +200,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.
 
-* `ignore_tags` - (Optional) **NOTE: This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.** Configuration block with resource tag settings to ignore across all resources handled by this provider for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations. This functionality is only supported in the following resources:
-  - `aws_subnet`
-  - `aws_vpc`
+* `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except `aws_autoscaling_group`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations.
 
 * `insecure` - (Optional) Explicitly allow the provider to
   perform "insecure" SSL requests. If omitted, default value is `false`.
@@ -297,8 +295,6 @@ security credentials. You cannot use the passed policy to grant permissions that
 in excess of those allowed by the access policy of the role that is being assumed.
 
 ### ignore_tags Configuration Block
-
-~> **NOTE:** This functionality is in public preview and there are no compatibility promises with future versions of the Terraform AWS Provider until a general availability announcement.
 
 Example:
 

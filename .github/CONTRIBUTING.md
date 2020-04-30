@@ -429,7 +429,10 @@ More details about this code generation, including fixes for potential error mes
 - In the resource `Read` function, implement the logic to convert the service tags to save them into the Terraform state for drift detection, e.g. with EKS Clusters (which had the tags available in the DescribeCluster API call):
 
   ```go
-  if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+  // Typically declared near conn := /* ... */
+  ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+  if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %s", err)
   }
   ```
@@ -437,13 +440,16 @@ More details about this code generation, including fixes for potential error mes
   If the service API does not return the tags directly from reading the resource and requires a separate API call, its possible to use the `keyvaluetags` functionality like the following, e.g. with Athena Workgroups:
 
   ```go
+  // Typically declared near conn := /* ... */
+  ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
   tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
 
   if err != nil {
     return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
   }
 
-  if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+  if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %s", err)
   }
   ```

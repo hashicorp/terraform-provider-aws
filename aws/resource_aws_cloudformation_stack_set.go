@@ -147,6 +147,7 @@ func resourceAwsCloudFormationStackSetCreate(d *schema.ResourceData, meta interf
 
 func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &cloudformation.DescribeStackSetInput{
 		StackSetName: aws.String(d.Id()),
@@ -188,7 +189,7 @@ func resourceAwsCloudFormationStackSetRead(d *schema.ResourceData, meta interfac
 
 	d.Set("stack_set_id", stackSet.StackSetId)
 
-	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stackSet.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stackSet.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

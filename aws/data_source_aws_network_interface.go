@@ -138,6 +138,7 @@ func dataSourceAwsNetworkInterface() *schema.Resource {
 
 func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 	if v, ok := d.GetOk("id"); ok {
@@ -187,7 +188,7 @@ func dataSourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{})
 	d.Set("outpost_arn", eni.OutpostArn)
 	d.Set("vpc_id", eni.VpcId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

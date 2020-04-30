@@ -160,6 +160,7 @@ func resourceAwsKmsExternalKeyCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kmsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &kms.DescribeKeyInput{
 		KeyId: aws.String(d.Id()),
@@ -243,7 +244,7 @@ func resourceAwsKmsExternalKeyRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error listing tags for KMS Key (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

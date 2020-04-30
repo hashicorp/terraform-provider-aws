@@ -298,6 +298,7 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 
 func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeGatewayInformationInput{
 		GatewayARN: aws.String(d.Id()),
@@ -316,7 +317,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error reading Storage Gateway Gateway: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(output.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.StoragegatewayKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

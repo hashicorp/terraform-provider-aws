@@ -314,6 +314,7 @@ func resourceAwsAppmeshRouteCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeRoute(&appmesh.DescribeRouteInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -352,7 +353,7 @@ func resourceAwsAppmeshRouteRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for App Mesh route (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
