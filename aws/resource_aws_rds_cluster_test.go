@@ -102,7 +102,7 @@ func testSweepRdsClusters(region string) error {
 
 func TestAccAWSRDSCluster_basic(t *testing.T) {
 	var dbCluster rds.DBCluster
-	rInt := acctest.RandInt()
+	clusterName := acctest.RandomWithPrefix("tf-aurora-cluster")
 	resourceName := "aws_rds_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -111,10 +111,10 @@ func TestAccAWSRDSCluster_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSClusterConfig(rInt),
+				Config: testAccAWSClusterConfig(clusterName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSClusterExists(resourceName, &dbCluster),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster:.+`)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", clusterName)),
 					resource.TestCheckResourceAttr(resourceName, "backtrack_window", "0"),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -2141,17 +2141,17 @@ func TestAccAWSRDSCluster_EnableHttpEndpoint(t *testing.T) {
 	})
 }
 
-func testAccAWSClusterConfig(n int) string {
+func testAccAWSClusterConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "tf-aurora-cluster-%d"
+  cluster_identifier              = %[1]q
   database_name                   = "mydb"
   master_username                 = "foo"
   master_password                 = "mustbeeightcharaters"
   db_cluster_parameter_group_name = "default.aurora5.6"
   skip_final_snapshot             = true
 }
-`, n)
+`, rName)
 }
 
 func testAccAWSClusterConfig_AvailabilityZones(rName string) string {
