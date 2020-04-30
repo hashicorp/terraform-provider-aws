@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -168,17 +166,6 @@ func processingConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-}
-
-func cloudwatchLoggingOptionsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%t-", m["enabled"].(bool)))
-	if m["enabled"].(bool) {
-		buf.WriteString(fmt.Sprintf("%s-", m["log_group_name"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", m["log_stream_name"].(string)))
-	}
-	return hashcode.String(buf.String())
 }
 
 func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
