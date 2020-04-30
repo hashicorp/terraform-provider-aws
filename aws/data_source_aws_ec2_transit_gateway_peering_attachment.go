@@ -44,6 +44,7 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachment() *schema.Resource {
 
 func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
@@ -94,7 +95,7 @@ func dataSourceAwsEc2TransitGatewayPeeringAttachmentRead(d *schema.ResourceData,
 	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)
 	d.Set("transit_gateway_id", local.TransitGatewayId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
