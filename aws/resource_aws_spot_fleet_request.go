@@ -22,7 +22,12 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 		Read:   resourceAwsSpotFleetRequestRead,
 		Delete: resourceAwsSpotFleetRequestDelete,
 		Update: resourceAwsSpotFleetRequestUpdate,
-
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("instance_pools_to_use_count", 1)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
@@ -1200,6 +1205,30 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 	if len(config.LaunchTemplateConfigs) > 0 {
 		if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
 			return fmt.Errorf("error setting launch_template_config: %s", err)
+		}
+	}
+
+	if config.LoadBalancersConfig != nil {
+		lbConf := config.LoadBalancersConfig
+
+		if lbConf.ClassicLoadBalancersConfig != nil {
+			flatLbs := make([]*string, 0)
+			for _, lb := range lbConf.ClassicLoadBalancersConfig.ClassicLoadBalancers {
+				flatLbs = append(flatLbs, lb.Name)
+			}
+			if err := d.Set("load_balancers", flattenStringSet(flatLbs)); err != nil {
+				return fmt.Errorf("error setting load_balancers: %s", err)
+			}
+		}
+
+		if lbConf.TargetGroupsConfig != nil {
+			flatTgs := make([]*string, 0)
+			for _, tg := range lbConf.TargetGroupsConfig.TargetGroups {
+				flatTgs = append(flatTgs, tg.Arn)
+			}
+			if err := d.Set("target_group_arns", flattenStringSet(flatTgs)); err != nil {
+				return fmt.Errorf("error setting target_group_arns: %s", err)
+			}
 		}
 	}
 
