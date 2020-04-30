@@ -150,58 +150,45 @@ func TestAccAWSEc2TransitGatewayPeeringAttachmentDataSource_Tags(t *testing.T) {
 	})
 }
 
-func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_sameAccount_base(rName) + fmt.Sprintf(`
-resource "aws_ec2_transit_gateway_peering_attachment" "test" {
-  peer_region             = %[1]q
-  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
-  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
-  tags = {
-    Name = %[2]q
-  }
-}
-`, testAccGetAlternateRegion(), rName)
-}
-func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_differentAccount_base(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentConfig_differentAccount_base(rName) + fmt.Sprintf(`
-resource "aws_ec2_transit_gateway_peering_attachment" "test" {
-  peer_region             = %[1]q
-  peer_transit_gateway_id = "${aws_ec2_transit_gateway.peer.id}"
-  transit_gateway_id      = "${aws_ec2_transit_gateway.test.id}"
-  tags = {
-    Name = %[2]q
-  }
-}
-`, testAccGetAlternateRegion(), rName)
-}
 func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_sameAccount(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName),
+		fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   filter {
     name   = "transit-gateway-attachment-id"
     values = ["${aws_ec2_transit_gateway_peering_attachment.test.id}"]
   }
 }
-`)
+`))
 }
+
 func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_sameAccount(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_sameAccount(rName),
+		fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
 }
-`)
+`))
 }
+
 func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigTags_sameAccount(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_sameAccount_base(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSEc2TransitGatewayPeeringAttachmentConfigTags1_sameAccount(rName, "Name", rName),
+		fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   tags = {
     Name = "${aws_ec2_transit_gateway_peering_attachment.test.tags["Name"]}"
   }
 }
-`)
+`))
 }
+
 func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigFilter_differentAccount(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_differentAccount_base(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName),
+		fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "aws.alternate"
   filter {
@@ -209,13 +196,16 @@ data "aws_ec2_transit_gateway_peering_attachment" "test" {
     values = ["${aws_ec2_transit_gateway_peering_attachment.test.id}"]
   }
 }
-`)
+`))
 }
+
 func testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfigID_differentAccount(rName string) string {
-	return testAccAWSEc2TransitGatewayPeeringAttachmentDataSourceConfig_differentAccount_base(rName) + fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSEc2TransitGatewayPeeringAttachmentConfigBasic_differentAccount(rName),
+		fmt.Sprintf(`
 data "aws_ec2_transit_gateway_peering_attachment" "test" {
   provider = "aws.alternate"
   id = "${aws_ec2_transit_gateway_peering_attachment.test.id}"
 }
-`)
+`))
 }

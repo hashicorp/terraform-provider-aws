@@ -427,6 +427,10 @@ func ec2TransitGatewayPeeringAttachmentRefreshFunc(conn *ec2.EC2, transitGateway
 			return nil, ec2.TransitGatewayAttachmentStateDeleted, nil
 		}
 
+		if aws.StringValue(transitGatewayPeeringAttachment.State) == ec2.TransitGatewayAttachmentStateFailed && transitGatewayPeeringAttachment.Status != nil {
+			return transitGatewayPeeringAttachment, aws.StringValue(transitGatewayPeeringAttachment.State), fmt.Errorf("%s: %s", aws.StringValue(transitGatewayPeeringAttachment.Status.Code), aws.StringValue(transitGatewayPeeringAttachment.Status.Message))
+		}
+
 		return transitGatewayPeeringAttachment, aws.StringValue(transitGatewayPeeringAttachment.State), nil
 	}
 }
@@ -562,12 +566,13 @@ func waitForEc2TransitGatewayRouteTableAssociationDeletion(conn *ec2.EC2, transi
 func waitForEc2TransitGatewayPeeringAttachmentCreation(conn *ec2.EC2, transitGatewayAttachmentID string) error {
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{
+			ec2.TransitGatewayAttachmentStateFailing,
 			ec2.TransitGatewayAttachmentStatePending,
 			"initiatingRequest", // No ENUM currently exists in the SDK for the state given by AWS
 		},
 		Target: []string{
-			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 			ec2.TransitGatewayAttachmentStateAvailable,
+			ec2.TransitGatewayAttachmentStatePendingAcceptance,
 		},
 		Refresh: ec2TransitGatewayPeeringAttachmentRefreshFunc(conn, transitGatewayAttachmentID),
 		Timeout: 10 * time.Minute,
