@@ -126,8 +126,7 @@ func resourceAwsGlueUserDefinedFunctionUpdate(d *schema.ResourceData, meta inter
 		FunctionInput: expandAwsGlueUserDefinedFunctionInput(d),
 	}
 
-	if d.HasChange("owner_name") || d.HasChange("owner_type") ||
-		d.HasChange("class_name") || d.HasChange("resource_uris") {
+	if d.HasChanges("owner_name", "owner_type", "class_name", "resource_uris") {
 		if _, err := conn.UpdateUserDefinedFunction(input); err != nil {
 			return err
 		}
