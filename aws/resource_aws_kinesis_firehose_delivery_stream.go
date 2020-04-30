@@ -181,9 +181,9 @@ func cloudwatchLoggingOptionsHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) *schema.Set {
+func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
 	if clo == nil {
-		return schema.NewSet(cloudwatchLoggingOptionsHash, []interface{}{})
+		return []interface{}{}
 	}
 
 	cloudwatchLoggingOptions := map[string]interface{}{
@@ -193,7 +193,7 @@ func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) *sc
 		cloudwatchLoggingOptions["log_group_name"] = aws.StringValue(clo.LogGroupName)
 		cloudwatchLoggingOptions["log_stream_name"] = aws.StringValue(clo.LogStreamName)
 	}
-	return schema.NewSet(cloudwatchLoggingOptionsHash, []interface{}{cloudwatchLoggingOptions})
+	return []interface{}{cloudwatchLoggingOptions}
 }
 
 func flattenFirehoseElasticsearchConfiguration(description *firehose.ElasticsearchDestinationDescription) []map[string]interface{} {

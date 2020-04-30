@@ -361,10 +361,7 @@ func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("throttle_settings") {
 		o, n := d.GetChange("throttle_settings")
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		diff := ns.Difference(os).List()
+		diff := n.([]interface{})
 
 		// Handle Removal
 		if len(diff) == 0 {
@@ -409,10 +406,7 @@ func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("quota_settings") {
 		o, n := d.GetChange("quota_settings")
-
-		os := o.(*schema.Set)
-		ns := n.(*schema.Set)
-		diff := ns.Difference(os).List()
+		diff := n.([]interface{})
 
 		// Handle Removal
 		if len(diff) == 0 {

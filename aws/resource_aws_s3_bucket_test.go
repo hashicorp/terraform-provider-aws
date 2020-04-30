@@ -1287,11 +1287,11 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.0.expiration.2613713285.days", "365"),
+						resourceName, "lifecycle_rule.0.expiration.0.days", "365"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.0.expiration.2613713285.date", ""),
+						resourceName, "lifecycle_rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.0.expiration.2613713285.expired_object_delete_marker", "false"),
+						resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "false"),
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.0.transition.2000431762.date", ""),
 					resource.TestCheckResourceAttr(
@@ -1327,11 +1327,11 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.1.prefix", "path2/"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.1.expiration.2855832418.date", "2016-01-12"),
+						resourceName, "lifecycle_rule.1.expiration.0.date", "2016-01-12"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.1.expiration.2855832418.days", "0"),
+						resourceName, "lifecycle_rule.1.expiration.0.days", "0"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.1.expiration.2855832418.expired_object_delete_marker", "false"),
+						resourceName, "lifecycle_rule.1.expiration.0.expired_object_delete_marker", "false"),
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.2.id", "id3"),
 					resource.TestCheckResourceAttr(
@@ -1384,7 +1384,7 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.0.enabled", "true"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.0.noncurrent_version_expiration.80908210.days", "365"),
+						resourceName, "lifecycle_rule.0.noncurrent_version_expiration.0.days", "365"),
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.0.noncurrent_version_transition.1377917700.days", "30"),
 					resource.TestCheckResourceAttr(
@@ -1400,7 +1400,7 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.1.enabled", "false"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.1.noncurrent_version_expiration.80908210.days", "365"),
+						resourceName, "lifecycle_rule.1.noncurrent_version_expiration.0.days", "365"),
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.2.id", "id3"),
 					resource.TestCheckResourceAttr(
@@ -1439,11 +1439,11 @@ func TestAccAWSS3Bucket_LifecycleExpireMarkerOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.0.expiration.3591068768.days", "0"),
+						resourceName, "lifecycle_rule.0.expiration.0.days", "0"),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.0.expiration.3591068768.date", ""),
+						resourceName, "lifecycle_rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(
-						resourceName, "lifecycle_rule.0.expiration.3591068768.expired_object_delete_marker", "true"),
+						resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "true"),
 				),
 			},
 			{

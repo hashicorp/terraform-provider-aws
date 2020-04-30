@@ -2185,33 +2185,38 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		}
 
 		// Expiration
-		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).(*schema.Set).List()
+		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).([]interface{})
 		if len(expiration) > 0 {
-			e := expiration[0].(map[string]interface{})
-			i := &s3.LifecycleExpiration{}
+			if expiration[0] != nil {
+				log.Printf("[INFO] expiration: %v", expiration)
+				e := expiration[0].(map[string]interface{})
+				i := &s3.LifecycleExpiration{}
 
-			if val, ok := e["date"].(string); ok && val != "" {
-				t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
-				if err != nil {
-					return fmt.Errorf("Error Parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
+				if val, ok := e["date"].(string); ok && val != "" {
+					t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
+					if err != nil {
+						return fmt.Errorf("Error Parsing AWS S3 Bucket Lifecycle Expiration Date: %s", err.Error())
+					}
+					i.Date = aws.Time(t)
+				} else if val, ok := e["days"].(int); ok && val > 0 {
+					i.Days = aws.Int64(int64(val))
+				} else if val, ok := e["expired_object_delete_marker"].(bool); ok {
+					i.ExpiredObjectDeleteMarker = aws.Bool(val)
 				}
-				i.Date = aws.Time(t)
-			} else if val, ok := e["days"].(int); ok && val > 0 {
-				i.Days = aws.Int64(int64(val))
-			} else if val, ok := e["expired_object_delete_marker"].(bool); ok {
-				i.ExpiredObjectDeleteMarker = aws.Bool(val)
+				rule.Expiration = i
 			}
-			rule.Expiration = i
 		}
 
 		// NoncurrentVersionExpiration
-		nc_expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.noncurrent_version_expiration", i)).(*schema.Set).List()
+		nc_expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.noncurrent_version_expiration", i)).([]interface{})
 		if len(nc_expiration) > 0 {
-			e := nc_expiration[0].(map[string]interface{})
+			if nc_expiration[0] != nil {
+				e := nc_expiration[0].(map[string]interface{})
 
-			if val, ok := e["days"].(int); ok && val > 0 {
-				rule.NoncurrentVersionExpiration = &s3.NoncurrentVersionExpiration{
-					NoncurrentDays: aws.Int64(int64(val)),
+				if val, ok := e["days"].(int); ok && val > 0 {
+					rule.NoncurrentVersionExpiration = &s3.NoncurrentVersionExpiration{
+						NoncurrentDays: aws.Int64(int64(val)),
+					}
 				}
 			}
 		}
