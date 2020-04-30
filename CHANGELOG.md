@@ -43,6 +43,7 @@ ENHANCEMENTS:
 * resource/aws_route53_health_check: Support plan-time validation for `reference_name` argument [GH-12873]
 * resource/aws_s3_bucket: Support `eu-south-1` region for `hosted_zone_id` attribute [GH-13061]
 * resource/aws_spot_fleet_request: Add `launch_template_config` configuration block (Support EC2 Launch Templates) [GH-12732]
+* resource/aws_spot_fleet_request: Support import [GH-12767]
 * resource/aws_storagegateway_gateway: Add `gateway_vpc_endpoint` argument [GH-9966]
 * resource/aws_storagegateway_smb_file_share: Add `path` attribute [GH-12623]
 * resource/aws_subnet: Add `outposts_arn` argument [GH-12097]
