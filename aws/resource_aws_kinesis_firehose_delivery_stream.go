@@ -1804,7 +1804,7 @@ func extractEncryptionConfiguration(s3 map[string]interface{}) *firehose.Encrypt
 }
 
 func extractCloudWatchLoggingConfiguration(s3 map[string]interface{}) *firehose.CloudWatchLoggingOptions {
-	config := s3["cloudwatch_logging_options"].(*schema.Set).List()
+	config := s3["cloudwatch_logging_options"].([]interface{})
 	if len(config) == 0 {
 		return nil
 	}

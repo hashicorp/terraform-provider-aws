@@ -104,6 +104,7 @@ func resourceAwsWafSqlInjectionMatchSetRead(d *schema.ResourceData, meta interfa
 	if err := d.Set("sql_injection_match_tuples", flattenWafSqlInjectionMatchTuples(resp.SqlInjectionMatchSet.SqlInjectionMatchTuples)); err != nil {
 		return fmt.Errorf("error setting sql_injection_match_tuples: %s", err)
 	}
+	log.Printf("Set to: %v", d.Get("sql_injection_match_tuples").(*schema.Set))
 
 	return nil
 }
@@ -198,7 +199,7 @@ func diffWafSqlInjectionMatchTuples(oldT, newT []interface{}) []*waf.SqlInjectio
 		updates = append(updates, &waf.SqlInjectionMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].(*schema.Set).List()[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})
@@ -210,7 +211,7 @@ func diffWafSqlInjectionMatchTuples(oldT, newT []interface{}) []*waf.SqlInjectio
 		updates = append(updates, &waf.SqlInjectionMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
-				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].(*schema.Set).List()[0].(map[string]interface{})),
+				FieldToMatch:       expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				TextTransformation: aws.String(tuple["text_transformation"].(string)),
 			},
 		})

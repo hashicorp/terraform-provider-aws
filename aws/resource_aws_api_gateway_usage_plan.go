@@ -155,7 +155,7 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("quota_settings"); ok {
-		settings := v.(*schema.Set).List()
+		settings := v.([]interface{})
 		q, ok := settings[0].(map[string]interface{})
 
 		if errors := validateApiGatewayUsagePlanQuotaSettings(q); len(errors) > 0 {
@@ -184,7 +184,7 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("throttle_settings"); ok {
-		settings := v.(*schema.Set).List()
+		settings := v.([]interface{})
 		q, ok := settings[0].(map[string]interface{})
 
 		if !ok {

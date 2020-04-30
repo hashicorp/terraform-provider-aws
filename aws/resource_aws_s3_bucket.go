@@ -1177,7 +1177,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				if lifecycleRule.Expiration.ExpiredObjectDeleteMarker != nil {
 					e["expired_object_delete_marker"] = *lifecycleRule.Expiration.ExpiredObjectDeleteMarker
 				}
-				rule["expiration"] = schema.NewSet(expirationHash, []interface{}{e})
+				rule["expiration"] = []interface{}{e}
 			}
 			// noncurrent_version_expiration
 			if lifecycleRule.NoncurrentVersionExpiration != nil {
@@ -1185,7 +1185,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				if lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays != nil {
 					e["days"] = int(*lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays)
 				}
-				rule["noncurrent_version_expiration"] = schema.NewSet(expirationHash, []interface{}{e})
+				rule["noncurrent_version_expiration"] = []interface{}{e}
 			}
 			//// transition
 			if len(lifecycleRule.Transitions) > 0 {
@@ -2030,8 +2030,8 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 		}
 
 		ruleDestination := &s3.Destination{}
-		if dest, ok := rr["destination"].(*schema.Set); ok && dest.Len() > 0 {
-			bd := dest.List()[0].(map[string]interface{})
+		if dest, ok := rr["destination"].([]interface{}); ok && len(dest) > 0 {
+			bd := dest[0].(map[string]interface{})
 			ruleDestination.Bucket = aws.String(bd["bucket"].(string))
 
 			if storageClass, ok := bd["storage_class"]; ok && storageClass != "" {
@@ -2058,11 +2058,11 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 		}
 		rcRule.Destination = ruleDestination
 
-		if ssc, ok := rr["source_selection_criteria"].(*schema.Set); ok && ssc.Len() > 0 {
-			sscValues := ssc.List()[0].(map[string]interface{})
+		if ssc, ok := rr["source_selection_criteria"].([]interface{}); ok && len(ssc) > 0 {
+			sscValues := ssc[0].(map[string]interface{})
 			ruleSsc := &s3.SourceSelectionCriteria{}
-			if sseKms, ok := sscValues["sse_kms_encrypted_objects"].(*schema.Set); ok && sseKms.Len() > 0 {
-				sseKmsValues := sseKms.List()[0].(map[string]interface{})
+			if sseKms, ok := sscValues["sse_kms_encrypted_objects"].([]interface{}); ok && len(sseKms) > 0 {
+				sseKmsValues := sseKms[0].(map[string]interface{})
 				sseKmsEncryptedObjects := &s3.SseKmsEncryptedObjects{}
 				if sseKmsValues["enabled"].(bool) {
 					sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusEnabled)
@@ -2334,7 +2334,7 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				}
 				rd["access_control_translation"] = []interface{}{rdt}
 			}
-			t["destination"] = schema.NewSet(destinationHash, []interface{}{rd})
+			t["destination"] = []interface{}{rd}
 		}
 
 		if v.ID != nil {
@@ -2355,9 +2355,9 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				} else if *vssc.SseKmsEncryptedObjects.Status == s3.SseKmsEncryptedObjectsStatusDisabled {
 					tSseKms["enabled"] = false
 				}
-				tssc["sse_kms_encrypted_objects"] = schema.NewSet(sourceSseKmsObjectsHash, []interface{}{tSseKms})
+				tssc["sse_kms_encrypted_objects"] = []interface{}{tSseKms}
 			}
-			t["source_selection_criteria"] = schema.NewSet(sourceSelectionCriteriaHash, []interface{}{tssc})
+			t["source_selection_criteria"] = []interface{}{tssc}
 		}
 
 		if v.Priority != nil {
@@ -2498,26 +2498,6 @@ func grantHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func expirationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["date"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["days"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["expired_object_delete_marker"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-	}
-	return hashcode.String(buf.String())
-}
-
 func transitionHash(v interface{}) int {
 	var buf bytes.Buffer
 	m, ok := v.(map[string]interface{})
@@ -2555,11 +2535,11 @@ func rulesHash(v interface{}) int {
 	if v, ok := m["status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if v, ok := m["destination"].(*schema.Set); ok && v.Len() > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", destinationHash(v.List()[0])))
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 {
+		buf.WriteString(fmt.Sprintf("%d-", destinationHash(v[0])))
 	}
-	if v, ok := m["source_selection_criteria"].(*schema.Set); ok && v.Len() > 0 && v.List()[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSelectionCriteriaHash(v.List()[0])))
+	if v, ok := m["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", sourceSelectionCriteriaHash(v[0])))
 	}
 	if v, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
@@ -2635,8 +2615,8 @@ func sourceSelectionCriteriaHash(v interface{}) int {
 		return 0
 	}
 
-	if v, ok := m["sse_kms_encrypted_objects"].(*schema.Set); ok && v.Len() > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v.List()[0])))
+	if v, ok := m["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 {
+		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v[0])))
 	}
 	return hashcode.String(buf.String())
 }

@@ -154,7 +154,7 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+			DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
 		}
@@ -196,7 +196,7 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWafWebAclRules([]interface{}{}, rules),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -288,7 +288,7 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWafWebAclRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -345,7 +345,7 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWafWebAclRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
