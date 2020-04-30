@@ -329,7 +329,7 @@ func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfigMultiAttach(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach", "true"),
 				),
 			},
 			{
