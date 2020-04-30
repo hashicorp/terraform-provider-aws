@@ -9,6 +9,8 @@ FEATURES:
 * **New Data Source:** `aws_backup_plan` [GH-13035]
 * **New Data Source:** `aws_backup_selection` [GH-13035]
 * **New Data Source:** `aws_backup_vault` [GH-13035]
+* **New Resource:** `aws_guardduty_organization_admin_account` [GH-13034]
+* **New Resource:** `aws_guardduty_organization_configuration` [GH-13034]
 
 ENHANCEMENTS:
 
