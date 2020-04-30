@@ -34,6 +34,7 @@ ENHANCEMENTS:
 * resource/aws_dms_endpoint: Add `kafka_settings` configuration block and `kafka` to `engine_name` argument validation [GH-12835]
 * resource/aws_ebs_volume: Add `outpost_arn` argument [GH-12439]
 * resource/aws_elasticsearch_domain: Support customizable update timeout [GH-12916]
+* resource/aws_glue_connection: Support `MONGODB` for `connection_type` argument [GH-13011]
 * resource/aws_key_pair: Support tag-on-create [GH-12962]
 * resource/aws_instance: Add `outpost_arn` attribute [GH-12330]
 * resource/aws_mq_broker: Support import [GH-11841]
