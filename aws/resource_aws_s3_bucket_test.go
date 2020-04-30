@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -356,6 +357,47 @@ func TestAccAWSS3Bucket_tagsWithSystemTags(t *testing.T) {
 					testAccCheckAWSS3BucketExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckAWSS3BucketTagKeys(resourceName, "aws:cloudformation:stack-name", "aws:cloudformation:stack-id", "aws:cloudformation:logical-id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSS3Bucket_ignoreTags(t *testing.T) {
+	resourceName := "aws_s3_bucket.bucket"
+	bucketName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: composeConfig(
+					testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey"),
+					testAccAWSS3BucketConfig_withNoTags(bucketName)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					testAccCheckAWSS3BucketUpdateTags(resourceName, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: composeConfig(
+					testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey"),
+					testAccAWSS3BucketConfig_withTags(bucketName)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "AAA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+					testAccCheckAWSS3BucketCheckTags(resourceName, map[string]string{
+						"ignorekey1": "ignorevalue1",
+						"Key1":       "AAA",
+						"Key2":       "BBB",
+						"Key3":       "CCC",
+					}),
 				),
 			},
 		},
@@ -2546,23 +2588,21 @@ func testAccCheckAWSS3BucketTagKeys(n string, keys ...string) resource.TestCheck
 		rs := s.RootModule().Resources[n]
 		conn := testAccProvider.Meta().(*AWSClient).s3conn
 
-		resp, err := conn.GetBucketTagging(&s3.GetBucketTaggingInput{
-			Bucket: aws.String(rs.Primary.ID),
-		})
+		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
 		if err != nil {
 			return err
 		}
 
-		for _, key := range keys {
+		for _, want := range keys {
 			ok := false
-			for _, tag := range resp.TagSet {
-				if key == aws.StringValue(tag.Key) {
+			for _, key := range got.Keys() {
+				if want == key {
 					ok = true
 					break
 				}
 			}
 			if !ok {
-				return fmt.Errorf("Key %s not found in bucket's tag set", key)
+				return fmt.Errorf("Key %s not found in bucket's tag set", want)
 			}
 		}
 
@@ -2963,6 +3003,34 @@ func testAccCheckS3BucketWebsiteEndpoint(resourceName string, attributeName stri
 		expectedValue := website.Endpoint
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
+	}
+}
+
+func testAccCheckAWSS3BucketUpdateTags(n string, oldTags, newTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		return keyvaluetags.S3BucketUpdateTags(conn, rs.Primary.Attributes["bucket"], oldTags, newTags)
+	}
+}
+
+func testAccCheckAWSS3BucketCheckTags(n string, expectedTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs := s.RootModule().Resources[n]
+		conn := testAccProvider.Meta().(*AWSClient).s3conn
+
+		got, err := keyvaluetags.S3BucketListTags(conn, rs.Primary.Attributes["bucket"])
+		if err != nil {
+			return err
+		}
+
+		want := keyvaluetags.New(expectedTags)
+		if !reflect.DeepEqual(want, got) {
+			return fmt.Errorf("Incorrect tags, want: %v got: %v", want, got)
+		}
+
+		return nil
 	}
 }
 
