@@ -102,9 +102,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 										}, false),
 									},
 									"state": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.crawl_state"},
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											glue.JobRunStateFailed,
 											glue.JobRunStateStopped,
@@ -113,9 +112,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 										}, false),
 									},
 									"crawl_state": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.state"},
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											glue.CrawlStateRunning,
 											glue.CrawlStateSucceeded,
