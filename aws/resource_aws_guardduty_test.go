@@ -19,6 +19,12 @@ func TestAccAWSGuardDuty(t *testing.T) {
 			"basic":  testAccAwsGuardDutyIpset_basic,
 			"import": testAccAwsGuardDutyIpset_import,
 		},
+		"OrganizationAdminAccount": {
+			"basic": testAccAwsGuardDutyOrganizationAdminAccount_basic,
+		},
+		"OrganizationConfiguration": {
+			"basic": testAccAwsGuardDutyOrganizationConfiguration_basic,
+		},
 		"ThreatIntelSet": {
 			"basic":  testAccAwsGuardDutyThreatintelset_basic,
 			"import": testAccAwsGuardDutyThreatintelset_import,
