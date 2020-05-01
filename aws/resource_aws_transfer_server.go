@@ -230,6 +230,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	descOpts := &transfer.DescribeServerInput{
 		ServerId: aws.String(d.Id()),
@@ -263,6 +264,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("logging_role", resp.Server.LoggingRole)
 	d.Set("host_key_fingerprint", resp.Server.HostKeyFingerprint)
 
+
 	if resp.Server.EndpointDetails.VpcEndpointId != nil {
 		out, err := describeTransferServerVPCEndpoint(meta.(*AWSClient).ec2conn, resp.Server.EndpointDetails.VpcEndpointId)
 		if err != nil {
@@ -272,7 +274,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 		d.Set("vpce_security_group_ids", flattenVpcEndpointSecurityGroupIds(out.Groups))
 	}
 
-	if err := d.Set("tags", keyvaluetags.TransferKeyValueTags(resp.Server.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.TransferKeyValueTags(resp.Server.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
 	}
 	return nil

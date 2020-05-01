@@ -79,6 +79,7 @@ func resourceAwsApiGatewayV2VpcLinkCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	outputRaw, _, err := waiter.VpcLinkStatus(conn, d.Id())()
 	if isAWSErr(err, apigatewayv2.ErrCodeNotFoundException, "") {
@@ -105,7 +106,7 @@ func resourceAwsApiGatewayV2VpcLinkRead(d *schema.ResourceData, meta interface{}
 	if err := d.Set("subnet_ids", flattenStringSet(output.SubnetIds)); err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
-	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(output.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Apigatewayv2KeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

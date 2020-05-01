@@ -121,7 +121,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 
@@ -187,7 +187,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 						"routing_rules": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.ValidateJsonString,
+							ValidateFunc: validation.StringIsJSON,
 							StateFunc: func(v interface{}) string {
 								json, _ := structure.NormalizeJsonString(v)
 								return json
@@ -823,6 +823,7 @@ func resourceAwsS3BucketUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	s3conn := meta.(*AWSClient).s3conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &s3.HeadBucketInput{
 		Bucket: aws.String(d.Id()),
@@ -1340,7 +1341,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.(keyvaluetags.KeyValueTags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

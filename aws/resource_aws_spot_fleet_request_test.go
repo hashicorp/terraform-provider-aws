@@ -78,6 +78,12 @@ func TestAccAWSSpotFleetRequest_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -101,6 +107,12 @@ func TestAccAWSSpotFleetRequest_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
 				Config: testAccAWSSpotFleetRequestConfigTags2(rName, validUntil, "key1", "value1updated", "key2", "value2", rInt),
@@ -144,6 +156,175 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.24370212.associate_public_ip_address", "true"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_launchTemplate(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchTemplateConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_launchTemplate_multiple(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_launchTemplateWithOverrides(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
+	var before, after ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestLaunchTemplateConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
+				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.005"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
+	var before, after ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.005"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
+				),
+			},
+			{
+				Config: testAccAWSSpotFleetRequestLaunchTemplateConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
+					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "launch_template_config.#", "1"),
+					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
+				),
+			},
 		},
 	})
 }
@@ -167,6 +348,12 @@ func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "instance_interruption_behaviour", "stop"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -192,6 +379,12 @@ func TestAccAWSSpotFleetRequest_fleetType(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "fleet_type", "request"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -215,6 +408,12 @@ func TestAccAWSSpotFleetRequest_iamInstanceProfileArn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(&sfr),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -240,6 +439,12 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.005"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
 				Config: testAccAWSSpotFleetRequestConfigChangeSpotBidPrice(rName, rInt, validUntil),
@@ -274,6 +479,12 @@ func TestAccAWSSpotFleetRequest_updateTargetCapacity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "target_capacity", "2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 			{
 				Config: testAccAWSSpotFleetRequestConfigTargetCapacity(rName, rInt, validUntil),
@@ -315,6 +526,12 @@ func TestAccAWSSpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
 				Config: testAccAWSSpotFleetRequestConfigExcessCapacityTermination(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &after),
@@ -345,6 +562,12 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -371,6 +594,12 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.19404370.availability_zone", "us-west-2b"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -394,6 +623,12 @@ func TestAccAWSSpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -423,8 +658,37 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.availability_zone", "us-west-2a"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
+}
+
+func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
+	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
+			return errors.New("Missing launch specification")
+		}
+
+		spec := *sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
+
+		profile := spec.IamInstanceProfile
+		if profile == nil {
+			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
+		}
+		//Validate the string whether it is ARN
+		re := regexp.MustCompile(`arn:aws:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
+		if !re.MatchString(*profile.Arn) {
+			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
+		}
+
+		return nil
+	}
 }
 
 func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) {
@@ -446,6 +710,12 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -476,6 +746,12 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.instance_type", "m1.small"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -499,6 +775,12 @@ func TestAccAWSSpotFleetRequest_withoutSpotPrice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -525,6 +807,12 @@ func TestAccAWSSpotFleetRequest_diversifiedAllocation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "diversified"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -550,6 +838,12 @@ func TestAccAWSSpotFleetRequest_multipleInstancePools(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "allocation_strategy", "lowestPrice"),
 					resource.TestCheckResourceAttr(resourceName, "instance_pools_to_use_count", "2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -594,6 +888,12 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.instance_type", "m3.large"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -617,6 +917,12 @@ func TestAccAWSSpotFleetRequest_withEBSDisk(t *testing.T) {
 					testAccCheckAWSSpotFleetRequest_EBSAttributes(&config),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -639,6 +945,12 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_EbsBlockDevice_KmsKeyId(t *t
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -660,6 +972,12 @@ func TestAccAWSSpotFleetRequest_LaunchSpecification_RootBlockDevice_KmsKeyId(t *
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -686,6 +1004,12 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.24370212.tags.Second", "Terraform"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -709,6 +1033,12 @@ func TestAccAWSSpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					testAccCheckAWSSpotFleetRequest_PlacementAttributes(&sfr, rName),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -735,6 +1065,12 @@ func TestAccAWSSpotFleetRequest_WithELBs(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
 				),
 			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
 		},
 	})
 }
@@ -745,7 +1081,6 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 	rInt := acctest.RandInt()
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
 		Providers:    testAccProviders,
@@ -759,6 +1094,12 @@ func TestAccAWSSpotFleetRequest_WithTargetGroups(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
 			},
 		},
 	})
@@ -778,6 +1119,30 @@ func TestAccAWSSpotFleetRequest_WithInstanceStoreAmi(t *testing.T) {
 			{
 				Config:      testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName, rInt, validUntil),
 				ExpectError: regexp.MustCompile("Instance store backed AMIs do not provide a root device name"),
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					testAccCheckAWSSpotFleetRequestDisappears(&sfr),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -823,6 +1188,16 @@ func testAccCheckAWSSpotFleetRequestExists(
 		*sfr = *resp.SpotFleetRequestConfigs[0]
 
 		return nil
+	}
+}
+
+func testAccCheckAWSSpotFleetRequestDisappears(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		sfrId := aws.StringValue(sfr.SpotFleetRequestId)
+		err := deleteSpotFleetRequest(sfrId, true, 5*time.Minute, conn)
+
+		return err
 	}
 }
 
@@ -885,38 +1260,17 @@ func testAccCheckAWSSpotFleetRequest_PlacementAttributes(
 		if placement == nil {
 			return fmt.Errorf("Expected placement to be set, got nil")
 		}
-		if *placement.Tenancy != "dedicated" {
+		if *placement.Tenancy != ec2.TenancyDedicated {
 			return fmt.Errorf("Expected placement tenancy to be %q, got %q", "dedicated", *placement.Tenancy)
 		}
+
 		if aws.StringValue(placement.GroupName) != fmt.Sprintf("test-pg-%s", rName) {
 			return fmt.Errorf("Expected placement group to be %q, got %q", fmt.Sprintf("test-pg-%s", rName), aws.StringValue(placement.GroupName))
 		}
 
 		return nil
 	}
-}
 
-func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
-	sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if len(sfr.SpotFleetRequestConfig.LaunchSpecifications) == 0 {
-			return errors.New("Missing launch specification")
-		}
-
-		spec := *sfr.SpotFleetRequestConfig.LaunchSpecifications[0]
-
-		profile := spec.IamInstanceProfile
-		if profile == nil {
-			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
-		}
-		//Validate the string whether it is ARN
-		re := regexp.MustCompile(`arn:aws:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
-		if !re.MatchString(*profile.Arn) {
-			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
-		}
-
-		return nil
-	}
 }
 
 func testAccPreCheckAWSEc2SpotFleetRequest(t *testing.T) {
@@ -936,7 +1290,7 @@ func testAccPreCheckAWSEc2SpotFleetRequest(t *testing.T) {
 }
 
 func testAccAWSSpotFleetRequestConfigBase(rName string, rInt int) string {
-	return fmt.Sprintf(`
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -945,14 +1299,17 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
-
-resource "aws_key_pair" "debugging" {
-  key_name   = "tmp-key-%[1]s"
+resource "aws_key_pair" "test" {
+  key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
+
+  tags = {
+   Name = %[1]q
+  }
 }
 
 resource "aws_iam_role" "test-role" {
-  name = "test-role-%[1]s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -972,10 +1329,14 @@ resource "aws_iam_role" "test-role" {
   ]
 }
 EOF
+
+  tags = {
+   Name = %[1]q
+  }
 }
 
 resource "aws_iam_policy" "test-policy" {
-  name        = "test-policy-%[2]d"
+  name        = %[1]q
   path        = "/"
   description = "Spot Fleet Request ACCTest Policy"
 
@@ -999,9 +1360,18 @@ EOF
 }
 
 resource "aws_iam_policy_attachment" "test-attach" {
-  name       = "test-attachment-%[2]d"
+  name       = %[1]q
   roles      = ["${aws_iam_role.test-role.name}"]
   policy_arn = "${aws_iam_policy.test-policy.arn}"
+}
+
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["t3.micro", "t2.micro"]
+  }
+
+  preferred_instance_types = ["t3.micro", "t2.micro"]
 }
 `, rName, rInt)
 }
@@ -1019,7 +1389,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1039,7 +1409,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     tags = {
       %[2]q = %[3]q
@@ -1062,7 +1432,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     tags = {
       %[2]q = %[3]q
@@ -1085,7 +1455,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         associate_public_ip_address = true
     }
 	depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1110,6 +1480,133 @@ resource "aws_spot_fleet_request" "test" {
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
 `, validUntil)
+}
+
+func testAccAWSSpotFleetRequestLaunchTemplateConfig(rName string, rInt int, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[2]q
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  key_name      = "${aws_key_pair.test.key_name}"
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+
+  launch_template_config {
+    launch_template_specification {
+      name    = "${aws_launch_template.test.name}"
+      version = "${aws_launch_template.test.latest_version}"
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`, validUntil, rName)
+}
+
+func testAccAWSSpotFleetRequestLaunchTemplateMultipleConfig(rName string, rInt int, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		fmt.Sprintf(`
+data "aws_ec2_instance_type_offering" "test" {
+  filter {
+    name   = "instance-type"
+    values = ["t1.micro"]
+  }
+
+  preferred_instance_types = ["t1.micro"]
+}
+
+resource "aws_launch_template" "test1" {
+  name          = "%[2]s-1"
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  key_name      = "${aws_key_pair.test.key_name}"
+}
+
+resource "aws_launch_template" "test2" {
+  name          = "%[2]s-2"
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.test.instance_type}"
+  key_name      = "${aws_key_pair.test.key_name}"
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+
+  launch_template_config {
+    launch_template_specification {
+      name    = "${aws_launch_template.test1.name}"
+      version = "${aws_launch_template.test1.latest_version}"
+    }
+  }
+
+  launch_template_config {
+    launch_template_specification {
+      name    = "${aws_launch_template.test2.name}"
+      version = "${aws_launch_template.test2.latest_version}"
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`, validUntil, rName)
+}
+
+func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, rInt int, validUntil string) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[2]q
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  key_name      = "${aws_key_pair.test.key_name}"
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+
+  launch_template_config {
+    launch_template_specification {
+      name    = "${aws_launch_template.test.name}"
+      version = "${aws_launch_template.test.latest_version}"
+    }
+
+    overrides {
+      instance_type     = "t1.micro"
+      weighted_capacity = "2"
+    }
+
+    overrides {
+      instance_type = "m3.medium"
+      priority      = 1
+      spot_price    = "0.26"
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestConfigExcessCapacityTermination(rName string, rInt int, validUntil string) string {
@@ -1206,7 +1703,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         iam_instance_profile_arn = "${aws_iam_instance_profile.test-iam-instance-profile1.arn}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1226,7 +1723,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1245,13 +1742,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[1]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1296,13 +1793,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.bar.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1358,7 +1855,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1425,7 +1922,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1445,13 +1942,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1487,13 +1984,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d0f506b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1513,13 +2010,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         spot_price = "0.01"
     }
@@ -1539,13 +2036,13 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1566,19 +2063,19 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1599,19 +2096,19 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1631,14 +2128,14 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "6"
     }
     launch_specification {
         instance_type = "r3.large"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "3"
     }
@@ -1660,16 +2157,16 @@ resource "aws_spot_fleet_request" "test" {
         instance_type = "m1.small"
         ami = "ami-516b9131"
 
-	ebs_block_device {
+    ebs_block_device {
             device_name = "/dev/xvda"
-	    volume_type = "gp2"
-	    volume_size = "8"
+        volume_type = "gp2"
+        volume_size = "8"
         }
 
-	ebs_block_device {
+    ebs_block_device {
             device_name = "/dev/xvdcz"
-	    volume_type = "gp2"
-	    volume_size = "100"
+        volume_type = "gp2"
+        volume_size = "100"
         }
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1679,23 +2176,12 @@ resource "aws_spot_fleet_request" "test" {
 
 func testAccAWSSpotFleetRequestLaunchSpecificationEbsBlockDeviceKmsKeyId(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+
+  tags = {
+   Name = %[2]q
+  }
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -1727,28 +2213,17 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, validUntil)
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchSpecificationRootBlockDeviceKmsKeyId(rName string, rInt int, validUntil string) string {
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
+
+  tags = {
+   Name = %[2]q
+  }
 }
 
 resource "aws_spot_fleet_request" "test" {
@@ -1773,7 +2248,7 @@ resource "aws_spot_fleet_request" "test" {
 
   depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
-`, validUntil)
+`, validUntil, rName)
 }
 
 func testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName string, rInt int, validUntil string) string {
@@ -1845,7 +2320,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-d06a90b0"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
 		placement_tenancy = "dedicated"
 		placement_group = "${aws_placement_group.test.name}"
     }

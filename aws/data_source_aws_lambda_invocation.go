@@ -31,7 +31,7 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 			"input": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 			},
 
 			"result": {

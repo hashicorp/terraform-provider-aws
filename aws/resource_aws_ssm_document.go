@@ -229,6 +229,7 @@ func resourceAwsSsmDocumentCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error {
 	ssmconn := meta.(*AWSClient).ssmconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SSM Document: %s", d.Id())
 
@@ -330,7 +331,7 @@ func resourceAwsSsmDocumentRead(d *schema.ResourceData, meta interface{}) error 
 		return err
 	}
 
-	if err := d.Set("tags", keyvaluetags.SsmKeyValueTags(doc.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.SsmKeyValueTags(doc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,6 +21,22 @@ func resourceAwsVolumeAttachment() *schema.Resource {
 		Read:   resourceAwsVolumeAttachmentRead,
 		Update: resourceAwsVolumeAttachmentUpdate,
 		Delete: resourceAwsVolumeAttachmentDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), ":")
+				if len(idParts) != 3 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected DEVICE_NAME:VOLUME_ID:INSTANCE_ID", d.Id())
+				}
+				deviceName := idParts[0]
+				volumeID := idParts[1]
+				instanceID := idParts[2]
+				d.Set("device_name", deviceName)
+				d.Set("volume_id", volumeID)
+				d.Set("instance_id", instanceID)
+				d.SetId(volumeAttachmentID(deviceName, volumeID, instanceID))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"device_name": {

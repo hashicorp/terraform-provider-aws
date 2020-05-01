@@ -833,8 +833,8 @@ func (s *CreateLifecyclePolicyOutput) SetPolicyId(v string) *CreateLifecyclePoli
 type CreateRule struct {
 	_ struct{} `type:"structure"`
 
-	// The interval between snapshots. The supported values are 2, 3, 4, 6, 8, 12,
-	// and 24.
+	// The interval between snapshots. The supported values are 1, 2, 3, 4, 6, 8,
+	// 12, and 24.
 	//
 	// Interval is a required field
 	Interval *int64 `min:"1" type:"integer" required:"true"`

@@ -37,6 +37,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resource_type", ssm.MaintenanceWindowResourceTypeInstance),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -62,6 +68,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_noNameOrDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.0", "acceptance_test"),
 					resource.TestCheckResourceAttr(resourceName, "targets.1.values.1", "acceptance_test2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -115,6 +127,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccAWSSSMMaintenanceWindowTargetBasicConfigUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTargetExists(resourceName, &maint),
@@ -128,6 +146,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", "This resource is for test purpose only - updated"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -157,6 +181,12 @@ func TestAccAWSSSMMaintenanceWindowTarget_resourceGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "This resource is for test purpose only"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", ssm.MaintenanceWindowResourceTypeResourceGroup),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -408,4 +438,15 @@ resource "aws_ssm_maintenance_window_target" "test" {
   }
 }
 `, rName, tName, tDesc)
+}
+
+func testAccAWSSSMMaintenanceWindowTargetImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["window_id"], rs.Primary.ID), nil
+	}
 }

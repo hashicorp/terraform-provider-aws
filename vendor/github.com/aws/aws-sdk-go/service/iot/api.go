@@ -15760,6 +15760,9 @@ func (c *IoT) SetV2LoggingLevelRequest(input *SetV2LoggingLevelInput) (req *requ
 //   * ServiceUnavailableException
 //   The service is temporarily unavailable.
 //
+//   * LimitExceededException
+//   A limit has been exceeded.
+//
 func (c *IoT) SetV2LoggingLevel(input *SetV2LoggingLevelInput) (*SetV2LoggingLevelOutput, error) {
 	req, out := c.SetV2LoggingLevelRequest(input)
 	return out, req.Send()

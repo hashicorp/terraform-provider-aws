@@ -116,6 +116,7 @@ func dataSourceAwsVpc() *schema.Resource {
 
 func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeVpcsInput{}
 
@@ -182,7 +183,7 @@ func dataSourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("default", vpc.IsDefault)
 	d.Set("state", vpc.State)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

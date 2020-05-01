@@ -647,6 +647,7 @@ func updateDynamoDbReplica(d *schema.ResourceData, conn *dynamodb.DynamoDB) erro
 
 func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(d.Id()),
@@ -676,12 +677,15 @@ func resourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error setting ttl: %s", err)
 	}
 
-	tags, err := readDynamoDbTableTags(d.Get("arn").(string), conn)
-	if err != nil {
-		return err
+	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
+
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %s", d.Get("arn").(string), err)
 	}
 
-	d.Set("tags", tags)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),
@@ -1071,23 +1075,6 @@ func updateDynamoDbPITR(d *schema.ResourceData, conn *dynamodb.DynamoDB) error {
 	}
 
 	return nil
-}
-
-func readDynamoDbTableTags(arn string, conn *dynamodb.DynamoDB) (map[string]string, error) {
-	output, err := conn.ListTagsOfResource(&dynamodb.ListTagsOfResourceInput{
-		ResourceArn: aws.String(arn),
-	})
-
-	// Do not fail if interfacing with dynamodb-local
-	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
-		return nil, fmt.Errorf("Error reading tags from dynamodb resource: %s", err)
-	}
-
-	result := keyvaluetags.DynamodbKeyValueTags(output.Tags).IgnoreAws().Map()
-
-	// TODO Read NextToken if available
-
-	return result, nil
 }
 
 // Waiters

@@ -56,6 +56,7 @@ The following arguments are supported:
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate
     that instances launched into the subnet should be assigned
     a public IP address. Default is `false`.
+* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`

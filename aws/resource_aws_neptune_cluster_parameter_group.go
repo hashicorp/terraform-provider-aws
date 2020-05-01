@@ -123,6 +123,7 @@ func resourceAwsNeptuneClusterParameterGroupCreate(d *schema.ResourceData, meta 
 
 func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).neptuneconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := neptune.DescribeDBClusterParameterGroupsInput{
 		DBClusterParameterGroupName: aws.String(d.Id()),
@@ -172,7 +173,7 @@ func resourceAwsNeptuneClusterParameterGroupRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error listing tags for Neptune Cluster Parameter Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

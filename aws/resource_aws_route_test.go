@@ -55,6 +55,28 @@ func TestAccAWSRoute_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_disappears(t *testing.T) {
+	var route ec2.Route
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists("aws_route.bar", &route),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute(), "aws_route.bar"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_ipv6Support(t *testing.T) {
 	var route ec2.Route
 
