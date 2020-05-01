@@ -132,3 +132,7 @@ func suppressRoute53ZoneNameWithTrailingDot(k, old, new string, d *schema.Resour
 	}
 	return strings.TrimSuffix(old, ".") == strings.TrimSuffix(new, ".")
 }
+
+func suppressEqualCIDRBlockDiffs(k, old, new string, d *schema.ResourceData) bool {
+	return cidrBlocksEqual(old, new)
+}
