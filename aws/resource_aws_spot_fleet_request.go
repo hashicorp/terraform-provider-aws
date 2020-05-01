@@ -545,6 +545,22 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				},
 				Set: schema.HashString,
 			},
+			"on_demand_allocation_strategy": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"on_demand_fulfilled_capacity": {
+				Type:     schema.TypeFloat,
+				Optional: true,
+			},
+			"on_demand_max_total_price": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"on_demand_target_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
 			"tags":     tagsSchema(),
 			"tags_all": tagsSchemaComputed(),
 		},
@@ -988,6 +1004,22 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("on_demand_target_capacity"); ok {
+		spotFleetConfig.OnDemandTargetCapacity = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("on_demand_allocation_strategy"); ok {
+		spotFleetConfig.OnDemandAllocationStrategy = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("on_demand_max_total_price"); ok {
+		spotFleetConfig.OnDemandMaxTotalPrice = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("on_demand_fulfilled_capacity"); ok {
+		spotFleetConfig.OnDemandFulfilledCapacity = aws.Float64(v.(float64))
+	}
+
 	if v, ok := d.GetOk("valid_from"); ok {
 		validFrom, err := time.Parse(time.RFC3339, v.(string))
 		if err != nil {
@@ -1308,6 +1340,22 @@ func resourceAwsSpotFleetRequestRead(d *schema.ResourceData, meta interface{}) e
 		if err := d.Set("launch_template_config", flattenFleetLaunchTemplateConfig(config.LaunchTemplateConfigs)); err != nil {
 			return fmt.Errorf("error setting launch_template_config: %s", err)
 		}
+	}
+
+	if config.OnDemandTargetCapacity != nil {
+		d.Set("on_demand_target_capacity", aws.Int64Value(config.OnDemandTargetCapacity))
+	}
+
+	if config.OnDemandAllocationStrategy != nil {
+		d.Set("on_demand_allocation_strategy", aws.StringValue(config.OnDemandAllocationStrategy))
+	}
+
+	if config.OnDemandMaxTotalPrice != nil {
+		d.Set("on_demand_max_total_price", aws.StringValue(config.OnDemandMaxTotalPrice))
+	}
+
+	if config.OnDemandFulfilledCapacity != nil {
+		d.Set("on_demand_fulfilled_capacity", aws.Float64Value(config.OnDemandFulfilledCapacity))
 	}
 
 	if config.LoadBalancersConfig != nil {
