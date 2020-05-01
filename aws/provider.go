@@ -270,6 +270,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_lambda_layer_version":                      dataSourceAwsLambdaLayerVersion(),
 			"aws_launch_configuration":                      dataSourceAwsLaunchConfiguration(),
 			"aws_launch_template":                           dataSourceAwsLaunchTemplate(),
+			"aws_local_gateway_route_table":                 dataSourceAwsLocalGatewayRouteTable(),
+			"aws_local_gateway_route_tables":                dataSourceAwsLocalGatewayRouteTables(),
 			"aws_mq_broker":                                 dataSourceAwsMqBroker(),
 			"aws_msk_cluster":                               dataSourceAwsMskCluster(),
 			"aws_msk_configuration":                         dataSourceAwsMskConfiguration(),
