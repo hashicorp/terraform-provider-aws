@@ -548,14 +548,17 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 			"on_demand_allocation_strategy": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"on_demand_fulfilled_capacity": {
 				Type:     schema.TypeFloat,
 				Optional: true,
+				ForceNew: true,
 			},
 			"on_demand_max_total_price": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"on_demand_target_capacity": {
 				Type:     schema.TypeInt,
@@ -1645,6 +1648,14 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 			req.TargetCapacity = aws.Int64(int64(val.(int)))
 			updateFlag = true
 		}
+	}
+
+	if d.HasChange("on_demand_target_capacity") {
+		if val, ok := d.GetOk("on_demand_target_capacity"); ok {
+			req.OnDemandTargetCapacity = aws.Int64(int64(val.(int)))
+		}
+
+		updateFlag = true
 	}
 
 	if d.HasChange("excess_capacity_termination_policy") {
