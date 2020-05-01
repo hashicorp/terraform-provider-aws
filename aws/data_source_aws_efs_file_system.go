@@ -58,7 +58,7 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Computed: true,
 			},
 			"size_in_bytes": {
-				Type:     schema.TypeFloat,
+				Type:     schema.TypeInt,
 				Computed: true,
 			},
 			"lifecycle_policy": {

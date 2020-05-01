@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -30,7 +31,7 @@ func TestAccDataSourceAwsEfsFileSystem_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "size_in_bytes", resourceName, "size_in_bytes"),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
 				),
 			},
 		},
@@ -59,7 +60,7 @@ func TestAccDataSourceAwsEfsFileSystem_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "size_in_bytes", resourceName, "size_in_bytes"),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
 				),
 			},
 		},
