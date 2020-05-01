@@ -425,9 +425,11 @@ func TestValidateCIDRNetworkAddress(t *testing.T) {
 		CIDR              string
 		ExpectedErrSubstr string
 	}{
-		{"notacidr", `must contain a valid CIDR`},
-		{"10.0.1.0/16", `must contain a valid network CIDR`},
+		{"notacidr", `is not a valid CIDR block`},
+		{"10.0.1.0/16", `is not a valid CIDR block; did you mean`},
 		{"10.0.1.0/24", ``},
+		{"2001:db8::/122", ``},
+		{"2001::/15", `is not a valid CIDR block; did you mean`},
 	}
 
 	for i, tc := range cases {

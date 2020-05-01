@@ -3,7 +3,6 @@ package aws
 import (
 	"errors"
 	"fmt"
-	"net"
 	"net/url"
 	"regexp"
 	"strconv"
@@ -725,17 +724,31 @@ func validatePolicyStatementId(v interface{}, k string) (ws []string, errors []e
 // validateCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	_, ipnet, err := net.ParseCIDR(value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf(
-			"%q must contain a valid CIDR, got error parsing: %s", k, err))
+	if err := validateCIDRBlock(v.(string)); err != nil {
+		errors = append(errors, err)
 		return
 	}
 
-	if ipnet == nil || value != ipnet.String() {
-		errors = append(errors, fmt.Errorf(
-			"%q must contain a valid network CIDR, got %q", k, value))
+	return
+}
+
+// validateIpv4CIDRNetworkAddress ensures that the string value is a valid IPv4 CIDR that
+// represents a network address - it adds an error otherwise
+func validateIpv4CIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+	if err := validateIpv4CIDRBlock(v.(string)); err != nil {
+		errors = append(errors, err)
+		return
+	}
+
+	return
+}
+
+// validateIpv6CIDRNetworkAddress ensures that the string value is a valid IPv6 CIDR that
+// represents a network address - it adds an error otherwise
+func validateIpv6CIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+	if err := validateIpv6CIDRBlock(v.(string)); err != nil {
+		errors = append(errors, err)
+		return
 	}
 
 	return
