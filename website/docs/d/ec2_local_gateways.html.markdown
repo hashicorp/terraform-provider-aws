@@ -1,28 +1,28 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_local_gateways"
+page_title: "AWS: aws_ec2_local_gateways"
 description: |-
-    Provides a list local gateways in a region
+    Provides information for multiple EC2 Local Gateways
 ---
 
-# Data Source: aws_local_gateways
+# Data Source: aws_ec2_local_gateways
 
-This resource can be useful for getting back a list of Local Gateway Ids for a region.
+Provides information for multiple EC2 Local Gateways, such as their identifiers.
 
 ## Example Usage
 
-The following example retrieves a list of Local Gateway Ids with a custom tag of `service` set to a value of "production".
+The following example retrieves Local Gateways with a resource tag of `service` set to `production`.
 
 ```hcl
-data "aws_local_gateways" "foo" {
+data "aws_ec2_local_gateways" "foo" {
   tags = {
     service = "production"
   }
 }
 
 output "foo" {
-  value = "${data.aws_local_gateways.foo.ids}"
+  value = "${data.aws_ec2_local_gateways.foo.ids}"
 }
 ```
 
@@ -44,4 +44,4 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the Local Gateway Ids found. This data source will fail if none are found.
+* `ids` - Set of all the Local Gateway identifiers

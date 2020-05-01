@@ -1,14 +1,14 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_local_gateway"
+page_title: "AWS: aws_ec2_local_gateway"
 description: |-
-    Provides details about a specific Local Gateway
+    Provides details about an EC2 Local Gateway
 ---
 
-# Data Source: aws_local_gateway
+# Data Source: aws_ec2_local_gateway
 
-`aws_local_gateway` provides details about a specific Local Gateway.
+Provides details about an EC2 Local Gateway.
 
 ## Example Usage
 
@@ -17,7 +17,7 @@ The following example shows how one might accept a local gateway id as a variabl
 ```hcl
 variable "local_gateway_id" {}
 
-data "aws_local_gateway" "selected" {
+data "aws_ec2_local_gateway" "selected" {
   id = "${var.local_gateway_id}"
 }
 ```
@@ -54,8 +54,8 @@ result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for
 the selected Local Gateway.
 
-The following attribute is additionally exported:
+The following attributes are additionally exported:
 
-* `outpost_arn` - Amazon Resource Name (ARN) of Local Gateway
-* `owner_id` - The ID of the AWS account that owns the Local Gateway.
-* `state` - The State of the local gateway.
+* `outpost_arn` - Amazon Resource Name (ARN) of Outpost
+* `owner_id` - AWS account identifier that owns the Local Gateway.
+* `state` - State of the local gateway.

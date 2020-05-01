@@ -5,15 +5,14 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsLocalGateway() *schema.Resource {
+func dataSourceAwsEc2LocalGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLocalGatewayRead,
+		Read: dataSourceAwsEc2LocalGatewayRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -45,18 +44,14 @@ func dataSourceAwsLocalGateway() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLocalGatewayRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEc2LocalGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeLocalGatewaysInput{}
 
-	var id string
-	if cid, ok := d.GetOk("id"); ok {
-		id = cid.(string)
-	}
-
-	if id != "" {
-		req.LocalGatewayIds = []*string{aws.String(id)}
+	if v, ok := d.GetOk("id"); ok {
+		req.LocalGatewayIds = []*string{aws.String(v.(string))}
 	}
 
 	req.Filters = buildEC2AttributeFilterList(
@@ -82,7 +77,7 @@ func dataSourceAwsLocalGatewayRead(d *schema.ResourceData, meta interface{}) err
 	log.Printf("[DEBUG] Reading AWS LOCAL GATEWAY: %s", req)
 	resp, err := conn.DescribeLocalGateways(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 Local Gateways: %w", err)
 	}
 	if resp == nil || len(resp.LocalGateways) == 0 {
 		return fmt.Errorf("no matching Local Gateway found")
@@ -95,22 +90,12 @@ func dataSourceAwsLocalGatewayRead(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(localGateway.LocalGatewayId))
 	d.Set("outpost_arn", localGateway.OutpostArn)
+	d.Set("owner_id", localGateway.OwnerId)
 	d.Set("state", localGateway.State)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(localGateway.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(localGateway.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
-
-	d.Set("owner_id", localGateway.OwnerId)
-
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "outposts",
-		Region:    meta.(*AWSClient).region,
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("outpost/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
 
 	return nil
 }

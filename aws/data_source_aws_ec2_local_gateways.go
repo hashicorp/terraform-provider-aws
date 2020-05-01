@@ -11,9 +11,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsLocalGateways() *schema.Resource {
+func dataSourceAwsEc2LocalGateways() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLocalGatewaysRead,
+		Read: dataSourceAwsEc2LocalGatewaysRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -29,7 +29,7 @@ func dataSourceAwsLocalGateways() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLocalGatewaysRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEc2LocalGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeLocalGatewaysInput{}
@@ -53,7 +53,7 @@ func dataSourceAwsLocalGatewaysRead(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] DescribeLocalGateways %s\n", req)
 	resp, err := conn.DescribeLocalGateways(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 Local Gateways: %w", err)
 	}
 
 	if resp == nil || len(resp.LocalGateways) == 0 {
