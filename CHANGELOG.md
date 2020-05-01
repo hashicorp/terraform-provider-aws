@@ -9,6 +9,11 @@ FEATURES:
 * **New Data Source:** `aws_ec2_local_gateway_route_table` [GH-13002]
 * **New Data Source:** `aws_ec2_local_gateway_route_tables` [GH-13002]
 
+ENHANCEMENTS:
+
+* data-source/aws_eip: Add `customer_owned_ip` and `customer_owned_ipv4_pool` attributes [GH-12862]
+* resource/aws_eip: Add `customer_owned_ip` attribute and `customer_owned_ipv4_pool` argument [GH-12862]
+
 ## 2.60.0 (May 01, 2020)
 
 NOTES:
