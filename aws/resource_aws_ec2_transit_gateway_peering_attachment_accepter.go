@@ -78,6 +78,8 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterCreate(d *schema.Resou
 func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	transitGatewayPeeringAttachment, err := ec2DescribeTransitGatewayPeeringAttachment(conn, d.Id())
 
 	if isAWSErr(err, "InvalidTransitGatewayAttachmentID.NotFound", "") {
@@ -124,7 +126,7 @@ func resourceAwsEc2TransitGatewayPeeringAttachmentAccepterRead(d *schema.Resourc
 	d.Set("peer_region", transitGatewayPeeringAttachment.RequesterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
