@@ -1007,7 +1007,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 		spotFleetConfig.SpotPrice = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("on_demand_target_capacity"); ok {
+	if v, ok := d.GetOkExists("on_demand_target_capacity"); ok {
 		spotFleetConfig.OnDemandTargetCapacity = aws.Int64(int64(v.(int)))
 	}
 
