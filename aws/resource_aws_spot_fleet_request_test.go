@@ -1092,6 +1092,12 @@ func TestAccAWSSpotFleetRequest_zero_capacity(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
 				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
@@ -2359,7 +2365,7 @@ resource "aws_spot_fleet_request" "test" {
     launch_specification {
         instance_type = "m1.small"
         ami = "ami-516b9131"
-        key_name = "${aws_key_pair.debugging.key_name}"
+        key_name = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
