@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -153,6 +154,46 @@ func TestAccDataSourceAwsEip_Instance(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccDataSourceAWSEIP_COIPPool(t *testing.T) {
+	dataSourceName := "data.aws_eip.test"
+	resourceName := "aws_eip.test"
+
+	poolId := os.Getenv("AWS_COIP_POOL_ID")
+	if poolId == "" {
+		t.Skip(
+			"Environment variable AWS_COIP_POOL_ID is not set. " +
+				"This environment variable must be set to the ID of " +
+				"a deployed Coip Pool to enable this test.")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAWSEIPConfig_CoipPool(poolId),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ipv4_pool", dataSourceName, "customer_owned_ipv4_pool"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "customer_owned_ip"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSourceAWSEIPConfig_CoipPool(poolId string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  vpc                      = true
+  customer_owned_ipv4_pool = "%s"
+}
+
+data "aws_eip" "test" {
+  id = "${aws_eip.test.id}"
+}
+`, poolId)
 }
 
 func testAccDataSourceAwsEipConfigFilter(rName string) string {
