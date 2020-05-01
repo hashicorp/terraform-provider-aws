@@ -12,7 +12,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 // How long to sleep if a limit-exceeded event happens
@@ -56,16 +55,17 @@ func resourceAwsRoute() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
+				ValidateFunc: validateIpv4CIDRNetworkAddress,
+				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block"},
 			},
+
 			"destination_ipv6_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IsCIDR,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return isIpv6CidrsEquals(old, new)
-				},
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateFunc:     validateIpv6CIDRNetworkAddress,
+				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
+				ExactlyOneOf:     []string{"destination_cidr_block", "destination_ipv6_cidr_block"},
 			},
 
 			"destination_prefix_list_id": {
@@ -553,7 +553,7 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 
 	if ipv6cidr != "" {
 		for _, route := range (*resp.RouteTables[0]).Routes {
-			if route.DestinationIpv6CidrBlock != nil && isIpv6CidrsEquals(aws.StringValue(route.DestinationIpv6CidrBlock), ipv6cidr) {
+			if cidrBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), ipv6cidr) {
 				return route, nil
 			}
 		}
