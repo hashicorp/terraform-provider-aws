@@ -43,6 +43,7 @@ func dataSourceAwsEc2CoipPool() *schema.Resource {
 
 func dataSourceAwsEc2CoipPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeCoipPoolsInput{}
 
@@ -96,7 +97,7 @@ func dataSourceAwsEc2CoipPoolRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("pool_id", coip.PoolId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(coip.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(coip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
