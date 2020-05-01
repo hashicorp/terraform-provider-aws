@@ -11,15 +11,15 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsLocalGatewayRouteTables() *schema.Resource {
+func dataSourceAwsEc2LocalGatewayRouteTables() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLocalGatewayRouteTablesRead,
+		Read: dataSourceAwsEc2LocalGatewayRouteTablesRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
 			"tags": tagsSchemaComputed(),
 
-			"local_gateway_route_table_ids": {
+			"ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -29,7 +29,7 @@ func dataSourceAwsLocalGatewayRouteTables() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLocalGatewayRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEc2LocalGatewayRouteTablesRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeLocalGatewayRouteTablesInput{}
@@ -49,7 +49,7 @@ func dataSourceAwsLocalGatewayRouteTablesRead(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] DescribeLocalGatewayRouteTables %s\n", req)
 	resp, err := conn.DescribeLocalGatewayRouteTables(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 Local Gateway Route Tables: %w", err)
 	}
 
 	if resp == nil || len(resp.LocalGatewayRouteTables) == 0 {
@@ -63,7 +63,7 @@ func dataSourceAwsLocalGatewayRouteTablesRead(d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(time.Now().UTC().String())
-	if err := d.Set("local_gateway_route_table_ids", localgatewayroutetables); err != nil {
+	if err := d.Set("ids", localgatewayroutetables); err != nil {
 		return fmt.Errorf("Error setting local gateway route table ids: %s", err)
 	}
 

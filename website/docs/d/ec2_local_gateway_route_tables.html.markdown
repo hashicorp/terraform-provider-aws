@@ -1,23 +1,23 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_local_gateway_route_table"
+page_title: "AWS: aws_ec2_local_gateway_route_tables"
 description: |-
-    Provides a list of Local Gateway Route Table Ids in a region
+    Provides information for multiple EC2 Local Gateway Route Tables
 ---
 
-# Data Source: aws_local_gateway_route_table
+# Data Source: aws_ec2_local_gateway_route_tables
 
-This resource can be useful for getting back a list of Local Gateway Route Table Ids for a region.
+Provides information for multiple EC2 Local Gateway Route Tables, such as their identifiers.
 
 ## Example Usage
 
 The following shows outputing all Local Gateway Route Table Ids.
 
 ```hcl
-data "aws_local_gateway_route_table" "foo" {}
+data "aws_ec2_local_gateway_route_table" "foo" {}
 output "foo" {
-  value = "${data.aws_local_gateway_route_table.foo.ids}"
+  value = "${data.aws_ec2_local_gateway_route_table.foo.ids}"
 }
 ```
 
@@ -39,5 +39,4 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `local_gateway_route_table_ids` - A list of all the Local Gateway Route Table Ids found. 
-This data source will fail if none are found.
+* `ids` - Set of Local Gateway Route Table identifiers

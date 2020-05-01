@@ -10,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsLocalGatewayRouteTable() *schema.Resource {
+func dataSourceAwsEc2LocalGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsLocalGatewayRouteTableRead,
+		Read: dataSourceAwsEc2LocalGatewayRouteTableRead,
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_route_table_id": {
@@ -46,18 +46,14 @@ func dataSourceAwsLocalGatewayRouteTable() *schema.Resource {
 	}
 }
 
-func dataSourceAwsLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEc2LocalGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeLocalGatewayRouteTablesInput{}
 
-	var id string
-	if cid, ok := d.GetOk("local_gateway_route_table_id"); ok {
-		id = cid.(string)
-	}
-
-	if id != "" {
-		req.LocalGatewayRouteTableIds = []*string{aws.String(id)}
+	if v, ok := d.GetOk("local_gateway_route_table_id"); ok {
+		req.LocalGatewayRouteTableIds = []*string{aws.String(v.(string))}
 	}
 
 	req.Filters = buildEC2AttributeFilterList(
@@ -83,7 +79,7 @@ func dataSourceAwsLocalGatewayRouteTableRead(d *schema.ResourceData, meta interf
 	log.Printf("[DEBUG] Reading AWS Local Gateway Route Table: %s", req)
 	resp, err := conn.DescribeLocalGatewayRouteTables(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 Local Gateway Route Tables: %w", err)
 	}
 	if resp == nil || len(resp.LocalGatewayRouteTables) == 0 {
 		return fmt.Errorf("no matching Local Gateway Route Table found")
@@ -96,10 +92,11 @@ func dataSourceAwsLocalGatewayRouteTableRead(d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(localgatewayroutetable.LocalGatewayRouteTableId))
 	d.Set("local_gateway_id", localgatewayroutetable.LocalGatewayId)
+	d.Set("local_gateway_route_table_id", localgatewayroutetable.LocalGatewayRouteTableId)
 	d.Set("outpost_arn", localgatewayroutetable.OutpostArn)
 	d.Set("state", localgatewayroutetable.State)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(localgatewayroutetable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

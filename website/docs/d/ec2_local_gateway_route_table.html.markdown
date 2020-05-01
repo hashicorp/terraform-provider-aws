@@ -1,16 +1,16 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_local_gateway_route_table"
+page_title: "AWS: aws_ec2_local_gateway_route_table"
 description: |-
-    Provides details about a specific Local Gateway Route Table
+    Provides details about an EC2 Local Gateway Route Table
 ---
 
-# Data Source: aws_local_gateway_route_table
+# Data Source: aws_ec2_local_gateway_route_table
 
-`aws_local_gateway_route_table` provides details about a specific Local Gateway Route Table.
+Provides details about an EC2 Local Gateway Route Table.
 
-This resource can prove useful when a module accepts a local gateway route table id as
+This data source can prove useful when a module accepts a local gateway route table id as
 an input variable and needs to, for example, find the associated Outpost or Local Gateway.
 
 ## Example Usage
@@ -18,9 +18,9 @@ an input variable and needs to, for example, find the associated Outpost or Loca
 The following example returns a specific local gateway route table ID
 
 ```hcl
-variable "aws_local_gateway_route_table" {}
-data "aws_local_gateway_route_table" "selected" {
-  local_gateway_route_table_id = "${var.aws_local_gateway_route_table}"
+variable "aws_ec2_local_gateway_route_table" {}
+data "aws_ec2_local_gateway_route_table" "selected" {
+  local_gateway_route_table_id = "${var.aws_ec2_local_gateway_route_table}"
 }
 ```
 
