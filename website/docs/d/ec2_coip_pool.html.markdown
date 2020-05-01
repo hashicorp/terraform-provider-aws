@@ -1,16 +1,16 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_coip_pool"
+page_title: "AWS: aws_ec2_coip_pool"
 description: |-
-    Provides details about a specific COIP Pool
+    Provides details about a specific EC2 Customer-Owned IP Pool
 ---
 
-# Data Source: aws_coip_pool
+# Data Source: aws_ec2_coip_pool
 
-`aws_coip_pool` provides details about a specific COIP Pool.
+Provides details about a specific EC2 Customer-Owned IP Pool.
 
-This resource can prove useful when a module accepts a coip pool id as
+This data source can prove useful when a module accepts a coip pool id as
 an input variable and needs to, for example, determine the CIDR block of that
 COIP Pool.
 
@@ -21,7 +21,7 @@ The following example returns a specific coip pool ID
 ```hcl
 variable "coip_pool_id" {}
 
-data "aws_coip_pool" "selected" {
+data "aws_ec2_coip_pool" "selected" {
   id = "${var.coip_pool_id}"
 }
 ```
@@ -57,4 +57,4 @@ the selected COIP Pool.
 
 The following attribute is additionally exported:
 
-* `pool_cidrs` - List of CIDR blocks in pool
+* `pool_cidrs` - Set of CIDR blocks in pool

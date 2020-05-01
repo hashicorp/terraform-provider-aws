@@ -11,9 +11,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsCoipPools() *schema.Resource {
+func dataSourceAwsEc2CoipPools() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCoipPoolsRead,
+		Read: dataSourceAwsEc2CoipPoolsRead,
 		Schema: map[string]*schema.Schema{
 			"filter": ec2CustomFiltersSchema(),
 
@@ -29,7 +29,7 @@ func dataSourceAwsCoipPools() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCoipPoolsRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEc2CoipPoolsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeCoipPoolsInput{}
@@ -53,7 +53,7 @@ func dataSourceAwsCoipPoolsRead(d *schema.ResourceData, meta interface{}) error 
 	log.Printf("[DEBUG] DescribeCoipPools %s\n", req)
 	resp, err := conn.DescribeCoipPools(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 COIP Pools: %w", err)
 	}
 
 	if resp == nil || len(resp.CoipPools) == 0 {

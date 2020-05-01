@@ -1,31 +1,31 @@
 ---
-subcategory: "VPC"
+subcategory: "EC2"
 layout: "aws"
-page_title: "AWS: aws_coip_pools"
+page_title: "AWS: aws_ec2_coip_pools"
 description: |-
-    Provides a list of COIP Pool Ids in a region
+    Provides information for multiple EC2 Customer-Owned IP Pools
 ---
 
-# Data Source: aws_coip_pools
+# Data Source: aws_ec2_coip_pools
 
-This resource can be useful for getting back a list of COIP Pool Ids for a region.
+Provides information for multiple EC2 Customer-Owned IP Pools, such as their identifiers.
 
 ## Example Usage
 
 The following shows outputing all COIP Pool Ids.
 
 ```hcl
-data "aws_coip_pools" "foo" {}
+data "aws_ec2_coip_pools" "foo" {}
 
 output "foo" {
-  value = "${data.aws_coip_pools.foo.ids}"
+  value = "${data.aws_ec2_coip_pools.foo.ids}"
 }
 ```
 
 ## Argument Reference
 
 * `tags` - (Optional) A mapping of tags, each pair of which must exactly match
-  a pair on the desired aws_coip_pools.
+  a pair on the desired aws_ec2_coip_pools.
 
 * `filter` - (Optional) Custom filter block as described below.
 
@@ -40,4 +40,4 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `pool_ids` - A list of all the COIP Pool Ids found. This data source will fail if none are found.
+* `pool_ids` - Set of COIP Pool Identifiers

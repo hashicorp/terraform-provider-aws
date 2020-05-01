@@ -10,9 +10,9 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func dataSourceAwsCoipPool() *schema.Resource {
+func dataSourceAwsEc2CoipPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAwsCoipPoolRead,
+		Read: dataSourceAwsEc2CoipPoolRead,
 
 		Schema: map[string]*schema.Schema{
 			"local_gateway_route_table_id": {
@@ -41,18 +41,13 @@ func dataSourceAwsCoipPool() *schema.Resource {
 	}
 }
 
-func dataSourceAwsCoipPoolRead(d *schema.ResourceData, meta interface{}) error {
+func dataSourceAwsEc2CoipPoolRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
 	req := &ec2.DescribeCoipPoolsInput{}
 
-	var id string
-	if cid, ok := d.GetOk("pool_id"); ok {
-		id = cid.(string)
-	}
-
-	if id != "" {
-		req.PoolIds = []*string{aws.String(id)}
+	if v, ok := d.GetOk("pool_id"); ok {
+		req.PoolIds = []*string{aws.String(v.(string))}
 	}
 
 	filters := map[string]string{}
@@ -80,7 +75,7 @@ func dataSourceAwsCoipPoolRead(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Reading AWS COIP Pool: %s", req)
 	resp, err := conn.DescribeCoipPools(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing EC2 COIP Pools: %w", err)
 	}
 	if resp == nil || len(resp.CoipPools) == 0 {
 		return fmt.Errorf("no matching COIP Pool found")
@@ -92,8 +87,14 @@ func dataSourceAwsCoipPoolRead(d *schema.ResourceData, meta interface{}) error {
 	coip := resp.CoipPools[0]
 
 	d.SetId(aws.StringValue(coip.PoolId))
-	d.Set("pool_cidrs", coip.PoolCidrs)
+
 	d.Set("local_gateway_route_table_id", coip.LocalGatewayRouteTableId)
+
+	if err := d.Set("pool_cidrs", aws.StringValueSlice(coip.PoolCidrs)); err != nil {
+		return fmt.Errorf("error setting pool_cidrs: %s", err)
+	}
+
+	d.Set("pool_id", coip.PoolId)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(coip.Tags).IgnoreAws().Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
