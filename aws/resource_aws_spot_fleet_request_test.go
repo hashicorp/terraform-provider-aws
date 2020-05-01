@@ -2363,9 +2363,9 @@ resource "aws_spot_fleet_request" "test" {
     instance_interruption_behaviour = "stop"
     wait_for_fulfillment = true
     launch_specification {
-        instance_type = "m1.small"
-        ami = "ami-516b9131"
-        key_name = "${aws_key_pair.test.key_name}"
+        instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+        ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+        key_name      = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
