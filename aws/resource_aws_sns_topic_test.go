@@ -7,7 +7,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -189,22 +188,9 @@ func TestAccAWSSNSTopic_withDeliveryPolicy(t *testing.T) {
 func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
 	attributes := make(map[string]string)
 	resourceName := "aws_sns_topic.test"
+	iamRoleResourceName := "aws_iam_role.example"
+
 	rName := acctest.RandString(10)
-	arnRegex := regexp.MustCompile("^arn:aws:iam::[0-9]{12}:role/sns-delivery-status-role-")
-	expectedAttributes := map[string]*regexp.Regexp{
-		"ApplicationFailureFeedbackRoleArn":    arnRegex,
-		"ApplicationSuccessFeedbackRoleArn":    arnRegex,
-		"ApplicationSuccessFeedbackSampleRate": regexp.MustCompile(`^100$`),
-		"HTTPFailureFeedbackRoleArn":           arnRegex,
-		"HTTPSuccessFeedbackRoleArn":           arnRegex,
-		"HTTPSuccessFeedbackSampleRate":        regexp.MustCompile(`^80$`),
-		"LambdaFailureFeedbackRoleArn":         arnRegex,
-		"LambdaSuccessFeedbackRoleArn":         arnRegex,
-		"LambdaSuccessFeedbackSampleRate":      regexp.MustCompile(`^90$`),
-		"SQSFailureFeedbackRoleArn":            arnRegex,
-		"SQSSuccessFeedbackRoleArn":            arnRegex,
-		"SQSSuccessFeedbackSampleRate":         regexp.MustCompile(`^70$`),
-	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -216,19 +202,18 @@ func TestAccAWSSNSTopic_deliveryStatus(t *testing.T) {
 				Config: testAccAWSSNSTopicConfig_deliveryStatus(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists(resourceName, attributes),
-					testAccCheckAWSSNSTopicAttributes(attributes, expectedAttributes),
-					resource.TestMatchResourceAttr(resourceName, "application_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "application_success_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "application_success_feedback_sample_rate", "100"),
-					resource.TestMatchResourceAttr(resourceName, "application_failure_feedback_role_arn", arnRegex),
-					resource.TestMatchResourceAttr(resourceName, "lambda_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "application_failure_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_success_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_success_feedback_sample_rate", "90"),
-					resource.TestMatchResourceAttr(resourceName, "lambda_failure_feedback_role_arn", arnRegex),
-					resource.TestMatchResourceAttr(resourceName, "http_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_failure_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "http_success_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "http_success_feedback_sample_rate", "80"),
-					resource.TestMatchResourceAttr(resourceName, "http_failure_feedback_role_arn", arnRegex),
-					resource.TestMatchResourceAttr(resourceName, "sqs_success_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "http_failure_feedback_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "sqs_success_feedback_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "sqs_success_feedback_sample_rate", "70"),
-					resource.TestMatchResourceAttr(resourceName, "sqs_failure_feedback_role_arn", arnRegex),
+					resource.TestCheckResourceAttrPair(resourceName, "sqs_failure_feedback_role_arn", iamRoleResourceName, "arn"),
 				),
 			},
 		},
@@ -322,7 +307,7 @@ func testAccCheckAWSNSTopicHasPolicy(n string, expectedPolicyText string) resour
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Queue URL specified!")
+			return fmt.Errorf("no Queue URL specified")
 		}
 
 		if !ok {
@@ -356,7 +341,7 @@ func testAccCheckAWSNSTopicHasPolicy(n string, expectedPolicyText string) resour
 			return fmt.Errorf("Error testing policy equivalence: %s", err)
 		}
 		if !equivalent {
-			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
+			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s",
 				expectedPolicyText, actualPolicyText)
 		}
 
@@ -372,7 +357,7 @@ func testAccCheckAWSNSTopicHasDeliveryPolicy(n string, expectedPolicyText string
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Queue URL specified!")
+			return fmt.Errorf("no Queue URL specified")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).snsconn
@@ -396,7 +381,7 @@ func testAccCheckAWSNSTopicHasDeliveryPolicy(n string, expectedPolicyText string
 		equivalent := suppressEquivalentJsonDiffs("", actualPolicyText, expectedPolicyText, nil)
 
 		if !equivalent {
-			return fmt.Errorf("Non-equivalent delivery policy error:\n\nexpected: %s\n\n     got: %s\n",
+			return fmt.Errorf("Non-equivalent delivery policy error:\n\nexpected: %s\n\n     got: %s",
 				expectedPolicyText, actualPolicyText)
 		}
 
@@ -423,23 +408,10 @@ func testAccCheckAWSSNSTopicDestroy(s *terraform.State) error {
 			}
 			return err
 		}
-		return fmt.Errorf("Topic exists when it should be destroyed!")
+		return fmt.Errorf("SNS topic (%s) exists when it should be destroyed", rs.Primary.ID)
 	}
 
 	return nil
-}
-
-func testAccCheckAWSSNSTopicAttributes(attributes map[string]string, expectedAttributes map[string]*regexp.Regexp) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		var errors error
-		for k, expectedR := range expectedAttributes {
-			if v, ok := attributes[k]; !ok || !expectedR.MatchString(v) {
-				err := fmt.Errorf("expected SNS topic attribute %q to match %q, received: %q", k, expectedR.String(), v)
-				errors = multierror.Append(errors, err)
-			}
-		}
-		return errors
-	}
 }
 
 func testAccCheckAWSSNSTopicExists(n string, attributes map[string]string) resource.TestCheckFunc {
