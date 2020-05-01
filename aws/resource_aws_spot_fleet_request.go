@@ -549,6 +549,11 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
+				Default:  ec2.OnDemandAllocationStrategyLowestPrice,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.OnDemandAllocationStrategyPrioritized,
+					ec2.OnDemandAllocationStrategyLowestPrice,
+				}, false),
 			},
 			"on_demand_fulfilled_capacity": {
 				Type:     schema.TypeFloat,
