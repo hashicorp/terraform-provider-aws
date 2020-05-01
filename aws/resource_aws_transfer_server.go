@@ -264,7 +264,6 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("logging_role", resp.Server.LoggingRole)
 	d.Set("host_key_fingerprint", resp.Server.HostKeyFingerprint)
 
-
 	if resp.Server.EndpointDetails.VpcEndpointId != nil {
 		out, err := describeTransferServerVPCEndpoint(meta.(*AWSClient).ec2conn, resp.Server.EndpointDetails.VpcEndpointId)
 		if err != nil {
