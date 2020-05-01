@@ -65,22 +65,22 @@ func (c *MediaLive) BatchUpdateScheduleRequest(input *BatchUpdateScheduleInput) 
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation BatchUpdateSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/BatchUpdateSchedule
 func (c *MediaLive) BatchUpdateSchedule(input *BatchUpdateScheduleInput) (*BatchUpdateScheduleOutput, error) {
@@ -157,22 +157,22 @@ func (c *MediaLive) CreateChannelRequest(input *CreateChannelInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateChannel
 func (c *MediaLive) CreateChannel(input *CreateChannelInput) (*CreateChannelOutput, error) {
@@ -249,18 +249,18 @@ func (c *MediaLive) CreateInputRequest(input *CreateInputInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInput
 func (c *MediaLive) CreateInput(input *CreateInputInput) (*CreateInputOutput, error) {
@@ -337,18 +337,18 @@ func (c *MediaLive) CreateInputSecurityGroupRequest(input *CreateInputSecurityGr
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateInputSecurityGroup
 func (c *MediaLive) CreateInputSecurityGroup(input *CreateInputSecurityGroupInput) (*CreateInputSecurityGroupOutput, error) {
@@ -425,22 +425,22 @@ func (c *MediaLive) CreateMultiplexRequest(input *CreateMultiplexInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplex
 func (c *MediaLive) CreateMultiplex(input *CreateMultiplexInput) (*CreateMultiplexOutput, error) {
@@ -517,22 +517,22 @@ func (c *MediaLive) CreateMultiplexProgramRequest(input *CreateMultiplexProgramI
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateMultiplexProgram
 func (c *MediaLive) CreateMultiplexProgram(input *CreateMultiplexProgramInput) (*CreateMultiplexProgramOutput, error) {
@@ -610,14 +610,14 @@ func (c *MediaLive) CreateTagsRequest(input *CreateTagsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation CreateTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/CreateTags
 func (c *MediaLive) CreateTags(input *CreateTagsInput) (*CreateTagsOutput, error) {
@@ -694,22 +694,22 @@ func (c *MediaLive) DeleteChannelRequest(input *DeleteChannelInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteChannel
 func (c *MediaLive) DeleteChannel(input *DeleteChannelInput) (*DeleteChannelOutput, error) {
@@ -787,22 +787,22 @@ func (c *MediaLive) DeleteInputRequest(input *DeleteInputInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInput
 func (c *MediaLive) DeleteInput(input *DeleteInputInput) (*DeleteInputOutput, error) {
@@ -880,20 +880,20 @@ func (c *MediaLive) DeleteInputSecurityGroupRequest(input *DeleteInputSecurityGr
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteInputSecurityGroup
 func (c *MediaLive) DeleteInputSecurityGroup(input *DeleteInputSecurityGroupInput) (*DeleteInputSecurityGroupOutput, error) {
@@ -970,22 +970,22 @@ func (c *MediaLive) DeleteMultiplexRequest(input *DeleteMultiplexInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplex
 func (c *MediaLive) DeleteMultiplex(input *DeleteMultiplexInput) (*DeleteMultiplexOutput, error) {
@@ -1062,22 +1062,22 @@ func (c *MediaLive) DeleteMultiplexProgramRequest(input *DeleteMultiplexProgramI
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteMultiplexProgram
 func (c *MediaLive) DeleteMultiplexProgram(input *DeleteMultiplexProgramInput) (*DeleteMultiplexProgramOutput, error) {
@@ -1154,22 +1154,22 @@ func (c *MediaLive) DeleteReservationRequest(input *DeleteReservationInput) (req
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteReservation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteReservation
 func (c *MediaLive) DeleteReservation(input *DeleteReservationInput) (*DeleteReservationOutput, error) {
@@ -1247,20 +1247,20 @@ func (c *MediaLive) DeleteScheduleRequest(input *DeleteScheduleInput) (req *requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteSchedule
 func (c *MediaLive) DeleteSchedule(input *DeleteScheduleInput) (*DeleteScheduleOutput, error) {
@@ -1338,14 +1338,14 @@ func (c *MediaLive) DeleteTagsRequest(input *DeleteTagsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DeleteTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DeleteTags
 func (c *MediaLive) DeleteTags(input *DeleteTagsInput) (*DeleteTagsOutput, error) {
@@ -1422,20 +1422,20 @@ func (c *MediaLive) DescribeChannelRequest(input *DescribeChannelInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeChannel
 func (c *MediaLive) DescribeChannel(input *DescribeChannelInput) (*DescribeChannelOutput, error) {
@@ -1512,20 +1512,20 @@ func (c *MediaLive) DescribeInputRequest(input *DescribeInputInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInput
 func (c *MediaLive) DescribeInput(input *DescribeInputInput) (*DescribeInputOutput, error) {
@@ -1602,20 +1602,20 @@ func (c *MediaLive) DescribeInputSecurityGroupRequest(input *DescribeInputSecuri
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeInputSecurityGroup
 func (c *MediaLive) DescribeInputSecurityGroup(input *DescribeInputSecurityGroupInput) (*DescribeInputSecurityGroupOutput, error) {
@@ -1692,20 +1692,20 @@ func (c *MediaLive) DescribeMultiplexRequest(input *DescribeMultiplexInput) (req
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplex
 func (c *MediaLive) DescribeMultiplex(input *DescribeMultiplexInput) (*DescribeMultiplexOutput, error) {
@@ -1782,20 +1782,20 @@ func (c *MediaLive) DescribeMultiplexProgramRequest(input *DescribeMultiplexProg
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeMultiplexProgram
 func (c *MediaLive) DescribeMultiplexProgram(input *DescribeMultiplexProgramInput) (*DescribeMultiplexProgramOutput, error) {
@@ -1872,20 +1872,20 @@ func (c *MediaLive) DescribeOfferingRequest(input *DescribeOfferingInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeOffering for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeOffering
 func (c *MediaLive) DescribeOffering(input *DescribeOfferingInput) (*DescribeOfferingOutput, error) {
@@ -1962,20 +1962,20 @@ func (c *MediaLive) DescribeReservationRequest(input *DescribeReservationInput) 
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeReservation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeReservation
 func (c *MediaLive) DescribeReservation(input *DescribeReservationInput) (*DescribeReservationOutput, error) {
@@ -2058,20 +2058,20 @@ func (c *MediaLive) DescribeScheduleRequest(input *DescribeScheduleInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation DescribeSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/DescribeSchedule
 func (c *MediaLive) DescribeSchedule(input *DescribeScheduleInput) (*DescribeScheduleOutput, error) {
@@ -2206,18 +2206,18 @@ func (c *MediaLive) ListChannelsRequest(input *ListChannelsInput) (req *request.
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListChannels for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListChannels
 func (c *MediaLive) ListChannels(input *ListChannelsInput) (*ListChannelsOutput, error) {
@@ -2352,18 +2352,18 @@ func (c *MediaLive) ListInputSecurityGroupsRequest(input *ListInputSecurityGroup
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListInputSecurityGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputSecurityGroups
 func (c *MediaLive) ListInputSecurityGroups(input *ListInputSecurityGroupsInput) (*ListInputSecurityGroupsOutput, error) {
@@ -2498,18 +2498,18 @@ func (c *MediaLive) ListInputsRequest(input *ListInputsInput) (req *request.Requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListInputs for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListInputs
 func (c *MediaLive) ListInputs(input *ListInputsInput) (*ListInputsOutput, error) {
@@ -2644,20 +2644,20 @@ func (c *MediaLive) ListMultiplexProgramsRequest(input *ListMultiplexProgramsInp
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListMultiplexPrograms for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexPrograms
 func (c *MediaLive) ListMultiplexPrograms(input *ListMultiplexProgramsInput) (*ListMultiplexProgramsOutput, error) {
@@ -2792,18 +2792,18 @@ func (c *MediaLive) ListMultiplexesRequest(input *ListMultiplexesInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListMultiplexes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListMultiplexes
 func (c *MediaLive) ListMultiplexes(input *ListMultiplexesInput) (*ListMultiplexesOutput, error) {
@@ -2938,18 +2938,18 @@ func (c *MediaLive) ListOfferingsRequest(input *ListOfferingsInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListOfferings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListOfferings
 func (c *MediaLive) ListOfferings(input *ListOfferingsInput) (*ListOfferingsOutput, error) {
@@ -3084,18 +3084,18 @@ func (c *MediaLive) ListReservationsRequest(input *ListReservationsInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListReservations for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListReservations
 func (c *MediaLive) ListReservations(input *ListReservationsInput) (*ListReservationsOutput, error) {
@@ -3224,14 +3224,14 @@ func (c *MediaLive) ListTagsForResourceRequest(input *ListTagsForResourceInput) 
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeNotFoundException "NotFoundException"
+// Returned Error Types:
+//   * NotFoundException
 //
-//   * ErrCodeBadRequestException "BadRequestException"
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/ListTagsForResource
 func (c *MediaLive) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
@@ -3308,22 +3308,22 @@ func (c *MediaLive) PurchaseOfferingRequest(input *PurchaseOfferingInput) (req *
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation PurchaseOffering for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/PurchaseOffering
 func (c *MediaLive) PurchaseOffering(input *PurchaseOfferingInput) (*PurchaseOfferingOutput, error) {
@@ -3400,22 +3400,22 @@ func (c *MediaLive) StartChannelRequest(input *StartChannelInput) (req *request.
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StartChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartChannel
 func (c *MediaLive) StartChannel(input *StartChannelInput) (*StartChannelOutput, error) {
@@ -3493,22 +3493,22 @@ func (c *MediaLive) StartMultiplexRequest(input *StartMultiplexInput) (req *requ
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StartMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StartMultiplex
 func (c *MediaLive) StartMultiplex(input *StartMultiplexInput) (*StartMultiplexOutput, error) {
@@ -3585,22 +3585,22 @@ func (c *MediaLive) StopChannelRequest(input *StopChannelInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StopChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopChannel
 func (c *MediaLive) StopChannel(input *StopChannelInput) (*StopChannelOutput, error) {
@@ -3678,22 +3678,22 @@ func (c *MediaLive) StopMultiplexRequest(input *StopMultiplexInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation StopMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/StopMultiplex
 func (c *MediaLive) StopMultiplex(input *StopMultiplexInput) (*StopMultiplexOutput, error) {
@@ -3770,20 +3770,20 @@ func (c *MediaLive) UpdateChannelRequest(input *UpdateChannelInput) (req *reques
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannel
 func (c *MediaLive) UpdateChannel(input *UpdateChannelInput) (*UpdateChannelOutput, error) {
@@ -3860,24 +3860,24 @@ func (c *MediaLive) UpdateChannelClassRequest(input *UpdateChannelClassInput) (r
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateChannelClass for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateChannelClass
 func (c *MediaLive) UpdateChannelClass(input *UpdateChannelClassInput) (*UpdateChannelClassOutput, error) {
@@ -3954,20 +3954,20 @@ func (c *MediaLive) UpdateInputRequest(input *UpdateInputInput) (req *request.Re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInput
 func (c *MediaLive) UpdateInput(input *UpdateInputInput) (*UpdateInputOutput, error) {
@@ -4044,20 +4044,20 @@ func (c *MediaLive) UpdateInputSecurityGroupRequest(input *UpdateInputSecurityGr
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateInputSecurityGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateInputSecurityGroup
 func (c *MediaLive) UpdateInputSecurityGroup(input *UpdateInputSecurityGroupInput) (*UpdateInputSecurityGroupOutput, error) {
@@ -4134,22 +4134,22 @@ func (c *MediaLive) UpdateMultiplexRequest(input *UpdateMultiplexInput) (req *re
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateMultiplex for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplex
 func (c *MediaLive) UpdateMultiplex(input *UpdateMultiplexInput) (*UpdateMultiplexOutput, error) {
@@ -4226,22 +4226,22 @@ func (c *MediaLive) UpdateMultiplexProgramRequest(input *UpdateMultiplexProgramI
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateMultiplexProgram for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeUnprocessableEntityException "UnprocessableEntityException"
+//   * UnprocessableEntityException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateMultiplexProgram
 func (c *MediaLive) UpdateMultiplexProgram(input *UpdateMultiplexProgramInput) (*UpdateMultiplexProgramOutput, error) {
@@ -4318,22 +4318,22 @@ func (c *MediaLive) UpdateReservationRequest(input *UpdateReservationInput) (req
 // See the AWS API reference guide for AWS Elemental MediaLive's
 // API operation UpdateReservation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //
-//   * ErrCodeInternalServerErrorException "InternalServerErrorException"
+//   * InternalServerErrorException
 //
-//   * ErrCodeForbiddenException "ForbiddenException"
+//   * ForbiddenException
 //
-//   * ErrCodeBadGatewayException "BadGatewayException"
+//   * BadGatewayException
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //
-//   * ErrCodeGatewayTimeoutException "GatewayTimeoutException"
+//   * GatewayTimeoutException
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //
-//   * ErrCodeConflictException "ConflictException"
+//   * ConflictException
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/medialive-2017-10-14/UpdateReservation
 func (c *MediaLive) UpdateReservation(input *UpdateReservationInput) (*UpdateReservationOutput, error) {
@@ -5169,6 +5169,9 @@ type AudioOnlyHlsSettings struct {
 	// play back by default. Represented as an EXT-X-MEDIA in the HLS manifest with
 	// DEFAULT=NO, AUTOSELECT=NO
 	AudioTrackType *string `locationName:"audioTrackType" type:"string" enum:"AudioOnlyHlsTrackType"`
+
+	// Specifies the segment type.
+	SegmentType *string `locationName:"segmentType" type:"string" enum:"AudioOnlyHlsSegmentType"`
 }
 
 // String returns the string representation
@@ -5211,6 +5214,12 @@ func (s *AudioOnlyHlsSettings) SetAudioOnlyImage(v *InputLocation) *AudioOnlyHls
 // SetAudioTrackType sets the AudioTrackType field's value.
 func (s *AudioOnlyHlsSettings) SetAudioTrackType(v string) *AudioOnlyHlsSettings {
 	s.AudioTrackType = &v
+	return s
+}
+
+// SetSegmentType sets the SegmentType field's value.
+func (s *AudioOnlyHlsSettings) SetSegmentType(v string) *AudioOnlyHlsSettings {
+	s.SegmentType = &v
 	return s
 }
 
@@ -5319,6 +5328,9 @@ type AudioSelectorSettings struct {
 
 	// Audio Pid Selection
 	AudioPidSelection *AudioPidSelection `locationName:"audioPidSelection" type:"structure"`
+
+	// Audio Track Selection
+	AudioTrackSelection *AudioTrackSelection `locationName:"audioTrackSelection" type:"structure"`
 }
 
 // String returns the string representation
@@ -5344,6 +5356,11 @@ func (s *AudioSelectorSettings) Validate() error {
 			invalidParams.AddNested("AudioPidSelection", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.AudioTrackSelection != nil {
+		if err := s.AudioTrackSelection.Validate(); err != nil {
+			invalidParams.AddNested("AudioTrackSelection", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5360,6 +5377,152 @@ func (s *AudioSelectorSettings) SetAudioLanguageSelection(v *AudioLanguageSelect
 // SetAudioPidSelection sets the AudioPidSelection field's value.
 func (s *AudioSelectorSettings) SetAudioPidSelection(v *AudioPidSelection) *AudioSelectorSettings {
 	s.AudioPidSelection = v
+	return s
+}
+
+// SetAudioTrackSelection sets the AudioTrackSelection field's value.
+func (s *AudioSelectorSettings) SetAudioTrackSelection(v *AudioTrackSelection) *AudioSelectorSettings {
+	s.AudioTrackSelection = v
+	return s
+}
+
+// Audio Track
+type AudioTrack struct {
+	_ struct{} `type:"structure"`
+
+	// 1-based integer value that maps to a specific audio track
+	//
+	// Track is a required field
+	Track *int64 `locationName:"track" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s AudioTrack) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AudioTrack) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioTrack) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioTrack"}
+	if s.Track == nil {
+		invalidParams.Add(request.NewErrParamRequired("Track"))
+	}
+	if s.Track != nil && *s.Track < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Track", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTrack sets the Track field's value.
+func (s *AudioTrack) SetTrack(v int64) *AudioTrack {
+	s.Track = &v
+	return s
+}
+
+// Audio Track Selection
+type AudioTrackSelection struct {
+	_ struct{} `type:"structure"`
+
+	// Selects one or more unique audio tracks from within an mp4 source.
+	//
+	// Tracks is a required field
+	Tracks []*AudioTrack `locationName:"tracks" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AudioTrackSelection) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AudioTrackSelection) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioTrackSelection) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioTrackSelection"}
+	if s.Tracks == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tracks"))
+	}
+	if s.Tracks != nil {
+		for i, v := range s.Tracks {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tracks", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTracks sets the Tracks field's value.
+func (s *AudioTrackSelection) SetTracks(v []*AudioTrack) *AudioTrackSelection {
+	s.Tracks = v
+	return s
+}
+
+// The settings for Automatic Input Failover.
+type AutomaticInputFailoverSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Input preference when deciding which input to make active when a previously
+	// failed input has recovered.
+	InputPreference *string `locationName:"inputPreference" type:"string" enum:"InputPreference"`
+
+	// The input ID of the secondary input in the automatic input failover pair.
+	//
+	// SecondaryInputId is a required field
+	SecondaryInputId *string `locationName:"secondaryInputId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AutomaticInputFailoverSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutomaticInputFailoverSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AutomaticInputFailoverSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AutomaticInputFailoverSettings"}
+	if s.SecondaryInputId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecondaryInputId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputPreference sets the InputPreference field's value.
+func (s *AutomaticInputFailoverSettings) SetInputPreference(v string) *AutomaticInputFailoverSettings {
+	s.InputPreference = &v
+	return s
+}
+
+// SetSecondaryInputId sets the SecondaryInputId field's value.
+func (s *AutomaticInputFailoverSettings) SetSecondaryInputId(v string) *AutomaticInputFailoverSettings {
+	s.SecondaryInputId = &v
 	return s
 }
 
@@ -5503,6 +5666,116 @@ func (s *AvailSettings) SetScte35SpliceInsert(v *Scte35SpliceInsert) *AvailSetti
 func (s *AvailSettings) SetScte35TimeSignalApos(v *Scte35TimeSignalApos) *AvailSettings {
 	s.Scte35TimeSignalApos = v
 	return s
+}
+
+type BadGatewayException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadGatewayException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadGatewayException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadGatewayException(v protocol.ResponseMetadata) error {
+	return &BadGatewayException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *BadGatewayException) Code() string {
+	return "BadGatewayException"
+}
+
+// Message returns the exception's message.
+func (s *BadGatewayException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *BadGatewayException) OrigErr() error {
+	return nil
+}
+
+func (s *BadGatewayException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *BadGatewayException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *BadGatewayException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type BadRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s *BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A list of schedule actions to create (in a request) or that have been created
@@ -6862,6 +7135,61 @@ func (s ColorSpacePassthroughSettings) String() string {
 // GoString returns the string representation
 func (s ColorSpacePassthroughSettings) GoString() string {
 	return s.String()
+}
+
+type ConflictException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s *ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s *ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type CreateChannelInput struct {
@@ -10523,6 +10851,51 @@ func (s *FixedModeScheduleActionStartSettings) SetTime(v string) *FixedModeSched
 	return s
 }
 
+// Fmp4 Hls Settings
+type Fmp4HlsSettings struct {
+	_ struct{} `type:"structure"`
+
+	// List all the audio groups that are used with the video output stream. Input
+	// all the audio GROUP-IDs that are associated to the video, separate by ','.
+	AudioRenditionSets *string `locationName:"audioRenditionSets" type:"string"`
+
+	// If set to passthrough, Nielsen inaudible tones for media tracking will be
+	// detected in the input audio and an equivalent ID3 tag will be inserted in
+	// the output.
+	NielsenId3Behavior *string `locationName:"nielsenId3Behavior" type:"string" enum:"Fmp4NielsenId3Behavior"`
+
+	// When set to passthrough, timed metadata is passed through from input to output.
+	TimedMetadataBehavior *string `locationName:"timedMetadataBehavior" type:"string" enum:"Fmp4TimedMetadataBehavior"`
+}
+
+// String returns the string representation
+func (s Fmp4HlsSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Fmp4HlsSettings) GoString() string {
+	return s.String()
+}
+
+// SetAudioRenditionSets sets the AudioRenditionSets field's value.
+func (s *Fmp4HlsSettings) SetAudioRenditionSets(v string) *Fmp4HlsSettings {
+	s.AudioRenditionSets = &v
+	return s
+}
+
+// SetNielsenId3Behavior sets the NielsenId3Behavior field's value.
+func (s *Fmp4HlsSettings) SetNielsenId3Behavior(v string) *Fmp4HlsSettings {
+	s.NielsenId3Behavior = &v
+	return s
+}
+
+// SetTimedMetadataBehavior sets the TimedMetadataBehavior field's value.
+func (s *Fmp4HlsSettings) SetTimedMetadataBehavior(v string) *Fmp4HlsSettings {
+	s.TimedMetadataBehavior = &v
+	return s
+}
+
 // Settings to specify if an action follows another.
 type FollowModeScheduleActionStartSettings struct {
 	_ struct{} `type:"structure"`
@@ -10575,6 +10948,61 @@ func (s *FollowModeScheduleActionStartSettings) SetFollowPoint(v string) *Follow
 func (s *FollowModeScheduleActionStartSettings) SetReferenceActionName(v string) *FollowModeScheduleActionStartSettings {
 	s.ReferenceActionName = &v
 	return s
+}
+
+type ForbiddenException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ForbiddenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ForbiddenException) GoString() string {
+	return s.String()
+}
+
+func newErrorForbiddenException(v protocol.ResponseMetadata) error {
+	return &ForbiddenException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ForbiddenException) Code() string {
+	return "ForbiddenException"
+}
+
+// Message returns the exception's message.
+func (s *ForbiddenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ForbiddenException) OrigErr() error {
+	return nil
+}
+
+func (s *ForbiddenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ForbiddenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ForbiddenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Frame Capture Group Settings
@@ -10656,6 +11084,9 @@ type FrameCaptureSettings struct {
 	//
 	// CaptureInterval is a required field
 	CaptureInterval *int64 `locationName:"captureInterval" min:"1" type:"integer" required:"true"`
+
+	// Unit for the frame capture interval.
+	CaptureIntervalUnits *string `locationName:"captureIntervalUnits" type:"string" enum:"FrameCaptureIntervalUnit"`
 }
 
 // String returns the string representation
@@ -10688,6 +11119,67 @@ func (s *FrameCaptureSettings) Validate() error {
 func (s *FrameCaptureSettings) SetCaptureInterval(v int64) *FrameCaptureSettings {
 	s.CaptureInterval = &v
 	return s
+}
+
+// SetCaptureIntervalUnits sets the CaptureIntervalUnits field's value.
+func (s *FrameCaptureSettings) SetCaptureIntervalUnits(v string) *FrameCaptureSettings {
+	s.CaptureIntervalUnits = &v
+	return s
+}
+
+type GatewayTimeoutException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s GatewayTimeoutException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GatewayTimeoutException) GoString() string {
+	return s.String()
+}
+
+func newErrorGatewayTimeoutException(v protocol.ResponseMetadata) error {
+	return &GatewayTimeoutException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *GatewayTimeoutException) Code() string {
+	return "GatewayTimeoutException"
+}
+
+// Message returns the exception's message.
+func (s *GatewayTimeoutException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *GatewayTimeoutException) OrigErr() error {
+	return nil
+}
+
+func (s *GatewayTimeoutException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *GatewayTimeoutException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *GatewayTimeoutException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Global Configuration
@@ -10832,6 +11324,30 @@ func (s *H264ColorSpaceSettings) SetRec709Settings(v *Rec709Settings) *H264Color
 	return s
 }
 
+// H264 Filter Settings
+type H264FilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Temporal Filter Settings
+	TemporalFilterSettings *TemporalFilterSettings `locationName:"temporalFilterSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s H264FilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H264FilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetTemporalFilterSettings sets the TemporalFilterSettings field's value.
+func (s *H264FilterSettings) SetTemporalFilterSettings(v *TemporalFilterSettings) *H264FilterSettings {
+	s.TemporalFilterSettings = v
+	return s
+}
+
 // H264 Settings
 type H264Settings struct {
 	_ struct{} `type:"structure"`
@@ -10867,6 +11383,9 @@ type H264Settings struct {
 	// Entropy encoding mode. Use cabac (must be in Main or High profile) or cavlc.
 	EntropyEncoding *string `locationName:"entropyEncoding" type:"string" enum:"H264EntropyEncoding"`
 
+	// Settings associated with the specified filter.
+	FilterSettings *H264FilterSettings `locationName:"filterSettings" type:"structure"`
+
 	// Four bit AFD value to write on all frames of video in the output stream.
 	// Only valid when afdSignaling is set to 'Fixed'.
 	FixedAfd *string `locationName:"fixedAfd" type:"string" enum:"FixedAfd"`
@@ -10874,6 +11393,15 @@ type H264Settings struct {
 	// If set to enabled, adjust quantization within each frame to reduce flicker
 	// or 'pop' on I-frames.
 	FlickerAq *string `locationName:"flickerAq" type:"string" enum:"H264FlickerAq"`
+
+	// This setting applies only when scan type is "interlaced." It controls whether
+	// coding is performed on a field basis or on a frame basis. (When the video
+	// is progressive, the coding is always performed on a frame basis.)enabled:
+	// Force MediaLive to code on a field basis, so that odd and even sets of fields
+	// are coded separately.disabled: Code the two sets of fields separately (on
+	// a field basis) or together (on a frame basis using PAFF), depending on what
+	// is most appropriate for the content.
+	ForceFieldPictures *string `locationName:"forceFieldPictures" type:"string" enum:"H264ForceFieldPictures"`
 
 	// This field indicates how the output video frame rate is specified. If "specified"
 	// is selected then the output video frame rate is determined by framerateNumerator
@@ -10951,6 +11479,11 @@ type H264Settings struct {
 	// H.264 Profile.
 	Profile *string `locationName:"profile" type:"string" enum:"H264Profile"`
 
+	// If set to "ENHANCEDQUALITY," improves visual quality at an increased output
+	// cost. If this video is being delivered to a MediaLive Multiplex, "ENHANCEDQUALITY"
+	// is always used.
+	QualityLevel *string `locationName:"qualityLevel" type:"string" enum:"H264QualityLevel"`
+
 	// Controls the target quality for the video encode. Applies only when the rate
 	// control mode is QVBR. Set values for the QVBR quality level field and Max
 	// bitrate field that suit your most important viewing devices. Recommended
@@ -10965,7 +11498,10 @@ type H264Settings struct {
 	// video complexity. Recommended instead of QVBRif you want to maintain a specific
 	// average bitrate over the duration of the channel.CBR: Quality varies, depending
 	// on the video complexity. Recommended only if you distributeyour assets to
-	// devices that cannot handle variable bitrates.
+	// devices that cannot handle variable bitrates.Multiplex: This rate control
+	// mode is only supported (and is required) when the video is beingdelivered
+	// to a MediaLive Multiplex in which case the rate control configuration is
+	// controlledby the properties within the Multiplex Program.
 	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"H264RateControlMode"`
 
 	// Sets the scan type of the output to progressive or top-field-first interlaced.
@@ -11099,6 +11635,12 @@ func (s *H264Settings) SetEntropyEncoding(v string) *H264Settings {
 	return s
 }
 
+// SetFilterSettings sets the FilterSettings field's value.
+func (s *H264Settings) SetFilterSettings(v *H264FilterSettings) *H264Settings {
+	s.FilterSettings = v
+	return s
+}
+
 // SetFixedAfd sets the FixedAfd field's value.
 func (s *H264Settings) SetFixedAfd(v string) *H264Settings {
 	s.FixedAfd = &v
@@ -11108,6 +11650,12 @@ func (s *H264Settings) SetFixedAfd(v string) *H264Settings {
 // SetFlickerAq sets the FlickerAq field's value.
 func (s *H264Settings) SetFlickerAq(v string) *H264Settings {
 	s.FlickerAq = &v
+	return s
+}
+
+// SetForceFieldPictures sets the ForceFieldPictures field's value.
+func (s *H264Settings) SetForceFieldPictures(v string) *H264Settings {
+	s.ForceFieldPictures = &v
 	return s
 }
 
@@ -11210,6 +11758,12 @@ func (s *H264Settings) SetParNumerator(v int64) *H264Settings {
 // SetProfile sets the Profile field's value.
 func (s *H264Settings) SetProfile(v string) *H264Settings {
 	s.Profile = &v
+	return s
+}
+
+// SetQualityLevel sets the QualityLevel field's value.
+func (s *H264Settings) SetQualityLevel(v string) *H264Settings {
+	s.QualityLevel = &v
 	return s
 }
 
@@ -11920,10 +12474,22 @@ type HlsGroupSettings struct {
 	// the main .m3u8 file.
 	BaseUrlContent *string `locationName:"baseUrlContent" type:"string"`
 
+	// Optional. One value per output group.This field is required only if you are
+	// completing Base URL content A, and the downstream system has notified you
+	// that the media files for pipeline 1 of all outputs are in a location different
+	// from the media files for pipeline 0.
+	BaseUrlContent1 *string `locationName:"baseUrlContent1" type:"string"`
+
 	// A partial URI prefix that will be prepended to each output in the media .m3u8
 	// file. Can be used if base manifest is delivered from a different URL than
 	// the main .m3u8 file.
 	BaseUrlManifest *string `locationName:"baseUrlManifest" type:"string"`
+
+	// Optional. One value per output group.Complete this field only if you are
+	// completing Base URL manifest A, and the downstream system has notified you
+	// that the child manifest files for pipeline 1 of all outputs are in a location
+	// different from the child manifest files for pipeline 0.
+	BaseUrlManifest1 *string `locationName:"baseUrlManifest1" type:"string"`
 
 	// Mapping of up to 4 caption channels to caption languages. Is only meaningful
 	// if captionLanguageSetting is set to "insert".
@@ -11968,6 +12534,9 @@ type HlsGroupSettings struct {
 
 	// Parameters that control interactions with the CDN.
 	HlsCdnSettings *HlsCdnSettings `locationName:"hlsCdnSettings" type:"structure"`
+
+	// State of HLS ID3 Segment Tagging
+	HlsId3SegmentTagging *string `locationName:"hlsId3SegmentTagging" type:"string" enum:"HlsId3SegmentTaggingState"`
 
 	// DISABLED: Do not create an I-frame-only manifest, but do create the master
 	// and media manifests (according to the Output Selection field).STANDARD: Create
@@ -12036,8 +12605,9 @@ type HlsGroupSettings struct {
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
 	// MANIFESTSANDSEGMENTS: Generates manifests (master manifest, if applicable,
-	// and media manifests) for this output group.SEGMENTSONLY: Does not generate
-	// any manifests for this output group.
+	// and media manifests) for this output group.VARIANTMANIFESTSANDSEGMENTS: Generates
+	// media manifests for this output group, but not a master manifest.SEGMENTSONLY:
+	// Does not generate any manifests for this output group.
 	OutputSelection *string `locationName:"outputSelection" type:"string" enum:"HlsOutputSelection"`
 
 	// Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files.
@@ -12163,9 +12733,21 @@ func (s *HlsGroupSettings) SetBaseUrlContent(v string) *HlsGroupSettings {
 	return s
 }
 
+// SetBaseUrlContent1 sets the BaseUrlContent1 field's value.
+func (s *HlsGroupSettings) SetBaseUrlContent1(v string) *HlsGroupSettings {
+	s.BaseUrlContent1 = &v
+	return s
+}
+
 // SetBaseUrlManifest sets the BaseUrlManifest field's value.
 func (s *HlsGroupSettings) SetBaseUrlManifest(v string) *HlsGroupSettings {
 	s.BaseUrlManifest = &v
+	return s
+}
+
+// SetBaseUrlManifest1 sets the BaseUrlManifest1 field's value.
+func (s *HlsGroupSettings) SetBaseUrlManifest1(v string) *HlsGroupSettings {
+	s.BaseUrlManifest1 = &v
 	return s
 }
 
@@ -12220,6 +12802,12 @@ func (s *HlsGroupSettings) SetEncryptionType(v string) *HlsGroupSettings {
 // SetHlsCdnSettings sets the HlsCdnSettings field's value.
 func (s *HlsGroupSettings) SetHlsCdnSettings(v *HlsCdnSettings) *HlsGroupSettings {
 	s.HlsCdnSettings = v
+	return s
+}
+
+// SetHlsId3SegmentTagging sets the HlsId3SegmentTagging field's value.
+func (s *HlsGroupSettings) SetHlsId3SegmentTagging(v string) *HlsGroupSettings {
+	s.HlsId3SegmentTagging = &v
 	return s
 }
 
@@ -12373,6 +12961,47 @@ func (s *HlsGroupSettings) SetTsFileMode(v string) *HlsGroupSettings {
 	return s
 }
 
+// Settings for the action to insert a user-defined ID3 tag in each HLS segment
+type HlsId3SegmentTaggingScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// ID3 tag to insert into each segment. Supports special keyword identifiers
+	// to substitute in segment-related values.\nSupported keyword identifiers:
+	// https://docs.aws.amazon.com/medialive/latest/ug/variable-data-identifiers.html
+	//
+	// Tag is a required field
+	Tag *string `locationName:"tag" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s HlsId3SegmentTaggingScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HlsId3SegmentTaggingScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HlsId3SegmentTaggingScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HlsId3SegmentTaggingScheduleActionSettings"}
+	if s.Tag == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tag"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTag sets the Tag field's value.
+func (s *HlsId3SegmentTaggingScheduleActionSettings) SetTag(v string) *HlsId3SegmentTaggingScheduleActionSettings {
+	s.Tag = &v
+	return s
+}
+
 // Hls Input Settings
 type HlsInputSettings struct {
 	_ struct{} `type:"structure"`
@@ -12499,6 +13128,10 @@ func (s *HlsMediaStoreSettings) SetRestartDelay(v int64) *HlsMediaStoreSettings 
 type HlsOutputSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Only applicable when this output is referencing an H.265 video description.Specifies
+	// whether MP4 segments should be packaged as HEV1 or HVC1.
+	H265PackagingType *string `locationName:"h265PackagingType" type:"string" enum:"HlsH265PackagingType"`
+
 	// Settings regarding the underlying stream. These settings are different for
 	// audio-only outputs.
 	//
@@ -12544,6 +13177,12 @@ func (s *HlsOutputSettings) Validate() error {
 	return nil
 }
 
+// SetH265PackagingType sets the H265PackagingType field's value.
+func (s *HlsOutputSettings) SetH265PackagingType(v string) *HlsOutputSettings {
+	s.H265PackagingType = &v
+	return s
+}
+
 // SetHlsSettings sets the HlsSettings field's value.
 func (s *HlsOutputSettings) SetHlsSettings(v *HlsSettings) *HlsOutputSettings {
 	s.HlsSettings = v
@@ -12568,6 +13207,9 @@ type HlsSettings struct {
 
 	// Audio Only Hls Settings
 	AudioOnlyHlsSettings *AudioOnlyHlsSettings `locationName:"audioOnlyHlsSettings" type:"structure"`
+
+	// Fmp4 Hls Settings
+	Fmp4HlsSettings *Fmp4HlsSettings `locationName:"fmp4HlsSettings" type:"structure"`
 
 	// Standard Hls Settings
 	StandardHlsSettings *StandardHlsSettings `locationName:"standardHlsSettings" type:"structure"`
@@ -12606,6 +13248,12 @@ func (s *HlsSettings) Validate() error {
 // SetAudioOnlyHlsSettings sets the AudioOnlyHlsSettings field's value.
 func (s *HlsSettings) SetAudioOnlyHlsSettings(v *AudioOnlyHlsSettings) *HlsSettings {
 	s.AudioOnlyHlsSettings = v
+	return s
+}
+
+// SetFmp4HlsSettings sets the Fmp4HlsSettings field's value.
+func (s *HlsSettings) SetFmp4HlsSettings(v *Fmp4HlsSettings) *HlsSettings {
+	s.Fmp4HlsSettings = v
 	return s
 }
 
@@ -12717,8 +13365,7 @@ func (s *HlsWebdavSettings) SetRestartDelay(v int64) *HlsWebdavSettings {
 	return s
 }
 
-// Settings to configure an action so that it occurs immediately. This is only
-// supported for input switch actions currently.
+// Settings to configure an action so that it occurs as soon as possible.
 type ImmediateModeScheduleActionStartSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -12884,6 +13531,10 @@ func (s *Input) SetType(v string) *Input {
 type InputAttachment struct {
 	_ struct{} `type:"structure"`
 
+	// User-specified settings for defining what the conditions are for declaring
+	// the input unhealthy and failing over to a different input.
+	AutomaticInputFailoverSettings *AutomaticInputFailoverSettings `locationName:"automaticInputFailoverSettings" type:"structure"`
+
 	// User-specified name for the attachment. This is required if the user wants
 	// to use this input in an input switch action.
 	InputAttachmentName *string `locationName:"inputAttachmentName" type:"string"`
@@ -12908,6 +13559,11 @@ func (s InputAttachment) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *InputAttachment) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "InputAttachment"}
+	if s.AutomaticInputFailoverSettings != nil {
+		if err := s.AutomaticInputFailoverSettings.Validate(); err != nil {
+			invalidParams.AddNested("AutomaticInputFailoverSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.InputSettings != nil {
 		if err := s.InputSettings.Validate(); err != nil {
 			invalidParams.AddNested("InputSettings", err.(request.ErrInvalidParams))
@@ -12918,6 +13574,12 @@ func (s *InputAttachment) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAutomaticInputFailoverSettings sets the AutomaticInputFailoverSettings field's value.
+func (s *InputAttachment) SetAutomaticInputFailoverSettings(v *AutomaticInputFailoverSettings) *InputAttachment {
+	s.AutomaticInputFailoverSettings = v
+	return s
 }
 
 // SetInputAttachmentName sets the InputAttachmentName field's value.
@@ -13806,6 +14468,61 @@ func (s InputWhitelistRuleCidr) GoString() string {
 func (s *InputWhitelistRuleCidr) SetCidr(v string) *InputWhitelistRuleCidr {
 	s.Cidr = &v
 	return s
+}
+
+type InternalServerErrorException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
+	return &InternalServerErrorException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServerErrorException) Code() string {
+	return "InternalServerErrorException"
+}
+
+// Message returns the exception's message.
+func (s *InternalServerErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServerErrorException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServerErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServerErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServerErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Key Provider Settings
@@ -15566,7 +16283,9 @@ type MsSmoothGroupSettings struct {
 	SendDelayMs *int64 `locationName:"sendDelayMs" type:"integer"`
 
 	// If set to scte35, use incoming SCTE-35 messages to generate a sparse track
-	// in this group of MS-Smooth outputs.
+	// in this group of MS-Smooth outputs. scte35WithoutSegmentation is the same
+	// as scte35, except EML will not start a new segment at a SCTE-35 marker. It
+	// will still encode an IDR frame at a SCTE-35 marker.
 	SparseTrackType *string `locationName:"sparseTrackType" type:"string" enum:"SmoothGroupSparseTrackType"`
 
 	// When set to send, send stream manifest so publishing point doesn't start
@@ -16246,6 +16965,9 @@ func (s *MultiplexProgramServiceDescriptor) SetServiceName(v string) *MultiplexP
 type MultiplexProgramSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates which pipeline is preferred by the multiplex for program ingest.
+	PreferredChannelPipeline *string `locationName:"preferredChannelPipeline" type:"string" enum:"PreferredChannelPipeline"`
+
 	// Unique program number.
 	//
 	// ProgramNumber is a required field
@@ -16289,6 +17011,12 @@ func (s *MultiplexProgramSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetPreferredChannelPipeline sets the PreferredChannelPipeline field's value.
+func (s *MultiplexProgramSettings) SetPreferredChannelPipeline(v string) *MultiplexProgramSettings {
+	s.PreferredChannelPipeline = &v
+	return s
 }
 
 // SetProgramNumber sets the ProgramNumber field's value.
@@ -16586,38 +17314,6 @@ func (s *MultiplexSummary) SetTags(v map[string]*string) *MultiplexSummary {
 	return s
 }
 
-type MultiplexValidationError struct {
-	_ struct{} `type:"structure"`
-
-	// Path to the source of the error.
-	ElementPath *string `locationName:"elementPath" type:"string"`
-
-	// The error message.
-	ErrorMessage *string `locationName:"errorMessage" type:"string"`
-}
-
-// String returns the string representation
-func (s MultiplexValidationError) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s MultiplexValidationError) GoString() string {
-	return s.String()
-}
-
-// SetElementPath sets the ElementPath field's value.
-func (s *MultiplexValidationError) SetElementPath(v string) *MultiplexValidationError {
-	s.ElementPath = &v
-	return s
-}
-
-// SetErrorMessage sets the ErrorMessage field's value.
-func (s *MultiplexValidationError) SetErrorMessage(v string) *MultiplexValidationError {
-	s.ErrorMessage = &v
-	return s
-}
-
 // The video configuration for each program in a multiplex.
 type MultiplexVideoSettings struct {
 	_ struct{} `type:"structure"`
@@ -16741,6 +17437,61 @@ func (s *NielsenConfiguration) SetDistributorId(v string) *NielsenConfiguration 
 func (s *NielsenConfiguration) SetNielsenPcmToId3Tagging(v string) *NielsenConfiguration {
 	s.NielsenPcmToId3Tagging = &v
 	return s
+}
+
+type NotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Reserved resources available for purchase
@@ -18305,6 +19056,9 @@ func (s *ScheduleAction) SetScheduleActionStartSettings(v *ScheduleActionStartSe
 type ScheduleActionSettings struct {
 	_ struct{} `type:"structure"`
 
+	// Action to insert HLS ID3 segment tagging
+	HlsId3SegmentTaggingSettings *HlsId3SegmentTaggingScheduleActionSettings `locationName:"hlsId3SegmentTaggingSettings" type:"structure"`
+
 	// Action to insert HLS metadata
 	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
 
@@ -18343,6 +19097,11 @@ func (s ScheduleActionSettings) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ScheduleActionSettings) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ScheduleActionSettings"}
+	if s.HlsId3SegmentTaggingSettings != nil {
+		if err := s.HlsId3SegmentTaggingSettings.Validate(); err != nil {
+			invalidParams.AddNested("HlsId3SegmentTaggingSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.HlsTimedMetadataSettings != nil {
 		if err := s.HlsTimedMetadataSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsTimedMetadataSettings", err.(request.ErrInvalidParams))
@@ -18383,6 +19142,12 @@ func (s *ScheduleActionSettings) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetHlsId3SegmentTaggingSettings sets the HlsId3SegmentTaggingSettings field's value.
+func (s *ScheduleActionSettings) SetHlsId3SegmentTaggingSettings(v *HlsId3SegmentTaggingScheduleActionSettings) *ScheduleActionSettings {
+	s.HlsId3SegmentTaggingSettings = v
+	return s
 }
 
 // SetHlsTimedMetadataSettings sets the HlsTimedMetadataSettings field's value.
@@ -20239,6 +21004,41 @@ func (s *TeletextSourceSettings) SetPageNumber(v string) *TeletextSourceSettings
 	return s
 }
 
+// Temporal Filter Settings
+type TemporalFilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// If set to "ENABLED," applies post-filter sharpening to improve visual quality.
+	// This is most beneficial when using a noisy or compressed input source and
+	// low output bitrates.
+	PostFilterSharpening *string `locationName:"postFilterSharpening" type:"string" enum:"TemporalFilterPostFilterSharpening"`
+
+	// Filter strength. A higher value produces stronger filtering.
+	Strength *string `locationName:"strength" type:"string" enum:"TemporalFilterStrength"`
+}
+
+// String returns the string representation
+func (s TemporalFilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TemporalFilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetPostFilterSharpening sets the PostFilterSharpening field's value.
+func (s *TemporalFilterSettings) SetPostFilterSharpening(v string) *TemporalFilterSettings {
+	s.PostFilterSharpening = &v
+	return s
+}
+
+// SetStrength sets the Strength field's value.
+func (s *TemporalFilterSettings) SetStrength(v string) *TemporalFilterSettings {
+	s.Strength = &v
+	return s
+}
+
 // Timecode Config
 type TimecodeConfig struct {
 	_ struct{} `type:"structure"`
@@ -20296,6 +21096,61 @@ func (s *TimecodeConfig) SetSource(v string) *TimecodeConfig {
 func (s *TimecodeConfig) SetSyncThreshold(v int64) *TimecodeConfig {
 	s.SyncThreshold = &v
 	return s
+}
+
+type TooManyRequestsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s *TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s *TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Ttml Destination Settings
@@ -20494,6 +21349,63 @@ func (s *UdpOutputSettings) SetDestination(v *OutputLocationRef) *UdpOutputSetti
 func (s *UdpOutputSettings) SetFecOutputSettings(v *FecOutputSettings) *UdpOutputSettings {
 	s.FecOutputSettings = v
 	return s
+}
+
+type UnprocessableEntityException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	ValidationErrors []*ValidationError `locationName:"validationErrors" type:"list"`
+}
+
+// String returns the string representation
+func (s UnprocessableEntityException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnprocessableEntityException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnprocessableEntityException(v protocol.ResponseMetadata) error {
+	return &UnprocessableEntityException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnprocessableEntityException) Code() string {
+	return "UnprocessableEntityException"
+}
+
+// Message returns the exception's message.
+func (s *UnprocessableEntityException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnprocessableEntityException) OrigErr() error {
+	return nil
+}
+
+func (s *UnprocessableEntityException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnprocessableEntityException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnprocessableEntityException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UpdateChannelClassInput struct {
@@ -21166,6 +22078,36 @@ func (s *UpdateReservationOutput) SetReservation(v *Reservation) *UpdateReservat
 	return s
 }
 
+type ValidationError struct {
+	_ struct{} `type:"structure"`
+
+	ElementPath *string `locationName:"elementPath" type:"string"`
+
+	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationError) GoString() string {
+	return s.String()
+}
+
+// SetElementPath sets the ElementPath field's value.
+func (s *ValidationError) SetElementPath(v string) *ValidationError {
+	s.ElementPath = &v
+	return s
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *ValidationError) SetErrorMessage(v string) *ValidationError {
+	s.ErrorMessage = &v
+	return s
+}
+
 // Video Codec Settings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
@@ -21702,6 +22644,15 @@ const (
 const (
 	// AudioNormalizationAlgorithmControlCorrectAudio is a AudioNormalizationAlgorithmControl enum value
 	AudioNormalizationAlgorithmControlCorrectAudio = "CORRECT_AUDIO"
+)
+
+// Audio Only Hls Segment Type
+const (
+	// AudioOnlyHlsSegmentTypeAac is a AudioOnlyHlsSegmentType enum value
+	AudioOnlyHlsSegmentTypeAac = "AAC"
+
+	// AudioOnlyHlsSegmentTypeFmp4 is a AudioOnlyHlsSegmentType enum value
+	AudioOnlyHlsSegmentTypeFmp4 = "FMP4"
 )
 
 // Audio Only Hls Track Type
@@ -22241,6 +23192,24 @@ const (
 	FixedAfdAfd1111 = "AFD_1111"
 )
 
+// Fmp4 Nielsen Id3 Behavior
+const (
+	// Fmp4NielsenId3BehaviorNoPassthrough is a Fmp4NielsenId3Behavior enum value
+	Fmp4NielsenId3BehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// Fmp4NielsenId3BehaviorPassthrough is a Fmp4NielsenId3Behavior enum value
+	Fmp4NielsenId3BehaviorPassthrough = "PASSTHROUGH"
+)
+
+// Fmp4 Timed Metadata Behavior
+const (
+	// Fmp4TimedMetadataBehaviorNoPassthrough is a Fmp4TimedMetadataBehavior enum value
+	Fmp4TimedMetadataBehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// Fmp4TimedMetadataBehaviorPassthrough is a Fmp4TimedMetadataBehavior enum value
+	Fmp4TimedMetadataBehaviorPassthrough = "PASSTHROUGH"
+)
+
 // Follow reference point.
 const (
 	// FollowPointEnd is a FollowPoint enum value
@@ -22248,6 +23217,15 @@ const (
 
 	// FollowPointStart is a FollowPoint enum value
 	FollowPointStart = "START"
+)
+
+// Frame Capture Interval Unit
+const (
+	// FrameCaptureIntervalUnitMilliseconds is a FrameCaptureIntervalUnit enum value
+	FrameCaptureIntervalUnitMilliseconds = "MILLISECONDS"
+
+	// FrameCaptureIntervalUnitSeconds is a FrameCaptureIntervalUnit enum value
+	FrameCaptureIntervalUnitSeconds = "SECONDS"
 )
 
 // Global Configuration Input End Action
@@ -22332,6 +23310,15 @@ const (
 
 	// H264FlickerAqEnabled is a H264FlickerAq enum value
 	H264FlickerAqEnabled = "ENABLED"
+)
+
+// H264 Force Field Pictures
+const (
+	// H264ForceFieldPicturesDisabled is a H264ForceFieldPictures enum value
+	H264ForceFieldPicturesDisabled = "DISABLED"
+
+	// H264ForceFieldPicturesEnabled is a H264ForceFieldPictures enum value
+	H264ForceFieldPicturesEnabled = "ENABLED"
 )
 
 // H264 Framerate Control
@@ -22455,6 +23442,15 @@ const (
 
 	// H264ProfileMain is a H264Profile enum value
 	H264ProfileMain = "MAIN"
+)
+
+// H264 Quality Level
+const (
+	// H264QualityLevelEnhancedQuality is a H264QualityLevel enum value
+	H264QualityLevelEnhancedQuality = "ENHANCED_QUALITY"
+
+	// H264QualityLevelStandardQuality is a H264QualityLevel enum value
+	H264QualityLevelStandardQuality = "STANDARD_QUALITY"
 )
 
 // H264 Rate Control Mode
@@ -22772,6 +23768,24 @@ const (
 	HlsEncryptionTypeSampleAes = "SAMPLE_AES"
 )
 
+// Hls H265 Packaging Type
+const (
+	// HlsH265PackagingTypeHev1 is a HlsH265PackagingType enum value
+	HlsH265PackagingTypeHev1 = "HEV1"
+
+	// HlsH265PackagingTypeHvc1 is a HlsH265PackagingType enum value
+	HlsH265PackagingTypeHvc1 = "HVC1"
+)
+
+// State of HLS ID3 Segment Tagging
+const (
+	// HlsId3SegmentTaggingStateDisabled is a HlsId3SegmentTaggingState enum value
+	HlsId3SegmentTaggingStateDisabled = "DISABLED"
+
+	// HlsId3SegmentTaggingStateEnabled is a HlsId3SegmentTaggingState enum value
+	HlsId3SegmentTaggingStateEnabled = "ENABLED"
+)
+
 // Hls Iv In Manifest
 const (
 	// HlsIvInManifestExclude is a HlsIvInManifest enum value
@@ -23019,6 +24033,18 @@ const (
 
 	// InputMaximumBitrateMax50Mbps is a InputMaximumBitrate enum value
 	InputMaximumBitrateMax50Mbps = "MAX_50_MBPS"
+)
+
+// Input preference when deciding which input to make active when a previously
+// failed input has recovered.If \"EQUAL_INPUT_PREFERENCE\", then the active
+// input will stay active as long as it is healthy.If \"PRIMARY_INPUT_PREFERRED\",
+// then always switch back to the primary input when it is healthy.
+const (
+	// InputPreferenceEqualInputPreference is a InputPreference enum value
+	InputPreferenceEqualInputPreference = "EQUAL_INPUT_PREFERENCE"
+
+	// InputPreferencePrimaryInputPreferred is a InputPreference enum value
+	InputPreferencePrimaryInputPreferred = "PRIMARY_INPUT_PREFERRED"
 )
 
 // Input resolution based on lines of vertical resolution in the input; SD is
@@ -23459,6 +24485,23 @@ const (
 	PipelineIdPipeline1 = "PIPELINE_1"
 )
 
+// Indicates which pipeline is preferred by the multiplex for program ingest.If
+// set to \"PIPELINE_0\" or \"PIPELINE_1\" and an unhealthy ingest causes the
+// multiplex to switch to the non-preferred pipeline,it will switch back once
+// that ingest is healthy again. If set to \"CURRENTLY_ACTIVE\",it will not
+// switch back to the other pipeline based on it recovering to a healthy state,it
+// will only switch if the active pipeline becomes unhealthy.
+const (
+	// PreferredChannelPipelineCurrentlyActive is a PreferredChannelPipeline enum value
+	PreferredChannelPipelineCurrentlyActive = "CURRENTLY_ACTIVE"
+
+	// PreferredChannelPipelinePipeline0 is a PreferredChannelPipeline enum value
+	PreferredChannelPipelinePipeline0 = "PIPELINE_0"
+
+	// PreferredChannelPipelinePipeline1 is a PreferredChannelPipeline enum value
+	PreferredChannelPipelinePipeline1 = "PIPELINE_1"
+)
+
 // Codec, 'MPEG2', 'AVC', 'HEVC', or 'AUDIO'
 const (
 	// ReservationCodecMpeg2 is a ReservationCodec enum value
@@ -23755,6 +24798,9 @@ const (
 
 	// SmoothGroupSparseTrackTypeScte35 is a SmoothGroupSparseTrackType enum value
 	SmoothGroupSparseTrackTypeScte35 = "SCTE_35"
+
+	// SmoothGroupSparseTrackTypeScte35WithoutSegmentation is a SmoothGroupSparseTrackType enum value
+	SmoothGroupSparseTrackTypeScte35WithoutSegmentation = "SCTE_35_WITHOUT_SEGMENTATION"
 )
 
 // Smooth Group Stream Manifest Behavior
@@ -23773,6 +24819,72 @@ const (
 
 	// SmoothGroupTimestampOffsetModeUseEventStartDate is a SmoothGroupTimestampOffsetMode enum value
 	SmoothGroupTimestampOffsetModeUseEventStartDate = "USE_EVENT_START_DATE"
+)
+
+// Temporal Filter Post Filter Sharpening
+const (
+	// TemporalFilterPostFilterSharpeningAuto is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningAuto = "AUTO"
+
+	// TemporalFilterPostFilterSharpeningDisabled is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningDisabled = "DISABLED"
+
+	// TemporalFilterPostFilterSharpeningEnabled is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningEnabled = "ENABLED"
+)
+
+// Temporal Filter Strength
+const (
+	// TemporalFilterStrengthAuto is a TemporalFilterStrength enum value
+	TemporalFilterStrengthAuto = "AUTO"
+
+	// TemporalFilterStrengthStrength1 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength1 = "STRENGTH_1"
+
+	// TemporalFilterStrengthStrength10 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength10 = "STRENGTH_10"
+
+	// TemporalFilterStrengthStrength11 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength11 = "STRENGTH_11"
+
+	// TemporalFilterStrengthStrength12 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength12 = "STRENGTH_12"
+
+	// TemporalFilterStrengthStrength13 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength13 = "STRENGTH_13"
+
+	// TemporalFilterStrengthStrength14 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength14 = "STRENGTH_14"
+
+	// TemporalFilterStrengthStrength15 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength15 = "STRENGTH_15"
+
+	// TemporalFilterStrengthStrength16 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength16 = "STRENGTH_16"
+
+	// TemporalFilterStrengthStrength2 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength2 = "STRENGTH_2"
+
+	// TemporalFilterStrengthStrength3 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength3 = "STRENGTH_3"
+
+	// TemporalFilterStrengthStrength4 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength4 = "STRENGTH_4"
+
+	// TemporalFilterStrengthStrength5 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength5 = "STRENGTH_5"
+
+	// TemporalFilterStrengthStrength6 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength6 = "STRENGTH_6"
+
+	// TemporalFilterStrengthStrength7 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength7 = "STRENGTH_7"
+
+	// TemporalFilterStrengthStrength8 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength8 = "STRENGTH_8"
+
+	// TemporalFilterStrengthStrength9 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength9 = "STRENGTH_9"
 )
 
 // Timecode Config Source

@@ -55,6 +55,47 @@ func TestAccAWSAPIGatewayUsagePlan_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayUsagePlan_tags(t *testing.T) {
+	var conf apigateway.UsagePlan
+	name := acctest.RandString(10)
+	resourceName := "aws_api_gateway_usage_plan.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayUsagePlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSApiGatewayUsagePlanBasicTags1(name, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSApiGatewayUsagePlanBasicTags2(name, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSApiGatewayUsagePlanBasicTags1(name, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayUsagePlanExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayUsagePlan_description(t *testing.T) {
 	var conf apigateway.UsagePlan
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(10))
@@ -371,7 +412,7 @@ func testAccCheckAWSAPIGatewayUsagePlanExists(n string, res *apigateway.UsagePla
 			return fmt.Errorf("No API Gateway Usage Plan ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetUsagePlanInput{
 			UsagePlanId: aws.String(rs.Primary.ID),
@@ -392,7 +433,7 @@ func testAccCheckAWSAPIGatewayUsagePlanExists(n string, res *apigateway.UsagePla
 }
 
 func testAccCheckAWSAPIGatewayUsagePlanDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_usage_plan" {
@@ -495,6 +536,31 @@ resource "aws_api_gateway_usage_plan" "test" {
   name = "%s"
 }
 `, rName)
+}
+
+func testAccAWSApiGatewayUsagePlanBasicTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig(rName)+`
+resource "aws_api_gateway_usage_plan" "main" {
+  name = "%s"
+
+  tags = {
+	%q = %q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSApiGatewayUsagePlanBasicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(testAccAWSAPIGatewayUsagePlanConfig(rName)+`
+resource "aws_api_gateway_usage_plan" "main" {
+  name = "%s"
+
+  tags = {
+	%q = %q
+	%q = %q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccAWSApiGatewayUsagePlanDescriptionConfig(rName string) string {

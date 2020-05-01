@@ -110,12 +110,12 @@ resource "aws_autoscaling_group" "example" {
       }
 
       override {
-        instance_type = "c4.large"
+        instance_type     = "c4.large"
         weighted_capacity = "3"
       }
 
       override {
-        instance_type = "c3.large"
+        instance_type     = "c3.large"
         weighted_capacity = "2"
       }
     }
@@ -148,19 +148,6 @@ resource "aws_autoscaling_group" "bar" {
   launch_configuration = "${aws_launch_configuration.foobar.name}"
   vpc_zone_identifier  = ["${aws_subnet.example1.id}", "${aws_subnet.example2.id}"]
 
-  tags = [
-    {
-      key                 = "explicit1"
-      value               = "value1"
-      propagate_at_launch = true
-    },
-    {
-      key                 = "explicit2"
-      value               = "value2"
-      propagate_at_launch = true
-    },
-  ]
-
   tags = ["${concat(
     list(
       map("key", "interpolation1", "value", "value3", "propagate_at_launch", true),
@@ -190,7 +177,7 @@ The following arguments are supported:
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the autoscaling group **before** instances are launched. The
   syntax is exactly the same as the separate
-  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
   resource, without the `autoscaling_group_name` attribute. Please note that this will only work when creating
   a new autoscaling group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 * `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
@@ -214,7 +201,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
 * `tags` (Optional) A list of tag blocks (maps). Tags documented below.
 * `placement_group` (Optional) The name of the placement group into which you'll launch your instances, if any.
 * `metrics_granularity` - (Optional) The granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
-* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupMinSize`, `GroupMaxSize`, `GroupDesiredCapacity`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupTerminatingInstances`, `GroupTotalInstances`.
+* `enabled_metrics` - (Optional) A list of metrics to collect. The allowed values are `GroupDesiredCapacity`, `GroupInServiceCapacity`, `GroupPendingCapacity`, `GroupMinSize`, `GroupMaxSize`, `GroupInServiceInstances`, `GroupPendingInstances`, `GroupStandbyInstances`, `GroupStandbyCapacity`, `GroupTerminatingCapacity`, `GroupTerminatingInstances`, `GroupTotalCapacity`, `GroupTotalInstances`.
 * `wait_for_capacity_timeout` (Default: "10m") A maximum
   [duration](https://golang.org/pkg/time/#ParseDuration) that Terraform should
   wait for ASG instances to be healthy before timing out.  (See also [Waiting
@@ -299,6 +286,8 @@ Alternatively the `tags` attributes can be used, which accepts a list of maps co
 This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
 `tag` and `tags` are mutually exclusive, only one of them can be specified.
 
+~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. To ignore the removal of these automatic tags, see the [`ignore_tags` provider configuration](https://www.terraform.io/docs/providers/aws/index.html#ignore_tags) or the [`ignore_changes` lifecycle argument for Terraform resources](https://www.terraform.io/docs/configuration/resources.html#ignore_changes).
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
@@ -324,7 +313,7 @@ AutoScaling Group
 
 ~> **NOTE:** Terraform has two types of ways you can add lifecycle hooks - via
 the `initial_lifecycle_hook` attribute from this resource, or via the separate
-[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hooks.html)
+[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
 resource. `initial_lifecycle_hook` exists here because any lifecycle hooks
 added with `aws_autoscaling_lifecycle_hook` will not be added until the
 autoscaling group has been created, and depending on your
@@ -333,7 +322,6 @@ been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initial_lifecycle_hook` here, but take
 care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `autoscaling_group` provides the following

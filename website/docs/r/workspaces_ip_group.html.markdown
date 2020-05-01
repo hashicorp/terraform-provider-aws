@@ -1,21 +1,20 @@
 ---
-subcategory: "Workspaces"
+subcategory: "WorkSpaces"
 layout: "aws"
 page_title: "AWS: aws_workspaces_ip_group"
-sidebar_current: "docs-aws-resource-workspaces-ip-group"
 description: |-
-  Provides an IP access control group in AWS Workspaces Service.
+  Provides an IP access control group in AWS WorkSpaces Service.
 ---
 
 # Resource: aws_workspaces_ip_group
 
-Provides an IP access control group in AWS Workspaces Service
+Provides an IP access control group in AWS WorkSpaces Service
 
 ## Example Usage
 
 ```hcl
 resource "aws_workspaces_ip_group" "contractors" {
-  name = "Contractors"
+  name        = "Contractors"
   description = "Contractors IP access control group"
 }
 ```
@@ -45,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Workspaces IP groups can be imported using their GroupID, e.g.
+WorkSpaces IP groups can be imported using their GroupID, e.g.
 
 ```
 $ terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k

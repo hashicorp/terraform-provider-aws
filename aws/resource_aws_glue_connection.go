@@ -40,6 +40,7 @@ func resourceAwsGlueConnection() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					glue.ConnectionTypeJdbc,
 					glue.ConnectionTypeSftp,
+					glue.ConnectionTypeMongodb,
 				}, false),
 			},
 			"description": {

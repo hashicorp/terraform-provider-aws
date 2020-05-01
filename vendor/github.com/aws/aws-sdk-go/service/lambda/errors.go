@@ -2,6 +2,10 @@
 
 package lambda
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCodeStorageExceededException for service response error code
@@ -182,3 +186,33 @@ const (
 	// The content type of the Invoke request body is not JSON.
 	ErrCodeUnsupportedMediaTypeException = "UnsupportedMediaTypeException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CodeStorageExceededException":                  newErrorCodeStorageExceededException,
+	"EC2AccessDeniedException":                      newErrorEC2AccessDeniedException,
+	"EC2ThrottledException":                         newErrorEC2ThrottledException,
+	"EC2UnexpectedException":                        newErrorEC2UnexpectedException,
+	"ENILimitReachedException":                      newErrorENILimitReachedException,
+	"InvalidParameterValueException":                newErrorInvalidParameterValueException,
+	"InvalidRequestContentException":                newErrorInvalidRequestContentException,
+	"InvalidRuntimeException":                       newErrorInvalidRuntimeException,
+	"InvalidSecurityGroupIDException":               newErrorInvalidSecurityGroupIDException,
+	"InvalidSubnetIDException":                      newErrorInvalidSubnetIDException,
+	"InvalidZipFileException":                       newErrorInvalidZipFileException,
+	"KMSAccessDeniedException":                      newErrorKMSAccessDeniedException,
+	"KMSDisabledException":                          newErrorKMSDisabledException,
+	"KMSInvalidStateException":                      newErrorKMSInvalidStateException,
+	"KMSNotFoundException":                          newErrorKMSNotFoundException,
+	"PolicyLengthExceededException":                 newErrorPolicyLengthExceededException,
+	"PreconditionFailedException":                   newErrorPreconditionFailedException,
+	"ProvisionedConcurrencyConfigNotFoundException": newErrorProvisionedConcurrencyConfigNotFoundException,
+	"RequestTooLargeException":                      newErrorRequestTooLargeException,
+	"ResourceConflictException":                     newErrorResourceConflictException,
+	"ResourceInUseException":                        newErrorResourceInUseException,
+	"ResourceNotFoundException":                     newErrorResourceNotFoundException,
+	"ResourceNotReadyException":                     newErrorResourceNotReadyException,
+	"ServiceException":                              newErrorServiceException,
+	"SubnetIPAddressLimitReachedException":          newErrorSubnetIPAddressLimitReachedException,
+	"TooManyRequestsException":                      newErrorTooManyRequestsException,
+	"UnsupportedMediaTypeException":                 newErrorUnsupportedMediaTypeException,
+}

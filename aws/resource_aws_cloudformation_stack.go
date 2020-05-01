@@ -88,7 +88,7 @@ func resourceAwsCloudFormationStack() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -256,6 +256,7 @@ func resourceAwsCloudFormationStackCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &cloudformation.DescribeStacksInput{
 		StackName: aws.String(d.Id()),
@@ -289,7 +290,8 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 	}
 
 	tInput := cloudformation.GetTemplateInput{
-		StackName: aws.String(d.Id()),
+		StackName:     aws.String(d.Id()),
+		TemplateStage: aws.String("Original"),
 	}
 	out, err := conn.GetTemplate(&tInput)
 	if err != nil {
@@ -330,7 +332,7 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.CloudformationKeyValueTags(stack.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

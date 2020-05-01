@@ -39,6 +39,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -116,6 +117,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53domains"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3control"
@@ -139,7 +141,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/aws/aws-sdk-go/service/worklink"
+	"github.com/aws/aws-sdk-go/service/workmail"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
@@ -164,10 +168,9 @@ type Config struct {
 	AllowedAccountIds   []string
 	ForbiddenAccountIds []string
 
-	Endpoints         map[string]string
-	IgnoreTagPrefixes []string
-	IgnoreTags        []string
-	Insecure          bool
+	Endpoints        map[string]string
+	IgnoreTagsConfig *keyvaluetags.IgnoreConfig
+	Insecure         bool
 
 	SkipCredsValidation     bool
 	SkipGetEC2Platforms     bool
@@ -185,7 +188,7 @@ type AWSClient struct {
 	acmconn                             *acm.ACM
 	acmpcaconn                          *acmpca.ACMPCA
 	amplifyconn                         *amplify.Amplify
-	apigateway                          *apigateway.APIGateway
+	apigatewayconn                      *apigateway.APIGateway
 	apigatewayv2conn                    *apigatewayv2.ApiGatewayV2
 	appautoscalingconn                  *applicationautoscaling.ApplicationAutoScaling
 	applicationinsightsconn             *applicationinsights.ApplicationInsights
@@ -211,6 +214,7 @@ type AWSClient struct {
 	codecommitconn                      *codecommit.CodeCommit
 	codedeployconn                      *codedeploy.CodeDeploy
 	codepipelineconn                    *codepipeline.CodePipeline
+	codestarnotificationsconn           *codestarnotifications.CodeStarNotifications
 	cognitoconn                         *cognitoidentity.CognitoIdentity
 	cognitoidpconn                      *cognitoidentityprovider.CognitoIdentityProvider
 	configconn                          *configservice.ConfigService
@@ -250,8 +254,7 @@ type AWSClient struct {
 	guarddutyconn                       *guardduty.GuardDuty
 	greengrassconn                      *greengrass.Greengrass
 	iamconn                             *iam.IAM
-	ignoreTagPrefixes                   keyvaluetags.KeyValueTags
-	ignoreTags                          keyvaluetags.KeyValueTags
+	IgnoreTagsConfig                    *keyvaluetags.IgnoreConfig
 	imagebuilderconn                    *imagebuilder.Imagebuilder
 	inspectorconn                       *inspector.Inspector
 	iotconn                             *iot.IoT
@@ -273,6 +276,7 @@ type AWSClient struct {
 	marketplacecatalogconn              *marketplacecatalog.MarketplaceCatalog
 	mediaconnectconn                    *mediaconnect.MediaConnect
 	mediaconvertconn                    *mediaconvert.MediaConvert
+	mediaconvertaccountconn             *mediaconvert.MediaConvert
 	medialiveconn                       *medialive.MediaLive
 	mediapackageconn                    *mediapackage.MediaPackage
 	mediastoreconn                      *mediastore.MediaStore
@@ -293,6 +297,7 @@ type AWSClient struct {
 	redshiftconn                        *redshift.Redshift
 	region                              string
 	resourcegroupsconn                  *resourcegroups.ResourceGroups
+	route53domainsconn                  *route53domains.Route53Domains
 	route53resolverconn                 *route53resolver.Route53Resolver
 	s3conn                              *s3.S3
 	s3connUriCleaningDisabled           *s3.S3
@@ -304,7 +309,7 @@ type AWSClient struct {
 	securityhubconn                     *securityhub.SecurityHub
 	serverlessapplicationrepositoryconn *serverlessapplicationrepository.ServerlessApplicationRepository
 	servicequotasconn                   *servicequotas.ServiceQuotas
-	sesConn                             *ses.SES
+	sesconn                             *ses.SES
 	sfnconn                             *sfn.SFN
 	shieldconn                          *shield.Shield
 	simpledbconn                        *simpledb.SimpleDB
@@ -319,9 +324,25 @@ type AWSClient struct {
 	transferconn                        *transfer.Transfer
 	wafconn                             *waf.WAF
 	wafregionalconn                     *wafregional.WAFRegional
+	wafv2conn                           *wafv2.WAFV2
 	worklinkconn                        *worklink.WorkLink
+	workmailconn                        *workmail.WorkMail
 	workspacesconn                      *workspaces.WorkSpaces
 	xrayconn                            *xray.XRay
+}
+
+// PartitionHostname returns a hostname with the provider domain suffix for the partition
+// e.g. PREFIX.amazonaws.com
+// The prefix should not contain a trailing period.
+func (client *AWSClient) PartitionHostname(prefix string) string {
+	return fmt.Sprintf("%s.%s", prefix, client.dnsSuffix)
+}
+
+// RegionalHostname returns a hostname with the provider domain suffix for the region and partition
+// e.g. PREFIX.us-west-2.amazonaws.com
+// The prefix should not contain a trailing period.
+func (client *AWSClient) RegionalHostname(prefix string) string {
+	return fmt.Sprintf("%s.%s.%s", prefix, client.region, client.dnsSuffix)
 }
 
 // Client configures and returns a fully initialized AWSClient
@@ -386,7 +407,7 @@ func (c *Config) Client() (interface{}, error) {
 		acmconn:                             acm.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acm"])})),
 		acmpcaconn:                          acmpca.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["acmpca"])})),
 		amplifyconn:                         amplify.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["amplify"])})),
-		apigateway:                          apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
+		apigatewayconn:                      apigateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
 		apigatewayv2conn:                    apigatewayv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["apigateway"])})),
 		appautoscalingconn:                  applicationautoscaling.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationautoscaling"])})),
 		applicationinsightsconn:             applicationinsights.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["applicationinsights"])})),
@@ -412,6 +433,7 @@ func (c *Config) Client() (interface{}, error) {
 		codecommitconn:                      codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codecommit"])})),
 		codedeployconn:                      codedeploy.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codedeploy"])})),
 		codepipelineconn:                    codepipeline.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codepipeline"])})),
+		codestarnotificationsconn:           codestarnotifications.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codestarnotifications"])})),
 		cognitoconn:                         cognitoidentity.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidentity"])})),
 		cognitoidpconn:                      cognitoidentityprovider.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cognitoidp"])})),
 		configconn:                          configservice.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["configservice"])})),
@@ -450,8 +472,7 @@ func (c *Config) Client() (interface{}, error) {
 		guarddutyconn:                       guardduty.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["guardduty"])})),
 		greengrassconn:                      greengrass.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["greengrass"])})),
 		iamconn:                             iam.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iam"])})),
-		ignoreTagPrefixes:                   keyvaluetags.New(c.IgnoreTagPrefixes),
-		ignoreTags:                          keyvaluetags.New(c.IgnoreTags),
+		IgnoreTagsConfig:                    c.IgnoreTagsConfig,
 		imagebuilderconn:                    imagebuilder.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["imagebuilder"])})),
 		inspectorconn:                       inspector.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["inspector"])})),
 		iotconn:                             iot.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["iot"])})),
@@ -492,6 +513,7 @@ func (c *Config) Client() (interface{}, error) {
 		redshiftconn:                        redshift.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["redshift"])})),
 		region:                              c.Region,
 		resourcegroupsconn:                  resourcegroups.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["resourcegroups"])})),
+		route53domainsconn:                  route53domains.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53domains"])})),
 		route53resolverconn:                 route53resolver.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["route53resolver"])})),
 		s3controlconn:                       s3control.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["s3control"])})),
 		sagemakerconn:                       sagemaker.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sagemaker"])})),
@@ -501,7 +523,7 @@ func (c *Config) Client() (interface{}, error) {
 		securityhubconn:                     securityhub.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["securityhub"])})),
 		serverlessapplicationrepositoryconn: serverlessapplicationrepository.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["serverlessrepo"])})),
 		servicequotasconn:                   servicequotas.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["servicequotas"])})),
-		sesConn:                             ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ses"])})),
+		sesconn:                             ses.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["ses"])})),
 		sfnconn:                             sfn.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["stepfunctions"])})),
 		simpledbconn:                        simpledb.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sdb"])})),
 		snsconn:                             sns.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sns"])})),
@@ -514,7 +536,9 @@ func (c *Config) Client() (interface{}, error) {
 		transferconn:                        transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["transfer"])})),
 		wafconn:                             waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["waf"])})),
 		wafregionalconn:                     wafregional.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafregional"])})),
+		wafv2conn:                           wafv2.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["wafv2"])})),
 		worklinkconn:                        worklink.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["worklink"])})),
+		workmailconn:                        workmail.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workmail"])})),
 		workspacesconn:                      workspaces.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["workspaces"])})),
 		xrayconn:                            xray.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["xray"])})),
 	}
@@ -644,7 +668,7 @@ func (c *Config) Client() (interface{}, error) {
 			}
 		}
 
-		if r.Operation.Name == "AttachVpnGateway" {
+		if r.Operation.Name == "AttachVpnGateway" || r.Operation.Name == "DetachVpnGateway" {
 			if isAWSErr(r.Error, "InvalidParameterValue", "This call cannot be completed because there are pending VPNs or Virtual Interfaces") {
 				r.Retryable = aws.Bool(true)
 			}

@@ -2,6 +2,10 @@
 
 package ecr
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeEmptyUploadException for service response error code
@@ -113,6 +117,12 @@ const (
 	// in the Amazon Elastic Container Registry User Guide.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
+	// ErrCodeReferencedImagesNotFoundException for service response error code
+	// "ReferencedImagesNotFoundException".
+	//
+	// The manifest list is referencing an image that does not exist.
+	ErrCodeReferencedImagesNotFoundException = "ReferencedImagesNotFoundException"
+
 	// ErrCodeRepositoryAlreadyExistsException for service response error code
 	// "RepositoryAlreadyExistsException".
 	//
@@ -160,6 +170,12 @@ const (
 	// of tags that can be applied to a repository is 50.
 	ErrCodeTooManyTagsException = "TooManyTagsException"
 
+	// ErrCodeUnsupportedImageTypeException for service response error code
+	// "UnsupportedImageTypeException".
+	//
+	// The image is of a type that cannot be scanned.
+	ErrCodeUnsupportedImageTypeException = "UnsupportedImageTypeException"
+
 	// ErrCodeUploadNotFoundException for service response error code
 	// "UploadNotFoundException".
 	//
@@ -167,3 +183,32 @@ const (
 	// this repository.
 	ErrCodeUploadNotFoundException = "UploadNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"EmptyUploadException":                      newErrorEmptyUploadException,
+	"ImageAlreadyExistsException":               newErrorImageAlreadyExistsException,
+	"ImageNotFoundException":                    newErrorImageNotFoundException,
+	"ImageTagAlreadyExistsException":            newErrorImageTagAlreadyExistsException,
+	"InvalidLayerException":                     newErrorInvalidLayerException,
+	"InvalidLayerPartException":                 newErrorInvalidLayerPartException,
+	"InvalidParameterException":                 newErrorInvalidParameterException,
+	"InvalidTagParameterException":              newErrorInvalidTagParameterException,
+	"LayerAlreadyExistsException":               newErrorLayerAlreadyExistsException,
+	"LayerInaccessibleException":                newErrorLayerInaccessibleException,
+	"LayerPartTooSmallException":                newErrorLayerPartTooSmallException,
+	"LayersNotFoundException":                   newErrorLayersNotFoundException,
+	"LifecyclePolicyNotFoundException":          newErrorLifecyclePolicyNotFoundException,
+	"LifecyclePolicyPreviewInProgressException": newErrorLifecyclePolicyPreviewInProgressException,
+	"LifecyclePolicyPreviewNotFoundException":   newErrorLifecyclePolicyPreviewNotFoundException,
+	"LimitExceededException":                    newErrorLimitExceededException,
+	"ReferencedImagesNotFoundException":         newErrorReferencedImagesNotFoundException,
+	"RepositoryAlreadyExistsException":          newErrorRepositoryAlreadyExistsException,
+	"RepositoryNotEmptyException":               newErrorRepositoryNotEmptyException,
+	"RepositoryNotFoundException":               newErrorRepositoryNotFoundException,
+	"RepositoryPolicyNotFoundException":         newErrorRepositoryPolicyNotFoundException,
+	"ScanNotFoundException":                     newErrorScanNotFoundException,
+	"ServerException":                           newErrorServerException,
+	"TooManyTagsException":                      newErrorTooManyTagsException,
+	"UnsupportedImageTypeException":             newErrorUnsupportedImageTypeException,
+	"UploadNotFoundException":                   newErrorUploadNotFoundException,
+}
