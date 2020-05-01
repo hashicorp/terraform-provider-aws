@@ -6,6 +6,8 @@ FEATURES:
 * **New Data Source:** `aws_ec2_coip_pools` [GH-12852]
 * **New Data Source:** `aws_ec2_local_gateway` [GH-12764]
 * **New Data Source:** `aws_ec2_local_gateways` [GH-12764]
+* **New Data Source:** `aws_ec2_local_gateway_route_table` [GH-13002]
+* **New Data Source:** `aws_ec2_local_gateway_route_tables` [GH-13002]
 
 ## 2.60.0 (May 01, 2020)
 
