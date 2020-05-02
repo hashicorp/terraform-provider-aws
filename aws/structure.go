@@ -161,6 +161,14 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 			if v, ok := config["root_directory"].(string); ok && v != "" {
 				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
 			}
+
+			if v, ok := config["transit_encryption"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
+			}
+
+			if v, ok := config["transit_encryption_port"].(int64); ok && v != 0 {
+				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(v)
+			}
 		}
 
 		volumes = append(volumes, l)
@@ -748,6 +756,14 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 
 		if v := config.RootDirectory; v != nil {
 			m["root_directory"] = aws.StringValue(v)
+		}
+
+		if v := config.TransitEncryption; v != nil {
+			m["transit_encryption"] = aws.StringValue(v)
+		}
+
+		if v := config.TransitEncryptionPort; v != nil {
+			m["transit_encryption_port"] = aws.Int64Value(v)
 		}
 	}
 
