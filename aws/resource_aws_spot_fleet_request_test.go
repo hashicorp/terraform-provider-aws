@@ -349,6 +349,49 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	})
 }
 
+func TestAccAWSSpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
+	var sfr ec2.SpotFleetRequestConfig
+	rName := acctest.RandString(10)
+	rInt := acctest.RandInt()
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	resourceName := "aws_spot_fleet_request.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, rInt, validUntil, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, rInt, validUntil, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "1"),
+				),
+			},
+			{
+				Config: testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName, rInt, validUntil, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
+					resource.TestCheckResourceAttr(resourceName, "on_demand_target_capacity", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 	var sfr ec2.SpotFleetRequestConfig
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -2662,4 +2705,36 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, validUntil)
+}
+
+func testAccAWSSpotFleetRequestOnDemandTargetCapacityConfig(rName string, rInt int, validUntil string, targetCapacity int) string {
+	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name          = %[2]q
+  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  key_name      = "${aws_key_pair.test.key_name}"
+}
+
+resource "aws_spot_fleet_request" "test" {
+  iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
+  spot_price                          = "0.005"
+  target_capacity                     = 2
+  valid_until                         = %[1]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+  on_demand_target_capacity           = %[3]d
+
+  launch_template_config {
+    launch_template_specification {
+      name    = "${aws_launch_template.test.name}"
+      version = "${aws_launch_template.test.latest_version}"
+    }
+  }
+
+  depends_on = ["aws_iam_policy_attachment.test-attach"]
+}
+`, validUntil, rName, targetCapacity)
 }

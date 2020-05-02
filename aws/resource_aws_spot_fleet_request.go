@@ -1656,11 +1656,10 @@ func resourceAwsSpotFleetRequestUpdate(d *schema.ResourceData, meta interface{})
 	}
 
 	if d.HasChange("on_demand_target_capacity") {
-		if val, ok := d.GetOk("on_demand_target_capacity"); ok {
+		if val, ok := d.GetOkExists("on_demand_target_capacity"); ok {
 			req.OnDemandTargetCapacity = aws.Int64(int64(val.(int)))
+			updateFlag = true
 		}
-
-		updateFlag = true
 	}
 
 	if d.HasChange("excess_capacity_termination_policy") {
