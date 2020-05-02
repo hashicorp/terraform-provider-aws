@@ -159,10 +159,12 @@ resource "aws_ecs_task_definition" "service" {
 
 #### EFS Volume Configuration Arguments
 
-For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/using_efs.html)
+For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
 
 * `file_system_id` - (Required) The ID of the EFS File System.
 * `root_directory` - (Optional) The path to mount on the host
+* `transit_encryption` - (Optional) Specify "ENABLED" to use transit encryption.
+* `transit_encryption_port` - (Optional) The port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
 
 ##### Example Usage
 
@@ -175,8 +177,10 @@ resource "aws_ecs_task_definition" "service" {
     name = "service-storage"
 
     efs_volume_configuration {
-      file_system_id = aws_efs_file_system.fs.id
-      root_directory = "/opt/data"
+      file_system_id          = aws_efs_file_system.fs.id
+      root_directory          = "/opt/data"
+      transit_encryption      = "ENABLED"
+      transit_encryption_port = 2999
     }
   }
 }
