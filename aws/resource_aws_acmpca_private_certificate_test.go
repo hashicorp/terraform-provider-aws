@@ -13,14 +13,15 @@ import (
 
 func TestAccAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 	resourceName := "aws_acmpca_private_certificate.test"
+	csr, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAcmpcaPrivateCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsAcmpcaPrivateCertificateConfig_Required,
+				Config: testAccAwsAcmpcaPrivateCertificateConfig_Required(csr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName),
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:acm-pca:[^:]+:[^:]+:certificate-authority/.+/certificate/.+$`)),
@@ -70,20 +71,8 @@ func testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName string) resource
 	}
 }
 
-const testAccAwsAcmpcaPrivateCertificateConfig_Required = `
-resource "tls_private_key" "key" {
-  algorithm = "RSA"
-}
-
-resource "tls_cert_request" "csr" {
-  key_algorithm   = "RSA"
-  private_key_pem = tls_private_key.key.private_key_pem
-
-  subject {
-    common_name = "testing"
-  }
-}
-
+func testAccAwsAcmpcaPrivateCertificateConfig_Required(csr string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
@@ -100,9 +89,9 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 resource "aws_acmpca_private_certificate" "test" {
 	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-	certificate_signing_request = tls_cert_request.csr.cert_request_pem
+	certificate_signing_request = "%[1]s"
 	signing_algorithm = "SHA256WITHRSA"
 	validity_length = 1
 	validity_unit = "YEARS"
+}`, csr)
 }
-`

@@ -13,9 +13,10 @@ import (
 )
 
 const (
-	pemBlockTypeCertificate   = `CERTIFICATE`
-	pemBlockTypeRsaPrivateKey = `RSA PRIVATE KEY`
-	pemBlockTypePublicKey     = `PUBLIC KEY`
+	pemBlockTypeCertificate        = `CERTIFICATE`
+	pemBlockTypeRsaPrivateKey      = `RSA PRIVATE KEY`
+	pemBlockTypePublicKey          = `PUBLIC KEY`
+	pemBlockTypeCertificateRequest = `CERTIFICATE REQUEST`
 )
 
 var tlsX509CertificateSerialNumberLimit = new(big.Int).Lsh(big.NewInt(1), 128)
@@ -223,6 +224,38 @@ func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
 	}
 
 	return string(pem.EncodeToMemory(certificateBlock))
+}
+
+func tlsRsaX509CertificateRequestPem(keyBits int, commonName string) (string, string) {
+	keyBytes, err := rsa.GenerateKey(rand.Reader, keyBits)
+	if err != nil {
+		panic(err)
+	}
+
+	csr := x509.CertificateRequest{
+		Subject: pkix.Name{
+			CommonName:   commonName,
+			Organization: []string{"ACME Examples, Inc"},
+		},
+		SignatureAlgorithm: x509.SHA256WithRSA,
+	}
+
+	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &csr, keyBytes)
+	if err != nil {
+		panic(err)
+	}
+
+	csrBlock := &pem.Block{
+		Bytes: csrBytes,
+		Type:  pemBlockTypeCertificateRequest,
+	}
+
+	keyBlock := &pem.Block{
+		Bytes: x509.MarshalPKCS1PrivateKey(keyBytes),
+		Type:  pemBlockTypeRsaPrivateKey,
+	}
+
+	return string(pem.EncodeToMemory(csrBlock)), string(pem.EncodeToMemory(keyBlock))
 }
 
 func tlsPemEscapeNewlines(pem string) string {

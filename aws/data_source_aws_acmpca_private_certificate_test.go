@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"regexp"
 	"testing"
 
@@ -10,17 +11,19 @@ import (
 func TestAccDataSourceAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 	resourceName := "aws_acmpca_private_certificate.test"
 	datasourceName := "data.aws_acmpca_private_certificate.test"
+	csr1, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest1.com")
+	csr2, _ := tlsRsaX509CertificateRequestPem(4096, "terraformtest2.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProvidersWithTLS,
+		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsAcmpcaPrivateCertificateConfig_NonExistent,
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaPrivateCertificateConfig_ARN,
+				Config: testAccDataSourceAwsAcmpcaPrivateCertificateConfig_ARN(csr1, csr2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
@@ -32,33 +35,8 @@ func TestAccDataSourceAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 	})
 }
 
-const testAccDataSourceAwsAcmpcaPrivateCertificateConfig_ARN = `
-resource "tls_private_key" "key_1" {
-  algorithm = "RSA"
-}
-
-resource "tls_cert_request" "csr_1" {
-  key_algorithm   = "RSA"
-  private_key_pem = tls_private_key.key_1.private_key_pem
-
-  subject {
-    common_name = "wrong"
-  }
-}
-
-resource "tls_private_key" "key_2" {
-  algorithm = "RSA"
-}
-
-resource "tls_cert_request" "csr_2" {
-  key_algorithm   = "RSA"
-  private_key_pem = tls_private_key.key_2.private_key_pem
-
-  subject {
-    common_name = "testing"
-  }
-}
-
+func testAccDataSourceAwsAcmpcaPrivateCertificateConfig_ARN(csr1, csr2 string) string {
+	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
@@ -75,7 +53,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 
 resource "aws_acmpca_private_certificate" "wrong" {
 	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-	certificate_signing_request = tls_cert_request.csr_1.cert_request_pem
+	certificate_signing_request = "%[1]s"
 	signing_algorithm = "SHA256WITHRSA"
 	validity_length = 1
 	validity_unit = "YEARS"
@@ -83,7 +61,7 @@ resource "aws_acmpca_private_certificate" "wrong" {
 
 resource "aws_acmpca_private_certificate" "test" {
 	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
-	certificate_signing_request = tls_cert_request.csr_2.cert_request_pem
+	certificate_signing_request = "%[2]s"
 	signing_algorithm = "SHA256WITHRSA"
 	validity_length = 1
 	validity_unit = "YEARS"
@@ -92,8 +70,8 @@ resource "aws_acmpca_private_certificate" "test" {
 data "aws_acmpca_private_certificate" "test" {
 	arn = aws_acmpca_private_certificate.test.arn
 	certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+}`, csr1, csr2)
 }
-`
 
 const testAccDataSourceAwsAcmpcaPrivateCertificateConfig_NonExistent = `
 data "aws_acmpca_private_certificate" "test" {

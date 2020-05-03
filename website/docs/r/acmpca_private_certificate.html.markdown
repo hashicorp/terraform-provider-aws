@@ -42,11 +42,11 @@ resource "tls_cert_request" "csr" {
 }
 
 resource "aws_acmpca_private_certificate" "example" {
-	certificate_authority_arn = aws_acmpca_certificate_authority.example.arn
-	certificate_signing_request = tls_cert_request.csr.cert_request_pem
-	signing_algorithm = "SHA256WITHRSA"
-	validity_length = 1
-	validity_unit = "YEARS"
+  certificate_authority_arn   = aws_acmpca_certificate_authority.example.arn
+  certificate_signing_request = tls_cert_request.csr.cert_request_pem
+  signing_algorithm           = "SHA256WITHRSA"
+  validity_length             = 1
+  validity_unit               = "YEARS"
 }
 ```
 
