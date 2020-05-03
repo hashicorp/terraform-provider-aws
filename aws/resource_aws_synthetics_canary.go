@@ -69,7 +69,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
 			"failure_retention_period": {
@@ -88,7 +87,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"duration_in_seconds": {
@@ -102,7 +100,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"expression": {
@@ -120,7 +117,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"security_group_ids": {
@@ -191,7 +187,7 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 
 	resp, err := conn.CreateCanary(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating Synthetics Canary: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.Canary.Name))
@@ -256,6 +252,52 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).syntheticsconn
+
+	input := &synthetics.UpdateCanaryInput{
+		Name: aws.String(d.Id()),
+	}
+
+	updateFlag := false
+
+	if d.HasChange("vpc_config") {
+		input.VpcConfig = expandAwsSyntheticsCanaryVpcConfig(d.Get("vpc_config").([]interface{}))
+		updateFlag = true
+	}
+
+	if d.HasChange("run_config") {
+		input.RunConfig = expandAwsSyntheticsCanaryRunConfig(d.Get("run_config").([]interface{}))
+		updateFlag = true
+	}
+
+	if d.HasChange("schedule") {
+		input.Schedule = expandAwsSyntheticsCanarySchedule(d.Get("schedule").([]interface{}))
+		updateFlag = true
+	}
+
+	if d.HasChange("success_retention_period") {
+		_, n := d.GetChange("success_retention_period")
+		input.SuccessRetentionPeriodInDays = aws.Int64(int64(n.(int)))
+		updateFlag = true
+	}
+
+	if d.HasChange("failure_retention_period") {
+		_, n := d.GetChange("failure_retention_period")
+		input.FailureRetentionPeriodInDays = aws.Int64(int64(n.(int)))
+		updateFlag = true
+	}
+
+	if d.HasChange("execution_role_arn") {
+		_, n := d.GetChange("execution_role_arn")
+		input.ExecutionRoleArn = aws.String(n.(string))
+		updateFlag = true
+	}
+
+	if updateFlag {
+		_, err := conn.UpdateCanary(input)
+		if err != nil {
+			return fmt.Errorf("error updating Synthetics Canary: %s", err)
+		}
+	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
