@@ -223,7 +223,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
 
   code {
-    handler  = "exports.example"
+    handler  = "exports.handler"
     zip_file = "test-fixtures/lambdatest.zip"
   }
 
