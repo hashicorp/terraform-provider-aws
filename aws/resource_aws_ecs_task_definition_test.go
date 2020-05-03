@@ -241,13 +241,39 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, "/home/test", "ENABLED", 2999),
+				Config: testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, "/home/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "volume.584193650.efs_volume_configuration.0.file_system_id", efsResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.root_directory", "/home/test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSEcsTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
+	var def ecs.TaskDefinition
+
+	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
+	resourceName := "aws_ecs_task_definition.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, "ENABLED", 2999),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.transit_encryption", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.transit_encryption_port", "2999"),
 				),
@@ -1491,7 +1517,7 @@ TASK_DEFINITION
 `, tdName)
 }
 
-func testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, rDir, tEnc string, tEncPort int) string {
+func testAccAWSEcsTaskDefinitionWithEFSVolume(tdName, rDir string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
 	creation_token = %[1]q
@@ -1519,12 +1545,46 @@ TASK_DEFINITION
     efs_volume_configuration {
       file_system_id = "${aws_efs_file_system.test.id}"
       root_directory = %[2]q
-	  transit_encryption = %[3]q
-	  transit_encryption_port = %[4]d
     }
   }
 }
-`, tdName, rDir, tEnc, tEncPort)
+`, tdName, rDir)
+}
+
+func testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, tEnc string, tEncPort int) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+	creation_token = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = "database_scratch"
+
+    efs_volume_configuration {
+      file_system_id          = "${aws_efs_file_system.test.id}"
+	  root_directory          = "/home/test"
+	  transit_encryption      = %[2]q
+      transit_encryption_port = %[3]d
+    }
+  }
+}
+`, tdName, tEnc, tEncPort)
 }
 
 func testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName string) string {
