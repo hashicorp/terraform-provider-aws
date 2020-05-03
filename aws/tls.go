@@ -226,6 +226,10 @@ func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
 	return string(pem.EncodeToMemory(certificateBlock))
 }
 
+// tlsRsaX509CertificateRequestPem generates a x509 certificate request PEM string
+// and a RSA private key PEM string.
+// Wrap with tlsPemEscapeNewlines() to allow simple fmt.Sprintf()
+// configurations such as: certificate_signing_request_pem = "%[1]s" private_key_pem = "%[2]s"
 func tlsRsaX509CertificateRequestPem(keyBits int, commonName string) (string, string) {
 	keyBytes, err := rsa.GenerateKey(rand.Reader, keyBits)
 	if err != nil {

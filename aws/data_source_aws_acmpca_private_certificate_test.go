@@ -23,7 +23,7 @@ func TestAccDataSourceAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`(AccessDeniedException|ResourceNotFoundException)`),
 			},
 			{
-				Config: testAccDataSourceAwsAcmpcaPrivateCertificateConfig_ARN(csr1, csr2),
+				Config: testAccDataSourceAwsAcmpcaPrivateCertificateConfig_ARN(tlsPemEscapeNewlines(csr1), tlsPemEscapeNewlines(csr2)),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "certificate", resourceName, "certificate"),
