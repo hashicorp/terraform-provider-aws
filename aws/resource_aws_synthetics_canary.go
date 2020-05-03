@@ -11,6 +11,8 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const awsMutexCanary = `aws_synthetics_canary`
+
 func resourceAwsSyntheticsCanary() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsSyntheticsCanaryCreate,
@@ -23,9 +25,10 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(1, 21),
 			},
 			"artifact_s3_location": {
 				Type:     schema.TypeString,
@@ -99,7 +102,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 			"schedule": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
-				Optional: true,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"expression": {
@@ -161,9 +164,18 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 		ArtifactS3Location: aws.String(d.Get("artifact_s3_location").(string)),
 		ExecutionRoleArn:   aws.String(d.Get("execution_role_arn").(string)),
 		RuntimeVersion:     aws.String("syn-1.0"),
-		Code:               expandAwsSyntheticsCanaryCode(d.Get("code").([]interface{})),
-		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SyntheticsTags(),
 	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		input.Tags = keyvaluetags.New(v).IgnoreAws().SyntheticsTags()
+	}
+
+	code, err := expandAwsSyntheticsCanaryCode(d.Get("code").([]interface{}))
+	if err != nil {
+		return err
+	}
+
+	input.Code = code
 
 	if v, ok := d.GetOk("run_config"); ok {
 		input.RunConfig = expandAwsSyntheticsCanaryRunConfig(v.([]interface{}))
@@ -328,9 +340,9 @@ func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func expandAwsSyntheticsCanaryCode(l []interface{}) *synthetics.CanaryCodeInput {
+func expandAwsSyntheticsCanaryCode(l []interface{}) (*synthetics.CanaryCodeInput, error) {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return nil, nil
 	}
 
 	m := l[0].(map[string]interface{})
@@ -339,7 +351,18 @@ func expandAwsSyntheticsCanaryCode(l []interface{}) *synthetics.CanaryCodeInput 
 		Handler: aws.String(m["handler"].(string)),
 	}
 
-	return codeConfig
+	if v, ok := m["zip_file"]; ok {
+		awsMutexKV.Lock(awsMutexCanary)
+		defer awsMutexKV.Unlock(awsMutexCanary)
+		file, err := loadFileContent(v.(string))
+		if err != nil {
+			return nil, fmt.Errorf("Unable to load %q: %s", v.(string), err)
+		}
+
+		codeConfig.ZipFile = file
+	}
+
+	return codeConfig, nil
 }
 
 func flattenAwsSyntheticsCanaryCode(canaryCodeOut *synthetics.CanaryCodeOutput) []interface{} {
