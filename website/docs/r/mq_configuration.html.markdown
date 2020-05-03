@@ -1,4 +1,5 @@
 ---
+subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_configuration"
 description: |-
@@ -44,7 +45,7 @@ The following arguments are supported:
 * `engine_type` - (Required) The type of broker engine.
 * `engine_version` - (Required) The version of the broker engine.
 * `name` - (Required) The name of the configuration
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

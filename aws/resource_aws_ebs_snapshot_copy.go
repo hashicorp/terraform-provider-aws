@@ -9,12 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEbsSnapshotCopy() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEbsSnapshotCopyCreate,
 		Read:   resourceAwsEbsSnapshotCopyRead,
+		Update: resourceAwsEbsSnapshotCopyUpdate,
 		Delete: resourceAwsEbsSnapshotCopyDelete,
 
 		Schema: map[string]*schema.Schema{
@@ -63,11 +65,7 @@ func resourceAwsEbsSnapshotCopy() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				ForceNew: true,
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -76,8 +74,9 @@ func resourceAwsEbsSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) 
 	conn := meta.(*AWSClient).ec2conn
 
 	request := &ec2.CopySnapshotInput{
-		SourceRegion:     aws.String(d.Get("source_region").(string)),
-		SourceSnapshotId: aws.String(d.Get("source_snapshot_id").(string)),
+		SourceRegion:      aws.String(d.Get("source_region").(string)),
+		SourceSnapshotId:  aws.String(d.Get("source_snapshot_id").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeSnapshot),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		request.Description = aws.String(v.(string))
@@ -101,15 +100,12 @@ func resourceAwsEbsSnapshotCopyCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	if err := setTags(conn, d); err != nil {
-		log.Printf("[WARN] error setting tags: %s", err)
-	}
-
 	return resourceAwsEbsSnapshotCopyRead(d, meta)
 }
 
 func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSnapshotsInput{
 		SnapshotIds: []*string{aws.String(d.Id())},
@@ -119,6 +115,10 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 		log.Printf("Snapshot %q Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error describing EC2 Snapshot (%s): %w", d.Id(), err)
 	}
 
 	snapshot := res.Snapshots[0]
@@ -132,8 +132,8 @@ func resourceAwsEbsSnapshotCopyRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("kms_key_id", snapshot.KmsKeyId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	if err := d.Set("tags", tagsToMap(snapshot.Tags)); err != nil {
-		log.Printf("[WARN] error saving tags to state: %s", err)
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(snapshot.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -170,6 +170,19 @@ func resourceAwsEbsSnapshotCopyDelete(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error deleting EBS snapshot copy: %s", err)
 	}
 	return nil
+}
+
+func resourceAwsEbsSnapshotCopyUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
+	return resourceAwsEbsSnapshotRead(d, meta)
 }
 
 func resourceAwsEbsSnapshotCopyWaitForAvailable(id string, conn *ec2.EC2) error {

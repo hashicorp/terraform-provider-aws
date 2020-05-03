@@ -8,11 +8,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/client/metadata"
 	"github.com/aws/aws-sdk-go/aws/request"
 	"github.com/aws/aws-sdk-go/aws/signer/v4"
+	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/private/protocol/jsonrpc"
 )
 
 // Transfer provides the API operation methods for making requests to
-// AWS Transfer for SFTP. See this package's package overview docs
+// AWS Transfer Family. See this package's package overview docs
 // for details on the service.
 //
 // Transfer methods are safe to use concurrently. It is not safe to
@@ -31,7 +32,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "Transfer" // Name of service.
 	EndpointsID = "transfer" // ID to lookup a service endpoint with.
-	ServiceID   = "Transfer" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "Transfer" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the Transfer client with a session.
@@ -39,6 +40,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a Transfer client from just a session.
 //     svc := transfer.New(mySession)
 //
@@ -49,11 +52,11 @@ func New(p client.ConfigProvider, cfgs ...*aws.Config) *Transfer {
 	if c.SigningNameDerived || len(c.SigningName) == 0 {
 		c.SigningName = "transfer"
 	}
-	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
+	return newClient(*c.Config, c.Handlers, c.PartitionID, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
-func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *Transfer {
+func newClient(cfg aws.Config, handlers request.Handlers, partitionID, endpoint, signingRegion, signingName string) *Transfer {
 	svc := &Transfer{
 		Client: client.New(
 			cfg,
@@ -62,6 +65,7 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
+				PartitionID:   partitionID,
 				Endpoint:      endpoint,
 				APIVersion:    "2018-11-05",
 				JSONVersion:   "1.1",
@@ -76,7 +80,9 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 	svc.Handlers.Build.PushBackNamed(jsonrpc.BuildHandler)
 	svc.Handlers.Unmarshal.PushBackNamed(jsonrpc.UnmarshalHandler)
 	svc.Handlers.UnmarshalMeta.PushBackNamed(jsonrpc.UnmarshalMetaHandler)
-	svc.Handlers.UnmarshalError.PushBackNamed(jsonrpc.UnmarshalErrorHandler)
+	svc.Handlers.UnmarshalError.PushBackNamed(
+		protocol.NewUnmarshalErrorHandler(jsonrpc.NewUnmarshalTypedError(exceptionFromCode)).NamedHandler(),
+	)
 
 	// Run custom client initialization if present
 	if initClient != nil {

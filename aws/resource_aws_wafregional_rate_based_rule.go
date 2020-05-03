@@ -5,10 +5,12 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
@@ -64,6 +66,11 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.IntAtLeast(100),
 			},
+			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -71,6 +78,7 @@ func resourceAwsWafRegionalRateBasedRule() *schema.Resource {
 func resourceAwsWafRegionalRateBasedRuleCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
 	region := meta.(*AWSClient).region
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WafregionalTags()
 
 	wr := newWafRegionalRetryer(conn, region)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
@@ -82,6 +90,10 @@ func resourceAwsWafRegionalRateBasedRuleCreate(d *schema.ResourceData, meta inte
 			RateLimit:   aws.Int64(int64(d.Get("rate_limit").(int))),
 		}
 
+		if len(tags) > 0 {
+			params.Tags = tags
+		}
+
 		return conn.CreateRateBasedRule(params)
 	})
 	if err != nil {
@@ -89,11 +101,22 @@ func resourceAwsWafRegionalRateBasedRuleCreate(d *schema.ResourceData, meta inte
 	}
 	resp := out.(*waf.CreateRateBasedRuleOutput)
 	d.SetId(*resp.Rule.RuleId)
-	return resourceAwsWafRegionalRateBasedRuleUpdate(d, meta)
+
+	newPredicates := d.Get("predicate").(*schema.Set).List()
+	if len(newPredicates) > 0 {
+		noPredicates := []interface{}{}
+		err := updateWafRateBasedRuleResourceWR(d.Id(), noPredicates, newPredicates, d.Get("rate_limit"), conn, region)
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF Rate Based Rule: %s", err)
+		}
+	}
+
+	return resourceAwsWafRegionalRateBasedRuleRead(d, meta)
 }
 
 func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafregionalconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &waf.GetRateBasedRuleInput{
 		RuleId: aws.String(d.Id()),
@@ -117,6 +140,23 @@ func resourceAwsWafRegionalRateBasedRuleRead(d *schema.ResourceData, meta interf
 			"type":    *predicateSet.Type,
 			"data_id": *predicateSet.DataId,
 		})
+	}
+
+	arn := arn.ARN{
+		AccountID: meta.(*AWSClient).accountid,
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("ratebasedrule/%s", d.Id()),
+		Service:   "waf-regional",
+	}.String()
+	d.Set("arn", arn)
+
+	tagList, err := keyvaluetags.WafregionalListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("Failed to get WAF Regional Rated Based Rule parameter tags for %s: %s", d.Get("name"), err)
+	}
+	if err := d.Set("tags", tagList.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	d.Set("predicate", predicates)
@@ -145,6 +185,14 @@ func resourceAwsWafRegionalRateBasedRuleUpdate(d *schema.ResourceData, meta inte
 		}
 		if err != nil {
 			return fmt.Errorf("Error updating WAF Regional Rate Based Rule Predicates (%s): %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.WafregionalUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 

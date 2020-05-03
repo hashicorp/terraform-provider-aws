@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_acl"
 description: |-
@@ -56,7 +57,7 @@ The following arguments are supported:
   This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
 * `egress` - (Optional) Specifies an egress rule. Parameters defined below.
   This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Both `egress` and `ingress` support the following keys:
 

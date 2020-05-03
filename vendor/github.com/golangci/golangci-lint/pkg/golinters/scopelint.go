@@ -17,10 +17,10 @@ const scopelintName = "scopelint"
 
 func NewScopelint() *goanalysis.Linter {
 	var mu sync.Mutex
-	var resIssues []result.Issue
+	var resIssues []goanalysis.Issue
 
 	analyzer := &analysis.Analyzer{
-		Name: goanalysis.TheOnlyAnalyzerName,
+		Name: scopelintName,
 		Doc:  goanalysis.TheOnlyanalyzerDoc,
 	}
 	return goanalysis.NewLinter(
@@ -47,12 +47,14 @@ func NewScopelint() *goanalysis.Linter {
 			}
 
 			mu.Lock()
-			resIssues = append(resIssues, res...)
+			for i := range res {
+				resIssues = append(resIssues, goanalysis.NewIssue(&res[i], pass))
+			}
 			mu.Unlock()
 
 			return nil, nil
 		}
-	}).WithIssuesReporter(func(*linter.Context) []result.Issue {
+	}).WithIssuesReporter(func(*linter.Context) []goanalysis.Issue {
 		return resIssues
 	}).WithLoadMode(goanalysis.LoadModeSyntax)
 }
@@ -86,7 +88,7 @@ func (f *Node) Visit(node ast.Node) ast.Visitor {
 		}
 
 	case *ast.RangeStmt:
-		// Memory variables declarated in range statement
+		// Memory variables declared in range statement
 		switch k := typedNode.Key.(type) {
 		case *ast.Ident:
 			f.UnsafeObjects[k.Obj] = 0
@@ -164,10 +166,10 @@ func (f *Node) Visit(node ast.Node) ast.Visitor {
 //nolint:interfacer
 func (f *Node) errorf(n ast.Node, format string, args ...interface{}) {
 	pos := f.fset.Position(n.Pos())
-	f.errorfAt(pos, format, args...)
+	f.errorAtf(pos, format, args...)
 }
 
-func (f *Node) errorfAt(pos token.Position, format string, args ...interface{}) {
+func (f *Node) errorAtf(pos token.Position, format string, args ...interface{}) {
 	*f.issues = append(*f.issues, result.Issue{
 		Pos:        pos,
 		Text:       fmt.Sprintf(format, args...),

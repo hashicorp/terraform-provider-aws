@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // Mutable attributes
@@ -66,7 +67,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -77,7 +78,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         false,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -151,7 +152,7 @@ func resourceAwsSnsTopic() *schema.Resource {
 
 func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
-	tags := tagsFromMapSNS(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().SnsTags()
 	var name string
 	if v, ok := d.GetOk("name"); ok {
 		name = v.(string)
@@ -174,7 +175,18 @@ func resourceAwsSnsTopicCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(*output.TopicArn)
-	return resourceAwsSnsTopicUpdate(d, meta)
+
+	for terraformAttrName, snsAttrName := range SNSAttributeMap {
+		if d.HasChange(terraformAttrName) {
+			_, terraformAttrValue := d.GetChange(terraformAttrName)
+			err := updateAwsSnsTopicAttribute(d.Id(), snsAttrName, terraformAttrValue, snsconn)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return resourceAwsSnsTopicRead(d, meta)
 }
 
 func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -189,9 +201,11 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 			}
 		}
 	}
-	if !d.IsNewResource() {
-		if err := setTagsSNS(conn, d); err != nil {
-			return fmt.Errorf("error updating SNS Topic tags for %s: %s", d.Id(), err)
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.SnsUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -200,6 +214,7 @@ func resourceAwsSnsTopicUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 	snsconn := meta.(*AWSClient).snsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading SNS Topic Attributes for %s", d.Id())
 	attributeOutput, err := snsconn.GetTopicAttributes(&sns.GetTopicAttributesInput{
@@ -237,15 +252,13 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
-	// List tags
+	tags, err := keyvaluetags.SnsListTags(snsconn, d.Id())
 
-	tagList, err := snsconn.ListTagsForResource(&sns.ListTagsForResourceInput{
-		ResourceArn: aws.String(d.Id()),
-	})
 	if err != nil {
-		return fmt.Errorf("error listing SNS Topic tags for %s: %s", d.Id(), err)
+		return fmt.Errorf("error listing tags for resource (%s): %s", d.Id(), err)
 	}
-	if err := d.Set("tags", tagsToMapSNS(tagList.Tags)); err != nil {
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

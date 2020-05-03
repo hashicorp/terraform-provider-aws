@@ -1,4 +1,5 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
 description: |-
@@ -114,7 +115,7 @@ resource "aws_s3_bucket_object" "examplebucket_object" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket to put the file in.
+* `bucket` - (Required) The name of the bucket to put the file in. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified.
 * `key` - (Required) The name of the object once it is in the bucket.
 * `source` - (Optional, conflicts with `content` and `content_base64`) The path to a file that will be read and uploaded as raw bytes for the object content.
 * `content` - (Optional, conflicts with `source` and `content_base64`) Literal string value to use as the object content, which will be uploaded as UTF-8-encoded text.
@@ -135,8 +136,8 @@ This attribute is not compatible with KMS encryption, `kms_key_id` or `server_si
 This value is a fully qualified **ARN** of the KMS Key. If using `aws_kms_key`,
 use the exported `arn` attribute:
       `kms_key_id = "${aws_kms_key.foo.arn}"`
-* `metadata` - (Optional) A mapping of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
-* `tags` - (Optional) A mapping of tags to assign to the object.
+* `metadata` - (Optional) A map of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
+* `tags` - (Optional) A map of tags to assign to the object.
 * `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
 Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
 * `object_lock_legal_hold_status` - (Optional) The [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status that you want to apply to the specified object. Valid values are `ON` and `OFF`.
@@ -144,6 +145,8 @@ Default is `false`. This value should be set to `true` only if the bucket has S3
 * `object_lock_retain_until_date` - (Optional) The date and time, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8), when this object's object lock will [expire](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-periods).
 
 If no content is provided through `source`, `content` or `content_base64`, then the object will be empty.
+
+-> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
 ## Attributes Reference
 

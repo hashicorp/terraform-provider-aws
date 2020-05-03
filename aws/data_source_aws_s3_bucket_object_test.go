@@ -50,6 +50,30 @@ func TestAccDataSourceAWSS3BucketObject_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSS3BucketObject_basicViaAccessPoint(t *testing.T) {
+	var dsObj, rObj s3.GetObjectOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	datasourceName := "data.aws_s3_bucket_object.test"
+	resourceName := "aws_s3_bucket_object.test"
+	accessPointResourceName := "aws_s3_access_point.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDataSourceS3ObjectConfig_basicViaAccessPoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsS3ObjectDataSourceExists(datasourceName, &dsObj),
+					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
+					resource.TestCheckResourceAttrPair(datasourceName, "bucket", accessPointResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "key", resourceName, "key"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSourceAWSS3BucketObject_readableBody(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_readableBody(rInt)
@@ -255,6 +279,101 @@ func TestAccDataSourceAWSS3BucketObject_ObjectLockLegalHoldOn(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSS3BucketObject_LeadingSlash(t *testing.T) {
+	var rObj s3.GetObjectOutput
+	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
+	resourceName := "aws_s3_bucket_object.object"
+	dataSourceName1 := "data.aws_s3_bucket_object.obj1"
+	dataSourceName2 := "data.aws_s3_bucket_object.obj2"
+	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
+	rInt := acctest.RandInt()
+	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_leadingSlash(rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { testAccPreCheck(t) },
+		Providers:                 testAccProviders,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: resourceOnlyConf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
+				),
+			},
+			{
+				Config: conf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName1, &dsObj1),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_type", "text/plain"),
+					resource.TestCheckResourceAttr(dataSourceName1, "etag", "a6105c0a611b41b08f1209506350279e"),
+					resource.TestMatchResourceAttr(dataSourceName1, "last_modified",
+						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
+					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName2, &dsObj2),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_type", "text/plain"),
+					resource.TestCheckResourceAttr(dataSourceName2, "etag", "a6105c0a611b41b08f1209506350279e"),
+					resource.TestMatchResourceAttr(dataSourceName2, "last_modified",
+						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
+					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName3, &dsObj3),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_type", "text/plain"),
+					resource.TestCheckResourceAttr(dataSourceName3, "etag", "a6105c0a611b41b08f1209506350279e"),
+					resource.TestMatchResourceAttr(dataSourceName3, "last_modified",
+						regexp.MustCompile("^[a-zA-Z]{3}, [0-9]+ [a-zA-Z]+ [0-9]{4} [0-9:]+ [A-Z]+$")),
+					resource.TestCheckResourceAttr(dataSourceName3, "body", "yes"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAWSS3BucketObject_MultipleSlashes(t *testing.T) {
+	var rObj1, rObj2 s3.GetObjectOutput
+	var dsObj1, dsObj2, dsObj3 s3.GetObjectOutput
+	resourceName1 := "aws_s3_bucket_object.object1"
+	resourceName2 := "aws_s3_bucket_object.object2"
+	dataSourceName1 := "data.aws_s3_bucket_object.obj1"
+	dataSourceName2 := "data.aws_s3_bucket_object.obj2"
+	dataSourceName3 := "data.aws_s3_bucket_object.obj3"
+	rInt := acctest.RandInt()
+	resourceOnlyConf, conf := testAccAWSDataSourceS3ObjectConfig_multipleSlashes(rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { testAccPreCheck(t) },
+		Providers:                 testAccProviders,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{
+				Config: resourceOnlyConf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSS3BucketObjectExists(resourceName1, &rObj1),
+					testAccCheckAWSS3BucketObjectExists(resourceName2, &rObj2),
+				),
+			},
+			{
+				Config: conf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName1, &dsObj1),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_type", "text/plain"),
+					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
+					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName2, &dsObj2),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_type", "text/plain"),
+					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
+					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName3, &dsObj3),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_length", "2"),
+					resource.TestCheckResourceAttr(dataSourceName3, "content_type", "text/plain"),
+					resource.TestCheckResourceAttr(dataSourceName3, "body", "no"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsS3ObjectDataSourceExists(n string, obj *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -303,6 +422,30 @@ data "aws_s3_bucket_object" "obj" {
 `, resources, randInt, randInt)
 
 	return resources, both
+}
+
+func testAccAWSDataSourceS3ObjectConfig_basicViaAccessPoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_access_point" "test" {
+  bucket = "${aws_s3_bucket.test.bucket}"
+  name   = %[1]q
+}
+
+resource "aws_s3_bucket_object" "test" {
+  bucket  = "${aws_s3_bucket.test.bucket}"
+  key     = %[1]q
+  content = "Hello World"
+}
+
+data "aws_s3_bucket_object" "test" {
+  bucket = "${aws_s3_access_point.test.arn}"
+  key    = "${aws_s3_bucket_object.test.key}"
+}
+`, rName)
 }
 
 func testAccAWSDataSourceS3ObjectConfig_readableBody(randInt int) (string, string) {
@@ -453,6 +596,75 @@ data "aws_s3_bucket_object" "obj" {
   key = "tf-testing-obj-%d"
 }
 `, resources, randInt, randInt)
+
+	return resources, both
+}
+
+func testAccAWSDataSourceS3ObjectConfig_leadingSlash(randInt int) (string, string) {
+	resources := fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+resource "aws_s3_bucket_object" "object" {
+  bucket = "${aws_s3_bucket.object_bucket.bucket}"
+  key = "//tf-testing-obj-%d-readable"
+  content = "yes"
+  content_type = "text/plain"
+}
+`, randInt, randInt)
+
+	both := fmt.Sprintf(`%s
+data "aws_s3_bucket_object" "obj1" {
+  bucket = "tf-object-test-bucket-%d"
+  key = "tf-testing-obj-%d-readable"
+}
+data "aws_s3_bucket_object" "obj2" {
+  bucket = "tf-object-test-bucket-%d"
+  key = "/tf-testing-obj-%d-readable"
+}
+data "aws_s3_bucket_object" "obj3" {
+  bucket = "tf-object-test-bucket-%d"
+  key = "//tf-testing-obj-%d-readable"
+}
+`, resources, randInt, randInt, randInt, randInt, randInt, randInt)
+
+	return resources, both
+}
+
+func testAccAWSDataSourceS3ObjectConfig_multipleSlashes(randInt int) (string, string) {
+	resources := fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%d"
+}
+resource "aws_s3_bucket_object" "object1" {
+  bucket = "${aws_s3_bucket.object_bucket.bucket}"
+  key = "first//second///third//"
+  content = "yes"
+  content_type = "text/plain"
+}
+# Without a trailing slash.
+resource "aws_s3_bucket_object" "object2" {
+  bucket = "${aws_s3_bucket.object_bucket.bucket}"
+  key = "/first////second/third"
+  content = "no"
+  content_type = "text/plain"
+}
+`, randInt)
+
+	both := fmt.Sprintf(`%s
+data "aws_s3_bucket_object" "obj1" {
+  bucket = "tf-object-test-bucket-%d"
+  key = "first/second/third/"
+}
+data "aws_s3_bucket_object" "obj2" {
+  bucket = "tf-object-test-bucket-%d"
+  key = "first//second///third//"
+}
+data "aws_s3_bucket_object" "obj3" {
+  bucket = "tf-object-test-bucket-%d"
+  key = "first/second/third"
+}
+`, resources, randInt, randInt, randInt)
 
 	return resources, both
 }
