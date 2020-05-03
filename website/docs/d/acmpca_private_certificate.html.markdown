@@ -1,7 +1,7 @@
 ---
+subcategory: "ACM PCA"
 layout: "aws"
 page_title: "AWS: aws_acmpca_private_certificate"
-sidebar_current: "docs-aws-datasource-acmpca-private-certificate"
 description: |-
   Get information on a AWS Certificate Manager Private Certificate Issuing
 ---
