@@ -113,17 +113,7 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 
 	log.Printf("[DEBUG] ACMPCA Issue Certificate: %s", input)
 	var output *acmpca.IssueCertificateOutput
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		output, err = conn.IssueCertificate(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		output, err = conn.IssueCertificate(input)
-	}
+	output, err := conn.IssueCertificate(input)
 	if err != nil {
 		return fmt.Errorf("error issuing ACMPCA Certificate: %s", err)
 	}
