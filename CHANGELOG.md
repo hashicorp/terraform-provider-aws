@@ -1,3 +1,8 @@
+FEATURES:
+
+* **New Data Source:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
+* **New Resource:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
+
 ## 2.61.0 (Unreleased)
 
 FEATURES:
@@ -818,11 +823,6 @@ BUG FIXES:
 * resource/aws_servicequotas_service_quota: Remove resource from Terraform state on `NoSuchResourceException` error ([#10735](https://github.com/terraform-providers/terraform-provider-aws/issues/10735))
 
 ## 2.36.0 (November 14, 2019)
-
-FEATURES:
-
-* **New Data Source:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
-* **New Resource:** `aws_acmpca_private_certificate` ([#10183](https://github.com/terraform-providers/terraform-provider-aws/issues/10183))
 
 ENHANCEMENTS:
 
