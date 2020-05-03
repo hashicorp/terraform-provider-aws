@@ -255,7 +255,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).swfconn
+	conn := meta.(*AWSClient).syntheticsconn
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
