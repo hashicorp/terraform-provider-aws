@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -16,6 +17,10 @@ import (
 func resourceAwsBudgetsBudget() *schema.Resource {
 	return &schema.Resource{
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"account_id": {
 				Type:         schema.TypeString,
 				Computed:     true,
@@ -39,6 +44,14 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 			"budget_type": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					budgets.BudgetTypeCost,
+					budgets.BudgetTypeRiCoverage,
+					budgets.BudgetTypeRiUtilization,
+					budgets.BudgetTypeSavingsPlansCoverage,
+					budgets.BudgetTypeSavingsPlansUtilization,
+					budgets.BudgetTypeUsage,
+				}, false),
 			},
 			"limit_amount": {
 				Type:     schema.TypeString,
@@ -125,6 +138,12 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 			"time_unit": {
 				Type:     schema.TypeString,
 				Required: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					budgets.TimeUnitAnnually,
+					budgets.TimeUnitDaily,
+					budgets.TimeUnitMonthly,
+					budgets.TimeUnitQuarterly,
+				}, false),
 			},
 			"cost_filters": {
 				Type:     schema.TypeMap,
@@ -174,7 +193,10 @@ func resourceAwsBudgetsBudget() *schema.Resource {
 						"subscriber_sns_topic_arns": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validateArn,
+							},
 						},
 					},
 				},
@@ -350,6 +372,14 @@ func resourceAwsBudgetsBudgetRead(d *schema.ResourceData, meta interface{}) erro
 
 	d.Set("time_unit", budget.TimeUnit)
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "budgetservice",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("budget/%s", aws.StringValue(budget.BudgetName)),
+	}
+	d.Set("arn", arn.String())
+
 	return resourceAwsBudgetsBudgetNotificationRead(d, meta)
 }
 
@@ -402,9 +432,9 @@ func resourceAwsBudgetsBudgetNotificationRead(d *schema.ResourceData, meta inter
 		emailSubscribers := make([]interface{}, 0)
 
 		for _, subscriberOutput := range subscribersOutput.Subscribers {
-			if *subscriberOutput.SubscriptionType == budgets.SubscriptionTypeSns {
+			if aws.StringValue(subscriberOutput.SubscriptionType) == budgets.SubscriptionTypeSns {
 				snsSubscribers = append(snsSubscribers, *subscriberOutput.Address)
-			} else if *subscriberOutput.SubscriptionType == budgets.SubscriptionTypeEmail {
+			} else if aws.StringValue(subscriberOutput.SubscriptionType) == budgets.SubscriptionTypeEmail {
 				emailSubscribers = append(emailSubscribers, *subscriberOutput.Address)
 			}
 		}
