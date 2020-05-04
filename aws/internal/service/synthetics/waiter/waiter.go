@@ -15,7 +15,7 @@ const (
 // CanaryReady waits for a Canary to return Ready
 func CanaryReady(conn *synthetics.Synthetics, name string) (*synthetics.GetCanaryOutput, error) {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{synthetics.CanaryStateCreating},
+		Pending: []string{synthetics.CanaryStateCreating, synthetics.CanaryStateUpdating},
 		Target:  []string{synthetics.CanaryStateReady},
 		Refresh: CanaryStatus(conn, name),
 		Timeout: CanaryCreatedTimeout,

@@ -320,6 +320,10 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("error updating Synthetics Canary: %s", err)
 		}
+
+		if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
+			return fmt.Errorf("error waiting for Synthetics Canary (%s) updating: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
