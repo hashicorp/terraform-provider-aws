@@ -84,11 +84,13 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"timeout_in_seconds": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -102,6 +104,9 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 						"expression": {
 							Type:     schema.TypeString,
 							Required: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return new == "rate(0 minute)" && old == "rate(0 hour)"
+							},
 						},
 						"duration_in_seconds": {
 							Type:     schema.TypeInt,

@@ -36,7 +36,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"code"},
+				ImportStateVerifyIgnore: []string{"zip_file"},
 			},
 		},
 	})
@@ -62,9 +62,10 @@ func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file"},
 			},
 			{
 				Config: testAccAWSSyntheticsCanaryConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -224,7 +225,6 @@ resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
-
   handler  = "exports.handler"
   zip_file = "test-fixtures/lambdatest.zip"
 
@@ -236,9 +236,13 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
-  name = %[1]q
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
 
   tags = {
     %[2]q = %[3]q
@@ -248,9 +252,13 @@ resource "aws_synthetics_canary" "test" {
 }
 
 func testAccAWSSyntheticsCanaryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
-  name = %[1]q
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler              = "exports.handler"
+  zip_file             = "test-fixtures/lambdatest.zip"
 
   tags = {
     %[2]q = %[3]q
