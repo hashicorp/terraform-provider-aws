@@ -42,6 +42,52 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSyntheticsCanary_vpc(t *testing.T) {
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
+	resourceName := "aws_synthetics_canary.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsSyntheticsCanaryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSyntheticsCanaryVPCConfig1(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_config.0.vpc_config.0.vpc_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"zip_file"},
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryVPCConfig2(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "2"),
+				),
+			},
+			{
+				Config: testAccAWSSyntheticsCanaryVPCConfig3(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsSyntheticsCanaryExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSyntheticsCanary_tags(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(8))
 	resourceName := "aws_synthetics_canary.test"
@@ -231,6 +277,144 @@ resource "aws_synthetics_canary" "test" {
   schedule {
     expression = "rate(0 minute)"
   }
+}
+`, rName)
+}
+
+func testAccAWSSyntheticsCanaryVPCConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_subnet" "test1" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 0)}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test2" {
+  vpc_id            = "${aws_vpc.test.id}"
+  cidr_block        = "${cidrsubnet(aws_vpc.test.cidr_block, 2, 1)}"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test1" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test2" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+  role       = "${aws_iam_role.test.name}"
+}
+`, rName)
+}
+
+func testAccAWSSyntheticsCanaryVPCConfig1(rName string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) +
+		testAccAWSSyntheticsCanaryVPCConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler  = "exports.handler"
+  zip_file = "test-fixtures/lambdatest.zip"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  vpc_config {
+    subnet_ids         = ["${aws_subnet.test1.id}"]
+    security_group_ids = ["${aws_security_group.test1.id}"]
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+}
+`, rName)
+}
+
+func testAccAWSSyntheticsCanaryVPCConfig2(rName string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) +
+		testAccAWSSyntheticsCanaryVPCConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler  = "exports.handler"
+  zip_file = "test-fixtures/lambdatest.zip"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  vpc_config {
+    subnet_ids         = ["${aws_subnet.test1.id}", "${aws_subnet.test2.id}"]
+    security_group_ids = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+
+}
+`, rName)
+}
+
+func testAccAWSSyntheticsCanaryVPCConfig3(rName string) string {
+	return testAccAWSSyntheticsCanaryConfigBase(rName) +
+		testAccAWSSyntheticsCanaryVPCConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_synthetics_canary" "test" {
+  name                 = %[1]q
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
+  execution_role_arn   = aws_iam_role.test.arn
+  handler  = "exports.handler"
+  zip_file = "test-fixtures/lambdatest.zip"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
+  vpc_config {
+    subnet_ids         = ["${aws_subnet.test2.id}"]
+    security_group_ids = ["${aws_security_group.test2.id}"]
+  }
+
+  depends_on = ["aws_iam_role_policy_attachment.test"]
 }
 `, rName)
 }

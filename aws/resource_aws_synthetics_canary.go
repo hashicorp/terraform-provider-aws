@@ -65,6 +65,10 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Optional:      true,
 				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_version"},
 			},
+			"source_location_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"execution_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -135,7 +139,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 						},
 						"vpc_id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -234,6 +238,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
 	d.Set("handler", canary.Code.Handler)
+	d.Set("source_location_arn", canary.Code.SourceLocationArn)
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
