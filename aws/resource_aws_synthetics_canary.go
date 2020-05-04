@@ -240,7 +240,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 		Service:   "synthetics",
 		Region:    meta.(*AWSClient).region,
 		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("canary/%s", aws.StringValue(canary.Name)),
+		Resource:  fmt.Sprintf("canary:%s", aws.StringValue(canary.Name)),
 	}.String()
 
 	d.Set("arn", arn)

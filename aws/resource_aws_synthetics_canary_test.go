@@ -27,7 +27,7 @@ func TestAccAWSSyntheticsCanary_basic(t *testing.T) {
 				Config: testAccAWSSyntheticsCanaryBasicConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAwsSyntheticsCanaryExists(resourceName),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "synthetics", regexp.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -244,6 +244,10 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
 
+  schedule {
+    expression = "rate(0 minute)"
+  }
+
   tags = {
     %[2]q = %[3]q
   }
@@ -259,6 +263,10 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
+
+  schedule {
+    expression = "rate(0 minute)"
+  }
 
   tags = {
     %[2]q = %[3]q
