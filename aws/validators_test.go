@@ -2250,7 +2250,7 @@ func TestValidateSSMDocumentPermissions(t *testing.T) {
 	}
 
 	for _, s := range invalidValues {
-		errors := validateCognitoRoles(s)
+		errors := validateSSMDocumentPermissions(s)
 		if len(errors) == 0 {
 			t.Fatalf("%q should not be valid SSM Document Permissions: %v", s, errors)
 		}
