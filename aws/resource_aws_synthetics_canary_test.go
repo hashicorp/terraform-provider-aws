@@ -219,7 +219,7 @@ func testAccAWSSyntheticsCanaryBasicConfig(rName string) string {
 	return testAccAWSSyntheticsCanaryConfigBase(rName) + fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
-  artifact_s3_location = aws_s3_bucket.test.arn
+  artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
 
   code {

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -34,6 +35,9 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.TrimPrefix(old, "s3://") == new
+				},
 			},
 			"code": {
 				Type:     schema.TypeList,
@@ -92,7 +96,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"duration_in_seconds": {
+						"timeout_in_seconds": {
 							Type:     schema.TypeInt,
 							Required: true,
 						},
