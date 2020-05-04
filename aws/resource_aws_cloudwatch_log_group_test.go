@@ -21,7 +21,7 @@ func init() {
 		Dependencies: []string{
 			"aws_api_gateway_rest_api",
 			"aws_cloudhsm_v2_cluster",
-			// Not currently implemented: "aws_cloudtrail",
+			"aws_cloudtrail",
 			"aws_datasync_task",
 			"aws_db_instance",
 			"aws_directory_service_directory",
