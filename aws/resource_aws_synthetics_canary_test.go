@@ -102,6 +102,9 @@ func testAccCheckAwsSyntheticsCanaryDestroy(s *terraform.State) error {
 
 		_, err := conn.GetCanary(input)
 		if err != nil {
+			if isAWSErr(err, synthetics.ErrCodeResourceNotFoundException, "") {
+				return nil
+			}
 			return err
 		}
 	}

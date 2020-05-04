@@ -36,7 +36,7 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return strings.TrimPrefix(old, "s3://") == new
+					return strings.TrimPrefix(new, "s3://") == old
 				},
 			},
 			"code": {
@@ -51,24 +51,24 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 							Required: true,
 						},
 						"s3_bucket": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"code.0.zip_file"},
 						},
 						"s3_key": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"code.0.zip_file"},
 						},
 						"s3_version": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"code.0.zip_file"},
 						},
 						"zip_file": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"source_location_arn": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:          schema.TypeString,
+							Optional:      true,
+							ConflictsWith: []string{"code.0.s3_bucket", "code.0.s3_key", "code.0.s3_version"},
 						},
 					},
 				},
@@ -98,7 +98,8 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"timeout_in_seconds": {
 							Type:     schema.TypeInt,
-							Required: true,
+							Optional: true,
+							Default:  840,
 						},
 					},
 				},
@@ -280,6 +281,15 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 		updateFlag = true
 	}
 
+	if d.HasChange("code") {
+		code, err := expandAwsSyntheticsCanaryCode(d.Get("code").([]interface{}))
+		if err != nil {
+			return err
+		}
+		input.Code = code
+		updateFlag = true
+	}
+
 	if d.HasChange("run_config") {
 		input.RunConfig = expandAwsSyntheticsCanaryRunConfig(d.Get("run_config").([]interface{}))
 		updateFlag = true
@@ -375,8 +385,7 @@ func flattenAwsSyntheticsCanaryCode(canaryCodeOut *synthetics.CanaryCodeOutput) 
 	}
 
 	m := map[string]interface{}{
-		"handler":             aws.StringValue(canaryCodeOut.Handler),
-		"source_location_arn": aws.StringValue(canaryCodeOut.SourceLocationArn),
+		"handler": aws.StringValue(canaryCodeOut.Handler),
 	}
 
 	return []interface{}{m}
