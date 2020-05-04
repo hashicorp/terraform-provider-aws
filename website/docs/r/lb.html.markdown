@@ -83,12 +83,12 @@ resource "aws_lb" "example" {
 
   subnet_mapping {
     subnet_id     = "${aws_subnet.example1.id}"
-    private_ivp4_address = "10.0.1.15"
+    private_ipv4_address = "10.0.1.15"
   }
 
   subnet_mapping {
     subnet_id     = "${aws_subnet.example2.id}"
-    private_ivp4_address = "10.0.2.15"
+    private_ipv4_address = "10.0.2.15"
   }
 }
 ```
