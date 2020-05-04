@@ -89,25 +89,12 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 			},
 
 			"roles": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeMap,
 				Required: true,
 				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authenticated": {
-							Type:         schema.TypeString,
-							ValidateFunc: validateArn,
-							Optional:     true,
-							AtLeastOneOf: []string{"roles.0.authenticated", "roles.0.unauthenticated"},
-						},
-						"unauthenticated": {
-							Type:         schema.TypeString,
-							ValidateFunc: validateArn,
-							Optional:     true,
-							AtLeastOneOf: []string{"roles.0.authenticated", "roles.0.unauthenticated"},
-						},
-					},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
 				},
 			},
 		},
@@ -117,9 +104,15 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoconn
 
+	// Validates role keys to be either authenticated or unauthenticated,
+	// since ValidateFunc validates only the value not the key.
+	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+		return fmt.Errorf("Error validating Roles: %v", errors)
+	}
+
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandCognitoIdentityPoolRoles(d.Get("roles").([]interface{})),
+		Roles:          expandCognitoIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
 	}
 
 	if v, ok := d.GetOk("role_mapping"); ok {
@@ -173,9 +166,15 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cognitoconn
 
+	// Validates role keys to be either authenticated or unauthenticated,
+	// since ValidateFunc validates only the value not the key.
+	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
+		return fmt.Errorf("Error validating Roles: %v", errors)
+	}
+
 	params := &cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandCognitoIdentityPoolRoles(d.Get("roles").([]interface{})),
+		Roles:          expandCognitoIdentityPoolRoles(d.Get("roles").(map[string]interface{})),
 	}
 
 	if d.HasChange("role_mapping") {
@@ -213,7 +212,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentDelete(d *schema.ResourceData,
 
 	_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
 		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-		Roles:          expandCognitoIdentityPoolRoles(make([]interface{}, 0)),
+		Roles:          expandCognitoIdentityPoolRoles(make(map[string]interface{})),
 		RoleMappings:   expandCognitoIdentityPoolRoleMappingsAttachment([]interface{}{}),
 	})
 

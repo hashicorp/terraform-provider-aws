@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -1777,6 +1778,26 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 	return
 }
 
+// Validates that type and account_ids are defined
+func validateSSMDocumentPermissions(v map[string]interface{}) (errors []error) {
+	k := "permissions"
+	t, hasType := v["type"].(string)
+	_, hasAccountIds := v["account_ids"].(string)
+
+	if hasType {
+		if t != ssm.DocumentPermissionTypeShare {
+			errors = append(errors, fmt.Errorf("%q: only %s \"type\" supported", k, ssm.DocumentPermissionTypeShare))
+		}
+	} else {
+		errors = append(errors, fmt.Errorf("%q: \"type\" must be defined", k))
+	}
+	if !hasAccountIds {
+		errors = append(errors, fmt.Errorf("%q: \"account_ids\" must be defined", k))
+	}
+
+	return
+}
+
 func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
 	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
 	value := v.(string)
@@ -1937,6 +1958,19 @@ func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string
 
 	if !regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
+	}
+
+	return
+}
+
+// Validates that either authenticated or unauthenticated is defined
+func validateCognitoRoles(v map[string]interface{}) (errors []error) {
+	k := "roles"
+	_, hasAuthenticated := v["authenticated"].(string)
+	_, hasUnauthenticated := v["unauthenticated"].(string)
+
+	if !hasAuthenticated && !hasUnauthenticated {
+		errors = append(errors, fmt.Errorf("%q: Either \"authenticated\" or \"unauthenticated\" must be defined", k))
 	}
 
 	return

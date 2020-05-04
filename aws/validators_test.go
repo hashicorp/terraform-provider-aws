@@ -2217,6 +2217,46 @@ func TestValidateIamRoleDescription(t *testing.T) {
 	}
 }
 
+func TestValidateSSMDocumentPermissions(t *testing.T) {
+	validValues := []map[string]interface{}{
+		{
+			"type":        "Share",
+			"account_ids": "123456789012,123456789014",
+		},
+		{
+			"type":        "Share",
+			"account_ids": "all",
+		},
+	}
+
+	for _, s := range validValues {
+		errors := validateSSMDocumentPermissions(s)
+		if len(errors) > 0 {
+			t.Fatalf("%q should be valid SSM Document Permissions: %v", s, errors)
+		}
+	}
+
+	invalidValues := []map[string]interface{}{
+		{},
+		{"type": ""},
+		{"type": "Share"},
+		{"account_ids": ""},
+		{"account_ids": "all"},
+		{"type": "", "account_ids": ""},
+		{"type": "", "account_ids": "all"},
+		{"type": "share", "account_ids": ""},
+		{"type": "share", "account_ids": "all"},
+		{"type": "private", "account_ids": "all"},
+	}
+
+	for _, s := range invalidValues {
+		errors := validateCognitoRoles(s)
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be valid SSM Document Permissions: %v", s, errors)
+		}
+	}
+}
+
 func TestValidateAwsSSMName(t *testing.T) {
 	validNames := []string{
 		".foo-bar_123",
@@ -2411,6 +2451,33 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 		_, errors := validateSecurityGroupRuleDescription(v, "description")
 		if len(errors) == 0 {
 			t.Fatalf("%q should be an invalid security group rule description", v)
+		}
+	}
+}
+
+func TestValidateCognitoRoles(t *testing.T) {
+	validValues := []map[string]interface{}{
+		{"authenticated": "hoge"},
+		{"unauthenticated": "hoge"},
+		{"authenticated": "hoge", "unauthenticated": "hoge"},
+	}
+
+	for _, s := range validValues {
+		errors := validateCognitoRoles(s)
+		if len(errors) > 0 {
+			t.Fatalf("%q should be a valid Cognito Roles: %v", s, errors)
+		}
+	}
+
+	invalidValues := []map[string]interface{}{
+		{},
+		{"invalid": "hoge"},
+	}
+
+	for _, s := range invalidValues {
+		errors := validateCognitoRoles(s)
+		if len(errors) == 0 {
+			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
 		}
 	}
 }

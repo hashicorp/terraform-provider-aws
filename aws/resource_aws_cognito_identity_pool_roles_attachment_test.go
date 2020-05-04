@@ -28,7 +28,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
 					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.0.authenticated"),
+					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.authenticated"),
 				),
 			},
 			{
@@ -36,7 +36,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
 					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.0.authenticated"),
+					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.authenticated"),
 				),
 			},
 		},
@@ -57,7 +57,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
 					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
 					resource.TestCheckResourceAttr("aws_cognito_identity_pool_roles_attachment.main", "role_mapping.#", "0"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.0.authenticated"),
+					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.authenticated"),
 				),
 			},
 			{
@@ -66,7 +66,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
 					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
 					resource.TestCheckResourceAttr("aws_cognito_identity_pool_roles_attachment.main", "role_mapping.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.0.authenticated"),
+					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.authenticated"),
 				),
 			},
 			{
@@ -75,7 +75,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
 					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
 					resource.TestCheckResourceAttr("aws_cognito_identity_pool_roles_attachment.main", "role_mapping.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.0.authenticated"),
+					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.authenticated"),
 				),
 			},
 			{
@@ -84,7 +84,7 @@ func TestAccAWSCognitoIdentityPoolRolesAttachment_roleMappings(t *testing.T) {
 					testAccCheckAWSCognitoIdentityPoolRolesAttachmentExists("aws_cognito_identity_pool_roles_attachment.main"),
 					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "identity_pool_id"),
 					resource.TestCheckResourceAttr("aws_cognito_identity_pool_roles_attachment.main", "role_mapping.#", "0"),
-					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.0.authenticated"),
+					resource.TestCheckResourceAttrSet("aws_cognito_identity_pool_roles_attachment.main", "roles.authenticated"),
 				),
 			},
 		},
@@ -304,8 +304,8 @@ func testAccAWSCognitoIdentityPoolRolesAttachmentConfig_basic(name string) strin
 resource "aws_cognito_identity_pool_roles_attachment" "main" {
   identity_pool_id = "${aws_cognito_identity_pool.main.id}"
 
-  roles {
-    authenticated = "${aws_iam_role.authenticated.arn}"
+  roles = {
+    "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
 `)
@@ -329,8 +329,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
-    authenticated = "${aws_iam_role.authenticated.arn}"
+  roles = {
+    "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
 `)
@@ -361,8 +361,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
-    authenticated = "${aws_iam_role.authenticated.arn}"
+  roles = {
+    "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
 `)
@@ -385,8 +385,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles  {
-    authenticated = "${aws_iam_role.authenticated.arn}"
+  roles = {
+    "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
 `)
@@ -403,8 +403,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     type                      = "Rules"
   }
 
-  roles {
-    authenticated = "${aws_iam_role.authenticated.arn}"
+  roles = {
+    "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
 `)
@@ -428,8 +428,8 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
-    authenticated = "${aws_iam_role.authenticated.arn}"
+  roles = {
+    "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
 `)

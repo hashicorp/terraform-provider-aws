@@ -3773,24 +3773,21 @@ type GroupIdentifier struct {
 	Description *string
 }
 
-func expandCognitoIdentityPoolRoles(config []interface{}) map[string]*string {
-	m := make(map[string]*string)
-	if len(config) > 0 {
-		for k, v := range config[0].(map[string]interface{}) {
-			if len(v.(string)) > 0 {
-				m[k] = aws.String(v.(string))
-			}
-		}
+func expandCognitoIdentityPoolRoles(config map[string]interface{}) map[string]*string {
+	m := map[string]*string{}
+	for k, v := range config {
+		s := v.(string)
+		m[k] = &s
 	}
 	return m
 }
 
-func flattenCognitoIdentityPoolRoles(config map[string]*string) []interface{} {
-	m := make(map[string]string)
+func flattenCognitoIdentityPoolRoles(config map[string]*string) map[string]string {
+	m := map[string]string{}
 	for k, v := range config {
-		m[k] = aws.StringValue(v)
+		m[k] = *v
 	}
-	return []interface{}{m}
+	return m
 }
 
 func expandCognitoIdentityPoolRoleMappingsAttachment(rms []interface{}) map[string]*cognitoidentity.RoleMapping {
