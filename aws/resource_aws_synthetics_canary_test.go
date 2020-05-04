@@ -225,10 +225,8 @@ resource "aws_synthetics_canary" "test" {
   artifact_s3_location = "s3://${aws_s3_bucket.test.bucket}/"
   execution_role_arn   = aws_iam_role.test.arn
 
-  code {
-    handler  = "exports.handler"
-    zip_file = "test-fixtures/lambdatest.zip"
-  }
+  handler  = "exports.handler"
+  zip_file = "test-fixtures/lambdatest.zip"
 
   schedule {
     expression = "rate(0 minute)"

@@ -39,39 +39,29 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 					return strings.TrimPrefix(new, "s3://") == old
 				},
 			},
-			"code": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
+			"handler": {
+				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"handler": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"s3_bucket": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"code.0.zip_file"},
-						},
-						"s3_key": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"code.0.zip_file"},
-						},
-						"s3_version": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"code.0.zip_file"},
-						},
-						"zip_file": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							ConflictsWith: []string{"code.0.s3_bucket", "code.0.s3_key", "code.0.s3_version"},
-						},
-					},
-				},
+			},
+			"s3_bucket": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"zip_file"},
+			},
+			"s3_key": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"zip_file"},
+			},
+			"s3_version": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"zip_file"},
+			},
+			"zip_file": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"s3_bucket", "s3_key", "s3_version"},
 			},
 			"execution_role_arn": {
 				Type:         schema.TypeString,
@@ -99,7 +89,6 @@ func resourceAwsSyntheticsCanary() *schema.Resource {
 						"timeout_in_seconds": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  840,
 						},
 					},
 				},
@@ -175,7 +164,7 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 		input.Tags = keyvaluetags.New(v).IgnoreAws().SyntheticsTags()
 	}
 
-	code, err := expandAwsSyntheticsCanaryCode(d.Get("code").([]interface{}))
+	code, err := expandAwsSyntheticsCanaryCode(d)
 	if err != nil {
 		return err
 	}
@@ -233,6 +222,7 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("artifact_s3_location", canary.ArtifactS3Location)
 	d.Set("failure_retention_period", canary.FailureRetentionPeriodInDays)
 	d.Set("success_retention_period", canary.SuccessRetentionPeriodInDays)
+	d.Set("handler", canary.Code.Handler)
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -243,10 +233,6 @@ func resourceAwsSyntheticsCanaryRead(d *schema.ResourceData, meta interface{}) e
 	}.String()
 
 	d.Set("arn", arn)
-
-	if err := d.Set("code", flattenAwsSyntheticsCanaryCode(canary.Code)); err != nil {
-		return fmt.Errorf("error setting code: %s", err)
-	}
 
 	if err := d.Set("vpc_config", flattenAwsSyntheticsCanaryVpcConfig(canary.VpcConfig)); err != nil {
 		return fmt.Errorf("error setting vpc config: %s", err)
@@ -281,8 +267,8 @@ func resourceAwsSyntheticsCanaryUpdate(d *schema.ResourceData, meta interface{})
 		updateFlag = true
 	}
 
-	if d.HasChange("code") {
-		code, err := expandAwsSyntheticsCanaryCode(d.Get("code").([]interface{}))
+	if d.HasChanges("handler", "zip_file", "s3_bucket", "s3_key", "s3_version") {
+		code, err := expandAwsSyntheticsCanaryCode(d)
 		if err != nil {
 			return err
 		}
@@ -354,41 +340,23 @@ func resourceAwsSyntheticsCanaryDelete(d *schema.ResourceData, meta interface{})
 	return nil
 }
 
-func expandAwsSyntheticsCanaryCode(l []interface{}) (*synthetics.CanaryCodeInput, error) {
-	if len(l) == 0 || l[0] == nil {
-		return nil, nil
-	}
-
-	m := l[0].(map[string]interface{})
+func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCodeInput, error) {
 
 	codeConfig := &synthetics.CanaryCodeInput{
-		Handler: aws.String(m["handler"].(string)),
+		Handler: aws.String(d.Get("handler").(string)),
 	}
 
-	if v, ok := m["zip_file"]; ok {
+	if v, ok := d.GetOk("zip_file"); ok {
 		awsMutexKV.Lock(awsMutexCanary)
 		defer awsMutexKV.Unlock(awsMutexCanary)
 		file, err := loadFileContent(v.(string))
 		if err != nil {
 			return nil, fmt.Errorf("Unable to load %q: %s", v.(string), err)
 		}
-
 		codeConfig.ZipFile = file
 	}
 
 	return codeConfig, nil
-}
-
-func flattenAwsSyntheticsCanaryCode(canaryCodeOut *synthetics.CanaryCodeOutput) []interface{} {
-	if canaryCodeOut == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"handler": aws.StringValue(canaryCodeOut.Handler),
-	}
-
-	return []interface{}{m}
 }
 
 func expandAwsSyntheticsCanarySchedule(l []interface{}) *synthetics.CanaryScheduleInput {
