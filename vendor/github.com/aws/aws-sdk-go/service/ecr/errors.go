@@ -117,6 +117,12 @@ const (
 	// in the Amazon Elastic Container Registry User Guide.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
+	// ErrCodeReferencedImagesNotFoundException for service response error code
+	// "ReferencedImagesNotFoundException".
+	//
+	// The manifest list is referencing an image that does not exist.
+	ErrCodeReferencedImagesNotFoundException = "ReferencedImagesNotFoundException"
+
 	// ErrCodeRepositoryAlreadyExistsException for service response error code
 	// "RepositoryAlreadyExistsException".
 	//
@@ -164,6 +170,12 @@ const (
 	// of tags that can be applied to a repository is 50.
 	ErrCodeTooManyTagsException = "TooManyTagsException"
 
+	// ErrCodeUnsupportedImageTypeException for service response error code
+	// "UnsupportedImageTypeException".
+	//
+	// The image is of a type that cannot be scanned.
+	ErrCodeUnsupportedImageTypeException = "UnsupportedImageTypeException"
+
 	// ErrCodeUploadNotFoundException for service response error code
 	// "UploadNotFoundException".
 	//
@@ -189,6 +201,7 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"LifecyclePolicyPreviewInProgressException": newErrorLifecyclePolicyPreviewInProgressException,
 	"LifecyclePolicyPreviewNotFoundException":   newErrorLifecyclePolicyPreviewNotFoundException,
 	"LimitExceededException":                    newErrorLimitExceededException,
+	"ReferencedImagesNotFoundException":         newErrorReferencedImagesNotFoundException,
 	"RepositoryAlreadyExistsException":          newErrorRepositoryAlreadyExistsException,
 	"RepositoryNotEmptyException":               newErrorRepositoryNotEmptyException,
 	"RepositoryNotFoundException":               newErrorRepositoryNotFoundException,
@@ -196,5 +209,6 @@ var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
 	"ScanNotFoundException":                     newErrorScanNotFoundException,
 	"ServerException":                           newErrorServerException,
 	"TooManyTagsException":                      newErrorTooManyTagsException,
+	"UnsupportedImageTypeException":             newErrorUnsupportedImageTypeException,
 	"UploadNotFoundException":                   newErrorUploadNotFoundException,
 }

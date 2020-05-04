@@ -224,6 +224,7 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := cloudtrail.DescribeTrailsInput{
 		TrailNameList: []*string{
@@ -277,7 +278,7 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

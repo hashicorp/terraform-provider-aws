@@ -6,6 +6,7 @@ import (
 	"os"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -278,6 +279,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
 				),
 			},
@@ -808,6 +810,43 @@ func TestAccAWSInstance_vpc(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"associate_public_ip_address", "user_data"},
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_outpost(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"associate_public_ip_address"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigOutpost(outpostArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						resourceName, &v),
+					resource.TestCheckResourceAttr(
+						resourceName, "outpost_arn", outpostArn),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -2743,21 +2782,19 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	instanceType := "m1.small"
 
 	resource.ParallelTest(t, resource.TestCase{
 		// No subnet_id specified requires default VPC or EC2-Classic.
 		PreCheck: func() {
 			testAccPreCheck(t)
 			testAccPreCheckHasDefaultVpcOrEc2Classic(t)
-			testAccPreCheckOffersEc2InstanceType(t, instanceType)
 		},
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigMetadataOptions(rName, instanceType),
+				Config: testAccInstanceConfigMetadataOptions(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
@@ -2767,7 +2804,7 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstanceConfigMetadataOptionsUpdated(rName, instanceType),
+				Config: testAccInstanceConfigMetadataOptionsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "1"),
@@ -3360,6 +3397,41 @@ resource "aws_instance" "test" {
   user_data                   = "3dc39dda39be1205215e776bad998da361a5955d"
 }
 `)
+}
+
+func testAccInstanceConfigOutpost(outpostArn string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceOutpostConfig(outpostArn) + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                         = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type               = "m5.large"
+  subnet_id                   = "${aws_subnet.test.id}"
+
+  root_block_device {
+    volume_type = "gp2"
+    volume_size = 8
+  }
+}
+`)
+}
+
+func testAccAwsInstanceOutpostConfig(outpostArn string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+}
+
+resource "aws_subnet" "test" {
+  cidr_block              = "10.1.1.0/24"
+  vpc_id                  = "${aws_vpc.test.id}"
+  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
+  outpost_arn             = "%s"
+}
+`, outpostArn)
 }
 
 func testAccInstanceConfigPlacementGroup(rName string) string {
@@ -4599,11 +4671,14 @@ resource "aws_instance" "test" {
 `, hibernation)
 }
 
-func testAccInstanceConfigMetadataOptions(rName, instanceType string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+func testAccInstanceConfigMetadataOptions(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = %[2]q
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
     Name = %[1]q
@@ -4617,14 +4692,17 @@ resource "aws_instance" "test" {
 data "aws_instance" "test" {
   instance_id = aws_instance.test.id
 }
-`, rName, instanceType)
+`, rName))
 }
 
-func testAccInstanceConfigMetadataOptionsUpdated(rName, instanceType string) string {
-	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
+func testAccInstanceConfigMetadataOptionsUpdated(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = %[2]q
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   tags = {
     Name = %[1]q
@@ -4636,5 +4714,21 @@ resource "aws_instance" "test" {
     http_put_response_hop_limit = 2
   }
 }
-`, rName, instanceType)
+`, rName))
+}
+
+// testAccAvailableEc2InstanceTypeForRegion returns the configuration for a data source that describes
+// the first available EC2 instance type offering in the current region from a list of preferred instance types.
+// The data source is named 'available'.
+func testAccAvailableEc2InstanceTypeForRegion(preferredInstanceTypes ...string) string {
+	return fmt.Sprintf(`
+data "aws_ec2_instance_type_offering" "available" {
+  filter {
+    name   = "instance-type"
+    values = ["%[1]v"]
+  }
+
+  preferred_instance_types = ["%[1]v"]
+}
+`, strings.Join(preferredInstanceTypes, "\", \""))
 }

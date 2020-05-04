@@ -5328,6 +5328,9 @@ type AudioSelectorSettings struct {
 
 	// Audio Pid Selection
 	AudioPidSelection *AudioPidSelection `locationName:"audioPidSelection" type:"structure"`
+
+	// Audio Track Selection
+	AudioTrackSelection *AudioTrackSelection `locationName:"audioTrackSelection" type:"structure"`
 }
 
 // String returns the string representation
@@ -5353,6 +5356,11 @@ func (s *AudioSelectorSettings) Validate() error {
 			invalidParams.AddNested("AudioPidSelection", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.AudioTrackSelection != nil {
+		if err := s.AudioTrackSelection.Validate(); err != nil {
+			invalidParams.AddNested("AudioTrackSelection", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5369,6 +5377,103 @@ func (s *AudioSelectorSettings) SetAudioLanguageSelection(v *AudioLanguageSelect
 // SetAudioPidSelection sets the AudioPidSelection field's value.
 func (s *AudioSelectorSettings) SetAudioPidSelection(v *AudioPidSelection) *AudioSelectorSettings {
 	s.AudioPidSelection = v
+	return s
+}
+
+// SetAudioTrackSelection sets the AudioTrackSelection field's value.
+func (s *AudioSelectorSettings) SetAudioTrackSelection(v *AudioTrackSelection) *AudioSelectorSettings {
+	s.AudioTrackSelection = v
+	return s
+}
+
+// Audio Track
+type AudioTrack struct {
+	_ struct{} `type:"structure"`
+
+	// 1-based integer value that maps to a specific audio track
+	//
+	// Track is a required field
+	Track *int64 `locationName:"track" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s AudioTrack) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AudioTrack) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioTrack) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioTrack"}
+	if s.Track == nil {
+		invalidParams.Add(request.NewErrParamRequired("Track"))
+	}
+	if s.Track != nil && *s.Track < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Track", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTrack sets the Track field's value.
+func (s *AudioTrack) SetTrack(v int64) *AudioTrack {
+	s.Track = &v
+	return s
+}
+
+// Audio Track Selection
+type AudioTrackSelection struct {
+	_ struct{} `type:"structure"`
+
+	// Selects one or more unique audio tracks from within an mp4 source.
+	//
+	// Tracks is a required field
+	Tracks []*AudioTrack `locationName:"tracks" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AudioTrackSelection) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AudioTrackSelection) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioTrackSelection) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioTrackSelection"}
+	if s.Tracks == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tracks"))
+	}
+	if s.Tracks != nil {
+		for i, v := range s.Tracks {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tracks", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTracks sets the Tracks field's value.
+func (s *AudioTrackSelection) SetTracks(v []*AudioTrack) *AudioTrackSelection {
+	s.Tracks = v
 	return s
 }
 
@@ -10753,6 +10858,14 @@ type Fmp4HlsSettings struct {
 	// List all the audio groups that are used with the video output stream. Input
 	// all the audio GROUP-IDs that are associated to the video, separate by ','.
 	AudioRenditionSets *string `locationName:"audioRenditionSets" type:"string"`
+
+	// If set to passthrough, Nielsen inaudible tones for media tracking will be
+	// detected in the input audio and an equivalent ID3 tag will be inserted in
+	// the output.
+	NielsenId3Behavior *string `locationName:"nielsenId3Behavior" type:"string" enum:"Fmp4NielsenId3Behavior"`
+
+	// When set to passthrough, timed metadata is passed through from input to output.
+	TimedMetadataBehavior *string `locationName:"timedMetadataBehavior" type:"string" enum:"Fmp4TimedMetadataBehavior"`
 }
 
 // String returns the string representation
@@ -10768,6 +10881,18 @@ func (s Fmp4HlsSettings) GoString() string {
 // SetAudioRenditionSets sets the AudioRenditionSets field's value.
 func (s *Fmp4HlsSettings) SetAudioRenditionSets(v string) *Fmp4HlsSettings {
 	s.AudioRenditionSets = &v
+	return s
+}
+
+// SetNielsenId3Behavior sets the NielsenId3Behavior field's value.
+func (s *Fmp4HlsSettings) SetNielsenId3Behavior(v string) *Fmp4HlsSettings {
+	s.NielsenId3Behavior = &v
+	return s
+}
+
+// SetTimedMetadataBehavior sets the TimedMetadataBehavior field's value.
+func (s *Fmp4HlsSettings) SetTimedMetadataBehavior(v string) *Fmp4HlsSettings {
+	s.TimedMetadataBehavior = &v
 	return s
 }
 
@@ -11199,6 +11324,30 @@ func (s *H264ColorSpaceSettings) SetRec709Settings(v *Rec709Settings) *H264Color
 	return s
 }
 
+// H264 Filter Settings
+type H264FilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Temporal Filter Settings
+	TemporalFilterSettings *TemporalFilterSettings `locationName:"temporalFilterSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s H264FilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H264FilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetTemporalFilterSettings sets the TemporalFilterSettings field's value.
+func (s *H264FilterSettings) SetTemporalFilterSettings(v *TemporalFilterSettings) *H264FilterSettings {
+	s.TemporalFilterSettings = v
+	return s
+}
+
 // H264 Settings
 type H264Settings struct {
 	_ struct{} `type:"structure"`
@@ -11234,6 +11383,9 @@ type H264Settings struct {
 	// Entropy encoding mode. Use cabac (must be in Main or High profile) or cavlc.
 	EntropyEncoding *string `locationName:"entropyEncoding" type:"string" enum:"H264EntropyEncoding"`
 
+	// Settings associated with the specified filter.
+	FilterSettings *H264FilterSettings `locationName:"filterSettings" type:"structure"`
+
 	// Four bit AFD value to write on all frames of video in the output stream.
 	// Only valid when afdSignaling is set to 'Fixed'.
 	FixedAfd *string `locationName:"fixedAfd" type:"string" enum:"FixedAfd"`
@@ -11243,12 +11395,12 @@ type H264Settings struct {
 	FlickerAq *string `locationName:"flickerAq" type:"string" enum:"H264FlickerAq"`
 
 	// This setting applies only when scan type is "interlaced." It controls whether
-	// coding is on a field basis or a frame basis. (When the video is progressive,
-	// the coding is always on a frame basis.)enabled: Always code on a field basis,
-	// so that odd and even sets of fields are coded separately.disabled: Code the
-	// two sets of fields separately (on a field basis) or together (on a frame
-	// basis, using PAFF or MBAFF), depending on what is most appropriate for the
-	// content.
+	// coding is performed on a field basis or on a frame basis. (When the video
+	// is progressive, the coding is always performed on a frame basis.)enabled:
+	// Force MediaLive to code on a field basis, so that odd and even sets of fields
+	// are coded separately.disabled: Code the two sets of fields separately (on
+	// a field basis) or together (on a frame basis using PAFF), depending on what
+	// is most appropriate for the content.
 	ForceFieldPictures *string `locationName:"forceFieldPictures" type:"string" enum:"H264ForceFieldPictures"`
 
 	// This field indicates how the output video frame rate is specified. If "specified"
@@ -11326,6 +11478,11 @@ type H264Settings struct {
 
 	// H.264 Profile.
 	Profile *string `locationName:"profile" type:"string" enum:"H264Profile"`
+
+	// If set to "ENHANCEDQUALITY," improves visual quality at an increased output
+	// cost. If this video is being delivered to a MediaLive Multiplex, "ENHANCEDQUALITY"
+	// is always used.
+	QualityLevel *string `locationName:"qualityLevel" type:"string" enum:"H264QualityLevel"`
 
 	// Controls the target quality for the video encode. Applies only when the rate
 	// control mode is QVBR. Set values for the QVBR quality level field and Max
@@ -11478,6 +11635,12 @@ func (s *H264Settings) SetEntropyEncoding(v string) *H264Settings {
 	return s
 }
 
+// SetFilterSettings sets the FilterSettings field's value.
+func (s *H264Settings) SetFilterSettings(v *H264FilterSettings) *H264Settings {
+	s.FilterSettings = v
+	return s
+}
+
 // SetFixedAfd sets the FixedAfd field's value.
 func (s *H264Settings) SetFixedAfd(v string) *H264Settings {
 	s.FixedAfd = &v
@@ -11595,6 +11758,12 @@ func (s *H264Settings) SetParNumerator(v int64) *H264Settings {
 // SetProfile sets the Profile field's value.
 func (s *H264Settings) SetProfile(v string) *H264Settings {
 	s.Profile = &v
+	return s
+}
+
+// SetQualityLevel sets the QualityLevel field's value.
+func (s *H264Settings) SetQualityLevel(v string) *H264Settings {
+	s.QualityLevel = &v
 	return s
 }
 
@@ -12436,8 +12605,9 @@ type HlsGroupSettings struct {
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
 	// MANIFESTSANDSEGMENTS: Generates manifests (master manifest, if applicable,
-	// and media manifests) for this output group.SEGMENTSONLY: Does not generate
-	// any manifests for this output group.
+	// and media manifests) for this output group.VARIANTMANIFESTSANDSEGMENTS: Generates
+	// media manifests for this output group, but not a master manifest.SEGMENTSONLY:
+	// Does not generate any manifests for this output group.
 	OutputSelection *string `locationName:"outputSelection" type:"string" enum:"HlsOutputSelection"`
 
 	// Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files.
@@ -13195,8 +13365,7 @@ func (s *HlsWebdavSettings) SetRestartDelay(v int64) *HlsWebdavSettings {
 	return s
 }
 
-// Settings to configure an action so that it occurs immediately. This is only
-// supported for input switch actions currently.
+// Settings to configure an action so that it occurs as soon as possible.
 type ImmediateModeScheduleActionStartSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -16114,7 +16283,9 @@ type MsSmoothGroupSettings struct {
 	SendDelayMs *int64 `locationName:"sendDelayMs" type:"integer"`
 
 	// If set to scte35, use incoming SCTE-35 messages to generate a sparse track
-	// in this group of MS-Smooth outputs.
+	// in this group of MS-Smooth outputs. scte35WithoutSegmentation is the same
+	// as scte35, except EML will not start a new segment at a SCTE-35 marker. It
+	// will still encode an IDR frame at a SCTE-35 marker.
 	SparseTrackType *string `locationName:"sparseTrackType" type:"string" enum:"SmoothGroupSparseTrackType"`
 
 	// When set to send, send stream manifest so publishing point doesn't start
@@ -20833,6 +21004,41 @@ func (s *TeletextSourceSettings) SetPageNumber(v string) *TeletextSourceSettings
 	return s
 }
 
+// Temporal Filter Settings
+type TemporalFilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// If set to "ENABLED," applies post-filter sharpening to improve visual quality.
+	// This is most beneficial when using a noisy or compressed input source and
+	// low output bitrates.
+	PostFilterSharpening *string `locationName:"postFilterSharpening" type:"string" enum:"TemporalFilterPostFilterSharpening"`
+
+	// Filter strength. A higher value produces stronger filtering.
+	Strength *string `locationName:"strength" type:"string" enum:"TemporalFilterStrength"`
+}
+
+// String returns the string representation
+func (s TemporalFilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TemporalFilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetPostFilterSharpening sets the PostFilterSharpening field's value.
+func (s *TemporalFilterSettings) SetPostFilterSharpening(v string) *TemporalFilterSettings {
+	s.PostFilterSharpening = &v
+	return s
+}
+
+// SetStrength sets the Strength field's value.
+func (s *TemporalFilterSettings) SetStrength(v string) *TemporalFilterSettings {
+	s.Strength = &v
+	return s
+}
+
 // Timecode Config
 type TimecodeConfig struct {
 	_ struct{} `type:"structure"`
@@ -22986,6 +23192,24 @@ const (
 	FixedAfdAfd1111 = "AFD_1111"
 )
 
+// Fmp4 Nielsen Id3 Behavior
+const (
+	// Fmp4NielsenId3BehaviorNoPassthrough is a Fmp4NielsenId3Behavior enum value
+	Fmp4NielsenId3BehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// Fmp4NielsenId3BehaviorPassthrough is a Fmp4NielsenId3Behavior enum value
+	Fmp4NielsenId3BehaviorPassthrough = "PASSTHROUGH"
+)
+
+// Fmp4 Timed Metadata Behavior
+const (
+	// Fmp4TimedMetadataBehaviorNoPassthrough is a Fmp4TimedMetadataBehavior enum value
+	Fmp4TimedMetadataBehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// Fmp4TimedMetadataBehaviorPassthrough is a Fmp4TimedMetadataBehavior enum value
+	Fmp4TimedMetadataBehaviorPassthrough = "PASSTHROUGH"
+)
+
 // Follow reference point.
 const (
 	// FollowPointEnd is a FollowPoint enum value
@@ -23218,6 +23442,15 @@ const (
 
 	// H264ProfileMain is a H264Profile enum value
 	H264ProfileMain = "MAIN"
+)
+
+// H264 Quality Level
+const (
+	// H264QualityLevelEnhancedQuality is a H264QualityLevel enum value
+	H264QualityLevelEnhancedQuality = "ENHANCED_QUALITY"
+
+	// H264QualityLevelStandardQuality is a H264QualityLevel enum value
+	H264QualityLevelStandardQuality = "STANDARD_QUALITY"
 )
 
 // H264 Rate Control Mode
@@ -24565,6 +24798,9 @@ const (
 
 	// SmoothGroupSparseTrackTypeScte35 is a SmoothGroupSparseTrackType enum value
 	SmoothGroupSparseTrackTypeScte35 = "SCTE_35"
+
+	// SmoothGroupSparseTrackTypeScte35WithoutSegmentation is a SmoothGroupSparseTrackType enum value
+	SmoothGroupSparseTrackTypeScte35WithoutSegmentation = "SCTE_35_WITHOUT_SEGMENTATION"
 )
 
 // Smooth Group Stream Manifest Behavior
@@ -24583,6 +24819,72 @@ const (
 
 	// SmoothGroupTimestampOffsetModeUseEventStartDate is a SmoothGroupTimestampOffsetMode enum value
 	SmoothGroupTimestampOffsetModeUseEventStartDate = "USE_EVENT_START_DATE"
+)
+
+// Temporal Filter Post Filter Sharpening
+const (
+	// TemporalFilterPostFilterSharpeningAuto is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningAuto = "AUTO"
+
+	// TemporalFilterPostFilterSharpeningDisabled is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningDisabled = "DISABLED"
+
+	// TemporalFilterPostFilterSharpeningEnabled is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningEnabled = "ENABLED"
+)
+
+// Temporal Filter Strength
+const (
+	// TemporalFilterStrengthAuto is a TemporalFilterStrength enum value
+	TemporalFilterStrengthAuto = "AUTO"
+
+	// TemporalFilterStrengthStrength1 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength1 = "STRENGTH_1"
+
+	// TemporalFilterStrengthStrength10 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength10 = "STRENGTH_10"
+
+	// TemporalFilterStrengthStrength11 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength11 = "STRENGTH_11"
+
+	// TemporalFilterStrengthStrength12 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength12 = "STRENGTH_12"
+
+	// TemporalFilterStrengthStrength13 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength13 = "STRENGTH_13"
+
+	// TemporalFilterStrengthStrength14 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength14 = "STRENGTH_14"
+
+	// TemporalFilterStrengthStrength15 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength15 = "STRENGTH_15"
+
+	// TemporalFilterStrengthStrength16 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength16 = "STRENGTH_16"
+
+	// TemporalFilterStrengthStrength2 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength2 = "STRENGTH_2"
+
+	// TemporalFilterStrengthStrength3 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength3 = "STRENGTH_3"
+
+	// TemporalFilterStrengthStrength4 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength4 = "STRENGTH_4"
+
+	// TemporalFilterStrengthStrength5 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength5 = "STRENGTH_5"
+
+	// TemporalFilterStrengthStrength6 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength6 = "STRENGTH_6"
+
+	// TemporalFilterStrengthStrength7 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength7 = "STRENGTH_7"
+
+	// TemporalFilterStrengthStrength8 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength8 = "STRENGTH_8"
+
+	// TemporalFilterStrengthStrength9 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength9 = "STRENGTH_9"
 )
 
 // Timecode Config Source

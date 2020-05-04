@@ -75,6 +75,7 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 
 func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	efsconn := meta.(*AWSClient).efsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeEfsOpts := &efs.DescribeFileSystemsInput{}
 
@@ -128,7 +129,7 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
 
-	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -139,8 +140,9 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error describing lifecycle configuration for EFS file system (%s): %s",
 			aws.StringValue(fs.FileSystemId), err)
 	}
-	if err := resourceAwsEfsFileSystemSetLifecyclePolicy(d, res.LifecyclePolicies); err != nil {
-		return err
+
+	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
+		return fmt.Errorf("error setting lifecycle_policy: %s", err)
 	}
 
 	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))

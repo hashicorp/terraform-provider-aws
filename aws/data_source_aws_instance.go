@@ -95,6 +95,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -314,6 +318,7 @@ func dataSourceAwsInstance() *schema.Resource {
 // dataSourceAwsInstanceRead performs the instanceID lookup
 func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	instanceID, instanceIDOk := d.GetOk("instance_id")
@@ -372,7 +377,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", *instance.InstanceId)
-	if err := instanceDescriptionAttributes(d, instance, conn); err != nil {
+	if err := instanceDescriptionAttributes(d, instance, conn, ignoreTagsConfig); err != nil {
 		return err
 	}
 
@@ -398,7 +403,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
+func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
 	d.SetId(*instance.InstanceId)
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
@@ -421,6 +426,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	d.Set("public_ip", instance.PublicIpAddress)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
+	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("iam_instance_profile", iamInstanceProfileArnToName(instance.IamInstanceProfile))
 
 	// iterate through network interfaces, and set subnet, network_interface, public_addr
@@ -447,7 +453,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

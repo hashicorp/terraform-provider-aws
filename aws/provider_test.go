@@ -587,6 +587,22 @@ func testAccAwsRegionProviderFunc(region string, providers *[]*schema.Provider) 
 	}
 }
 
+func testAccCheckResourceDisappears(provider *schema.Provider, resource *schema.Resource, resourceName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		resourceState, ok := s.RootModule().Resources[resourceName]
+
+		if !ok {
+			return fmt.Errorf("resource not found: %s", resourceName)
+		}
+
+		if resourceState.Primary.ID == "" {
+			return fmt.Errorf("resource ID missing: %s", resourceName)
+		}
+
+		return resource.Delete(resource.Data(resourceState.Primary), provider.Meta())
+	}
+}
+
 func testAccCheckWithProviders(f func(*terraform.State, *schema.Provider) error, providers *[]*schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		numberOfProviders := len(*providers)
@@ -1234,24 +1250,6 @@ func testAccHasDefaultVpc(t *testing.T) bool {
 	}
 
 	return true
-}
-
-// testAccPreCheckOffersEc2InstanceType checks that the test region offers the specified EC2 instance type.
-func testAccPreCheckOffersEc2InstanceType(t *testing.T, instanceType string) {
-	client := testAccProvider.Meta().(*AWSClient)
-
-	resp, err := client.ec2conn.DescribeInstanceTypeOfferings(&ec2.DescribeInstanceTypeOfferingsInput{
-		Filters: buildEC2AttributeFilterList(map[string]string{
-			"instance-type": instanceType,
-		}),
-		LocationType: aws.String(ec2.LocationTypeRegion),
-	})
-	if testAccPreCheckSkipError(err) || len(resp.InstanceTypeOfferings) == 0 {
-		t.Skipf("skipping tests; %s does not offer EC2 instance type: %s", client.region, instanceType)
-	}
-	if err != nil {
-		t.Fatalf("error describing EC2 instance type offerings: %s", err)
-	}
 }
 
 func testAccAWSProviderConfigEndpoints(endpoints string) string {

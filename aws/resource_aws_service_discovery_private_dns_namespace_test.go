@@ -109,6 +109,12 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
 				),
 			},
+			{
+				ResourceName:      "aws_service_discovery_private_dns_namespace.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc("aws_service_discovery_private_dns_namespace.test"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -128,6 +134,12 @@ func TestAccAWSServiceDiscoveryPrivateDnsNamespace_longname(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "arn"),
 					resource.TestCheckResourceAttrSet("aws_service_discovery_private_dns_namespace.test", "hosted_zone"),
 				),
+			},
+			{
+				ResourceName:      "aws_service_discovery_private_dns_namespace.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc("aws_service_discovery_private_dns_namespace.test"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -241,4 +253,14 @@ resource "aws_service_discovery_private_dns_namespace" "subdomain" {
   vpc  = "${aws_service_discovery_private_dns_namespace.top.vpc}"
 }
 `, topDomain)
+}
+
+func testAccServiceDiscoveryPrivateDnsNamespaceImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+		return fmt.Sprintf("%s:%s", rs.Primary.ID, rs.Primary.Attributes["vpc"]), nil
+	}
 }

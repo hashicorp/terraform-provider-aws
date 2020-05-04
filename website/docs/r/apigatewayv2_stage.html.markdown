@@ -38,7 +38,7 @@ Supported only for WebSocket APIs.
 * `description` - (Optional) The description for the stage.
 * `route_settings` - (Optional) Route settings for the stage.
 * `stage_variables` - (Optional) A map that defines the stage variables for the stage.
-* `tags` - (Optional) A mapping of tags to assign to the stage.
+* `tags` - (Optional) A map of tags to assign to the stage.
 
 The `access_log_settings` object supports the following:
 

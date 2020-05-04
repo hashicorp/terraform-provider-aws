@@ -750,6 +750,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 				tagsList = append(tagsList, t)
 			}
 		}
+		//lintignore:AWSR002
 		d.Set("tags", autoscalingTagDescriptionsToSlice(tagsList))
 	}
 

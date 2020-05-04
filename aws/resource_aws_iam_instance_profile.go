@@ -197,8 +197,6 @@ func instanceProfileSetRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
 
 	currentRoles := schema.CopySet(oldRoles)
 
-	d.Partial(true)
-
 	for _, role := range oldRoles.Difference(newRoles).List() {
 		err := instanceProfileRemoveRole(iamconn, d.Id(), role.(string))
 		if err != nil {
@@ -206,7 +204,6 @@ func instanceProfileSetRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
 		}
 		currentRoles.Remove(role)
 		d.Set("roles", currentRoles)
-		d.SetPartial("roles")
 	}
 
 	for _, role := range newRoles.Difference(oldRoles).List() {
@@ -216,10 +213,7 @@ func instanceProfileSetRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
 		}
 		currentRoles.Add(role)
 		d.Set("roles", currentRoles)
-		d.SetPartial("roles")
 	}
-
-	d.Partial(false)
 
 	return nil
 }
@@ -246,8 +240,6 @@ func instanceProfileRemoveAllRoles(d *schema.ResourceData, iamconn *iam.IAM) err
 func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	d.Partial(true)
-
 	if d.HasChange("role") {
 		oldRole, newRole := d.GetChange("role")
 
@@ -264,15 +256,11 @@ func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{
 				return fmt.Errorf("Error adding role %s to IAM instance profile %s: %s", newRole.(string), d.Id(), err)
 			}
 		}
-
-		d.SetPartial("role")
 	}
 
 	if d.HasChange("roles") {
 		return instanceProfileSetRoles(d, iamconn)
 	}
-
-	d.Partial(false)
 
 	return nil
 }

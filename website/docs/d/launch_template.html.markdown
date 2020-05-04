@@ -35,7 +35,7 @@ The following arguments are supported:
 
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
 * `name` - (Optional) The name of the launch template.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Launch Template.
+* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Launch Template.
 
 ### filter Configuration Block
 
@@ -84,7 +84,7 @@ In addition to all arguments above, the following attributes are exported:
   `vpc_security_group_ids` instead.
 * `vpc_security_group_ids` - A list of security group IDs to associate with.
 * `tag_specifications` - The tags to apply to the resources during launch.
-* `tags` - (Optional) A mapping of tags to assign to the launch template.
+* `tags` - (Optional) A map of tags to assign to the launch template.
 * `user_data` - The Base64-encoded user data to provide when launching the instance.
 * `hibernation_options` - The hibernation options for the instance.
 

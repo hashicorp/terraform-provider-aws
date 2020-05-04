@@ -398,6 +398,8 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 
 	// Retrieve DB Cluster information, to determine if this Instance is a writer
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.DescribeDBClusters(&rds.DescribeDBClustersInput{
 		DBClusterIdentifier: db.DBClusterIdentifier,
 	})
@@ -463,7 +465,7 @@ func resourceAwsRDSClusterInstanceRead(d *schema.ResourceData, meta interface{})
 	if err != nil {
 		return fmt.Errorf("error listing tags for RDS Cluster Instance (%s): %s", d.Id(), err)
 	}
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

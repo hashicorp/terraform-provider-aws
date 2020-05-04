@@ -180,7 +180,7 @@ The following arguments are supported:
 * `enhanced_monitoring` - (Optional) Specify the desired enhanced MSK CloudWatch monitoring level.  See [Monitoring Amazon MSK with Amazon CloudWatch](https://docs.aws.amazon.com/msk/latest/developerguide/monitoring.html)
 * `open_monitoring` - (Optional) Configuration block for JMX and Node monitoring for the MSK cluster. See below.
 * `logging_info` - (Optional) Configuration block for streaming broker logs to Cloudwatch/S3/Kinesis Firehose. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource
 
 ### broker_node_group_info Argument Reference
 

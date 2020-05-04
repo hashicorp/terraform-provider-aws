@@ -95,8 +95,8 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
   launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the [EC2 documentation](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html#roles-usingrole-ec2instance-permissions), notably `iam:PassRole`.
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6_addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
-* `tags` - (Optional) A mapping of tags to assign to the resource.
-* `volume_tags` - (Optional) A mapping of tags to assign to the devices created by the instance at launch time.
+* `tags` - (Optional) A map of tags to assign to the resource.
+* `volume_tags` - (Optional) A map of tags to assign to the devices created by the instance at launch time.
 * `root_block_device` - (Optional) Customize details about the root block
   device of the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the
@@ -281,6 +281,7 @@ In addition to all arguments above, the following attributes are exported:
 * `security_groups` - The associated security groups.
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
+* `outpost_arn` - The ARN of the Outpost the instance is assigned to.
 * `credit_specification` - Credit specification of instance.
 * `instance_state` - The state of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 

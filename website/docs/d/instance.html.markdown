@@ -33,7 +33,7 @@ data "aws_instance" "foo" {
 
 * `instance_id` - (Optional) Specify the exact Instance ID with which to populate the data source.
 
-* `instance_tags` - (Optional) A mapping of tags, each pair of which must
+* `instance_tags` - (Optional) A map of tags, each pair of which must
 exactly match a pair on the desired Instance.
 
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are
@@ -106,9 +106,10 @@ interpolation.
 * `security_groups` - The associated security groups.
 * `source_dest_check` - Whether the network interface performs source/destination checking (Boolean).
 * `subnet_id` - The VPC subnet ID.
+* `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
 * `user_data` - SHA-1 hash of User Data supplied to the Instance.
 * `user_data_base64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](/docs/configuration/functions/base64decode.html). This attribute is only exported if `get_user_data` is true.
-* `tags` - A mapping of tags assigned to the Instance.
+* `tags` - A map of tags assigned to the Instance.
 * `tenancy` - The tenancy of the instance: `dedicated`, `default`, `host`.
 * `host_id` - The Id of the dedicated host the instance will be assigned to.
 * `vpc_security_group_ids` - The associated security groups in a non-default VPC.

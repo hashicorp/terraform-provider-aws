@@ -280,7 +280,9 @@ func (c *ECS) CreateServiceRequest(input *CreateServiceInput) (req *request.Requ
 //
 //    * DAEMON - The daemon scheduling strategy deploys exactly one task on
 //    each active container instance that meets all of the task placement constraints
-//    that you specify in your cluster. When using this strategy, you don't
+//    that you specify in your cluster. The service scheduler also evaluates
+//    the task placement constraints for running tasks and will stop tasks that
+//    do not meet the placement constraints. When using this strategy, you don't
 //    need to specify a desired number of tasks, a task placement strategy,
 //    or use Service Auto Scaling policies. For more information, see Service
 //    Scheduler Concepts (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs_services.html)
@@ -5132,24 +5134,32 @@ func (c *ECS) UpdateServiceRequest(input *UpdateServiceInput) (req *request.Requ
 
 // UpdateService API operation for Amazon EC2 Container Service.
 //
+//
+// Updating the task placement strategies and constraints on an Amazon ECS service
+// remains in preview and is a Beta Service as defined by and subject to the
+// Beta Service Participation Service Terms located at https://aws.amazon.com/service-terms
+// (https://aws.amazon.com/service-terms) ("Beta Terms"). These Beta Terms apply
+// to your participation in this preview.
+//
 // Modifies the parameters of a service.
 //
 // For services using the rolling update (ECS) deployment controller, the desired
-// count, deployment configuration, network configuration, or task definition
-// used can be updated.
+// count, deployment configuration, network configuration, task placement constraints
+// and strategies, or task definition used can be updated.
 //
 // For services using the blue/green (CODE_DEPLOY) deployment controller, only
-// the desired count, deployment configuration, and health check grace period
-// can be updated using this API. If the network configuration, platform version,
-// or task definition need to be updated, a new AWS CodeDeploy deployment should
-// be created. For more information, see CreateDeployment (https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_CreateDeployment.html)
+// the desired count, deployment configuration, task placement constraints and
+// strategies, and health check grace period can be updated using this API.
+// If the network configuration, platform version, or task definition need to
+// be updated, a new AWS CodeDeploy deployment should be created. For more information,
+// see CreateDeployment (https://docs.aws.amazon.com/codedeploy/latest/APIReference/API_CreateDeployment.html)
 // in the AWS CodeDeploy API Reference.
 //
 // For services using an external deployment controller, you can update only
-// the desired count and health check grace period using this API. If the launch
-// type, load balancer, network configuration, platform version, or task definition
-// need to be updated, you should create a new task set. For more information,
-// see CreateTaskSet.
+// the desired count, task placement constraints and strategies, and health
+// check grace period using this API. If the launch type, load balancer, network
+// configuration, platform version, or task definition need to be updated, you
+// should create a new task set. For more information, see CreateTaskSet.
 //
 // You can add to or subtract from the number of instantiations of a task definition
 // in a service by specifying the cluster that the service is running in and
@@ -6104,7 +6114,7 @@ type CapacityProviderStrategyItem struct {
 	// can have a base defined.
 	Base *int64 `locationName:"base" type:"integer"`
 
-	// The short name or full Amazon Resource Name (ARN) of the capacity provider.
+	// The short name of the capacity provider.
 	//
 	// CapacityProvider is a required field
 	CapacityProvider *string `locationName:"capacityProvider" type:"string" required:"true"`
@@ -7080,10 +7090,11 @@ type ContainerDefinition struct {
 	// in the Amazon Elastic Container Service Developer Guide.
 	FirelensConfiguration *FirelensConfiguration `locationName:"firelensConfiguration" type:"structure"`
 
-	// The health check command and associated configuration parameters for the
-	// container. This parameter maps to HealthCheck in the Create a container (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate)
-	// section of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/)
-	// and the HEALTHCHECK parameter of docker run (https://docs.docker.com/engine/reference/run/).
+	// The container health check command and associated configuration parameters
+	// for the container. This parameter maps to HealthCheck in the Create a container
+	// (https://docs.docker.com/engine/api/v1.35/#operation/ContainerCreate) section
+	// of the Docker Remote API (https://docs.docker.com/engine/api/v1.35/) and
+	// the HEALTHCHECK parameter of docker run (https://docs.docker.com/engine/reference/run/).
 	HealthCheck *HealthCheck `locationName:"healthCheck" type:"structure"`
 
 	// The hostname to use for your container. This parameter maps to Hostname in
@@ -8409,8 +8420,7 @@ func (s *CreateCapacityProviderOutput) SetCapacityProvider(v *CapacityProvider) 
 type CreateClusterInput struct {
 	_ struct{} `type:"structure"`
 
-	// The short name or full Amazon Resource Name (ARN) of one or more capacity
-	// providers to associate with the cluster.
+	// The short name of one or more capacity providers to associate with the cluster.
 	//
 	// If specifying a capacity provider that uses an Auto Scaling group, the capacity
 	// provider must already be created and not already associated with another
@@ -8777,11 +8787,13 @@ type CreateServiceInput struct {
 	//
 	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
 	//    active container instance that meets all of the task placement constraints
-	//    that you specify in your cluster. When you're using this strategy, you
-	//    don't need to specify a desired number of tasks, a task placement strategy,
-	//    or use Service Auto Scaling policies. Tasks using the Fargate launch type
-	//    or the CODE_DEPLOY or EXTERNAL deployment controller types don't support
-	//    the DAEMON scheduling strategy.
+	//    that you specify in your cluster. The service scheduler also evaluates
+	//    the task placement constraints for running tasks and will stop tasks that
+	//    do not meet the placement constraints. When you're using this strategy,
+	//    you don't need to specify a desired number of tasks, a task placement
+	//    strategy, or use Service Auto Scaling policies. Tasks using the Fargate
+	//    launch type or the CODE_DEPLOY or EXTERNAL deployment controller types
+	//    don't support the DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The name of your service. Up to 255 letters (uppercase and lowercase), numbers,
@@ -11074,17 +11086,58 @@ func (s *DockerVolumeConfiguration) SetScope(v string) *DockerVolumeConfiguratio
 	return s
 }
 
+// The authorization configuration details for the Amazon EFS file system.
+type EFSAuthorizationConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon EFS access point ID to use. If an access point is specified, the
+	// root directory value specified in the EFSVolumeConfiguration will be relative
+	// to the directory set for the access point. If an access point is used, transit
+	// encryption must be enabled in the EFSVolumeConfiguration. For more information,
+	// see Working with Amazon EFS Access Points (https://docs.aws.amazon.com/efs/latest/ug/efs-access-points.html)
+	// in the Amazon Elastic File System User Guide.
+	AccessPointId *string `locationName:"accessPointId" type:"string"`
+
+	// Whether or not to use the Amazon ECS task IAM role defined in a task definition
+	// when mounting the Amazon EFS file system. If enabled, transit encryption
+	// must be enabled in the EFSVolumeConfiguration. If this parameter is omitted,
+	// the default value of DISABLED is used. For more information, see Using Amazon
+	// EFS Access Points (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#efs-volume-accesspoints)
+	// in the Amazon Elastic Container Service Developer Guide.
+	Iam *string `locationName:"iam" type:"string" enum:"EFSAuthorizationConfigIAM"`
+}
+
+// String returns the string representation
+func (s EFSAuthorizationConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EFSAuthorizationConfig) GoString() string {
+	return s.String()
+}
+
+// SetAccessPointId sets the AccessPointId field's value.
+func (s *EFSAuthorizationConfig) SetAccessPointId(v string) *EFSAuthorizationConfig {
+	s.AccessPointId = &v
+	return s
+}
+
+// SetIam sets the Iam field's value.
+func (s *EFSAuthorizationConfig) SetIam(v string) *EFSAuthorizationConfig {
+	s.Iam = &v
+	return s
+}
+
 // This parameter is specified when you are using an Amazon Elastic File System
-// (Amazon EFS) file storage. Amazon EFS file systems are only supported when
-// you are using the EC2 launch type.
-//
-// EFSVolumeConfiguration remains in preview and is a Beta Service as defined
-// by and subject to the Beta Service Participation Service Terms located at
-// https://aws.amazon.com/service-terms (https://aws.amazon.com/service-terms)
-// ("Beta Terms"). These Beta Terms apply to your participation in this preview
-// of EFSVolumeConfiguration.
+// file system for task storage. For more information, see Amazon EFS Volumes
+// (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html)
+// in the Amazon Elastic Container Service Developer Guide.
 type EFSVolumeConfiguration struct {
 	_ struct{} `type:"structure"`
+
+	// The authorization configuration details for the Amazon EFS file system.
+	AuthorizationConfig *EFSAuthorizationConfig `locationName:"authorizationConfig" type:"structure"`
 
 	// The Amazon EFS file system ID to use.
 	//
@@ -11092,8 +11145,25 @@ type EFSVolumeConfiguration struct {
 	FileSystemId *string `locationName:"fileSystemId" type:"string" required:"true"`
 
 	// The directory within the Amazon EFS file system to mount as the root directory
-	// inside the host.
+	// inside the host. If this parameter is omitted, the root of the Amazon EFS
+	// volume will be used. Specifying / will have the same effect as omitting this
+	// parameter.
 	RootDirectory *string `locationName:"rootDirectory" type:"string"`
+
+	// Whether or not to enable encryption for Amazon EFS data in transit between
+	// the Amazon ECS host and the Amazon EFS server. Transit encryption must be
+	// enabled if Amazon EFS IAM authorization is used. If this parameter is omitted,
+	// the default value of DISABLED is used. For more information, see Encrypting
+	// Data in Transit (https://docs.aws.amazon.com/efs/latest/ug/encryption-in-transit.html)
+	// in the Amazon Elastic File System User Guide.
+	TransitEncryption *string `locationName:"transitEncryption" type:"string" enum:"EFSTransitEncryption"`
+
+	// The port to use when sending encrypted data between the Amazon ECS host and
+	// the Amazon EFS server. If you do not specify a transit encryption port, it
+	// will use the port selection strategy that the Amazon EFS mount helper uses.
+	// For more information, see EFS Mount Helper (https://docs.aws.amazon.com/efs/latest/ug/efs-mount-helper.html)
+	// in the Amazon Elastic File System User Guide.
+	TransitEncryptionPort *int64 `locationName:"transitEncryptionPort" type:"integer"`
 }
 
 // String returns the string representation
@@ -11119,6 +11189,12 @@ func (s *EFSVolumeConfiguration) Validate() error {
 	return nil
 }
 
+// SetAuthorizationConfig sets the AuthorizationConfig field's value.
+func (s *EFSVolumeConfiguration) SetAuthorizationConfig(v *EFSAuthorizationConfig) *EFSVolumeConfiguration {
+	s.AuthorizationConfig = v
+	return s
+}
+
 // SetFileSystemId sets the FileSystemId field's value.
 func (s *EFSVolumeConfiguration) SetFileSystemId(v string) *EFSVolumeConfiguration {
 	s.FileSystemId = &v
@@ -11128,6 +11204,18 @@ func (s *EFSVolumeConfiguration) SetFileSystemId(v string) *EFSVolumeConfigurati
 // SetRootDirectory sets the RootDirectory field's value.
 func (s *EFSVolumeConfiguration) SetRootDirectory(v string) *EFSVolumeConfiguration {
 	s.RootDirectory = &v
+	return s
+}
+
+// SetTransitEncryption sets the TransitEncryption field's value.
+func (s *EFSVolumeConfiguration) SetTransitEncryption(v string) *EFSVolumeConfiguration {
+	s.TransitEncryption = &v
+	return s
+}
+
+// SetTransitEncryptionPort sets the TransitEncryptionPort field's value.
+func (s *EFSVolumeConfiguration) SetTransitEncryptionPort(v int64) *EFSVolumeConfiguration {
+	s.TransitEncryptionPort = &v
 	return s
 }
 
@@ -11234,6 +11322,36 @@ func (s *FirelensConfiguration) SetType(v string) *FirelensConfiguration {
 // that are specified in a container definition override any Docker health checks
 // that exist in the container image (such as those specified in a parent image
 // or from the image's Dockerfile).
+//
+// You can view the health status of both individual containers and a task with
+// the DescribeTasks API operation or when viewing the task details in the console.
+//
+// The following describes the possible healthStatus values for a container:
+//
+//    * HEALTHY-The container health check has passed successfully.
+//
+//    * UNHEALTHY-The container health check has failed.
+//
+//    * UNKNOWN-The container health check is being evaluated or there is no
+//    container health check defined.
+//
+// The following describes the possible healthStatus values for a task. The
+// container health check status of nonessential containers do not have an effect
+// on the health status of a task.
+//
+//    * HEALTHY-All essential containers within the task have passed their health
+//    checks.
+//
+//    * UNHEALTHY-One or more essential containers have failed their health
+//    check.
+//
+//    * UNKNOWN-The essential containers within the task are still having their
+//    health checks evaluated or there are no container health checks defined.
+//
+// If a task is run manually, and not as part of a service, the task will continue
+// its lifecycle regardless of its health status. For tasks that are part of
+// a service, if the task reports as unhealthy then the task will be stopped
+// and the service scheduler will replace it.
 //
 // The following are notes about container health check support:
 //
@@ -15846,9 +15964,11 @@ type Service struct {
 	//    and constraints to customize task placement decisions.
 	//
 	//    * DAEMON-The daemon scheduling strategy deploys exactly one task on each
-	//    container instance in your cluster. When you are using this strategy,
-	//    do not specify a desired number of tasks or any task placement strategies.
-	//    Fargate tasks do not support the DAEMON scheduling strategy.
+	//    active container instance that meets all of the task placement constraints
+	//    that you specify in your cluster. The service scheduler also evaluates
+	//    the task placement constraints for running tasks and will stop tasks that
+	//    do not meet the placement constraints. Fargate tasks do not support the
+	//    DAEMON scheduling strategy.
 	SchedulingStrategy *string `locationName:"schedulingStrategy" type:"string" enum:"SchedulingStrategy"`
 
 	// The ARN that identifies the service. The ARN contains the arn:aws:ecs namespace,
@@ -17921,7 +18041,7 @@ type TaskDefinition struct {
 	// The short name or full Amazon Resource Name (ARN) of the AWS Identity and
 	// Access Management (IAM) role that grants containers in the task permission
 	// to call AWS APIs on your behalf. For more information, see Amazon ECS Task
-	// Role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_IAM_role.html)
+	// Role (https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html)
 	// in the Amazon Elastic Container Service Developer Guide.
 	//
 	// IAM roles for tasks on Windows require that the -EnableTaskIAMRole option
@@ -19139,9 +19259,28 @@ type UpdateServiceInput struct {
 	// The capacity provider strategy to update the service to use.
 	//
 	// If the service is using the default capacity provider strategy for the cluster,
-	// the service can be updated to use one or more capacity providers. However,
-	// when a service is using a non-default capacity provider strategy, the service
-	// cannot be updated to use the cluster's default capacity provider strategy.
+	// the service can be updated to use one or more capacity providers as opposed
+	// to the default capacity provider strategy. However, when a service is using
+	// a capacity provider strategy that is not the default capacity provider strategy,
+	// the service cannot be updated to use the cluster's default capacity provider
+	// strategy.
+	//
+	// A capacity provider strategy consists of one or more capacity providers along
+	// with the base and weight to assign to them. A capacity provider must be associated
+	// with the cluster to be used in a capacity provider strategy. The PutClusterCapacityProviders
+	// API is used to associate a capacity provider with a cluster. Only capacity
+	// providers with an ACTIVE or UPDATING status can be used.
+	//
+	// If specifying a capacity provider that uses an Auto Scaling group, the capacity
+	// provider must already be created. New capacity providers can be created with
+	// the CreateCapacityProvider API operation.
+	//
+	// To use a AWS Fargate capacity provider, specify either the FARGATE or FARGATE_SPOT
+	// capacity providers. The AWS Fargate capacity providers are available to all
+	// accounts and only need to be associated with a cluster to be used.
+	//
+	// The PutClusterCapacityProviders API operation is used to update the list
+	// of available capacity providers for a cluster after the cluster is created.
 	CapacityProviderStrategy []*CapacityProviderStrategyItem `locationName:"capacityProviderStrategy" type:"list"`
 
 	// The short name or full Amazon Resource Name (ARN) of the cluster that your
@@ -19867,6 +20006,22 @@ const (
 
 	// DeviceCgroupPermissionMknod is a DeviceCgroupPermission enum value
 	DeviceCgroupPermissionMknod = "mknod"
+)
+
+const (
+	// EFSAuthorizationConfigIAMEnabled is a EFSAuthorizationConfigIAM enum value
+	EFSAuthorizationConfigIAMEnabled = "ENABLED"
+
+	// EFSAuthorizationConfigIAMDisabled is a EFSAuthorizationConfigIAM enum value
+	EFSAuthorizationConfigIAMDisabled = "DISABLED"
+)
+
+const (
+	// EFSTransitEncryptionEnabled is a EFSTransitEncryption enum value
+	EFSTransitEncryptionEnabled = "ENABLED"
+
+	// EFSTransitEncryptionDisabled is a EFSTransitEncryption enum value
+	EFSTransitEncryptionDisabled = "DISABLED"
 )
 
 const (
