@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/synthetics/waiter"
 )
 
 const awsMutexCanary = `aws_synthetics_canary`
@@ -203,6 +205,10 @@ func resourceAwsSyntheticsCanaryCreate(d *schema.ResourceData, meta interface{})
 
 	d.SetId(aws.StringValue(resp.Canary.Name))
 
+	if _, err := waiter.CanaryReady(conn, d.Id()); err != nil {
+		return fmt.Errorf("error waiting for Synthetics Canary (%s) creation: %s", d.Id(), err)
+	}
+
 	return resourceAwsSyntheticsCanaryRead(d, meta)
 }
 
@@ -351,14 +357,30 @@ func expandAwsSyntheticsCanaryCode(d *schema.ResourceData) (*synthetics.CanaryCo
 		Handler: aws.String(d.Get("handler").(string)),
 	}
 
-	if v, ok := d.GetOk("zip_file"); ok {
+	zipFile, hasZipFile := d.GetOk("zip_file")
+	s3Bucket, bucketOk := d.GetOk("s3_bucket")
+	s3Key, keyOk := d.GetOk("s3_key")
+	s3Version, s3VersionOk := d.GetOk("s3_version")
+
+	if hasZipFile {
 		awsMutexKV.Lock(awsMutexCanary)
 		defer awsMutexKV.Unlock(awsMutexCanary)
-		file, err := loadFileContent(v.(string))
+		file, err := loadFileContent(zipFile.(string))
 		if err != nil {
-			return nil, fmt.Errorf("Unable to load %q: %s", v.(string), err)
+			return nil, fmt.Errorf("Unable to load %q: %s", zipFile.(string), err)
 		}
 		codeConfig.ZipFile = file
+	} else {
+		if !bucketOk || !keyOk {
+			return nil, errors.New("s3_bucket and s3_key must all be set while using S3 code source")
+		}
+
+		codeConfig.S3Bucket = aws.String(s3Bucket.(string))
+		codeConfig.S3Key = aws.String(s3Key.(string))
+
+		if s3VersionOk {
+			codeConfig.S3Version = aws.String(s3Version.(string))
+		}
 	}
 
 	return codeConfig, nil
