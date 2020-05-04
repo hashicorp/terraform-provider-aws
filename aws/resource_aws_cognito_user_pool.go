@@ -164,6 +164,20 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 								cognitoidentityprovider.EmailSendingAccountTypeDeveloper,
 							}, false),
 						},
+						"configuration_set": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								validPattern := "^[A-Za-z0-9_-]{1,64}$"
+								valid, matchErr := regexp.MatchString(validPattern, value)
+								if !valid || matchErr != nil {
+									errors = append(errors, fmt.Errorf(
+										"%q must match regex '%v'", k, validPattern))
+								}
+								return
+							},
+						},
 					},
 				},
 			},
@@ -594,6 +608,10 @@ func resourceAwsCognitoUserPoolCreate(d *schema.ResourceData, meta interface{}) 
 
 			if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
 				emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
+			}
+
+			if v, ok := config["configuration_set"]; ok && v.(string) != "" {
+				emailConfigurationType.ConfigurationSet = aws.String(v.(string))
 			}
 
 			params.EmailConfiguration = emailConfigurationType

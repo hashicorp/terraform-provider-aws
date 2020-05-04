@@ -92,6 +92,7 @@ The following arguments are supported:
   * `source_arn` (Optional) - The ARN of the email source.
   * `from_email_address` (Optional) - Sender’s email address or sender’s name with their email address (e.g. `john@smith.com` or `John Smith <john@smith.com>`)
   * `email_sending_account` (Optional) - Instruct Cognito to either use its built-in functional or Amazon SES to send out emails.
+  * `configuration_set` (Optional) - The set of configuration rules to be applied to emails sent using Amazon SES.
 
 #### Lambda Configuration
 
