@@ -1942,19 +1942,6 @@ func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string
 	return
 }
 
-// Validates that either authenticated or unauthenticated is defined
-func validateCognitoRoles(v map[string]interface{}) (errors []error) {
-	k := "roles"
-	_, hasAuthenticated := v["authenticated"].(string)
-	_, hasUnauthenticated := v["unauthenticated"].(string)
-
-	if !hasAuthenticated && !hasUnauthenticated {
-		errors = append(errors, fmt.Errorf("%q: Either \"authenticated\" or \"unauthenticated\" must be defined", k))
-	}
-
-	return
-}
-
 func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"1Gbps",

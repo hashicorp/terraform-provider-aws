@@ -117,8 +117,8 @@ func TestAccAWSSSMDocument_permission_public(t *testing.T) {
 				Config: testAccAWSSSMDocumentPublicPermissionConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", "all"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.type", "Share"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.account_ids", "all"),
 				),
 			},
 			{
@@ -143,7 +143,7 @@ func TestAccAWSSSMDocument_permission_private(t *testing.T) {
 				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, ids),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.type", "Share"),
 				),
 			},
 			{
@@ -168,7 +168,7 @@ func TestAccAWSSSMDocument_permission_batching(t *testing.T) {
 				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, ids),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.type", "Share"),
 				),
 			},
 			{
@@ -195,8 +195,8 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsInitial),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", idsInitial),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.type", "Share"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.account_ids", idsInitial),
 				),
 			},
 			{
@@ -208,16 +208,16 @@ func TestAccAWSSSMDocument_permission_change(t *testing.T) {
 				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsRemove),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", idsRemove),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.type", "Share"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.account_ids", idsRemove),
 				),
 			},
 			{
 				Config: testAccAWSSSMDocumentPrivatePermissionConfig(name, idsAdd),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMDocumentExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "permissions.type", "Share"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.account_ids", idsAdd),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.type", "Share"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0.account_ids", idsAdd),
 				),
 			},
 		},
@@ -649,7 +649,7 @@ resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Command"
 
-  permissions = {
+  permissions {
     type        = "Share"
     account_ids = "all"
   }
@@ -683,7 +683,7 @@ resource "aws_ssm_document" "test" {
   name          = "test_document-%s"
   document_type = "Command"
 
-  permissions = {
+  permissions {
     type        = "Share"
     account_ids = "%s"
   }

@@ -2415,33 +2415,6 @@ func TestValidateSecurityGroupRuleDescription(t *testing.T) {
 	}
 }
 
-func TestValidateCognitoRoles(t *testing.T) {
-	validValues := []map[string]interface{}{
-		{"authenticated": "hoge"},
-		{"unauthenticated": "hoge"},
-		{"authenticated": "hoge", "unauthenticated": "hoge"},
-	}
-
-	for _, s := range validValues {
-		errors := validateCognitoRoles(s)
-		if len(errors) > 0 {
-			t.Fatalf("%q should be a valid Cognito Roles: %v", s, errors)
-		}
-	}
-
-	invalidValues := []map[string]interface{}{
-		{},
-		{"invalid": "hoge"},
-	}
-
-	for _, s := range invalidValues {
-		errors := validateCognitoRoles(s)
-		if len(errors) == 0 {
-			t.Fatalf("%q should not be a valid Cognito Roles: %v", s, errors)
-		}
-	}
-}
-
 func TestValidateKmsKey(t *testing.T) {
 	cases := []struct {
 		Value    string

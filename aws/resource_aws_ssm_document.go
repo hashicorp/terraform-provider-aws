@@ -157,8 +157,9 @@ func resourceAwsSsmDocument() *schema.Resource {
 				},
 			},
 			"permissions": {
-				Type:     schema.TypeMap,
+				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -455,22 +456,28 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 
 	if d.HasChange("permissions") {
 		o, n := d.GetChange("permissions")
-		oldPermissions := o.(map[string]interface{})
-		newPermissions := n.(map[string]interface{})
+		oldPermissions := o.([]interface{})
+		newPermissions := n.([]interface{})
 		oldPermissionsAccountIds := make([]interface{}, 0)
-		if v, ok := oldPermissions["account_ids"]; ok && v.(string) != "" {
-			parts := strings.Split(v.(string), ",")
-			oldPermissionsAccountIds = make([]interface{}, len(parts))
-			for i, v := range parts {
-				oldPermissionsAccountIds[i] = v
+		if len(oldPermissions) > 0 {
+			opm := oldPermissions[0].(map[string]interface{})
+			if v, ok := opm["account_ids"]; ok && v.(string) != "" {
+				parts := strings.Split(v.(string), ",")
+				oldPermissionsAccountIds = make([]interface{}, len(parts))
+				for i, v := range parts {
+					oldPermissionsAccountIds[i] = v
+				}
 			}
 		}
 		newPermissionsAccountIds := make([]interface{}, 0)
-		if v, ok := newPermissions["account_ids"]; ok && v.(string) != "" {
-			parts := strings.Split(v.(string), ",")
-			newPermissionsAccountIds = make([]interface{}, len(parts))
-			for i, v := range parts {
-				newPermissionsAccountIds[i] = v
+		if len(newPermissions) > 0 {
+			npm := newPermissions[0].(map[string]interface{})
+			if v, ok := npm["account_ids"]; ok && v.(string) != "" {
+				parts := strings.Split(v.(string), ",")
+				newPermissionsAccountIds = make([]interface{}, len(parts))
+				for i, v := range parts {
+					newPermissionsAccountIds[i] = v
+				}
 			}
 		}
 
@@ -498,7 +505,7 @@ func setDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[string]interface{}, error) {
+func getDocumentPermissions(d *schema.ResourceData, meta interface{}) ([]interface{}, error) {
 	ssmconn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Getting permissions for document: %s", d.Id())
@@ -537,7 +544,7 @@ func getDocumentPermissions(d *schema.ResourceData, meta interface{}) (map[strin
 	perms["type"] = permissionType
 	perms["account_ids"] = ids
 
-	return perms, nil
+	return []interface{}{perms}, nil
 }
 
 func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
@@ -545,22 +552,21 @@ func deleteDocumentPermissions(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[INFO] Removing permissions from document: %s", d.Id())
 
-	permission := d.Get("permissions").(map[string]interface{})
-
-	accountIdsToRemove := make([]interface{}, 0)
-
-	if permission["account_ids"] != nil {
-
-		if v, ok := permission["account_ids"]; ok && v.(string) != "" {
-			parts := strings.Split(v.(string), ",")
-			accountIdsToRemove = make([]interface{}, len(parts))
-			for i, v := range parts {
-				accountIdsToRemove[i] = v
+	if permissions, ok := d.GetOk("permissions"); ok {
+		accountIdsToRemove := make([]interface{}, 0)
+		permission := permissions.([]interface{})[0].(map[string]interface{})
+		if permission["account_ids"] != nil {
+			if v, ok := permission["account_ids"]; ok && v.(string) != "" {
+				parts := strings.Split(v.(string), ",")
+				accountIdsToRemove = make([]interface{}, len(parts))
+				for i, v := range parts {
+					accountIdsToRemove[i] = v
+				}
 			}
-		}
 
-		if err := modifyDocumentPermissions(ssmconn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
-			return fmt.Errorf("error removing SSM document permissions: %s", err)
+			if err := modifyDocumentPermissions(ssmconn, d.Get("name").(string), nil, accountIdsToRemove); err != nil {
+				return fmt.Errorf("error removing SSM document permissions: %s", err)
+			}
 		}
 
 	}
