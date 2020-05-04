@@ -231,9 +231,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	// Tags
 	_, tagsAreDefined := d.GetOk("tags")
 	if tagsAreDefined {
-    if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-      return fmt.Errorf("error setting tags: %s", err)
-    }
+		if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %s", err)
+		}
 	}
 
 	d.Set("owner_id", rt.OwnerId)
