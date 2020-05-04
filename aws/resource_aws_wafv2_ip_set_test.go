@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsWafv2IPSet_basic(t *testing.T) {
+func TestAccAwsWafv2IPSet_Basic(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -26,7 +26,7 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfig(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &v),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
@@ -41,7 +41,7 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfigUpdate(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &v),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
@@ -60,7 +60,29 @@ func TestAccAwsWafv2IPSet_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_minimal(t *testing.T) {
+func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
+	var r wafv2.IPSet
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_ip_set.ip_set"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2IPSetConfig(ipSetName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafv2IPSetExists(resourceName, &r),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2IPSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2IPSet_Minimal(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -73,7 +95,7 @@ func TestAccAwsWafv2IPSet_minimal(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfigMinimal(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &v),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -92,7 +114,7 @@ func TestAccAwsWafv2IPSet_minimal(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_changeNameForceNew(t *testing.T) {
+func TestAccAwsWafv2IPSet_ChangeNameForceNew(t *testing.T) {
 	var before, after wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	ipSetNewName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
@@ -106,7 +128,7 @@ func TestAccAwsWafv2IPSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfig(ipSetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &before),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
@@ -118,7 +140,7 @@ func TestAccAwsWafv2IPSet_changeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfig(ipSetNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &after),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ipSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipSetNewName),
@@ -131,7 +153,7 @@ func TestAccAwsWafv2IPSet_changeNameForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2IPSet_tags(t *testing.T) {
+func TestAccAwsWafv2IPSet_Tags(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	resourceName := "aws_wafv2_ip_set.ip_set"
@@ -144,7 +166,7 @@ func TestAccAwsWafv2IPSet_tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfigOneTag(ipSetName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &v),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
@@ -159,7 +181,7 @@ func TestAccAwsWafv2IPSet_tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfigTwoTags(ipSetName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &v),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1Updated"),
@@ -169,7 +191,7 @@ func TestAccAwsWafv2IPSet_tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2IPSetConfigOneTag(ipSetName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafv2IPSetExists("aws_wafv2_ip_set.ip_set", &v),
+					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
