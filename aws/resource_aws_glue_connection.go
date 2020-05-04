@@ -41,6 +41,7 @@ func resourceAwsGlueConnection() *schema.Resource {
 					glue.ConnectionTypeJdbc,
 					glue.ConnectionTypeSftp,
 					glue.ConnectionTypeMongodb,
+					glue.ConnectionTypeKafka,
 				}, false),
 			},
 			"description": {
