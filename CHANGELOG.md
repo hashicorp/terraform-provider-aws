@@ -15,6 +15,7 @@ ENHANCEMENTS:
 * resource/aws_api_gateway_deployment: Add `triggers` argument [GH-13054]
 * resource/aws_apigatewayv2_deployment: Add `triggers` argument [GH-13055]
 * resource/aws_eip: Add `customer_owned_ip` attribute and `customer_owned_ipv4_pool` argument [GH-12862]
+* resource/aws_glue_connection: Support `KAFKA` for `connection_type` argument [GH-13141]
 
 ## 2.60.0 (May 01, 2020)
 
