@@ -140,6 +140,7 @@ func resourceAwsAppmeshVirtualRouterCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appmeshconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeVirtualRouter(&appmesh.DescribeVirtualRouterInput{
 		MeshName:          aws.String(d.Get("mesh_name").(string)),
@@ -176,7 +177,7 @@ func resourceAwsAppmeshVirtualRouterRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error listing tags for App Mesh virtual router (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

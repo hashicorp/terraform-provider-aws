@@ -241,7 +241,7 @@ of several sub-resources - these resources are laid out below.
   * `restrictions` (Required) - The [restriction
     configuration](#restrictions-arguments) for this distribution (maximum one).
 
-  * `tags` - (Optional) A mapping of tags to assign to the resource.
+  * `tags` - (Optional) A map of tags to assign to the resource.
 
   * `viewer_certificate` (Required) - The [SSL
     configuration](#viewer-certificate-arguments) for this distribution (maximum

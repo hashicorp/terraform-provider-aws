@@ -115,6 +115,7 @@ func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interf
 
 func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := redshift.DescribeClusterParameterGroupsInput{
 		ParameterGroupName: aws.String(d.Id()),
@@ -144,7 +145,7 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 	d.Set("name", describeResp.ParameterGroups[0].ParameterGroupName)
 	d.Set("family", describeResp.ParameterGroups[0].ParameterGroupFamily)
 	d.Set("description", describeResp.ParameterGroups[0].Description)
-	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(describeResp.ParameterGroups[0].Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(describeResp.ParameterGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -164,8 +165,6 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 
 func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
-
-	d.Partial(true)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -197,7 +196,6 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 				return fmt.Errorf("Error modifying Redshift Parameter Group: %s", err)
 			}
 		}
-		d.SetPartial("parameter")
 	}
 
 	if d.HasChange("tags") {
@@ -206,11 +204,8 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating Redshift Parameter Group (%s) tags: %s", d.Get("arn").(string), err)
 		}
-
-		d.SetPartial("tags")
 	}
 
-	d.Partial(false)
 	return resourceAwsRedshiftParameterGroupRead(d, meta)
 }
 

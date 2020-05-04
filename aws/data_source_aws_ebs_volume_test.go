@@ -21,6 +21,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "size", "40"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.%", "1"),
 					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.Name", "External Volume"),
+					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "outpost_arn", ""),
 				),
 			},
 		},
@@ -61,7 +62,14 @@ func testAccCheckAwsEbsVolumeDataSourceID(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAwsEbsVolumeDataSourceConfig = `
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "example" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
@@ -86,7 +94,14 @@ data "aws_ebs_volume" "ebs_volume" {
 `
 
 const testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters = `
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "external1" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"

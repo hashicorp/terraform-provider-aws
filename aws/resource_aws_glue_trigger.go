@@ -102,9 +102,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 										}, false),
 									},
 									"state": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.crawl_state"},
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											glue.JobRunStateFailed,
 											glue.JobRunStateStopped,
@@ -113,9 +112,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 										}, false),
 									},
 									"crawl_state": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.state"},
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											glue.CrawlStateRunning,
 											glue.CrawlStateSucceeded,
@@ -229,6 +227,7 @@ func resourceAwsGlueTriggerCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &glue.GetTriggerInput{
 		Name: aws.String(d.Id()),
@@ -290,7 +289,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error listing tags for Glue Trigger (%s): %s", triggerARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

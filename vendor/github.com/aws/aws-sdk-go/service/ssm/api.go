@@ -73,10 +73,11 @@ func (c *SSM) AddTagsToResourceRequest(input *AddTagsToResourceInput) (req *requ
 // We recommend that you devise a set of tag keys that meets your needs for
 // each resource type. Using a consistent set of tag keys makes it easier for
 // you to manage your resources. You can search and filter the resources based
-// on the tags you add. Tags don't have any semantic meaning to Amazon EC2 and
-// are interpreted strictly as a string of characters.
+// on the tags you add. Tags don't have any semantic meaning to and are interpreted
+// strictly as a string of characters.
 //
-// For more information about tags, see Tagging Your Amazon EC2 Resources (http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
+// For more information about using tags with EC2 instances, see Tagging your
+// Amazon EC2 resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
 // in the Amazon EC2 User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -290,7 +291,7 @@ func (c *SSM) CancelMaintenanceWindowExecutionRequest(input *CancelMaintenanceWi
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/CancelMaintenanceWindowExecution
@@ -365,12 +366,11 @@ func (c *SSM) CreateActivationRequest(input *CreateActivationInput) (req *reques
 // Systems Manager capabilities. You use the activation code and ID when installing
 // SSM Agent on machines in your hybrid environment. For more information about
 // requirements for managing on-premises instances and VMs using Systems Manager,
-// see Setting Up AWS Systems Manager for Hybrid Environments (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances.html)
+// see Setting up AWS Systems Manager for hybrid environments (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances.html)
 // in the AWS Systems Manager User Guide.
 //
-// On-premises servers or VMs that are registered with Systems Manager and Amazon
-// EC2 instances that you manage with Systems Manager are all called managed
-// instances.
+// On-premises servers or VMs that are registered with Systems Manager and EC2
+// instances that you manage with Systems Manager are all called managed instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -508,7 +508,7 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 //
 //   * InvalidTarget
 //   The target is not valid or does not exist. It might not be configured for
-//   EC2 Systems Manager or you might not have permission to perform the operation.
+//   Systems Manager or you might not have permission to perform the operation.
 //
 //   * InvalidSchedule
 //   The schedule is invalid. Verify your cron or rate expression and try again.
@@ -638,7 +638,7 @@ func (c *SSM) CreateAssociationBatchRequest(input *CreateAssociationBatchInput) 
 //
 //   * InvalidTarget
 //   The target is not valid or does not exist. It might not be configured for
-//   EC2 Systems Manager or you might not have permission to perform the operation.
+//   Systems Manager or you might not have permission to perform the operation.
 //
 //   * InvalidSchedule
 //   The schedule is invalid. Verify your cron or rate expression and try again.
@@ -709,10 +709,11 @@ func (c *SSM) CreateDocumentRequest(input *CreateDocumentInput) (req *request.Re
 
 // CreateDocument API operation for Amazon Simple Systems Manager (SSM).
 //
-// Creates a Systems Manager document.
-//
-// After you create a document, you can use CreateAssociation to associate it
-// with one or more running instances.
+// Creates a Systems Manager (SSM) document. An SSM document defines the actions
+// that Systems Manager performs on your managed instances. For more information
+// about SSM documents, including information about supported schemas, features,
+// and syntax, see AWS Systems Manager Documents (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-ssm-docs.html)
+// in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -832,7 +833,7 @@ func (c *SSM) CreateMaintenanceWindowRequest(input *CreateMaintenanceWindowInput
 //   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -906,13 +907,13 @@ func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Requ
 //
 // Creates a new OpsItem. You must have permission in AWS Identity and Access
 // Management (IAM) to create a new OpsItem. For more information, see Getting
-// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// started with OpsCenter (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
 // Operations engineers and IT professionals use OpsCenter to view, investigate,
 // and remediate operational issues impacting the performance and health of
 // their AWS resources. For more information, see AWS Systems Manager OpsCenter
-// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -931,7 +932,7 @@ func (c *SSM) CreateOpsItemRequest(input *CreateOpsItemInput) (req *request.Requ
 //
 //   * OpsItemLimitExceededException
 //   The request caused OpsItems to exceed one or more quotas. For information
-//   about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * OpsItemInvalidParameterException
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -1025,7 +1026,7 @@ func (c *SSM) CreatePatchBaselineRequest(input *CreatePatchBaselineInput) (req *
 //   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -1104,16 +1105,16 @@ func (c *SSM) CreateResourceDataSyncRequest(input *CreateResourceDataSyncInput) 
 //
 // You can configure Systems Manager Inventory to use the SyncToDestination
 // type to synchronize Inventory data from multiple AWS Regions to a single
-// Amazon S3 bucket. For more information, see Configuring Resource Data Sync
-// for Inventory (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html)
+// S3 bucket. For more information, see Configuring Resource Data Sync for Inventory
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-datasync.html)
 // in the AWS Systems Manager User Guide.
 //
 // You can configure Systems Manager Explorer to use the SyncFromSource type
 // to synchronize operational work items (OpsItems) and operational data (OpsData)
-// from multiple AWS Regions to a single Amazon S3 bucket. This type can synchronize
+// from multiple AWS Regions to a single S3 bucket. This type can synchronize
 // OpsItems and OpsData from multiple AWS accounts and Regions or EntireOrganization
-// by using AWS Organizations. For more information, see Setting Up Explorer
-// to Display Data from Multiple Accounts and Regions (http://docs.aws.amazon.com/systems-manager/latest/userguide/Explorer-resource-data-sync.html)
+// by using AWS Organizations. For more information, see Setting up Systems
+// Manager Explorer to display data from multiple accounts and Regions (https://docs.aws.amazon.com/systems-manager/latest/userguide/Explorer-resource-data-sync.html)
 // in the AWS Systems Manager User Guide.
 //
 // A resource data sync is an asynchronous operation that returns immediately.
@@ -2207,7 +2208,7 @@ func (c *SSM) DeregisterTargetFromMaintenanceWindowRequest(input *DeregisterTarg
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -2298,7 +2299,7 @@ func (c *SSM) DeregisterTaskFromMaintenanceWindowRequest(input *DeregisterTaskFr
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -3344,7 +3345,7 @@ func (c *SSM) DescribeEffectivePatchesForPatchBaselineRequest(input *DescribeEff
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * UnsupportedOperatingSystem
@@ -3521,16 +3522,18 @@ func (c *SSM) DescribeInstanceInformationRequest(input *DescribeInstanceInformat
 
 // DescribeInstanceInformation API operation for Amazon Simple Systems Manager (SSM).
 //
-// Describes one or more of your instances. You can use this to get information
-// about instances like the operating system platform, the SSM Agent version
-// (Linux), status etc. If you specify one or more instance IDs, it returns
-// information for those instances. If you do not specify instance IDs, it returns
-// information for all your instances. If you specify an instance ID that is
-// not valid or an instance that you do not own, you receive an error.
+// Describes one or more of your instances, including information about the
+// operating system platform, the version of SSM Agent installed on the instance,
+// instance status, and so on.
+//
+// If you specify one or more instance IDs, it returns information for those
+// instances. If you do not specify instance IDs, it returns information for
+// all your instances. If you specify an instance ID that is not valid or an
+// instance that you do not own, you receive an error.
 //
 // The IamRole field for this API action is the Amazon Identity and Access Management
 // (IAM) role assigned to on-premises instances. This call does not return the
-// IAM role for Amazon EC2 instances.
+// IAM role for EC2 instances.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4052,7 +4055,7 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTaskInvocationsRequest(input *De
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -4139,7 +4142,7 @@ func (c *SSM) DescribeMaintenanceWindowExecutionTasksRequest(input *DescribeMain
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -4310,7 +4313,7 @@ func (c *SSM) DescribeMaintenanceWindowScheduleRequest(input *DescribeMaintenanc
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/DescribeMaintenanceWindowSchedule
@@ -4394,7 +4397,7 @@ func (c *SSM) DescribeMaintenanceWindowTargetsRequest(input *DescribeMaintenance
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -4481,7 +4484,7 @@ func (c *SSM) DescribeMaintenanceWindowTasksRequest(input *DescribeMaintenanceWi
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -4714,13 +4717,13 @@ func (c *SSM) DescribeOpsItemsRequest(input *DescribeOpsItemsInput) (req *reques
 //
 // Query a set of OpsItems. You must have permission in AWS Identity and Access
 // Management (IAM) to query a list of OpsItems. For more information, see Getting
-// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// started with OpsCenter (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
 // Operations engineers and IT professionals use OpsCenter to view, investigate,
 // and remediate operational issues impacting the performance and health of
 // their AWS resources. For more information, see AWS Systems Manager OpsCenter
-// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -5680,7 +5683,7 @@ func (c *SSM) GetConnectionStatusRequest(input *GetConnectionStatusInput) (req *
 // GetConnectionStatus API operation for Amazon Simple Systems Manager (SSM).
 //
 // Retrieves the Session Manager connection status for an instance to determine
-// whether it is connected and ready to receive Session Manager connections.
+// whether it is running and ready to receive Session Manager connections.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5863,10 +5866,10 @@ func (c *SSM) GetDeployablePatchSnapshotForInstanceRequest(input *GetDeployableP
 //   Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
 //
 //   * UnsupportedFeatureRequiredException
-//   Microsoft application patching is only available on EC2 instances and Advanced
-//   Instances. To patch Microsoft applications on on-premises servers and VMs,
-//   you must enable Advanced Instances. For more information, see Using the Advanced-Instances
-//   Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
+//   Microsoft application patching is only available on EC2 instances and advanced
+//   instances. To patch Microsoft applications on on-premises servers and VMs,
+//   you must enable advanced instances. For more information, see Using the advanced-instances
+//   tier (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
 //   in the AWS Systems Manager User Guide.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/ssm-2014-11-06/GetDeployablePatchSnapshotForInstance
@@ -6220,7 +6223,7 @@ func (c *SSM) GetMaintenanceWindowRequest(input *GetMaintenanceWindowInput) (req
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -6307,7 +6310,7 @@ func (c *SSM) GetMaintenanceWindowExecutionRequest(input *GetMaintenanceWindowEx
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -6395,7 +6398,7 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskRequest(input *GetMaintenanceWind
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -6482,7 +6485,7 @@ func (c *SSM) GetMaintenanceWindowExecutionTaskInvocationRequest(input *GetMaint
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -6569,7 +6572,7 @@ func (c *SSM) GetMaintenanceWindowTaskRequest(input *GetMaintenanceWindowTaskInp
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -6643,13 +6646,13 @@ func (c *SSM) GetOpsItemRequest(input *GetOpsItemInput) (req *request.Request, o
 //
 // Get information about an OpsItem by using the ID. You must have permission
 // in AWS Identity and Access Management (IAM) to view information about an
-// OpsItem. For more information, see Getting Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// OpsItem. For more information, see Getting started with OpsCenter (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
 // Operations engineers and IT professionals use OpsCenter to view, investigate,
 // and remediate operational issues impacting the performance and health of
 // their AWS resources. For more information, see AWS Systems Manager OpsCenter
-// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -7323,7 +7326,7 @@ func (c *SSM) GetPatchBaselineRequest(input *GetPatchBaselineInput) (req *reques
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InvalidResourceId
@@ -9424,7 +9427,7 @@ func (c *SSM) PutParameterRequest(input *PutParameterInput) (req *request.Reques
 //
 //   * HierarchyLevelLimitExceededException
 //   A hierarchy can have a maximum of 15 levels. For more information, see Requirements
-//   and Constraints for Parameter Names (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
+//   and constraints for parameter names (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
 //   in the AWS Systems Manager User Guide.
 //
 //   * HierarchyTypeMismatchException
@@ -9550,7 +9553,7 @@ func (c *SSM) RegisterDefaultPatchBaselineRequest(input *RegisterDefaultPatchBas
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -9641,7 +9644,7 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InvalidResourceId
@@ -9653,7 +9656,7 @@ func (c *SSM) RegisterPatchBaselineForPatchGroupRequest(input *RegisterPatchBase
 //   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -9744,7 +9747,7 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * ResourceLimitExceededException
@@ -9752,7 +9755,7 @@ func (c *SSM) RegisterTargetWithMaintenanceWindowRequest(input *RegisterTargetWi
 //   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -9843,7 +9846,7 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * ResourceLimitExceededException
@@ -9851,7 +9854,7 @@ func (c *SSM) RegisterTaskWithMaintenanceWindowRequest(input *RegisterTaskWithMa
 //   For example, too many maintenance windows or patch baselines have been created.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * FeatureNotAvailableException
@@ -10140,7 +10143,7 @@ func (c *SSM) ResumeSessionRequest(input *ResumeSessionInput) (req *request.Requ
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -10357,7 +10360,7 @@ func (c *SSM) SendCommandRequest(input *SendCommandInput) (req *request.Request,
 //   The role name can't contain invalid characters. Also verify that you specified
 //   an IAM role for notifications that includes the required trust policy. For
 //   information about configuring the IAM role for Run Command notifications,
-//   see Configuring Amazon SNS Notifications for Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
+//   see Configuring Amazon SNS Notifications for Run Command (https://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
 //   in the AWS Systems Manager User Guide.
 //
 //   * InvalidNotificationConfig
@@ -10545,7 +10548,7 @@ func (c *SSM) StartAutomationExecutionRequest(input *StartAutomationExecutionInp
 //
 //   * InvalidTarget
 //   The target is not valid or does not exist. It might not be configured for
-//   EC2 Systems Manager or you might not have permission to perform the operation.
+//   Systems Manager or you might not have permission to perform the operation.
 //
 //   * InternalServerError
 //   An error occurred on the server side.
@@ -10622,7 +10625,7 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 //
 // AWS CLI usage: start-session is an interactive command that requires the
 // Session Manager plugin to be installed on the client machine making the call.
-// For information, see Install the Session Manager Plugin for the AWS CLI (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
+// For information, see Install the Session Manager plugin for the AWS CLI (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-working-with-install-plugin.html)
 // in the AWS Systems Manager User Guide.
 //
 // AWS Tools for PowerShell usage: Start-SSMSession is not currently supported
@@ -10641,8 +10644,8 @@ func (c *SSM) StartSessionRequest(input *StartSessionInput) (req *request.Reques
 //
 //   * TargetNotConnected
 //   The specified target instance for the session is not fully configured for
-//   use with Session Manager. For more information, see Getting Started with
-//   Session Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+//   use with Session Manager. For more information, see Getting started with
+//   Session Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
 //   in the AWS Systems Manager User Guide.
 //
 //   * InternalServerError
@@ -10818,7 +10821,7 @@ func (c *SSM) TerminateSessionRequest(input *TerminateSessionInput) (req *reques
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -10943,7 +10946,7 @@ func (c *SSM) UpdateAssociationRequest(input *UpdateAssociationInput) (req *requ
 //
 //   * InvalidTarget
 //   The target is not valid or does not exist. It might not be configured for
-//   EC2 Systems Manager or you might not have permission to perform the operation.
+//   Systems Manager or you might not have permission to perform the operation.
 //
 //   * InvalidAssociationVersion
 //   The version you specified is not valid. Use ListAssociationVersions to view
@@ -11345,7 +11348,7 @@ func (c *SSM) UpdateMaintenanceWindowRequest(input *UpdateMaintenanceWindowInput
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -11449,7 +11452,7 @@ func (c *SSM) UpdateMaintenanceWindowTargetRequest(input *UpdateMaintenanceWindo
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -11555,7 +11558,7 @@ func (c *SSM) UpdateMaintenanceWindowTaskRequest(input *UpdateMaintenanceWindowT
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -11628,8 +11631,10 @@ func (c *SSM) UpdateManagedInstanceRoleRequest(input *UpdateManagedInstanceRoleI
 
 // UpdateManagedInstanceRole API operation for Amazon Simple Systems Manager (SSM).
 //
-// Assigns or changes an Amazon Identity and Access Management (IAM) role for
-// the managed instance.
+// Changes the Amazon Identity and Access Management (IAM) role that is assigned
+// to the on-premises instance or virtual machines (VM). IAM roles are first
+// assigned to these hybrid instances during the activation process. For more
+// information, see CreateActivation.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -11723,13 +11728,13 @@ func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Requ
 //
 // Edit or change an OpsItem. You must have permission in AWS Identity and Access
 // Management (IAM) to update an OpsItem. For more information, see Getting
-// Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
+// started with OpsCenter (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html)
 // in the AWS Systems Manager User Guide.
 //
 // Operations engineers and IT professionals use OpsCenter to view, investigate,
 // and remediate operational issues impacting the performance and health of
 // their AWS resources. For more information, see AWS Systems Manager OpsCenter
-// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -11751,7 +11756,7 @@ func (c *SSM) UpdateOpsItemRequest(input *UpdateOpsItemInput) (req *request.Requ
 //
 //   * OpsItemLimitExceededException
 //   The request caused OpsItems to exceed one or more quotas. For information
-//   about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+//   about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 //
 //   * OpsItemInvalidParameterException
 //   A specified parameter argument isn't valid. Verify the available arguments
@@ -11842,7 +11847,7 @@ func (c *SSM) UpdatePatchBaselineRequest(input *UpdatePatchBaselineInput) (req *
 //   window or Patch baseline, doesn't exist.
 //
 //   For information about resource quotas in Systems Manager, see Systems Manager
-//   Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+//   service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 //   in the AWS General Reference.
 //
 //   * InternalServerError
@@ -11921,6 +11926,9 @@ func (c *SSM) UpdateResourceDataSyncRequest(input *UpdateResourceDataSyncInput) 
 // only the current account option, you can't edit that sync later and choose
 // the Include all accounts from my AWS Organizations configuration option.
 // Instead, you must delete the first resource data sync, and create a new one.
+//
+// This API action only supports a resource data sync that was created with
+// a SyncFromSource SyncType.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12325,8 +12333,8 @@ func (s AddTagsToResourceOutput) GoString() string {
 // Error returned if an attempt is made to register a patch group with a patch
 // baseline that is already registered with a different patch baseline.
 type AlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -12343,17 +12351,17 @@ func (s AlreadyExistsException) GoString() string {
 
 func newErrorAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &AlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AlreadyExistsException) Code() string {
+func (s *AlreadyExistsException) Code() string {
 	return "AlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s AlreadyExistsException) Message() string {
+func (s *AlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12361,29 +12369,29 @@ func (s AlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AlreadyExistsException) OrigErr() error {
+func (s *AlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s AlreadyExistsException) Error() string {
+func (s *AlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You must disassociate a document from all instances before you can delete
 // it.
 type AssociatedInstances struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -12400,17 +12408,17 @@ func (s AssociatedInstances) GoString() string {
 
 func newErrorAssociatedInstances(v protocol.ResponseMetadata) error {
 	return &AssociatedInstances{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociatedInstances) Code() string {
+func (s *AssociatedInstances) Code() string {
 	return "AssociatedInstances"
 }
 
 // Message returns the exception's message.
-func (s AssociatedInstances) Message() string {
+func (s *AssociatedInstances) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12418,22 +12426,22 @@ func (s AssociatedInstances) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociatedInstances) OrigErr() error {
+func (s *AssociatedInstances) OrigErr() error {
 	return nil
 }
 
-func (s AssociatedInstances) Error() string {
+func (s *AssociatedInstances) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociatedInstances) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociatedInstances) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociatedInstances) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociatedInstances) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes an association of a Systems Manager document and an instance.
@@ -12544,8 +12552,8 @@ func (s *Association) SetTargets(v []*Target) *Association {
 
 // The specified association already exists.
 type AssociationAlreadyExists struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -12562,17 +12570,17 @@ func (s AssociationAlreadyExists) GoString() string {
 
 func newErrorAssociationAlreadyExists(v protocol.ResponseMetadata) error {
 	return &AssociationAlreadyExists{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociationAlreadyExists) Code() string {
+func (s *AssociationAlreadyExists) Code() string {
 	return "AssociationAlreadyExists"
 }
 
 // Message returns the exception's message.
-func (s AssociationAlreadyExists) Message() string {
+func (s *AssociationAlreadyExists) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12580,22 +12588,22 @@ func (s AssociationAlreadyExists) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociationAlreadyExists) OrigErr() error {
+func (s *AssociationAlreadyExists) OrigErr() error {
 	return nil
 }
 
-func (s AssociationAlreadyExists) Error() string {
+func (s *AssociationAlreadyExists) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociationAlreadyExists) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociationAlreadyExists) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociationAlreadyExists) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociationAlreadyExists) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes the parameters for a document.
@@ -12665,7 +12673,7 @@ type AssociationDescription struct {
 	// The name of the Systems Manager document.
 	Name *string `type:"string"`
 
-	// An Amazon S3 bucket where you want to store the output details of the request.
+	// An S3 bucket where you want to store the output details of the request.
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
 	// Information about the association.
@@ -12679,6 +12687,20 @@ type AssociationDescription struct {
 
 	// The association status.
 	Status *AssociationStatus `type:"structure"`
+
+	// The mode for generating association compliance. You can specify AUTO or MANUAL.
+	// In AUTO mode, the system uses the status of the association execution to
+	// determine the compliance status. If the association execution runs successfully,
+	// then the association is COMPLIANT. If the association execution doesn't run
+	// successfully, the association is NON-COMPLIANT.
+	//
+	// In MANUAL mode, you must specify the AssociationId as a parameter for the
+	// PutComplianceItems API action. In this case, compliance data is not managed
+	// by State Manager. It is managed by your direct call to the PutComplianceItems
+	// API action.
+	//
+	// By default, all associations use AUTO mode.
+	SyncCompliance *string `type:"string" enum:"AssociationSyncCompliance"`
 
 	// The instances targeted by the request.
 	Targets []*Target `type:"list"`
@@ -12808,6 +12830,12 @@ func (s *AssociationDescription) SetStatus(v *AssociationStatus) *AssociationDes
 	return s
 }
 
+// SetSyncCompliance sets the SyncCompliance field's value.
+func (s *AssociationDescription) SetSyncCompliance(v string) *AssociationDescription {
+	s.SyncCompliance = &v
+	return s
+}
+
 // SetTargets sets the Targets field's value.
 func (s *AssociationDescription) SetTargets(v []*Target) *AssociationDescription {
 	s.Targets = v
@@ -12816,8 +12844,8 @@ func (s *AssociationDescription) SetTargets(v []*Target) *AssociationDescription
 
 // The specified association does not exist.
 type AssociationDoesNotExist struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -12834,17 +12862,17 @@ func (s AssociationDoesNotExist) GoString() string {
 
 func newErrorAssociationDoesNotExist(v protocol.ResponseMetadata) error {
 	return &AssociationDoesNotExist{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociationDoesNotExist) Code() string {
+func (s *AssociationDoesNotExist) Code() string {
 	return "AssociationDoesNotExist"
 }
 
 // Message returns the exception's message.
-func (s AssociationDoesNotExist) Message() string {
+func (s *AssociationDoesNotExist) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12852,22 +12880,22 @@ func (s AssociationDoesNotExist) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociationDoesNotExist) OrigErr() error {
+func (s *AssociationDoesNotExist) OrigErr() error {
 	return nil
 }
 
-func (s AssociationDoesNotExist) Error() string {
+func (s *AssociationDoesNotExist) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociationDoesNotExist) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociationDoesNotExist) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociationDoesNotExist) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociationDoesNotExist) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Includes information about the specified association.
@@ -12960,8 +12988,8 @@ func (s *AssociationExecution) SetStatus(v string) *AssociationExecution {
 
 // The specified execution ID does not exist. Verify the ID number and try again.
 type AssociationExecutionDoesNotExist struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -12978,17 +13006,17 @@ func (s AssociationExecutionDoesNotExist) GoString() string {
 
 func newErrorAssociationExecutionDoesNotExist(v protocol.ResponseMetadata) error {
 	return &AssociationExecutionDoesNotExist{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociationExecutionDoesNotExist) Code() string {
+func (s *AssociationExecutionDoesNotExist) Code() string {
 	return "AssociationExecutionDoesNotExist"
 }
 
 // Message returns the exception's message.
-func (s AssociationExecutionDoesNotExist) Message() string {
+func (s *AssociationExecutionDoesNotExist) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12996,22 +13024,22 @@ func (s AssociationExecutionDoesNotExist) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociationExecutionDoesNotExist) OrigErr() error {
+func (s *AssociationExecutionDoesNotExist) OrigErr() error {
 	return nil
 }
 
-func (s AssociationExecutionDoesNotExist) Error() string {
+func (s *AssociationExecutionDoesNotExist) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociationExecutionDoesNotExist) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociationExecutionDoesNotExist) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociationExecutionDoesNotExist) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociationExecutionDoesNotExist) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Filters used in the request.
@@ -13294,8 +13322,8 @@ func (s *AssociationFilter) SetValue(v string) *AssociationFilter {
 
 // You can have at most 2,000 active associations.
 type AssociationLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -13312,17 +13340,17 @@ func (s AssociationLimitExceeded) GoString() string {
 
 func newErrorAssociationLimitExceeded(v protocol.ResponseMetadata) error {
 	return &AssociationLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociationLimitExceeded) Code() string {
+func (s *AssociationLimitExceeded) Code() string {
 	return "AssociationLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s AssociationLimitExceeded) Message() string {
+func (s *AssociationLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13330,22 +13358,22 @@ func (s AssociationLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociationLimitExceeded) OrigErr() error {
+func (s *AssociationLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s AssociationLimitExceeded) Error() string {
+func (s *AssociationLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociationLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociationLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociationLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociationLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about the association.
@@ -13535,6 +13563,20 @@ type AssociationVersionInfo struct {
 	// version was created.
 	ScheduleExpression *string `min:"1" type:"string"`
 
+	// The mode for generating association compliance. You can specify AUTO or MANUAL.
+	// In AUTO mode, the system uses the status of the association execution to
+	// determine the compliance status. If the association execution runs successfully,
+	// then the association is COMPLIANT. If the association execution doesn't run
+	// successfully, the association is NON-COMPLIANT.
+	//
+	// In MANUAL mode, you must specify the AssociationId as a parameter for the
+	// PutComplianceItems API action. In this case, compliance data is not managed
+	// by State Manager. It is managed by your direct call to the PutComplianceItems
+	// API action.
+	//
+	// By default, all associations use AUTO mode.
+	SyncCompliance *string `type:"string" enum:"AssociationSyncCompliance"`
+
 	// The targets specified for the association when the association version was
 	// created.
 	Targets []*Target `type:"list"`
@@ -13622,6 +13664,12 @@ func (s *AssociationVersionInfo) SetScheduleExpression(v string) *AssociationVer
 	return s
 }
 
+// SetSyncCompliance sets the SyncCompliance field's value.
+func (s *AssociationVersionInfo) SetSyncCompliance(v string) *AssociationVersionInfo {
+	s.SyncCompliance = &v
+	return s
+}
+
 // SetTargets sets the Targets field's value.
 func (s *AssociationVersionInfo) SetTargets(v []*Target) *AssociationVersionInfo {
 	s.Targets = v
@@ -13631,8 +13679,8 @@ func (s *AssociationVersionInfo) SetTargets(v []*Target) *AssociationVersionInfo
 // You have reached the maximum number versions allowed for an association.
 // Each association has a limit of 1,000 versions.
 type AssociationVersionLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -13649,17 +13697,17 @@ func (s AssociationVersionLimitExceeded) GoString() string {
 
 func newErrorAssociationVersionLimitExceeded(v protocol.ResponseMetadata) error {
 	return &AssociationVersionLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociationVersionLimitExceeded) Code() string {
+func (s *AssociationVersionLimitExceeded) Code() string {
 	return "AssociationVersionLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s AssociationVersionLimitExceeded) Message() string {
+func (s *AssociationVersionLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13667,22 +13715,22 @@ func (s AssociationVersionLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociationVersionLimitExceeded) OrigErr() error {
+func (s *AssociationVersionLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s AssociationVersionLimitExceeded) Error() string {
+func (s *AssociationVersionLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociationVersionLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociationVersionLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociationVersionLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociationVersionLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A structure that includes attributes that describe a document attachment.
@@ -13844,8 +13892,8 @@ func (s *AttachmentsSource) SetValues(v []*string) *AttachmentsSource {
 
 // An Automation document with the specified name could not be found.
 type AutomationDefinitionNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -13862,17 +13910,17 @@ func (s AutomationDefinitionNotFoundException) GoString() string {
 
 func newErrorAutomationDefinitionNotFoundException(v protocol.ResponseMetadata) error {
 	return &AutomationDefinitionNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AutomationDefinitionNotFoundException) Code() string {
+func (s *AutomationDefinitionNotFoundException) Code() string {
 	return "AutomationDefinitionNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s AutomationDefinitionNotFoundException) Message() string {
+func (s *AutomationDefinitionNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13880,28 +13928,28 @@ func (s AutomationDefinitionNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AutomationDefinitionNotFoundException) OrigErr() error {
+func (s *AutomationDefinitionNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s AutomationDefinitionNotFoundException) Error() string {
+func (s *AutomationDefinitionNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AutomationDefinitionNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AutomationDefinitionNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AutomationDefinitionNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AutomationDefinitionNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An Automation document with the specified name and version could not be found.
 type AutomationDefinitionVersionNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -13918,17 +13966,17 @@ func (s AutomationDefinitionVersionNotFoundException) GoString() string {
 
 func newErrorAutomationDefinitionVersionNotFoundException(v protocol.ResponseMetadata) error {
 	return &AutomationDefinitionVersionNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AutomationDefinitionVersionNotFoundException) Code() string {
+func (s *AutomationDefinitionVersionNotFoundException) Code() string {
 	return "AutomationDefinitionVersionNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s AutomationDefinitionVersionNotFoundException) Message() string {
+func (s *AutomationDefinitionVersionNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13936,22 +13984,22 @@ func (s AutomationDefinitionVersionNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AutomationDefinitionVersionNotFoundException) OrigErr() error {
+func (s *AutomationDefinitionVersionNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s AutomationDefinitionVersionNotFoundException) Error() string {
+func (s *AutomationDefinitionVersionNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AutomationDefinitionVersionNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AutomationDefinitionVersionNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AutomationDefinitionVersionNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AutomationDefinitionVersionNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Detailed information about the current state of an individual Automation
@@ -14265,8 +14313,8 @@ func (s *AutomationExecutionFilter) SetValues(v []*string) *AutomationExecutionF
 // The number of simultaneously running Automation executions exceeded the allowable
 // limit.
 type AutomationExecutionLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -14283,17 +14331,17 @@ func (s AutomationExecutionLimitExceededException) GoString() string {
 
 func newErrorAutomationExecutionLimitExceededException(v protocol.ResponseMetadata) error {
 	return &AutomationExecutionLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AutomationExecutionLimitExceededException) Code() string {
+func (s *AutomationExecutionLimitExceededException) Code() string {
 	return "AutomationExecutionLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s AutomationExecutionLimitExceededException) Message() string {
+func (s *AutomationExecutionLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14301,22 +14349,22 @@ func (s AutomationExecutionLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AutomationExecutionLimitExceededException) OrigErr() error {
+func (s *AutomationExecutionLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s AutomationExecutionLimitExceededException) Error() string {
+func (s *AutomationExecutionLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AutomationExecutionLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AutomationExecutionLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AutomationExecutionLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AutomationExecutionLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details about a specific Automation execution.
@@ -14331,8 +14379,8 @@ type AutomationExecutionMetadata struct {
 
 	// Use this filter with DescribeAutomationExecutions. Specify either Local or
 	// CrossAccount. CrossAccount is an Automation that runs in multiple AWS Regions
-	// and accounts. For more information, see Executing Automations in Multiple
-	// AWS Regions and Accounts (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
+	// and accounts. For more information, see Running Automation workflows in multiple
+	// AWS Regions and accounts (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
 	// in the AWS Systems Manager User Guide.
 	AutomationType *string `type:"string" enum:"AutomationType"`
 
@@ -14361,7 +14409,7 @@ type AutomationExecutionMetadata struct {
 	// The list of execution outputs as defined in the Automation document.
 	FailureMessage *string `type:"string"`
 
-	// An Amazon S3 bucket where execution information is stored.
+	// An S3 bucket where execution information is stored.
 	LogFile *string `type:"string"`
 
 	// The MaxConcurrency value specified by the user when starting the Automation.
@@ -14540,8 +14588,8 @@ func (s *AutomationExecutionMetadata) SetTargets(v []*Target) *AutomationExecuti
 // There is no automation execution information for the requested automation
 // execution ID.
 type AutomationExecutionNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -14558,17 +14606,17 @@ func (s AutomationExecutionNotFoundException) GoString() string {
 
 func newErrorAutomationExecutionNotFoundException(v protocol.ResponseMetadata) error {
 	return &AutomationExecutionNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AutomationExecutionNotFoundException) Code() string {
+func (s *AutomationExecutionNotFoundException) Code() string {
 	return "AutomationExecutionNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s AutomationExecutionNotFoundException) Message() string {
+func (s *AutomationExecutionNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14576,29 +14624,29 @@ func (s AutomationExecutionNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AutomationExecutionNotFoundException) OrigErr() error {
+func (s *AutomationExecutionNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s AutomationExecutionNotFoundException) Error() string {
+func (s *AutomationExecutionNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AutomationExecutionNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AutomationExecutionNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AutomationExecutionNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AutomationExecutionNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified step name and execution ID don't exist. Verify the information
 // and try again.
 type AutomationStepNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -14615,17 +14663,17 @@ func (s AutomationStepNotFoundException) GoString() string {
 
 func newErrorAutomationStepNotFoundException(v protocol.ResponseMetadata) error {
 	return &AutomationStepNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AutomationStepNotFoundException) Code() string {
+func (s *AutomationStepNotFoundException) Code() string {
 	return "AutomationStepNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s AutomationStepNotFoundException) Message() string {
+func (s *AutomationStepNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14633,22 +14681,22 @@ func (s AutomationStepNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AutomationStepNotFoundException) OrigErr() error {
+func (s *AutomationStepNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s AutomationStepNotFoundException) Error() string {
+func (s *AutomationStepNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AutomationStepNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AutomationStepNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AutomationStepNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AutomationStepNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type CancelCommandInput struct {
@@ -14874,16 +14922,16 @@ type Command struct {
 	// The maximum number of instances that are allowed to run the command at the
 	// same time. You can specify a number of instances, such as 10, or a percentage
 	// of instances, such as 10%. The default value is 50. For more information
-	// about how to use MaxConcurrency, see Running Commands Using Systems Manager
-	// Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/run-command.html)
+	// about how to use MaxConcurrency, see Running commands using Systems Manager
+	// Run Command (https://docs.aws.amazon.com/systems-manager/latest/userguide/run-command.html)
 	// in the AWS Systems Manager User Guide.
 	MaxConcurrency *string `min:"1" type:"string"`
 
 	// The maximum number of errors allowed before the system stops sending the
 	// command to additional targets. You can specify a number of errors, such as
 	// 10, or a percentage or errors, such as 10%. The default value is 0. For more
-	// information about how to use MaxErrors, see Running Commands Using Systems
-	// Manager Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/run-command.html)
+	// information about how to use MaxErrors, see Running commands using Systems
+	// Manager Run Command (https://docs.aws.amazon.com/systems-manager/latest/userguide/run-command.html)
 	// in the AWS Systems Manager User Guide.
 	MaxErrors *string `min:"1" type:"string"`
 
@@ -14899,8 +14947,8 @@ type Command struct {
 	OutputS3KeyPrefix *string `type:"string"`
 
 	// (Deprecated) You can no longer specify this parameter. The system ignores
-	// it. Instead, Systems Manager automatically determines the Amazon S3 bucket
-	// region.
+	// it. Instead, Systems Manager automatically determines the Region of the S3
+	// bucket.
 	OutputS3Region *string `min:"3" type:"string"`
 
 	// The parameter values to be inserted in the document when running the command.
@@ -14919,8 +14967,8 @@ type Command struct {
 	// A detailed status of the command execution. StatusDetails includes more information
 	// than Status because it includes states resulting from error and concurrency
 	// control parameters. StatusDetails can show different results than Status.
-	// For more information about these statuses, see Understanding Command Statuses
-	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
+	// For more information about these statuses, see Understanding command statuses
+	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
 	// in the AWS Systems Manager User Guide. StatusDetails can be one of the following
 	// values:
 	//
@@ -15217,9 +15265,8 @@ type CommandInvocation struct {
 	// The instance ID in which this invocation was requested.
 	InstanceId *string `type:"string"`
 
-	// The name of the invocation target. For Amazon EC2 instances this is the value
-	// for the aws:Name tag. For on-premises instances, this is the name of the
-	// instance.
+	// The name of the invocation target. For EC2 instances this is the value for
+	// the aws:Name tag. For on-premises instances, this is the name of the instance.
 	InstanceName *string `type:"string"`
 
 	// Configurations for sending notifications about command status changes on
@@ -15233,16 +15280,16 @@ type CommandInvocation struct {
 	// notifications about command status changes on a per instance basis.
 	ServiceRole *string `type:"string"`
 
-	// The URL to the plugin's StdErr file in Amazon S3, if the Amazon S3 bucket
-	// was defined for the parent command. For an invocation, StandardErrorUrl is
-	// populated if there is just one plugin defined for the command, and the Amazon
-	// S3 bucket was defined for the command.
+	// The URL to the plugin's StdErr file in Amazon S3, if the S3 bucket was defined
+	// for the parent command. For an invocation, StandardErrorUrl is populated
+	// if there is just one plugin defined for the command, and the S3 bucket was
+	// defined for the command.
 	StandardErrorUrl *string `type:"string"`
 
-	// The URL to the plugin's StdOut file in Amazon S3, if the Amazon S3 bucket
-	// was defined for the parent command. For an invocation, StandardOutputUrl
-	// is populated if there is just one plugin defined for the command, and the
-	// Amazon S3 bucket was defined for the command.
+	// The URL to the plugin's StdOut file in Amazon S3, if the S3 bucket was defined
+	// for the parent command. For an invocation, StandardOutputUrl is populated
+	// if there is just one plugin defined for the command, and the S3 bucket was
+	// defined for the command.
 	StandardOutputUrl *string `type:"string"`
 
 	// Whether or not the invocation succeeded, failed, or is pending.
@@ -15252,7 +15299,7 @@ type CommandInvocation struct {
 	// targeted by the command). StatusDetails includes more information than Status
 	// because it includes states resulting from error and concurrency control parameters.
 	// StatusDetails can show different results than Status. For more information
-	// about these statuses, see Understanding Command Statuses (http://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
+	// about these statuses, see Understanding command statuses (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
 	// in the AWS Systems Manager User Guide. StatusDetails can be one of the following
 	// values:
 	//
@@ -15421,7 +15468,7 @@ type CommandPlugin struct {
 	//
 	// test_folder/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-1234567876543/awsrunShellScript
 	//
-	// test_folder is the name of the Amazon S3 bucket;
+	// test_folder is the name of the S3 bucket;
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
@@ -15436,7 +15483,7 @@ type CommandPlugin struct {
 	//
 	// test_folder/ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix/i-1234567876543/awsrunShellScript
 	//
-	// test_folder is the name of the Amazon S3 bucket;
+	// test_folder is the name of the S3 bucket;
 	//
 	// ab19cb99-a030-46dd-9dfc-8eSAMPLEPre-Fix is the name of the S3 prefix;
 	//
@@ -15446,8 +15493,7 @@ type CommandPlugin struct {
 	OutputS3KeyPrefix *string `type:"string"`
 
 	// (Deprecated) You can no longer specify this parameter. The system ignores
-	// it. Instead, Systems Manager automatically determines the Amazon S3 bucket
-	// region.
+	// it. Instead, Systems Manager automatically determines the S3 bucket region.
 	OutputS3Region *string `min:"3" type:"string"`
 
 	// A numeric response code generated after running the plugin.
@@ -15465,8 +15511,7 @@ type CommandPlugin struct {
 	StandardErrorUrl *string `type:"string"`
 
 	// The URL for the complete text written by the plugin to stdout in Amazon S3.
-	// If the Amazon S3 bucket for the command was not specified, then this string
-	// is empty.
+	// If the S3 bucket for the command was not specified, then this string is empty.
 	StandardOutputUrl *string `type:"string"`
 
 	// The status of this plugin. You can run a document with multiple plugins.
@@ -15475,8 +15520,8 @@ type CommandPlugin struct {
 	// A detailed status of the plugin execution. StatusDetails includes more information
 	// than Status because it includes states resulting from error and concurrency
 	// control parameters. StatusDetails can show different results than Status.
-	// For more information about these statuses, see Understanding Command Statuses
-	// (http://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
+	// For more information about these statuses, see Understanding command statuses
+	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
 	// in the AWS Systems Manager User Guide. StatusDetails can be one of the following
 	// values:
 	//
@@ -15663,7 +15708,7 @@ func (s *ComplianceExecutionSummary) SetExecutionType(v string) *ComplianceExecu
 
 // Information about the compliance as defined by the resource type. For example,
 // for a patch resource type, Items includes information about the PatchSeverity,
-// Classification, etc.
+// Classification, and so on.
 type ComplianceItem struct {
 	_ struct{} `type:"structure"`
 
@@ -15955,8 +16000,8 @@ func (s *ComplianceSummaryItem) SetNonCompliantSummary(v *NonCompliantSummary) *
 // You specified too many custom compliance types. You can specify a maximum
 // of 10 different types.
 type ComplianceTypeCountLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -15973,17 +16018,17 @@ func (s ComplianceTypeCountLimitExceededException) GoString() string {
 
 func newErrorComplianceTypeCountLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ComplianceTypeCountLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ComplianceTypeCountLimitExceededException) Code() string {
+func (s *ComplianceTypeCountLimitExceededException) Code() string {
 	return "ComplianceTypeCountLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ComplianceTypeCountLimitExceededException) Message() string {
+func (s *ComplianceTypeCountLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15991,22 +16036,22 @@ func (s ComplianceTypeCountLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ComplianceTypeCountLimitExceededException) OrigErr() error {
+func (s *ComplianceTypeCountLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ComplianceTypeCountLimitExceededException) Error() string {
+func (s *ComplianceTypeCountLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ComplianceTypeCountLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ComplianceTypeCountLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ComplianceTypeCountLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ComplianceTypeCountLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A summary of resources that are compliant. The summary is organized according
@@ -16066,7 +16111,7 @@ type CreateActivationInput struct {
 	// The Amazon Identity and Access Management (IAM) role that you want to assign
 	// to the managed instance. This IAM role must provide AssumeRole permissions
 	// for the Systems Manager service principal ssm.amazonaws.com. For more information,
-	// see Create an IAM Service Role for a Hybrid Environment (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-service-role.html)
+	// see Create an IAM service role for a hybrid environment (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-service-role.html)
 	// in the AWS Systems Manager User Guide.
 	//
 	// IamRole is a required field
@@ -16358,7 +16403,7 @@ type CreateAssociationBatchRequestEntry struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// An Amazon S3 bucket where you want to store the results of this request.
+	// An S3 bucket where you want to store the results of this request.
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
 	// A description of the parameters for a document.
@@ -16366,6 +16411,20 @@ type CreateAssociationBatchRequestEntry struct {
 
 	// A cron expression that specifies a schedule when the association runs.
 	ScheduleExpression *string `min:"1" type:"string"`
+
+	// The mode for generating association compliance. You can specify AUTO or MANUAL.
+	// In AUTO mode, the system uses the status of the association execution to
+	// determine the compliance status. If the association execution runs successfully,
+	// then the association is COMPLIANT. If the association execution doesn't run
+	// successfully, the association is NON-COMPLIANT.
+	//
+	// In MANUAL mode, you must specify the AssociationId as a parameter for the
+	// PutComplianceItems API action. In this case, compliance data is not managed
+	// by State Manager. It is managed by your direct call to the PutComplianceItems
+	// API action.
+	//
+	// By default, all associations use AUTO mode.
+	SyncCompliance *string `type:"string" enum:"AssociationSyncCompliance"`
 
 	// The instances targeted by the request.
 	Targets []*Target `type:"list"`
@@ -16487,6 +16546,12 @@ func (s *CreateAssociationBatchRequestEntry) SetScheduleExpression(v string) *Cr
 	return s
 }
 
+// SetSyncCompliance sets the SyncCompliance field's value.
+func (s *CreateAssociationBatchRequestEntry) SetSyncCompliance(v string) *CreateAssociationBatchRequestEntry {
+	s.SyncCompliance = &v
+	return s
+}
+
 // SetTargets sets the Targets field's value.
 func (s *CreateAssociationBatchRequestEntry) SetTargets(v []*Target) *CreateAssociationBatchRequestEntry {
 	s.Targets = v
@@ -16568,7 +16633,7 @@ type CreateAssociationInput struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// An Amazon S3 bucket where you want to store the output details of the request.
+	// An S3 bucket where you want to store the output details of the request.
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
 	// The parameters for the runtime configuration of the document.
@@ -16577,8 +16642,25 @@ type CreateAssociationInput struct {
 	// A cron expression when the association will be applied to the target(s).
 	ScheduleExpression *string `min:"1" type:"string"`
 
-	// The targets (either instances or tags) for the association. You must specify
-	// a value for Targets if you don't specify a value for InstanceId.
+	// The mode for generating association compliance. You can specify AUTO or MANUAL.
+	// In AUTO mode, the system uses the status of the association execution to
+	// determine the compliance status. If the association execution runs successfully,
+	// then the association is COMPLIANT. If the association execution doesn't run
+	// successfully, the association is NON-COMPLIANT.
+	//
+	// In MANUAL mode, you must specify the AssociationId as a parameter for the
+	// PutComplianceItems API action. In this case, compliance data is not managed
+	// by State Manager. It is managed by your direct call to the PutComplianceItems
+	// API action.
+	//
+	// By default, all associations use AUTO mode.
+	SyncCompliance *string `type:"string" enum:"AssociationSyncCompliance"`
+
+	// The targets for the association. You can target instances by using tags,
+	// AWS Resource Groups, all instances in an AWS account, or individual instance
+	// IDs. For more information about choosing targets for an association, see
+	// Using targets and rate controls with State Manager associations (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-state-manager-targets-and-rate-controls.html)
+	// in the AWS Systems Manager User Guide.
 	Targets []*Target `type:"list"`
 }
 
@@ -16698,6 +16780,12 @@ func (s *CreateAssociationInput) SetScheduleExpression(v string) *CreateAssociat
 	return s
 }
 
+// SetSyncCompliance sets the SyncCompliance field's value.
+func (s *CreateAssociationInput) SetSyncCompliance(v string) *CreateAssociationInput {
+	s.SyncCompliance = &v
+	return s
+}
+
 // SetTargets sets the Targets field's value.
 func (s *CreateAssociationInput) SetTargets(v []*Target) *CreateAssociationInput {
 	s.Targets = v
@@ -16734,7 +16822,17 @@ type CreateDocumentInput struct {
 	// document.
 	Attachments []*AttachmentsSource `type:"list"`
 
-	// A valid JSON or YAML string.
+	// The content for the new SSM document in JSON or YAML format. We recommend
+	// storing the contents for your new document in an external JSON or YAML file
+	// and referencing the file in a command.
+	//
+	// For examples, see the following topics in the AWS Systems Manager User Guide.
+	//
+	//    * Create an SSM document (console) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-console.html)
+	//
+	//    * Create an SSM document (AWS CLI) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-document-cli.html)
+	//
+	//    * Create an SSM document (API) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-document-api.html)
 	//
 	// Content is a required field
 	Content *string `min:"1" type:"string" required:"true"`
@@ -16748,8 +16846,8 @@ type CreateDocumentInput struct {
 
 	// A name for the Systems Manager document.
 	//
-	// Do not use the following to begin the names of documents you create. They
-	// are reserved by AWS for use as document prefixes:
+	// You can't use the following strings as document name prefixes. These are
+	// reserved by AWS for use as document name prefixes:
 	//
 	//    * aws
 	//
@@ -16760,8 +16858,13 @@ type CreateDocumentInput struct {
 	// Name is a required field
 	Name *string `type:"string" required:"true"`
 
-	// A list of SSM documents required by a document. For example, an ApplicationConfiguration
-	// document requires an ApplicationConfigurationSchema document.
+	// A list of SSM documents required by a document. This parameter is used exclusively
+	// by AWS AppConfig. When a user creates an AppConfig configuration in an SSM
+	// document, the user must also specify a required document for validation purposes.
+	// In this case, an ApplicationConfiguration document requires an ApplicationConfigurationSchema
+	// document for validation purposes. For more information, see AWS AppConfig
+	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/appconfig.html)
+	// in the AWS Systems Manager User Guide.
 	Requires []*DocumentRequires `min:"1" type:"list"`
 
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
@@ -16781,8 +16884,8 @@ type CreateDocumentInput struct {
 	// on. For example, to run a document on EC2 instances, specify the following
 	// value: /AWS::EC2::Instance. If you specify a value of '/' the document can
 	// run on all types of resources. If you don't specify a value, the document
-	// can't run on any resources. For a list of valid resource types, see AWS Resource
-	// Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+	// can't run on any resources. For a list of valid resource types, see AWS resource
+	// and property types reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 	// in the AWS CloudFormation User Guide.
 	TargetType *string `type:"string"`
 
@@ -17189,7 +17292,7 @@ type CreateOpsItemInput struct {
 	// Use the /aws/resources key in OperationalData to specify a related resource
 	// in the request. Use the /aws/automations key in OperationalData to associate
 	// an Automation runbook with the OpsItem. To view AWS CLI example commands
-	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// that use these keys, see Creating OpsItems manually (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
 	// in the AWS Systems Manager User Guide.
 	OperationalData map[string]*OpsItemDataValue `type:"map"`
 
@@ -17204,14 +17307,16 @@ type CreateOpsItemInput struct {
 	// Specify a severity to assign to an OpsItem.
 	Severity *string `min:"1" type:"string"`
 
-	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager.
+	// The origin of the OpsItem, such as Amazon EC2 or Systems Manager.
+	//
+	// The source name can't contain the following strings: aws, amazon, and amzn.
 	//
 	// Source is a required field
 	Source *string `min:"1" type:"string" required:"true"`
 
 	// Optional metadata that you assign to a resource. You can restrict access
 	// to OpsItems by using an inline IAM policy that specifies tags. For more information,
-	// see Getting Started with OpsCenter (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html#OpsCenter-getting-started-user-permissions)
+	// see Getting started with OpsCenter (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-getting-started.html#OpsCenter-getting-started-user-permissions)
 	// in the AWS Systems Manager User Guide.
 	//
 	// Tags use a key-value pair. For example:
@@ -17387,8 +17492,8 @@ type CreatePatchBaselineInput struct {
 	// A list of explicitly approved patches for the baseline.
 	//
 	// For information about accepted formats for lists of approved patches and
-	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// rejected patches, see About package name formats for approved and rejected
+	// patch lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	ApprovedPatches []*string `type:"list"`
 
@@ -17423,8 +17528,8 @@ type CreatePatchBaselineInput struct {
 	// A list of explicitly rejected patches for the baseline.
 	//
 	// For information about accepted formats for lists of approved patches and
-	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// rejected patches, see About package name formats for approved and rejected
+	// patch lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
@@ -17627,7 +17732,8 @@ func (s *CreatePatchBaselineOutput) SetBaselineId(v string) *CreatePatchBaseline
 type CreateResourceDataSyncInput struct {
 	_ struct{} `type:"structure"`
 
-	// Amazon S3 configuration details for the sync.
+	// Amazon S3 configuration details for the sync. This parameter is required
+	// if the SyncType value is SyncToDestination.
 	S3Destination *ResourceDataSyncS3Destination `type:"structure"`
 
 	// A name for the configuration.
@@ -17635,13 +17741,17 @@ type CreateResourceDataSyncInput struct {
 	// SyncName is a required field
 	SyncName *string `min:"1" type:"string" required:"true"`
 
-	// Specify information about the data sources to synchronize.
+	// Specify information about the data sources to synchronize. This parameter
+	// is required if the SyncType value is SyncFromSource.
 	SyncSource *ResourceDataSyncSource `type:"structure"`
 
 	// Specify SyncToDestination to create a resource data sync that synchronizes
-	// data from multiple AWS Regions to an Amazon S3 bucket. Specify SyncFromSource
-	// to synchronize data from multiple AWS accounts and Regions, as listed in
-	// AWS Organizations.
+	// data to an S3 bucket for Inventory. If you specify SyncToDestination, you
+	// must provide a value for S3Destination. Specify SyncFromSource to synchronize
+	// data from a single account and multiple Regions, or multiple AWS accounts
+	// and Regions, as listed in AWS Organizations for Explorer. If you specify
+	// SyncFromSource, you must provide a value for SyncSource. The default value
+	// is SyncToDestination.
 	SyncType *string `min:"1" type:"string"`
 }
 
@@ -17725,8 +17835,8 @@ func (s CreateResourceDataSyncOutput) GoString() string {
 // You have exceeded the limit for custom schemas. Delete one or more custom
 // schemas and try again.
 type CustomSchemaCountLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -17743,17 +17853,17 @@ func (s CustomSchemaCountLimitExceededException) GoString() string {
 
 func newErrorCustomSchemaCountLimitExceededException(v protocol.ResponseMetadata) error {
 	return &CustomSchemaCountLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s CustomSchemaCountLimitExceededException) Code() string {
+func (s *CustomSchemaCountLimitExceededException) Code() string {
 	return "CustomSchemaCountLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s CustomSchemaCountLimitExceededException) Message() string {
+func (s *CustomSchemaCountLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -17761,22 +17871,22 @@ func (s CustomSchemaCountLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s CustomSchemaCountLimitExceededException) OrigErr() error {
+func (s *CustomSchemaCountLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s CustomSchemaCountLimitExceededException) Error() string {
+func (s *CustomSchemaCountLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s CustomSchemaCountLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *CustomSchemaCountLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s CustomSchemaCountLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *CustomSchemaCountLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type DeleteActivationInput struct {
@@ -18067,7 +18177,7 @@ type DeleteInventoryOutput struct {
 	DeletionId *string `type:"string"`
 
 	// A summary of the delete operation. For more information about this summary,
-	// see Understanding the Delete Inventory Summary (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-delete.html#sysman-inventory-delete-summary)
+	// see Deleting custom inventory (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-custom.html#sysman-inventory-delete-summary)
 	// in the AWS Systems Manager User Guide.
 	DeletionSummary *InventoryDeletionSummary `type:"structure"`
 
@@ -19692,7 +19802,7 @@ type DescribeDocumentPermissionOutput struct {
 	// either an AWS account or All.
 	AccountIds []*string `type:"list"`
 
-	// A list of of AWS accounts where the current document is shared and the version
+	// A list of AWS accounts where the current document is shared and the version
 	// shared with each account.
 	AccountSharingInfoList []*AccountSharingInfo `type:"list"`
 }
@@ -20009,17 +20119,16 @@ type DescribeInstanceInformationInput struct {
 	_ struct{} `type:"structure"`
 
 	// One or more filters. Use a filter to return a more specific list of instances.
-	// You can filter on Amazon EC2 tag. Specify tags by using a key-value mapping.
+	// You can filter based on tags applied to EC2 instances. Use this Filters data
+	// type instead of InstanceInformationFilterList, which is deprecated.
 	Filters []*InstanceInformationStringFilter `type:"list"`
 
 	// This is a legacy method. We recommend that you don't use this method. Instead,
-	// use the InstanceInformationFilter action. The InstanceInformationFilter action
-	// enables you to return instance information by using tags that are specified
-	// as a key-value mapping.
+	// use the Filters data type. Filters enables you to return instance information
+	// by filtering based on tags applied to managed instances.
 	//
-	// If you do use this method, then you can't use the InstanceInformationFilter
-	// action. Using this method and the InstanceInformationFilter action causes
-	// an exception error.
+	// Attempting to use InstanceInformationFilterList and Filters leads to an exception
+	// error.
 	InstanceInformationFilterList []*InstanceInformationFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -21559,7 +21668,7 @@ type DescribeOpsItemsInput struct {
 	// A token to start the list. Use this token to get the next set of results.
 	NextToken *string `type:"string"`
 
-	// One or more filters to limit the reponse.
+	// One or more filters to limit the response.
 	//
 	//    * Key: CreatedTime Operations: GreaterThan, LessThan
 	//
@@ -21765,8 +21874,7 @@ func (s *DescribeParametersInput) SetParameterFilters(v []*ParameterStringFilter
 type DescribeParametersOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The token to use when requesting the next set of items. If there are no additional
-	// items to return, the string is empty.
+	// The token to use when requesting the next set of items.
 	NextToken *string `type:"string"`
 
 	// Parameters returned by the request.
@@ -22383,8 +22491,8 @@ func (s *DescribeSessionsOutput) SetSessions(v []*Session) *DescribeSessionsOutp
 
 // The specified document already exists.
 type DocumentAlreadyExists struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -22401,17 +22509,17 @@ func (s DocumentAlreadyExists) GoString() string {
 
 func newErrorDocumentAlreadyExists(v protocol.ResponseMetadata) error {
 	return &DocumentAlreadyExists{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DocumentAlreadyExists) Code() string {
+func (s *DocumentAlreadyExists) Code() string {
 	return "DocumentAlreadyExists"
 }
 
 // Message returns the exception's message.
-func (s DocumentAlreadyExists) Message() string {
+func (s *DocumentAlreadyExists) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -22419,22 +22527,22 @@ func (s DocumentAlreadyExists) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DocumentAlreadyExists) OrigErr() error {
+func (s *DocumentAlreadyExists) OrigErr() error {
 	return nil
 }
 
-func (s DocumentAlreadyExists) Error() string {
+func (s *DocumentAlreadyExists) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DocumentAlreadyExists) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DocumentAlreadyExists) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DocumentAlreadyExists) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DocumentAlreadyExists) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A default version of a document.
@@ -22484,7 +22592,7 @@ type DocumentDescription struct {
 	_ struct{} `type:"structure"`
 
 	// Details about the document attachments, including names, locations, sizes,
-	// etc.
+	// and so on.
 	AttachmentsInformation []*AttachmentInformation `type:"list"`
 
 	// The date when the document was created.
@@ -22554,7 +22662,7 @@ type DocumentDescription struct {
 
 	// The target type which defines the kinds of resources the document can run
 	// on. For example, /AWS::EC2::Instance. For a list of valid resource types,
-	// see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+	// see AWS resource and property types reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 	// in the AWS CloudFormation User Guide.
 	TargetType *string `type:"string"`
 
@@ -22704,7 +22812,7 @@ func (s *DocumentDescription) SetVersionName(v string) *DocumentDescription {
 	return s
 }
 
-// Describes a filter.
+// This data type is deprecated. Instead, use DocumentKeyValuesFilter.
 type DocumentFilter struct {
 	_ struct{} `type:"structure"`
 
@@ -22794,7 +22902,7 @@ type DocumentIdentifier struct {
 
 	// The target type which defines the kinds of resources the document can run
 	// on. For example, /AWS::EC2::Instance. For a list of valid resource types,
-	// see AWS Resource Types Reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
+	// see AWS resource and property types reference (http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html)
 	// in the AWS CloudFormation User Guide.
 	TargetType *string `type:"string"`
 
@@ -22899,7 +23007,7 @@ func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
 // for a key, documents that are identified by any of the values are returned
 // in the results.
 //
-// To specify a custom key and value pair, use the format Key=tag:[tagName],Values=[valueName].
+// To specify a custom key and value pair, use the format Key=tag:tagName,Values=valueName.
 //
 // For example, if you created a Key called region and are using the AWS CLI
 // to call the list-documents command:
@@ -22952,8 +23060,8 @@ func (s *DocumentKeyValuesFilter) SetValues(v []*string) *DocumentKeyValuesFilte
 
 // You can have at most 500 active Systems Manager documents.
 type DocumentLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -22970,17 +23078,17 @@ func (s DocumentLimitExceeded) GoString() string {
 
 func newErrorDocumentLimitExceeded(v protocol.ResponseMetadata) error {
 	return &DocumentLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DocumentLimitExceeded) Code() string {
+func (s *DocumentLimitExceeded) Code() string {
 	return "DocumentLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s DocumentLimitExceeded) Message() string {
+func (s *DocumentLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -22988,22 +23096,22 @@ func (s DocumentLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DocumentLimitExceeded) OrigErr() error {
+func (s *DocumentLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s DocumentLimitExceeded) Error() string {
+func (s *DocumentLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DocumentLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DocumentLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DocumentLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DocumentLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Parameters specified in a System Manager document that run on the server
@@ -23064,8 +23172,8 @@ func (s *DocumentParameter) SetType(v string) *DocumentParameter {
 // a document with a maximum of 20 accounts. You can publicly share up to five
 // documents. If you need to increase this limit, contact AWS Support.
 type DocumentPermissionLimit struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -23082,17 +23190,17 @@ func (s DocumentPermissionLimit) GoString() string {
 
 func newErrorDocumentPermissionLimit(v protocol.ResponseMetadata) error {
 	return &DocumentPermissionLimit{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DocumentPermissionLimit) Code() string {
+func (s *DocumentPermissionLimit) Code() string {
 	return "DocumentPermissionLimit"
 }
 
 // Message returns the exception's message.
-func (s DocumentPermissionLimit) Message() string {
+func (s *DocumentPermissionLimit) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23100,22 +23208,22 @@ func (s DocumentPermissionLimit) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DocumentPermissionLimit) OrigErr() error {
+func (s *DocumentPermissionLimit) OrigErr() error {
 	return nil
 }
 
-func (s DocumentPermissionLimit) Error() string {
+func (s *DocumentPermissionLimit) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DocumentPermissionLimit) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DocumentPermissionLimit) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DocumentPermissionLimit) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DocumentPermissionLimit) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An SSM document required by the current document.
@@ -23263,8 +23371,8 @@ func (s *DocumentVersionInfo) SetVersionName(v string) *DocumentVersionInfo {
 // The document has too many versions. Delete one or more document versions
 // and try again.
 type DocumentVersionLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -23281,17 +23389,17 @@ func (s DocumentVersionLimitExceeded) GoString() string {
 
 func newErrorDocumentVersionLimitExceeded(v protocol.ResponseMetadata) error {
 	return &DocumentVersionLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DocumentVersionLimitExceeded) Code() string {
+func (s *DocumentVersionLimitExceeded) Code() string {
 	return "DocumentVersionLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s DocumentVersionLimitExceeded) Message() string {
+func (s *DocumentVersionLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23299,33 +23407,33 @@ func (s DocumentVersionLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DocumentVersionLimitExceeded) OrigErr() error {
+func (s *DocumentVersionLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s DocumentVersionLimitExceeded) Error() string {
+func (s *DocumentVersionLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DocumentVersionLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DocumentVersionLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DocumentVersionLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DocumentVersionLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Error returned when the ID specified for a resource, such as a maintenance
 // window or Patch baseline, doesn't exist.
 //
 // For information about resource quotas in Systems Manager, see Systems Manager
-// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+// service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 // in the AWS General Reference.
 type DoesNotExistException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -23342,17 +23450,17 @@ func (s DoesNotExistException) GoString() string {
 
 func newErrorDoesNotExistException(v protocol.ResponseMetadata) error {
 	return &DoesNotExistException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DoesNotExistException) Code() string {
+func (s *DoesNotExistException) Code() string {
 	return "DoesNotExistException"
 }
 
 // Message returns the exception's message.
-func (s DoesNotExistException) Message() string {
+func (s *DoesNotExistException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23360,29 +23468,29 @@ func (s DoesNotExistException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DoesNotExistException) OrigErr() error {
+func (s *DoesNotExistException) OrigErr() error {
 	return nil
 }
 
-func (s DoesNotExistException) Error() string {
+func (s *DoesNotExistException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DoesNotExistException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DoesNotExistException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DoesNotExistException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DoesNotExistException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The content of the association document matches another document. Change
 // the content of the document and try again.
 type DuplicateDocumentContent struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -23399,17 +23507,17 @@ func (s DuplicateDocumentContent) GoString() string {
 
 func newErrorDuplicateDocumentContent(v protocol.ResponseMetadata) error {
 	return &DuplicateDocumentContent{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DuplicateDocumentContent) Code() string {
+func (s *DuplicateDocumentContent) Code() string {
 	return "DuplicateDocumentContent"
 }
 
 // Message returns the exception's message.
-func (s DuplicateDocumentContent) Message() string {
+func (s *DuplicateDocumentContent) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23417,29 +23525,29 @@ func (s DuplicateDocumentContent) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DuplicateDocumentContent) OrigErr() error {
+func (s *DuplicateDocumentContent) OrigErr() error {
 	return nil
 }
 
-func (s DuplicateDocumentContent) Error() string {
+func (s *DuplicateDocumentContent) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DuplicateDocumentContent) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DuplicateDocumentContent) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DuplicateDocumentContent) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DuplicateDocumentContent) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The version name has already been used in this document. Specify a different
 // version name, and then try again.
 type DuplicateDocumentVersionName struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -23456,17 +23564,17 @@ func (s DuplicateDocumentVersionName) GoString() string {
 
 func newErrorDuplicateDocumentVersionName(v protocol.ResponseMetadata) error {
 	return &DuplicateDocumentVersionName{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DuplicateDocumentVersionName) Code() string {
+func (s *DuplicateDocumentVersionName) Code() string {
 	return "DuplicateDocumentVersionName"
 }
 
 // Message returns the exception's message.
-func (s DuplicateDocumentVersionName) Message() string {
+func (s *DuplicateDocumentVersionName) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23474,28 +23582,28 @@ func (s DuplicateDocumentVersionName) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DuplicateDocumentVersionName) OrigErr() error {
+func (s *DuplicateDocumentVersionName) OrigErr() error {
 	return nil
 }
 
-func (s DuplicateDocumentVersionName) Error() string {
+func (s *DuplicateDocumentVersionName) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DuplicateDocumentVersionName) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DuplicateDocumentVersionName) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DuplicateDocumentVersionName) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DuplicateDocumentVersionName) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You cannot specify an instance ID in more than one association.
 type DuplicateInstanceId struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -23512,17 +23620,17 @@ func (s DuplicateInstanceId) GoString() string {
 
 func newErrorDuplicateInstanceId(v protocol.ResponseMetadata) error {
 	return &DuplicateInstanceId{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s DuplicateInstanceId) Code() string {
+func (s *DuplicateInstanceId) Code() string {
 	return "DuplicateInstanceId"
 }
 
 // Message returns the exception's message.
-func (s DuplicateInstanceId) Message() string {
+func (s *DuplicateInstanceId) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23530,22 +23638,22 @@ func (s DuplicateInstanceId) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s DuplicateInstanceId) OrigErr() error {
+func (s *DuplicateInstanceId) OrigErr() error {
 	return nil
 }
 
-func (s DuplicateInstanceId) Error() string {
+func (s *DuplicateInstanceId) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s DuplicateInstanceId) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *DuplicateInstanceId) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s DuplicateInstanceId) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *DuplicateInstanceId) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The EffectivePatch structure defines metadata about a patch along with the
@@ -23678,8 +23786,8 @@ func (s *FailureDetails) SetFailureType(v string) *FailureDetails {
 // You attempted to register a LAMBDA or STEP_FUNCTIONS task in a region where
 // the corresponding service is not available.
 type FeatureNotAvailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -23696,17 +23804,17 @@ func (s FeatureNotAvailableException) GoString() string {
 
 func newErrorFeatureNotAvailableException(v protocol.ResponseMetadata) error {
 	return &FeatureNotAvailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s FeatureNotAvailableException) Code() string {
+func (s *FeatureNotAvailableException) Code() string {
 	return "FeatureNotAvailableException"
 }
 
 // Message returns the exception's message.
-func (s FeatureNotAvailableException) Message() string {
+func (s *FeatureNotAvailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23714,22 +23822,22 @@ func (s FeatureNotAvailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s FeatureNotAvailableException) OrigErr() error {
+func (s *FeatureNotAvailableException) OrigErr() error {
 	return nil
 }
 
-func (s FeatureNotAvailableException) Error() string {
+func (s *FeatureNotAvailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s FeatureNotAvailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *FeatureNotAvailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s FeatureNotAvailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *FeatureNotAvailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type GetAutomationExecutionInput struct {
@@ -23905,7 +24013,7 @@ type GetCommandInvocationInput struct {
 	CommandId *string `min:"36" type:"string" required:"true"`
 
 	// (Required) The ID of the managed instance targeted by the command. A managed
-	// instance can be an Amazon EC2 instance or an instance in your hybrid environment
+	// instance can be an EC2 instance or an instance in your hybrid environment
 	// that is configured for Systems Manager.
 	//
 	// InstanceId is a required field
@@ -24007,8 +24115,8 @@ type GetCommandInvocationOutput struct {
 	ExecutionStartDateTime *string `type:"string"`
 
 	// The ID of the managed instance targeted by the command. A managed instance
-	// can be an Amazon EC2 instance or an instance in your hybrid environment that
-	// is configured for Systems Manager.
+	// can be an EC2 instance or an instance in your hybrid environment that is
+	// configured for Systems Manager.
 	InstanceId *string `type:"string"`
 
 	// The name of the plugin for which you want detailed results. For example,
@@ -24034,7 +24142,7 @@ type GetCommandInvocationOutput struct {
 	StandardOutputContent *string `type:"string"`
 
 	// The URL for the complete text written by the plugin to stdout in Amazon S3.
-	// If an Amazon S3 bucket was not specified, then this string is empty.
+	// If an S3 bucket was not specified, then this string is empty.
 	StandardOutputUrl *string `type:"string"`
 
 	// The status of this invocation plugin. This status can be different than StatusDetails.
@@ -24044,7 +24152,7 @@ type GetCommandInvocationOutput struct {
 	// includes more information than Status because it includes states resulting
 	// from error and concurrency control parameters. StatusDetails can show different
 	// results than Status. For more information about these statuses, see Understanding
-	// Command Statuses (http://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
+	// command statuses (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitor-commands.html)
 	// in the AWS Systems Manager User Guide. StatusDetails can be one of the following
 	// values:
 	//
@@ -24055,10 +24163,10 @@ type GetCommandInvocationOutput struct {
 	//
 	//    * Delayed: The system attempted to send the command to the target, but
 	//    the target was not available. The instance might not be available because
-	//    of network issues, the instance was stopped, etc. The system will try
-	//    to deliver the command again.
+	//    of network issues, because the instance was stopped, or for similar reasons.
+	//    The system will try to send the command again.
 	//
-	//    * Success: The command or plugin was run successfully. This is a terminal
+	//    * Success: The command or plugin ran successfully. This is a terminal
 	//    state.
 	//
 	//    * Delivery Timed Out: The command was not delivered to the instance before
@@ -24456,7 +24564,7 @@ type GetDocumentInput struct {
 
 	// An optional field specifying the version of the artifact associated with
 	// the document. For example, "Release 12, Update 6". This value is unique across
-	// all versions of a document, and cannot be changed.
+	// all versions of a document and can't be changed.
 	VersionName *string `type:"string"`
 }
 
@@ -24511,7 +24619,7 @@ type GetDocumentOutput struct {
 	_ struct{} `type:"structure"`
 
 	// A description of the document attachments, including names, locations, sizes,
-	// etc.
+	// and so on.
 	AttachmentsContent []*AttachmentContent `type:"list"`
 
 	// The contents of the Systems Manager document.
@@ -26717,7 +26825,8 @@ func (s *GetPatchBaselineOutput) SetSources(v []*PatchSource) *GetPatchBaselineO
 type GetServiceSettingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the service setting to get.
+	// The ID of the service setting to get. The setting ID can be /ssm/parameter-store/default-parameter-tier,
+	// /ssm/parameter-store/high-throughput-enabled, or /ssm/managed-instance/activation-tier.
 	//
 	// SettingId is a required field
 	SettingId *string `min:"1" type:"string" required:"true"`
@@ -26780,14 +26889,14 @@ func (s *GetServiceSettingOutput) SetServiceSetting(v *ServiceSetting) *GetServi
 }
 
 // A hierarchy can have a maximum of 15 levels. For more information, see Requirements
-// and Constraints for Parameter Names (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
+// and constraints for parameter names (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
 // in the AWS Systems Manager User Guide.
 type HierarchyLevelLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A hierarchy can have a maximum of 15 levels. For more information, see Requirements
-	// and Constraints for Parameter Names (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
+	// and constraints for parameter names (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
 	// in the AWS Systems Manager User Guide.
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -26804,17 +26913,17 @@ func (s HierarchyLevelLimitExceededException) GoString() string {
 
 func newErrorHierarchyLevelLimitExceededException(v protocol.ResponseMetadata) error {
 	return &HierarchyLevelLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s HierarchyLevelLimitExceededException) Code() string {
+func (s *HierarchyLevelLimitExceededException) Code() string {
 	return "HierarchyLevelLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s HierarchyLevelLimitExceededException) Message() string {
+func (s *HierarchyLevelLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -26822,30 +26931,30 @@ func (s HierarchyLevelLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s HierarchyLevelLimitExceededException) OrigErr() error {
+func (s *HierarchyLevelLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s HierarchyLevelLimitExceededException) Error() string {
+func (s *HierarchyLevelLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s HierarchyLevelLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *HierarchyLevelLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s HierarchyLevelLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *HierarchyLevelLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Parameter Store does not support changing a parameter type in a hierarchy.
 // For example, you can't change a parameter from a String type to a SecureString
 // type. You must create a new, unique parameter.
 type HierarchyTypeMismatchException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Parameter Store does not support changing a parameter type in a hierarchy.
 	// For example, you can't change a parameter from a String type to a SecureString
@@ -26865,17 +26974,17 @@ func (s HierarchyTypeMismatchException) GoString() string {
 
 func newErrorHierarchyTypeMismatchException(v protocol.ResponseMetadata) error {
 	return &HierarchyTypeMismatchException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s HierarchyTypeMismatchException) Code() string {
+func (s *HierarchyTypeMismatchException) Code() string {
 	return "HierarchyTypeMismatchException"
 }
 
 // Message returns the exception's message.
-func (s HierarchyTypeMismatchException) Message() string {
+func (s *HierarchyTypeMismatchException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -26883,29 +26992,29 @@ func (s HierarchyTypeMismatchException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s HierarchyTypeMismatchException) OrigErr() error {
+func (s *HierarchyTypeMismatchException) OrigErr() error {
 	return nil
 }
 
-func (s HierarchyTypeMismatchException) Error() string {
+func (s *HierarchyTypeMismatchException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s HierarchyTypeMismatchException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *HierarchyTypeMismatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s HierarchyTypeMismatchException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *HierarchyTypeMismatchException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Error returned when an idempotent operation is retried and the parameters
 // don't match the original call to the API with the same idempotency token.
 type IdempotentParameterMismatch struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -26922,17 +27031,17 @@ func (s IdempotentParameterMismatch) GoString() string {
 
 func newErrorIdempotentParameterMismatch(v protocol.ResponseMetadata) error {
 	return &IdempotentParameterMismatch{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IdempotentParameterMismatch) Code() string {
+func (s *IdempotentParameterMismatch) Code() string {
 	return "IdempotentParameterMismatch"
 }
 
 // Message returns the exception's message.
-func (s IdempotentParameterMismatch) Message() string {
+func (s *IdempotentParameterMismatch) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -26940,30 +27049,30 @@ func (s IdempotentParameterMismatch) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IdempotentParameterMismatch) OrigErr() error {
+func (s *IdempotentParameterMismatch) OrigErr() error {
 	return nil
 }
 
-func (s IdempotentParameterMismatch) Error() string {
+func (s *IdempotentParameterMismatch) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IdempotentParameterMismatch) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IdempotentParameterMismatch) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IdempotentParameterMismatch) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IdempotentParameterMismatch) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // There is a conflict in the policies specified for this parameter. You can't,
 // for example, specify two Expiration policies for a parameter. Review your
 // policies, and try again.
 type IncompatiblePolicyException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -26980,17 +27089,17 @@ func (s IncompatiblePolicyException) GoString() string {
 
 func newErrorIncompatiblePolicyException(v protocol.ResponseMetadata) error {
 	return &IncompatiblePolicyException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IncompatiblePolicyException) Code() string {
+func (s *IncompatiblePolicyException) Code() string {
 	return "IncompatiblePolicyException"
 }
 
 // Message returns the exception's message.
-func (s IncompatiblePolicyException) Message() string {
+func (s *IncompatiblePolicyException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -26998,22 +27107,22 @@ func (s IncompatiblePolicyException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IncompatiblePolicyException) OrigErr() error {
+func (s *IncompatiblePolicyException) OrigErr() error {
 	return nil
 }
 
-func (s IncompatiblePolicyException) Error() string {
+func (s *IncompatiblePolicyException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IncompatiblePolicyException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IncompatiblePolicyException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IncompatiblePolicyException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IncompatiblePolicyException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Status information about the aggregated associations.
@@ -27100,11 +27209,11 @@ func (s *InstanceAssociation) SetInstanceId(v string) *InstanceAssociation {
 	return s
 }
 
-// An Amazon S3 bucket where you want to store the results of this request.
+// An S3 bucket where you want to store the results of this request.
 type InstanceAssociationOutputLocation struct {
 	_ struct{} `type:"structure"`
 
-	// An Amazon S3 bucket where you want to store the results of this request.
+	// An S3 bucket where you want to store the results of this request.
 	S3Location *S3OutputLocation `type:"structure"`
 }
 
@@ -27139,11 +27248,11 @@ func (s *InstanceAssociationOutputLocation) SetS3Location(v *S3OutputLocation) *
 	return s
 }
 
-// The URL of Amazon S3 bucket where you want to store the results of this request.
+// The URL of S3 bucket where you want to store the results of this request.
 type InstanceAssociationOutputUrl struct {
 	_ struct{} `type:"structure"`
 
-	// The URL of Amazon S3 bucket where you want to store the results of this request.
+	// The URL of S3 bucket where you want to store the results of this request.
 	S3OutputUrl *S3OutputUrl `type:"structure"`
 }
 
@@ -27197,8 +27306,7 @@ type InstanceAssociationStatusInfo struct {
 	// The name of the association.
 	Name *string `type:"string"`
 
-	// A URL for an Amazon S3 bucket where you want to store the results of this
-	// request.
+	// A URL for an S3 bucket where you want to store the results of this request.
 	OutputUrl *InstanceAssociationOutputUrl `type:"structure"`
 
 	// Status information about the instance association.
@@ -27311,7 +27419,7 @@ type InstanceInformation struct {
 
 	// The Amazon Identity and Access Management (IAM) role assigned to the on-premises
 	// Systems Manager managed instances. This call does not return the IAM role
-	// for Amazon EC2 instances.
+	// for EC2 instances.
 	IamRole *string `type:"string"`
 
 	// The instance ID.
@@ -27618,12 +27726,12 @@ type InstancePatchState struct {
 	FailedCount *int64 `type:"integer"`
 
 	// An https URL or an Amazon S3 path-style URL to a list of patches to be installed.
-	// This patch installation list, which you maintain in an Amazon S3 bucket in
-	// YAML format and specify in the SSM document AWS-RunPatchBaseline, overrides
-	// the patches specified by the default patch baseline.
+	// This patch installation list, which you maintain in an S3 bucket in YAML
+	// format and specify in the SSM document AWS-RunPatchBaseline, overrides the
+	// patches specified by the default patch baseline.
 	//
 	// For more information about the InstallOverrideList parameter, see About the
-	// SSM Document AWS-RunPatchBaseline (http://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-about-aws-runpatchbaseline.html)
+	// SSM document AWS-RunPatchBaseline (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-about-aws-runpatchbaseline.html)
 	// in the AWS Systems Manager User Guide.
 	InstallOverrideList *string `min:"1" type:"string"`
 
@@ -27916,8 +28024,8 @@ func (s *InstancePatchStateFilter) SetValues(v []*string) *InstancePatchStateFil
 
 // An error occurred on the server side.
 type InternalServerError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -27934,17 +28042,17 @@ func (s InternalServerError) GoString() string {
 
 func newErrorInternalServerError(v protocol.ResponseMetadata) error {
 	return &InternalServerError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerError) Code() string {
+func (s *InternalServerError) Code() string {
 	return "InternalServerError"
 }
 
 // Message returns the exception's message.
-func (s InternalServerError) Message() string {
+func (s *InternalServerError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -27952,29 +28060,29 @@ func (s InternalServerError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerError) OrigErr() error {
+func (s *InternalServerError) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerError) Error() string {
+func (s *InternalServerError) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The activation is not valid. The activation might have been deleted, or the
 // ActivationId and the ActivationCode do not match.
 type InvalidActivation struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -27991,17 +28099,17 @@ func (s InvalidActivation) GoString() string {
 
 func newErrorInvalidActivation(v protocol.ResponseMetadata) error {
 	return &InvalidActivation{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidActivation) Code() string {
+func (s *InvalidActivation) Code() string {
 	return "InvalidActivation"
 }
 
 // Message returns the exception's message.
-func (s InvalidActivation) Message() string {
+func (s *InvalidActivation) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28009,29 +28117,29 @@ func (s InvalidActivation) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidActivation) OrigErr() error {
+func (s *InvalidActivation) OrigErr() error {
 	return nil
 }
 
-func (s InvalidActivation) Error() string {
+func (s *InvalidActivation) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidActivation) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidActivation) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidActivation) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidActivation) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The activation ID is not valid. Verify the you entered the correct ActivationId
 // or ActivationCode and try again.
 type InvalidActivationId struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28048,17 +28156,17 @@ func (s InvalidActivationId) GoString() string {
 
 func newErrorInvalidActivationId(v protocol.ResponseMetadata) error {
 	return &InvalidActivationId{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidActivationId) Code() string {
+func (s *InvalidActivationId) Code() string {
 	return "InvalidActivationId"
 }
 
 // Message returns the exception's message.
-func (s InvalidActivationId) Message() string {
+func (s *InvalidActivationId) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28066,29 +28174,29 @@ func (s InvalidActivationId) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidActivationId) OrigErr() error {
+func (s *InvalidActivationId) OrigErr() error {
 	return nil
 }
 
-func (s InvalidActivationId) Error() string {
+func (s *InvalidActivationId) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidActivationId) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidActivationId) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidActivationId) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidActivationId) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified aggregator is not valid for inventory groups. Verify that the
 // aggregator uses a valid inventory type such as AWS:Application or AWS:InstanceInformation.
 type InvalidAggregatorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28105,17 +28213,17 @@ func (s InvalidAggregatorException) GoString() string {
 
 func newErrorInvalidAggregatorException(v protocol.ResponseMetadata) error {
 	return &InvalidAggregatorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAggregatorException) Code() string {
+func (s *InvalidAggregatorException) Code() string {
 	return "InvalidAggregatorException"
 }
 
 // Message returns the exception's message.
-func (s InvalidAggregatorException) Message() string {
+func (s *InvalidAggregatorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28123,28 +28231,28 @@ func (s InvalidAggregatorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAggregatorException) OrigErr() error {
+func (s *InvalidAggregatorException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAggregatorException) Error() string {
+func (s *InvalidAggregatorException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAggregatorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAggregatorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAggregatorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAggregatorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request does not meet the regular expression requirement.
 type InvalidAllowedPatternException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The request does not meet the regular expression requirement.
 	Message_ *string `locationName:"message" type:"string"`
@@ -28162,17 +28270,17 @@ func (s InvalidAllowedPatternException) GoString() string {
 
 func newErrorInvalidAllowedPatternException(v protocol.ResponseMetadata) error {
 	return &InvalidAllowedPatternException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAllowedPatternException) Code() string {
+func (s *InvalidAllowedPatternException) Code() string {
 	return "InvalidAllowedPatternException"
 }
 
 // Message returns the exception's message.
-func (s InvalidAllowedPatternException) Message() string {
+func (s *InvalidAllowedPatternException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28180,28 +28288,28 @@ func (s InvalidAllowedPatternException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAllowedPatternException) OrigErr() error {
+func (s *InvalidAllowedPatternException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAllowedPatternException) Error() string {
+func (s *InvalidAllowedPatternException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAllowedPatternException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAllowedPatternException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAllowedPatternException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAllowedPatternException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The association is not valid or does not exist.
 type InvalidAssociation struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28218,17 +28326,17 @@ func (s InvalidAssociation) GoString() string {
 
 func newErrorInvalidAssociation(v protocol.ResponseMetadata) error {
 	return &InvalidAssociation{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAssociation) Code() string {
+func (s *InvalidAssociation) Code() string {
 	return "InvalidAssociation"
 }
 
 // Message returns the exception's message.
-func (s InvalidAssociation) Message() string {
+func (s *InvalidAssociation) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28236,30 +28344,30 @@ func (s InvalidAssociation) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAssociation) OrigErr() error {
+func (s *InvalidAssociation) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAssociation) Error() string {
+func (s *InvalidAssociation) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAssociation) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAssociation) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAssociation) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAssociation) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The version you specified is not valid. Use ListAssociationVersions to view
 // all versions of an association according to the association ID. Or, use the
 // $LATEST parameter to view the latest version of the association.
 type InvalidAssociationVersion struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28276,17 +28384,17 @@ func (s InvalidAssociationVersion) GoString() string {
 
 func newErrorInvalidAssociationVersion(v protocol.ResponseMetadata) error {
 	return &InvalidAssociationVersion{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAssociationVersion) Code() string {
+func (s *InvalidAssociationVersion) Code() string {
 	return "InvalidAssociationVersion"
 }
 
 // Message returns the exception's message.
-func (s InvalidAssociationVersion) Message() string {
+func (s *InvalidAssociationVersion) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28294,30 +28402,30 @@ func (s InvalidAssociationVersion) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAssociationVersion) OrigErr() error {
+func (s *InvalidAssociationVersion) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAssociationVersion) Error() string {
+func (s *InvalidAssociationVersion) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAssociationVersion) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAssociationVersion) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAssociationVersion) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAssociationVersion) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The supplied parameters for invoking the specified Automation document are
 // incorrect. For example, they may not match the set of parameters permitted
 // for the specified Automation document.
 type InvalidAutomationExecutionParametersException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28334,17 +28442,17 @@ func (s InvalidAutomationExecutionParametersException) GoString() string {
 
 func newErrorInvalidAutomationExecutionParametersException(v protocol.ResponseMetadata) error {
 	return &InvalidAutomationExecutionParametersException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAutomationExecutionParametersException) Code() string {
+func (s *InvalidAutomationExecutionParametersException) Code() string {
 	return "InvalidAutomationExecutionParametersException"
 }
 
 // Message returns the exception's message.
-func (s InvalidAutomationExecutionParametersException) Message() string {
+func (s *InvalidAutomationExecutionParametersException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28352,28 +28460,28 @@ func (s InvalidAutomationExecutionParametersException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAutomationExecutionParametersException) OrigErr() error {
+func (s *InvalidAutomationExecutionParametersException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAutomationExecutionParametersException) Error() string {
+func (s *InvalidAutomationExecutionParametersException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAutomationExecutionParametersException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAutomationExecutionParametersException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAutomationExecutionParametersException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAutomationExecutionParametersException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The signal is not valid for the current Automation execution.
 type InvalidAutomationSignalException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28390,17 +28498,17 @@ func (s InvalidAutomationSignalException) GoString() string {
 
 func newErrorInvalidAutomationSignalException(v protocol.ResponseMetadata) error {
 	return &InvalidAutomationSignalException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAutomationSignalException) Code() string {
+func (s *InvalidAutomationSignalException) Code() string {
 	return "InvalidAutomationSignalException"
 }
 
 // Message returns the exception's message.
-func (s InvalidAutomationSignalException) Message() string {
+func (s *InvalidAutomationSignalException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28408,28 +28516,28 @@ func (s InvalidAutomationSignalException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAutomationSignalException) OrigErr() error {
+func (s *InvalidAutomationSignalException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAutomationSignalException) Error() string {
+func (s *InvalidAutomationSignalException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAutomationSignalException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAutomationSignalException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAutomationSignalException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAutomationSignalException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified update status operation is not valid.
 type InvalidAutomationStatusUpdateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28446,17 +28554,17 @@ func (s InvalidAutomationStatusUpdateException) GoString() string {
 
 func newErrorInvalidAutomationStatusUpdateException(v protocol.ResponseMetadata) error {
 	return &InvalidAutomationStatusUpdateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidAutomationStatusUpdateException) Code() string {
+func (s *InvalidAutomationStatusUpdateException) Code() string {
 	return "InvalidAutomationStatusUpdateException"
 }
 
 // Message returns the exception's message.
-func (s InvalidAutomationStatusUpdateException) Message() string {
+func (s *InvalidAutomationStatusUpdateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28464,27 +28572,27 @@ func (s InvalidAutomationStatusUpdateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidAutomationStatusUpdateException) OrigErr() error {
+func (s *InvalidAutomationStatusUpdateException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidAutomationStatusUpdateException) Error() string {
+func (s *InvalidAutomationStatusUpdateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidAutomationStatusUpdateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidAutomationStatusUpdateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidAutomationStatusUpdateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidAutomationStatusUpdateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type InvalidCommandId struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -28501,17 +28609,17 @@ func (s InvalidCommandId) GoString() string {
 
 func newErrorInvalidCommandId(v protocol.ResponseMetadata) error {
 	return &InvalidCommandId{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidCommandId) Code() string {
+func (s *InvalidCommandId) Code() string {
 	return "InvalidCommandId"
 }
 
 // Message returns the exception's message.
-func (s InvalidCommandId) Message() string {
+func (s *InvalidCommandId) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28519,29 +28627,29 @@ func (s InvalidCommandId) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidCommandId) OrigErr() error {
+func (s *InvalidCommandId) OrigErr() error {
 	return nil
 }
 
-func (s InvalidCommandId) Error() string {
+func (s *InvalidCommandId) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidCommandId) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidCommandId) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidCommandId) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidCommandId) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more of the parameters specified for the delete operation is not valid.
 // Verify all parameters and try again.
 type InvalidDeleteInventoryParametersException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28558,17 +28666,17 @@ func (s InvalidDeleteInventoryParametersException) GoString() string {
 
 func newErrorInvalidDeleteInventoryParametersException(v protocol.ResponseMetadata) error {
 	return &InvalidDeleteInventoryParametersException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDeleteInventoryParametersException) Code() string {
+func (s *InvalidDeleteInventoryParametersException) Code() string {
 	return "InvalidDeleteInventoryParametersException"
 }
 
 // Message returns the exception's message.
-func (s InvalidDeleteInventoryParametersException) Message() string {
+func (s *InvalidDeleteInventoryParametersException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28576,29 +28684,29 @@ func (s InvalidDeleteInventoryParametersException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDeleteInventoryParametersException) OrigErr() error {
+func (s *InvalidDeleteInventoryParametersException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDeleteInventoryParametersException) Error() string {
+func (s *InvalidDeleteInventoryParametersException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDeleteInventoryParametersException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDeleteInventoryParametersException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDeleteInventoryParametersException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDeleteInventoryParametersException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The ID specified for the delete operation does not exist or is not valid.
 // Verify the ID and try again.
 type InvalidDeletionIdException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28615,17 +28723,17 @@ func (s InvalidDeletionIdException) GoString() string {
 
 func newErrorInvalidDeletionIdException(v protocol.ResponseMetadata) error {
 	return &InvalidDeletionIdException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDeletionIdException) Code() string {
+func (s *InvalidDeletionIdException) Code() string {
 	return "InvalidDeletionIdException"
 }
 
 // Message returns the exception's message.
-func (s InvalidDeletionIdException) Message() string {
+func (s *InvalidDeletionIdException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28633,28 +28741,28 @@ func (s InvalidDeletionIdException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDeletionIdException) OrigErr() error {
+func (s *InvalidDeletionIdException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDeletionIdException) Error() string {
+func (s *InvalidDeletionIdException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDeletionIdException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDeletionIdException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDeletionIdException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDeletionIdException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified document does not exist.
 type InvalidDocument struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The document does not exist or the document is not available to the user.
 	// This exception can be issued by CreateAssociation, CreateAssociationBatch,
@@ -28675,17 +28783,17 @@ func (s InvalidDocument) GoString() string {
 
 func newErrorInvalidDocument(v protocol.ResponseMetadata) error {
 	return &InvalidDocument{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDocument) Code() string {
+func (s *InvalidDocument) Code() string {
 	return "InvalidDocument"
 }
 
 // Message returns the exception's message.
-func (s InvalidDocument) Message() string {
+func (s *InvalidDocument) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28693,28 +28801,28 @@ func (s InvalidDocument) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDocument) OrigErr() error {
+func (s *InvalidDocument) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDocument) Error() string {
+func (s *InvalidDocument) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDocument) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDocument) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDocument) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDocument) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The content for the document is not valid.
 type InvalidDocumentContent struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A description of the validation error.
 	Message_ *string `locationName:"Message" type:"string"`
@@ -28732,17 +28840,17 @@ func (s InvalidDocumentContent) GoString() string {
 
 func newErrorInvalidDocumentContent(v protocol.ResponseMetadata) error {
 	return &InvalidDocumentContent{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDocumentContent) Code() string {
+func (s *InvalidDocumentContent) Code() string {
 	return "InvalidDocumentContent"
 }
 
 // Message returns the exception's message.
-func (s InvalidDocumentContent) Message() string {
+func (s *InvalidDocumentContent) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28750,29 +28858,29 @@ func (s InvalidDocumentContent) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDocumentContent) OrigErr() error {
+func (s *InvalidDocumentContent) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDocumentContent) Error() string {
+func (s *InvalidDocumentContent) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDocumentContent) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDocumentContent) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDocumentContent) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDocumentContent) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You attempted to delete a document while it is still shared. You must stop
 // sharing the document before you can delete it.
 type InvalidDocumentOperation struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28789,17 +28897,17 @@ func (s InvalidDocumentOperation) GoString() string {
 
 func newErrorInvalidDocumentOperation(v protocol.ResponseMetadata) error {
 	return &InvalidDocumentOperation{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDocumentOperation) Code() string {
+func (s *InvalidDocumentOperation) Code() string {
 	return "InvalidDocumentOperation"
 }
 
 // Message returns the exception's message.
-func (s InvalidDocumentOperation) Message() string {
+func (s *InvalidDocumentOperation) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28807,28 +28915,28 @@ func (s InvalidDocumentOperation) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDocumentOperation) OrigErr() error {
+func (s *InvalidDocumentOperation) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDocumentOperation) Error() string {
+func (s *InvalidDocumentOperation) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDocumentOperation) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDocumentOperation) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDocumentOperation) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDocumentOperation) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The version of the document schema is not supported.
 type InvalidDocumentSchemaVersion struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28845,17 +28953,17 @@ func (s InvalidDocumentSchemaVersion) GoString() string {
 
 func newErrorInvalidDocumentSchemaVersion(v protocol.ResponseMetadata) error {
 	return &InvalidDocumentSchemaVersion{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDocumentSchemaVersion) Code() string {
+func (s *InvalidDocumentSchemaVersion) Code() string {
 	return "InvalidDocumentSchemaVersion"
 }
 
 // Message returns the exception's message.
-func (s InvalidDocumentSchemaVersion) Message() string {
+func (s *InvalidDocumentSchemaVersion) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28863,29 +28971,29 @@ func (s InvalidDocumentSchemaVersion) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDocumentSchemaVersion) OrigErr() error {
+func (s *InvalidDocumentSchemaVersion) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDocumentSchemaVersion) Error() string {
+func (s *InvalidDocumentSchemaVersion) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDocumentSchemaVersion) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDocumentSchemaVersion) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDocumentSchemaVersion) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDocumentSchemaVersion) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The document type is not valid. Valid document types are described in the
 // DocumentType property.
 type InvalidDocumentType struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28902,17 +29010,17 @@ func (s InvalidDocumentType) GoString() string {
 
 func newErrorInvalidDocumentType(v protocol.ResponseMetadata) error {
 	return &InvalidDocumentType{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDocumentType) Code() string {
+func (s *InvalidDocumentType) Code() string {
 	return "InvalidDocumentType"
 }
 
 // Message returns the exception's message.
-func (s InvalidDocumentType) Message() string {
+func (s *InvalidDocumentType) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28920,28 +29028,28 @@ func (s InvalidDocumentType) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDocumentType) OrigErr() error {
+func (s *InvalidDocumentType) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDocumentType) Error() string {
+func (s *InvalidDocumentType) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDocumentType) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDocumentType) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDocumentType) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDocumentType) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The document version is not valid or does not exist.
 type InvalidDocumentVersion struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -28958,17 +29066,17 @@ func (s InvalidDocumentVersion) GoString() string {
 
 func newErrorInvalidDocumentVersion(v protocol.ResponseMetadata) error {
 	return &InvalidDocumentVersion{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidDocumentVersion) Code() string {
+func (s *InvalidDocumentVersion) Code() string {
 	return "InvalidDocumentVersion"
 }
 
 // Message returns the exception's message.
-func (s InvalidDocumentVersion) Message() string {
+func (s *InvalidDocumentVersion) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -28976,29 +29084,29 @@ func (s InvalidDocumentVersion) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidDocumentVersion) OrigErr() error {
+func (s *InvalidDocumentVersion) OrigErr() error {
 	return nil
 }
 
-func (s InvalidDocumentVersion) Error() string {
+func (s *InvalidDocumentVersion) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidDocumentVersion) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidDocumentVersion) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidDocumentVersion) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidDocumentVersion) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The filter name is not valid. Verify the you entered the correct name and
 // try again.
 type InvalidFilter struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29015,17 +29123,17 @@ func (s InvalidFilter) GoString() string {
 
 func newErrorInvalidFilter(v protocol.ResponseMetadata) error {
 	return &InvalidFilter{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidFilter) Code() string {
+func (s *InvalidFilter) Code() string {
 	return "InvalidFilter"
 }
 
 // Message returns the exception's message.
-func (s InvalidFilter) Message() string {
+func (s *InvalidFilter) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29033,28 +29141,28 @@ func (s InvalidFilter) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidFilter) OrigErr() error {
+func (s *InvalidFilter) OrigErr() error {
 	return nil
 }
 
-func (s InvalidFilter) Error() string {
+func (s *InvalidFilter) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidFilter) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidFilter) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidFilter) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidFilter) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified key is not valid.
 type InvalidFilterKey struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -29071,17 +29179,17 @@ func (s InvalidFilterKey) GoString() string {
 
 func newErrorInvalidFilterKey(v protocol.ResponseMetadata) error {
 	return &InvalidFilterKey{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidFilterKey) Code() string {
+func (s *InvalidFilterKey) Code() string {
 	return "InvalidFilterKey"
 }
 
 // Message returns the exception's message.
-func (s InvalidFilterKey) Message() string {
+func (s *InvalidFilterKey) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29089,29 +29197,29 @@ func (s InvalidFilterKey) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidFilterKey) OrigErr() error {
+func (s *InvalidFilterKey) OrigErr() error {
 	return nil
 }
 
-func (s InvalidFilterKey) Error() string {
+func (s *InvalidFilterKey) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidFilterKey) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidFilterKey) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidFilterKey) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidFilterKey) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified filter option is not valid. Valid options are Equals and BeginsWith.
 // For Path filter, valid options are Recursive and OneLevel.
 type InvalidFilterOption struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The specified filter option is not valid. Valid options are Equals and BeginsWith.
 	// For Path filter, valid options are Recursive and OneLevel.
@@ -29130,17 +29238,17 @@ func (s InvalidFilterOption) GoString() string {
 
 func newErrorInvalidFilterOption(v protocol.ResponseMetadata) error {
 	return &InvalidFilterOption{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidFilterOption) Code() string {
+func (s *InvalidFilterOption) Code() string {
 	return "InvalidFilterOption"
 }
 
 // Message returns the exception's message.
-func (s InvalidFilterOption) Message() string {
+func (s *InvalidFilterOption) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29148,28 +29256,28 @@ func (s InvalidFilterOption) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidFilterOption) OrigErr() error {
+func (s *InvalidFilterOption) OrigErr() error {
 	return nil
 }
 
-func (s InvalidFilterOption) Error() string {
+func (s *InvalidFilterOption) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidFilterOption) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidFilterOption) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidFilterOption) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidFilterOption) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The filter value is not valid. Verify the value and try again.
 type InvalidFilterValue struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29186,17 +29294,17 @@ func (s InvalidFilterValue) GoString() string {
 
 func newErrorInvalidFilterValue(v protocol.ResponseMetadata) error {
 	return &InvalidFilterValue{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidFilterValue) Code() string {
+func (s *InvalidFilterValue) Code() string {
 	return "InvalidFilterValue"
 }
 
 // Message returns the exception's message.
-func (s InvalidFilterValue) Message() string {
+func (s *InvalidFilterValue) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29204,22 +29312,22 @@ func (s InvalidFilterValue) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidFilterValue) OrigErr() error {
+func (s *InvalidFilterValue) OrigErr() error {
 	return nil
 }
 
-func (s InvalidFilterValue) Error() string {
+func (s *InvalidFilterValue) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidFilterValue) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidFilterValue) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidFilterValue) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidFilterValue) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The following problems can cause this exception:
@@ -29233,8 +29341,8 @@ func (s InvalidFilterValue) RequestID() string {
 // The instance is not in valid state. Valid states are: Running, Pending, Stopped,
 // Stopping. Invalid states are: Shutting-down and Terminated.
 type InvalidInstanceId struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29251,17 +29359,17 @@ func (s InvalidInstanceId) GoString() string {
 
 func newErrorInvalidInstanceId(v protocol.ResponseMetadata) error {
 	return &InvalidInstanceId{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInstanceId) Code() string {
+func (s *InvalidInstanceId) Code() string {
 	return "InvalidInstanceId"
 }
 
 // Message returns the exception's message.
-func (s InvalidInstanceId) Message() string {
+func (s *InvalidInstanceId) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29269,28 +29377,28 @@ func (s InvalidInstanceId) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInstanceId) OrigErr() error {
+func (s *InvalidInstanceId) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInstanceId) Error() string {
+func (s *InvalidInstanceId) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInstanceId) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInstanceId) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInstanceId) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInstanceId) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified filter value is not valid.
 type InvalidInstanceInformationFilterValue struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -29307,17 +29415,17 @@ func (s InvalidInstanceInformationFilterValue) GoString() string {
 
 func newErrorInvalidInstanceInformationFilterValue(v protocol.ResponseMetadata) error {
 	return &InvalidInstanceInformationFilterValue{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInstanceInformationFilterValue) Code() string {
+func (s *InvalidInstanceInformationFilterValue) Code() string {
 	return "InvalidInstanceInformationFilterValue"
 }
 
 // Message returns the exception's message.
-func (s InvalidInstanceInformationFilterValue) Message() string {
+func (s *InvalidInstanceInformationFilterValue) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29325,28 +29433,28 @@ func (s InvalidInstanceInformationFilterValue) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInstanceInformationFilterValue) OrigErr() error {
+func (s *InvalidInstanceInformationFilterValue) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInstanceInformationFilterValue) Error() string {
+func (s *InvalidInstanceInformationFilterValue) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInstanceInformationFilterValue) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInstanceInformationFilterValue) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInstanceInformationFilterValue) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInstanceInformationFilterValue) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified inventory group is not valid.
 type InvalidInventoryGroupException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29363,17 +29471,17 @@ func (s InvalidInventoryGroupException) GoString() string {
 
 func newErrorInvalidInventoryGroupException(v protocol.ResponseMetadata) error {
 	return &InvalidInventoryGroupException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInventoryGroupException) Code() string {
+func (s *InvalidInventoryGroupException) Code() string {
 	return "InvalidInventoryGroupException"
 }
 
 // Message returns the exception's message.
-func (s InvalidInventoryGroupException) Message() string {
+func (s *InvalidInventoryGroupException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29381,29 +29489,29 @@ func (s InvalidInventoryGroupException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInventoryGroupException) OrigErr() error {
+func (s *InvalidInventoryGroupException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInventoryGroupException) Error() string {
+func (s *InvalidInventoryGroupException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInventoryGroupException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInventoryGroupException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInventoryGroupException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInventoryGroupException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You specified invalid keys or values in the Context attribute for InventoryItem.
 // Verify the keys and values, and try again.
 type InvalidInventoryItemContextException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29420,17 +29528,17 @@ func (s InvalidInventoryItemContextException) GoString() string {
 
 func newErrorInvalidInventoryItemContextException(v protocol.ResponseMetadata) error {
 	return &InvalidInventoryItemContextException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInventoryItemContextException) Code() string {
+func (s *InvalidInventoryItemContextException) Code() string {
 	return "InvalidInventoryItemContextException"
 }
 
 // Message returns the exception's message.
-func (s InvalidInventoryItemContextException) Message() string {
+func (s *InvalidInventoryItemContextException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29438,28 +29546,28 @@ func (s InvalidInventoryItemContextException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInventoryItemContextException) OrigErr() error {
+func (s *InvalidInventoryItemContextException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInventoryItemContextException) Error() string {
+func (s *InvalidInventoryItemContextException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInventoryItemContextException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInventoryItemContextException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInventoryItemContextException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInventoryItemContextException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request is not valid.
 type InvalidInventoryRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29476,17 +29584,17 @@ func (s InvalidInventoryRequestException) GoString() string {
 
 func newErrorInvalidInventoryRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidInventoryRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInventoryRequestException) Code() string {
+func (s *InvalidInventoryRequestException) Code() string {
 	return "InvalidInventoryRequestException"
 }
 
 // Message returns the exception's message.
-func (s InvalidInventoryRequestException) Message() string {
+func (s *InvalidInventoryRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29494,28 +29602,28 @@ func (s InvalidInventoryRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInventoryRequestException) OrigErr() error {
+func (s *InvalidInventoryRequestException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInventoryRequestException) Error() string {
+func (s *InvalidInventoryRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInventoryRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInventoryRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInventoryRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInventoryRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more content items is not valid.
 type InvalidItemContentException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -29534,17 +29642,17 @@ func (s InvalidItemContentException) GoString() string {
 
 func newErrorInvalidItemContentException(v protocol.ResponseMetadata) error {
 	return &InvalidItemContentException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidItemContentException) Code() string {
+func (s *InvalidItemContentException) Code() string {
 	return "InvalidItemContentException"
 }
 
 // Message returns the exception's message.
-func (s InvalidItemContentException) Message() string {
+func (s *InvalidItemContentException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29552,28 +29660,28 @@ func (s InvalidItemContentException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidItemContentException) OrigErr() error {
+func (s *InvalidItemContentException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidItemContentException) Error() string {
+func (s *InvalidItemContentException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidItemContentException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidItemContentException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidItemContentException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidItemContentException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The query key ID is not valid.
 type InvalidKeyId struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -29590,17 +29698,17 @@ func (s InvalidKeyId) GoString() string {
 
 func newErrorInvalidKeyId(v protocol.ResponseMetadata) error {
 	return &InvalidKeyId{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidKeyId) Code() string {
+func (s *InvalidKeyId) Code() string {
 	return "InvalidKeyId"
 }
 
 // Message returns the exception's message.
-func (s InvalidKeyId) Message() string {
+func (s *InvalidKeyId) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29608,28 +29716,28 @@ func (s InvalidKeyId) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidKeyId) OrigErr() error {
+func (s *InvalidKeyId) OrigErr() error {
 	return nil
 }
 
-func (s InvalidKeyId) Error() string {
+func (s *InvalidKeyId) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidKeyId) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidKeyId) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidKeyId) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidKeyId) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified token is not valid.
 type InvalidNextToken struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29646,17 +29754,17 @@ func (s InvalidNextToken) GoString() string {
 
 func newErrorInvalidNextToken(v protocol.ResponseMetadata) error {
 	return &InvalidNextToken{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidNextToken) Code() string {
+func (s *InvalidNextToken) Code() string {
 	return "InvalidNextToken"
 }
 
 // Message returns the exception's message.
-func (s InvalidNextToken) Message() string {
+func (s *InvalidNextToken) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29664,29 +29772,29 @@ func (s InvalidNextToken) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidNextToken) OrigErr() error {
+func (s *InvalidNextToken) OrigErr() error {
 	return nil
 }
 
-func (s InvalidNextToken) Error() string {
+func (s *InvalidNextToken) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidNextToken) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidNextToken) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidNextToken) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidNextToken) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more configuration items is not valid. Verify that a valid Amazon
 // Resource Name (ARN) was provided for an Amazon SNS topic.
 type InvalidNotificationConfig struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29703,17 +29811,17 @@ func (s InvalidNotificationConfig) GoString() string {
 
 func newErrorInvalidNotificationConfig(v protocol.ResponseMetadata) error {
 	return &InvalidNotificationConfig{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidNotificationConfig) Code() string {
+func (s *InvalidNotificationConfig) Code() string {
 	return "InvalidNotificationConfig"
 }
 
 // Message returns the exception's message.
-func (s InvalidNotificationConfig) Message() string {
+func (s *InvalidNotificationConfig) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29721,29 +29829,29 @@ func (s InvalidNotificationConfig) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidNotificationConfig) OrigErr() error {
+func (s *InvalidNotificationConfig) OrigErr() error {
 	return nil
 }
 
-func (s InvalidNotificationConfig) Error() string {
+func (s *InvalidNotificationConfig) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidNotificationConfig) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidNotificationConfig) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidNotificationConfig) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidNotificationConfig) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The delete inventory option specified is not valid. Verify the option and
 // try again.
 type InvalidOptionException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29760,17 +29868,17 @@ func (s InvalidOptionException) GoString() string {
 
 func newErrorInvalidOptionException(v protocol.ResponseMetadata) error {
 	return &InvalidOptionException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidOptionException) Code() string {
+func (s *InvalidOptionException) Code() string {
 	return "InvalidOptionException"
 }
 
 // Message returns the exception's message.
-func (s InvalidOptionException) Message() string {
+func (s *InvalidOptionException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29778,28 +29886,28 @@ func (s InvalidOptionException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidOptionException) OrigErr() error {
+func (s *InvalidOptionException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidOptionException) Error() string {
+func (s *InvalidOptionException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidOptionException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidOptionException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidOptionException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidOptionException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The S3 bucket does not exist.
 type InvalidOutputFolder struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -29816,17 +29924,17 @@ func (s InvalidOutputFolder) GoString() string {
 
 func newErrorInvalidOutputFolder(v protocol.ResponseMetadata) error {
 	return &InvalidOutputFolder{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidOutputFolder) Code() string {
+func (s *InvalidOutputFolder) Code() string {
 	return "InvalidOutputFolder"
 }
 
 // Message returns the exception's message.
-func (s InvalidOutputFolder) Message() string {
+func (s *InvalidOutputFolder) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29834,28 +29942,28 @@ func (s InvalidOutputFolder) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidOutputFolder) OrigErr() error {
+func (s *InvalidOutputFolder) OrigErr() error {
 	return nil
 }
 
-func (s InvalidOutputFolder) Error() string {
+func (s *InvalidOutputFolder) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidOutputFolder) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidOutputFolder) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidOutputFolder) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidOutputFolder) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The output location is not valid or does not exist.
 type InvalidOutputLocation struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -29872,17 +29980,17 @@ func (s InvalidOutputLocation) GoString() string {
 
 func newErrorInvalidOutputLocation(v protocol.ResponseMetadata) error {
 	return &InvalidOutputLocation{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidOutputLocation) Code() string {
+func (s *InvalidOutputLocation) Code() string {
 	return "InvalidOutputLocation"
 }
 
 // Message returns the exception's message.
-func (s InvalidOutputLocation) Message() string {
+func (s *InvalidOutputLocation) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29890,30 +29998,30 @@ func (s InvalidOutputLocation) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidOutputLocation) OrigErr() error {
+func (s *InvalidOutputLocation) OrigErr() error {
 	return nil
 }
 
-func (s InvalidOutputLocation) Error() string {
+func (s *InvalidOutputLocation) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidOutputLocation) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidOutputLocation) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidOutputLocation) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidOutputLocation) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You must specify values for all required parameters in the Systems Manager
 // document. You can only supply values to parameters defined in the Systems
 // Manager document.
 type InvalidParameters struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29930,17 +30038,17 @@ func (s InvalidParameters) GoString() string {
 
 func newErrorInvalidParameters(v protocol.ResponseMetadata) error {
 	return &InvalidParameters{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidParameters) Code() string {
+func (s *InvalidParameters) Code() string {
 	return "InvalidParameters"
 }
 
 // Message returns the exception's message.
-func (s InvalidParameters) Message() string {
+func (s *InvalidParameters) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -29948,29 +30056,29 @@ func (s InvalidParameters) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidParameters) OrigErr() error {
+func (s *InvalidParameters) OrigErr() error {
 	return nil
 }
 
-func (s InvalidParameters) Error() string {
+func (s *InvalidParameters) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidParameters) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidParameters) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidParameters) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidParameters) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The permission type is not supported. Share is the only supported permission
 // type.
 type InvalidPermissionType struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -29987,17 +30095,17 @@ func (s InvalidPermissionType) GoString() string {
 
 func newErrorInvalidPermissionType(v protocol.ResponseMetadata) error {
 	return &InvalidPermissionType{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidPermissionType) Code() string {
+func (s *InvalidPermissionType) Code() string {
 	return "InvalidPermissionType"
 }
 
 // Message returns the exception's message.
-func (s InvalidPermissionType) Message() string {
+func (s *InvalidPermissionType) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30005,28 +30113,28 @@ func (s InvalidPermissionType) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidPermissionType) OrigErr() error {
+func (s *InvalidPermissionType) OrigErr() error {
 	return nil
 }
 
-func (s InvalidPermissionType) Error() string {
+func (s *InvalidPermissionType) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidPermissionType) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidPermissionType) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidPermissionType) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidPermissionType) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The plugin name is not valid.
 type InvalidPluginName struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -30043,17 +30151,17 @@ func (s InvalidPluginName) GoString() string {
 
 func newErrorInvalidPluginName(v protocol.ResponseMetadata) error {
 	return &InvalidPluginName{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidPluginName) Code() string {
+func (s *InvalidPluginName) Code() string {
 	return "InvalidPluginName"
 }
 
 // Message returns the exception's message.
-func (s InvalidPluginName) Message() string {
+func (s *InvalidPluginName) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30061,28 +30169,28 @@ func (s InvalidPluginName) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidPluginName) OrigErr() error {
+func (s *InvalidPluginName) OrigErr() error {
 	return nil
 }
 
-func (s InvalidPluginName) Error() string {
+func (s *InvalidPluginName) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidPluginName) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidPluginName) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidPluginName) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidPluginName) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A policy attribute or its value is invalid.
 type InvalidPolicyAttributeException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -30099,17 +30207,17 @@ func (s InvalidPolicyAttributeException) GoString() string {
 
 func newErrorInvalidPolicyAttributeException(v protocol.ResponseMetadata) error {
 	return &InvalidPolicyAttributeException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidPolicyAttributeException) Code() string {
+func (s *InvalidPolicyAttributeException) Code() string {
 	return "InvalidPolicyAttributeException"
 }
 
 // Message returns the exception's message.
-func (s InvalidPolicyAttributeException) Message() string {
+func (s *InvalidPolicyAttributeException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30117,29 +30225,29 @@ func (s InvalidPolicyAttributeException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidPolicyAttributeException) OrigErr() error {
+func (s *InvalidPolicyAttributeException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidPolicyAttributeException) Error() string {
+func (s *InvalidPolicyAttributeException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidPolicyAttributeException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidPolicyAttributeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidPolicyAttributeException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidPolicyAttributeException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The policy type is not supported. Parameter Store supports the following
 // policy types: Expiration, ExpirationNotification, and NoChangeNotification.
 type InvalidPolicyTypeException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -30156,17 +30264,17 @@ func (s InvalidPolicyTypeException) GoString() string {
 
 func newErrorInvalidPolicyTypeException(v protocol.ResponseMetadata) error {
 	return &InvalidPolicyTypeException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidPolicyTypeException) Code() string {
+func (s *InvalidPolicyTypeException) Code() string {
 	return "InvalidPolicyTypeException"
 }
 
 // Message returns the exception's message.
-func (s InvalidPolicyTypeException) Message() string {
+func (s *InvalidPolicyTypeException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30174,29 +30282,29 @@ func (s InvalidPolicyTypeException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidPolicyTypeException) OrigErr() error {
+func (s *InvalidPolicyTypeException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidPolicyTypeException) Error() string {
+func (s *InvalidPolicyTypeException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidPolicyTypeException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidPolicyTypeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidPolicyTypeException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidPolicyTypeException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource ID is not valid. Verify that you entered the correct ID and
 // try again.
 type InvalidResourceId struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -30213,17 +30321,17 @@ func (s InvalidResourceId) GoString() string {
 
 func newErrorInvalidResourceId(v protocol.ResponseMetadata) error {
 	return &InvalidResourceId{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidResourceId) Code() string {
+func (s *InvalidResourceId) Code() string {
 	return "InvalidResourceId"
 }
 
 // Message returns the exception's message.
-func (s InvalidResourceId) Message() string {
+func (s *InvalidResourceId) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30231,29 +30339,29 @@ func (s InvalidResourceId) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidResourceId) OrigErr() error {
+func (s *InvalidResourceId) OrigErr() error {
 	return nil
 }
 
-func (s InvalidResourceId) Error() string {
+func (s *InvalidResourceId) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidResourceId) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidResourceId) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidResourceId) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidResourceId) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The resource type is not valid. For example, if you are attempting to tag
 // an instance, the instance must be a registered, managed instance.
 type InvalidResourceType struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -30270,17 +30378,17 @@ func (s InvalidResourceType) GoString() string {
 
 func newErrorInvalidResourceType(v protocol.ResponseMetadata) error {
 	return &InvalidResourceType{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidResourceType) Code() string {
+func (s *InvalidResourceType) Code() string {
 	return "InvalidResourceType"
 }
 
 // Message returns the exception's message.
-func (s InvalidResourceType) Message() string {
+func (s *InvalidResourceType) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30288,28 +30396,28 @@ func (s InvalidResourceType) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidResourceType) OrigErr() error {
+func (s *InvalidResourceType) OrigErr() error {
 	return nil
 }
 
-func (s InvalidResourceType) Error() string {
+func (s *InvalidResourceType) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidResourceType) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidResourceType) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidResourceType) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidResourceType) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified inventory item result attribute is not valid.
 type InvalidResultAttributeException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -30326,17 +30434,17 @@ func (s InvalidResultAttributeException) GoString() string {
 
 func newErrorInvalidResultAttributeException(v protocol.ResponseMetadata) error {
 	return &InvalidResultAttributeException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidResultAttributeException) Code() string {
+func (s *InvalidResultAttributeException) Code() string {
 	return "InvalidResultAttributeException"
 }
 
 // Message returns the exception's message.
-func (s InvalidResultAttributeException) Message() string {
+func (s *InvalidResultAttributeException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30344,32 +30452,32 @@ func (s InvalidResultAttributeException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidResultAttributeException) OrigErr() error {
+func (s *InvalidResultAttributeException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidResultAttributeException) Error() string {
+func (s *InvalidResultAttributeException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidResultAttributeException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidResultAttributeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidResultAttributeException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidResultAttributeException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The role name can't contain invalid characters. Also verify that you specified
 // an IAM role for notifications that includes the required trust policy. For
 // information about configuring the IAM role for Run Command notifications,
-// see Configuring Amazon SNS Notifications for Run Command (http://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
+// see Configuring Amazon SNS Notifications for Run Command (https://docs.aws.amazon.com/systems-manager/latest/userguide/rc-sns-notifications.html)
 // in the AWS Systems Manager User Guide.
 type InvalidRole struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -30386,17 +30494,17 @@ func (s InvalidRole) GoString() string {
 
 func newErrorInvalidRole(v protocol.ResponseMetadata) error {
 	return &InvalidRole{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidRole) Code() string {
+func (s *InvalidRole) Code() string {
 	return "InvalidRole"
 }
 
 // Message returns the exception's message.
-func (s InvalidRole) Message() string {
+func (s *InvalidRole) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30404,28 +30512,28 @@ func (s InvalidRole) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidRole) OrigErr() error {
+func (s *InvalidRole) OrigErr() error {
 	return nil
 }
 
-func (s InvalidRole) Error() string {
+func (s *InvalidRole) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidRole) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidRole) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidRole) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidRole) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The schedule is invalid. Verify your cron or rate expression and try again.
 type InvalidSchedule struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -30442,17 +30550,17 @@ func (s InvalidSchedule) GoString() string {
 
 func newErrorInvalidSchedule(v protocol.ResponseMetadata) error {
 	return &InvalidSchedule{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidSchedule) Code() string {
+func (s *InvalidSchedule) Code() string {
 	return "InvalidSchedule"
 }
 
 // Message returns the exception's message.
-func (s InvalidSchedule) Message() string {
+func (s *InvalidSchedule) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30460,29 +30568,29 @@ func (s InvalidSchedule) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidSchedule) OrigErr() error {
+func (s *InvalidSchedule) OrigErr() error {
 	return nil
 }
 
-func (s InvalidSchedule) Error() string {
+func (s *InvalidSchedule) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidSchedule) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidSchedule) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidSchedule) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidSchedule) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The target is not valid or does not exist. It might not be configured for
-// EC2 Systems Manager or you might not have permission to perform the operation.
+// Systems Manager or you might not have permission to perform the operation.
 type InvalidTarget struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -30499,17 +30607,17 @@ func (s InvalidTarget) GoString() string {
 
 func newErrorInvalidTarget(v protocol.ResponseMetadata) error {
 	return &InvalidTarget{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidTarget) Code() string {
+func (s *InvalidTarget) Code() string {
 	return "InvalidTarget"
 }
 
 // Message returns the exception's message.
-func (s InvalidTarget) Message() string {
+func (s *InvalidTarget) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30517,28 +30625,28 @@ func (s InvalidTarget) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidTarget) OrigErr() error {
+func (s *InvalidTarget) OrigErr() error {
 	return nil
 }
 
-func (s InvalidTarget) Error() string {
+func (s *InvalidTarget) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidTarget) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidTarget) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidTarget) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidTarget) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The parameter type name is not valid.
 type InvalidTypeNameException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -30555,17 +30663,17 @@ func (s InvalidTypeNameException) GoString() string {
 
 func newErrorInvalidTypeNameException(v protocol.ResponseMetadata) error {
 	return &InvalidTypeNameException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidTypeNameException) Code() string {
+func (s *InvalidTypeNameException) Code() string {
 	return "InvalidTypeNameException"
 }
 
 // Message returns the exception's message.
-func (s InvalidTypeNameException) Message() string {
+func (s *InvalidTypeNameException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30573,28 +30681,28 @@ func (s InvalidTypeNameException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidTypeNameException) OrigErr() error {
+func (s *InvalidTypeNameException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidTypeNameException) Error() string {
+func (s *InvalidTypeNameException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidTypeNameException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidTypeNameException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidTypeNameException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidTypeNameException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The update is not valid.
 type InvalidUpdate struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -30611,17 +30719,17 @@ func (s InvalidUpdate) GoString() string {
 
 func newErrorInvalidUpdate(v protocol.ResponseMetadata) error {
 	return &InvalidUpdate{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidUpdate) Code() string {
+func (s *InvalidUpdate) Code() string {
 	return "InvalidUpdate"
 }
 
 // Message returns the exception's message.
-func (s InvalidUpdate) Message() string {
+func (s *InvalidUpdate) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -30629,22 +30737,22 @@ func (s InvalidUpdate) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidUpdate) OrigErr() error {
+func (s *InvalidUpdate) OrigErr() error {
 	return nil
 }
 
-func (s InvalidUpdate) Error() string {
+func (s *InvalidUpdate) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidUpdate) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidUpdate) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidUpdate) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidUpdate) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies the inventory type and attribute for the aggregation execution.
@@ -30741,7 +30849,7 @@ type InventoryDeletionStatusItem struct {
 	DeletionStartTime *time.Time `type:"timestamp"`
 
 	// Information about the delete operation. For more information about this summary,
-	// see Understanding the Delete Inventory Summary (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-custom.html#sysman-inventory-delete)
+	// see Understanding the delete inventory summary (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-custom.html#sysman-inventory-delete)
 	// in the AWS Systems Manager User Guide.
 	DeletionSummary *InventoryDeletionSummary `type:"structure"`
 
@@ -30906,6 +31014,10 @@ type InventoryFilter struct {
 	Key *string `min:"1" type:"string" required:"true"`
 
 	// The type of filter.
+	//
+	// The Exists filter must be used with aggregators. For more information, see
+	// Aggregating inventory data (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-inventory-aggregate.html)
+	// in the AWS Systems Manager User Guide.
 	Type *string `type:"string" enum:"InventoryQueryOperatorType"`
 
 	// Inventory filter values. Example: inventory filter where instance IDs are
@@ -31352,8 +31464,8 @@ func (s *InventoryResultItem) SetTypeName(v string) *InventoryResultItem {
 // The command ID and instance ID you specified did not match any invocations.
 // Verify the command ID and the instance ID and try again.
 type InvocationDoesNotExist struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -31370,17 +31482,17 @@ func (s InvocationDoesNotExist) GoString() string {
 
 func newErrorInvocationDoesNotExist(v protocol.ResponseMetadata) error {
 	return &InvocationDoesNotExist{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvocationDoesNotExist) Code() string {
+func (s *InvocationDoesNotExist) Code() string {
 	return "InvocationDoesNotExist"
 }
 
 // Message returns the exception's message.
-func (s InvocationDoesNotExist) Message() string {
+func (s *InvocationDoesNotExist) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -31388,28 +31500,28 @@ func (s InvocationDoesNotExist) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvocationDoesNotExist) OrigErr() error {
+func (s *InvocationDoesNotExist) OrigErr() error {
 	return nil
 }
 
-func (s InvocationDoesNotExist) Error() string {
+func (s *InvocationDoesNotExist) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvocationDoesNotExist) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvocationDoesNotExist) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvocationDoesNotExist) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvocationDoesNotExist) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The inventory item has invalid content.
 type ItemContentMismatchException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -31428,17 +31540,17 @@ func (s ItemContentMismatchException) GoString() string {
 
 func newErrorItemContentMismatchException(v protocol.ResponseMetadata) error {
 	return &ItemContentMismatchException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ItemContentMismatchException) Code() string {
+func (s *ItemContentMismatchException) Code() string {
 	return "ItemContentMismatchException"
 }
 
 // Message returns the exception's message.
-func (s ItemContentMismatchException) Message() string {
+func (s *ItemContentMismatchException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -31446,28 +31558,28 @@ func (s ItemContentMismatchException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ItemContentMismatchException) OrigErr() error {
+func (s *ItemContentMismatchException) OrigErr() error {
 	return nil
 }
 
-func (s ItemContentMismatchException) Error() string {
+func (s *ItemContentMismatchException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ItemContentMismatchException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ItemContentMismatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ItemContentMismatchException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ItemContentMismatchException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The inventory item size has exceeded the size limit.
 type ItemSizeLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -31486,17 +31598,17 @@ func (s ItemSizeLimitExceededException) GoString() string {
 
 func newErrorItemSizeLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ItemSizeLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ItemSizeLimitExceededException) Code() string {
+func (s *ItemSizeLimitExceededException) Code() string {
 	return "ItemSizeLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ItemSizeLimitExceededException) Message() string {
+func (s *ItemSizeLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -31504,22 +31616,22 @@ func (s ItemSizeLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ItemSizeLimitExceededException) OrigErr() error {
+func (s *ItemSizeLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ItemSizeLimitExceededException) Error() string {
+func (s *ItemSizeLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ItemSizeLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ItemSizeLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ItemSizeLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ItemSizeLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type LabelParameterVersionInput struct {
@@ -31595,7 +31707,7 @@ type LabelParameterVersionOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The label does not meet the requirements. For information about parameter
-	// label requirements, see Labeling Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
+	// label requirements, see Labeling parameters (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-labels.html)
 	// in the AWS Systems Manager User Guide.
 	InvalidLabels []*string `min:"1" type:"list"`
 
@@ -32409,10 +32521,15 @@ func (s *ListDocumentVersionsOutput) SetNextToken(v string) *ListDocumentVersion
 type ListDocumentsInput struct {
 	_ struct{} `type:"structure"`
 
-	// One or more filters. Use a filter to return a more specific list of results.
+	// This data type is deprecated. Instead, use Filters.
 	DocumentFilterList []*DocumentFilter `min:"1" type:"list"`
 
-	// One or more filters. Use a filter to return a more specific list of results.
+	// One or more DocumentKeyValuesFilter objects. Use a filter to return a more
+	// specific list of results. For keys, you can specify one or more key-value
+	// pair tags that have been applied to a document. Other valid keys include
+	// Owner, Name, PlatformTypes, and DocumentType. For example, to return documents
+	// you own use Key=Owner,Values=Self. To specify a custom key-value pair, use
+	// the format Key=tag:tagName,Values=valueName.
 	Filters []*DocumentKeyValuesFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -32969,7 +33086,7 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 	return s
 }
 
-// Information about an Amazon S3 bucket to write instance-level logs to.
+// Information about an S3 bucket to write instance-level logs to.
 //
 // LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 // instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
@@ -32978,15 +33095,15 @@ func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOut
 type LoggingInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The name of an Amazon S3 bucket where execution logs are stored .
+	// The name of an S3 bucket where execution logs are stored .
 	//
 	// S3BucketName is a required field
 	S3BucketName *string `min:"3" type:"string" required:"true"`
 
-	// (Optional) The Amazon S3 bucket subfolder.
+	// (Optional) The S3 bucket subfolder.
 	S3KeyPrefix *string `type:"string"`
 
-	// The region where the Amazon S3 bucket is located.
+	// The Region where the S3 bucket is located.
 	//
 	// S3Region is a required field
 	S3Region *string `min:"3" type:"string" required:"true"`
@@ -33720,10 +33837,10 @@ type MaintenanceWindowRunCommandParameters struct {
 	// a per-instance basis.
 	NotificationConfig *NotificationConfig `type:"structure"`
 
-	// The name of the Amazon S3 bucket.
+	// The name of the S3 bucket.
 	OutputS3BucketName *string `min:"3" type:"string"`
 
-	// The Amazon S3 bucket subfolder.
+	// The S3 bucket subfolder.
 	OutputS3KeyPrefix *string `type:"string"`
 
 	// The parameters for the RUN_COMMAND task execution.
@@ -33991,7 +34108,7 @@ type MaintenanceWindowTask struct {
 	// A description of the task.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// Information about an Amazon S3 bucket to write task-level logs to.
+	// Information about an S3 bucket to write task-level logs to.
 	//
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
 	// instead use the OutputS3BucketName and OutputS3KeyPrefix options in the TaskInvocationParameters
@@ -34242,8 +34359,8 @@ func (s *MaintenanceWindowTaskParameterValueExpression) SetValues(v []*string) *
 
 // The size limit of a document is 64 KB.
 type MaxDocumentSizeExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -34260,17 +34377,17 @@ func (s MaxDocumentSizeExceeded) GoString() string {
 
 func newErrorMaxDocumentSizeExceeded(v protocol.ResponseMetadata) error {
 	return &MaxDocumentSizeExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s MaxDocumentSizeExceeded) Code() string {
+func (s *MaxDocumentSizeExceeded) Code() string {
 	return "MaxDocumentSizeExceeded"
 }
 
 // Message returns the exception's message.
-func (s MaxDocumentSizeExceeded) Message() string {
+func (s *MaxDocumentSizeExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -34278,22 +34395,22 @@ func (s MaxDocumentSizeExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s MaxDocumentSizeExceeded) OrigErr() error {
+func (s *MaxDocumentSizeExceeded) OrigErr() error {
 	return nil
 }
 
-func (s MaxDocumentSizeExceeded) Error() string {
+func (s *MaxDocumentSizeExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s MaxDocumentSizeExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *MaxDocumentSizeExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s MaxDocumentSizeExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *MaxDocumentSizeExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ModifyDocumentPermissionInput struct {
@@ -34439,8 +34556,8 @@ type NotificationConfig struct {
 
 	// The different events for which you can receive notifications. These events
 	// include the following: All (events), InProgress, Success, TimedOut, Cancelled,
-	// Failed. To learn more about these events, see Configuring Amazon SNS Notifications
-	// for AWS Systems Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/monitoring-sns-notifications.html)
+	// Failed. To learn more about these events, see Monitoring Systems Manager
+	// status changes using Amazon SNS notifications (https://docs.aws.amazon.com/systems-manager/latest/userguide/monitoring-sns-notifications.html)
 	// in the AWS Systems Manager User Guide.
 	NotificationEvents []*string `type:"list"`
 
@@ -34727,7 +34844,7 @@ func (s *OpsFilter) SetValues(v []*string) *OpsFilter {
 // Operations engineers and IT professionals use OpsCenter to view, investigate,
 // and remediate operational issues impacting the performance and health of
 // their AWS resources. For more information, see AWS Systems Manager OpsCenter
-// (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
+// (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter.html)
 // in the AWS Systems Manager User Guide.
 type OpsItem struct {
 	_ struct{} `type:"structure"`
@@ -34774,7 +34891,7 @@ type OpsItem struct {
 	// Use the /aws/resources key in OperationalData to specify a related resource
 	// in the request. Use the /aws/automations key in OperationalData to associate
 	// an Automation runbook with the OpsItem. To view AWS CLI example commands
-	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// that use these keys, see Creating OpsItems manually (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
 	// in the AWS Systems Manager User Guide.
 	OperationalData map[string]*OpsItemDataValue `type:"map"`
 
@@ -34792,12 +34909,12 @@ type OpsItem struct {
 	// The severity of the OpsItem. Severity options range from 1 to 4.
 	Severity *string `min:"1" type:"string"`
 
-	// The origin of the OpsItem, such as Amazon EC2 or AWS Systems Manager. The
-	// impacted resource is a subset of source.
+	// The origin of the OpsItem, such as Amazon EC2 or Systems Manager. The impacted
+	// resource is a subset of source.
 	Source *string `min:"1" type:"string"`
 
 	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
-	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
+	// information, see Editing OpsItem details (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
 	// in the AWS Systems Manager User Guide.
 	Status *string `type:"string" enum:"OpsItemStatus"`
 
@@ -34918,8 +35035,8 @@ func (s *OpsItem) SetVersion(v string) *OpsItem {
 
 // The OpsItem already exists.
 type OpsItemAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -34938,17 +35055,17 @@ func (s OpsItemAlreadyExistsException) GoString() string {
 
 func newErrorOpsItemAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &OpsItemAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OpsItemAlreadyExistsException) Code() string {
+func (s *OpsItemAlreadyExistsException) Code() string {
 	return "OpsItemAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s OpsItemAlreadyExistsException) Message() string {
+func (s *OpsItemAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -34956,22 +35073,22 @@ func (s OpsItemAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OpsItemAlreadyExistsException) OrigErr() error {
+func (s *OpsItemAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s OpsItemAlreadyExistsException) Error() string {
+func (s *OpsItemAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OpsItemAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OpsItemAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OpsItemAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OpsItemAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object that defines the value of the key and its type in the OperationalData
@@ -35078,8 +35195,8 @@ func (s *OpsItemFilter) SetValues(v []*string) *OpsItemFilter {
 // A specified parameter argument isn't valid. Verify the available arguments
 // and try again.
 type OpsItemInvalidParameterException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -35098,17 +35215,17 @@ func (s OpsItemInvalidParameterException) GoString() string {
 
 func newErrorOpsItemInvalidParameterException(v protocol.ResponseMetadata) error {
 	return &OpsItemInvalidParameterException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OpsItemInvalidParameterException) Code() string {
+func (s *OpsItemInvalidParameterException) Code() string {
 	return "OpsItemInvalidParameterException"
 }
 
 // Message returns the exception's message.
-func (s OpsItemInvalidParameterException) Message() string {
+func (s *OpsItemInvalidParameterException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -35116,29 +35233,29 @@ func (s OpsItemInvalidParameterException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OpsItemInvalidParameterException) OrigErr() error {
+func (s *OpsItemInvalidParameterException) OrigErr() error {
 	return nil
 }
 
-func (s OpsItemInvalidParameterException) Error() string {
+func (s *OpsItemInvalidParameterException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OpsItemInvalidParameterException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OpsItemInvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OpsItemInvalidParameterException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OpsItemInvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The request caused OpsItems to exceed one or more quotas. For information
-// about OpsItem quotas, see What are the resource limits for OpsCenter? (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
+// about OpsItem quotas, see What are the resource limits for OpsCenter? (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-learn-more.html#OpsCenter-learn-more-limits).
 type OpsItemLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Limit *int64 `type:"integer"`
 
@@ -35161,17 +35278,17 @@ func (s OpsItemLimitExceededException) GoString() string {
 
 func newErrorOpsItemLimitExceededException(v protocol.ResponseMetadata) error {
 	return &OpsItemLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OpsItemLimitExceededException) Code() string {
+func (s *OpsItemLimitExceededException) Code() string {
 	return "OpsItemLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s OpsItemLimitExceededException) Message() string {
+func (s *OpsItemLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -35179,28 +35296,28 @@ func (s OpsItemLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OpsItemLimitExceededException) OrigErr() error {
+func (s *OpsItemLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s OpsItemLimitExceededException) Error() string {
+func (s *OpsItemLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OpsItemLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OpsItemLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OpsItemLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OpsItemLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified OpsItem ID doesn't exist. Verify the ID and try again.
 type OpsItemNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -35217,17 +35334,17 @@ func (s OpsItemNotFoundException) GoString() string {
 
 func newErrorOpsItemNotFoundException(v protocol.ResponseMetadata) error {
 	return &OpsItemNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OpsItemNotFoundException) Code() string {
+func (s *OpsItemNotFoundException) Code() string {
 	return "OpsItemNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s OpsItemNotFoundException) Message() string {
+func (s *OpsItemNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -35235,22 +35352,22 @@ func (s OpsItemNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OpsItemNotFoundException) OrigErr() error {
+func (s *OpsItemNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s OpsItemNotFoundException) Error() string {
+func (s *OpsItemNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OpsItemNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OpsItemNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OpsItemNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OpsItemNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A notification about the OpsItem.
@@ -35451,7 +35568,7 @@ func (s *OpsResultAttribute) SetTypeName(v string) *OpsResultAttribute {
 type OutputSource struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the output source, for example the URL of an Amazon S3 bucket.
+	// The ID of the output source, for example the URL of an S3 bucket.
 	OutputSourceId *string `min:"36" type:"string"`
 
 	// The type of source where the association execution details are stored, for
@@ -35481,7 +35598,7 @@ func (s *OutputSource) SetOutputSourceType(v string) *OutputSource {
 	return s
 }
 
-// An Amazon EC2 Systems Manager parameter in Parameter Store.
+// An Systems Manager parameter in Parameter Store.
 type Parameter struct {
 	_ struct{} `type:"structure"`
 
@@ -35507,8 +35624,8 @@ type Parameter struct {
 	// is the raw result or response from the source.
 	SourceResult *string `type:"string"`
 
-	// The type of parameter. Valid values include the following: String, String
-	// list, Secure string.
+	// The type of parameter. Valid values include the following: String, StringList,
+	// and SecureString.
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value.
@@ -35578,8 +35695,8 @@ func (s *Parameter) SetVersion(v int64) *Parameter {
 
 // The parameter already exists. You can't create duplicate parameters.
 type ParameterAlreadyExists struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -35596,17 +35713,17 @@ func (s ParameterAlreadyExists) GoString() string {
 
 func newErrorParameterAlreadyExists(v protocol.ResponseMetadata) error {
 	return &ParameterAlreadyExists{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ParameterAlreadyExists) Code() string {
+func (s *ParameterAlreadyExists) Code() string {
 	return "ParameterAlreadyExists"
 }
 
 // Message returns the exception's message.
-func (s ParameterAlreadyExists) Message() string {
+func (s *ParameterAlreadyExists) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -35614,22 +35731,22 @@ func (s ParameterAlreadyExists) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ParameterAlreadyExists) OrigErr() error {
+func (s *ParameterAlreadyExists) OrigErr() error {
 	return nil
 }
 
-func (s ParameterAlreadyExists) Error() string {
+func (s *ParameterAlreadyExists) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ParameterAlreadyExists) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ParameterAlreadyExists) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ParameterAlreadyExists) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ParameterAlreadyExists) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about parameter usage.
@@ -35661,7 +35778,7 @@ type ParameterHistory struct {
 
 	// Information about the policies assigned to a parameter.
 	//
-	// Working with Parameter Policies (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-policies.html)
+	// Assigning parameter policies (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-policies.html)
 	// in the AWS Systems Manager User Guide.
 	Policies []*ParameterInlinePolicy `type:"list"`
 
@@ -35809,8 +35926,8 @@ func (s *ParameterInlinePolicy) SetPolicyType(v string) *ParameterInlinePolicy {
 // You have exceeded the number of parameters for this AWS account. Delete one
 // or more parameters and try again.
 type ParameterLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -35827,17 +35944,17 @@ func (s ParameterLimitExceeded) GoString() string {
 
 func newErrorParameterLimitExceeded(v protocol.ResponseMetadata) error {
 	return &ParameterLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ParameterLimitExceeded) Code() string {
+func (s *ParameterLimitExceeded) Code() string {
 	return "ParameterLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s ParameterLimitExceeded) Message() string {
+func (s *ParameterLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -35845,28 +35962,28 @@ func (s ParameterLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ParameterLimitExceeded) OrigErr() error {
+func (s *ParameterLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s ParameterLimitExceeded) Error() string {
+func (s *ParameterLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ParameterLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ParameterLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ParameterLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ParameterLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The parameter exceeded the maximum number of allowed versions.
 type ParameterMaxVersionLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -35883,17 +36000,17 @@ func (s ParameterMaxVersionLimitExceeded) GoString() string {
 
 func newErrorParameterMaxVersionLimitExceeded(v protocol.ResponseMetadata) error {
 	return &ParameterMaxVersionLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ParameterMaxVersionLimitExceeded) Code() string {
+func (s *ParameterMaxVersionLimitExceeded) Code() string {
 	return "ParameterMaxVersionLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s ParameterMaxVersionLimitExceeded) Message() string {
+func (s *ParameterMaxVersionLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -35901,22 +36018,22 @@ func (s ParameterMaxVersionLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ParameterMaxVersionLimitExceeded) OrigErr() error {
+func (s *ParameterMaxVersionLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s ParameterMaxVersionLimitExceeded) Error() string {
+func (s *ParameterMaxVersionLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ParameterMaxVersionLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ParameterMaxVersionLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ParameterMaxVersionLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ParameterMaxVersionLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Metadata includes information like the ARN of the last user and the date/time
@@ -35951,7 +36068,7 @@ type ParameterMetadata struct {
 	Tier *string `type:"string" enum:"ParameterTier"`
 
 	// The type of parameter. Valid parameter types include the following: String,
-	// String list, Secure string.
+	// StringList, and SecureString.
 	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter version.
@@ -36030,8 +36147,8 @@ func (s *ParameterMetadata) SetVersion(v int64) *ParameterMetadata {
 
 // The parameter could not be found. Verify the name and try again.
 type ParameterNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -36048,17 +36165,17 @@ func (s ParameterNotFound) GoString() string {
 
 func newErrorParameterNotFound(v protocol.ResponseMetadata) error {
 	return &ParameterNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ParameterNotFound) Code() string {
+func (s *ParameterNotFound) Code() string {
 	return "ParameterNotFound"
 }
 
 // Message returns the exception's message.
-func (s ParameterNotFound) Message() string {
+func (s *ParameterNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -36066,28 +36183,28 @@ func (s ParameterNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ParameterNotFound) OrigErr() error {
+func (s *ParameterNotFound) OrigErr() error {
 	return nil
 }
 
-func (s ParameterNotFound) Error() string {
+func (s *ParameterNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ParameterNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ParameterNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ParameterNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ParameterNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The parameter name is not valid.
 type ParameterPatternMismatchException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The parameter name is not valid.
 	Message_ *string `locationName:"message" type:"string"`
@@ -36105,17 +36222,17 @@ func (s ParameterPatternMismatchException) GoString() string {
 
 func newErrorParameterPatternMismatchException(v protocol.ResponseMetadata) error {
 	return &ParameterPatternMismatchException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ParameterPatternMismatchException) Code() string {
+func (s *ParameterPatternMismatchException) Code() string {
 	return "ParameterPatternMismatchException"
 }
 
 // Message returns the exception's message.
-func (s ParameterPatternMismatchException) Message() string {
+func (s *ParameterPatternMismatchException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -36123,22 +36240,22 @@ func (s ParameterPatternMismatchException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ParameterPatternMismatchException) OrigErr() error {
+func (s *ParameterPatternMismatchException) OrigErr() error {
 	return nil
 }
 
-func (s ParameterPatternMismatchException) Error() string {
+func (s *ParameterPatternMismatchException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ParameterPatternMismatchException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ParameterPatternMismatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ParameterPatternMismatchException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ParameterPatternMismatchException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // One or more filters. Use a filter to return a more specific list of results.
@@ -36154,7 +36271,7 @@ func (s ParameterPatternMismatchException) RequestID() string {
 // Name, Path, and Tier.
 //
 // For examples of CLI commands demonstrating valid parameter filter constructions,
-// see Searching for Systems Manager Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
+// see Searching for Systems Manager parameters (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-search.html)
 // in the AWS Systems Manager User Guide.
 type ParameterStringFilter struct {
 	_ struct{} `type:"structure"`
@@ -36230,8 +36347,8 @@ func (s *ParameterStringFilter) SetValues(v []*string) *ParameterStringFilter {
 
 // A parameter version can have a maximum of ten labels.
 type ParameterVersionLabelLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -36248,17 +36365,17 @@ func (s ParameterVersionLabelLimitExceeded) GoString() string {
 
 func newErrorParameterVersionLabelLimitExceeded(v protocol.ResponseMetadata) error {
 	return &ParameterVersionLabelLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ParameterVersionLabelLimitExceeded) Code() string {
+func (s *ParameterVersionLabelLimitExceeded) Code() string {
 	return "ParameterVersionLabelLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s ParameterVersionLabelLimitExceeded) Message() string {
+func (s *ParameterVersionLabelLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -36266,29 +36383,29 @@ func (s ParameterVersionLabelLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ParameterVersionLabelLimitExceeded) OrigErr() error {
+func (s *ParameterVersionLabelLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s ParameterVersionLabelLimitExceeded) Error() string {
+func (s *ParameterVersionLabelLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ParameterVersionLabelLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ParameterVersionLabelLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ParameterVersionLabelLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ParameterVersionLabelLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The specified parameter version was not found. Verify the parameter name
 // and version, and try again.
 type ParameterVersionNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -36305,17 +36422,17 @@ func (s ParameterVersionNotFound) GoString() string {
 
 func newErrorParameterVersionNotFound(v protocol.ResponseMetadata) error {
 	return &ParameterVersionNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ParameterVersionNotFound) Code() string {
+func (s *ParameterVersionNotFound) Code() string {
 	return "ParameterVersionNotFound"
 }
 
 // Message returns the exception's message.
-func (s ParameterVersionNotFound) Message() string {
+func (s *ParameterVersionNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -36323,22 +36440,22 @@ func (s ParameterVersionNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ParameterVersionNotFound) OrigErr() error {
+func (s *ParameterVersionNotFound) OrigErr() error {
 	return nil
 }
 
-func (s ParameterVersionNotFound) Error() string {
+func (s *ParameterVersionNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ParameterVersionNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ParameterVersionNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ParameterVersionNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ParameterVersionNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // This data type is deprecated. Instead, use ParameterStringFilter.
@@ -36621,7 +36738,7 @@ type PatchComplianceData struct {
 
 	// The state of the patch on the instance, such as INSTALLED or FAILED.
 	//
-	// For descriptions of each patch state, see About Patch Compliance (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-compliance-about.html#sysman-compliance-monitor-patch)
+	// For descriptions of each patch state, see About patch compliance (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-compliance-about.html#sysman-compliance-monitor-patch)
 	// in the AWS Systems Manager User Guide.
 	//
 	// State is a required field
@@ -36891,15 +37008,17 @@ type PatchRule struct {
 	// The number of days after the release date of each patch matched by the rule
 	// that the patch is marked as approved in the patch baseline. For example,
 	// a value of 7 means that patches are approved seven days after they are released.
+	// Not supported on Ubuntu Server.
 	ApproveAfterDays *int64 `type:"integer"`
 
 	// The cutoff date for auto approval of released patches. Any patches released
-	// on or before this date will be installed automatically
+	// on or before this date are installed automatically. Not supported on Ubuntu
+	// Server.
+	//
+	// Enter dates in the format YYYY-MM-DD. For example, 2020-12-31.
 	ApproveUntilDate *string `min:"1" type:"string"`
 
 	// A compliance severity level for all approved patches in a patch baseline.
-	// Valid compliance severity levels include the following: Unspecified, Critical,
-	// High, Medium, Low, and Informational.
 	ComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
 
 	// For instances identified by the approval rule filters, enables a patch baseline
@@ -37153,8 +37272,8 @@ func (s *PatchStatus) SetDeploymentStatus(v string) *PatchStatus {
 // You specified more than the maximum number of allowed policies for the parameter.
 // The maximum is 10.
 type PoliciesLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -37171,17 +37290,17 @@ func (s PoliciesLimitExceededException) GoString() string {
 
 func newErrorPoliciesLimitExceededException(v protocol.ResponseMetadata) error {
 	return &PoliciesLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s PoliciesLimitExceededException) Code() string {
+func (s *PoliciesLimitExceededException) Code() string {
 	return "PoliciesLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s PoliciesLimitExceededException) Message() string {
+func (s *PoliciesLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -37189,22 +37308,22 @@ func (s PoliciesLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s PoliciesLimitExceededException) OrigErr() error {
+func (s *PoliciesLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s PoliciesLimitExceededException) Error() string {
+func (s *PoliciesLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s PoliciesLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *PoliciesLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s PoliciesLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *PoliciesLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An aggregate of step execution statuses displayed in the AWS Console for
@@ -37296,7 +37415,7 @@ type PutComplianceItemsInput struct {
 
 	// Information about the compliance as defined by the resource type. For example,
 	// for a patch compliance type, Items includes information about the PatchSeverity,
-	// Classification, etc.
+	// Classification, and so on.
 	//
 	// Items is a required field
 	Items []*ComplianceItemEntry `type:"list" required:"true"`
@@ -37312,6 +37431,18 @@ type PutComplianceItemsInput struct {
 	//
 	// ResourceType is a required field
 	ResourceType *string `min:"1" type:"string" required:"true"`
+
+	// The mode for uploading compliance items. You can specify COMPLETE or PARTIAL.
+	// In COMPLETE mode, the system overwrites all existing compliance information
+	// for the resource. You must provide a full list of compliance items each time
+	// you send the request.
+	//
+	// In PARTIAL mode, the system overwrites compliance information for a specific
+	// association. The association must be configured with SyncCompliance set to
+	// MANUAL. By default, all requests use COMPLETE mode.
+	//
+	// This attribute is only valid for association compliance.
+	UploadType *string `type:"string" enum:"ComplianceUploadType"`
 }
 
 // String returns the string representation
@@ -37406,6 +37537,12 @@ func (s *PutComplianceItemsInput) SetResourceId(v string) *PutComplianceItemsInp
 // SetResourceType sets the ResourceType field's value.
 func (s *PutComplianceItemsInput) SetResourceType(v string) *PutComplianceItemsInput {
 	s.ResourceType = &v
+	return s
+}
+
+// SetUploadType sets the UploadType field's value.
+func (s *PutComplianceItemsInput) SetUploadType(v string) *PutComplianceItemsInput {
+	s.UploadType = &v
 	return s
 }
 
@@ -37562,8 +37699,8 @@ type PutParameterInput struct {
 	//
 	//    * Parameter hierarchies are limited to a maximum depth of fifteen levels.
 	//
-	// For additional information about valid values for parameter names, see Requirements
-	// and Constraints for Parameter Names (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
+	// For additional information about valid values for parameter names, see About
+	// requirements and constraints for parameter names (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-parameter-name-constraints.html)
 	// in the AWS Systems Manager User Guide.
 	//
 	// The maximum length constraint listed below includes capacity for additional
@@ -37600,8 +37737,8 @@ type PutParameterInput struct {
 	// time, but it has not been changed.
 	//
 	// All existing policies are preserved until you send new policies or an empty
-	// policy. For more information about parameter policies, see Working with Parameter
-	// Policies (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-paramstore-su-policies.html).
+	// policy. For more information about parameter policies, see Assigning parameter
+	// policies (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-policies.html).
 	Policies *string `min:"1" type:"string"`
 
 	// Optional metadata that you assign to a resource. Tags enable you to categorize
@@ -37632,7 +37769,7 @@ type PutParameterInput struct {
 	// Advanced parameters have a content size limit of 8 KB and can be configured
 	// to use parameter policies. You can create a maximum of 100,000 advanced parameters
 	// for each Region in an AWS account. Advanced parameters incur a charge. For
-	// more information, see About Advanced Parameters (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
+	// more information, see Standard and advanced parameter tiers (https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html)
 	// in the AWS Systems Manager User Guide.
 	//
 	// You can change a standard parameter to an advanced parameter any time. But
@@ -37680,7 +37817,7 @@ type PutParameterInput struct {
 	//    current Region.
 	//
 	// For more information about configuring the default tier option, see Specifying
-	// a Default Parameter Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/ps-default-tier.html)
+	// a default parameter tier (https://docs.aws.amazon.com/systems-manager/latest/userguide/ps-default-tier.html)
 	// in the AWS Systems Manager User Guide.
 	Tier *string `type:"string" enum:"ParameterTier"`
 
@@ -38055,7 +38192,7 @@ type RegisterTargetWithMaintenanceWindowInput struct {
 	// Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
 	//
 	// For more information about these examples formats, including the best use
-	// case for each one, see Examples: Register Targets with a Maintenance Window
+	// case for each one, see Examples: Register targets with a maintenance window
 	// (https://docs.aws.amazon.com/systems-manager/latest/userguide/mw-cli-tutorial-targets-examples.html)
 	// in the AWS Systems Manager User Guide.
 	//
@@ -38196,7 +38333,7 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// An optional description for the task.
 	Description *string `min:"1" type:"string" sensitive:"true"`
 
-	// A structure containing information about an Amazon S3 bucket to write instance-level
+	// A structure containing information about an S3 bucket to write instance-level
 	// logs to.
 	//
 	// LoggingInfo has been deprecated. To specify an S3 bucket to contain logs,
@@ -38231,10 +38368,10 @@ type RegisterTaskWithMaintenanceWindowInput struct {
 	// For more information, see the following topics in the in the AWS Systems
 	// Manager User Guide:
 	//
-	//    * Service-Linked Role Permissions for Systems Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	//    * Using service-linked roles for Systems Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
 	//
-	//    * Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
-	//    Window Tasks? (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	//    * Should I use a service-linked role or a custom service role to run maintenance
+	//    window tasks? (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or maintenance window targets).
@@ -38605,7 +38742,9 @@ func (s RemoveTagsFromResourceOutput) GoString() string {
 type ResetServiceSettingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the service setting to reset.
+	// The Amazon Resource Name (ARN) of the service setting to reset. The setting
+	// ID can be /ssm/parameter-store/default-parameter-tier, /ssm/parameter-store/high-throughput-enabled,
+	// or /ssm/managed-instance/activation-tier. For example, arn:aws:ssm:us-east-1:111122223333:servicesetting/ssm/parameter-store/high-throughput-enabled.
 	//
 	// SettingId is a required field
 	SettingId *string `min:"1" type:"string" required:"true"`
@@ -38792,8 +38931,8 @@ func (s *ResourceComplianceSummaryItem) SetStatus(v string) *ResourceComplianceS
 
 // A sync configuration with the same name already exists.
 type ResourceDataSyncAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -38812,17 +38951,17 @@ func (s ResourceDataSyncAlreadyExistsException) GoString() string {
 
 func newErrorResourceDataSyncAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ResourceDataSyncAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceDataSyncAlreadyExistsException) Code() string {
+func (s *ResourceDataSyncAlreadyExistsException) Code() string {
 	return "ResourceDataSyncAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ResourceDataSyncAlreadyExistsException) Message() string {
+func (s *ResourceDataSyncAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -38830,22 +38969,22 @@ func (s ResourceDataSyncAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceDataSyncAlreadyExistsException) OrigErr() error {
+func (s *ResourceDataSyncAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceDataSyncAlreadyExistsException) Error() string {
+func (s *ResourceDataSyncAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceDataSyncAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceDataSyncAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceDataSyncAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceDataSyncAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about the AwsOrganizationsSource resource data sync source. A
@@ -38920,8 +39059,8 @@ func (s *ResourceDataSyncAwsOrganizationsSource) SetOrganizationalUnits(v []*Res
 // Another UpdateResourceDataSync request is being processed. Wait a few minutes
 // and try again.
 type ResourceDataSyncConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -38938,17 +39077,17 @@ func (s ResourceDataSyncConflictException) GoString() string {
 
 func newErrorResourceDataSyncConflictException(v protocol.ResponseMetadata) error {
 	return &ResourceDataSyncConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceDataSyncConflictException) Code() string {
+func (s *ResourceDataSyncConflictException) Code() string {
 	return "ResourceDataSyncConflictException"
 }
 
 // Message returns the exception's message.
-func (s ResourceDataSyncConflictException) Message() string {
+func (s *ResourceDataSyncConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -38956,28 +39095,28 @@ func (s ResourceDataSyncConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceDataSyncConflictException) OrigErr() error {
+func (s *ResourceDataSyncConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceDataSyncConflictException) Error() string {
+func (s *ResourceDataSyncConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceDataSyncConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceDataSyncConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceDataSyncConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceDataSyncConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You have exceeded the allowed maximum sync configurations.
 type ResourceDataSyncCountExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -38994,17 +39133,17 @@ func (s ResourceDataSyncCountExceededException) GoString() string {
 
 func newErrorResourceDataSyncCountExceededException(v protocol.ResponseMetadata) error {
 	return &ResourceDataSyncCountExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceDataSyncCountExceededException) Code() string {
+func (s *ResourceDataSyncCountExceededException) Code() string {
 	return "ResourceDataSyncCountExceededException"
 }
 
 // Message returns the exception's message.
-func (s ResourceDataSyncCountExceededException) Message() string {
+func (s *ResourceDataSyncCountExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39012,28 +39151,68 @@ func (s ResourceDataSyncCountExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceDataSyncCountExceededException) OrigErr() error {
+func (s *ResourceDataSyncCountExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceDataSyncCountExceededException) Error() string {
+func (s *ResourceDataSyncCountExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceDataSyncCountExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceDataSyncCountExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceDataSyncCountExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceDataSyncCountExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Synchronize Systems Manager Inventory data from multiple AWS accounts defined
+// in AWS Organizations to a centralized S3 bucket. Data is synchronized to
+// individual key prefixes in the central bucket. Each key prefix represents
+// a different AWS account ID.
+type ResourceDataSyncDestinationDataSharing struct {
+	_ struct{} `type:"structure"`
+
+	// The sharing data type. Only Organization is supported.
+	DestinationDataSharingType *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceDataSyncDestinationDataSharing) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceDataSyncDestinationDataSharing) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ResourceDataSyncDestinationDataSharing) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ResourceDataSyncDestinationDataSharing"}
+	if s.DestinationDataSharingType != nil && len(*s.DestinationDataSharingType) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DestinationDataSharingType", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDestinationDataSharingType sets the DestinationDataSharingType field's value.
+func (s *ResourceDataSyncDestinationDataSharing) SetDestinationDataSharingType(v string) *ResourceDataSyncDestinationDataSharing {
+	s.DestinationDataSharingType = &v
+	return s
 }
 
 // The specified sync configuration is invalid.
 type ResourceDataSyncInvalidConfigurationException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39050,17 +39229,17 @@ func (s ResourceDataSyncInvalidConfigurationException) GoString() string {
 
 func newErrorResourceDataSyncInvalidConfigurationException(v protocol.ResponseMetadata) error {
 	return &ResourceDataSyncInvalidConfigurationException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceDataSyncInvalidConfigurationException) Code() string {
+func (s *ResourceDataSyncInvalidConfigurationException) Code() string {
 	return "ResourceDataSyncInvalidConfigurationException"
 }
 
 // Message returns the exception's message.
-func (s ResourceDataSyncInvalidConfigurationException) Message() string {
+func (s *ResourceDataSyncInvalidConfigurationException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39068,22 +39247,22 @@ func (s ResourceDataSyncInvalidConfigurationException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceDataSyncInvalidConfigurationException) OrigErr() error {
+func (s *ResourceDataSyncInvalidConfigurationException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceDataSyncInvalidConfigurationException) Error() string {
+func (s *ResourceDataSyncInvalidConfigurationException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceDataSyncInvalidConfigurationException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceDataSyncInvalidConfigurationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceDataSyncInvalidConfigurationException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceDataSyncInvalidConfigurationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about a Resource Data Sync configuration, including its current
@@ -39103,7 +39282,7 @@ type ResourceDataSyncItem struct {
 	// The last time the configuration attempted to sync (UTC).
 	LastSyncTime *time.Time `type:"timestamp"`
 
-	// Configuration information for the target Amazon S3 bucket.
+	// Configuration information for the target S3 bucket.
 	S3Destination *ResourceDataSyncS3Destination `type:"structure"`
 
 	// The date and time the configuration was created (UTC).
@@ -39119,9 +39298,9 @@ type ResourceDataSyncItem struct {
 	SyncSource *ResourceDataSyncSourceWithState `type:"structure"`
 
 	// The type of resource data sync. If SyncType is SyncToDestination, then the
-	// resource data sync synchronizes data to an Amazon S3 bucket. If the SyncType
-	// is SyncFromSource then the resource data sync synchronizes data from AWS
-	// Organizations or from multiple AWS Regions.
+	// resource data sync synchronizes data to an S3 bucket. If the SyncType is
+	// SyncFromSource then the resource data sync synchronizes data from AWS Organizations
+	// or from multiple AWS Regions.
 	SyncType *string `min:"1" type:"string"`
 }
 
@@ -39197,8 +39376,8 @@ func (s *ResourceDataSyncItem) SetSyncType(v string) *ResourceDataSyncItem {
 
 // The specified sync name was not found.
 type ResourceDataSyncNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -39219,17 +39398,17 @@ func (s ResourceDataSyncNotFoundException) GoString() string {
 
 func newErrorResourceDataSyncNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceDataSyncNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceDataSyncNotFoundException) Code() string {
+func (s *ResourceDataSyncNotFoundException) Code() string {
 	return "ResourceDataSyncNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceDataSyncNotFoundException) Message() string {
+func (s *ResourceDataSyncNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39237,22 +39416,22 @@ func (s ResourceDataSyncNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceDataSyncNotFoundException) OrigErr() error {
+func (s *ResourceDataSyncNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceDataSyncNotFoundException) Error() string {
+func (s *ResourceDataSyncNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceDataSyncNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceDataSyncNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceDataSyncNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceDataSyncNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The AWS Organizations organizational unit data source for the sync.
@@ -39292,23 +39471,26 @@ func (s *ResourceDataSyncOrganizationalUnit) SetOrganizationalUnitId(v string) *
 	return s
 }
 
-// Information about the target Amazon S3 bucket for the Resource Data Sync.
+// Information about the target S3 bucket for the Resource Data Sync.
 type ResourceDataSyncS3Destination struct {
 	_ struct{} `type:"structure"`
 
 	// The ARN of an encryption key for a destination in Amazon S3. Must belong
-	// to the same Region as the destination Amazon S3 bucket.
+	// to the same Region as the destination S3 bucket.
 	AWSKMSKeyARN *string `min:"1" type:"string"`
 
-	// The name of the Amazon S3 bucket where the aggregated data is stored.
+	// The name of the S3 bucket where the aggregated data is stored.
 	//
 	// BucketName is a required field
 	BucketName *string `min:"1" type:"string" required:"true"`
 
+	// Enables destination data sharing. By default, this field is null.
+	DestinationDataSharing *ResourceDataSyncDestinationDataSharing `type:"structure"`
+
 	// An Amazon S3 prefix for the bucket.
 	Prefix *string `min:"1" type:"string"`
 
-	// The AWS Region with the Amazon S3 bucket targeted by the Resource Data Sync.
+	// The AWS Region with the S3 bucket targeted by the Resource Data Sync.
 	//
 	// Region is a required field
 	Region *string `min:"1" type:"string" required:"true"`
@@ -39353,6 +39535,11 @@ func (s *ResourceDataSyncS3Destination) Validate() error {
 	if s.SyncFormat == nil {
 		invalidParams.Add(request.NewErrParamRequired("SyncFormat"))
 	}
+	if s.DestinationDataSharing != nil {
+		if err := s.DestinationDataSharing.Validate(); err != nil {
+			invalidParams.AddNested("DestinationDataSharing", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -39369,6 +39556,12 @@ func (s *ResourceDataSyncS3Destination) SetAWSKMSKeyARN(v string) *ResourceDataS
 // SetBucketName sets the BucketName field's value.
 func (s *ResourceDataSyncS3Destination) SetBucketName(v string) *ResourceDataSyncS3Destination {
 	s.BucketName = &v
+	return s
+}
+
+// SetDestinationDataSharing sets the DestinationDataSharing field's value.
+func (s *ResourceDataSyncS3Destination) SetDestinationDataSharing(v *ResourceDataSyncDestinationDataSharing) *ResourceDataSyncS3Destination {
+	s.DestinationDataSharing = v
 	return s
 }
 
@@ -39564,8 +39757,8 @@ func (s *ResourceDataSyncSourceWithState) SetState(v string) *ResourceDataSyncSo
 // Error returned if an attempt is made to delete a patch baseline that is registered
 // for a patch group.
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39582,17 +39775,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39600,33 +39793,33 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Error returned when the caller has exceeded the default resource quotas.
 // For example, too many maintenance windows or patch baselines have been created.
 //
 // For information about resource quotas in Systems Manager, see Systems Manager
-// Service Quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
+// service quotas (http://docs.aws.amazon.com/general/latest/gr/ssm.html#limits_ssm)
 // in the AWS General Reference.
 type ResourceLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39643,17 +39836,17 @@ func (s ResourceLimitExceededException) GoString() string {
 
 func newErrorResourceLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ResourceLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceLimitExceededException) Code() string {
+func (s *ResourceLimitExceededException) Code() string {
 	return "ResourceLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ResourceLimitExceededException) Message() string {
+func (s *ResourceLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39661,22 +39854,22 @@ func (s ResourceLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceLimitExceededException) OrigErr() error {
+func (s *ResourceLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceLimitExceededException) Error() string {
+func (s *ResourceLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The inventory item result attribute.
@@ -39774,8 +39967,8 @@ type ResumeSessionOutput struct {
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
-	// of supported region values, see the Region column in Systems Manager Service
-	// Endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
+	// of supported region values, see the Region column in Systems Manager service
+	// endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
 	// in the AWS General Reference.
 	//
 	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
@@ -39814,19 +40007,19 @@ func (s *ResumeSessionOutput) SetTokenValue(v string) *ResumeSessionOutput {
 	return s
 }
 
-// An Amazon S3 bucket where you want to store the results of this request.
+// An S3 bucket where you want to store the results of this request.
 type S3OutputLocation struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Amazon S3 bucket.
+	// The name of the S3 bucket.
 	OutputS3BucketName *string `min:"3" type:"string"`
 
-	// The Amazon S3 bucket subfolder.
+	// The S3 bucket subfolder.
 	OutputS3KeyPrefix *string `type:"string"`
 
 	// (Deprecated) You can no longer specify this parameter. The system ignores
-	// it. Instead, Systems Manager automatically determines the Amazon S3 bucket
-	// region.
+	// it. Instead, Systems Manager automatically determines the Region of the S3
+	// bucket.
 	OutputS3Region *string `min:"3" type:"string"`
 }
 
@@ -39874,13 +40067,11 @@ func (s *S3OutputLocation) SetOutputS3Region(v string) *S3OutputLocation {
 	return s
 }
 
-// A URL for the Amazon S3 bucket where you want to store the results of this
-// request.
+// A URL for the S3 bucket where you want to store the results of this request.
 type S3OutputUrl struct {
 	_ struct{} `type:"structure"`
 
-	// A URL for an Amazon S3 bucket where you want to store the results of this
-	// request.
+	// A URL for an S3 bucket where you want to store the results of this request.
 	OutputUrl *string `type:"string"`
 }
 
@@ -40083,15 +40274,15 @@ type SendCommandInput struct {
 	// The instance IDs where the command should run. You can specify a maximum
 	// of 50 IDs. If you prefer not to list individual instance IDs, you can instead
 	// send commands to a fleet of instances using the Targets parameter, which
-	// accepts EC2 tags. For more information about how to use targets, see Sending
-	// Commands to a Fleet (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
+	// accepts EC2 tags. For more information about how to use targets, see Using
+	// targets and rate controls to send commands to a fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	InstanceIds []*string `type:"list"`
 
 	// (Optional) The maximum number of instances that are allowed to run the command
 	// at the same time. You can specify a number such as 10 or a percentage such
 	// as 10%. The default value is 50. For more information about how to use MaxConcurrency,
-	// see Using Concurrency Controls (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-velocity)
+	// see Using concurrency controls (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-velocity)
 	// in the AWS Systems Manager User Guide.
 	MaxConcurrency *string `min:"1" type:"string"`
 
@@ -40099,7 +40290,7 @@ type SendCommandInput struct {
 	// command fails one more time beyond the value of MaxErrors, the systems stops
 	// sending the command to additional targets. You can specify a number like
 	// 10 or a percentage like 10%. The default value is 0. For more information
-	// about how to use MaxErrors, see Using Error Controls (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-maxerrors)
+	// about how to use MaxErrors, see Using error controls (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-maxerrors)
 	// in the AWS Systems Manager User Guide.
 	MaxErrors *string `min:"1" type:"string"`
 
@@ -40114,8 +40305,8 @@ type SendCommandInput struct {
 	OutputS3KeyPrefix *string `type:"string"`
 
 	// (Deprecated) You can no longer specify this parameter. The system ignores
-	// it. Instead, Systems Manager automatically determines the Amazon S3 bucket
-	// region.
+	// it. Instead, Systems Manager automatically determines the Region of the S3
+	// bucket.
 	OutputS3Region *string `min:"3" type:"string"`
 
 	// The required and optional parameters specified in the document being run.
@@ -40128,7 +40319,7 @@ type SendCommandInput struct {
 	// (Optional) An array of search criteria that targets instances using a Key,Value
 	// combination that you specify. Targets is required if you don't provide one
 	// or more instance IDs in the call. For more information about how to use targets,
-	// see Sending Commands to a Fleet (http://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
+	// see Sending commands to a fleet (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html)
 	// in the AWS Systems Manager User Guide.
 	Targets []*Target `type:"list"`
 
@@ -40413,8 +40604,8 @@ func (s *ServiceSetting) SetStatus(v string) *ServiceSetting {
 // The specified service setting was not found. Either the service name or the
 // setting has not been provisioned by the AWS service team.
 type ServiceSettingNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -40431,17 +40622,17 @@ func (s ServiceSettingNotFound) GoString() string {
 
 func newErrorServiceSettingNotFound(v protocol.ResponseMetadata) error {
 	return &ServiceSettingNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceSettingNotFound) Code() string {
+func (s *ServiceSettingNotFound) Code() string {
 	return "ServiceSettingNotFound"
 }
 
 // Message returns the exception's message.
-func (s ServiceSettingNotFound) Message() string {
+func (s *ServiceSettingNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -40449,22 +40640,22 @@ func (s ServiceSettingNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceSettingNotFound) OrigErr() error {
+func (s *ServiceSettingNotFound) OrigErr() error {
 	return nil
 }
 
-func (s ServiceSettingNotFound) Error() string {
+func (s *ServiceSettingNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceSettingNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceSettingNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceSettingNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceSettingNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about a Session Manager connection to an instance.
@@ -40866,8 +41057,8 @@ type StartAutomationExecutionInput struct {
 
 	// A location is a combination of AWS Regions and/or AWS accounts where you
 	// want to run the Automation. Use this action to start an Automation in multiple
-	// Regions and multiple accounts. For more information, see Executing Automations
-	// in Multiple AWS Regions and Accounts (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
+	// Regions and multiple accounts. For more information, see Running Automation
+	// workflows in multiple AWS Regions and accounts (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-automation-multiple-accounts-and-regions.html)
 	// in the AWS Systems Manager User Guide.
 	TargetLocations []*TargetLocation `min:"1" type:"list"`
 
@@ -41121,8 +41312,8 @@ type StartSessionOutput struct {
 	//
 	// region represents the Region identifier for an AWS Region supported by AWS
 	// Systems Manager, such as us-east-2 for the US East (Ohio) Region. For a list
-	// of supported region values, see the Region column in Systems Manager Service
-	// Endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
+	// of supported region values, see the Region column in Systems Manager service
+	// endpoints (http://docs.aws.amazon.com/general/latest/gr/ssm.html#ssm_region)
 	// in the AWS General Reference.
 	//
 	// session-id represents the ID of a Session Manager session, such as 1a2b3c4dEXAMPLE.
@@ -41163,8 +41354,8 @@ func (s *StartSessionOutput) SetTokenValue(v string) *StartSessionOutput {
 
 // The updated status is the same as the current status.
 type StatusUnchanged struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -41181,17 +41372,17 @@ func (s StatusUnchanged) GoString() string {
 
 func newErrorStatusUnchanged(v protocol.ResponseMetadata) error {
 	return &StatusUnchanged{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s StatusUnchanged) Code() string {
+func (s *StatusUnchanged) Code() string {
 	return "StatusUnchanged"
 }
 
 // Message returns the exception's message.
-func (s StatusUnchanged) Message() string {
+func (s *StatusUnchanged) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -41199,22 +41390,22 @@ func (s StatusUnchanged) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s StatusUnchanged) OrigErr() error {
+func (s *StatusUnchanged) OrigErr() error {
 	return nil
 }
 
-func (s StatusUnchanged) Error() string {
+func (s *StatusUnchanged) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s StatusUnchanged) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *StatusUnchanged) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s StatusUnchanged) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *StatusUnchanged) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Detailed information about an the execution state of an Automation step.
@@ -41567,8 +41758,8 @@ func (s StopAutomationExecutionOutput) GoString() string {
 
 // The sub-type count exceeded the limit for the inventory type.
 type SubTypeCountLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -41585,17 +41776,17 @@ func (s SubTypeCountLimitExceededException) GoString() string {
 
 func newErrorSubTypeCountLimitExceededException(v protocol.ResponseMetadata) error {
 	return &SubTypeCountLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s SubTypeCountLimitExceededException) Code() string {
+func (s *SubTypeCountLimitExceededException) Code() string {
 	return "SubTypeCountLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s SubTypeCountLimitExceededException) Message() string {
+func (s *SubTypeCountLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -41603,22 +41794,22 @@ func (s SubTypeCountLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s SubTypeCountLimitExceededException) OrigErr() error {
+func (s *SubTypeCountLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s SubTypeCountLimitExceededException) Error() string {
+func (s *SubTypeCountLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s SubTypeCountLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *SubTypeCountLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s SubTypeCountLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *SubTypeCountLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Metadata that you assign to your AWS resources. Tags enable you to categorize
@@ -41711,16 +41902,15 @@ func (s *Tag) SetValue(v string) *Tag {
 //    group ProductionResourceGroup in your maintenance window.
 //
 //    * (Maintenance window targets only) Key=resource-groups:ResourceTypeFilters,Values=AWS::EC2::INSTANCE,AWS::EC2::VPC
-//    This example demonstrates how to target only Amazon EC2 instances and
-//    VPCs in your maintenance window.
+//    This example demonstrates how to target only EC2 instances and VPCs in
+//    your maintenance window.
 //
 //    * (State Manager association targets only) Key=InstanceIds,Values=* This
 //    example demonstrates how to target all managed instances in the AWS Region
 //    where the association was created.
 //
 // For information about how to send commands that target instances using Key,Value
-// parameters, see Using Targets and Rate Controls to Send Commands to a Fleet
-// (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
+// parameters, see Targeting multiple instances (https://docs.aws.amazon.com/systems-manager/latest/userguide/send-commands-multiple.html#send-commands-targeting)
 // in the AWS Systems Manager User Guide.
 type Target struct {
 	_ struct{} `type:"structure"`
@@ -41731,7 +41921,7 @@ type Target struct {
 
 	// User-defined criteria that maps to Key. For example, if you specified tag:ServerRole,
 	// you could specify value:WebServer to run a command on instances that include
-	// Amazon EC2 tags of ServerRole,WebServer.
+	// EC2 tags of ServerRole,WebServer.
 	Values []*string `type:"list"`
 }
 
@@ -41773,8 +41963,8 @@ func (s *Target) SetValues(v []*string) *Target {
 // You specified the Safe option for the DeregisterTargetFromMaintenanceWindow
 // operation, but the target is still referenced in a task.
 type TargetInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -41791,17 +41981,17 @@ func (s TargetInUseException) GoString() string {
 
 func newErrorTargetInUseException(v protocol.ResponseMetadata) error {
 	return &TargetInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TargetInUseException) Code() string {
+func (s *TargetInUseException) Code() string {
 	return "TargetInUseException"
 }
 
 // Message returns the exception's message.
-func (s TargetInUseException) Message() string {
+func (s *TargetInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -41809,22 +41999,22 @@ func (s TargetInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TargetInUseException) OrigErr() error {
+func (s *TargetInUseException) OrigErr() error {
 	return nil
 }
 
-func (s TargetInUseException) Error() string {
+func (s *TargetInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TargetInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TargetInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TargetInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TargetInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The combination of AWS Regions and accounts targeted by the current Automation
@@ -41916,12 +42106,12 @@ func (s *TargetLocation) SetTargetLocationMaxErrors(v string) *TargetLocation {
 }
 
 // The specified target instance for the session is not fully configured for
-// use with Session Manager. For more information, see Getting Started with
-// Session Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
+// use with Session Manager. For more information, see Getting started with
+// Session Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/session-manager-getting-started.html)
 // in the AWS Systems Manager User Guide.
 type TargetNotConnected struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -41938,17 +42128,17 @@ func (s TargetNotConnected) GoString() string {
 
 func newErrorTargetNotConnected(v protocol.ResponseMetadata) error {
 	return &TargetNotConnected{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TargetNotConnected) Code() string {
+func (s *TargetNotConnected) Code() string {
 	return "TargetNotConnected"
 }
 
 // Message returns the exception's message.
-func (s TargetNotConnected) Message() string {
+func (s *TargetNotConnected) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -41956,22 +42146,22 @@ func (s TargetNotConnected) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TargetNotConnected) OrigErr() error {
+func (s *TargetNotConnected) OrigErr() error {
 	return nil
 }
 
-func (s TargetNotConnected) Error() string {
+func (s *TargetNotConnected) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TargetNotConnected) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TargetNotConnected) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TargetNotConnected) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TargetNotConnected) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type TerminateSessionInput struct {
@@ -42041,8 +42231,8 @@ func (s *TerminateSessionOutput) SetSessionId(v string) *TerminateSessionOutput 
 // The Targets parameter includes too many tags. Remove one or more tags and
 // try the command again.
 type TooManyTagsError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -42059,17 +42249,17 @@ func (s TooManyTagsError) GoString() string {
 
 func newErrorTooManyTagsError(v protocol.ResponseMetadata) error {
 	return &TooManyTagsError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyTagsError) Code() string {
+func (s *TooManyTagsError) Code() string {
 	return "TooManyTagsError"
 }
 
 // Message returns the exception's message.
-func (s TooManyTagsError) Message() string {
+func (s *TooManyTagsError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42077,29 +42267,29 @@ func (s TooManyTagsError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyTagsError) OrigErr() error {
+func (s *TooManyTagsError) OrigErr() error {
 	return nil
 }
 
-func (s TooManyTagsError) Error() string {
+func (s *TooManyTagsError) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyTagsError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyTagsError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyTagsError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyTagsError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // There are concurrent updates for a resource that supports one update at a
 // time.
 type TooManyUpdates struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -42116,17 +42306,17 @@ func (s TooManyUpdates) GoString() string {
 
 func newErrorTooManyUpdates(v protocol.ResponseMetadata) error {
 	return &TooManyUpdates{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyUpdates) Code() string {
+func (s *TooManyUpdates) Code() string {
 	return "TooManyUpdates"
 }
 
 // Message returns the exception's message.
-func (s TooManyUpdates) Message() string {
+func (s *TooManyUpdates) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42134,28 +42324,28 @@ func (s TooManyUpdates) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyUpdates) OrigErr() error {
+func (s *TooManyUpdates) OrigErr() error {
 	return nil
 }
 
-func (s TooManyUpdates) Error() string {
+func (s *TooManyUpdates) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyUpdates) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyUpdates) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyUpdates) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyUpdates) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The size of inventory data has exceeded the total size limit for the resource.
 type TotalSizeLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -42172,17 +42362,17 @@ func (s TotalSizeLimitExceededException) GoString() string {
 
 func newErrorTotalSizeLimitExceededException(v protocol.ResponseMetadata) error {
 	return &TotalSizeLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TotalSizeLimitExceededException) Code() string {
+func (s *TotalSizeLimitExceededException) Code() string {
 	return "TotalSizeLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s TotalSizeLimitExceededException) Message() string {
+func (s *TotalSizeLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42190,29 +42380,29 @@ func (s TotalSizeLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TotalSizeLimitExceededException) OrigErr() error {
+func (s *TotalSizeLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s TotalSizeLimitExceededException) Error() string {
+func (s *TotalSizeLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TotalSizeLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TotalSizeLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TotalSizeLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TotalSizeLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The calendar entry contained in the specified Systems Manager document is
 // not supported.
 type UnsupportedCalendarException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -42229,17 +42419,17 @@ func (s UnsupportedCalendarException) GoString() string {
 
 func newErrorUnsupportedCalendarException(v protocol.ResponseMetadata) error {
 	return &UnsupportedCalendarException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedCalendarException) Code() string {
+func (s *UnsupportedCalendarException) Code() string {
 	return "UnsupportedCalendarException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedCalendarException) Message() string {
+func (s *UnsupportedCalendarException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42247,32 +42437,32 @@ func (s UnsupportedCalendarException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedCalendarException) OrigErr() error {
+func (s *UnsupportedCalendarException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedCalendarException) Error() string {
+func (s *UnsupportedCalendarException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedCalendarException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedCalendarException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedCalendarException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedCalendarException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
-// Microsoft application patching is only available on EC2 instances and Advanced
-// Instances. To patch Microsoft applications on on-premises servers and VMs,
-// you must enable Advanced Instances. For more information, see Using the Advanced-Instances
-// Tier (http://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
+// Microsoft application patching is only available on EC2 instances and advanced
+// instances. To patch Microsoft applications on on-premises servers and VMs,
+// you must enable advanced instances. For more information, see Using the advanced-instances
+// tier (https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-managedinstances-advanced.html)
 // in the AWS Systems Manager User Guide.
 type UnsupportedFeatureRequiredException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -42289,17 +42479,17 @@ func (s UnsupportedFeatureRequiredException) GoString() string {
 
 func newErrorUnsupportedFeatureRequiredException(v protocol.ResponseMetadata) error {
 	return &UnsupportedFeatureRequiredException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedFeatureRequiredException) Code() string {
+func (s *UnsupportedFeatureRequiredException) Code() string {
 	return "UnsupportedFeatureRequiredException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedFeatureRequiredException) Message() string {
+func (s *UnsupportedFeatureRequiredException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42307,30 +42497,30 @@ func (s UnsupportedFeatureRequiredException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedFeatureRequiredException) OrigErr() error {
+func (s *UnsupportedFeatureRequiredException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedFeatureRequiredException) Error() string {
+func (s *UnsupportedFeatureRequiredException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedFeatureRequiredException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedFeatureRequiredException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedFeatureRequiredException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedFeatureRequiredException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The Context attribute that you specified for the InventoryItem is not allowed
 // for this inventory type. You can only use the Context attribute with inventory
 // types like AWS:ComplianceItem.
 type UnsupportedInventoryItemContextException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 
@@ -42349,17 +42539,17 @@ func (s UnsupportedInventoryItemContextException) GoString() string {
 
 func newErrorUnsupportedInventoryItemContextException(v protocol.ResponseMetadata) error {
 	return &UnsupportedInventoryItemContextException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedInventoryItemContextException) Code() string {
+func (s *UnsupportedInventoryItemContextException) Code() string {
 	return "UnsupportedInventoryItemContextException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedInventoryItemContextException) Message() string {
+func (s *UnsupportedInventoryItemContextException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42367,30 +42557,30 @@ func (s UnsupportedInventoryItemContextException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedInventoryItemContextException) OrigErr() error {
+func (s *UnsupportedInventoryItemContextException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedInventoryItemContextException) Error() string {
+func (s *UnsupportedInventoryItemContextException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedInventoryItemContextException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedInventoryItemContextException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedInventoryItemContextException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedInventoryItemContextException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Inventory item type schema version has to match supported versions in the
 // service. Check output of GetInventorySchema to see the available schema version
 // for each type.
 type UnsupportedInventorySchemaVersionException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -42407,17 +42597,17 @@ func (s UnsupportedInventorySchemaVersionException) GoString() string {
 
 func newErrorUnsupportedInventorySchemaVersionException(v protocol.ResponseMetadata) error {
 	return &UnsupportedInventorySchemaVersionException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedInventorySchemaVersionException) Code() string {
+func (s *UnsupportedInventorySchemaVersionException) Code() string {
 	return "UnsupportedInventorySchemaVersionException"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedInventorySchemaVersionException) Message() string {
+func (s *UnsupportedInventorySchemaVersionException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42425,30 +42615,30 @@ func (s UnsupportedInventorySchemaVersionException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedInventorySchemaVersionException) OrigErr() error {
+func (s *UnsupportedInventorySchemaVersionException) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedInventorySchemaVersionException) Error() string {
+func (s *UnsupportedInventorySchemaVersionException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedInventorySchemaVersionException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedInventorySchemaVersionException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedInventorySchemaVersionException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedInventorySchemaVersionException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The operating systems you specified is not supported, or the operation is
 // not supported for the operating system. Valid operating systems include:
 // Windows, AmazonLinux, RedhatEnterpriseLinux, and Ubuntu.
 type UnsupportedOperatingSystem struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -42465,17 +42655,17 @@ func (s UnsupportedOperatingSystem) GoString() string {
 
 func newErrorUnsupportedOperatingSystem(v protocol.ResponseMetadata) error {
 	return &UnsupportedOperatingSystem{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedOperatingSystem) Code() string {
+func (s *UnsupportedOperatingSystem) Code() string {
 	return "UnsupportedOperatingSystem"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedOperatingSystem) Message() string {
+func (s *UnsupportedOperatingSystem) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42483,28 +42673,28 @@ func (s UnsupportedOperatingSystem) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedOperatingSystem) OrigErr() error {
+func (s *UnsupportedOperatingSystem) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedOperatingSystem) Error() string {
+func (s *UnsupportedOperatingSystem) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedOperatingSystem) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedOperatingSystem) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedOperatingSystem) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedOperatingSystem) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The parameter type is not supported.
 type UnsupportedParameterType struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -42521,17 +42711,17 @@ func (s UnsupportedParameterType) GoString() string {
 
 func newErrorUnsupportedParameterType(v protocol.ResponseMetadata) error {
 	return &UnsupportedParameterType{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedParameterType) Code() string {
+func (s *UnsupportedParameterType) Code() string {
 	return "UnsupportedParameterType"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedParameterType) Message() string {
+func (s *UnsupportedParameterType) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42539,29 +42729,29 @@ func (s UnsupportedParameterType) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedParameterType) OrigErr() error {
+func (s *UnsupportedParameterType) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedParameterType) Error() string {
+func (s *UnsupportedParameterType) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedParameterType) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedParameterType) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedParameterType) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedParameterType) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The document does not support the platform type of the given instance ID(s).
 // For example, you sent an document for a Windows instance to a Linux instance.
 type UnsupportedPlatformType struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -42578,17 +42768,17 @@ func (s UnsupportedPlatformType) GoString() string {
 
 func newErrorUnsupportedPlatformType(v protocol.ResponseMetadata) error {
 	return &UnsupportedPlatformType{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnsupportedPlatformType) Code() string {
+func (s *UnsupportedPlatformType) Code() string {
 	return "UnsupportedPlatformType"
 }
 
 // Message returns the exception's message.
-func (s UnsupportedPlatformType) Message() string {
+func (s *UnsupportedPlatformType) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -42596,22 +42786,22 @@ func (s UnsupportedPlatformType) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnsupportedPlatformType) OrigErr() error {
+func (s *UnsupportedPlatformType) OrigErr() error {
 	return nil
 }
 
-func (s UnsupportedPlatformType) Error() string {
+func (s *UnsupportedPlatformType) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnsupportedPlatformType) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnsupportedPlatformType) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnsupportedPlatformType) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnsupportedPlatformType) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UpdateAssociationInput struct {
@@ -42686,7 +42876,7 @@ type UpdateAssociationInput struct {
 	// or My-Document.
 	Name *string `type:"string"`
 
-	// An Amazon S3 bucket where you want to store the results of this request.
+	// An S3 bucket where you want to store the results of this request.
 	OutputLocation *InstanceAssociationOutputLocation `type:"structure"`
 
 	// The parameters you want to update for the association. If you create a parameter
@@ -42695,6 +42885,20 @@ type UpdateAssociationInput struct {
 
 	// The cron expression used to schedule the association that you want to update.
 	ScheduleExpression *string `min:"1" type:"string"`
+
+	// The mode for generating association compliance. You can specify AUTO or MANUAL.
+	// In AUTO mode, the system uses the status of the association execution to
+	// determine the compliance status. If the association execution runs successfully,
+	// then the association is COMPLIANT. If the association execution doesn't run
+	// successfully, the association is NON-COMPLIANT.
+	//
+	// In MANUAL mode, you must specify the AssociationId as a parameter for the
+	// PutComplianceItems API action. In this case, compliance data is not managed
+	// by State Manager. It is managed by your direct call to the PutComplianceItems
+	// API action.
+	//
+	// By default, all associations use AUTO mode.
+	SyncCompliance *string `type:"string" enum:"AssociationSyncCompliance"`
 
 	// The targets of the association.
 	Targets []*Target `type:"list"`
@@ -42819,6 +43023,12 @@ func (s *UpdateAssociationInput) SetParameters(v map[string][]*string) *UpdateAs
 // SetScheduleExpression sets the ScheduleExpression field's value.
 func (s *UpdateAssociationInput) SetScheduleExpression(v string) *UpdateAssociationInput {
 	s.ScheduleExpression = &v
+	return s
+}
+
+// SetSyncCompliance sets the SyncCompliance field's value.
+func (s *UpdateAssociationInput) SetSyncCompliance(v string) *UpdateAssociationInput {
+	s.SyncCompliance = &v
 	return s
 }
 
@@ -43037,7 +43247,9 @@ type UpdateDocumentInput struct {
 	// supports JSON and YAML documents. JSON is the default format.
 	DocumentFormat *string `type:"string" enum:"DocumentFormat"`
 
-	// (Required) The version of the document that you want to update.
+	// (Required) The latest version of the document that you want to update. The
+	// latest document version can be specified using the $LATEST variable or by
+	// the version number. Updating a previous version of a document is not supported.
 	DocumentVersion *string `type:"string"`
 
 	// The name of the document that you want to update.
@@ -43679,10 +43891,10 @@ type UpdateMaintenanceWindowTaskInput struct {
 	// For more information, see the following topics in the in the AWS Systems
 	// Manager User Guide:
 	//
-	//    * Service-Linked Role Permissions for Systems Manager (http://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
+	//    * Using service-linked roles for Systems Manager (https://docs.aws.amazon.com/systems-manager/latest/userguide/using-service-linked-roles.html#slr-permissions)
 	//
-	//    * Should I Use a Service-Linked Role or a Custom Service Role to Run Maintenance
-	//    Window Tasks? (http://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
+	//    * Should I use a service-linked role or a custom service role to run maintenance
+	//    window tasks? (https://docs.aws.amazon.com/systems-manager/latest/userguide/sysman-maintenance-permissions.html#maintenance-window-tasks-service-role)
 	ServiceRoleArn *string `type:"string"`
 
 	// The targets (either instances or tags) to modify. Instances are specified
@@ -44117,7 +44329,7 @@ type UpdateOpsItemInput struct {
 	// Use the /aws/resources key in OperationalData to specify a related resource
 	// in the request. Use the /aws/automations key in OperationalData to associate
 	// an Automation runbook with the OpsItem. To view AWS CLI example commands
-	// that use these keys, see Creating OpsItems Manually (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
+	// that use these keys, see Creating OpsItems manually (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-creating-OpsItems.html#OpsCenter-manually-create-OpsItems)
 	// in the AWS Systems Manager User Guide.
 	OperationalData map[string]*OpsItemDataValue `type:"map"`
 
@@ -44141,7 +44353,7 @@ type UpdateOpsItemInput struct {
 	Severity *string `min:"1" type:"string"`
 
 	// The OpsItem status. Status can be Open, In Progress, or Resolved. For more
-	// information, see Editing OpsItem Details (http://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems-editing-details.html)
+	// information, see Editing OpsItem details (https://docs.aws.amazon.com/systems-manager/latest/userguide/OpsCenter-working-with-OpsItems.html#OpsCenter-working-with-OpsItems-editing-details)
 	// in the AWS Systems Manager User Guide.
 	Status *string `type:"string" enum:"OpsItemStatus"`
 
@@ -44287,8 +44499,8 @@ type UpdatePatchBaselineInput struct {
 	// A list of explicitly approved patches for the baseline.
 	//
 	// For information about accepted formats for lists of approved patches and
-	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// rejected patches, see About package name formats for approved and rejected
+	// patch lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	ApprovedPatches []*string `type:"list"`
 
@@ -44317,8 +44529,8 @@ type UpdatePatchBaselineInput struct {
 	// A list of explicitly rejected patches for the baseline.
 	//
 	// For information about accepted formats for lists of approved patches and
-	// rejected patches, see Package Name Formats for Approved and Rejected Patch
-	// Lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
+	// rejected patches, see About package name formats for approved and rejected
+	// patch lists (https://docs.aws.amazon.com/systems-manager/latest/userguide/patch-manager-approved-rejected-package-name-formats.html)
 	// in the AWS Systems Manager User Guide.
 	RejectedPatches []*string `type:"list"`
 
@@ -44630,10 +44842,7 @@ type UpdateResourceDataSyncInput struct {
 	// SyncSource is a required field
 	SyncSource *ResourceDataSyncSource `type:"structure" required:"true"`
 
-	// The type of resource data sync. If SyncType is SyncToDestination, then the
-	// resource data sync synchronizes data to an Amazon S3 bucket. If the SyncType
-	// is SyncFromSource then the resource data sync synchronizes data from AWS
-	// Organizations or from multiple AWS Regions.
+	// The type of resource data sync. The supported SyncType is SyncFromSource.
 	//
 	// SyncType is a required field
 	SyncType *string `min:"1" type:"string" required:"true"`
@@ -44715,12 +44924,30 @@ func (s UpdateResourceDataSyncOutput) GoString() string {
 type UpdateServiceSettingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the service setting to update.
+	// The Amazon Resource Name (ARN) of the service setting to reset. For example,
+	// arn:aws:ssm:us-east-1:111122223333:servicesetting/ssm/parameter-store/high-throughput-enabled.
+	// The setting ID can be one of the following.
+	//
+	//    * /ssm/parameter-store/default-parameter-tier
+	//
+	//    * /ssm/parameter-store/high-throughput-enabled
+	//
+	//    * /ssm/managed-instance/activation-tier
 	//
 	// SettingId is a required field
 	SettingId *string `min:"1" type:"string" required:"true"`
 
-	// The new value to specify for the service setting.
+	// The new value to specify for the service setting. For the /ssm/parameter-store/default-parameter-tier
+	// setting ID, the setting value can be one of the following.
+	//
+	//    * Standard
+	//
+	//    * Advanced
+	//
+	//    * Intelligent-Tiering
+	//
+	// For the /ssm/parameter-store/high-throughput-enabled, and /ssm/managed-instance/activation-tier
+	// setting IDs, the setting value can be true or false.
 	//
 	// SettingValue is a required field
 	SettingValue *string `min:"1" type:"string" required:"true"`
@@ -44845,6 +45072,9 @@ const (
 
 	// AssociationFilterKeyAssociationName is a AssociationFilterKey enum value
 	AssociationFilterKeyAssociationName = "AssociationName"
+
+	// AssociationFilterKeyResourceGroupName is a AssociationFilterKey enum value
+	AssociationFilterKeyResourceGroupName = "ResourceGroupName"
 )
 
 const (
@@ -44867,6 +45097,14 @@ const (
 
 	// AssociationStatusNameFailed is a AssociationStatusName enum value
 	AssociationStatusNameFailed = "Failed"
+)
+
+const (
+	// AssociationSyncComplianceAuto is a AssociationSyncCompliance enum value
+	AssociationSyncComplianceAuto = "AUTO"
+
+	// AssociationSyncComplianceManual is a AssociationSyncCompliance enum value
+	AssociationSyncComplianceManual = "MANUAL"
 )
 
 const (
@@ -45085,6 +45323,14 @@ const (
 
 	// ComplianceStatusNonCompliant is a ComplianceStatus enum value
 	ComplianceStatusNonCompliant = "NON_COMPLIANT"
+)
+
+const (
+	// ComplianceUploadTypeComplete is a ComplianceUploadType enum value
+	ComplianceUploadTypeComplete = "COMPLETE"
+
+	// ComplianceUploadTypePartial is a ComplianceUploadType enum value
+	ComplianceUploadTypePartial = "PARTIAL"
 )
 
 const (

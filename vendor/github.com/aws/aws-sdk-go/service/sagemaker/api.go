@@ -398,6 +398,13 @@ func (c *SageMaker) CreateAutoMLJobRequest(input *CreateAutoMLJobInput) (req *re
 //
 // Creates an AutoPilot job.
 //
+// After you run an AutoPilot job, you can find the best performing model by
+// calling , and then deploy that model by following the steps described in
+// Step 6.1: Deploy the Model to Amazon SageMaker Hosting Services (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html).
+//
+// For information about how to use AutoPilot, see Use AutoPilot to Automate
+// Model Development (https://docs.aws.amazon.com/sagemaker/latest/dg/autopilot-automate-model-development.html).
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -764,14 +771,17 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 //
 // Creates an endpoint using the endpoint configuration specified in the request.
 // Amazon SageMaker uses the endpoint to provision resources and deploy models.
-// You create the endpoint configuration with the CreateEndpointConfig (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html)
-// API.
+// You create the endpoint configuration with the CreateEndpointConfig API.
 //
-// Use this API only for hosting models using Amazon SageMaker hosting services.
+// Use this API to deploy models using Amazon SageMaker hosting services.
 //
-// You must not delete an EndpointConfig in use by an endpoint that is live
-// or while the UpdateEndpoint or CreateEndpoint operations are being performed
-// on the endpoint. To update an endpoint, you must create a new EndpointConfig.
+// For an example that calls this method when deploying a model to Amazon SageMaker
+// hosting services, see Deploy the Model to Amazon SageMaker Hosting Services
+// (AWS SDK for Python (Boto 3)). (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html#ex1-deploy-model-boto)
+//
+// You must not delete an EndpointConfig that is in use by an endpoint that
+// is live or while the UpdateEndpoint or CreateEndpoint operations are being
+// performed on the endpoint. To update an endpoint, you must create a new EndpointConfig.
 //
 // The endpoint name must be unique within an AWS Region in your AWS account.
 //
@@ -781,11 +791,7 @@ func (c *SageMaker) CreateEndpointRequest(input *CreateEndpointInput) (req *requ
 // When Amazon SageMaker receives the request, it sets the endpoint status to
 // Creating. After it creates the endpoint, it sets the status to InService.
 // Amazon SageMaker can then process incoming requests for inferences. To check
-// the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
-// API.
-//
-// For an example, see Exercise 1: Using the K-Means Algorithm Provided by Amazon
-// SageMaker (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1.html).
+// the status of an endpoint, use the DescribeEndpoint API.
 //
 // If any of the models hosted at this endpoint get model data from an Amazon
 // S3 location, Amazon SageMaker uses AWS Security Token Service to download
@@ -876,14 +882,13 @@ func (c *SageMaker) CreateEndpointConfigRequest(input *CreateEndpointConfigInput
 // Creates an endpoint configuration that Amazon SageMaker hosting services
 // uses to deploy models. In the configuration, you identify one or more models,
 // created using the CreateModel API, to deploy and the resources that you want
-// Amazon SageMaker to provision. Then you call the CreateEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpoint.html)
-// API.
+// Amazon SageMaker to provision. Then you call the CreateEndpoint API.
 //
-// Use this API only if you want to use Amazon SageMaker hosting services to
-// deploy models into production.
+// Use this API if you want to use Amazon SageMaker hosting services to deploy
+// models into production.
 //
-// In the request, you define one or more ProductionVariants, each of which
-// identifies a model. Each ProductionVariant parameter also describes the resources
+// In the request, you define a ProductionVariant, for each model that you want
+// to deploy. Each ProductionVariant parameter also describes the resources
 // that you want Amazon SageMaker to provision. This includes the number and
 // type of ML compute instances to deploy.
 //
@@ -892,6 +897,10 @@ func (c *SageMaker) CreateEndpointConfigRequest(input *CreateEndpointConfigInput
 // that you want to host two models, A and B, and you assign traffic weight
 // 2 for model A and 1 for model B. Amazon SageMaker distributes two-thirds
 // of the traffic to Model A, and one-third to model B.
+//
+// For an example that calls this method when deploying a model to Amazon SageMaker
+// hosting services, see Deploy the Model to Amazon SageMaker Hosting Services
+// (AWS SDK for Python (Boto 3)). (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html#ex1-deploy-model-boto)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1442,9 +1451,9 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 //
 // Creates a model in Amazon SageMaker. In the request, you name the model and
 // describe a primary container. For the primary container, you specify the
-// docker image containing inference code, artifacts (from prior training),
-// and custom environment map that the inference code uses when you deploy the
-// model for predictions.
+// Docker image that contains inference code, artifacts (from prior training),
+// and a custom environment map that the inference code uses when you deploy
+// the model for predictions.
 //
 // Use this API to create a model if you want to use Amazon SageMaker hosting
 // services or run a batch transform job.
@@ -1453,6 +1462,10 @@ func (c *SageMaker) CreateModelRequest(input *CreateModelInput) (req *request.Re
 // API, and then create an endpoint with the CreateEndpoint API. Amazon SageMaker
 // then deploys all of the containers that you defined for the model in the
 // hosting environment.
+//
+// For an example that calls this method when deploying a model to Amazon SageMaker
+// hosting services, see Deploy the Model to Amazon SageMaker Hosting Services
+// (AWS SDK for Python (Boto 3)). (https://docs.aws.amazon.com/sagemaker/latest/dg/ex1-deploy-model.html#ex1-deploy-model-boto)
 //
 // To run a batch transform using your model, you start a job with the CreateTransformJob
 // API. Amazon SageMaker uses your model and your dataset to get inferences
@@ -2023,9 +2036,9 @@ func (c *SageMaker) CreatePresignedNotebookInstanceUrlRequest(input *CreatePresi
 // IP addresses that you want to have access to the notebook instance. For more
 // information, see Limit Access to a Notebook Instance by IP Address (https://docs.aws.amazon.com/sagemaker/latest/dg/security_iam_id-based-policy-examples.html#nbi-ip-filter).
 //
-// The URL that you get from a call to is valid only for 5 minutes. If you try
-// to use the URL after the 5-minute limit expires, you are directed to the
-// AWS console sign-in page.
+// The URL that you get from a call to CreatePresignedNotebookInstanceUrl is
+// valid only for 5 minutes. If you try to use the URL after the 5-minute limit
+// expires, you are directed to the AWS console sign-in page.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3433,9 +3446,9 @@ func (c *SageMaker) DeleteModelRequest(input *DeleteModelInput) (req *request.Re
 // DeleteModel API operation for Amazon SageMaker Service.
 //
 // Deletes a model. The DeleteModel API deletes only the model entry that was
-// created in Amazon SageMaker when you called the CreateModel (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateModel.html)
-// API. It does not delete model artifacts, inference code, or the IAM role
-// that you specified when creating the model.
+// created in Amazon SageMaker when you called the CreateModel API. It does
+// not delete model artifacts, inference code, or the IAM role that you specified
+// when creating the model.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -6334,6 +6347,10 @@ func (c *SageMaker) DisassociateTrialComponentRequest(input *DisassociateTrialCo
 // associate a trial component with a trial, call the AssociateTrialComponent
 // API.
 //
+// To get a list of the trials a component is associated with, use the Search
+// API. Specify ExperimentTrialComponent for the Resource parameter. The list
+// appears in the response under Results.TrialComponent.Parents.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -8622,8 +8639,7 @@ func (c *SageMaker) ListModelsRequest(input *ListModelsInput) (req *request.Requ
 
 // ListModels API operation for Amazon SageMaker Service.
 //
-// Lists models created with the CreateModel (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateModel.html)
-// API.
+// Lists models created with the CreateModel API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10232,9 +10248,10 @@ func (c *SageMaker) ListTrialsRequest(input *ListTrialsInput) (req *request.Requ
 // ListTrials API operation for Amazon SageMaker Service.
 //
 // Lists the trials in your account. Specify an experiment name to limit the
-// list to the trials that are part of that experiment. The list can be filtered
-// to show only trials that were created in a specific time range. The list
-// can be sorted by trial name or creation time.
+// list to the trials that are part of that experiment. Specify a trial component
+// name to limit the list to the trials that associated with that trial component.
+// The list can be filtered to show only trials that were created in a specific
+// time range. The list can be sorted by trial name or creation time.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -10711,9 +10728,9 @@ func (c *SageMaker) SearchRequest(input *SearchInput) (req *request.Request, out
 
 // Search API operation for Amazon SageMaker Service.
 //
-// Finds Amazon SageMaker resources that match a search query. Matching resource
-// objects are returned as a list of SearchResult objects in the response. You
-// can sort the search results by any resource property in a ascending or descending
+// Finds Amazon SageMaker resources that match a search query. Matching resources
+// are returned as a list of SearchRecord objects in the response. You can sort
+// the search results by any resource property in a ascending or descending
 // order.
 //
 // You can query against the following value types: numeric, text, Boolean,
@@ -11928,8 +11945,7 @@ func (c *SageMaker) UpdateEndpointRequest(input *UpdateEndpointInput) (req *requ
 //
 // When Amazon SageMaker receives the request, it sets the endpoint status to
 // Updating. After updating the endpoint, it sets the status to InService. To
-// check the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
-// API.
+// check the status of an endpoint, use the DescribeEndpoint API.
 //
 // You must not delete an EndpointConfig in use by an endpoint that is live
 // or while the UpdateEndpoint or CreateEndpoint operations are being performed
@@ -12017,8 +12033,7 @@ func (c *SageMaker) UpdateEndpointWeightsAndCapacitiesRequest(input *UpdateEndpo
 // endpoint, or capacity of one variant associated with an existing endpoint.
 // When it receives the request, Amazon SageMaker sets the endpoint status to
 // Updating. After updating the endpoint, it sets the status to InService. To
-// check the status of an endpoint, use the DescribeEndpoint (https://docs.aws.amazon.com/sagemaker/latest/dg/API_DescribeEndpoint.html)
-// API.
+// check the status of an endpoint, use the DescribeEndpoint API.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -12890,8 +12905,7 @@ func (s *AddTagsOutput) SetTags(v []*Tag) *AddTagsOutput {
 	return s
 }
 
-// Specifies the training algorithm to use in a CreateTrainingJob (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateTrainingJob.html)
-// request.
+// Specifies the training algorithm to use in a CreateTrainingJob request.
 //
 // For more information about algorithms provided by Amazon SageMaker, see Algorithms
 // (https://docs.aws.amazon.com/sagemaker/latest/dg/algos.html). For information
@@ -13355,6 +13369,21 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-ImageMultiClass arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClass
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClass
 	//
+	//    * Multi-label image classification - Uses a variant of the Expectation
+	//    Maximization approach to estimate the true classes of an image based on
+	//    annotations from individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-ImageMultiClassMultiLabel
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-ImageMultiClassMultiLabel
+	//
 	//    * Semantic segmentation - Treats each pixel in an image as a multi-class
 	//    classification and treats pixel annotations from workers as "votes" for
 	//    the correct label. arn:aws:lambda:us-east-1:432418664414:function:ACS-SemanticSegmentation
@@ -13380,6 +13409,21 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-TextMultiClass
 	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-TextMultiClass arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClass
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClass
+	//
+	//    * Multi-label text classification - Uses a variant of the Expectation
+	//    Maximization approach to estimate the true classes of text based on annotations
+	//    from individual workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:us-west-2:081040173940:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-1:568282634449:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-1:477331159723:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-2:454466003867:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-south-1:565803892007:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:eu-central-1:203001061592:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-northeast-2:845288260483:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:eu-west-2:487402164563:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ap-southeast-1:377565633583:function:ACS-TextMultiClassMultiLabel
+	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-TextMultiClassMultiLabel
 	//
 	//    * Named entity recognition - Groups similar selections and calculates
 	//    aggregate boundaries, resolving to most-assigned label. arn:aws:lambda:us-east-1:432418664414:function:ACS-NamedEntityRecognition
@@ -13411,7 +13455,7 @@ type AnnotationConsolidationConfig struct {
 	//    arn:aws:lambda:ca-central-1:918755190332:function:ACS-VerificationBoundingBox
 	//
 	//    * Semantic segmentation verification - Uses a variant of the Expectation
-	//    Maximization approach to estimate the true class of verification judgement
+	//    Maximization approach to estimate the true class of verification judgment
 	//    for semantic segmentation labels based on annotations from individual
 	//    workers. arn:aws:lambda:us-east-1:432418664414:function:ACS-VerificationSemanticSegmentation
 	//    arn:aws:lambda:us-east-2:266458841044:function:ACS-VerificationSemanticSegmentation
@@ -13892,7 +13936,7 @@ type AutoMLChannel struct {
 	// DataSource is a required field
 	DataSource *AutoMLDataSource `type:"structure" required:"true"`
 
-	// The name of the target variable in supervised learning, a.k.a. ‘y’.
+	// The name of the target variable in supervised learning, a.k.a. 'y'.
 	//
 	// TargetAttributeName is a required field
 	TargetAttributeName *string `min:"1" type:"string" required:"true"`
@@ -14003,7 +14047,9 @@ func (s *AutoMLContainerDefinition) SetModelDataUrl(v string) *AutoMLContainerDe
 type AutoMLDataSource struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon S3 location of the data.
+	// The Amazon S3 location of the input data.
+	//
+	// The input data must be in CSV format and contain at least 1000 rows.
 	//
 	// S3DataSource is a required field
 	S3DataSource *AutoMLS3DataSource `type:"structure" required:"true"`
@@ -15266,8 +15312,8 @@ func (s *CompilationJobSummary) SetLastModifiedTime(v time.Time) *CompilationJob
 // There was a conflict when you attempted to modify an experiment, trial, or
 // trial component.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -15284,17 +15330,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15302,22 +15348,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes the container, as part of model definition.
@@ -15910,6 +15956,7 @@ type CreateAutoMLJobInput struct {
 	GenerateCandidateDefinitionsOnly *bool `type:"boolean"`
 
 	// Similar to InputDataConfig supported by Tuning. Format(s) supported: CSV.
+	// Minimum of 1000 rows.
 	//
 	// InputDataConfig is a required field
 	InputDataConfig []*AutoMLChannel `min:"1" type:"list" required:"true"`
@@ -16509,7 +16556,6 @@ type CreateEndpointConfigInput struct {
 	DataCaptureConfig *DataCaptureConfig `type:"structure"`
 
 	// The name of the endpoint configuration. You specify this name in a CreateEndpoint
-	// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpoint.html)
 	// request.
 	//
 	// EndpointConfigName is a required field
@@ -16673,8 +16719,7 @@ func (s *CreateEndpointConfigOutput) SetEndpointConfigArn(v string) *CreateEndpo
 type CreateEndpointInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of an endpoint configuration. For more information, see CreateEndpointConfig
-	// (https://docs.aws.amazon.com/sagemaker/latest/dg/API_CreateEndpointConfig.html).
+	// The name of an endpoint configuration. For more information, see CreateEndpointConfig.
 	//
 	// EndpointConfigName is a required field
 	EndpointConfigName *string `type:"string" required:"true"`
@@ -16894,6 +16939,10 @@ type CreateFlowDefinitionInput struct {
 	// HumanLoopConfig is a required field
 	HumanLoopConfig *HumanLoopConfig `type:"structure" required:"true"`
 
+	// Container for configuring the source of human task requests. Use to specify
+	// if Amazon Rekognition or Amazon Textract is used as an integration source.
+	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure"`
+
 	// An object containing information about where the human review results will
 	// be uploaded.
 	//
@@ -16953,6 +17002,11 @@ func (s *CreateFlowDefinitionInput) Validate() error {
 			invalidParams.AddNested("HumanLoopConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.HumanLoopRequestSource != nil {
+		if err := s.HumanLoopRequestSource.Validate(); err != nil {
+			invalidParams.AddNested("HumanLoopRequestSource", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.OutputConfig != nil {
 		if err := s.OutputConfig.Validate(); err != nil {
 			invalidParams.AddNested("OutputConfig", err.(request.ErrInvalidParams))
@@ -16990,6 +17044,12 @@ func (s *CreateFlowDefinitionInput) SetHumanLoopActivationConfig(v *HumanLoopAct
 // SetHumanLoopConfig sets the HumanLoopConfig field's value.
 func (s *CreateFlowDefinitionInput) SetHumanLoopConfig(v *HumanLoopConfig) *CreateFlowDefinitionInput {
 	s.HumanLoopConfig = v
+	return s
+}
+
+// SetHumanLoopRequestSource sets the HumanLoopRequestSource field's value.
+func (s *CreateFlowDefinitionInput) SetHumanLoopRequestSource(v *HumanLoopRequestSource) *CreateFlowDefinitionInput {
+	s.HumanLoopRequestSource = v
 	return s
 }
 
@@ -17149,7 +17209,7 @@ type CreateHyperParameterTuningJobInput struct {
 	// The HyperParameterTuningJobConfig object that describes the tuning job, including
 	// the search strategy, the objective metric used to evaluate training jobs,
 	// ranges of parameters to search, and resource limits for the tuning job. For
-	// more information, see automatic-model-tuning
+	// more information, see How Hyperparameter Tuning Works (https://docs.aws.amazon.com/sagemaker/latest/dg/automatic-model-tuning-how-it-works.html).
 	//
 	// HyperParameterTuningJobConfig is a required field
 	HyperParameterTuningJobConfig *HyperParameterTuningJobConfig `type:"structure" required:"true"`
@@ -17626,10 +17686,9 @@ type CreateModelInput struct {
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 
-	// A VpcConfig (https://docs.aws.amazon.com/sagemaker/latest/dg/API_VpcConfig.html)
-	// object that specifies the VPC that you want your model to connect to. Control
-	// access to and from your model container by configuring the VPC. VpcConfig
-	// is used in hosting services and in batch transform. For more information,
+	// A VpcConfig object that specifies the VPC that you want your model to connect
+	// to. Control access to and from your model container by configuring the VPC.
+	// VpcConfig is used in hosting services and in batch transform. For more information,
 	// see Protect Endpoints by Using an Amazon Virtual Private Cloud (https://docs.aws.amazon.com/sagemaker/latest/dg/host-vpc.html)
 	// and Protect Data in Batch Transform Jobs by Using an Amazon Virtual Private
 	// Cloud (https://docs.aws.amazon.com/sagemaker/latest/dg/batch-vpc.html).
@@ -17916,7 +17975,7 @@ type CreateMonitoringScheduleInput struct {
 	MonitoringScheduleName *string `min:"1" type:"string" required:"true"`
 
 	// (Optional) An array of key-value pairs. For more information, see Using Cost
-	// Allocation Tags (https://docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
+	// Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 }
@@ -18571,7 +18630,7 @@ type CreateProcessingJobInput struct {
 	StoppingCondition *ProcessingStoppingCondition `type:"structure"`
 
 	// (Optional) An array of key-value pairs. For more information, see Using Cost
-	// Allocation Tags (https://docs-aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
+	// Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
 	// in the AWS Billing and Cost Management User Guide.
 	Tags []*Tag `type:"list"`
 }
@@ -19165,8 +19224,8 @@ type CreateTransformJobInput struct {
 	// request. A record is a single unit of input data that inference can be made
 	// on. For example, a single line in a CSV file is a record.
 	//
-	// To enable the batch strategy, you must set the SplitType property of the
-	// DataProcessing object to Line, RecordIO, or TFRecord.
+	// To enable the batch strategy, you must set the SplitType property to Line,
+	// RecordIO, or TFRecord.
 	//
 	// To use only one record when making an HTTP invocation request to a container,
 	// set BatchStrategy to SingleRecord and SplitType to Line.
@@ -22122,9 +22181,9 @@ type DescribeAutoMLJobOutput struct {
 	// Returns the job's problem type.
 	ProblemType *string `type:"string" enum:"ProblemType"`
 
-	// This contains ProblemType, AutoMLJobObjective and CompletionCriteria. They’re
+	// This contains ProblemType, AutoMLJobObjective and CompletionCriteria. They're
 	// auto-inferred values, if not provided by you. If you do provide them, then
-	// they’ll be the same as provided.
+	// they'll be the same as provided.
 	ResolvedAttributes *ResolvedAttributes `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the AWS Identity and Access Management
@@ -23261,6 +23320,10 @@ type DescribeFlowDefinitionOutput struct {
 	// HumanLoopConfig is a required field
 	HumanLoopConfig *HumanLoopConfig `type:"structure" required:"true"`
 
+	// Container for configuring the source of human task requests. Used to specify
+	// if Amazon Rekognition or Amazon Textract is used as an integration source.
+	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure"`
+
 	// An object containing information about the output file.
 	//
 	// OutputConfig is a required field
@@ -23322,6 +23385,12 @@ func (s *DescribeFlowDefinitionOutput) SetHumanLoopActivationConfig(v *HumanLoop
 // SetHumanLoopConfig sets the HumanLoopConfig field's value.
 func (s *DescribeFlowDefinitionOutput) SetHumanLoopConfig(v *HumanLoopConfig) *DescribeFlowDefinitionOutput {
 	s.HumanLoopConfig = v
+	return s
+}
+
+// SetHumanLoopRequestSource sets the HumanLoopRequestSource field's value.
+func (s *DescribeFlowDefinitionOutput) SetHumanLoopRequestSource(v *HumanLoopRequestSource) *DescribeFlowDefinitionOutput {
+	s.HumanLoopRequestSource = v
 	return s
 }
 
@@ -23730,7 +23799,7 @@ type DescribeLabelingJobOutput struct {
 	//
 	//    * Semantic segmentation labeling jobs using automated labeling: 20 labels
 	//
-	//    * Box bounding labeling jobs (all): 10 lables
+	//    * Box bounding labeling jobs (all): 10 labels
 	//
 	// The file is a JSON structure in the following format:
 	//
@@ -26336,8 +26405,8 @@ type DescribeWorkforceInput struct {
 	_ struct{} `type:"structure"`
 
 	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to "default" when a workforce is created and cannot
-	// be modified.
+	// is automatically set to default when a workforce is created and cannot be
+	// modified.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -26380,7 +26449,7 @@ type DescribeWorkforceOutput struct {
 
 	// A single private workforce, which is automatically created when you create
 	// your first private work team. You can create one private work force in each
-	// AWS Region. By default, any workforce related API operation used in a specific
+	// AWS Region. By default, any workforce-related API operation used in a specific
 	// region will apply to the workforce created in that region. To learn how to
 	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
 	//
@@ -26920,7 +26989,7 @@ func (s *EndpointSummary) SetLastModifiedTime(v time.Time) *EndpointSummary {
 	return s
 }
 
-// A summary of the properties of an experiment as returned by the Search API.
+// The properties of an experiment as returned by the Search API.
 type Experiment struct {
 	_ struct{} `type:"structure"`
 
@@ -27282,15 +27351,11 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 }
 
 // A conditional statement for a search expression that includes a resource
-// property, a Boolean operator, and a value.
-//
-// If you don't specify an Operator and a Value, the filter searches for only
-// the specified property. For example, defining a Filter for the FailureReason
-// for the TrainingJob Resource searches for training job objects that have
-// a value in the FailureReason field.
+// property, a Boolean operator, and a value. Resources that match the statement
+// are returned in the results from the Search API.
 //
 // If you specify a Value, but not an Operator, Amazon SageMaker uses the equals
-// operator as the default.
+// operator.
 //
 // In search, there are several property types:
 //
@@ -27304,7 +27369,7 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 //
 // "Name": "Metrics.accuracy",
 //
-// "Operator": "GREATER_THAN",
+// "Operator": "GreaterThan",
 //
 // "Value": "0.9"
 //
@@ -27323,7 +27388,7 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 //
 // "Name": "HyperParameters.learning_rate",
 //
-// "Operator": "LESS_THAN",
+// "Operator": "LessThan",
 //
 // "Value": "0.5"
 //
@@ -27331,13 +27396,12 @@ func (s *FileSystemDataSource) SetFileSystemType(v string) *FileSystemDataSource
 //
 // Tags
 //
-// To define a tag filter, enter a value with the form "Tags.<key>".
+// To define a tag filter, enter a value with the form Tags.<key>.
 type Filter struct {
 	_ struct{} `type:"structure"`
 
-	// A property name. For example, TrainingJobName. For the list of valid property
-	// names returned in a search result for each supported resource, see TrainingJob
-	// properties. You must specify a valid property name for the resource.
+	// A resource property name. For example, TrainingJobName. For valid property
+	// names, see SearchRecord. You must specify a valid property for the resource.
 	//
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
@@ -27347,44 +27411,53 @@ type Filter struct {
 	//
 	// Equals
 	//
-	// The specified resource in Name equals the specified Value.
+	// The value of Name equals Value.
 	//
 	// NotEquals
 	//
-	// The specified resource in Name does not equal the specified Value.
+	// The value of Name doesn't equal Value.
 	//
 	// GreaterThan
 	//
-	// The specified resource in Name is greater than the specified Value. Not supported
-	// for text-based properties.
+	// The value of Name is greater than Value. Not supported for text properties.
 	//
 	// GreaterThanOrEqualTo
 	//
-	// The specified resource in Name is greater than or equal to the specified
-	// Value. Not supported for text-based properties.
+	// The value of Name is greater than or equal to Value. Not supported for text
+	// properties.
 	//
 	// LessThan
 	//
-	// The specified resource in Name is less than the specified Value. Not supported
-	// for text-based properties.
+	// The value of Name is less than Value. Not supported for text properties.
 	//
 	// LessThanOrEqualTo
 	//
-	// The specified resource in Name is less than or equal to the specified Value.
-	// Not supported for text-based properties.
+	// The value of Name is less than or equal to Value. Not supported for text
+	// properties.
 	//
 	// Contains
 	//
-	// Only supported for text-based properties. The word-list of the property contains
-	// the specified Value. A SearchExpression can include only one Contains operator.
+	// The value of Name contains the string Value. A SearchExpression can include
+	// only one Contains operator. Only supported for text properties.
 	//
-	// If you have specified a filter Value, the default is Equals.
+	// Exists
+	//
+	// The Name property exists.
+	//
+	// NotExists
+	//
+	// The Name property does not exist.
+	//
+	// In
+	//
+	// The value of Name is one of the comma delimited strings in Value. Only supported
+	// for text properties.
 	Operator *string `type:"string" enum:"Operator"`
 
-	// A value used with Resource and Operator to determine if objects satisfy the
-	// filter's condition. For numerical properties, Value must be an integer or
-	// floating-point decimal. For timestamp properties, Value must be an ISO 8601
-	// date-time string of the following format: YYYY-mm-dd'T'HH:MM:SS.
+	// A value used with Name and Operator to determine which resources satisfy
+	// the filter's condition. For numerical properties, Value must be an integer
+	// or floating-point decimal. For timestamp properties, Value must be an ISO
+	// 8601 date-time string of the following format: YYYY-mm-dd'T'HH:MM:SS.
 	Value *string `min:"1" type:"string"`
 }
 
@@ -27651,7 +27724,7 @@ func (s *FlowDefinitionSummary) SetFlowDefinitionStatus(v string) *FlowDefinitio
 type GetSearchSuggestionsInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the Amazon SageMaker resource to Search for.
+	// The name of the Amazon SageMaker resource to search for.
 	//
 	// Resource is a required field
 	Resource *string `type:"string" required:"true" enum:"ResourceType"`
@@ -27832,13 +27905,17 @@ func (s *GitConfigForUpdate) SetSecretArn(v string) *GitConfigForUpdate {
 	return s
 }
 
-// Defines under what conditions SageMaker creates a human loop. Used within .
+// Defines under what conditions SageMaker creates a human loop. Used within
+// . See for the required format of activation conditions.
 type HumanLoopActivationConditionsConfig struct {
 	_ struct{} `type:"structure"`
 
 	// JSON expressing use-case specific conditions declaratively. If any condition
 	// is matched, atomic tasks are created against the configured work team. The
-	// set of conditions is different for Rekognition and Textract.
+	// set of conditions is different for Rekognition and Textract. For more information
+	// about how to structure the JSON, see JSON Schema for Human Loop Activation
+	// Conditions in Amazon Augmented AI (https://docs.aws.amazon.com/sagemaker/latest/dg/a2i-human-fallback-conditions-json-schema.html)
+	// in the Amazon SageMaker Developer Guide.
 	//
 	// HumanLoopActivationConditions is a required field
 	HumanLoopActivationConditions aws.JSONValue `type:"jsonvalue" required:"true"`
@@ -27884,11 +27961,6 @@ type HumanLoopActivationConfig struct {
 	//
 	// HumanLoopActivationConditionsConfig is a required field
 	HumanLoopActivationConditionsConfig *HumanLoopActivationConditionsConfig `type:"structure" required:"true"`
-
-	// Container for configuring the source of human task requests.
-	//
-	// HumanLoopRequestSource is a required field
-	HumanLoopRequestSource *HumanLoopRequestSource `type:"structure" required:"true"`
 }
 
 // String returns the string representation
@@ -27907,17 +27979,9 @@ func (s *HumanLoopActivationConfig) Validate() error {
 	if s.HumanLoopActivationConditionsConfig == nil {
 		invalidParams.Add(request.NewErrParamRequired("HumanLoopActivationConditionsConfig"))
 	}
-	if s.HumanLoopRequestSource == nil {
-		invalidParams.Add(request.NewErrParamRequired("HumanLoopRequestSource"))
-	}
 	if s.HumanLoopActivationConditionsConfig != nil {
 		if err := s.HumanLoopActivationConditionsConfig.Validate(); err != nil {
 			invalidParams.AddNested("HumanLoopActivationConditionsConfig", err.(request.ErrInvalidParams))
-		}
-	}
-	if s.HumanLoopRequestSource != nil {
-		if err := s.HumanLoopRequestSource.Validate(); err != nil {
-			invalidParams.AddNested("HumanLoopRequestSource", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -27930,12 +27994,6 @@ func (s *HumanLoopActivationConfig) Validate() error {
 // SetHumanLoopActivationConditionsConfig sets the HumanLoopActivationConditionsConfig field's value.
 func (s *HumanLoopActivationConfig) SetHumanLoopActivationConditionsConfig(v *HumanLoopActivationConditionsConfig) *HumanLoopActivationConfig {
 	s.HumanLoopActivationConditionsConfig = v
-	return s
-}
-
-// SetHumanLoopRequestSource sets the HumanLoopRequestSource field's value.
-func (s *HumanLoopActivationConfig) SetHumanLoopRequestSource(v *HumanLoopRequestSource) *HumanLoopActivationConfig {
-	s.HumanLoopRequestSource = v
 	return s
 }
 
@@ -28158,7 +28216,10 @@ type HumanLoopConfig struct {
 	// The length of time that a task remains available for labeling by human workers.
 	TaskAvailabilityLifetimeInSeconds *int64 `min:"1" type:"integer"`
 
-	// The number of human tasks.
+	// The number of distinct workers who will perform the same task on each object.
+	// For example, if TaskCount is set to 3 for an image classification labeling
+	// job, three workers will classify each input image. Increasing TaskCount can
+	// improve label accuracy.
 	//
 	// TaskCount is a required field
 	TaskCount *int64 `min:"1" type:"integer" required:"true"`
@@ -28366,9 +28427,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:us-east-1:432418664414:function:PRE-NamedEntityRecognition
 	//
@@ -28386,9 +28451,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:us-east-2:266458841044:function:PRE-NamedEntityRecognition
 	//
@@ -28406,9 +28475,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:us-west-2:081040173940:function:PRE-NamedEntityRecognition
 	//
@@ -28426,9 +28499,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-NamedEntityRecognition
 	//
@@ -28446,9 +28523,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-NamedEntityRecognition
 	//
@@ -28466,9 +28547,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-NamedEntityRecognition
 	//
@@ -28486,9 +28571,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-NamedEntityRecognition
 	//
@@ -28506,9 +28595,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-NamedEntityRecognition
 	//
@@ -28526,9 +28619,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-northeast-2:845288260483:function:PRE-NamedEntityRecognition
 	//
@@ -28546,9 +28643,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-south-1:565803892007:function:PRE-NamedEntityRecognition
 	//
@@ -28566,9 +28667,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-southeast-1:377565633583:function:PRE-NamedEntityRecognition
 	//
@@ -28586,9 +28691,13 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-ImageMultiClass
 	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-ImageMultiClassMultiLabel
+	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-TextMultiClass
+	//
+	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-southeast-2:454466003867:function:PRE-NamedEntityRecognition
 	//
@@ -28609,7 +28718,7 @@ type HumanTaskConfig struct {
 
 	// The length of time that a task remains available for labeling by human workers.
 	// If you choose the Amazon Mechanical Turk workforce, the maximum is 12 hours
-	// (43200). The default value is 864000 seconds (1 day). For private and vendor
+	// (43200). The default value is 864000 seconds (10 days). For private and vendor
 	// workforces, the maximum is as listed.
 	TaskAvailabilityLifetimeInSeconds *int64 `min:"60" type:"integer"`
 
@@ -35027,6 +35136,10 @@ type ListTrialsInput struct {
 
 	// The sort order. The default value is Descending.
 	SortOrder *string `type:"string" enum:"SortOrder"`
+
+	// A filter that returns only trials that are associated with the specified
+	// trial component.
+	TrialComponentName *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -35047,6 +35160,9 @@ func (s *ListTrialsInput) Validate() error {
 	}
 	if s.MaxResults != nil && *s.MaxResults < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+	if s.TrialComponentName != nil && len(*s.TrialComponentName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TrialComponentName", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -35094,6 +35210,12 @@ func (s *ListTrialsInput) SetSortBy(v string) *ListTrialsInput {
 // SetSortOrder sets the SortOrder field's value.
 func (s *ListTrialsInput) SetSortOrder(v string) *ListTrialsInput {
 	s.SortOrder = &v
+	return s
+}
+
+// SetTrialComponentName sets the TrialComponentName field's value.
+func (s *ListTrialsInput) SetTrialComponentName(v string) *ListTrialsInput {
+	s.TrialComponentName = &v
 	return s
 }
 
@@ -36924,22 +37046,16 @@ func (s *MonitoringStoppingCondition) SetMaxRuntimeInSeconds(v int64) *Monitorin
 	return s
 }
 
-// Defines a list of NestedFilters objects. To satisfy the conditions specified
-// in the NestedFilters call, a resource must satisfy the conditions of all
-// of the filters.
+// A list of nested Filter objects. A resource must satisfy the conditions of
+// all filters to be included in the results returned from the Search API.
 //
-// For example, you could define a NestedFilters using the training job's InputDataConfig
-// property to filter on Channel objects.
+// For example, to filter on a training job's InputDataConfig property with
+// a specific channel name and S3Uri prefix, define the following filters:
 //
-// A NestedFilters object contains multiple filters. For example, to find all
-// training jobs whose name contains train and that have cat/data in their S3Uri
-// (specified in InputDataConfig), you need to create a NestedFilters object
-// that specifies the InputDataConfig property with the following Filter objects:
+//    * '{Name:"InputDataConfig.ChannelName", "Operator":"Equals", "Value":"train"}',
 //
-//    * '{Name:"InputDataConfig.ChannelName", "Operator":"EQUALS", "Value":"train"}',
-//
-//    * '{Name:"InputDataConfig.DataSource.S3DataSource.S3Uri", "Operator":"CONTAINS",
-//    "Value":"cat/data"}'
+//    * '{Name:"InputDataConfig.DataSource.S3DataSource.S3Uri", "Operator":"Contains",
+//    "Value":"mybucket/catdata"}'
 type NestedFilters struct {
 	_ struct{} `type:"structure"`
 
@@ -37888,6 +38004,232 @@ func (s *ProcessingInput) SetS3Input(v *ProcessingS3Input) *ProcessingInput {
 	return s
 }
 
+// An Amazon SageMaker processing job that is used to analyze data and evaluate
+// models. For more information, see Process Data and Evaluate Models (https://docs.aws.amazon.com/sagemaker/latest/dg/processing-job.html).
+type ProcessingJob struct {
+	_ struct{} `type:"structure"`
+
+	// Configuration to run a processing job in a specified container image.
+	AppSpecification *AppSpecification `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the AutoML job associated with this processing
+	// job.
+	AutoMLJobArn *string `min:"1" type:"string"`
+
+	// The time the processing job was created.
+	CreationTime *time.Time `type:"timestamp"`
+
+	// Sets the environment variables in the Docker container.
+	Environment map[string]*string `type:"map"`
+
+	// A string, up to one KB in size, that contains metadata from the processing
+	// container when the processing job exits.
+	ExitMessage *string `type:"string"`
+
+	// Configuration for the experiment.
+	ExperimentConfig *ExperimentConfig `type:"structure"`
+
+	// A string, up to one KB in size, that contains the reason a processing job
+	// failed, if it failed.
+	FailureReason *string `type:"string"`
+
+	// The time the processing job was last modified.
+	LastModifiedTime *time.Time `type:"timestamp"`
+
+	// The ARN of a monitoring schedule for an endpoint associated with this processing
+	// job.
+	MonitoringScheduleArn *string `type:"string"`
+
+	// Networking options for a job, such as network traffic encryption between
+	// containers, whether to allow inbound and outbound network calls to and from
+	// containers, and the VPC subnets and security groups to use for VPC-enabled
+	// jobs.
+	NetworkConfig *NetworkConfig `type:"structure"`
+
+	// The time that the processing job ended.
+	ProcessingEndTime *time.Time `type:"timestamp"`
+
+	// For each input, data is downloaded from S3 into the processing container
+	// before the processing job begins running if "S3InputMode" is set to File.
+	ProcessingInputs []*ProcessingInput `type:"list"`
+
+	// The ARN of the processing job.
+	ProcessingJobArn *string `type:"string"`
+
+	// The name of the processing job.
+	ProcessingJobName *string `min:"1" type:"string"`
+
+	// The status of the processing job.
+	ProcessingJobStatus *string `type:"string" enum:"ProcessingJobStatus"`
+
+	// The output configuration for the processing job.
+	ProcessingOutputConfig *ProcessingOutputConfig `type:"structure"`
+
+	// Identifies the resources, ML compute instances, and ML storage volumes to
+	// deploy for a processing job. In distributed training, you specify more than
+	// one instance.
+	ProcessingResources *ProcessingResources `type:"structure"`
+
+	// The time that the processing job started.
+	ProcessingStartTime *time.Time `type:"timestamp"`
+
+	// The ARN of the role used to create the processing job.
+	RoleArn *string `min:"20" type:"string"`
+
+	// Specifies a time limit for how long the processing job is allowed to run.
+	StoppingCondition *ProcessingStoppingCondition `type:"structure"`
+
+	// An array of key-value pairs. For more information, see Using Cost Allocation
+	// Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html#allocation-whatURL)
+	// in the AWS Billing and Cost Management User Guide.
+	Tags []*Tag `type:"list"`
+
+	// The ARN of the training job associated with this processing job.
+	TrainingJobArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ProcessingJob) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProcessingJob) GoString() string {
+	return s.String()
+}
+
+// SetAppSpecification sets the AppSpecification field's value.
+func (s *ProcessingJob) SetAppSpecification(v *AppSpecification) *ProcessingJob {
+	s.AppSpecification = v
+	return s
+}
+
+// SetAutoMLJobArn sets the AutoMLJobArn field's value.
+func (s *ProcessingJob) SetAutoMLJobArn(v string) *ProcessingJob {
+	s.AutoMLJobArn = &v
+	return s
+}
+
+// SetCreationTime sets the CreationTime field's value.
+func (s *ProcessingJob) SetCreationTime(v time.Time) *ProcessingJob {
+	s.CreationTime = &v
+	return s
+}
+
+// SetEnvironment sets the Environment field's value.
+func (s *ProcessingJob) SetEnvironment(v map[string]*string) *ProcessingJob {
+	s.Environment = v
+	return s
+}
+
+// SetExitMessage sets the ExitMessage field's value.
+func (s *ProcessingJob) SetExitMessage(v string) *ProcessingJob {
+	s.ExitMessage = &v
+	return s
+}
+
+// SetExperimentConfig sets the ExperimentConfig field's value.
+func (s *ProcessingJob) SetExperimentConfig(v *ExperimentConfig) *ProcessingJob {
+	s.ExperimentConfig = v
+	return s
+}
+
+// SetFailureReason sets the FailureReason field's value.
+func (s *ProcessingJob) SetFailureReason(v string) *ProcessingJob {
+	s.FailureReason = &v
+	return s
+}
+
+// SetLastModifiedTime sets the LastModifiedTime field's value.
+func (s *ProcessingJob) SetLastModifiedTime(v time.Time) *ProcessingJob {
+	s.LastModifiedTime = &v
+	return s
+}
+
+// SetMonitoringScheduleArn sets the MonitoringScheduleArn field's value.
+func (s *ProcessingJob) SetMonitoringScheduleArn(v string) *ProcessingJob {
+	s.MonitoringScheduleArn = &v
+	return s
+}
+
+// SetNetworkConfig sets the NetworkConfig field's value.
+func (s *ProcessingJob) SetNetworkConfig(v *NetworkConfig) *ProcessingJob {
+	s.NetworkConfig = v
+	return s
+}
+
+// SetProcessingEndTime sets the ProcessingEndTime field's value.
+func (s *ProcessingJob) SetProcessingEndTime(v time.Time) *ProcessingJob {
+	s.ProcessingEndTime = &v
+	return s
+}
+
+// SetProcessingInputs sets the ProcessingInputs field's value.
+func (s *ProcessingJob) SetProcessingInputs(v []*ProcessingInput) *ProcessingJob {
+	s.ProcessingInputs = v
+	return s
+}
+
+// SetProcessingJobArn sets the ProcessingJobArn field's value.
+func (s *ProcessingJob) SetProcessingJobArn(v string) *ProcessingJob {
+	s.ProcessingJobArn = &v
+	return s
+}
+
+// SetProcessingJobName sets the ProcessingJobName field's value.
+func (s *ProcessingJob) SetProcessingJobName(v string) *ProcessingJob {
+	s.ProcessingJobName = &v
+	return s
+}
+
+// SetProcessingJobStatus sets the ProcessingJobStatus field's value.
+func (s *ProcessingJob) SetProcessingJobStatus(v string) *ProcessingJob {
+	s.ProcessingJobStatus = &v
+	return s
+}
+
+// SetProcessingOutputConfig sets the ProcessingOutputConfig field's value.
+func (s *ProcessingJob) SetProcessingOutputConfig(v *ProcessingOutputConfig) *ProcessingJob {
+	s.ProcessingOutputConfig = v
+	return s
+}
+
+// SetProcessingResources sets the ProcessingResources field's value.
+func (s *ProcessingJob) SetProcessingResources(v *ProcessingResources) *ProcessingJob {
+	s.ProcessingResources = v
+	return s
+}
+
+// SetProcessingStartTime sets the ProcessingStartTime field's value.
+func (s *ProcessingJob) SetProcessingStartTime(v time.Time) *ProcessingJob {
+	s.ProcessingStartTime = &v
+	return s
+}
+
+// SetRoleArn sets the RoleArn field's value.
+func (s *ProcessingJob) SetRoleArn(v string) *ProcessingJob {
+	s.RoleArn = &v
+	return s
+}
+
+// SetStoppingCondition sets the StoppingCondition field's value.
+func (s *ProcessingJob) SetStoppingCondition(v *ProcessingStoppingCondition) *ProcessingJob {
+	s.StoppingCondition = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ProcessingJob) SetTags(v []*Tag) *ProcessingJob {
+	s.Tags = v
+	return s
+}
+
+// SetTrainingJobArn sets the TrainingJobArn field's value.
+func (s *ProcessingJob) SetTrainingJobArn(v string) *ProcessingJob {
+	s.TrainingJobArn = &v
+	return s
+}
+
 // Summary of information about a processing job.
 type ProcessingJobSummary struct {
 	_ struct{} `type:"structure"`
@@ -38163,7 +38505,7 @@ type ProcessingS3Input struct {
 	// LocalPath is a required field
 	LocalPath *string `type:"string" required:"true"`
 
-	// Whether to use Gzip compresion for Amazon S3 storage.
+	// Whether to use Gzip compression for Amazon S3 storage.
 	S3CompressionType *string `type:"string" enum:"ProcessingS3CompressionType"`
 
 	// Whether the data stored in Amazon S3 is FullyReplicated or ShardedByS3Key.
@@ -38179,7 +38521,7 @@ type ProcessingS3Input struct {
 	// S3DataType is a required field
 	S3DataType *string `type:"string" required:"true" enum:"ProcessingS3DataType"`
 
-	// Wether to use File or Pipe input mode. In File mode, Amazon SageMaker copies
+	// Whether to use File or Pipe input mode. In File mode, Amazon SageMaker copies
 	// the data from the input source onto the local Amazon Elastic Block Store
 	// (Amazon EBS) volumes before starting your training algorithm. This is the
 	// most commonly used input mode. In Pipe mode, Amazon SageMaker streams input
@@ -39224,8 +39566,8 @@ func (s *ResourceConfig) SetVolumeSizeInGB(v int64) *ResourceConfig {
 
 // Resource being accessed is in use.
 type ResourceInUse struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39242,17 +39584,17 @@ func (s ResourceInUse) GoString() string {
 
 func newErrorResourceInUse(v protocol.ResponseMetadata) error {
 	return &ResourceInUse{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUse) Code() string {
+func (s *ResourceInUse) Code() string {
 	return "ResourceInUse"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUse) Message() string {
+func (s *ResourceInUse) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39260,29 +39602,29 @@ func (s ResourceInUse) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUse) OrigErr() error {
+func (s *ResourceInUse) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUse) Error() string {
+func (s *ResourceInUse) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUse) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUse) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUse) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUse) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You have exceeded an Amazon SageMaker resource limit. For example, you might
 // have too many training jobs created.
 type ResourceLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39299,17 +39641,17 @@ func (s ResourceLimitExceeded) GoString() string {
 
 func newErrorResourceLimitExceeded(v protocol.ResponseMetadata) error {
 	return &ResourceLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceLimitExceeded) Code() string {
+func (s *ResourceLimitExceeded) Code() string {
 	return "ResourceLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s ResourceLimitExceeded) Message() string {
+func (s *ResourceLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39317,22 +39659,22 @@ func (s ResourceLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceLimitExceeded) OrigErr() error {
+func (s *ResourceLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s ResourceLimitExceeded) Error() string {
+func (s *ResourceLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Specifies the maximum number of training jobs and parallel training jobs
@@ -39399,8 +39741,8 @@ func (s *ResourceLimits) SetMaxParallelTrainingJobs(v int64) *ResourceLimits {
 
 // Resource being access is not found.
 type ResourceNotFound struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -39417,17 +39759,17 @@ func (s ResourceNotFound) GoString() string {
 
 func newErrorResourceNotFound(v protocol.ResponseMetadata) error {
 	return &ResourceNotFound{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFound) Code() string {
+func (s *ResourceNotFound) Code() string {
 	return "ResourceNotFound"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFound) Message() string {
+func (s *ResourceNotFound) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -39435,33 +39777,35 @@ func (s ResourceNotFound) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFound) OrigErr() error {
+func (s *ResourceNotFound) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFound) Error() string {
+func (s *ResourceNotFound) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFound) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFound) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFound) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFound) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
-// The instance type and quantity.
+// The instance type and the Amazon Resource Name (ARN) of the image created
+// on the instance. The ARN is stored as metadata in Amazon SageMaker Studio
+// notebooks.
 type ResourceSpec struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the environment.
-	EnvironmentArn *string `type:"string"`
-
 	// The instance type.
 	InstanceType *string `type:"string" enum:"AppInstanceType"`
+
+	// The Amazon Resource Name (ARN) of the image created on the instance.
+	SageMakerImageArn *string `type:"string"`
 }
 
 // String returns the string representation
@@ -39474,15 +39818,15 @@ func (s ResourceSpec) GoString() string {
 	return s.String()
 }
 
-// SetEnvironmentArn sets the EnvironmentArn field's value.
-func (s *ResourceSpec) SetEnvironmentArn(v string) *ResourceSpec {
-	s.EnvironmentArn = &v
-	return s
-}
-
 // SetInstanceType sets the InstanceType field's value.
 func (s *ResourceSpec) SetInstanceType(v string) *ResourceSpec {
 	s.InstanceType = &v
+	return s
+}
+
+// SetSageMakerImageArn sets the SageMakerImageArn field's value.
+func (s *ResourceSpec) SetSageMakerImageArn(v string) *ResourceSpec {
+	s.SageMakerImageArn = &v
 	return s
 }
 
@@ -39820,13 +40164,12 @@ func (s *SearchExpression) SetSubExpressions(v []*SearchExpression) *SearchExpre
 type SearchInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of results to return in a SearchResponse.
+	// The maximum number of results to return.
 	MaxResults *int64 `min:"1" type:"integer"`
 
-	// If more than MaxResults resource objects match the specified SearchExpression,
-	// the SearchResponse includes a NextToken. The NextToken can be passed to the
-	// next SearchRequest to continue retrieving results for the specified SearchExpression
-	// and Sort parameters.
+	// If more than MaxResults resources match the specified SearchExpression, the
+	// response includes a NextToken. The NextToken can be passed to the next SearchRequest
+	// to continue retrieving results.
 	NextToken *string `type:"string"`
 
 	// The name of the Amazon SageMaker resource to search for.
@@ -39834,8 +40177,8 @@ type SearchInput struct {
 	// Resource is a required field
 	Resource *string `type:"string" required:"true" enum:"ResourceType"`
 
-	// A Boolean conditional statement. Resource objects must satisfy this condition
-	// to be included in search results. You must provide at least one subexpression,
+	// A Boolean conditional statement. Resources must satisfy this condition to
+	// be included in search results. You must provide at least one subexpression,
 	// filter, or nested filter. The maximum number of recursive SubExpressions,
 	// NestedFilters, and Filters that can be included in a SearchExpression object
 	// is 50.
@@ -39928,7 +40271,7 @@ type SearchOutput struct {
 	// in the next request.
 	NextToken *string `type:"string"`
 
-	// A list of SearchResult objects.
+	// A list of SearchRecord objects.
 	Results []*SearchRecord `type:"list"`
 }
 
@@ -39954,20 +40297,20 @@ func (s *SearchOutput) SetResults(v []*SearchRecord) *SearchOutput {
 	return s
 }
 
-// An individual search result record that contains a single resource object.
+// A single resource returned as part of the Search API response.
 type SearchRecord struct {
 	_ struct{} `type:"structure"`
 
-	// A summary of the properties of an experiment.
+	// The properties of an experiment.
 	Experiment *Experiment `type:"structure"`
 
-	// A TrainingJob object that is returned as part of a Search request.
+	// The properties of a training job.
 	TrainingJob *TrainingJob `type:"structure"`
 
-	// A summary of the properties of a trial.
+	// The properties of a trial.
 	Trial *Trial `type:"structure"`
 
-	// A summary of the properties of a trial component.
+	// The properties of a trial component.
 	TrialComponent *TrialComponent `type:"structure"`
 }
 
@@ -40359,7 +40702,7 @@ type SourceIpConfig struct {
 	// A list of one to four Classless Inter-Domain Routing (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html)
 	// (CIDR) values.
 	//
-	// Maximum: 4 CIDR values
+	// Maximum: Four CIDR values
 	//
 	// The following Length Constraints apply to individual CIDR values in the CIDR
 	// value list.
@@ -41338,7 +41681,7 @@ type TrainingJob struct {
 
 	// When true, enables managed spot training using Amazon EC2 Spot instances
 	// to run training jobs instead of on-demand instances. For more information,
-	// see model-managed-spot-training.
+	// see Managed Spot Training (https://docs.aws.amazon.com/sagemaker/latest/dg/model-managed-spot-training.html).
 	EnableManagedSpotTraining *bool `type:"boolean"`
 
 	// If the TrainingJob was created with network isolation, the value is set to
@@ -42804,7 +43147,7 @@ func (s *TransformS3DataSource) SetS3Uri(v string) *TransformS3DataSource {
 	return s
 }
 
-// A summary of the properties of a trial as returned by the Search API.
+// The properties of a trial as returned by the Search API.
 type Trial struct {
 	_ struct{} `type:"structure"`
 
@@ -42923,8 +43266,7 @@ func (s *Trial) SetTrialName(v string) *Trial {
 	return s
 }
 
-// A summary of the properties of a trial component as returned by the Search
-// API.
+// The properties of a trial component as returned by the Search API.
 type TrialComponent struct {
 	_ struct{} `type:"structure"`
 
@@ -42966,10 +43308,10 @@ type TrialComponent struct {
 	// not have any parents.
 	Parents []*Parent `type:"list"`
 
-	// The source of the trial component.
+	// The Amazon Resource Name (ARN) and job type of the source of the component.
 	Source *TrialComponentSource `type:"structure"`
 
-	// The source of the trial component.>
+	// Details of the source of the component.
 	SourceDetail *TrialComponentSourceDetail `type:"structure"`
 
 	// When the component started.
@@ -43315,7 +43657,7 @@ type TrialComponentSimpleSummary struct {
 	// The name of the trial component.
 	TrialComponentName *string `min:"1" type:"string"`
 
-	// The source of the trial component.
+	// The Amazon Resource Name (ARN) and job type of the source of a trial component.
 	TrialComponentSource *TrialComponentSource `type:"structure"`
 }
 
@@ -43359,11 +43701,11 @@ func (s *TrialComponentSimpleSummary) SetTrialComponentSource(v *TrialComponentS
 	return s
 }
 
-// The source of the trial component.
+// The Amazon Resource Name (ARN) and job type of the source of a trial component.
 type TrialComponentSource struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the source.
+	// The source ARN.
 	//
 	// SourceArn is a required field
 	SourceArn *string `type:"string" required:"true"`
@@ -43394,14 +43736,18 @@ func (s *TrialComponentSource) SetSourceType(v string) *TrialComponentSource {
 	return s
 }
 
-// Detailed information about the source of a trial component.
+// Detailed information about the source of a trial component. Either ProcessingJob
+// or TrainingJob is returned.
 type TrialComponentSourceDetail struct {
 	_ struct{} `type:"structure"`
+
+	// Information about a processing job that's the source of a trial component.
+	ProcessingJob *ProcessingJob `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the source.
 	SourceArn *string `type:"string"`
 
-	// Contains information about a training job.
+	// Information about a training job that's the source of a trial component.
 	TrainingJob *TrainingJob `type:"structure"`
 }
 
@@ -43413,6 +43759,12 @@ func (s TrialComponentSourceDetail) String() string {
 // GoString returns the string representation
 func (s TrialComponentSourceDetail) GoString() string {
 	return s.String()
+}
+
+// SetProcessingJob sets the ProcessingJob field's value.
+func (s *TrialComponentSourceDetail) SetProcessingJob(v *ProcessingJob) *TrialComponentSourceDetail {
+	s.ProcessingJob = v
+	return s
 }
 
 // SetSourceArn sets the SourceArn field's value.
@@ -43502,7 +43854,7 @@ type TrialComponentSummary struct {
 	// The name of the trial component.
 	TrialComponentName *string `min:"1" type:"string"`
 
-	// The source of the trial component.
+	// The Amazon Resource Name (ARN) and job type of the source of a trial component.
 	TrialComponentSource *TrialComponentSource `type:"structure"`
 }
 
@@ -43856,7 +44208,7 @@ func (s *UiTemplate) SetContent(v string) *UiTemplate {
 type UiTemplateInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The SHA 256 hash that you used to create the request signature.
+	// The SHA-256 digest of the contents of the template.
 	ContentSha256 *string `min:"1" type:"string"`
 
 	// The URL for the user interface template.
@@ -44057,6 +44409,20 @@ type UpdateEndpointInput struct {
 	//
 	// EndpointName is a required field
 	EndpointName *string `type:"string" required:"true"`
+
+	// When you are updating endpoint resources with UpdateEndpointInput$RetainAllVariantProperties,
+	// whose value is set to true, ExcludeRetainedVariantProperties specifies the
+	// list of type VariantProperty to override with the values provided by EndpointConfig.
+	// If you don't specify a value for ExcludeAllVariantProperties, no variant
+	// properties are overridden.
+	ExcludeRetainedVariantProperties []*VariantProperty `type:"list"`
+
+	// When updating endpoint resources, enables or disables the retention of variant
+	// properties, such as the instance count or the variant weight. To retain the
+	// variant properties of an endpoint when updating it, set RetainAllVariantProperties
+	// to true. To use the variant properties specified in a new EndpointConfig
+	// call when updating an endpoint, set RetainAllVariantProperties to false.
+	RetainAllVariantProperties *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -44078,6 +44444,16 @@ func (s *UpdateEndpointInput) Validate() error {
 	if s.EndpointName == nil {
 		invalidParams.Add(request.NewErrParamRequired("EndpointName"))
 	}
+	if s.ExcludeRetainedVariantProperties != nil {
+		for i, v := range s.ExcludeRetainedVariantProperties {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ExcludeRetainedVariantProperties", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -44094,6 +44470,18 @@ func (s *UpdateEndpointInput) SetEndpointConfigName(v string) *UpdateEndpointInp
 // SetEndpointName sets the EndpointName field's value.
 func (s *UpdateEndpointInput) SetEndpointName(v string) *UpdateEndpointInput {
 	s.EndpointName = &v
+	return s
+}
+
+// SetExcludeRetainedVariantProperties sets the ExcludeRetainedVariantProperties field's value.
+func (s *UpdateEndpointInput) SetExcludeRetainedVariantProperties(v []*VariantProperty) *UpdateEndpointInput {
+	s.ExcludeRetainedVariantProperties = v
+	return s
+}
+
+// SetRetainAllVariantProperties sets the RetainAllVariantProperties field's value.
+func (s *UpdateEndpointInput) SetRetainAllVariantProperties(v bool) *UpdateEndpointInput {
+	s.RetainAllVariantProperties = &v
 	return s
 }
 
@@ -45041,12 +45429,12 @@ type UpdateWorkforceInput struct {
 	// A list of one to four worker IP address ranges (CIDRs (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_Subnets.html))
 	// that can be used to access tasks assigned to this workforce.
 	//
-	// Maximum: 4 CIDR values
+	// Maximum: Four CIDR values
 	SourceIpConfig *SourceIpConfig `type:"structure"`
 
 	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to "default" when a workforce is created and cannot
-	// be modified.
+	// is automatically set to default when a workforce is created and cannot be
+	// modified.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -45100,7 +45488,7 @@ type UpdateWorkforceOutput struct {
 
 	// A single private workforce, which is automatically created when you create
 	// your first private work team. You can create one private work force in each
-	// AWS Region. By default, any workforce related API operation used in a specific
+	// AWS Region. By default, any workforce-related API operation used in a specific
 	// region will apply to the workforce created in that region. To learn how to
 	// create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
 	//
@@ -45418,6 +45806,57 @@ func (s *UserSettings) SetTensorBoardAppSettings(v *TensorBoardAppSettings) *Use
 	return s
 }
 
+// Specifies a production variant property type for an Endpoint.
+//
+// If you are updating an endpoint with the UpdateEndpointInput$RetainAllVariantProperties
+// option set to true, the VariantProperty objects listed in UpdateEndpointInput$ExcludeRetainedVariantProperties
+// override the existing variant properties of the endpoint.
+type VariantProperty struct {
+	_ struct{} `type:"structure"`
+
+	// The type of variant property. The supported values are:
+	//
+	//    * DesiredInstanceCount: Overrides the existing variant instance counts
+	//    using the ProductionVariant$InitialInstanceCount values in the CreateEndpointConfigInput$ProductionVariants.
+	//
+	//    * DesiredWeight: Overrides the existing variant weights using the ProductionVariant$InitialVariantWeight
+	//    values in the CreateEndpointConfigInput$ProductionVariants.
+	//
+	//    * DataCaptureConfig: (Not currently supported.)
+	//
+	// VariantPropertyType is a required field
+	VariantPropertyType *string `type:"string" required:"true" enum:"VariantPropertyType"`
+}
+
+// String returns the string representation
+func (s VariantProperty) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VariantProperty) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VariantProperty) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VariantProperty"}
+	if s.VariantPropertyType == nil {
+		invalidParams.Add(request.NewErrParamRequired("VariantPropertyType"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetVariantPropertyType sets the VariantPropertyType field's value.
+func (s *VariantProperty) SetVariantPropertyType(v string) *VariantProperty {
+	s.VariantPropertyType = &v
+	return s
+}
+
 // Specifies a VPC that your training jobs and hosted models have access to.
 // Control access to and from your training and model containers by configuring
 // the VPC. For more information, see Protect Endpoints by Using an Amazon Virtual
@@ -45433,12 +45872,8 @@ type VpcConfig struct {
 	SecurityGroupIds []*string `min:"1" type:"list" required:"true"`
 
 	// The ID of the subnets in the VPC to which you want to connect your training
-	// job or model.
-	//
-	// Amazon EC2 P3 accelerated computing instances are not available in the c/d/e
-	// availability zones of region us-east-1. If you want to create endpoints with
-	// P3 instances in VPC mode in region us-east-1, create subnets in a/b/f availability
-	// zones instead.
+	// job or model. For information about the availability of specific instance
+	// types, see Supported Instance Types and Availability Zones (https://docs.aws.amazon.com/sagemaker/latest/dg/instance-types-az.html).
 	//
 	// Subnets is a required field
 	Subnets []*string `min:"1" type:"list" required:"true"`
@@ -45490,7 +45925,7 @@ func (s *VpcConfig) SetSubnets(v []*string) *VpcConfig {
 
 // A single private workforce, which is automatically created when you create
 // your first private work team. You can create one private work force in each
-// AWS Region. By default, any workforce related API operation used in a specific
+// AWS Region. By default, any workforce-related API operation used in a specific
 // region will apply to the workforce created in that region. To learn how to
 // create a private workforce, see Create a Private Workforce (https://docs.aws.amazon.com/sagemaker/latest/dg/sms-workforce-create-private.html).
 type Workforce struct {
@@ -45511,8 +45946,8 @@ type Workforce struct {
 	WorkforceArn *string `type:"string" required:"true"`
 
 	// The name of the private workforce whose access you want to restrict. WorkforceName
-	// is automatically set to "default" when a workforce is created and cannot
-	// be modified.
+	// is automatically set to default when a workforce is created and cannot be
+	// modified.
 	//
 	// WorkforceName is a required field
 	WorkforceName *string `min:"1" type:"string" required:"true"`
@@ -46216,9 +46651,6 @@ const (
 
 	// FlowDefinitionStatusDeleting is a FlowDefinitionStatus enum value
 	FlowDefinitionStatusDeleting = "Deleting"
-
-	// FlowDefinitionStatusDeleted is a FlowDefinitionStatus enum value
-	FlowDefinitionStatusDeleted = "Deleted"
 )
 
 const (
@@ -46239,6 +46671,9 @@ const (
 
 	// FrameworkXgboost is a Framework enum value
 	FrameworkXgboost = "XGBOOST"
+
+	// FrameworkTflite is a Framework enum value
+	FrameworkTflite = "TFLITE"
 )
 
 const (
@@ -46656,6 +47091,9 @@ const (
 
 	// OperatorNotExists is a Operator enum value
 	OperatorNotExists = "NotExists"
+
+	// OperatorIn is a Operator enum value
+	OperatorIn = "In"
 )
 
 const (
@@ -47318,8 +47756,14 @@ const (
 	// TargetDeviceJetsonNano is a TargetDevice enum value
 	TargetDeviceJetsonNano = "jetson_nano"
 
+	// TargetDeviceJetsonXavier is a TargetDevice enum value
+	TargetDeviceJetsonXavier = "jetson_xavier"
+
 	// TargetDeviceRasp3b is a TargetDevice enum value
 	TargetDeviceRasp3b = "rasp3b"
+
+	// TargetDeviceImx8qm is a TargetDevice enum value
+	TargetDeviceImx8qm = "imx8qm"
 
 	// TargetDeviceDeeplens is a TargetDevice enum value
 	TargetDeviceDeeplens = "deeplens"
@@ -47341,6 +47785,12 @@ const (
 
 	// TargetDeviceQcs603 is a TargetDevice enum value
 	TargetDeviceQcs603 = "qcs603"
+
+	// TargetDeviceSitaraAm57x is a TargetDevice enum value
+	TargetDeviceSitaraAm57x = "sitara_am57x"
+
+	// TargetDeviceAmbaCv22 is a TargetDevice enum value
+	TargetDeviceAmbaCv22 = "amba_cv22"
 )
 
 const (
@@ -47450,6 +47900,21 @@ const (
 
 	// TrainingInstanceTypeMlC518xlarge is a TrainingInstanceType enum value
 	TrainingInstanceTypeMlC518xlarge = "ml.c5.18xlarge"
+
+	// TrainingInstanceTypeMlC5nXlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5nXlarge = "ml.c5n.xlarge"
+
+	// TrainingInstanceTypeMlC5n2xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n2xlarge = "ml.c5n.2xlarge"
+
+	// TrainingInstanceTypeMlC5n4xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n4xlarge = "ml.c5n.4xlarge"
+
+	// TrainingInstanceTypeMlC5n9xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n9xlarge = "ml.c5n.9xlarge"
+
+	// TrainingInstanceTypeMlC5n18xlarge is a TrainingInstanceType enum value
+	TrainingInstanceTypeMlC5n18xlarge = "ml.c5n.18xlarge"
 )
 
 const (
@@ -47597,6 +48062,12 @@ const (
 
 	// TrialComponentPrimaryStatusFailed is a TrialComponentPrimaryStatus enum value
 	TrialComponentPrimaryStatusFailed = "Failed"
+
+	// TrialComponentPrimaryStatusStopping is a TrialComponentPrimaryStatus enum value
+	TrialComponentPrimaryStatusStopping = "Stopping"
+
+	// TrialComponentPrimaryStatusStopped is a TrialComponentPrimaryStatus enum value
+	TrialComponentPrimaryStatusStopped = "Stopped"
 )
 
 const (
@@ -47619,4 +48090,15 @@ const (
 
 	// UserProfileStatusPending is a UserProfileStatus enum value
 	UserProfileStatusPending = "Pending"
+)
+
+const (
+	// VariantPropertyTypeDesiredInstanceCount is a VariantPropertyType enum value
+	VariantPropertyTypeDesiredInstanceCount = "DesiredInstanceCount"
+
+	// VariantPropertyTypeDesiredWeight is a VariantPropertyType enum value
+	VariantPropertyTypeDesiredWeight = "DesiredWeight"
+
+	// VariantPropertyTypeDataCaptureConfig is a VariantPropertyType enum value
+	VariantPropertyTypeDataCaptureConfig = "DataCaptureConfig"
 )

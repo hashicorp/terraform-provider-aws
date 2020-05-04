@@ -233,7 +233,6 @@ func testAccCheckAwsWorkspacesDirectoryExists(n string, v *workspaces.WorkspaceD
 
 		if *resp.Directories[0].DirectoryId == rs.Primary.ID {
 			*v = *resp.Directories[0]
-
 			return nil
 		}
 
@@ -326,6 +325,11 @@ data "aws_region" "current" {}
 
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 locals {

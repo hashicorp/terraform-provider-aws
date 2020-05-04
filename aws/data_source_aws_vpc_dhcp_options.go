@@ -57,6 +57,7 @@ func dataSourceAwsVpcDhcpOptions() *schema.Resource {
 
 func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
@@ -123,7 +124,7 @@ func dataSourceAwsVpcDhcpOptionsRead(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(output.DhcpOptions[0].Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(output.DhcpOptions[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 	d.Set("owner_id", output.DhcpOptions[0].OwnerId)

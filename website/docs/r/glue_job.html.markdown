@@ -84,7 +84,7 @@ be removed in future releases, please use `max_capacity` instead.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
 * `notification_property` - (Optional) Notification property of the job. Defined below.
 * `role_arn` – (Required) The ARN of the IAM role associated with this job.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 * `timeout` – (Optional) The job timeout in minutes. The default is 2880 minutes (48 hours).
 * `security_configuration` - (Optional) The name of the Security Configuration to be associated with the job.
 * `worker_type` - (Optional) The type of predefined worker that is allocated when a job runs. Accepts a value of Standard, G.1X, or G.2X.

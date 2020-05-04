@@ -21,7 +21,6 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -52,6 +51,10 @@ func dataSourceAwsEbsVolume() *schema.Resource {
 				Computed: true,
 			},
 			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"outpost_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -141,8 +144,9 @@ func volumeDescriptionAttributes(d *schema.ResourceData, client *AWSClient, volu
 	d.Set("size", volume.Size)
 	d.Set("snapshot_id", volume.SnapshotId)
 	d.Set("volume_type", volume.VolumeType)
+	d.Set("outpost_arn", volume.OutpostArn)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(client.IgnoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

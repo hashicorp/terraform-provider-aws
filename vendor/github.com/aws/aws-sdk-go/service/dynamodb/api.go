@@ -61,26 +61,30 @@ func (c *DynamoDB) BatchGetItemRequest(input *BatchGetItemInput) (req *request.R
 
 	output = &BatchGetItemOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -278,26 +282,30 @@ func (c *DynamoDB) BatchWriteItemRequest(input *BatchWriteItemInput) (req *reque
 
 	output = &BatchWriteItemOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -468,26 +476,30 @@ func (c *DynamoDB) CreateBackupRequest(input *CreateBackupInput) (req *request.R
 
 	output = &CreateBackupOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -624,26 +636,30 @@ func (c *DynamoDB) CreateGlobalTableRequest(input *CreateGlobalTableInput) (req 
 
 	output = &CreateGlobalTableOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -780,26 +796,30 @@ func (c *DynamoDB) CreateTableRequest(input *CreateTableInput) (req *request.Req
 
 	output = &CreateTableOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -913,26 +933,30 @@ func (c *DynamoDB) DeleteBackupRequest(input *DeleteBackupInput) (req *request.R
 
 	output = &DeleteBackupOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -1036,26 +1060,30 @@ func (c *DynamoDB) DeleteItemRequest(input *DeleteItemInput) (req *request.Reque
 
 	output = &DeleteItemOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -1176,26 +1204,30 @@ func (c *DynamoDB) DeleteTableRequest(input *DeleteTableInput) (req *request.Req
 
 	output = &DeleteTableOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -1316,26 +1348,30 @@ func (c *DynamoDB) DescribeBackupRequest(input *DescribeBackupInput) (req *reque
 
 	output = &DescribeBackupOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -1421,26 +1457,30 @@ func (c *DynamoDB) DescribeContinuousBackupsRequest(input *DescribeContinuousBac
 
 	output = &DescribeContinuousBackupsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -1767,26 +1807,30 @@ func (c *DynamoDB) DescribeGlobalTableRequest(input *DescribeGlobalTableInput) (
 
 	output = &DescribeGlobalTableOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -1873,26 +1917,30 @@ func (c *DynamoDB) DescribeGlobalTableSettingsRequest(input *DescribeGlobalTable
 
 	output = &DescribeGlobalTableSettingsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -1979,26 +2027,30 @@ func (c *DynamoDB) DescribeLimitsRequest(input *DescribeLimitsInput) (req *reque
 
 	output = &DescribeLimitsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -2136,26 +2188,30 @@ func (c *DynamoDB) DescribeTableRequest(input *DescribeTableInput) (req *request
 
 	output = &DescribeTableOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -2334,26 +2390,30 @@ func (c *DynamoDB) DescribeTimeToLiveRequest(input *DescribeTimeToLiveInput) (re
 
 	output = &DescribeTimeToLiveOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -2438,26 +2498,30 @@ func (c *DynamoDB) GetItemRequest(input *GetItemInput) (req *request.Request, ou
 
 	output = &GetItemOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -2562,26 +2626,30 @@ func (c *DynamoDB) ListBackupsRequest(input *ListBackupsInput) (req *request.Req
 
 	output = &ListBackupsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -2812,26 +2880,30 @@ func (c *DynamoDB) ListGlobalTablesRequest(input *ListGlobalTablesInput) (req *r
 
 	output = &ListGlobalTablesOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -2921,26 +2993,30 @@ func (c *DynamoDB) ListTablesRequest(input *ListTablesInput) (req *request.Reque
 
 	output = &ListTablesOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -3075,26 +3151,30 @@ func (c *DynamoDB) ListTagsOfResourceRequest(input *ListTagsOfResourceInput) (re
 
 	output = &ListTagsOfResourceOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -3183,26 +3263,30 @@ func (c *DynamoDB) PutItemRequest(input *PutItemInput) (req *request.Request, ou
 
 	output = &PutItemOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -3359,26 +3443,30 @@ func (c *DynamoDB) QueryRequest(input *QueryInput) (req *request.Request, output
 
 	output = &QueryOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -3575,26 +3663,30 @@ func (c *DynamoDB) RestoreTableFromBackupRequest(input *RestoreTableFromBackupIn
 
 	output = &RestoreTableFromBackupOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -3719,26 +3811,30 @@ func (c *DynamoDB) RestoreTableToPointInTimeRequest(input *RestoreTableToPointIn
 
 	output = &RestoreTableToPointInTimeOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -3891,26 +3987,30 @@ func (c *DynamoDB) ScanRequest(input *ScanInput) (req *request.Request, output *
 
 	output = &ScanOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -4088,26 +4188,30 @@ func (c *DynamoDB) TagResourceRequest(input *TagResourceInput) (req *request.Req
 	output = &TagResourceOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -4217,26 +4321,30 @@ func (c *DynamoDB) TransactGetItemsRequest(input *TransactGetItemsInput) (req *r
 
 	output = &TransactGetItemsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -4440,26 +4548,30 @@ func (c *DynamoDB) TransactWriteItemsRequest(input *TransactWriteItemsInput) (re
 
 	output = &TransactWriteItemsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -4705,26 +4817,30 @@ func (c *DynamoDB) UntagResourceRequest(input *UntagResourceInput) (req *request
 	output = &UntagResourceOutput{}
 	req = c.newRequest(op, input, output)
 	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -4832,26 +4948,30 @@ func (c *DynamoDB) UpdateContinuousBackupsRequest(input *UpdateContinuousBackups
 
 	output = &UpdateContinuousBackupsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -5032,26 +5152,30 @@ func (c *DynamoDB) UpdateGlobalTableRequest(input *UpdateGlobalTableInput) (req 
 
 	output = &UpdateGlobalTableOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -5164,26 +5288,30 @@ func (c *DynamoDB) UpdateGlobalTableSettingsRequest(input *UpdateGlobalTableSett
 
 	output = &UpdateGlobalTableSettingsOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -5292,26 +5420,30 @@ func (c *DynamoDB) UpdateItemRequest(input *UpdateItemInput) (req *request.Reque
 
 	output = &UpdateItemOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -5426,26 +5558,30 @@ func (c *DynamoDB) UpdateTableRequest(input *UpdateTableInput) (req *request.Req
 
 	output = &UpdateTableOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -5671,26 +5807,30 @@ func (c *DynamoDB) UpdateTimeToLiveRequest(input *UpdateTimeToLiveInput) (req *r
 
 	output = &UpdateTimeToLiveOutput{}
 	req = c.newRequest(op, input, output)
-	if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
-		de := discovererDescribeEndpoints{
-			Required:      false,
-			EndpointCache: c.endpointCache,
-			Params: map[string]*string{
-				"op": aws.String(req.Operation.Name),
-			},
-			Client: c,
-		}
-
-		for k, v := range de.Params {
-			if v == nil {
-				delete(de.Params, k)
+	// if a custom endpoint is provided for the request,
+	// we skip endpoint discovery workflow
+	if req.Config.Endpoint == nil {
+		if aws.BoolValue(req.Config.EnableEndpointDiscovery) {
+			de := discovererDescribeEndpoints{
+				Required:      false,
+				EndpointCache: c.endpointCache,
+				Params: map[string]*string{
+					"op": aws.String(req.Operation.Name),
+				},
+				Client: c,
 			}
-		}
 
-		req.Handlers.Build.PushFrontNamed(request.NamedHandler{
-			Name: "crr.endpointdiscovery",
-			Fn:   de.Handler,
-		})
+			for k, v := range de.Params {
+				if v == nil {
+					delete(de.Params, k)
+				}
+			}
+
+			req.Handlers.Build.PushFrontNamed(request.NamedHandler{
+				Name: "crr.endpointdiscovery",
+				Fn:   de.Handler,
+			})
+		}
 	}
 	return
 }
@@ -6668,8 +6808,8 @@ func (s *BackupDetails) SetBackupType(v string) *BackupDetails {
 // There is another ongoing conflicting backup control plane operation on the
 // table. The backup is either being created, deleted or restored to a table.
 type BackupInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6686,17 +6826,17 @@ func (s BackupInUseException) GoString() string {
 
 func newErrorBackupInUseException(v protocol.ResponseMetadata) error {
 	return &BackupInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BackupInUseException) Code() string {
+func (s *BackupInUseException) Code() string {
 	return "BackupInUseException"
 }
 
 // Message returns the exception's message.
-func (s BackupInUseException) Message() string {
+func (s *BackupInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6704,28 +6844,28 @@ func (s BackupInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BackupInUseException) OrigErr() error {
+func (s *BackupInUseException) OrigErr() error {
 	return nil
 }
 
-func (s BackupInUseException) Error() string {
+func (s *BackupInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BackupInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BackupInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BackupInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BackupInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Backup not found for the given BackupARN.
 type BackupNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6742,17 +6882,17 @@ func (s BackupNotFoundException) GoString() string {
 
 func newErrorBackupNotFoundException(v protocol.ResponseMetadata) error {
 	return &BackupNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BackupNotFoundException) Code() string {
+func (s *BackupNotFoundException) Code() string {
 	return "BackupNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s BackupNotFoundException) Message() string {
+func (s *BackupNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6760,22 +6900,22 @@ func (s BackupNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BackupNotFoundException) OrigErr() error {
+func (s *BackupNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s BackupNotFoundException) Error() string {
+func (s *BackupNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BackupNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BackupNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BackupNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BackupNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains details for the backup.
@@ -7678,8 +7818,8 @@ func (s *ConditionCheck) SetTableName(v string) *ConditionCheck {
 
 // A condition specified in the operation could not be evaluated.
 type ConditionalCheckFailedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The conditional request failed.
 	Message_ *string `locationName:"message" type:"string"`
@@ -7697,17 +7837,17 @@ func (s ConditionalCheckFailedException) GoString() string {
 
 func newErrorConditionalCheckFailedException(v protocol.ResponseMetadata) error {
 	return &ConditionalCheckFailedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConditionalCheckFailedException) Code() string {
+func (s *ConditionalCheckFailedException) Code() string {
 	return "ConditionalCheckFailedException"
 }
 
 // Message returns the exception's message.
-func (s ConditionalCheckFailedException) Message() string {
+func (s *ConditionalCheckFailedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7715,22 +7855,22 @@ func (s ConditionalCheckFailedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConditionalCheckFailedException) OrigErr() error {
+func (s *ConditionalCheckFailedException) OrigErr() error {
 	return nil
 }
 
-func (s ConditionalCheckFailedException) Error() string {
+func (s *ConditionalCheckFailedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConditionalCheckFailedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConditionalCheckFailedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConditionalCheckFailedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConditionalCheckFailedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The capacity units consumed by an operation. The data returned includes the
@@ -7854,8 +7994,8 @@ func (s *ContinuousBackupsDescription) SetPointInTimeRecoveryDescription(v *Poin
 
 // Backups have not yet been enabled for this table.
 type ContinuousBackupsUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7872,17 +8012,17 @@ func (s ContinuousBackupsUnavailableException) GoString() string {
 
 func newErrorContinuousBackupsUnavailableException(v protocol.ResponseMetadata) error {
 	return &ContinuousBackupsUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ContinuousBackupsUnavailableException) Code() string {
+func (s *ContinuousBackupsUnavailableException) Code() string {
 	return "ContinuousBackupsUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s ContinuousBackupsUnavailableException) Message() string {
+func (s *ContinuousBackupsUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7890,22 +8030,22 @@ func (s ContinuousBackupsUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ContinuousBackupsUnavailableException) OrigErr() error {
+func (s *ContinuousBackupsUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s ContinuousBackupsUnavailableException) Error() string {
+func (s *ContinuousBackupsUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ContinuousBackupsUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ContinuousBackupsUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ContinuousBackupsUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ContinuousBackupsUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents a Contributor Insights summary entry..
@@ -11133,8 +11273,8 @@ func (s *GlobalTable) SetReplicationGroup(v []*Replica) *GlobalTable {
 
 // The specified global table already exists.
 type GlobalTableAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -11151,17 +11291,17 @@ func (s GlobalTableAlreadyExistsException) GoString() string {
 
 func newErrorGlobalTableAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &GlobalTableAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s GlobalTableAlreadyExistsException) Code() string {
+func (s *GlobalTableAlreadyExistsException) Code() string {
 	return "GlobalTableAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s GlobalTableAlreadyExistsException) Message() string {
+func (s *GlobalTableAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11169,22 +11309,22 @@ func (s GlobalTableAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s GlobalTableAlreadyExistsException) OrigErr() error {
+func (s *GlobalTableAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s GlobalTableAlreadyExistsException) Error() string {
+func (s *GlobalTableAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s GlobalTableAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *GlobalTableAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s GlobalTableAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *GlobalTableAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains details about the global table.
@@ -11329,8 +11469,8 @@ func (s *GlobalTableGlobalSecondaryIndexSettingsUpdate) SetProvisionedWriteCapac
 
 // The specified global table does not exist.
 type GlobalTableNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -11347,17 +11487,17 @@ func (s GlobalTableNotFoundException) GoString() string {
 
 func newErrorGlobalTableNotFoundException(v protocol.ResponseMetadata) error {
 	return &GlobalTableNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s GlobalTableNotFoundException) Code() string {
+func (s *GlobalTableNotFoundException) Code() string {
 	return "GlobalTableNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s GlobalTableNotFoundException) Message() string {
+func (s *GlobalTableNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11365,29 +11505,29 @@ func (s GlobalTableNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s GlobalTableNotFoundException) OrigErr() error {
+func (s *GlobalTableNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s GlobalTableNotFoundException) Error() string {
+func (s *GlobalTableNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s GlobalTableNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *GlobalTableNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s GlobalTableNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *GlobalTableNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // DynamoDB rejected the request because you retried a request with a different
 // payload but with an idempotent token that was already used.
 type IdempotentParameterMismatchException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -11404,17 +11544,17 @@ func (s IdempotentParameterMismatchException) GoString() string {
 
 func newErrorIdempotentParameterMismatchException(v protocol.ResponseMetadata) error {
 	return &IdempotentParameterMismatchException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IdempotentParameterMismatchException) Code() string {
+func (s *IdempotentParameterMismatchException) Code() string {
 	return "IdempotentParameterMismatchException"
 }
 
 // Message returns the exception's message.
-func (s IdempotentParameterMismatchException) Message() string {
+func (s *IdempotentParameterMismatchException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11422,28 +11562,28 @@ func (s IdempotentParameterMismatchException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IdempotentParameterMismatchException) OrigErr() error {
+func (s *IdempotentParameterMismatchException) OrigErr() error {
 	return nil
 }
 
-func (s IdempotentParameterMismatchException) Error() string {
+func (s *IdempotentParameterMismatchException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IdempotentParameterMismatchException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IdempotentParameterMismatchException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IdempotentParameterMismatchException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IdempotentParameterMismatchException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The operation tried to access a nonexistent index.
 type IndexNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -11460,17 +11600,17 @@ func (s IndexNotFoundException) GoString() string {
 
 func newErrorIndexNotFoundException(v protocol.ResponseMetadata) error {
 	return &IndexNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IndexNotFoundException) Code() string {
+func (s *IndexNotFoundException) Code() string {
 	return "IndexNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s IndexNotFoundException) Message() string {
+func (s *IndexNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11478,28 +11618,28 @@ func (s IndexNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IndexNotFoundException) OrigErr() error {
+func (s *IndexNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s IndexNotFoundException) Error() string {
+func (s *IndexNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IndexNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IndexNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IndexNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IndexNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An error occurred on the server side.
 type InternalServerError struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The server encountered an internal error trying to fulfill the request.
 	Message_ *string `locationName:"message" type:"string"`
@@ -11517,17 +11657,17 @@ func (s InternalServerError) GoString() string {
 
 func newErrorInternalServerError(v protocol.ResponseMetadata) error {
 	return &InternalServerError{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerError) Code() string {
+func (s *InternalServerError) Code() string {
 	return "InternalServerError"
 }
 
 // Message returns the exception's message.
-func (s InternalServerError) Message() string {
+func (s *InternalServerError) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11535,29 +11675,29 @@ func (s InternalServerError) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerError) OrigErr() error {
+func (s *InternalServerError) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerError) Error() string {
+func (s *InternalServerError) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerError) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerError) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An invalid restore time was specified. RestoreDateTime must be between EarliestRestorableDateTime
 // and LatestRestorableDateTime.
 type InvalidRestoreTimeException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -11574,17 +11714,17 @@ func (s InvalidRestoreTimeException) GoString() string {
 
 func newErrorInvalidRestoreTimeException(v protocol.ResponseMetadata) error {
 	return &InvalidRestoreTimeException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidRestoreTimeException) Code() string {
+func (s *InvalidRestoreTimeException) Code() string {
 	return "InvalidRestoreTimeException"
 }
 
 // Message returns the exception's message.
-func (s InvalidRestoreTimeException) Message() string {
+func (s *InvalidRestoreTimeException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11592,22 +11732,22 @@ func (s InvalidRestoreTimeException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidRestoreTimeException) OrigErr() error {
+func (s *InvalidRestoreTimeException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidRestoreTimeException) Error() string {
+func (s *InvalidRestoreTimeException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidRestoreTimeException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidRestoreTimeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidRestoreTimeException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidRestoreTimeException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about item collections, if any, that were affected by the operation.
@@ -11658,8 +11798,8 @@ func (s *ItemCollectionMetrics) SetSizeEstimateRangeGB(v []*float64) *ItemCollec
 // An item collection is too large. This exception is only returned for tables
 // that have one or more local secondary indexes.
 type ItemCollectionSizeLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The total size of an item collection has exceeded the maximum limit of 10
 	// gigabytes.
@@ -11678,17 +11818,17 @@ func (s ItemCollectionSizeLimitExceededException) GoString() string {
 
 func newErrorItemCollectionSizeLimitExceededException(v protocol.ResponseMetadata) error {
 	return &ItemCollectionSizeLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ItemCollectionSizeLimitExceededException) Code() string {
+func (s *ItemCollectionSizeLimitExceededException) Code() string {
 	return "ItemCollectionSizeLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s ItemCollectionSizeLimitExceededException) Message() string {
+func (s *ItemCollectionSizeLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -11696,22 +11836,22 @@ func (s ItemCollectionSizeLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ItemCollectionSizeLimitExceededException) OrigErr() error {
+func (s *ItemCollectionSizeLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ItemCollectionSizeLimitExceededException) Error() string {
+func (s *ItemCollectionSizeLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ItemCollectionSizeLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ItemCollectionSizeLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ItemCollectionSizeLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ItemCollectionSizeLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Details for the requested item.
@@ -11964,8 +12104,8 @@ func (s *KeysAndAttributes) SetProjectionExpression(v string) *KeysAndAttributes
 //
 // There is a soft account limit of 256 tables.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Too many operations for a given subscriber.
 	Message_ *string `locationName:"message" type:"string"`
@@ -11983,17 +12123,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12001,22 +12141,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListBackupsInput struct {
@@ -12866,8 +13006,8 @@ func (s *PointInTimeRecoverySpecification) SetPointInTimeRecoveryEnabled(v bool)
 
 // Point in time recovery has not yet been enabled for this source table.
 type PointInTimeRecoveryUnavailableException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -12884,17 +13024,17 @@ func (s PointInTimeRecoveryUnavailableException) GoString() string {
 
 func newErrorPointInTimeRecoveryUnavailableException(v protocol.ResponseMetadata) error {
 	return &PointInTimeRecoveryUnavailableException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s PointInTimeRecoveryUnavailableException) Code() string {
+func (s *PointInTimeRecoveryUnavailableException) Code() string {
 	return "PointInTimeRecoveryUnavailableException"
 }
 
 // Message returns the exception's message.
-func (s PointInTimeRecoveryUnavailableException) Message() string {
+func (s *PointInTimeRecoveryUnavailableException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12902,22 +13042,22 @@ func (s PointInTimeRecoveryUnavailableException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s PointInTimeRecoveryUnavailableException) OrigErr() error {
+func (s *PointInTimeRecoveryUnavailableException) OrigErr() error {
 	return nil
 }
 
-func (s PointInTimeRecoveryUnavailableException) Error() string {
+func (s *PointInTimeRecoveryUnavailableException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s PointInTimeRecoveryUnavailableException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *PointInTimeRecoveryUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s PointInTimeRecoveryUnavailableException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *PointInTimeRecoveryUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents attributes that are copied (projected) from the table into an
@@ -13129,8 +13269,8 @@ func (s *ProvisionedThroughputDescription) SetWriteCapacityUnits(v int64) *Provi
 // Exponential Backoff (https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Programming.Errors.html#Programming.Errors.RetryAndBackoff)
 // in the Amazon DynamoDB Developer Guide.
 type ProvisionedThroughputExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// You exceeded your maximum allowed provisioned throughput.
 	Message_ *string `locationName:"message" type:"string"`
@@ -13148,17 +13288,17 @@ func (s ProvisionedThroughputExceededException) GoString() string {
 
 func newErrorProvisionedThroughputExceededException(v protocol.ResponseMetadata) error {
 	return &ProvisionedThroughputExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ProvisionedThroughputExceededException) Code() string {
+func (s *ProvisionedThroughputExceededException) Code() string {
 	return "ProvisionedThroughputExceededException"
 }
 
 // Message returns the exception's message.
-func (s ProvisionedThroughputExceededException) Message() string {
+func (s *ProvisionedThroughputExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -13166,22 +13306,22 @@ func (s ProvisionedThroughputExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ProvisionedThroughputExceededException) OrigErr() error {
+func (s *ProvisionedThroughputExceededException) OrigErr() error {
 	return nil
 }
 
-func (s ProvisionedThroughputExceededException) Error() string {
+func (s *ProvisionedThroughputExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ProvisionedThroughputExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ProvisionedThroughputExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ProvisionedThroughputExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ProvisionedThroughputExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Replica-specific provisioned throughput settings. If not specified, uses
@@ -14220,8 +14360,8 @@ func (s *Replica) SetRegionName(v string) *Replica {
 
 // The specified replica is already part of the global table.
 type ReplicaAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -14238,17 +14378,17 @@ func (s ReplicaAlreadyExistsException) GoString() string {
 
 func newErrorReplicaAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &ReplicaAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ReplicaAlreadyExistsException) Code() string {
+func (s *ReplicaAlreadyExistsException) Code() string {
 	return "ReplicaAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s ReplicaAlreadyExistsException) Message() string {
+func (s *ReplicaAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14256,22 +14396,22 @@ func (s ReplicaAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ReplicaAlreadyExistsException) OrigErr() error {
+func (s *ReplicaAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s ReplicaAlreadyExistsException) Error() string {
+func (s *ReplicaAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ReplicaAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ReplicaAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ReplicaAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ReplicaAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents the auto scaling settings of the replica.
@@ -14870,8 +15010,8 @@ func (s *ReplicaGlobalSecondaryIndexSettingsUpdate) SetProvisionedReadCapacityUn
 
 // The specified replica is no longer part of the global table.
 type ReplicaNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -14888,17 +15028,17 @@ func (s ReplicaNotFoundException) GoString() string {
 
 func newErrorReplicaNotFoundException(v protocol.ResponseMetadata) error {
 	return &ReplicaNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ReplicaNotFoundException) Code() string {
+func (s *ReplicaNotFoundException) Code() string {
 	return "ReplicaNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ReplicaNotFoundException) Message() string {
+func (s *ReplicaNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14906,22 +15046,22 @@ func (s ReplicaNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ReplicaNotFoundException) OrigErr() error {
+func (s *ReplicaNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ReplicaNotFoundException) Error() string {
+func (s *ReplicaNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ReplicaNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ReplicaNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ReplicaNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ReplicaNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents the properties of a replica.
@@ -15260,8 +15400,8 @@ func (s *ReplicationGroupUpdate) SetUpdate(v *UpdateReplicationGroupMemberAction
 // contact AWS Support at AWS Support (https://aws.amazon.com/support) to request
 // a limit increase.
 type RequestLimitExceeded struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -15278,17 +15418,17 @@ func (s RequestLimitExceeded) GoString() string {
 
 func newErrorRequestLimitExceeded(v protocol.ResponseMetadata) error {
 	return &RequestLimitExceeded{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RequestLimitExceeded) Code() string {
+func (s *RequestLimitExceeded) Code() string {
 	return "RequestLimitExceeded"
 }
 
 // Message returns the exception's message.
-func (s RequestLimitExceeded) Message() string {
+func (s *RequestLimitExceeded) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15296,30 +15436,30 @@ func (s RequestLimitExceeded) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RequestLimitExceeded) OrigErr() error {
+func (s *RequestLimitExceeded) OrigErr() error {
 	return nil
 }
 
-func (s RequestLimitExceeded) Error() string {
+func (s *RequestLimitExceeded) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RequestLimitExceeded) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RequestLimitExceeded) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RequestLimitExceeded) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RequestLimitExceeded) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The operation conflicts with the resource's availability. For example, you
 // attempted to recreate an existing table, or tried to delete a table currently
 // in the CREATING state.
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The resource which is being attempted to be changed is in use.
 	Message_ *string `locationName:"message" type:"string"`
@@ -15337,17 +15477,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15355,29 +15495,29 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The operation tried to access a nonexistent table or index. The resource
 // might not be specified correctly, or its status might not be ACTIVE.
 type ResourceNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// The resource which is being requested does not exist.
 	Message_ *string `locationName:"message" type:"string"`
@@ -15395,17 +15535,17 @@ func (s ResourceNotFoundException) GoString() string {
 
 func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
 	return &ResourceNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceNotFoundException) Code() string {
+func (s *ResourceNotFoundException) Code() string {
 	return "ResourceNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ResourceNotFoundException) Message() string {
+func (s *ResourceNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15413,22 +15553,22 @@ func (s ResourceNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceNotFoundException) OrigErr() error {
+func (s *ResourceNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceNotFoundException) Error() string {
+func (s *ResourceNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Contains details for the restore.
@@ -16652,8 +16792,8 @@ func (s *StreamSpecification) SetStreamViewType(v string) *StreamSpecification {
 
 // A target table with the specified name already exists.
 type TableAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -16670,17 +16810,17 @@ func (s TableAlreadyExistsException) GoString() string {
 
 func newErrorTableAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &TableAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TableAlreadyExistsException) Code() string {
+func (s *TableAlreadyExistsException) Code() string {
 	return "TableAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s TableAlreadyExistsException) Message() string {
+func (s *TableAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -16688,22 +16828,22 @@ func (s TableAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TableAlreadyExistsException) OrigErr() error {
+func (s *TableAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s TableAlreadyExistsException) Error() string {
+func (s *TableAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TableAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TableAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TableAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TableAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents the auto scaling configuration for a global table.
@@ -17106,8 +17246,8 @@ func (s *TableDescription) SetTableStatus(v string) *TableDescription {
 
 // A target table with the specified name is either being created or deleted.
 type TableInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -17124,17 +17264,17 @@ func (s TableInUseException) GoString() string {
 
 func newErrorTableInUseException(v protocol.ResponseMetadata) error {
 	return &TableInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TableInUseException) Code() string {
+func (s *TableInUseException) Code() string {
 	return "TableInUseException"
 }
 
 // Message returns the exception's message.
-func (s TableInUseException) Message() string {
+func (s *TableInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -17142,29 +17282,29 @@ func (s TableInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TableInUseException) OrigErr() error {
+func (s *TableInUseException) OrigErr() error {
 	return nil
 }
 
-func (s TableInUseException) Error() string {
+func (s *TableInUseException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TableInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TableInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TableInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TableInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A source table with the name TableName does not currently exist within the
 // subscriber's account.
 type TableNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -17181,17 +17321,17 @@ func (s TableNotFoundException) GoString() string {
 
 func newErrorTableNotFoundException(v protocol.ResponseMetadata) error {
 	return &TableNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TableNotFoundException) Code() string {
+func (s *TableNotFoundException) Code() string {
 	return "TableNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s TableNotFoundException) Message() string {
+func (s *TableNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -17199,22 +17339,22 @@ func (s TableNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TableNotFoundException) OrigErr() error {
+func (s *TableNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s TableNotFoundException) Error() string {
+func (s *TableNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TableNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TableNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TableNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TableNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes a tag. A tag is a key-value pair. You can add up to 50 tags to
@@ -17930,8 +18070,8 @@ func (s *TransactWriteItemsOutput) SetItemCollectionMetrics(v map[string][]*Item
 //    The provided expression refers to an attribute that does not exist in
 //    the item.
 type TransactionCanceledException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// A list of cancellation reasons.
 	CancellationReasons []*CancellationReason `min:"1" type:"list"`
@@ -17951,17 +18091,17 @@ func (s TransactionCanceledException) GoString() string {
 
 func newErrorTransactionCanceledException(v protocol.ResponseMetadata) error {
 	return &TransactionCanceledException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TransactionCanceledException) Code() string {
+func (s *TransactionCanceledException) Code() string {
 	return "TransactionCanceledException"
 }
 
 // Message returns the exception's message.
-func (s TransactionCanceledException) Message() string {
+func (s *TransactionCanceledException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -17969,28 +18109,28 @@ func (s TransactionCanceledException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TransactionCanceledException) OrigErr() error {
+func (s *TransactionCanceledException) OrigErr() error {
 	return nil
 }
 
-func (s TransactionCanceledException) Error() string {
+func (s *TransactionCanceledException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TransactionCanceledException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TransactionCanceledException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TransactionCanceledException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TransactionCanceledException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Operation was rejected because there is an ongoing transaction for the item.
 type TransactionConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -18007,17 +18147,17 @@ func (s TransactionConflictException) GoString() string {
 
 func newErrorTransactionConflictException(v protocol.ResponseMetadata) error {
 	return &TransactionConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TransactionConflictException) Code() string {
+func (s *TransactionConflictException) Code() string {
 	return "TransactionConflictException"
 }
 
 // Message returns the exception's message.
-func (s TransactionConflictException) Message() string {
+func (s *TransactionConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18025,28 +18165,28 @@ func (s TransactionConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TransactionConflictException) OrigErr() error {
+func (s *TransactionConflictException) OrigErr() error {
 	return nil
 }
 
-func (s TransactionConflictException) Error() string {
+func (s *TransactionConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TransactionConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TransactionConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TransactionConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TransactionConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The transaction with the given request token is already in progress.
 type TransactionInProgressException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -18063,17 +18203,17 @@ func (s TransactionInProgressException) GoString() string {
 
 func newErrorTransactionInProgressException(v protocol.ResponseMetadata) error {
 	return &TransactionInProgressException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TransactionInProgressException) Code() string {
+func (s *TransactionInProgressException) Code() string {
 	return "TransactionInProgressException"
 }
 
 // Message returns the exception's message.
-func (s TransactionInProgressException) Message() string {
+func (s *TransactionInProgressException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -18081,22 +18221,22 @@ func (s TransactionInProgressException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TransactionInProgressException) OrigErr() error {
+func (s *TransactionInProgressException) OrigErr() error {
 	return nil
 }
 
-func (s TransactionInProgressException) Error() string {
+func (s *TransactionInProgressException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TransactionInProgressException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TransactionInProgressException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TransactionInProgressException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TransactionInProgressException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {

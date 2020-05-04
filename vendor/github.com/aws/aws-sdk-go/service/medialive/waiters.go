@@ -89,7 +89,7 @@ func (c *MediaLive) WaitUntilChannelDeleted(input *DescribeChannelInput) error {
 func (c *MediaLive) WaitUntilChannelDeletedWithContext(ctx aws.Context, input *DescribeChannelInput, opts ...request.WaiterOption) error {
 	w := request.Waiter{
 		Name:        "WaitUntilChannelDeleted",
-		MaxAttempts: 20,
+		MaxAttempts: 84,
 		Delay:       request.ConstantWaiterDelay(5 * time.Second),
 		Acceptors: []request.WaiterAcceptor{
 			{
@@ -201,7 +201,7 @@ func (c *MediaLive) WaitUntilChannelStopped(input *DescribeChannelInput) error {
 func (c *MediaLive) WaitUntilChannelStoppedWithContext(ctx aws.Context, input *DescribeChannelInput, opts ...request.WaiterOption) error {
 	w := request.Waiter{
 		Name:        "WaitUntilChannelStopped",
-		MaxAttempts: 28,
+		MaxAttempts: 60,
 		Delay:       request.ConstantWaiterDelay(5 * time.Second),
 		Acceptors: []request.WaiterAcceptor{
 			{
