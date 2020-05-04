@@ -704,7 +704,7 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCognitoUserPoolDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, "", "", "", "","COGNITO_DEFAULT"),
+				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, "", "", "", "", "COGNITO_DEFAULT"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", ""),
@@ -719,7 +719,7 @@ func TestAccAWSCognitoUserPool_withEmailConfiguration(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, replyTo, sourceARN, "John Smith <john@smith.com>", "config-set","DEVELOPER"),
+				Config: testAccAWSCognitoUserPoolConfig_withEmailConfiguration(name, replyTo, sourceARN, "John Smith <john@smith.com>", "config-set", "DEVELOPER"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "email_configuration.0.reply_to_email_address", replyTo),
