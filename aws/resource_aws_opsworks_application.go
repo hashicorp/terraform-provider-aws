@@ -293,8 +293,14 @@ func resourceAwsOpsworksApplicationRead(d *schema.ResourceData, meta interface{}
 	d.Set("description", app.Description)
 	d.Set("domains", flattenStringList(app.Domains))
 	d.Set("enable_ssl", app.EnableSsl)
-	resourceAwsOpsworksSetApplicationSsl(d, app.SslConfiguration)
-	resourceAwsOpsworksSetApplicationSource(d, app.AppSource)
+	err = resourceAwsOpsworksSetApplicationSsl(d, app.SslConfiguration)
+	if err != nil {
+		return err
+	}
+	err = resourceAwsOpsworksSetApplicationSource(d, app.AppSource)
+	if err != nil {
+		return err
+	}
 	resourceAwsOpsworksSetApplicationDataSources(d, app.DataSources)
 	resourceAwsOpsworksSetApplicationEnvironmentVariable(d, app.Environment)
 	resourceAwsOpsworksSetApplicationAttributes(d, app.Attributes)
@@ -446,7 +452,7 @@ func resourceAwsOpsworksApplicationSource(d *schema.ResourceData) *opsworks.Sour
 	}
 }
 
-func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) {
+func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks.Source) error {
 	nv := make([]interface{}, 0, 1)
 	if v != nil {
 		m := make(map[string]interface{})
@@ -475,8 +481,9 @@ func resourceAwsOpsworksSetApplicationSource(d *schema.ResourceData, v *opsworks
 	err := d.Set("app_source", nv)
 	if err != nil {
 		// should never happen
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func resourceAwsOpsworksApplicationDataSources(d *schema.ResourceData) []*opsworks.DataSource {
@@ -523,7 +530,7 @@ func resourceAwsOpsworksApplicationSsl(d *schema.ResourceData) *opsworks.SslConf
 	}
 }
 
-func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.SslConfiguration) {
+func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.SslConfiguration) error {
 	nv := make([]interface{}, 0, 1)
 	set := false
 	if v != nil {
@@ -548,8 +555,9 @@ func resourceAwsOpsworksSetApplicationSsl(d *schema.ResourceData, v *opsworks.Ss
 	err := d.Set("ssl_configuration", nv)
 	if err != nil {
 		// should never happen
-		panic(err)
+		return err
 	}
+	return nil
 }
 
 func resourceAwsOpsworksApplicationAttributes(d *schema.ResourceData) map[string]*string {
