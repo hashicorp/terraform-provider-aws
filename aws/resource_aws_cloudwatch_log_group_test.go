@@ -36,7 +36,7 @@ func init() {
 			"aws_mq_broker",
 			"aws_msk_cluster",
 			"aws_rds_cluster",
-			// Not currently implemented: "aws_route53_query_log",
+			"aws_route53_query_log",
 			"aws_sagemaker_endpoint",
 			"aws_storagegateway_gateway",
 		},
