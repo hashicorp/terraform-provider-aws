@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
@@ -364,51 +365,12 @@ func resourceAwsMskClusterCreate(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(out.ClusterArn))
 
 	log.Printf("[DEBUG] Waiting for MSK cluster %q to be created", d.Id())
-	err = waitForMskClusterCreation(conn, d.Id())
+	_, err = waiter.ClusterActive(conn, d.Id())
 	if err != nil {
-		return fmt.Errorf("error waiting for MSK cluster creation (%s): %s", d.Id(), err)
+		return fmt.Errorf("error waiting for MSK cluster creation (%s): %w", d.Id(), err)
 	}
 
 	return resourceAwsMskClusterRead(d, meta)
-}
-
-func waitForMskClusterCreation(conn *kafka.Kafka, arn string) error {
-	input := &kafka.DescribeClusterInput{
-		ClusterArn: aws.String(arn),
-	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		out, err := conn.DescribeCluster(input)
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		if out.ClusterInfo != nil {
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateFailed {
-				return resource.NonRetryableError(fmt.Errorf("Cluster creation failed with cluster state %q", kafka.ClusterStateFailed))
-			}
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateActive {
-				return nil
-			}
-		}
-		return resource.RetryableError(fmt.Errorf("%q: cluster still creating", arn))
-	})
-	if isResourceTimeoutError(err) {
-		out, err := conn.DescribeCluster(input)
-		if err != nil {
-			return fmt.Errorf("Error describing MSK cluster state: %s", err)
-		}
-		if out.ClusterInfo != nil {
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateFailed {
-				return fmt.Errorf("Cluster creation failed with cluster state %q", kafka.ClusterStateFailed)
-			}
-			if aws.StringValue(out.ClusterInfo.State) == kafka.ClusterStateActive {
-				return nil
-			}
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for MSK cluster creation: %s", err)
-	}
-	return nil
 }
 
 func resourceAwsMskClusterRead(d *schema.ResourceData, meta interface{}) error {
@@ -1040,7 +1002,14 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
-	return resourceAwsMskClusterDeleteWaiter(conn, d.Id())
+	_, err = waiter.ClusterDeleted(conn, d.Id())
+	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error waiting to delete Msk cluster (%s): %w", d.Id(), err)
+	}
+	return nil
 }
 
 func deleteMskCluster(conn *kafka.Kafka, arn string) error {
@@ -1051,34 +1020,6 @@ func deleteMskCluster(conn *kafka.Kafka, arn string) error {
 		return nil
 	}
 	return err
-}
-
-func resourceAwsMskClusterDeleteWaiter(conn *kafka.Kafka, arn string) error {
-	input := &kafka.DescribeClusterInput{
-		ClusterArn: aws.String(arn),
-	}
-	err := resource.Retry(60*time.Minute, func() *resource.RetryError {
-		_, err := conn.DescribeCluster(input)
-
-		if err != nil {
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-				return nil
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		return resource.RetryableError(fmt.Errorf("timeout while waiting for the cluster %q to be deleted", arn))
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.DescribeCluster(input)
-		if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-			return nil
-		}
-	}
-	if err != nil {
-		return fmt.Errorf("Error waiting for MSK cluster to be deleted: %s", err)
-	}
-	return nil
 }
 
 func mskClusterOperationRefreshFunc(conn *kafka.Kafka, clusterOperationARN string) resource.StateRefreshFunc {
