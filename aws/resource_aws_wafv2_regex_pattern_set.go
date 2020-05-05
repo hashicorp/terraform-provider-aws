@@ -86,48 +86,30 @@ func resourceAwsWafv2RegexPatternSet() *schema.Resource {
 
 func resourceAwsWafv2RegexPatternSetCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-	var resp *wafv2.CreateRegexPatternSetOutput
-
 	params := &wafv2.CreateRegexPatternSetInput{
-		Name:  aws.String(d.Get("name").(string)),
-		Scope: aws.String(d.Get("scope").(string)),
+		Name:                  aws.String(d.Get("name").(string)),
+		Scope:                 aws.String(d.Get("scope").(string)),
+		RegularExpressionList: []*wafv2.Regex{},
 	}
 
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("regular_expression_list"); ok && v.(*schema.Set).Len() > 0 {
-		params.RegularExpressionList = expandWafv2RegexPatternSet(d.Get("regular_expression_list").(*schema.Set).List())
+		params.RegularExpressionList = expandWafv2RegexPatternSet(v.(*schema.Set).List())
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
 	}
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.CreateRegexPatternSet(params)
-		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationException, "An error occurred during the tagging operation") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-	if isResourceTimeoutError(err) {
-		_, err = conn.CreateRegexPatternSet(params)
-	}
+	resp, err := conn.CreateRegexPatternSet(params)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating WAFv2 RegexPatternSet: %s", err)
 	}
+
 	d.SetId(*resp.Summary.Id)
 
 	return resourceAwsWafv2RegexPatternSetRead(d, meta)
@@ -135,7 +117,7 @@ func resourceAwsWafv2RegexPatternSetCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
-
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	params := &wafv2.GetRegexPatternSetInput{
 		Id:    aws.String(d.Id()),
 		Name:  aws.String(d.Get("name").(string)),
@@ -145,7 +127,7 @@ func resourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{
 	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
 		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "AWS WAF couldn’t perform the operation because your resource doesn’t exist") {
-			log.Printf("[WARN] WAFV2 RegexPatternSet (%s) not found, removing from state", d.Id())
+			log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -164,79 +146,48 @@ func resourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{
 
 	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.RegexPatternSet.ARN)
 	if err != nil {
-		return fmt.Errorf("error listing tags for WAFV2 RegexPatternSet (%s): %s", *resp.RegexPatternSet.ARN, err)
+		return fmt.Errorf("Error listing tags for WAFv2 RegexPatternSet (%s): %s", *resp.RegexPatternSet.ARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("Error setting tags: %s", err)
 	}
 
 	return nil
 }
 
-func flattenWafv2RegexPatternSet(r []*wafv2.Regex) interface{} {
-	regexPatterns := make([]interface{}, len(r))
-
-	for i, regexPattern := range r {
-		d := map[string]interface{}{
-			"regex_string": *regexPattern.RegexString,
-		}
-		regexPatterns[i] = d
-	}
-
-	return regexPatterns
-}
-
 func resourceAwsWafv2RegexPatternSetUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Updating WAFV2 RegexPatternSet %s", d.Id())
+	log.Printf("[INFO] Updating WAFv2 RegexPatternSet %s", d.Id())
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		u := &wafv2.UpdateRegexPatternSetInput{
-			Id:          aws.String(d.Id()),
-			Name:        aws.String(d.Get("name").(string)),
-			Scope:       aws.String(d.Get("scope").(string)),
-			Description: aws.String(d.Get("description").(string)),
-			LockToken:   aws.String(d.Get("lock_token").(string)),
-		}
-
-		if v, ok := d.GetOk("regular_expression_list"); ok && v.(*schema.Set).Len() > 0 {
-			u.RegularExpressionList = expandWafv2RegexPatternSet(d.Get("regular_expression_list").(*schema.Set).List())
-		}
-
-		if d.HasChange("description") {
-			u.Description = aws.String(d.Get("description").(string))
-		}
-
-		_, err := conn.UpdateRegexPatternSet(u)
-
-		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		_, err = conn.UpdateRegexPatternSet(&wafv2.UpdateRegexPatternSetInput{
-			Id:        aws.String(d.Id()),
-			Name:      aws.String(d.Get("name").(string)),
-			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: aws.String(d.Get("lock_token").(string)),
-		})
+	params := &wafv2.UpdateRegexPatternSetInput{
+		Id:                    aws.String(d.Id()),
+		Name:                  aws.String(d.Get("name").(string)),
+		Scope:                 aws.String(d.Get("scope").(string)),
+		Description:           aws.String(d.Get("description").(string)),
+		LockToken:             aws.String(d.Get("lock_token").(string)),
+		RegularExpressionList: []*wafv2.Regex{},
 	}
 
+	if v, ok := d.GetOk("regular_expression_list"); ok && v.(*schema.Set).Len() > 0 {
+		params.RegularExpressionList = expandWafv2RegexPatternSet(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
+	}
+
+	_, err := conn.UpdateRegexPatternSet(params)
+
 	if err != nil {
-		return fmt.Errorf("Error updating WAFV2 RegexPatternSet: %s", err)
+		return fmt.Errorf("Error updating WAFv2 RegexPatternSet: %s", err)
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("Error updating tags: %s", err)
 		}
 	}
 
@@ -246,20 +197,17 @@ func resourceAwsWafv2RegexPatternSetUpdate(d *schema.ResourceData, meta interfac
 func resourceAwsWafv2RegexPatternSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Deleting WAFV2 RegexPatternSet %s", d.Id())
-
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteRegexPatternSet(&wafv2.DeleteRegexPatternSetInput{
-			Id:        aws.String(d.Id()),
-			Name:      aws.String(d.Get("name").(string)),
-			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: aws.String(d.Get("lock_token").(string)),
-		})
+	log.Printf("[INFO] Deleting WAFv2 RegexPatternSet %s", d.Id())
+	params := &wafv2.DeleteRegexPatternSetInput{
+		Id:        aws.String(d.Id()),
+		Name:      aws.String(d.Get("name").(string)),
+		Scope:     aws.String(d.Get("scope").(string)),
+		LockToken: aws.String(d.Get("lock_token").(string)),
+	}
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteRegexPatternSet(params)
 
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
 			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "AWS WAF couldn’t perform the operation because your resource is being used by another resource or it’s associated with another resource") {
 				return resource.RetryableError(err)
 			}
@@ -269,16 +217,11 @@ func resourceAwsWafv2RegexPatternSetDelete(d *schema.ResourceData, meta interfac
 	})
 
 	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteRegexPatternSet(&wafv2.DeleteRegexPatternSetInput{
-			Id:        aws.String(d.Id()),
-			Name:      aws.String(d.Get("name").(string)),
-			Scope:     aws.String(d.Get("scope").(string)),
-			LockToken: aws.String(d.Get("lock_token").(string)),
-		})
+		_, err = conn.DeleteRegexPatternSet(params)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting WAFV2 RegexPatternSet: %s", err)
+		return fmt.Errorf("Error deleting WAFv2 RegexPatternSet: %s", err)
 	}
 
 	return nil
@@ -309,4 +252,17 @@ func expandWafv2Regex(m map[string]interface{}) *wafv2.Regex {
 	return &wafv2.Regex{
 		RegexString: aws.String(m["regex_string"].(string)),
 	}
+}
+
+func flattenWafv2RegexPatternSet(r []*wafv2.Regex) interface{} {
+	regexPatterns := make([]interface{}, len(r))
+
+	for i, regexPattern := range r {
+		d := map[string]interface{}{
+			"regex_string": *regexPattern.RegexString,
+		}
+		regexPatterns[i] = d
+	}
+
+	return regexPatterns
 }

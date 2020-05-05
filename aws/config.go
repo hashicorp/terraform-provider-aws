@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -151,7 +150,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/xray"
 	awsbase "github.com/hashicorp/aws-sdk-go-base"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/logging"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -722,7 +720,7 @@ func (c *Config) Client() (interface{}, error) {
 			r.Retryable = aws.Bool(true)
 		}
 
-		if r.Operation.Name == "CreateIPSet" {
+		if r.Operation.Name == "CreateIPSet" || r.Operation.Name == "CreateRegexPatternSet" {
 			// WAFv2 supports tag on create which can result in the below error codes according to the documentation
 			if isAWSErr(r.Error, wafv2.ErrCodeWAFTagOperationException, "Retry your request") {
 				r.Retryable = aws.Bool(true)
@@ -782,40 +780,4 @@ func GetSupportedEC2Platforms(conn *ec2.EC2) ([]string, error) {
 	}
 
 	return platforms, nil
-}
-
-type wafv2CallFunc func() (interface{}, error)
-
-// Calls a WAFv2 action and retries on a retryable error
-func callWafv2WithRetry(f wafv2CallFunc) (interface{}, error) {
-	var out interface{}
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
-		var err error
-		out, err = f()
-		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationException, "An error occurred during the tagging operation") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "AWS WAF couldn’t perform the operation because your resource is being used by another resource or it’s associated with another resource") {
-				return resource.RetryableError(err)
-			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		_, err = f()
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	return out, nil
 }
