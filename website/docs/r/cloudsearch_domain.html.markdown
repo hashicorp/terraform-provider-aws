@@ -24,7 +24,7 @@ resource "aws_cloudsearch_domain" "my_domain" {
       return          = true
       sort            = true
       highlight       = false
-      analysis_scheme = "_de_default_"
+      analysis_scheme = "_en_default_"
     }
   indexes {
       name   = "price"

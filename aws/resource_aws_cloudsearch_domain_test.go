@@ -7,7 +7,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"strconv"
 	"testing"
+	"time"
 )
 
 func TestAccAWSCloudSearchDomain_basic(t *testing.T) {
@@ -49,7 +51,7 @@ func testAccCheckAWSCloudSearchDomainExists(n string, domains *cloudsearch.Descr
 
 		domainlist := cloudsearch.DescribeDomainsInput{
 			DomainNames: []*string{
-				aws.String(rs.Primary.ID),
+				aws.String(rs.Primary.Attributes["domain_name"]),
 			},
 		}
 
@@ -71,22 +73,32 @@ func testAccCheckAWSCloudSearchDomainDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).cloudsearchconn
+		// wait for the resource to go into deleted state.
+		stateConf := &resource.StateChangeConf{
+			Pending: []string{"false"},
+			Target:  []string{"true"},
+			Timeout: 20 * time.Minute,
+			Refresh: func() (interface{}, string, error) {
+				domainlist := cloudsearch.DescribeDomainsInput{
+					DomainNames: []*string{
+						aws.String(rs.Primary.Attributes["domain_name"]),
+					},
+				}
 
-		domainlist := cloudsearch.DescribeDomainsInput{
-			DomainNames: []*string{
-				aws.String(rs.Primary.ID),
+				resp, err := conn.DescribeDomains(&domainlist)
+				if err != nil {
+					return nil, "false", err
+				}
+				domain := resp.DomainStatusList[0]
+				if domain.Deleted != nil {
+					return nil, strconv.FormatBool(*domain.Deleted), nil
+				}
+				return nil, "false", nil
+
 			},
 		}
-
-		resp, err := conn.DescribeDomains(&domainlist)
-		if err != nil {
-			return err
-		}
-		domain := resp.DomainStatusList[0]
-
-		if domain.Deleted != nil || *domain.Deleted != true {
-			return fmt.Errorf("Expected Cloudsearch domain to be deleted/destroyed, %s found with Deleted != true", rs.Primary.ID)
-		}
+		_, err := stateConf.WaitForState()
+		return err
 	}
 
 	return nil
@@ -108,22 +120,16 @@ resource "aws_cloudsearch_domain" "test" {
 		}
 	
 	access_policy = <<EOF
-	{
+{
 	"Version": "2012-10-17",
-	"Statement": [
-		{
+	"Statement": [{
 		"Effect": "Allow",
 		"Principal": {
-			"AWS": [
-			"*"
-			]
+			"AWS": ["*"]
 		},
-		"Action": [
-			"cloudsearch:*"
-		]
-		}
-	]
-	}
+		"Action": ["cloudsearch:*"]
+	}]
+}
 	EOF
 	}
 `, domainName)
