@@ -169,6 +169,9 @@ func resourceAwsCognitoUserPool() *schema.Resource {
 							Optional: true,
 							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 								value := v.(string)
+								if value == "" {
+									return
+								}
 								validPattern := "^[A-Za-z0-9_-]{1,64}$"
 								valid, matchErr := regexp.MatchString(validPattern, value)
 								if !valid || matchErr != nil {
