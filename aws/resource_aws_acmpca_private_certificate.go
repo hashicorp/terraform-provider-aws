@@ -113,7 +113,6 @@ func resourceAwsAcmpcaPrivateCertificateCreate(d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] ACMPCA Issue Certificate: %s", input)
-	var output *acmpca.IssueCertificateOutput
 	output, err := conn.IssueCertificate(input)
 	if err != nil {
 		return fmt.Errorf("error issuing ACMPCA Certificate: %s", err)
