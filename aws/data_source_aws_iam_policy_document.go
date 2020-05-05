@@ -297,6 +297,13 @@ func dataSourceAwsIamPolicyPrincipalSchema() *schema.Schema {
 				"type": {
 					Type:     schema.TypeString,
 					Required: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						"*",
+						"AWS",
+						"Service",
+						"Federated",
+						"CanonicalUser",
+					}, false),
 				},
 				"identifiers": {
 					Type:     schema.TypeSet,
