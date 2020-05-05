@@ -26018,6 +26018,8 @@ func (c *EC2) DisableVpcClassicLinkDnsSupportRequest(input *DisableVpcClassicLin
 // ClassicLink (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html)
 // in the Amazon Elastic Compute Cloud User Guide.
 //
+// You must specify a VPC ID in the request.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -26334,7 +26336,7 @@ func (c *EC2) DisassociateRouteTableRequest(input *DisassociateRouteTableInput) 
 
 // DisassociateRouteTable API operation for Amazon Elastic Compute Cloud.
 //
-// Disassociates a subnet from a route table.
+// Disassociates a subnet or gateway from a route table.
 //
 // After you perform this action, the subnet no longer uses the routes in the
 // route table. Instead, it uses the routes in the VPC's main route table. For
@@ -27203,6 +27205,8 @@ func (c *EC2) EnableVpcClassicLinkDnsSupportRequest(input *EnableVpcClassicLinkD
 // IP address when addressed from a linked EC2-Classic instance. For more information,
 // see ClassicLink (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/vpc-classiclink.html)
 // in the Amazon Elastic Compute Cloud User Guide.
+//
+// You must specify a VPC ID in the request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -45783,8 +45787,6 @@ type CreateFlowLogsInput struct {
 	//
 	// Specify the fields using the ${field-id} format, separated by spaces. For
 	// the AWS CLI, use single quotation marks (' ') to surround the parameter value.
-	//
-	// Only applicable to flow logs that are published to an Amazon S3 bucket.
 	LogFormat *string `type:"string"`
 
 	// The name of a new or existing CloudWatch Logs log group where Amazon EC2
@@ -48378,6 +48380,9 @@ type CreateSubnetInput struct {
 	// for example us-west-2-lax-1a. For information about the Regions that support
 	// Local Zones, see Available Regions (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using-regions-availability-zones.html#concepts-available-regions)
 	// in the Amazon Elastic Compute Cloud User Guide.
+	//
+	// To create a subnet in an Outpost, set this value to the Availability Zone
+	// for the Outpost and specify the Outpost ARN.
 	AvailabilityZone *string `type:"string"`
 
 	// The AZ ID or the Local Zone ID of the subnet.
@@ -70661,7 +70666,7 @@ type DisassociateRouteTableInput struct {
 	_ struct{} `type:"structure"`
 
 	// The association ID representing the current association between the route
-	// table and subnet.
+	// table and subnet or gateway.
 	//
 	// AssociationId is a required field
 	AssociationId *string `locationName:"associationId" type:"string" required:"true"`
@@ -87531,8 +87536,20 @@ type ModifySubnetAttributeInput struct {
 	// or later of the Amazon EC2 API.
 	AssignIpv6AddressOnCreation *AttributeBooleanValue `type:"structure"`
 
-	// Specify true to indicate that ENIs attached to instances created in the specified
-	// subnet should be assigned a public IPv4 address.
+	// The customer-owned IPv4 address pool associated with the subnet.
+	//
+	// You must set this value when you specify true for MapCustomerOwnedIpOnLaunch.
+	CustomerOwnedIpv4Pool *string `type:"string"`
+
+	// Specify true to indicate that network interfaces attached to instances created
+	// in the specified subnet should be assigned a customer-owned IPv4 address.
+	//
+	// When this value is true, you must specify the customer-owned IP pool using
+	// CustomerOwnedIpv4Pool.
+	MapCustomerOwnedIpOnLaunch *AttributeBooleanValue `type:"structure"`
+
+	// Specify true to indicate that network interfaces attached to instances created
+	// in the specified subnet should be assigned a public IPv4 address.
 	MapPublicIpOnLaunch *AttributeBooleanValue `type:"structure"`
 
 	// The ID of the subnet.
@@ -87567,6 +87584,18 @@ func (s *ModifySubnetAttributeInput) Validate() error {
 // SetAssignIpv6AddressOnCreation sets the AssignIpv6AddressOnCreation field's value.
 func (s *ModifySubnetAttributeInput) SetAssignIpv6AddressOnCreation(v *AttributeBooleanValue) *ModifySubnetAttributeInput {
 	s.AssignIpv6AddressOnCreation = v
+	return s
+}
+
+// SetCustomerOwnedIpv4Pool sets the CustomerOwnedIpv4Pool field's value.
+func (s *ModifySubnetAttributeInput) SetCustomerOwnedIpv4Pool(v string) *ModifySubnetAttributeInput {
+	s.CustomerOwnedIpv4Pool = &v
+	return s
+}
+
+// SetMapCustomerOwnedIpOnLaunch sets the MapCustomerOwnedIpOnLaunch field's value.
+func (s *ModifySubnetAttributeInput) SetMapCustomerOwnedIpOnLaunch(v *AttributeBooleanValue) *ModifySubnetAttributeInput {
+	s.MapCustomerOwnedIpOnLaunch = v
 	return s
 }
 
@@ -103284,11 +103313,19 @@ type Subnet struct {
 	// The IPv4 CIDR block assigned to the subnet.
 	CidrBlock *string `locationName:"cidrBlock" type:"string"`
 
+	// The customer-owned IPv4 address pool associated with the subnet.
+	CustomerOwnedIpv4Pool *string `locationName:"customerOwnedIpv4Pool" type:"string"`
+
 	// Indicates whether this is the default subnet for the Availability Zone.
 	DefaultForAz *bool `locationName:"defaultForAz" type:"boolean"`
 
 	// Information about the IPv6 CIDR blocks associated with the subnet.
 	Ipv6CidrBlockAssociationSet []*SubnetIpv6CidrBlockAssociation `locationName:"ipv6CidrBlockAssociationSet" locationNameList:"item" type:"list"`
+
+	// Indicates whether a network interface created in this subnet (including a
+	// network interface created by RunInstances) receives a customer-owned IPv4
+	// address.
+	MapCustomerOwnedIpOnLaunch *bool `locationName:"mapCustomerOwnedIpOnLaunch" type:"boolean"`
 
 	// Indicates whether instances launched in this subnet receive a public IPv4
 	// address.
@@ -103356,6 +103393,12 @@ func (s *Subnet) SetCidrBlock(v string) *Subnet {
 	return s
 }
 
+// SetCustomerOwnedIpv4Pool sets the CustomerOwnedIpv4Pool field's value.
+func (s *Subnet) SetCustomerOwnedIpv4Pool(v string) *Subnet {
+	s.CustomerOwnedIpv4Pool = &v
+	return s
+}
+
 // SetDefaultForAz sets the DefaultForAz field's value.
 func (s *Subnet) SetDefaultForAz(v bool) *Subnet {
 	s.DefaultForAz = &v
@@ -103365,6 +103408,12 @@ func (s *Subnet) SetDefaultForAz(v bool) *Subnet {
 // SetIpv6CidrBlockAssociationSet sets the Ipv6CidrBlockAssociationSet field's value.
 func (s *Subnet) SetIpv6CidrBlockAssociationSet(v []*SubnetIpv6CidrBlockAssociation) *Subnet {
 	s.Ipv6CidrBlockAssociationSet = v
+	return s
+}
+
+// SetMapCustomerOwnedIpOnLaunch sets the MapCustomerOwnedIpOnLaunch field's value.
+func (s *Subnet) SetMapCustomerOwnedIpOnLaunch(v bool) *Subnet {
+	s.MapCustomerOwnedIpOnLaunch = &v
 	return s
 }
 

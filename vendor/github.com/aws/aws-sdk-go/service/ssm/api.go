@@ -15008,6 +15008,9 @@ type Command struct {
 	// that you specify. Targets is required if you don't provide one or more instance
 	// IDs in the call.
 	Targets []*Target `type:"list"`
+
+	// The TimeoutSeconds value specified for a command.
+	TimeoutSeconds *int64 `min:"30" type:"integer"`
 }
 
 // String returns the string representation
@@ -15155,6 +15158,12 @@ func (s *Command) SetTargetCount(v int64) *Command {
 // SetTargets sets the Targets field's value.
 func (s *Command) SetTargets(v []*Target) *Command {
 	s.Targets = v
+	return s
+}
+
+// SetTimeoutSeconds sets the TimeoutSeconds field's value.
+func (s *Command) SetTimeoutSeconds(v int64) *Command {
+	s.TimeoutSeconds = &v
 	return s
 }
 
@@ -16828,7 +16837,7 @@ type CreateDocumentInput struct {
 	//
 	// For examples, see the following topics in the AWS Systems Manager User Guide.
 	//
-	//    * Create an SSM document (console) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-console.html)
+	//    * Create an SSM document (AWS API) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-document-api.html)
 	//
 	//    * Create an SSM document (AWS CLI) (https://docs.aws.amazon.com/systems-manager/latest/userguide/create-ssm-document-cli.html)
 	//
@@ -22992,7 +23001,8 @@ func (s *DocumentIdentifier) SetVersionName(v string) *DocumentIdentifier {
 //
 // For keys, you can specify one or more tags that have been applied to a document.
 //
-// Other valid values include Owner, Name, PlatformTypes, and DocumentType.
+// Other valid values include Owner, Name, PlatformTypes, DocumentType, and
+// TargetType.
 //
 // Note that only one Owner can be specified in a request. For example: Key=Owner,Values=Self.
 //
@@ -31946,7 +31956,7 @@ type ListCommandInvocationsInput struct {
 	Details *bool `type:"boolean"`
 
 	// (Optional) One or more filters. Use a filter to return a more specific list
-	// of results. Note that the DocumentName filter is not supported for ListCommandInvocations.
+	// of results.
 	Filters []*CommandFilter `min:"1" type:"list"`
 
 	// (Optional) The command execution details for a specific instance ID.
@@ -32527,9 +32537,9 @@ type ListDocumentsInput struct {
 	// One or more DocumentKeyValuesFilter objects. Use a filter to return a more
 	// specific list of results. For keys, you can specify one or more key-value
 	// pair tags that have been applied to a document. Other valid keys include
-	// Owner, Name, PlatformTypes, and DocumentType. For example, to return documents
-	// you own use Key=Owner,Values=Self. To specify a custom key-value pair, use
-	// the format Key=tag:tagName,Values=valueName.
+	// Owner, Name, PlatformTypes, DocumentType, and TargetType. For example, to
+	// return documents you own use Key=Owner,Values=Self. To specify a custom key-value
+	// pair, use the format Key=tag:tagName,Values=valueName.
 	Filters []*DocumentKeyValuesFilter `type:"list"`
 
 	// The maximum number of items to return for this call. The call also returns
@@ -35605,6 +35615,10 @@ type Parameter struct {
 	// The Amazon Resource Name (ARN) of the parameter.
 	ARN *string `type:"string"`
 
+	// The data type of the parameter, such as text or aws:ec2:image. The default
+	// is text.
+	DataType *string `type:"string"`
+
 	// Date the parameter was last changed or updated and the parameter version
 	// was created.
 	LastModifiedDate *time.Time `type:"timestamp"`
@@ -35648,6 +35662,12 @@ func (s Parameter) GoString() string {
 // SetARN sets the ARN field's value.
 func (s *Parameter) SetARN(v string) *Parameter {
 	s.ARN = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *Parameter) SetDataType(v string) *Parameter {
+	s.DataType = &v
 	return s
 }
 
@@ -35758,6 +35778,10 @@ type ParameterHistory struct {
 	// a-zA-Z0-9_.-
 	AllowedPattern *string `type:"string"`
 
+	// The data type of the parameter, such as text or aws:ec2:image. The default
+	// is text.
+	DataType *string `type:"string"`
+
 	// Information about the parameter.
 	Description *string `type:"string"`
 
@@ -35808,6 +35832,12 @@ func (s ParameterHistory) GoString() string {
 // SetAllowedPattern sets the AllowedPattern field's value.
 func (s *ParameterHistory) SetAllowedPattern(v string) *ParameterHistory {
 	s.AllowedPattern = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *ParameterHistory) SetDataType(v string) *ParameterHistory {
+	s.DataType = &v
 	return s
 }
 
@@ -36046,6 +36076,10 @@ type ParameterMetadata struct {
 	// a-zA-Z0-9_.-
 	AllowedPattern *string `type:"string"`
 
+	// The data type of the parameter, such as text or aws:ec2:image. The default
+	// is text.
+	DataType *string `type:"string"`
+
 	// Description of the parameter actions.
 	Description *string `type:"string"`
 
@@ -36088,6 +36122,12 @@ func (s ParameterMetadata) GoString() string {
 // SetAllowedPattern sets the AllowedPattern field's value.
 func (s *ParameterMetadata) SetAllowedPattern(v string) *ParameterMetadata {
 	s.AllowedPattern = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *ParameterMetadata) SetDataType(v string) *ParameterMetadata {
+	s.DataType = &v
 	return s
 }
 
@@ -37656,6 +37696,22 @@ type PutParameterInput struct {
 	// AllowedPattern=^\d+$
 	AllowedPattern *string `type:"string"`
 
+	// The data type for a String parameter. Supported data types include plain
+	// text and Amazon Machine Image IDs.
+	//
+	// The following data type values are supported.
+	//
+	//    * text
+	//
+	//    * aws:ec2:image
+	//
+	// When you create a String parameter and specify aws:ec2:image, Systems Manager
+	// validates the parameter value you provide against that data type. The required
+	// format is ami-12345abcdeEXAMPLE. For more information, see Native parameter
+	// support for Amazon Machine Image IDs (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html)
+	// in the AWS Systems Manager User Guide.
+	DataType *string `type:"string"`
+
 	// Information about the parameter that you want to add to the system. Optional
 	// but recommended.
 	//
@@ -37829,9 +37885,7 @@ type PutParameterInput struct {
 	//
 	// SecureString is not currently supported for AWS CloudFormation templates
 	// or in the China Regions.
-	//
-	// Type is a required field
-	Type *string `type:"string" required:"true" enum:"ParameterType"`
+	Type *string `type:"string" enum:"ParameterType"`
 
 	// The parameter value that you want to add to the system. Standard parameters
 	// have a value limit of 4 KB. Advanced parameters have a value limit of 8 KB.
@@ -37865,9 +37919,6 @@ func (s *PutParameterInput) Validate() error {
 	if s.Policies != nil && len(*s.Policies) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Policies", 1))
 	}
-	if s.Type == nil {
-		invalidParams.Add(request.NewErrParamRequired("Type"))
-	}
 	if s.Value == nil {
 		invalidParams.Add(request.NewErrParamRequired("Value"))
 	}
@@ -37891,6 +37942,12 @@ func (s *PutParameterInput) Validate() error {
 // SetAllowedPattern sets the AllowedPattern field's value.
 func (s *PutParameterInput) SetAllowedPattern(v string) *PutParameterInput {
 	s.AllowedPattern = &v
+	return s
+}
+
+// SetDataType sets the DataType field's value.
+func (s *PutParameterInput) SetDataType(v string) *PutParameterInput {
+	s.DataType = &v
 	return s
 }
 
