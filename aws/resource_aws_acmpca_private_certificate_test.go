@@ -24,7 +24,7 @@ func TestAccAwsAcmpcaPrivateCertificate_Basic(t *testing.T) {
 				Config: testAccAwsAcmpcaPrivateCertificateConfig_Required(tlsPemEscapeNewlines(csr)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaPrivateCertificateExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:acm-pca:[^:]+:[^:]+:certificate-authority/.+/certificate/.+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "acm-pca", regexp.MustCompile(`certificate-authority/.+/certificate/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_signing_request"),

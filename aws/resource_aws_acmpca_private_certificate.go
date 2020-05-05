@@ -38,9 +38,10 @@ func resourceAwsAcmpcaPrivateCertificate() *schema.Resource {
 				Computed: true,
 			},
 			"certificate_authority_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"certificate_signing_request": {
 				Type:      schema.TypeString,
