@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	multierror "github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -23,7 +23,7 @@ func init() {
 func testSweepEcrRepositories(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).ecrconn
 
@@ -34,6 +34,9 @@ func testSweepEcrRepositories(region string) error {
 		}
 
 		for _, repository := range page.Repositories {
+			repositoryName := aws.StringValue(repository.RepositoryName)
+			log.Printf("[INFO] Deleting ECR repository: %s", repositoryName)
+
 			shouldForce := true
 			_, err = conn.DeleteRepository(&ecr.DeleteRepositoryInput{
 				// We should probably sweep repositories even if there are images.
@@ -42,7 +45,11 @@ func testSweepEcrRepositories(region string) error {
 				RepositoryName: repository.RepositoryName,
 			})
 			if err != nil {
-				errors = multierror.Append(errors, fmt.Errorf("Error deleting ECR repository: %w", err))
+				if !isAWSErr(err, ecr.ErrCodeRepositoryNotFoundException, "") {
+					sweeperErr := fmt.Errorf("Error deleting ECR repository (%s): %w", repositoryName, err)
+					log.Printf("[ERROR] %s", sweeperErr)
+					errors = multierror.Append(errors, sweeperErr)
+				}
 				continue
 			}
 		}
