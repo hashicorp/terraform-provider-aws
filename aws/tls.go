@@ -28,6 +28,7 @@ func tlsRsaPrivateKeyPem(bits int) string {
 	key, err := rsa.GenerateKey(rand.Reader, bits)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -48,12 +49,14 @@ func tlsRsaPublicKeyPem(keyPem string) string {
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
 	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -74,6 +77,7 @@ func tlsRsaX509LocallySignedCertificatePem(caKeyPem, caCertificatePem, keyPem, c
 	caCertificate, err := x509.ParseCertificate(caCertificateBlock.Bytes)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -82,6 +86,7 @@ func tlsRsaX509LocallySignedCertificatePem(caKeyPem, caCertificatePem, keyPem, c
 	caKey, err := x509.ParsePKCS1PrivateKey(caKeyBlock.Bytes)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -90,12 +95,14 @@ func tlsRsaX509LocallySignedCertificatePem(caKeyPem, caCertificatePem, keyPem, c
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -115,6 +122,7 @@ func tlsRsaX509LocallySignedCertificatePem(caKeyPem, caCertificatePem, keyPem, c
 	certificateBytes, err := x509.CreateCertificate(rand.Reader, certificate, caCertificate, &key.PublicKey, caKey)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -135,12 +143,14 @@ func tlsRsaX509SelfSignedCaCertificatePem(keyPem string) string {
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
 	publicKeyBytes, err := x509.MarshalPKIXPublicKey(&key.PublicKey)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -149,6 +159,7 @@ func tlsRsaX509SelfSignedCaCertificatePem(keyPem string) string {
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -170,6 +181,7 @@ func tlsRsaX509SelfSignedCaCertificatePem(keyPem string) string {
 	certificateBytes, err := x509.CreateCertificate(rand.Reader, certificate, certificate, &key.PublicKey, key)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -190,12 +202,14 @@ func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
 	key, err := x509.ParsePKCS1PrivateKey(keyBlock.Bytes)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
 	serialNumber, err := rand.Int(rand.Reader, tlsX509CertificateSerialNumberLimit)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -215,6 +229,7 @@ func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
 	certificateBytes, err := x509.CreateCertificate(rand.Reader, certificate, certificate, &key.PublicKey, key)
 
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
