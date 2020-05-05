@@ -248,6 +248,7 @@ func tlsRsaX509SelfSignedCertificatePem(keyPem, commonName string) string {
 func tlsRsaX509CertificateRequestPem(keyBits int, commonName string) (string, string) {
 	keyBytes, err := rsa.GenerateKey(rand.Reader, keyBits)
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
@@ -261,6 +262,7 @@ func tlsRsaX509CertificateRequestPem(keyBits int, commonName string) (string, st
 
 	csrBytes, err := x509.CreateCertificateRequest(rand.Reader, &csr, keyBytes)
 	if err != nil {
+		//lintignore:R009
 		panic(err)
 	}
 
