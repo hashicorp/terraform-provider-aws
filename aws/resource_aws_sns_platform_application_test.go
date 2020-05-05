@@ -9,13 +9,67 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_sns_platform_application", &resource.Sweeper{
+		Name: "aws_sns_platform_application",
+		F:    testSweepSnsPlatformApplications,
+	})
+}
+
+func testSweepSnsPlatformApplications(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).snsconn
+	input := &sns.ListPlatformApplicationsInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.ListPlatformApplications(input)
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Platform Applications: %w", err))
+			return sweeperErrs
+		}
+
+		for _, platformApplication := range output.PlatformApplications {
+			arn := aws.StringValue(platformApplication.PlatformApplicationArn)
+
+			log.Printf("[INFO] Deleting SNS Platform Application: %s", arn)
+			_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
+				PlatformApplicationArn: aws.String(arn),
+			})
+			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting SNS Platform Application (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 /**
  Before running this test, at least one of these ENV variables combinations must be set:
