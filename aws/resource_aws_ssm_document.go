@@ -677,3 +677,23 @@ func updateAwsSSMDocument(d *schema.ResourceData, meta interface{}) error {
 	}
 	return nil
 }
+
+//Validates that type and account_ids are defined
+func validateSSMDocumentPermissions(v map[string]interface{}) (errors []error) {
+	k := "permissions"
+	t, hasType := v["type"].(string)
+	_, hasAccountIds := v["account_ids"].(string)
+
+	if hasType {
+		if t != ssm.DocumentPermissionTypeShare {
+			errors = append(errors, fmt.Errorf("%q: only %s \"type\" supported", k, ssm.DocumentPermissionTypeShare))
+		}
+	} else {
+		errors = append(errors, fmt.Errorf("%q: \"type\" must be defined", k))
+	}
+	if !hasAccountIds {
+		errors = append(errors, fmt.Errorf("%q: \"account_ids\" must be defined", k))
+	}
+
+	return
+}

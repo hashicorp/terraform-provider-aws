@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/configservice"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -1775,26 +1774,6 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 			`Only alphanumeric & accented characters allowed in %q: %q (Must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
 			k, value))
 	}
-	return
-}
-
-// Validates that type and account_ids are defined
-func validateSSMDocumentPermissions(v map[string]interface{}) (errors []error) {
-	k := "permissions"
-	t, hasType := v["type"].(string)
-	_, hasAccountIds := v["account_ids"].(string)
-
-	if hasType {
-		if t != ssm.DocumentPermissionTypeShare {
-			errors = append(errors, fmt.Errorf("%q: only %s \"type\" supported", k, ssm.DocumentPermissionTypeShare))
-		}
-	} else {
-		errors = append(errors, fmt.Errorf("%q: \"type\" must be defined", k))
-	}
-	if !hasAccountIds {
-		errors = append(errors, fmt.Errorf("%q: \"account_ids\" must be defined", k))
-	}
-
 	return
 }
 
