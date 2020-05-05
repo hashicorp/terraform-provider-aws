@@ -145,47 +145,46 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
 	}
 
-	if d.HasChange("description") {
-		params.Description = aws.String(d.Get("description").(string))
+	if v, ok := d.GetOk("description"); ok {
+		params.Description = aws.String(v.(string))
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
 	}
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateWebACL(params)
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationException, "An error occurred during the tagging operation") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
 		_, err = conn.CreateWebACL(params)
 	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating WAFv2 WebACL: %s", err)
 	}
-	d.SetId(*resp.Summary.Id)
+
+	if resp == nil || resp.Summary == nil {
+		return fmt.Errorf("Error creating WAFv2 WebACL")
+	}
+
+	d.SetId(aws.StringValue(resp.Summary.Id))
 
 	return resourceAwsWafv2WebACLRead(d, meta)
 }
 
 func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &wafv2.GetWebACLInput{
 		Id:    aws.String(d.Id()),
@@ -195,31 +194,44 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 
 	resp, err := conn.GetWebACL(params)
 	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "AWS WAF couldn’t perform the operation because your resource doesn’t exist") {
-			log.Printf("[WARN] WAFV2 WebACL (%s) not found, removing from state", d.Id())
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			log.Printf("[WARN] WAFv2 WebACL (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-
 		return err
 	}
 
-	d.Set("name", resp.WebACL.Name)
-	d.Set("capacity", resp.WebACL.Capacity)
-	d.Set("description", resp.WebACL.Description)
-	d.Set("arn", resp.WebACL.ARN)
-	d.Set("lock_token", resp.LockToken)
-	d.Set("default_action", flattenWafv2DefaultAction(resp.WebACL.DefaultAction))
-	d.Set("rule", flattenWafv2WebACLRules(resp.WebACL.Rules))
-	d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.WebACL.VisibilityConfig))
-
-	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.WebACL.ARN)
-	if err != nil {
-		return fmt.Errorf("error listing tags for WAFV2 WebACL (%s): %s", *resp.WebACL.ARN, err)
+	if resp == nil || resp.WebACL == nil {
+		return fmt.Errorf("Error getting WAFv2 WebACL")
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+	d.Set("name", aws.StringValue(resp.WebACL.Name))
+	d.Set("capacity", aws.Int64Value(resp.WebACL.Capacity))
+	d.Set("description", aws.StringValue(resp.WebACL.Description))
+	d.Set("arn", aws.StringValue(resp.WebACL.ARN))
+	d.Set("lock_token", aws.StringValue(resp.LockToken))
+
+	if err := d.Set("default_action", flattenWafv2DefaultAction(resp.WebACL.DefaultAction)); err != nil {
+		return fmt.Errorf("Error setting default_action: %s", err)
+	}
+
+	if err := d.Set("rule", flattenWafv2WebACLRules(resp.WebACL.Rules)); err != nil {
+		return fmt.Errorf("Error setting rule: %s", err)
+	}
+
+	if err := d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.WebACL.VisibilityConfig)); err != nil {
+		return fmt.Errorf("Error setting visibility_config: %s", err)
+	}
+
+	arn := aws.StringValue(resp.WebACL.ARN)
+	tags, err := keyvaluetags.Wafv2ListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("Error listing tags for WAFv2 WebACL (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("Error setting tags: %s", err)
 	}
 
 	return nil
@@ -228,7 +240,7 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Updating WAFV2 WebACL %s", d.Id())
+	log.Printf("[INFO] Updating WAFv2 WebACL %s", d.Id())
 
 	u := &wafv2.UpdateWebACLInput{
 		Id:               aws.String(d.Id()),
@@ -241,17 +253,13 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
-		u.Description = aws.String(d.Get("description").(string))
+		u.Description = aws.String(v.(string))
 	}
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.UpdateWebACL(u)
-
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -264,7 +272,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error updating WAFV2 WebACL: %s", err)
+		return fmt.Errorf("Error updating WAFv2 WebACL: %s", err)
 	}
 
 	if d.HasChange("tags") {
@@ -280,7 +288,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Deleting WAFV2 WebACL %s", d.Id())
+	log.Printf("[INFO] Deleting WAFv2 WebACL %s", d.Id())
 
 	r := &wafv2.DeleteWebACLInput{
 		Id:        aws.String(d.Id()),
@@ -289,26 +297,15 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
 
-	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteWebACL(r)
-
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "AWS WAF couldn’t perform the operation because your resource is being used by another resource or it’s associated with another resource") {
+			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFInternalErrorException, "AWS WAF couldn’t perform the operation because of a system problem") {
+			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
 				return resource.RetryableError(err)
 			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationException, "An error occurred during the tagging operation") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "AWS WAF couldn’t perform your tagging operation because of an internal error") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "AWS WAF couldn’t retrieve the resource that you requested. Retry your request") {
-				return resource.RetryableError(err)
-			}
-
 			return resource.NonRetryableError(err)
 		}
 		return nil
@@ -319,7 +316,7 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting WAFV2 WebACL: %s", err)
+		return fmt.Errorf("Error deleting WAFv2 WebACL: %s", err)
 	}
 
 	return nil
@@ -400,12 +397,12 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 				"aggregate_key_type": {
 					Type:     schema.TypeString,
 					Optional: true,
-					Default:  "IP",
+					Default:  wafv2.RateBasedStatementAggregateKeyTypeIp,
 				},
 				"limit": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(100, 2000000000.),
+					ValidateFunc: validation.IntBetween(100, 2000000000),
 				},
 				"scope_down_statement": wafv2ScopeDownStatementSchema(level - 1),
 			},
@@ -445,7 +442,7 @@ func wafv2RuleGroupReferenceStatementSchema() *schema.Schema {
 				"arn": {
 					Type:         schema.TypeString,
 					Required:     true,
-					ValidateFunc: validation.StringLenBetween(20, 2048),
+					ValidateFunc: validateArn,
 				},
 				"excluded_rule": wafv2ExcludedRuleSchema(),
 			},

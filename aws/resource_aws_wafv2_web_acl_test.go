@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -27,10 +26,11 @@ func TestAccAwsWafv2WebACL_Basic(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_Basic(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
@@ -39,15 +39,13 @@ func TestAccAwsWafv2WebACL_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				Config: testAccAwsWafv2WebACLConfig_BasicUpdate(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
@@ -59,6 +57,7 @@ func TestAccAwsWafv2WebACL_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.name", "rule-2"),
 					resource.TestCheckResourceAttr(resourceName, "rule.1707625671.priority", "10"),
@@ -109,10 +108,11 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_Basic(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &before),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &before),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "description", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
@@ -126,10 +126,11 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_Basic(ruleGroupNewName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &after),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupNewName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
@@ -139,6 +140,28 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACL_Disappears(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_Minimal(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -157,7 +180,7 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -176,7 +199,7 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_Update(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -217,10 +240,11 @@ func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_Minimal(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
@@ -248,7 +272,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -267,7 +291,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_RateBasedStatement_Update(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -319,7 +343,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -337,7 +361,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_Update(webACLName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -377,7 +401,7 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_OneTag(webACLName, "Tag1", "Value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
@@ -392,7 +416,7 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_TwoTags(webACLName, "Tag1", "Value1Updated", "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1Updated"),
@@ -402,7 +426,7 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 			{
 				Config: testAccAwsWafv2WebACLConfig_OneTag(webACLName, "Tag2", "Value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLExists("aws_wafv2_web_acl.test", &v),
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
@@ -485,16 +509,17 @@ func testAccCheckAwsWafv2WebACLDestroy(s *terraform.State) error {
 			})
 
 		if err == nil {
-			if *resp.WebACL.Id == rs.Primary.ID {
-				return fmt.Errorf("WAFV2 WebACL %s still exists", rs.Primary.ID)
+			if resp == nil || resp.WebACL == nil {
+				return fmt.Errorf("Error getting WAFv2 WebACL")
+			}
+			if aws.StringValue(resp.WebACL.Id) == rs.Primary.ID {
+				return fmt.Errorf("WAFv2 WebACL %s still exists", rs.Primary.ID)
 			}
 		}
 
 		// Return nil if the WebACL is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == wafv2.ErrCodeWAFNonexistentItemException {
-				return nil
-			}
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			return nil
 		}
 
 		return err
@@ -511,7 +536,7 @@ func testAccCheckAwsWafv2WebACLExists(n string, v *wafv2.WebACL) resource.TestCh
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAFV2 WebACL ID is set")
+			return fmt.Errorf("No WAFv2 WebACL ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
@@ -525,12 +550,16 @@ func testAccCheckAwsWafv2WebACLExists(n string, v *wafv2.WebACL) resource.TestCh
 			return err
 		}
 
-		if *resp.WebACL.Id == rs.Primary.ID {
+		if resp == nil || resp.WebACL == nil {
+			return fmt.Errorf("Error getting WAFv2 WebACL")
+		}
+
+		if aws.StringValue(resp.WebACL.Id) == rs.Primary.ID {
 			*v = *resp.WebACL
 			return nil
 		}
 
-		return fmt.Errorf("WAFV2 WebACL (%s) not found", rs.Primary.ID)
+		return fmt.Errorf("WAFv2 WebACL (%s) not found", rs.Primary.ID)
 	}
 }
 
@@ -543,11 +572,6 @@ resource "aws_wafv2_web_acl" "test" {
 
   default_action {
     allow {}
-  }
-
-  tags = {
-    Tag1 = "Value1"
-    Tag2 = "Value2"
   }
 
   visibility_config {

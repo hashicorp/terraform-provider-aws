@@ -3,12 +3,12 @@ subcategory: "WAFv2"
 layout: "aws"
 page_title: "AWS: aws_wafv2_web_acl"
 description: |-
-  Creates an WAFv2 Web ACL Resource.
+  Creates a WAFv2 Web ACL resource.
 ---
 
 # Resource: aws_wafv2_rule_group
 
-Creates an WAFv2 Web ACL Resource.
+Creates a WAFv2 Web ACL resource.
 
 ## Example Usage
 
@@ -259,7 +259,7 @@ The following arguments are supported:
 * `description` - (Optional) A friendly description of the rule group.
 * `name` - (Required) A friendly name of the rule group.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
 
@@ -311,7 +311,7 @@ The `statement` block supports the following arguments:
 * `managed_rule_group_statement` - (Optional) A rule statement used to run the rules that are defined in a managed rule group.  This statement can not be nested. See [Managed Rule Group Statement](#managed-rule-group-statement) below for details.
 * `not_statement` - (Optional) A logical rule statement used to negate the results of another rule statement. See [NOT Statement](#not-statement) below for details.
 * `or_statement` - (Optional) A logical rule statement used to combine other rule statements with OR logic. See [OR Statement](#or-statement) below for details.
-* `rate_bases_statement` - (Optional) A rate-based rule tracks the rate of requests for each originating `IP address`, and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any `5-minute` time span. This statement can not be nested. See [Rate Based Statement](#rate-based-statement) below for details.
+* `rate_based_statement` - (Optional) A rate-based rule tracks the rate of requests for each originating `IP address`, and triggers the rule action when the rate exceeds a limit that you specify on the number of requests in any `5-minute` time span. This statement can not be nested. See [Rate Based Statement](#rate-based-statement) below for details.
 * `regex_pattern_set_reference_statement` - (Optional) A rule statement used to search web request components for matches with regular expressions. See [Regex Pattern Set Reference Statement](#regex-pattern-set-reference-statement) below for details.
 * `sqli_match_statement` - (Optional) An SQL injection match condition identifies the part of web requests, such as the URI or the query string, that you want AWS WAF to inspect. See [SQL Injection Match Statement](#sql-injection-match-statement) below for details.
 * `xss_match_statement` - (Optional) A rule statement that defines a cross-site scripting (XSS) match search for AWS WAF to apply to web requests. See [XSS Match Statement](#xss-match-statement) below for details.
@@ -390,7 +390,7 @@ The `rate_based_statement` block supports the following arguments:
 * `limit` - (Required) The limit on requests per 5-minute period for a single originating IP address. 
 * `scope_down_statement` - (Optional) An optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [Statement](#statement) above for details.
 
-### Regex Pattern Set Reference Statement`
+### Regex Pattern Set Reference Statement
 
 A rule statement used to search web request components for matches with regular expressions. To use this, create a `aws_wafv2_regex_pattern_set` that specifies the expressions that you want to detect, then use the `ARN` of that set in this statement. A web request matches the pattern set rule statement if the request component matches any of the patterns in the set.
 
@@ -488,7 +488,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Rule Group can be imported using the ID, Name and Scope e.g.
+WAFv2 Web ACLs can be imported using `ID/Name/Scope` e.g.
 
 ```
 $ terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
