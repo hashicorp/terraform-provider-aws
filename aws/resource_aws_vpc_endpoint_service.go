@@ -64,6 +64,7 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 			"private_dns_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 			},
 			"service_name": {
 				Type:     schema.TypeString,
