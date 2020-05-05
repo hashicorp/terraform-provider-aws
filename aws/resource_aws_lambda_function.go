@@ -136,9 +136,8 @@ func resourceAwsLambdaFunction() *schema.Resource {
 				Required: true,
 			},
 			"runtime": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(validLambdaRuntimes, false),
+				Type:     schema.TypeString,
+				Required: true,
 			},
 			"timeout": {
 				Type:     schema.TypeInt,
