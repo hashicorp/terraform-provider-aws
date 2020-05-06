@@ -165,7 +165,6 @@ func resourceAwsWafv2RegexPatternSetUpdate(d *schema.ResourceData, meta interfac
 		Id:                    aws.String(d.Id()),
 		Name:                  aws.String(d.Get("name").(string)),
 		Scope:                 aws.String(d.Get("scope").(string)),
-		Description:           aws.String(d.Get("description").(string)),
 		LockToken:             aws.String(d.Get("lock_token").(string)),
 		RegularExpressionList: []*wafv2.Regex{},
 	}

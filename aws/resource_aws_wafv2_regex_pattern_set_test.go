@@ -77,7 +77,7 @@ func TestAccAwsWafv2RegexPatternSet_Disappears(t *testing.T) {
 				Config: testAccAwsWafv2RegexPatternSetConfig_Minimal(regexPatternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSWafv2RegexPatternSetExists(resourceName, &v),
-					testAccCheckAWSWafv2RegexPatternSetDisappears(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2RegexPatternSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -226,29 +226,6 @@ func testAccCheckAWSWafv2RegexPatternSetDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSWafv2RegexPatternSetDisappears(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no WAFv2 RegexPatternSet ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
-		_, err := conn.DeleteRegexPatternSet(&wafv2.DeleteRegexPatternSetInput{
-			Id:        aws.String(rs.Primary.ID),
-			Name:      aws.String(rs.Primary.Attributes["name"]),
-			Scope:     aws.String(rs.Primary.Attributes["scope"]),
-			LockToken: aws.String(rs.Primary.Attributes["lock_token"]),
-		})
-
-		return err
-	}
 }
 
 func testAccCheckAWSWafv2RegexPatternSetExists(n string, v *wafv2.RegexPatternSet) resource.TestCheckFunc {

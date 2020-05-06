@@ -40,7 +40,7 @@ The following arguments are supported:
 * `name` - (Required) A friendly name of the regular expression pattern set.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
-* `regular_expression_list` - (Required) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`.
+* `regular_expression_list` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource.
 
 ## Nested blocks
