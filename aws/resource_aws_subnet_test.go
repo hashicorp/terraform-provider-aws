@@ -333,6 +333,107 @@ func TestAccAWSSubnet_outpost(t *testing.T) {
 	})
 }
 
+func TestAccAWSSubnet_CustomerOwnedIpv4Pool(t *testing.T) {
+	// Hide Outposts testing behind consistent environment variable
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	// Local Gateway Route Table ID filtering in DescribeCoipPools is not currently working
+	poolId := os.Getenv("AWS_COIP_POOL_ID")
+	if poolId == "" {
+		t.Skip(
+			"Environment variable AWS_COIP_POOL_ID is not set. " +
+				"This environment variable must be set to the ID of " +
+				"a deployed Coip Pool to enable this test.")
+	}
+
+	var subnet1 ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigCustomerOwnedIpv4Pool(outpostArn, poolId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet1),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", poolId),
+					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", outpostArn),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSubnet_MapCustomerOwnedIpOnLaunch(t *testing.T) {
+	// Hide Outposts testing behind consistent environment variable
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	// Local Gateway Route Table ID filtering in DescribeCoipPools is not currently working
+	poolId := os.Getenv("AWS_COIP_POOL_ID")
+	if poolId == "" {
+		t.Skip(
+			"Environment variable AWS_COIP_POOL_ID is not set. " +
+				"This environment variable must be set to the ID of " +
+				"a deployed Coip Pool to enable this test.")
+	}
+
+	var subnet1 ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigMapCustomerOwnedIpOnLaunch(outpostArn, poolId, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet1),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", poolId),
+					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", outpostArn),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSubnetConfigMapCustomerOwnedIpOnLaunch(outpostArn, poolId, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet1),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", poolId),
+					resource.TestCheckResourceAttr(resourceName, "map_customer_owned_ip_on_launch", "false"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", outpostArn),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsSubnetIpv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
@@ -556,9 +657,16 @@ resource "aws_subnet" "test" {
 
 func testAccSubnetConfigOutpost(outpostArn string) string {
 	return fmt.Sprintf(`
+# TODO: This should be replaced with aws_outposts_outpost data source, when available.
 data "aws_availability_zones" "current" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  # Exclude Availability Zones with limited Outposts functionality.
   blacklisted_zone_ids = ["usw2-az4"]
+
+  # Exclude Local Zones
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -578,4 +686,85 @@ resource "aws_subnet" "test" {
   }
 }
 `, outpostArn)
+}
+
+func testAccSubnetConfigCustomerOwnedIpv4Pool(outpostArn string, customerOwnedIpv4Pool string) string {
+	return fmt.Sprintf(`
+# TODO: This should be replaced with aws_outposts_outpost data source, when available.
+data "aws_availability_zones" "current" {
+  # Exclude Availability Zones with limited Outposts functionality.
+  blacklisted_zone_ids = ["usw2-az4"]
+
+  # Exclude Local Zones
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_ec2_coip_pool" "test" {
+  pool_id = %[2]q
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-subnet-customer-owned-ipv4-pool"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone        = data.aws_availability_zones.current.names[0]
+  cidr_block               = "10.1.1.0/24"
+  customer_owned_ipv4_pool = data.aws_ec2_coip_pool.test.id
+  outpost_arn              = %[1]q
+  vpc_id                   = aws_vpc.test.id
+
+  tags = {
+    Name = aws_vpc.test.tags["Name"]
+  }
+}
+`, outpostArn, customerOwnedIpv4Pool)
+}
+
+func testAccSubnetConfigMapCustomerOwnedIpOnLaunch(outpostArn string, customerOwnedIpv4Pool string, mapCustomerOwnedIpOnLaunch bool) string {
+	return fmt.Sprintf(`
+# TODO: This should be replaced with aws_outposts_outpost data source, when available.
+data "aws_availability_zones" "current" {
+  # Exclude Availability Zones with limited Outposts functionality.
+  blacklisted_zone_ids = ["usw2-az4"]
+
+  # Exclude Local Zones
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_ec2_coip_pool" "test" {
+  pool_id = %[2]q
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-subnet-customer-owned-ipv4-pool"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone               = data.aws_availability_zones.current.names[0]
+  cidr_block                      = "10.1.1.0/24"
+  customer_owned_ipv4_pool        = data.aws_ec2_coip_pool.test.id
+  map_customer_owned_ip_on_launch = %[3]t
+  outpost_arn                     = %[1]q
+  vpc_id                          = aws_vpc.test.id
+
+  tags = {
+    Name = aws_vpc.test.tags["Name"]
+  }
+}
+`, outpostArn, customerOwnedIpv4Pool, mapCustomerOwnedIpOnLaunch)
 }
