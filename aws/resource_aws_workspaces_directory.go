@@ -69,6 +69,44 @@ func resourceAwsWorkspacesDirectory() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"workspace_security_group_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"iam_role_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"registration_code": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"directory_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"alias": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ip_group_ids": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
+			"dns_ip_addresses": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 			"tags": tagsSchema(),
 		},
 	}
@@ -89,9 +127,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("subnet_ids"); ok {
-		for _, id := range v.(*schema.Set).List() {
-			input.SubnetIds = append(input.SubnetIds, aws.String(id.(string)))
-		}
+		input.SubnetIds = expandStringSet(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Regestering workspaces directory...\n%#v\n", *input)
@@ -149,9 +185,25 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 
 	dir := raw.(*workspaces.WorkspaceDirectory)
 	d.Set("directory_id", dir.DirectoryId)
-	d.Set("subnet_ids", dir.SubnetIds)
+	if err := d.Set("subnet_ids", flattenStringSet(dir.SubnetIds)); err != nil {
+		return fmt.Errorf("error setting subnet_ids: %s", err)
+	}
+	d.Set("workspace_security_group_id", dir.WorkspaceSecurityGroupId)
+	d.Set("iam_role_id", dir.IamRoleId)
+	d.Set("registration_code", dir.RegistrationCode)
+	d.Set("directory_name", dir.DirectoryName)
+	d.Set("directory_type", dir.DirectoryType)
+	d.Set("alias", dir.Alias)
 	if err := d.Set("self_service_permissions", flattenSelfServicePermissions(dir.SelfservicePermissions)); err != nil {
 		return fmt.Errorf("error setting self_service_permissions: %s", err)
+	}
+
+	if err := d.Set("ip_group_ids", flattenStringSet(dir.IpGroupIds)); err != nil {
+		return fmt.Errorf("error setting ip_group_ids: %s", err)
+	}
+
+	if err := d.Set("dns_ip_addresses", flattenStringSet(dir.DnsIpAddresses)); err != nil {
+		return fmt.Errorf("error setting dns_ip_addresses: %s", err)
 	}
 
 	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())

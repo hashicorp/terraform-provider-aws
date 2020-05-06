@@ -59,8 +59,9 @@ IAM
 Inspector
 IoT
 KMS
-Kinesis Firehose
 Kinesis
+Kinesis Data Analytics v2 (SQL and Java Applications)
+Kinesis Firehose
 Kinesis Video
 Lambda
 License Manager
