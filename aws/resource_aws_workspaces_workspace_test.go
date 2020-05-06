@@ -317,14 +317,14 @@ resource "aws_iam_role" "workspaces-default" {
   assume_role_policy = data.aws_iam_policy_document.workspaces.json
 }
 
-resource "aws_iam_role_policy_attachment" "workspaces-default-skylight-service-access" {
+resource "aws_iam_role_policy_attachment" "workspaces-default-service-access" {
   role       = aws_iam_role.workspaces-default.name
-  policy_arn = "arn:aws:iam::aws:policy/SkyLightServiceAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess"
 }
 
-resource "aws_iam_role_policy_attachment" "workspaces-default-skylight-self-service-access" {
+resource "aws_iam_role_policy_attachment" "workspaces-default-self-service-access" {
   role       = aws_iam_role.workspaces-default.name
-  policy_arn = "arn:aws:iam::aws:policy/SkyLightSelfServiceAccess"
+  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
 }
 
 data "aws_workspaces_bundle" "test" {
