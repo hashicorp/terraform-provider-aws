@@ -833,7 +833,6 @@ func Provider() terraform.ResourceProvider {
 			"aws_default_subnet":                                      resourceAwsDefaultSubnet(),
 			"aws_subnet":                                              resourceAwsSubnet(),
 			"aws_swf_domain":                                          resourceAwsSwfDomain(),
-			"aws_synthetics_canary":                                   resourceAwsSyntheticsCanary(),
 			"aws_transfer_server":                                     resourceAwsTransferServer(),
 			"aws_transfer_ssh_key":                                    resourceAwsTransferSshKey(),
 			"aws_transfer_user":                                       resourceAwsTransferUser(),
