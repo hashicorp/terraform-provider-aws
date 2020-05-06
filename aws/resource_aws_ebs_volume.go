@@ -56,10 +56,9 @@ func resourceAwsEbsVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
-			"multi_attach": {
+			"multi_attach_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Computed: true,
 				ForceNew: true,
 			},
 			"size": {
@@ -108,7 +107,7 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	if value, ok := d.GetOk("snapshot_id"); ok {
 		request.SnapshotId = aws.String(value.(string))
 	}
-	if value, ok := d.GetOk("multi_attach"); ok {
+	if value, ok := d.GetOk("multi_attach_enabled"); ok {
 		request.MultiAttachEnabled = aws.Bool(value.(bool))
 	}
 	if value, ok := d.GetOk("outpost_arn"); ok {
@@ -284,7 +283,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("size", aws.Int64Value(volume.Size))
 	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
 	d.Set("outpost_arn", aws.StringValue(volume.OutpostArn))
-	d.Set("multi_attach", volume.MultiAttachEnabled)
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)

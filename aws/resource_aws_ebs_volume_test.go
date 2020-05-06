@@ -89,7 +89,7 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach", "false"),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
 				),
 			},
 			{
@@ -329,7 +329,7 @@ func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
 				Config: testAccAwsEbsVolumeConfigMultiAttach(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVolumeExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "multi_attach", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
 				),
 			},
 			{
@@ -764,10 +764,10 @@ data "aws_availability_zones" "available" {
 
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  type              = "io1"
-  multi_attach      = true
-  size              = 4
-  iops              = 100
+  type                 = "io1"
+  multi_attach_enabled = true
+  size                 = 4
+  iops                 = 100
 
   tags = {
     Name = %[1]q
