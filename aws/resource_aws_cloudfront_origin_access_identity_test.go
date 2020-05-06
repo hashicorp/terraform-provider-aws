@@ -83,7 +83,7 @@ func TestAccAWSCloudFrontOriginAccessIdentity_disappears(t *testing.T) {
 				Config: testAccAWSCloudFrontOriginAccessIdentityConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontOriginAccessIdentityExistence(resourceName, &origin),
-					testAccCheckCloudFrontOriginAccessIdentityDisappears(&origin),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudFrontOriginAccessIdentity(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -136,21 +136,6 @@ func testAccCheckCloudFrontOriginAccessIdentityExistence(r string, origin *cloud
 		*origin = *resp
 
 		return nil
-	}
-}
-
-func testAccCheckCloudFrontOriginAccessIdentityDisappears(origin *cloudfront.GetCloudFrontOriginAccessIdentityOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
-
-		params := &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
-			Id:      origin.CloudFrontOriginAccessIdentity.Id,
-			IfMatch: origin.ETag,
-		}
-
-		_, err := conn.DeleteCloudFrontOriginAccessIdentity(params)
-
-		return err
 	}
 }
 
