@@ -277,6 +277,29 @@ func TestAccAWSBudgetsBudget_notification(t *testing.T) {
 	})
 }
 
+func TestAccAWSBudgetsBudget_disappears(t *testing.T) {
+	costFilterKey := "AZ"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	configBasicDefaults := testAccAWSBudgetsBudgetConfigDefaults(rName)
+	resourceName := "aws_budgets_budget.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBudgets(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccAWSBudgetsBudgetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
+				Check: resource.ComposeTestCheckFunc(
+					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBudgetsBudget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccAWSBudgetsBudgetExists(resourceName string, config budgets.Budget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
