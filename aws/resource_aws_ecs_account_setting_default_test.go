@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
+	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSEcsDefaultSetting_basic(t *testing.T) {
-	//var provider ecs.Setting
-	rName := "serviceLongArnFormat"
+func TestAccAWSEcsAccountDefaultSetting_containerInstanceLongArnFormat(t *testing.T) {
 	resourceName := "aws_ecs_account_setting_default.test"
+	rName := "containerInstanceLongArnFormat"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,6 +25,115 @@ func TestAccAWSEcsDefaultSetting_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestMatchResourceAttr(resourceName, "principal_arn", regexp.MustCompile(fmt.Sprintf(":root"))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsAccountDefaultSetting_serviceLongArnFormat(t *testing.T) {
+	resourceName := "aws_ecs_account_setting_default.test"
+	rName := "serviceLongArnFormat"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestMatchResourceAttr(resourceName, "principal_arn", regexp.MustCompile(fmt.Sprintf(":root"))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsAccountDefaultSetting_taskLongArnFormat(t *testing.T) {
+	resourceName := "aws_ecs_account_setting_default.test"
+	rName := "taskLongArnFormat"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestMatchResourceAttr(resourceName, "principal_arn", regexp.MustCompile(fmt.Sprintf(":root"))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsAccountDefaultSetting_awsvpcTrunking(t *testing.T) {
+	resourceName := "aws_ecs_account_setting_default.test"
+	rName := "awsvpcTrunking"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestMatchResourceAttr(resourceName, "principal_arn", regexp.MustCompile(fmt.Sprintf(":root"))),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     rName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsAccountDefaultSetting_containerInsights(t *testing.T) {
+	resourceName := "aws_ecs_account_setting_default.test"
+	rName := "containerInsights"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsDefaultSettingDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsDefaultSettingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "value", "enabled"),
+					resource.TestMatchResourceAttr(resourceName, "principal_arn", regexp.MustCompile(fmt.Sprintf(":root"))),
 				),
 			},
 			{
