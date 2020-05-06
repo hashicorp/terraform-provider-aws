@@ -527,7 +527,7 @@ github.com/hashicorp/logutils
 github.com/hashicorp/terraform-config-inspect/tfconfig
 # github.com/hashicorp/terraform-json v0.4.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk v1.9.0
+# github.com/hashicorp/terraform-plugin-sdk v1.12.0
 github.com/hashicorp/terraform-plugin-sdk/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff
@@ -579,7 +579,7 @@ github.com/hashicorp/terraform-plugin-sdk/internal/version
 github.com/hashicorp/terraform-plugin-sdk/meta
 github.com/hashicorp/terraform-plugin-sdk/plugin
 github.com/hashicorp/terraform-plugin-sdk/terraform
-# github.com/hashicorp/terraform-plugin-test v1.2.0
+# github.com/hashicorp/terraform-plugin-test v1.3.0
 github.com/hashicorp/terraform-plugin-test
 # github.com/hashicorp/terraform-svchost v0.0.0-20191011084731-65d371908596
 github.com/hashicorp/terraform-svchost
