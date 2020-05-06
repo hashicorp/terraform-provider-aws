@@ -68,6 +68,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/ssm"
@@ -2167,6 +2168,33 @@ func (tags KeyValueTags) ServicecatalogTags() []*servicecatalog.Tag {
 
 // ServicecatalogKeyValueTags creates KeyValueTags from servicecatalog service tags.
 func ServicecatalogKeyValueTags(tags []*servicecatalog.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// Sesv2Tags returns sesv2 service tags.
+func (tags KeyValueTags) Sesv2Tags() []*sesv2.Tag {
+	result := make([]*sesv2.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &sesv2.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// Sesv2KeyValueTags creates KeyValueTags from sesv2 service tags.
+func Sesv2KeyValueTags(tags []*sesv2.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {

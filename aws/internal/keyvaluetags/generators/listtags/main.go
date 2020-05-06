@@ -99,6 +99,7 @@ var serviceNames = []string{
 	"route53resolver",
 	"sagemaker",
 	"securityhub",
+	"sesv2",
 	"sfn",
 	"sns",
 	"sqs",

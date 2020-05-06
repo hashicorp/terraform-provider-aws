@@ -106,6 +106,7 @@ var serviceNames = []string{
 	"sagemaker",
 	"secretsmanager",
 	"securityhub",
+	"sesv2",
 	"sfn",
 	"sns",
 	"sqs",

@@ -96,6 +96,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -296,6 +297,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(secretsmanager.New)
 	case "securityhub":
 		funcType = reflect.TypeOf(securityhub.New)
+	case "sesv2":
+		funcType = reflect.TypeOf(sesv2.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
 	case "sns":

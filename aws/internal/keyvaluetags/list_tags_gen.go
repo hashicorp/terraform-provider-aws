@@ -86,6 +86,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go/service/sesv2"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -1492,6 +1493,23 @@ func SecurityhubListTags(conn *securityhub.SecurityHub, identifier string) (KeyV
 	}
 
 	return SecurityhubKeyValueTags(output.Tags), nil
+}
+
+// Sesv2ListTags lists sesv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Sesv2ListTags(conn *sesv2.SESV2, identifier string) (KeyValueTags, error) {
+	input := &sesv2.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Sesv2KeyValueTags(output.Tags), nil
 }
 
 // SfnListTags lists sfn service tags.

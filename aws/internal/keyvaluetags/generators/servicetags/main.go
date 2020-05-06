@@ -83,6 +83,7 @@ var sliceServiceNames = []string{
 	"secretsmanager",
 	"serverlessapplicationrepository",
 	"servicecatalog",
+	"sesv2",
 	"sfn",
 	"sns",
 	"ssm",
