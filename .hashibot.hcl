@@ -330,6 +330,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/kinesisanalytics" = [
       "aws_kinesis_analytics_",
     ],
+    "service/kinesisanalyticsv2" = [
+      "aws_kinesisanalyticsv2_",
+    ],
     "service/kms" = [
       "aws_kms_",
     ],
@@ -951,6 +954,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/kinesisanalytics" = [
       "**/*_kinesis_analytics_*",
       "**/kinesis_analytics_*"
+    ]
+    "service/kinesisanalyticsv2" = [
+      "**/*_kinesisanalyticsv2_*",
+      "**/kinesisanalyticsv2_*"
     ]
     "service/kms" = [
       "**/*_kms_*",
