@@ -277,38 +277,6 @@ func testAccCheckAWSRedshiftSecurityGroupDestroy(s *terraform.State) error {
 	return nil
 }
 
-func TestResourceAWSRedshiftSecurityGroupNameValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "default",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing123%%",
-			ErrCount: 1,
-		},
-		{
-			Value:    "TestingSG",
-			ErrCount: 1,
-		},
-		{
-			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateRedshiftSecurityGroupName(tc.Value, "aws_redshift_security_group_name")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Redshift Security Group Name to trigger a validation error")
-		}
-	}
-}
-
 func testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_redshift_security_group" "test" {
