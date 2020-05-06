@@ -620,7 +620,7 @@ func xmlConfigToTunnelInfo(xmlConfig string) (*TunnelInfo, error) {
 func validateVpnConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
-		validation.StringDoesNotMatch(regexp.MustCompile(`(?i)^0`), "cannot start with zero character"),
+		validation.StringDoesNotMatch(regexp.MustCompile(`^0`), "cannot start with zero character"),
 		validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
 	)
 }
