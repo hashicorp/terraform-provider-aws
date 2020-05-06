@@ -42,6 +42,28 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 				Optional: true,
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					o, n := d.GetChange("addresses")
+					oldAddresses := o.(*schema.Set).List()
+					newAddresses := n.(*schema.Set).List()
+					if len(oldAddresses) == len(newAddresses) {
+						for _, ov := range oldAddresses {
+							hasAddress := false
+							for _, nv := range newAddresses {
+								// isIpv6CidrsEquals works for both IPv4 and IPv6
+								if isIpv6CidrsEquals(ov.(string), nv.(string)) {
+									hasAddress = true
+									break
+								}
+							}
+							if !hasAddress {
+								return false
+							}
+						}
+						return true
+					}
+					return false
+				},
 			},
 			"arn": {
 				Type:     schema.TypeString,

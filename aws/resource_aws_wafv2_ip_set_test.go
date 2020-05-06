@@ -82,6 +82,41 @@ func TestAccAwsWafv2IPSet_Disappears(t *testing.T) {
 	})
 }
 
+func TestAccAwsWafv2IPSet_IPv6(t *testing.T) {
+	var v wafv2.IPSet
+	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	resourceName := "aws_wafv2_ip_set.ip_set"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafv2IPSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2IPSetConfigIPv6(ipSetName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafv2IPSetExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", ipSetName),
+					resource.TestCheckResourceAttr(resourceName, "description", ipSetName),
+					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "ip_address_version", wafv2.IPAddressVersionIpv6),
+					resource.TestCheckResourceAttr(resourceName, "addresses.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.1676510651", "1234:5678:9abc:6811:0000:0000:0000:0000/64"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.3671909787", "2001:db8::/32"),
+					resource.TestCheckResourceAttr(resourceName, "addresses.4089736081", "0:0:0:0:0:ffff:7f00:1/64"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAWSWafv2IPSetImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccAwsWafv2IPSet_Minimal(t *testing.T) {
 	var v wafv2.IPSet
 	ipSetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
@@ -292,6 +327,22 @@ resource "aws_wafv2_ip_set" "ip_set" {
   addresses          = ["1.1.1.1/32", "2.2.2.2/32", "3.3.3.3/32"]
 }
 `, name)
+}
+
+func testAccAwsWafv2IPSetConfigIPv6(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_ip_set" "ip_set" {
+  name               = "%s"
+  description        = "%s"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV6"
+  addresses          = [
+    "0:0:0:0:0:ffff:7f00:1/64",
+    "1234:5678:9abc:6811:0000:0000:0000:0000/64",
+    "2001:db8::/32"
+  ]
+}
+`, name, name)
 }
 
 func testAccAwsWafv2IPSetConfigMinimal(name string) string {
