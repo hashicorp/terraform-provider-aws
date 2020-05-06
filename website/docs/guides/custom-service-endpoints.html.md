@@ -175,6 +175,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>servicediscovery</code></li>
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>
+  <li><code>sesv2</code></li>
   <li><code>shield</code></li>
   <li><code>sns</code></li>
   <li><code>sqs</code></li>

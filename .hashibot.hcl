@@ -462,6 +462,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/ses" = [
       "aws_ses_",
     ],
+    "service/sesv2" = [
+      "aws_sesv2_",
+    ],
     "service/sfn" = [
       "aws_sfn_",
     ],
@@ -1134,6 +1137,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/ses" = [
       "**/*_ses_*",
       "**/ses_*"
+    ]
+    "service/sesv2" = [
+      "**/*_sesv2_*",
+      "**/sesv2_*"
     ]
     "service/sfn" = [
       "**/*_sfn_*",

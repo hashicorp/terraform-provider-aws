@@ -1119,6 +1119,7 @@ func init() {
 		"servicediscovery",
 		"servicequotas",
 		"ses",
+		"sesv2",
 		"shield",
 		"sns",
 		"sqs",

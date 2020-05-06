@@ -88,6 +88,7 @@ Route53 Resolver
 Route53
 S3
 SES
+SES v2
 SNS
 SQS
 SSM
