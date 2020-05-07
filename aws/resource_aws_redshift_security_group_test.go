@@ -53,9 +53,10 @@ func TestAccAWSRedshiftSecurityGroup_ingressCidr(t *testing.T) {
 	resourceName := "aws_redshift_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRedshiftSecurityGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSRedshiftSecurityGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSRedshiftSecurityGroupConfig_ingressCidr(rInt),

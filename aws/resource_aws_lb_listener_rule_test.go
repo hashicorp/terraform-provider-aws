@@ -60,10 +60,11 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName),
@@ -102,10 +103,11 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_alb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfigBackwardsCompatibility(lbName, targetGroupName),
@@ -573,10 +575,11 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHostHeader(lbName),
@@ -611,10 +614,11 @@ func TestAccAWSLBListenerRule_conditionHostHeader_deprecated(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHostHeader_deprecated(lbName),
@@ -647,10 +651,11 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-httpHeader-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHttpHeader(lbName),
@@ -709,10 +714,11 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-httpRequest-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHttpRequestMethod(lbName),
@@ -745,10 +751,11 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName),
@@ -783,10 +790,11 @@ func TestAccAWSLBListenerRule_conditionPathPattern_deprecated(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName),
@@ -819,10 +827,11 @@ func TestAccAWSLBListenerRule_conditionUpdatePathPattern_deprecated(t *testing.T
 	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName),
@@ -876,10 +885,11 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-queryString-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionQueryString(lbName),
@@ -925,10 +935,11 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-sourceIp-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionSourceIp(lbName),
@@ -961,10 +972,11 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-mixed-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMixed(lbName),
@@ -1029,10 +1041,11 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMultiple(lbName),
@@ -1107,10 +1120,11 @@ func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_lb_listener_rule.static",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMultiple(lbName),
