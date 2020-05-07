@@ -53,7 +53,7 @@ func TestAccAWSDeviceFarmProject_disappears(t *testing.T) {
 				Config: testAccDeviceFarmProjectConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeviceFarmProjectExists(resourceName, &proj),
-					testAccCheckDeviceFarmProjectDisappears(&proj),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDevicefarmProject(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -85,16 +85,6 @@ func testAccCheckDeviceFarmProjectExists(n string, v *devicefarm.Project) resour
 		*v = *resp.Project
 
 		return nil
-	}
-}
-
-func testAccCheckDeviceFarmProjectDisappears(v *devicefarm.Project) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).devicefarmconn
-		_, err := conn.DeleteProject(
-			&devicefarm.DeleteProjectInput{Arn: v.Arn})
-
-		return err
 	}
 }
 
