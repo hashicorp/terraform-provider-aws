@@ -525,7 +525,10 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
-      ".github/*.md",
+      ".github/**/*",
+      ".gitignore",
+      ".go-version",
+      ".hashibot.hcl",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -533,8 +536,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_ip_ranges*",
       "aws/*_aws_partition*",
       "aws/*_aws_region*",
+      "aws/internal/flatmap/*",
+      "aws/internal/keyvaluetags/*",
+      "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "GNUmakefile",
+      "main.go",
       "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
@@ -545,7 +553,11 @@ behavior "pull_request_path_labeler" "service_labels" {
     # label test related changes
     "tests" = [
       "**/*_test.go",
+      "**/testdata/**/*",
+      "**/test-fixtures/**/*",
+      ".github/workflows/*",
       ".gometalinter.json",
+      ".markdownlinkcheck.json",
       ".markdownlint.yml",
       ".travis.yml",
       "staticcheck.conf"
