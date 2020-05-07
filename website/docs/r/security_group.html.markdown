@@ -29,7 +29,7 @@ Basic usage
 resource "aws_security_group" "allow_tls" {
   name        = "allow_tls"
   description = "Allow TLS inbound traffic"
-  vpc_id      = "${aws_vpc.main.id}"
+  vpc_id      = aws_vpc.main.id
 
   ingress {
     description = "TLS from VPC"
@@ -138,7 +138,7 @@ egress {
   from_port       = 0
   to_port         = 0
   protocol        = "-1"
-  prefix_list_ids = ["${aws_vpc_endpoint.my_endpoint.prefix_list_id}"]
+  prefix_list_ids = [aws_vpc_endpoint.my_endpoint.prefix_list_id]
 }
 
 # ...
