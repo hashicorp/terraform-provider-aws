@@ -36,7 +36,8 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 }
 
 behavior "opened_pull_request_labeler" "triage" {
-  labels = ["needs-triage"]
+  labels             = ["needs-triage"]
+  skip_collaborators = true
 }
 
 queued_behavior "release_commenter" "releases" {
