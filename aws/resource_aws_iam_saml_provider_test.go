@@ -60,7 +60,7 @@ func TestAccAWSIAMSamlProvider_disappears(t *testing.T) {
 				Config: testAccIAMSamlProviderConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIAMSamlProviderExists(resourceName),
-					testAccCheckIAMSamlProviderDisappears(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsIamSamlProvider(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -110,26 +110,6 @@ func testAccCheckIAMSamlProviderExists(id string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).iamconn
 		_, err := conn.GetSAMLProvider(&iam.GetSAMLProviderInput{
-			SAMLProviderArn: aws.String(rs.Primary.ID),
-		})
-
-		return err
-	}
-}
-
-func testAccCheckIAMSamlProviderDisappears(id string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[id]
-		if !ok {
-			return fmt.Errorf("Not Found: %s", id)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).iamconn
-		_, err := conn.DeleteSAMLProvider(&iam.DeleteSAMLProviderInput{
 			SAMLProviderArn: aws.String(rs.Primary.ID),
 		})
 
