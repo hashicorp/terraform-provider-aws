@@ -11,6 +11,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_efs_file_system: Add `size_in_bytes` attribute [GH-13125]
 * data-source/aws_eip: Add `customer_owned_ip` and `customer_owned_ipv4_pool` attributes [GH-12862]
 * resource/aws_api_gateway_deployment: Add `triggers` argument [GH-13054]
 * resource/aws_apigatewayv2_deployment: Add `triggers` argument [GH-13055]
