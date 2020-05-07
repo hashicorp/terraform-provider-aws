@@ -542,6 +542,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/provider.go",
       "aws/utils.go",
       "GNUmakefile",
+      "infrastructure/**/*",
       "main.go",
       "renovate.json",
       "website/docs/index.html.markdown",
