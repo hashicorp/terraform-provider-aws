@@ -24,7 +24,7 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "multi_attach", resourceName, "multi_attach"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_attach_enabled", resourceName, "multi_attach_enabled"),
 				),
 			},
 		},
