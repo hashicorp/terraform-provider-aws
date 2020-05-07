@@ -2,16 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/neptune/waiter"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_neptune_event_subscription", &resource.Sweeper{
+		Name: "aws_neptune_event_subscription",
+		F:    testSweepNeptuneEventSubscriptions,
+	})
+}
+
+func testSweepNeptuneEventSubscriptions(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).neptuneconn
+	var sweeperErrs *multierror.Error
+
+	err = conn.DescribeEventSubscriptionsPages(&neptune.DescribeEventSubscriptionsInput{}, func(page *neptune.DescribeEventSubscriptionsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, eventSubscription := range page.EventSubscriptionsList {
+			name := aws.StringValue(eventSubscription.CustSubscriptionId)
+
+			log.Printf("[INFO] Deleting Neptune Event Subscription: %s", name)
+			_, err = conn.DeleteEventSubscription(&neptune.DeleteEventSubscriptionInput{
+				SubscriptionName: aws.String(name),
+			})
+			if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Neptune Event Subscription (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			_, err = waiter.EventSubscriptionDeleted(conn, name)
+			if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error waiting for Neptune Event Subscription (%s) deletion: %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Neptune Event Subscriptions sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Neptune Event Subscriptions: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSNeptuneEventSubscription_basic(t *testing.T) {
 	var v neptune.EventSubscription
@@ -205,23 +269,17 @@ func testAccCheckAWSNeptuneEventSubscriptionDestroy(s *terraform.State) error {
 				SubscriptionName: aws.String(rs.Primary.ID),
 			})
 
-		if ae, ok := err.(awserr.Error); ok && ae.Code() == "SubscriptionNotFound" {
+		if isAWSErr(err, neptune.ErrCodeSubscriptionNotFoundFault, "") {
 			continue
 		}
 
-		if err == nil {
-			if len(resp.EventSubscriptionsList) != 0 &&
-				aws.StringValue(resp.EventSubscriptionsList[0].CustSubscriptionId) == rs.Primary.ID {
-				return fmt.Errorf("Event Subscription still exists")
-			}
+		if err != nil {
+			return err
 		}
 
-		newerr, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if newerr.Code() != "SubscriptionNotFound" {
-			return err
+		if len(resp.EventSubscriptionsList) != 0 &&
+			aws.StringValue(resp.EventSubscriptionsList[0].CustSubscriptionId) == rs.Primary.ID {
+			return fmt.Errorf("Event Subscription still exists")
 		}
 	}
 
