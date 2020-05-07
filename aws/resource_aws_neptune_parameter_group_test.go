@@ -77,9 +77,10 @@ func TestAccAWSNeptuneParameterGroup_Parameter(t *testing.T) {
 	resourceName := "aws_neptune_parameter_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSNeptuneParameterGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSNeptuneParameterGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSNeptuneParameterGroupConfig_Parameter(rName, "neptune_query_timeout", "25", "pending-reboot"),

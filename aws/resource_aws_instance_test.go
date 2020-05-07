@@ -280,7 +280,7 @@ func TestAccAWSInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:instance/i-.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance/i-[a-z0-9]+`)),
 				),
 			},
 			{
@@ -319,9 +319,10 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn,
@@ -510,11 +511,12 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 	rootVolumeSize := "11"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"ephemeral_block_device"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckInstanceDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       resourceName,
+		IDRefreshIgnore:     []string{"ephemeral_block_device"},
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2InstanceConfigBlockDevices(rootVolumeSize),
@@ -626,11 +628,12 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"ephemeral_block_device"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckInstanceDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       resourceName,
+		IDRefreshIgnore:     []string{"ephemeral_block_device"},
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -1722,9 +1725,10 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing
 	updatedRootVolumeSize := "14"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(originalRootVolumeSize, deleteOnTermination),
@@ -1762,9 +1766,10 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 	updatedDeleteOnTermination := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckInstanceDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(rootVolumeSize, originalDeleteOnTermination),

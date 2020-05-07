@@ -57,6 +57,10 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 				Type:     schema.TypeFloat,
 				Computed: true,
 			},
+			"size_in_bytes": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -128,6 +132,9 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("kms_key_id", fs.KmsKeyId)
 	d.Set("provisioned_throughput_in_mibps", fs.ProvisionedThroughputInMibps)
 	d.Set("throughput_mode", fs.ThroughputMode)
+	if fs.SizeInBytes != nil {
+		d.Set("size_in_bytes", fs.SizeInBytes.Value)
+	}
 
 	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(fs.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)

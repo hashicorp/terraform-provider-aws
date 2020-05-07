@@ -742,9 +742,12 @@ func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resou
 func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-
+		password, err := generateIAMPassword(32)
+		if err != nil {
+			return err
+		}
 		input := &iam.CreateLoginProfileInput{
-			Password: aws.String(generateIAMPassword(32)),
+			Password: aws.String(password),
 			UserName: getUserOutput.User.UserName,
 		}
 

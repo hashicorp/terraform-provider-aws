@@ -70,6 +70,7 @@ func TestDecodeStorageGatewayUploadBufferID(t *testing.T) {
 func TestAccAWSStorageGatewayUploadBuffer_Basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_storagegateway_upload_buffer.test"
+	localDiskDataSourceName := "data.aws_storagegateway_local_disk.test"
 	gatewayResourceName := "aws_storagegateway_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,7 +84,7 @@ func TestAccAWSStorageGatewayUploadBuffer_Basic(t *testing.T) {
 				Config: testAccAWSStorageGatewayUploadBufferConfig_Basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSStorageGatewayUploadBufferExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "disk_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "disk_id", localDiskDataSourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 				),
 			},

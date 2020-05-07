@@ -28,7 +28,7 @@ func TestAccAWSDBClusterSnapshot_basic(t *testing.T) {
 					testAccCheckDbClusterSnapshotExists(resourceName, &dbClusterSnapshot),
 					resource.TestCheckResourceAttrSet(resourceName, "allocated_storage"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zones.#"),
-					resource.TestMatchResourceAttr(resourceName, "db_cluster_snapshot_arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster-snapshot:.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "db_cluster_snapshot_arn", "rds", regexp.MustCompile(fmt.Sprintf("cluster-snapshot:%s$", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
@@ -177,7 +177,7 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -189,17 +189,17 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = %q
+  name       = %[1]q
   subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier   = %[1]q
   db_subnet_group_name = "${aws_db_subnet_group.test.name}"
   master_password      = "barbarbarbar"
   master_username      = "foo"
@@ -208,9 +208,9 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = "${aws_rds_cluster.test.id}"
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
 }
-`, rName, rName, rName, rName, rName)
+`, rName)
 }
 
 func testAccAwsDbClusterSnapshotConfigTags1(rName, tagKey1, tagValue1 string) string {
@@ -228,7 +228,7 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -240,17 +240,17 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = %q
+  name       = %[1]q
   subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier   = %[1]q
   db_subnet_group_name = "${aws_db_subnet_group.test.name}"
   master_password      = "barbarbarbar"
   master_username      = "foo"
@@ -259,12 +259,12 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = "${aws_rds_cluster.test.id}"
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
   tags = {
-    %q = %q
+    %[2]q = %[3]q
   }
 }
-`, rName, rName, rName, rName, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1)
 }
 
 func testAccAwsDbClusterSnapshotConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
@@ -282,7 +282,7 @@ resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
@@ -294,17 +294,17 @@ resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
-    Name = %q
+    Name = %[1]q
   }
 }
 
 resource "aws_db_subnet_group" "test" {
-  name       = %q
+  name       = %[1]q
   subnet_ids = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %q
+  cluster_identifier   = %[1]q
   db_subnet_group_name = "${aws_db_subnet_group.test.name}"
   master_password      = "barbarbarbar"
   master_username      = "foo"
@@ -313,11 +313,11 @@ resource "aws_rds_cluster" "test" {
 
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = "${aws_rds_cluster.test.id}"
-  db_cluster_snapshot_identifier = %q
+  db_cluster_snapshot_identifier = %[1]q
   tags = {
-    %q = %q
-    %q = %q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName, rName, rName, rName, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

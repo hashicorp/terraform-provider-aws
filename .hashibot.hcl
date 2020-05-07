@@ -36,7 +36,8 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 }
 
 behavior "opened_pull_request_labeler" "triage" {
-  labels = ["needs-triage"]
+  labels             = ["needs-triage"]
+  skip_collaborators = true
 }
 
 queued_behavior "release_commenter" "releases" {
@@ -330,6 +331,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/kinesisanalytics" = [
       "aws_kinesis_analytics_",
     ],
+    "service/kinesisanalyticsv2" = [
+      "aws_kinesisanalyticsv2_",
+    ],
     "service/kms" = [
       "aws_kms_",
     ],
@@ -521,7 +525,10 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
-      ".github/*.md",
+      ".github/**/*",
+      ".gitignore",
+      ".go-version",
+      ".hashibot.hcl",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -529,8 +536,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_ip_ranges*",
       "aws/*_aws_partition*",
       "aws/*_aws_region*",
+      "aws/internal/flatmap/*",
+      "aws/internal/keyvaluetags/*",
+      "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "GNUmakefile",
+      "main.go",
       "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
@@ -541,7 +553,11 @@ behavior "pull_request_path_labeler" "service_labels" {
     # label test related changes
     "tests" = [
       "**/*_test.go",
+      "**/testdata/**/*",
+      "**/test-fixtures/**/*",
+      ".github/workflows/*",
       ".gometalinter.json",
+      ".markdownlinkcheck.json",
       ".markdownlint.yml",
       ".travis.yml",
       "staticcheck.conf"
@@ -951,6 +967,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/kinesisanalytics" = [
       "**/*_kinesis_analytics_*",
       "**/kinesis_analytics_*"
+    ]
+    "service/kinesisanalyticsv2" = [
+      "**/*_kinesisanalyticsv2_*",
+      "**/kinesisanalyticsv2_*"
     ]
     "service/kms" = [
       "**/*_kms_*",
