@@ -118,9 +118,9 @@ func TestAccAWSWafRegionalGeoMatchSet_changeConstraints(t *testing.T) {
 	setName := fmt.Sprintf("tfacc-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafRegionalGeoMatchSetDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafRegionalGeoMatchSetDestroy,
 		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
