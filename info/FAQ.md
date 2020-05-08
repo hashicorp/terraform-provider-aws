@@ -13,11 +13,13 @@ The HashiCorp Terraform AWS provider team is :
 
 ### Why isn’t my PR merged yet?
 
-Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the most value to the most community members.
+Unfortunately, due to the volume of issues and new pull requests we receive, we are unable to give each one the full attention that we would like. We always focus on the contributions that provide the greatest value to the most community members.
 
 ### How do you decide what gets merged for each release?
 
 The number one factor we look at when deciding what issues to look at are your reactions, comments, and upvotes on the issues or PR’s. The items with the most support are always on our radar, and we commit to keep the community updated on their status and potential timelines.
+
+We publish a [roadmap](../ROADMAP.md) every quarter which describes major themes or specific product areas of focus. 
 
 We also are investing time to improve the contributing experience by improving documentation, adding more linter coverage to ensure that incoming PR's can be in as good shape as possible. This will allow us to get through them quicker.
 
@@ -58,7 +60,7 @@ provider "aws" {
 
 ### How can I help?
 
-Great question, if you have contributed before check out issues with the `help-wanted` label. These are normally issues with support, but we are currently unable to field resources to work on. If you are just getting started, take a look at issues with the `good-first-issue` label. Items with these labels will always be given priority for response.
+Great question, if you have contributed before check out issues with the `help-wanted` label. These are normally features which we want to support, but we are currently unable to field resources to work on. If you are just getting started, take a look at issues with the `good-first-issue` label. Items with these labels will always be given priority for response.
 
 ### How can I become a maintainer?
 
