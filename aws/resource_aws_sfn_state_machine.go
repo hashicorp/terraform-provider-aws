@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/sfn/waiter"
 )
 
 func resourceAwsSfnStateMachine() *schema.Resource {
@@ -191,6 +192,13 @@ func resourceAwsSfnStateMachineDelete(d *schema.ResourceData, meta interface{}) 
 
 	if err != nil {
 		return fmt.Errorf("Error deleting SFN state machine: %s", err)
+	}
+
+	if _, err := waiter.StateMachineDeleted(conn, d.Id()); err != nil {
+		if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
+			return nil
+		}
+		return fmt.Errorf("error waiting for SFN State Machine (%s) deletion: %w", d.Id(), err)
 	}
 
 	return nil

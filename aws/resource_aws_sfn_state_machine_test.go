@@ -116,7 +116,7 @@ func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 				Config: testAccAWSSfnStateMachineConfig(rName, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSfnExists(resourceName, &sm),
-					testAccCheckAWSSfnStateMachineDisappears(&sm),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSfnStateMachine(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
