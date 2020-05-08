@@ -47,8 +47,8 @@ github.com/beorn7/perks v0.0.0-20180321164747-3a771d992973/go.mod h1:Dwedo/Wpr24
 github.com/beorn7/perks v1.0.0/go.mod h1:KWe93zE9D1o94FZ5RNwFwVgaQK1VOXiVxmqh+CedLV8=
 github.com/bflad/gopaniccheck v0.1.0 h1:tJftp+bv42ouERmUMWLoUn/5bi/iQZjHPznM00cP/bU=
 github.com/bflad/gopaniccheck v0.1.0/go.mod h1:ZCj2vSr7EqVeDaqVsWN4n2MwdROx1YL+LFo47TSWtsA=
-github.com/bflad/tfproviderdocs v0.5.2 h1:iQoJJTXYcd9eVuWICK6gBNSYcy4FCS2ZdhwiH/iLfq8=
-github.com/bflad/tfproviderdocs v0.5.2/go.mod h1:d0k1fQLEu1pdeORxozwuwmvauFaEmMBREQ1fw3J+pPc=
+github.com/bflad/tfproviderdocs v0.5.3 h1:0JozhslEaLujgTnV6OdljbFiT/FCponx5hruFSkizGk=
+github.com/bflad/tfproviderdocs v0.5.3/go.mod h1:d0k1fQLEu1pdeORxozwuwmvauFaEmMBREQ1fw3J+pPc=
 github.com/bflad/tfproviderlint v0.14.0 h1:iki5tDr4l0jp0zEL0chZylptMT5QdE09E60cziFQNZA=
 github.com/bflad/tfproviderlint v0.14.0/go.mod h1:1Jtjs6DPKoyqPrbPyMiy33h0ViO2h831uzoOuikCA60=
 github.com/bgentry/go-netrc v0.0.0-20140422174119-9fd32a8b3d3d h1:xDfNPAt8lFiC1UJrqV3uuy861HCTo708pDMbjHHdCas=

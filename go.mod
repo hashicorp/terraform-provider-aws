@@ -5,7 +5,7 @@ go 1.13
 require (
 	github.com/aws/aws-sdk-go v1.30.21
 	github.com/beevik/etree v1.1.0
-	github.com/bflad/tfproviderdocs v0.5.2
+	github.com/bflad/tfproviderdocs v0.5.3
 	github.com/bflad/tfproviderlint v0.14.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.26.0

@@ -1,3 +1,9 @@
+# v0.5.3
+
+BUG FIXES
+
+* check: Prevent additional errors when `docs/` contains files outside Terraform Provider documentation
+
 # v0.5.2
 
 BUG FIXES
