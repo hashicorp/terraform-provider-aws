@@ -8,6 +8,7 @@ FEATURES:
 * **New Data Source:** `aws_ec2_local_gateways` [GH-12764]
 * **New Data Source:** `aws_ec2_local_gateway_route_table` [GH-13002]
 * **New Data Source:** `aws_ec2_local_gateway_route_tables` [GH-13002]
+* **New Resource:** `aws_ec2_transit_gateway_peering_attachment_accepter` [GH-11185]
 
 ENHANCEMENTS:
 
