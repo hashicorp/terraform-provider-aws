@@ -231,6 +231,7 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeTaskInput{
 		TaskArn: aws.String(d.Id()),
@@ -266,7 +267,7 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for DataSync Task (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

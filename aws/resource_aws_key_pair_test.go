@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -61,7 +60,7 @@ func testSweepKeyPairs(region string) error {
 func TestAccAWSKeyPair_basic(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
 	fingerprint := "d7:ff:a6:63:18:64:9c:57:a1:ee:ca:a4:ad:c2:81:62"
-	resourceName := "aws_key_pair.a_key_pair"
+	resourceName := "aws_key_pair.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +89,7 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 
 func TestAccAWSKeyPair_tags(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
-	resourceName := "aws_key_pair.a_key_pair"
+	resourceName := "aws_key_pair.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -135,7 +134,7 @@ func TestAccAWSKeyPair_tags(t *testing.T) {
 
 func TestAccAWSKeyPair_generatedName(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
-	resourceName := "aws_key_pair.a_key_pair"
+	resourceName := "aws_key_pair.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -162,11 +161,11 @@ func TestAccAWSKeyPair_generatedName(t *testing.T) {
 
 func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
-	resourceName := "aws_key_pair.a_key_pair"
+	resourceName := "aws_key_pair.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   "aws_key_pair.a_key_pair",
+		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"key_name_prefix"},
 		Providers:       testAccProviders,
 		CheckDestroy:    testAccCheckAWSKeyPairDestroy,
@@ -191,7 +190,7 @@ func TestAccAWSKeyPair_namePrefix(t *testing.T) {
 
 func TestAccAWSKeyPair_disappears(t *testing.T) {
 	var keyPair ec2.KeyPairInfo
-	resourceName := "aws_key_pair.a_key_pair"
+	resourceName := "aws_key_pair.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -230,12 +229,7 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 			return nil
 		}
 
-		// Verify the error is what we want
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return err
-		}
-		if ec2err.Code() != "InvalidKeyPair.NotFound" {
+		if !isAWSErr(err, "InvalidKeyPair.NotFound", "") {
 			return err
 		}
 	}
@@ -308,7 +302,7 @@ func testAccCheckAWSKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestC
 
 func testAccAWSKeyPairConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_key_pair" "a_key_pair" {
+resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
@@ -317,7 +311,7 @@ resource "aws_key_pair" "a_key_pair" {
 
 func testAccAWSKeyPairConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_key_pair" "a_key_pair" {
+resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 
@@ -330,7 +324,7 @@ resource "aws_key_pair" "a_key_pair" {
 
 func testAccAWSKeyPairConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_key_pair" "a_key_pair" {
+resource "aws_key_pair" "test" {
   key_name   = %[1]q
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 
@@ -343,13 +337,13 @@ resource "aws_key_pair" "a_key_pair" {
 }
 
 const testAccAWSKeyPairConfig_generatedName = `
-resource "aws_key_pair" "a_key_pair" {
+resource "aws_key_pair" "test" {
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }
 `
 
 const testAccCheckAWSKeyPairPrefixNameConfig = `
-resource "aws_key_pair" "a_key_pair" {
+resource "aws_key_pair" "test" {
   key_name_prefix   = "baz-"
   public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD3F6tyPEFEzV0LX3X8BsXdMsQz1x2cEikKDEY0aIj41qgxMCP/iteneqXSIFZBp5vizPvaoIR3Um9xK7PGoW8giupGn+EPuxIA4cDM4vzOqOkiMPhz5XK0whEjkVzTo4+S0puvDZuwIsdiW9mxhJc7tgBNL0cYlWSYVkz4G/fslNfRPW5mYAM49f4fhtxPb5ok4Q2Lg9dPKVHO/Bgeu5woMc7RY0p1ej6D4CKFE6lymSDJpW0YHX/wqE9+cfEauh7xZcG0q9t2ta6F6fmX0agvpFyZo8aFbXeUBr7osSCJNgvavWbM/06niWrOvYX2xwWdhXmXSrbX8ZbabVohBK41 phodgson@thoughtworks.com"
 }

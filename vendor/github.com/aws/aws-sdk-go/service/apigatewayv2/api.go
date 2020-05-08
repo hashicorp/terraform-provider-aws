@@ -2459,6 +2459,93 @@ func (c *ApiGatewayV2) DeleteVpcLinkWithContext(ctx aws.Context, input *DeleteVp
 	return out, req.Send()
 }
 
+const opExportApi = "ExportApi"
+
+// ExportApiRequest generates a "aws/request.Request" representing the
+// client's request for the ExportApi operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ExportApi for more information on using the ExportApi
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ExportApiRequest method.
+//    req, resp := client.ExportApiRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ExportApi
+func (c *ApiGatewayV2) ExportApiRequest(input *ExportApiInput) (req *request.Request, output *ExportApiOutput) {
+	op := &request.Operation{
+		Name:       opExportApi,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v2/apis/{apiId}/exports/{specification}",
+	}
+
+	if input == nil {
+		input = &ExportApiInput{}
+	}
+
+	output = &ExportApiOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ExportApi API operation for AmazonApiGatewayV2.
+//
+// Exports a definition of an API in a particular output format and specification.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation ExportApi for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+//   * BadRequestException
+//   The request is not valid, for example, the input is incomplete or incorrect.
+//   See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ExportApi
+func (c *ApiGatewayV2) ExportApi(input *ExportApiInput) (*ExportApiOutput, error) {
+	req, out := c.ExportApiRequest(input)
+	return out, req.Send()
+}
+
+// ExportApiWithContext is the same as ExportApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ExportApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) ExportApiWithContext(ctx aws.Context, input *ExportApiInput, opts ...request.Option) (*ExportApiOutput, error) {
+	req, out := c.ExportApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetApi = "GetApi"
 
 // GetApiRequest generates a "aws/request.Request" representing the
@@ -6144,8 +6231,8 @@ func (c *ApiGatewayV2) UpdateVpcLinkWithContext(ctx aws.Context, input *UpdateVp
 }
 
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -6162,17 +6249,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6180,22 +6267,22 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Settings for logging access in a stage.
@@ -6574,8 +6661,8 @@ func (s *Authorizer) SetName(v string) *Authorizer {
 // The request is not valid, for example, the input is incomplete or incorrect.
 // See the accompanying error message for details.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the error encountered.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6593,17 +6680,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6611,30 +6698,30 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The requested operation would cause a conflict with the current state of
 // a service resource associated with the request. Resolve the conflict before
 // retrying this request. See the accompanying error message for details.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the error encountered.
 	Message_ *string `locationName:"message" type:"string"`
@@ -6652,17 +6739,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -6670,22 +6757,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Represents a CORS configuration. Supported only for HTTP APIs. See Configuring
@@ -7749,7 +7836,7 @@ type CreateIntegrationInput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
 
 	// The TLS configuration for a private integration. If you specify a TLS configuration,
@@ -7953,7 +8040,7 @@ type CreateIntegrationOutput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
 
 	// The TLS configuration for a private integration. If you specify a TLS configuration,
@@ -10650,6 +10737,121 @@ func (s *DomainNameConfiguration) SetSecurityPolicy(v string) *DomainNameConfigu
 	return s
 }
 
+type ExportApiInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	ExportVersion *string `location:"querystring" locationName:"exportVersion" type:"string"`
+
+	IncludeExtensions *bool `location:"querystring" locationName:"includeExtensions" type:"boolean"`
+
+	// OutputType is a required field
+	OutputType *string `location:"querystring" locationName:"outputType" type:"string" required:"true"`
+
+	// Specification is a required field
+	Specification *string `location:"uri" locationName:"specification" type:"string" required:"true"`
+
+	StageName *string `location:"querystring" locationName:"stageName" type:"string"`
+}
+
+// String returns the string representation
+func (s ExportApiInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportApiInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExportApiInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExportApiInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.OutputType == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputType"))
+	}
+	if s.Specification == nil {
+		invalidParams.Add(request.NewErrParamRequired("Specification"))
+	}
+	if s.Specification != nil && len(*s.Specification) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Specification", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *ExportApiInput) SetApiId(v string) *ExportApiInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetExportVersion sets the ExportVersion field's value.
+func (s *ExportApiInput) SetExportVersion(v string) *ExportApiInput {
+	s.ExportVersion = &v
+	return s
+}
+
+// SetIncludeExtensions sets the IncludeExtensions field's value.
+func (s *ExportApiInput) SetIncludeExtensions(v bool) *ExportApiInput {
+	s.IncludeExtensions = &v
+	return s
+}
+
+// SetOutputType sets the OutputType field's value.
+func (s *ExportApiInput) SetOutputType(v string) *ExportApiInput {
+	s.OutputType = &v
+	return s
+}
+
+// SetSpecification sets the Specification field's value.
+func (s *ExportApiInput) SetSpecification(v string) *ExportApiInput {
+	s.Specification = &v
+	return s
+}
+
+// SetStageName sets the StageName field's value.
+func (s *ExportApiInput) SetStageName(v string) *ExportApiInput {
+	s.StageName = &v
+	return s
+}
+
+type ExportApiOutput struct {
+	_ struct{} `type:"structure" payload:"Body"`
+
+	// Represents an exported definition of an API in a particular output format,
+	// for example, YAML. The API is serialized to the requested specification,
+	// for example, OpenAPI 3.0.
+	Body []byte `locationName:"body" type:"blob"`
+}
+
+// String returns the string representation
+func (s ExportApiOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportApiOutput) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *ExportApiOutput) SetBody(v []byte) *ExportApiOutput {
+	s.Body = v
+	return s
+}
+
 type GetApiInput struct {
 	_ struct{} `type:"structure"`
 
@@ -11818,7 +12020,7 @@ type GetIntegrationOutput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
 
 	// The TLS configuration for a private integration. If you specify a TLS configuration,
@@ -13900,7 +14102,7 @@ type Integration struct {
 	// Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
 	// If you specify the ARN of an AWS Cloud Map service, API Gateway uses DiscoverInstances
 	// to identify resources. You can use query parameters to target specific resources.
-	// To learn more, see DiscoverInstances (https://alpha-docs-aws.amazon.com/cloud-map/latest/api/API_DiscoverInstances.html).
+	// To learn more, see DiscoverInstances (https://docs.aws.amazon.com/cloud-map/latest/api/API_DiscoverInstances.html).
 	// For private integrations, all resources must be owned by the same AWS account.
 	IntegrationUri *string `locationName:"integrationUri" type:"string"`
 
@@ -13946,9 +14148,9 @@ type Integration struct {
 	// WebSocket APIs.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// Custom timeout between 50 and 29,000 milliseconds. The default value is 29,000
-	// milliseconds or 29 seconds for WebSocket APIs. The default value is 5,000
-	// milliseconds, or 5 seconds for HTTP APIs.
+	// Custom timeout between 50 and 29,000 milliseconds for WebSocket APIs and
+	// between 50 and 30,000 milliseconds for HTTP APIs. The default timeout is
+	// 29 seconds for WebSocket APIs and 30 seconds for HTTP APIs.
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
 
 	// The TLS configuration for a private integration. If you specify a TLS configuration,
@@ -14274,8 +14476,8 @@ func (s *Model) SetSchema(v string) *Model {
 // The resource specified in the request was not found. See the message field
 // for more information.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the error encountered.
 	Message_ *string `locationName:"message" type:"string"`
@@ -14296,17 +14498,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14314,22 +14516,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Validation constraints imposed on parameters of a request (path, query string,
@@ -15113,8 +15315,8 @@ func (s *TlsConfigInput) SetServerNameToVerify(v string) *TlsConfigInput {
 
 // A limit has been exceeded. See the accompanying error message for details.
 type TooManyRequestsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	LimitType *string `locationName:"limitType" type:"string"`
 
@@ -15133,17 +15335,17 @@ func (s TooManyRequestsException) GoString() string {
 
 func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
 	return &TooManyRequestsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyRequestsException) Code() string {
+func (s *TooManyRequestsException) Code() string {
 	return "TooManyRequestsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyRequestsException) Message() string {
+func (s *TooManyRequestsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -15151,22 +15353,22 @@ func (s TooManyRequestsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyRequestsException) OrigErr() error {
+func (s *TooManyRequestsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyRequestsException) Error() string {
+func (s *TooManyRequestsException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyRequestsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyRequestsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -16204,7 +16406,7 @@ type UpdateIntegrationInput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
 
 	// The TLS configuration for a private integration. If you specify a TLS configuration,
@@ -16417,7 +16619,7 @@ type UpdateIntegrationOutput struct {
 	// for more information.
 	TemplateSelectionExpression *string `locationName:"templateSelectionExpression" type:"string"`
 
-	// An integer with a value between [50-29000].
+	// An integer with a value between [50-30000].
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" min:"50" type:"integer"`
 
 	// The TLS configuration for a private integration. If you specify a TLS configuration,

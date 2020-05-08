@@ -19,9 +19,10 @@ func TestAccAWSWafByteMatchSet_basic(t *testing.T) {
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafByteMatchSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafByteMatchSetConfig(byteMatchSet),
@@ -94,9 +95,10 @@ func TestAccAWSWafByteMatchSet_changeTuples(t *testing.T) {
 	resourceName := "aws_waf_byte_match_set.byte_set"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafByteMatchSetDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafByteMatchSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafByteMatchSetConfig(byteMatchSetName),

@@ -44,7 +44,7 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 			"bid_price": {
 				Type:     schema.TypeString,
@@ -60,7 +60,7 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ForceNew:         false,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)

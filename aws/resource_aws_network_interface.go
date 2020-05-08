@@ -79,6 +79,11 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Default:  true,
 			},
 
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -145,13 +150,20 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	d.SetId(*resp.NetworkInterface.NetworkInterfaceId)
-	log.Printf("[INFO] ENI ID: %s", d.Id())
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
+	}
+
 	return resourceAwsNetworkInterfaceUpdate(d, meta)
 }
 
 func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	describe_network_interfaces_request := &ec2.DescribeNetworkInterfacesInput{
 		NetworkInterfaceIds: []*string{aws.String(d.Id())},
 	}
@@ -186,6 +198,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("mac_address", eni.MacAddress)
 	d.Set("private_ip", eni.PrivateIpAddress)
+	d.Set("outpost_arn", eni.OutpostArn)
 
 	if err := d.Set("private_ips", flattenNetworkInterfacesPrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return fmt.Errorf("error setting private_ips: %s", err)
@@ -200,7 +213,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -261,7 +274,6 @@ func resourceAwsNetworkInterfaceDetach(oa *schema.Set, meta interface{}, eniId s
 
 func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	d.Partial(true)
 
 	if d.HasChange("attachment") {
 		oa, na := d.GetChange("attachment")
@@ -285,8 +297,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 				return fmt.Errorf("Error attaching ENI: %s", attach_err)
 			}
 		}
-
-		d.SetPartial("attachment")
 	}
 
 	if d.HasChange("private_ips") {
@@ -326,8 +336,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 				return fmt.Errorf("Failure to assign Private IPs: %s", err)
 			}
 		}
-
-		d.SetPartial("private_ips")
 	}
 
 	// ModifyNetworkInterfaceAttribute needs to be called after creating an ENI
@@ -342,8 +350,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("Failure updating ENI: %s", err)
 		}
-
-		d.SetPartial("source_dest_check")
 	}
 
 	if d.HasChange("private_ips_count") && !d.IsNewResource() {
@@ -384,8 +390,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 					return fmt.Errorf("Failure to unassign Private IPs: %s", err)
 				}
 			}
-
-			d.SetPartial("private_ips_count")
 		}
 	}
 
@@ -399,8 +403,6 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("Failure updating ENI: %s", err)
 		}
-
-		d.SetPartial("security_groups")
 	}
 
 	if d.HasChange("description") {
@@ -413,19 +415,15 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 		if err != nil {
 			return fmt.Errorf("Failure updating ENI: %s", err)
 		}
-
-		d.SetPartial("description")
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
 			return fmt.Errorf("error updating EC2 Network Interface (%s) tags: %s", d.Id(), err)
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsNetworkInterfaceRead(d, meta)
 }

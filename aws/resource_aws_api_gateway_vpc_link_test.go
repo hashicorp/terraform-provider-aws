@@ -213,7 +213,14 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_availability_zones" "test" {}
+data "aws_availability_zones" "test" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"

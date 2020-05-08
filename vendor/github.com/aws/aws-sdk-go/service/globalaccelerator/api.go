@@ -1013,7 +1013,8 @@ func (c *GlobalAccelerator) DescribeEndpointGroupRequest(input *DescribeEndpoint
 
 // DescribeEndpointGroup API operation for AWS Global Accelerator.
 //
-// Describe an endpoint group.
+// Describe an endpoint group. To see an AWS CLI example of describing an endpoint
+// group, scroll down to Example.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1271,7 +1272,8 @@ func (c *GlobalAccelerator) ListByoipCidrsRequest(input *ListByoipCidrsInput) (r
 // ListByoipCidrs API operation for AWS Global Accelerator.
 //
 // Lists the IP address ranges that were specified in calls to ProvisionByoipCidr
-// (https://docs.aws.amazon.com/global-accelerator/latest/api/ProvisionByoipCidr.html).
+// (https://docs.aws.amazon.com/global-accelerator/latest/api/ProvisionByoipCidr.html),
+// including the current state and a history of state changes.
 //
 // To see an AWS CLI example of listing BYOIP CIDR addresses, scroll down to
 // Example.
@@ -2505,8 +2507,8 @@ func (s *AcceleratorAttributes) SetFlowLogsS3Prefix(v string) *AcceleratorAttrib
 
 // The accelerator that you specified could not be disabled.
 type AcceleratorNotDisabledException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2523,17 +2525,17 @@ func (s AcceleratorNotDisabledException) GoString() string {
 
 func newErrorAcceleratorNotDisabledException(v protocol.ResponseMetadata) error {
 	return &AcceleratorNotDisabledException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AcceleratorNotDisabledException) Code() string {
+func (s *AcceleratorNotDisabledException) Code() string {
 	return "AcceleratorNotDisabledException"
 }
 
 // Message returns the exception's message.
-func (s AcceleratorNotDisabledException) Message() string {
+func (s *AcceleratorNotDisabledException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2541,28 +2543,28 @@ func (s AcceleratorNotDisabledException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AcceleratorNotDisabledException) OrigErr() error {
+func (s *AcceleratorNotDisabledException) OrigErr() error {
 	return nil
 }
 
-func (s AcceleratorNotDisabledException) Error() string {
+func (s *AcceleratorNotDisabledException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AcceleratorNotDisabledException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AcceleratorNotDisabledException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AcceleratorNotDisabledException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AcceleratorNotDisabledException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The accelerator that you specified doesn't exist.
 type AcceleratorNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2579,17 +2581,17 @@ func (s AcceleratorNotFoundException) GoString() string {
 
 func newErrorAcceleratorNotFoundException(v protocol.ResponseMetadata) error {
 	return &AcceleratorNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AcceleratorNotFoundException) Code() string {
+func (s *AcceleratorNotFoundException) Code() string {
 	return "AcceleratorNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s AcceleratorNotFoundException) Message() string {
+func (s *AcceleratorNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2597,28 +2599,28 @@ func (s AcceleratorNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AcceleratorNotFoundException) OrigErr() error {
+func (s *AcceleratorNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s AcceleratorNotFoundException) Error() string {
+func (s *AcceleratorNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AcceleratorNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AcceleratorNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AcceleratorNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AcceleratorNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // You don't have access permission.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2635,17 +2637,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2653,22 +2655,22 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type AdvertiseByoipCidrInput struct {
@@ -2737,8 +2739,8 @@ func (s *AdvertiseByoipCidrOutput) SetByoipCidr(v *ByoipCidr) *AdvertiseByoipCid
 // You must remove all dependent resources from a listener before you can delete
 // it.
 type AssociatedEndpointGroupFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2755,17 +2757,17 @@ func (s AssociatedEndpointGroupFoundException) GoString() string {
 
 func newErrorAssociatedEndpointGroupFoundException(v protocol.ResponseMetadata) error {
 	return &AssociatedEndpointGroupFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociatedEndpointGroupFoundException) Code() string {
+func (s *AssociatedEndpointGroupFoundException) Code() string {
 	return "AssociatedEndpointGroupFoundException"
 }
 
 // Message returns the exception's message.
-func (s AssociatedEndpointGroupFoundException) Message() string {
+func (s *AssociatedEndpointGroupFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2773,30 +2775,30 @@ func (s AssociatedEndpointGroupFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociatedEndpointGroupFoundException) OrigErr() error {
+func (s *AssociatedEndpointGroupFoundException) OrigErr() error {
 	return nil
 }
 
-func (s AssociatedEndpointGroupFoundException) Error() string {
+func (s *AssociatedEndpointGroupFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociatedEndpointGroupFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociatedEndpointGroupFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociatedEndpointGroupFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociatedEndpointGroupFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The accelerator that you specified has a listener associated with it. You
 // must remove all dependent resources from an accelerator before you can delete
 // it.
 type AssociatedListenerFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2813,17 +2815,17 @@ func (s AssociatedListenerFoundException) GoString() string {
 
 func newErrorAssociatedListenerFoundException(v protocol.ResponseMetadata) error {
 	return &AssociatedListenerFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AssociatedListenerFoundException) Code() string {
+func (s *AssociatedListenerFoundException) Code() string {
 	return "AssociatedListenerFoundException"
 }
 
 // Message returns the exception's message.
-func (s AssociatedListenerFoundException) Message() string {
+func (s *AssociatedListenerFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2831,26 +2833,26 @@ func (s AssociatedListenerFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AssociatedListenerFoundException) OrigErr() error {
+func (s *AssociatedListenerFoundException) OrigErr() error {
 	return nil
 }
 
-func (s AssociatedListenerFoundException) Error() string {
+func (s *AssociatedListenerFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AssociatedListenerFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AssociatedListenerFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AssociatedListenerFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AssociatedListenerFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Information about an IP address range that is provisioned for use with your
-// AWS resources through bring your own IP addresses (BYOIP).
+// AWS resources through bring your own IP address (BYOIP).
 //
 // The following describes each BYOIP State that your IP address range can be
 // in.
@@ -2902,6 +2904,10 @@ type ByoipCidr struct {
 	// The address range, in CIDR notation.
 	Cidr *string `type:"string"`
 
+	// A history of status changes for an IP address range that that you bring to
+	// AWS Global Accelerator through bring your own IP address (BYOIP).
+	Events []*ByoipCidrEvent `type:"list"`
+
 	// The state of the address pool.
 	State *string `type:"string" enum:"ByoipCidrState"`
 }
@@ -2922,16 +2928,60 @@ func (s *ByoipCidr) SetCidr(v string) *ByoipCidr {
 	return s
 }
 
+// SetEvents sets the Events field's value.
+func (s *ByoipCidr) SetEvents(v []*ByoipCidrEvent) *ByoipCidr {
+	s.Events = v
+	return s
+}
+
 // SetState sets the State field's value.
 func (s *ByoipCidr) SetState(v string) *ByoipCidr {
 	s.State = &v
 	return s
 }
 
+// A complex type that contains a Message and a Timestamp value for changes
+// that you make in the status an IP address range that you bring to AWS Global
+// Accelerator through bring your own IP address (BYOIP).
+type ByoipCidrEvent struct {
+	_ struct{} `type:"structure"`
+
+	// A string that contains an Event message describing changes that you make
+	// in the status of an IP address range that you bring to AWS Global Accelerator
+	// through bring your own IP address (BYOIP).
+	Message *string `type:"string"`
+
+	// A timestamp when you make a status change for an IP address range that you
+	// bring to AWS Global Accelerator through bring your own IP address (BYOIP).
+	Timestamp *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s ByoipCidrEvent) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ByoipCidrEvent) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *ByoipCidrEvent) SetMessage(v string) *ByoipCidrEvent {
+	s.Message = &v
+	return s
+}
+
+// SetTimestamp sets the Timestamp field's value.
+func (s *ByoipCidrEvent) SetTimestamp(v time.Time) *ByoipCidrEvent {
+	s.Timestamp = &v
+	return s
+}
+
 // The CIDR that you specified was not found or is incorrect.
 type ByoipCidrNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -2948,17 +2998,17 @@ func (s ByoipCidrNotFoundException) GoString() string {
 
 func newErrorByoipCidrNotFoundException(v protocol.ResponseMetadata) error {
 	return &ByoipCidrNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ByoipCidrNotFoundException) Code() string {
+func (s *ByoipCidrNotFoundException) Code() string {
 	return "ByoipCidrNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ByoipCidrNotFoundException) Message() string {
+func (s *ByoipCidrNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -2966,22 +3016,22 @@ func (s ByoipCidrNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ByoipCidrNotFoundException) OrigErr() error {
+func (s *ByoipCidrNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ByoipCidrNotFoundException) Error() string {
+func (s *ByoipCidrNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ByoipCidrNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ByoipCidrNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ByoipCidrNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ByoipCidrNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides authorization for Amazon to bring a specific IP address range to
@@ -3966,8 +4016,8 @@ type EndpointConfiguration struct {
 	// X-Forwarded-For request header as traffic travels to applications on the
 	// Application Load Balancer endpoint fronted by the accelerator.
 	//
-	// For more information, see Viewing Client IP Addresses in AWS Global Accelerator
-	// (https://docs.aws.amazon.com/global-accelerator/latest/dg/introduction-how-it-works-client-ip.html)
+	// For more information, see Preserve Client IP Addresses in AWS Global Accelerator
+	// (https://docs.aws.amazon.com/global-accelerator/latest/dg/preserve-client-ip-address.html)
 	// in the AWS Global Accelerator Developer Guide.
 	ClientIPPreservationEnabled *bool `type:"boolean"`
 
@@ -4237,8 +4287,8 @@ func (s *EndpointGroup) SetTrafficDialPercentage(v float64) *EndpointGroup {
 
 // The endpoint group that you specified already exists.
 type EndpointGroupAlreadyExistsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4255,17 +4305,17 @@ func (s EndpointGroupAlreadyExistsException) GoString() string {
 
 func newErrorEndpointGroupAlreadyExistsException(v protocol.ResponseMetadata) error {
 	return &EndpointGroupAlreadyExistsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s EndpointGroupAlreadyExistsException) Code() string {
+func (s *EndpointGroupAlreadyExistsException) Code() string {
 	return "EndpointGroupAlreadyExistsException"
 }
 
 // Message returns the exception's message.
-func (s EndpointGroupAlreadyExistsException) Message() string {
+func (s *EndpointGroupAlreadyExistsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4273,28 +4323,28 @@ func (s EndpointGroupAlreadyExistsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s EndpointGroupAlreadyExistsException) OrigErr() error {
+func (s *EndpointGroupAlreadyExistsException) OrigErr() error {
 	return nil
 }
 
-func (s EndpointGroupAlreadyExistsException) Error() string {
+func (s *EndpointGroupAlreadyExistsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s EndpointGroupAlreadyExistsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *EndpointGroupAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s EndpointGroupAlreadyExistsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *EndpointGroupAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The endpoint group that you specified doesn't exist.
 type EndpointGroupNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4311,17 +4361,17 @@ func (s EndpointGroupNotFoundException) GoString() string {
 
 func newErrorEndpointGroupNotFoundException(v protocol.ResponseMetadata) error {
 	return &EndpointGroupNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s EndpointGroupNotFoundException) Code() string {
+func (s *EndpointGroupNotFoundException) Code() string {
 	return "EndpointGroupNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s EndpointGroupNotFoundException) Message() string {
+func (s *EndpointGroupNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4329,29 +4379,29 @@ func (s EndpointGroupNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s EndpointGroupNotFoundException) OrigErr() error {
+func (s *EndpointGroupNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s EndpointGroupNotFoundException) Error() string {
+func (s *EndpointGroupNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s EndpointGroupNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *EndpointGroupNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s EndpointGroupNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *EndpointGroupNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The CIDR that you specified is not valid for this action. For example, the
 // state of the CIDR might be incorrect for this action.
 type IncorrectCidrStateException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4368,17 +4418,17 @@ func (s IncorrectCidrStateException) GoString() string {
 
 func newErrorIncorrectCidrStateException(v protocol.ResponseMetadata) error {
 	return &IncorrectCidrStateException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s IncorrectCidrStateException) Code() string {
+func (s *IncorrectCidrStateException) Code() string {
 	return "IncorrectCidrStateException"
 }
 
 // Message returns the exception's message.
-func (s IncorrectCidrStateException) Message() string {
+func (s *IncorrectCidrStateException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4386,28 +4436,28 @@ func (s IncorrectCidrStateException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s IncorrectCidrStateException) OrigErr() error {
+func (s *IncorrectCidrStateException) OrigErr() error {
 	return nil
 }
 
-func (s IncorrectCidrStateException) Error() string {
+func (s *IncorrectCidrStateException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s IncorrectCidrStateException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *IncorrectCidrStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s IncorrectCidrStateException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *IncorrectCidrStateException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // There was an internal error for AWS Global Accelerator.
 type InternalServiceErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4424,17 +4474,17 @@ func (s InternalServiceErrorException) GoString() string {
 
 func newErrorInternalServiceErrorException(v protocol.ResponseMetadata) error {
 	return &InternalServiceErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServiceErrorException) Code() string {
+func (s *InternalServiceErrorException) Code() string {
 	return "InternalServiceErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalServiceErrorException) Message() string {
+func (s *InternalServiceErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4442,28 +4492,28 @@ func (s InternalServiceErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServiceErrorException) OrigErr() error {
+func (s *InternalServiceErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServiceErrorException) Error() string {
+func (s *InternalServiceErrorException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServiceErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServiceErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServiceErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServiceErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An argument that you specified is invalid.
 type InvalidArgumentException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4480,17 +4530,17 @@ func (s InvalidArgumentException) GoString() string {
 
 func newErrorInvalidArgumentException(v protocol.ResponseMetadata) error {
 	return &InvalidArgumentException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidArgumentException) Code() string {
+func (s *InvalidArgumentException) Code() string {
 	return "InvalidArgumentException"
 }
 
 // Message returns the exception's message.
-func (s InvalidArgumentException) Message() string {
+func (s *InvalidArgumentException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4498,28 +4548,28 @@ func (s InvalidArgumentException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidArgumentException) OrigErr() error {
+func (s *InvalidArgumentException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidArgumentException) Error() string {
+func (s *InvalidArgumentException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidArgumentException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidArgumentException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidArgumentException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidArgumentException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // There isn't another item to return.
 type InvalidNextTokenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4536,17 +4586,17 @@ func (s InvalidNextTokenException) GoString() string {
 
 func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
 	return &InvalidNextTokenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidNextTokenException) Code() string {
+func (s *InvalidNextTokenException) Code() string {
 	return "InvalidNextTokenException"
 }
 
 // Message returns the exception's message.
-func (s InvalidNextTokenException) Message() string {
+func (s *InvalidNextTokenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4554,29 +4604,29 @@ func (s InvalidNextTokenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidNextTokenException) OrigErr() error {
+func (s *InvalidNextTokenException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidNextTokenException) Error() string {
+func (s *InvalidNextTokenException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidNextTokenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidNextTokenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidNextTokenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidNextTokenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The port numbers that you specified are not valid numbers or are not unique
 // for this accelerator.
 type InvalidPortRangeException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4593,17 +4643,17 @@ func (s InvalidPortRangeException) GoString() string {
 
 func newErrorInvalidPortRangeException(v protocol.ResponseMetadata) error {
 	return &InvalidPortRangeException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidPortRangeException) Code() string {
+func (s *InvalidPortRangeException) Code() string {
 	return "InvalidPortRangeException"
 }
 
 // Message returns the exception's message.
-func (s InvalidPortRangeException) Message() string {
+func (s *InvalidPortRangeException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4611,22 +4661,22 @@ func (s InvalidPortRangeException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidPortRangeException) OrigErr() error {
+func (s *InvalidPortRangeException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidPortRangeException) Error() string {
+func (s *InvalidPortRangeException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidPortRangeException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidPortRangeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidPortRangeException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidPortRangeException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A complex type for the set of IP addresses for an accelerator.
@@ -4666,8 +4716,8 @@ func (s *IpSet) SetIpFamily(v string) *IpSet {
 // Processing your request would cause you to exceed an AWS Global Accelerator
 // limit.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4684,17 +4734,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4702,22 +4752,22 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListAcceleratorsInput struct {
@@ -5204,8 +5254,8 @@ func (s *Listener) SetProtocol(v string) *Listener {
 
 // The listener that you specified doesn't exist.
 type ListenerNotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -5222,17 +5272,17 @@ func (s ListenerNotFoundException) GoString() string {
 
 func newErrorListenerNotFoundException(v protocol.ResponseMetadata) error {
 	return &ListenerNotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ListenerNotFoundException) Code() string {
+func (s *ListenerNotFoundException) Code() string {
 	return "ListenerNotFoundException"
 }
 
 // Message returns the exception's message.
-func (s ListenerNotFoundException) Message() string {
+func (s *ListenerNotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5240,22 +5290,22 @@ func (s ListenerNotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ListenerNotFoundException) OrigErr() error {
+func (s *ListenerNotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s ListenerNotFoundException) Error() string {
+func (s *ListenerNotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ListenerNotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ListenerNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ListenerNotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ListenerNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A complex type for a range of ports for a listener.
