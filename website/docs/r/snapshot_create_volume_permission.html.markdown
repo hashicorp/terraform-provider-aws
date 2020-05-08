@@ -31,6 +31,7 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 ```
 
 ### Public snapshot
+
 ```hcl
 resource "aws_snapshot_create_volume_permission" "example_perm" {
   snapshot_id = "${aws_ebs_snapshot.example_snapshot.id}"
