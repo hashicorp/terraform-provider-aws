@@ -22,6 +22,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 			"advanced_options": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
