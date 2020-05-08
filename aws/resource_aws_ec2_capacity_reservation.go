@@ -156,6 +156,7 @@ func resourceAwsEc2CapacityReservationCreate(d *schema.ResourceData, meta interf
 
 func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeCapacityReservations(&ec2.DescribeCapacityReservationsInput{
 		CapacityReservationIds: []*string{aws.String(d.Id())},
@@ -197,7 +198,7 @@ func resourceAwsEc2CapacityReservationRead(d *schema.ResourceData, meta interfac
 	d.Set("instance_platform", reservation.InstancePlatform)
 	d.Set("instance_type", reservation.InstanceType)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(reservation.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(reservation.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

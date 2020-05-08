@@ -130,6 +130,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>kinesis_analytics</code> (<b>DEPRECATED</b> Use <code>kinesisanalytics</code> instead)</li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>
+  <li><code>kinesisanalyticsv2</code></li>
   <li><code>kinesisvideo</code></li>
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
@@ -161,6 +162,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>redshift</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>route53</code></li>
+  <li><code>route53domains</code></li>
   <li><code>route53resolver</code></li>
   <li><code>s3</code></li>
   <li><code>s3control</code></li>

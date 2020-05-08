@@ -27,6 +27,7 @@ var validLambdaRuntimes = []string{
 	lambda.RuntimeDotnetcore10,
 	lambda.RuntimeDotnetcore20,
 	lambda.RuntimeDotnetcore21,
+	lambda.RuntimeDotnetcore31,
 	lambda.RuntimeGo1X,
 	lambda.RuntimeJava8,
 	lambda.RuntimeJava11,
@@ -491,6 +492,7 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 // GetFunction in the API / SDK
 func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &lambda.GetFunctionInput{
 		FunctionName: aws.String(d.Get("function_name").(string)),
@@ -523,7 +525,7 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	// Tagging operations are permitted on Lambda functions only.
 	// Tags on aliases and versions are not supported.
 	if !qualifierExistance {
-		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().Map()); err != nil {
+		if err := d.Set("tags", keyvaluetags.LambdaKeyValueTags(getFunctionOutput.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return fmt.Errorf("error setting tags: %s", err)
 		}
 	}
@@ -670,8 +672,6 @@ func needsFunctionCodeUpdate(d resourceDiffer) bool {
 // UpdateFunctionCode in the API / SDK
 func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lambdaconn
-
-	d.Partial(true)
 
 	arn := d.Get("arn").(string)
 	if d.HasChange("tags") {
@@ -837,12 +837,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		if err := waitForLambdaFunctionUpdate(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return fmt.Errorf("error waiting for Lambda Function (%s) update: %s", d.Id(), err)
 		}
-
-		d.SetPartial("description")
-		d.SetPartial("handler")
-		d.SetPartial("memory_size")
-		d.SetPartial("role")
-		d.SetPartial("timeout")
 	}
 
 	codeUpdate := needsFunctionCodeUpdate(d)
@@ -880,12 +874,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 		if err != nil {
 			return fmt.Errorf("Error modifying Lambda Function Code %s: %s", d.Id(), err)
 		}
-
-		d.SetPartial("filename")
-		d.SetPartial("source_code_hash")
-		d.SetPartial("s3_bucket")
-		d.SetPartial("s3_key")
-		d.SetPartial("s3_object_version")
 	}
 
 	if d.HasChange("reserved_concurrent_executions") {
@@ -927,8 +915,6 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("Error publishing Lambda Function Version %s: %s", d.Id(), err)
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsLambdaFunctionRead(d, meta)
 }

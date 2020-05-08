@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsRedshiftSecurityGroup() *schema.Resource {
@@ -28,10 +29,14 @@ func resourceAwsRedshiftSecurityGroup() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRedshiftSecurityGroupName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringNotInSlice([]string{"default"}, false),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+				),
 			},
 
 			"description": {
@@ -246,24 +251,6 @@ func resourceAwsRedshiftSecurityGroupRetrieve(d *schema.ResourceData, meta inter
 	}
 
 	return resp.ClusterSecurityGroups[0], nil
-}
-
-func validateRedshiftSecurityGroupName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value == "default" {
-		errors = append(errors, fmt.Errorf("the Redshift Security Group name cannot be %q", value))
-	}
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q: %q",
-			k, value))
-	}
-	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 32 characters: %q", k, value))
-	}
-	return
-
 }
 
 func resourceAwsRedshiftSecurityGroupIngressHash(v interface{}) int {
