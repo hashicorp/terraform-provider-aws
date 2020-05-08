@@ -170,7 +170,7 @@ func TestAccAWSLaunchConfiguration_RootBlockDevice_AmiDisappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLaunchConfigurationExists(resourceName, &conf),
 					testAccCheckAmiExists(amiCopyResourceName, &ami),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmi(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmi(), amiCopyResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
