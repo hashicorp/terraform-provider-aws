@@ -314,25 +314,16 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("instance_type", request.LaunchSpecification.InstanceType)
 	d.Set("ami", request.LaunchSpecification.ImageId)
 
-	var sgs []*string
-	for _, sg := range request.LaunchSpecification.SecurityGroups {
-		sgs = append(sgs, sg.GroupId)
-	}
-
-	if err := d.Set("vpc_security_group_ids", flattenStringSet(sgs)); err != nil {
-		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
-	}
-
-	if d.Get("get_password_data").(bool) {
-		passwordData, err := getAwsEc2InstancePasswordData(*request.InstanceId, conn)
-		if err != nil {
-			return err
-		}
-		d.Set("password_data", passwordData)
-	} else {
-		d.Set("get_password_data", false)
-		d.Set("password_data", nil)
-	}
+	//if d.Get("get_password_data").(bool) {
+	//	passwordData, err := getAwsEc2InstancePasswordData(*request.InstanceId, conn)
+	//	if err != nil {
+	//		return err
+	//	}
+	//	d.Set("password_data", passwordData)
+	//} else {
+	//	d.Set("get_password_data", false)
+	//	d.Set("password_data", nil)
+	//}
 
 	return nil
 }
@@ -401,6 +392,10 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 
 	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
 		log.Printf("[WARN] Error setting ipv6_addresses for AWS Spot Instance (%s): %s", d.Id(), err)
+	}
+
+	if err := readSecurityGroups(d, instance, conn); err != nil {
+		return err
 	}
 
 	if d.Get("get_password_data").(bool) {
