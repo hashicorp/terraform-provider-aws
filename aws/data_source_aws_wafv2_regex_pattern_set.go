@@ -26,6 +26,18 @@ func dataSourceAwsWafv2RegexPatternSet() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"regular_expression": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"regex_string": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"scope": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -45,33 +57,57 @@ func dataSourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interfac
 	var foundRegexPatternSet *wafv2.RegexPatternSetSummary
 	input := &wafv2.ListRegexPatternSetsInput{
 		Scope: aws.String(d.Get("scope").(string)),
+		Limit: aws.Int64(100),
 	}
+
 	for {
-		output, err := conn.ListRegexPatternSets(input)
+		resp, err := conn.ListRegexPatternSets(input)
 		if err != nil {
-			return fmt.Errorf("Error reading WAFV2 RegexPatternSets: %s", err)
+			return fmt.Errorf("Error reading WAFv2 RegexPatternSets: %s", err)
 		}
 
-		for _, regexPatternSet := range output.RegexPatternSets {
-			if aws.StringValue(regexPatternSet.Name) == name {
+		if resp == nil || resp.RegexPatternSets == nil {
+			return fmt.Errorf("Error reading WAFv2 RegexPatternSets")
+		}
+
+		for _, regexPatternSet := range resp.RegexPatternSets {
+			if regexPatternSet != nil && aws.StringValue(regexPatternSet.Name) == name {
 				foundRegexPatternSet = regexPatternSet
 				break
 			}
 		}
 
-		if output.NextMarker == nil || foundRegexPatternSet != nil {
+		if resp.NextMarker == nil || foundRegexPatternSet != nil {
 			break
 		}
-		input.NextMarker = output.NextMarker
+		input.NextMarker = resp.NextMarker
 	}
 
 	if foundRegexPatternSet == nil {
-		return fmt.Errorf("WAFV2 RegexPatternSet not found for name: %s", name)
+		return fmt.Errorf("WAFv2 RegexPatternSet not found for name: %s", name)
 	}
 
-	d.SetId(aws.StringValue(foundRegexPatternSet.Id))
-	d.Set("arn", foundRegexPatternSet.ARN)
-	d.Set("description", aws.StringValue(foundRegexPatternSet.Description))
+	resp, err := conn.GetRegexPatternSet(&wafv2.GetRegexPatternSetInput{
+		Id:    foundRegexPatternSet.Id,
+		Name:  foundRegexPatternSet.Name,
+		Scope: aws.String(d.Get("scope").(string)),
+	})
+
+	if err != nil {
+		return fmt.Errorf("Error reading WAFv2 RegexPatternSet: %s", err)
+	}
+
+	if resp == nil || resp.RegexPatternSet == nil {
+		return fmt.Errorf("Error reading WAFv2 RegexPatternSet")
+	}
+
+	d.SetId(aws.StringValue(resp.RegexPatternSet.Id))
+	d.Set("arn", aws.StringValue(resp.RegexPatternSet.ARN))
+	d.Set("description", aws.StringValue(resp.RegexPatternSet.Description))
+
+	if err := d.Set("regular_expression", flattenWafv2RegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
+		return fmt.Errorf("Error setting regular_expression: %s", err)
+	}
 
 	return nil
 }

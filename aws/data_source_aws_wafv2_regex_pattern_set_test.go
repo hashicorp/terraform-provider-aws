@@ -20,15 +20,17 @@ func TestAccDataSourceAwsWafv2RegexPatternSet_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafv2RegexPatternSet_NonExistent(name),
-				ExpectError: regexp.MustCompile(`WAFV2 RegexPatternSet not found`),
+				ExpectError: regexp.MustCompile(`WAFv2 RegexPatternSet not found`),
 			},
 			{
 				Config: testAccDataSourceAwsWafv2RegexPatternSet_Name(name),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "wafv2", regexp.MustCompile(fmt.Sprintf("regional/regexpatternset/%v/.+$", name))),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "regular_expression_list", resourceName, "regular_expression_list"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scope", resourceName, "scope"),
 				),
 			},
@@ -42,7 +44,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "%s"
   scope = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 }
@@ -60,7 +62,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "%s"
   scope = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 }
