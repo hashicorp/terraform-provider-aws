@@ -314,14 +314,14 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 | [![breaking-change][breaking-change-badge]][breaking-change]&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; | Introduces a breaking change in current functionality; breaking changes are usually deferred to the next major release. | None |
 | [![bug][bug-badge]][bug] | Addresses a defect in current functionality. | None |
 | [![crash][crash-badge]][crash] | Results from or addresses a Terraform crash or kernel panic. | None |
-| [![dependencies][dependencies-badge]][dependencies] | Used to indicate a dependency version update. | Added by the Renovate bot. Configuration is found in the `renovate.json` file. |
+| [![dependencies][dependencies-badge]][dependencies] | Used to indicate dependency or vendoring changes. | Added by Hashibot. |
 | [![documentation][documentation-badge]][documentation] | Introduces or discusses updates to documentation. | None |
 | [![enhancement][enhancement-badge]][enhancement] | Requests to existing resources that expand the functionality or scope. | None |
 | [![good first issue][good-first-issue-badge]][good-first-issue] | Call to action for new contributors looking for a place to start. Smaller or straightforward issues. | None |
 | [![hacktoberfest][hacktoberfest-badge]][hacktoberfest] | Call to action for Hacktoberfest (OSS Initiative). | None |
 | [![hashibot ignore][hashibot-ignore-badge]][hashibot-ignore] | Issues or PRs labelled with this are ignored by Hashibot. | None |
 | [![help wanted][help-wanted-badge]][help-wanted] | Call to action for contributors. Indicates an area of the codebase we’d like to expand/work on but don’t have the bandwidth inside the team. | None |
-| [![needs-triage][needs-triage-badge]][needs-triage] | Waiting for first response or review from a maintainer. | Added to all new issues or PRs by GitHub action in `.github/workflows/issues.yml` unless they were submitted by a maintainer. |
+| [![needs-triage][needs-triage-badge]][needs-triage] | Waiting for first response or review from a maintainer. | Added to all new issues or PRs by GitHub action in `.github/workflows/issues.yml` or PRs by Hashibot in `.hashibot.hcl` unless they were submitted by a maintainer. |
 | [![new-data-source][new-data-source-badge]][new-data-source] | Introduces a new data source. | None |
 | [![new-resource][new-resource-badge]][new-resource] | Introduces a new resrouce. | None |
 | [![proposal][proposal-badge]][proposal] | Proposes new design or functionality. | None |
@@ -337,7 +337,7 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 | [![thinking][thinking-badge]][thinking] | Requires additional research by the maintainers. | None |
 | [![upstream-terraform][upstream-terraform-badge]][upstream-terraform] | Addresses functionality related to the Terraform core binary. | None |
 | [![upstream][upstream-badge]][upstream] | Addresses functionality related to the cloud provider. | None |
-| [![waiting-response][waiting-response-badge]][waiting-response] | Addresses functionality related to the cloud provider. | None |
+| [![waiting-response][waiting-response-badge]][waiting-response] | Maintainers are waiting on response from community or contributor. | None |
 
 [breaking-change-badge]: https://img.shields.io/badge/breaking--change-d93f0b
 [breaking-change]: https://github.com/terraform-providers/terraform-provider-aws/labels/breaking-change

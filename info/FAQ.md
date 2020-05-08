@@ -63,7 +63,9 @@ provider "aws" {
 
 ### How can I help?
 
-Great question, if you have contributed before check out issues with the `help-wanted` label. These are normally features which we want to support, but we are currently unable to field resources to work on. If you are just getting started, take a look at issues with the `good-first-issue` label. Items with these labels will always be given priority for response.
+Great question, if you have contributed before check out issues with the `help-wanted` label. These are normally enhancement issues that will have a great impact, but the maintainers are unable to develop them in the near future. If you are just getting started, take a look at issues with the `good-first-issue` label. Items with these labels will always be given priority for response.
+
+Check out the [Contributing Guide](CONTRIBUTING.md) for additional information.
 
 ### How can I become a maintainer?
 
