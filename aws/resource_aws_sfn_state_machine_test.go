@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sfn"
@@ -178,38 +177,6 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSSfnStateMachineDisappears(sm *sfn.DescribeStateMachineOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).sfnconn
-
-		input := &sfn.DeleteStateMachineInput{
-			StateMachineArn: sm.StateMachineArn,
-		}
-
-		if _, err := conn.DeleteStateMachine(input); err != nil {
-			return err
-		}
-
-		return resource.Retry(1*time.Minute, func() *resource.RetryError {
-			opts := &sfn.DescribeStateMachineInput{
-				StateMachineArn: sm.StateMachineArn,
-			}
-			resp, err := conn.DescribeStateMachine(opts)
-			if err != nil {
-				if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
-					return nil
-				} else {
-					return resource.NonRetryableError(fmt.Errorf("Error While Deleting State Machine: %v", resp.StateMachineArn))
-				}
-			}
-			if aws.StringValue(resp.Status) == sfn.StateMachineStatusDeleting {
-				return resource.RetryableError(fmt.Errorf("Waiting for State Machine: %v Deletion", resp.StateMachineArn))
-			}
-			return nil
-		})
-	}
 }
 
 func testAccAWSSfnStateMachineConfigBase(rName string) string {
