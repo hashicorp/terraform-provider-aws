@@ -29,7 +29,9 @@ We release weekly on Thursday. We release often to ensure we can bring value to 
 
 ### Backward Compatibility Promise
 
-Our policy is described on the Terraform website [here](https://www.terraform.io/docs/extend/best-practices/versioning.html). 
+Our policy is described on the Terraform website [here](https://www.terraform.io/docs/extend/best-practices/versioning.html). While we do our best to prevent breaking changes until major version releases of the provider, it is generally recommended to [pin the provider version in your configuration](https://www.terraform.io/docs/configuration/providers.html#provider-versions).
+
+Due to the constant release pace of AWS and the relatively infrequent major version releases of the provider, there can be cases where a minor version update may contain unexpected changes depending on your configuration or environment. These may include items such as a resource requiring additional IAM permissions to support newer functionality. We typically base these decisions on a pragmatic compromise between introducing a relatively minor one-time inconvenience for a subset of the community versus better overall user experience for the entire community.
 
 ### AWS just announced a new region, when will I see it in the provider.
 
