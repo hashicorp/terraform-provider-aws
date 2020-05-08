@@ -341,9 +341,10 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettings(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSAPIGatewayV2StageDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2StageConfig_routeSettings(rName),
