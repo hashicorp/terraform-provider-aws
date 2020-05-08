@@ -56,7 +56,7 @@ func TestAccAWSCloudwatchLogDestination_disappears(t *testing.T) {
 				Config: testAccAWSCloudwatchLogDestinationConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCloudwatchLogDestinationExists(resourceName, &destination),
-					testAccCheckAWSCloudwatchLogDestinationDisappears(&destination),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchLogDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -104,18 +104,6 @@ func testAccCheckAWSCloudwatchLogDestinationExists(n string, d *cloudwatchlogs.D
 		*d = *destination
 
 		return nil
-	}
-}
-
-func testAccCheckAWSCloudwatchLogDestinationDisappears(d *cloudwatchlogs.Destination) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-
-		conn := testAccProvider.Meta().(*AWSClient).cloudwatchlogsconn
-		input := &cloudwatchlogs.DeleteDestinationInput{DestinationName: d.DestinationName}
-
-		_, err := conn.DeleteDestination(input)
-
-		return err
 	}
 }
 
