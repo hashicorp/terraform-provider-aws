@@ -130,11 +130,10 @@ func resourceAwsSsmPatchBaseline() *schema.Resource {
 			},
 
 			"operating_system": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ssm.OperatingSystemWindows,
-				ValidateFunc: validation.StringInSlice(ssmPatchOSs, false),
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  ssm.OperatingSystemWindows,
 			},
 
 			"approved_patches_compliance_level": {
