@@ -332,8 +332,7 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 | ![service <*>][service-badge] | Indicates the service that is covered or introduced (i.e. service/s3) | Added by Hashibot when the code change matches a service definition in `.hashibot.hcl`.
 | ![size%2F<*>][size-badge] | Managed by automation to categorize the size of a PR | Added by Hashibot to indicate the size of the PR. |
 | [![stale][stale-badge]][stale] | Old or inactive issues managed by automation, if no further action taken these will get closed. | Added by a Github Action, configuration is found: `.github/workflows/stale.yml`. |
-| [![technical-debt][technical-debt-badge]][technical-debt] | 
-Addresses areas of the codebase that need refactoring or redesign. |  None|
+| [![technical-debt][technical-debt-badge]][technical-debt] | Addresses areas of the codebase that need refactoring or redesign. |  None |
 | [![tests][tests-badge]][tests] | On a PR this indicates expanded test coverage. On an Issue this proposes expanded coverage or enhancement to test infrastructure. | None |
 | [![thinking][thinking-badge]][thinking] | Requires additional research by the maintainers. | None |
 | [![upstream-terraform][upstream-terraform-badge]][upstream-terraform] | Addresses functionality related to the Terraform core binary. | None |
