@@ -83,6 +83,7 @@ func dataSourceAwsVpcPeeringConnection() *schema.Resource {
 
 func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading VPC Peering Connections.")
 
@@ -142,7 +143,7 @@ func dataSourceAwsVpcPeeringConnectionRead(d *schema.ResourceData, meta interfac
 	d.Set("peer_owner_id", pcx.AccepterVpcInfo.OwnerId)
 	d.Set("peer_cidr_block", pcx.AccepterVpcInfo.CidrBlock)
 	d.Set("peer_region", pcx.AccepterVpcInfo.Region)
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pcx.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(pcx.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -58,7 +58,7 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 			"authentication_options": {
 				Type:     schema.TypeList,
 				Required: true,
-				MaxItems: 1,
+				MaxItems: 2,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -137,26 +137,16 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("authentication_options"); ok {
-		authOptsSet := v.([]interface{})
-		attrs := authOptsSet[0].(map[string]interface{})
+		authOptions := v.([]interface{})
+		authRequests := make([]*ec2.ClientVpnAuthenticationRequest, 0, len(authOptions))
 
-		authOptsReq := &ec2.ClientVpnAuthenticationRequest{
-			Type: aws.String(attrs["type"].(string)),
+		for _, authOpt := range authOptions {
+			auth := authOpt.(map[string]interface{})
+
+			authReq := expandEc2ClientVpnAuthenticationRequest(auth)
+			authRequests = append(authRequests, authReq)
 		}
-
-		if attrs["type"].(string) == "certificate-authentication" {
-			authOptsReq.MutualAuthentication = &ec2.CertificateAuthenticationRequest{
-				ClientRootCertificateChainArn: aws.String(attrs["root_certificate_chain_arn"].(string)),
-			}
-		}
-
-		if attrs["type"].(string) == "directory-service-authentication" {
-			authOptsReq.ActiveDirectory = &ec2.DirectoryServiceAuthenticationRequest{
-				DirectoryId: aws.String(attrs["active_directory_id"].(string)),
-			}
-		}
-
-		req.AuthenticationOptions = []*ec2.ClientVpnAuthenticationRequest{authOptsReq}
+		req.AuthenticationOptions = authRequests
 	}
 
 	if v, ok := d.GetOk("connection_log_options"); ok {
@@ -191,6 +181,8 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	var err error
 
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
@@ -242,7 +234,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting connection_log_options: %s", err)
 	}
 
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().Map())
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -265,8 +257,6 @@ func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interfac
 
 func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-
-	d.Partial(true)
 
 	req := &ec2.ModifyClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
@@ -334,7 +324,6 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	d.Partial(false)
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
 }
 
@@ -351,13 +340,38 @@ func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[str
 }
 
 func flattenAuthOptsConfig(aopts []*ec2.ClientVpnAuthentication) []map[string]interface{} {
-	m := make(map[string]interface{})
-	if aopts[0].MutualAuthentication != nil {
-		m["root_certificate_chain_arn"] = *aopts[0].MutualAuthentication.ClientRootCertificateChain
+	result := make([]map[string]interface{}, 0, len(aopts))
+	for _, aopt := range aopts {
+		r := map[string]interface{}{
+			"type": aws.StringValue(aopt.Type),
+		}
+		if aopt.MutualAuthentication != nil {
+			r["root_certificate_chain_arn"] = aws.StringValue(aopt.MutualAuthentication.ClientRootCertificateChain)
+		}
+		if aopt.ActiveDirectory != nil {
+			r["active_directory_id"] = aws.StringValue(aopt.ActiveDirectory.DirectoryId)
+		}
+		result = append([]map[string]interface{}{r}, result...)
 	}
-	if aopts[0].ActiveDirectory != nil {
-		m["active_directory_id"] = *aopts[0].ActiveDirectory.DirectoryId
+	return result
+}
+
+func expandEc2ClientVpnAuthenticationRequest(data map[string]interface{}) *ec2.ClientVpnAuthenticationRequest {
+	req := &ec2.ClientVpnAuthenticationRequest{
+		Type: aws.String(data["type"].(string)),
 	}
-	m["type"] = *aopts[0].Type
-	return []map[string]interface{}{m}
+
+	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeCertificateAuthentication {
+		req.MutualAuthentication = &ec2.CertificateAuthenticationRequest{
+			ClientRootCertificateChainArn: aws.String(data["root_certificate_chain_arn"].(string)),
+		}
+	}
+
+	if data["type"].(string) == ec2.ClientVpnAuthenticationTypeDirectoryServiceAuthentication {
+		req.ActiveDirectory = &ec2.DirectoryServiceAuthenticationRequest{
+			DirectoryId: aws.String(data["active_directory_id"].(string)),
+		}
+	}
+
+	return req
 }

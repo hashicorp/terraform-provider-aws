@@ -92,19 +92,9 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 				Type:     schema.TypeMap,
 				Required: true,
 				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authenticated": {
-							Type:         schema.TypeString,
-							ValidateFunc: validateArn,
-							Optional:     true, // Required if unauthenticated isn't defined.
-						},
-						"unauthenticated": {
-							Type:         schema.TypeString,
-							ValidateFunc: validateArn,
-							Optional:     true, // Required if authenticated isn't defined.
-						},
-					},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
 				},
 			},
 		},

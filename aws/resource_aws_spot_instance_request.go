@@ -228,7 +228,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), nil, v); err != nil {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
 			return fmt.Errorf("error adding EC2 Spot Instance Request (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -239,6 +239,7 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 // Update spot state, etc
 func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeSpotInstanceRequestsInput{
 		SpotInstanceRequestIds: []*string{aws.String(d.Id())},
@@ -285,7 +286,7 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("launch_group", request.LaunchGroup)
 	d.Set("block_duration_minutes", request.BlockDurationMinutes)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(request.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(request.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -299,13 +300,11 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 func readInstance(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	resp, err := conn.DescribeInstances(&ec2.DescribeInstancesInput{
-		InstanceIds: []*string{aws.String(d.Get("spot_instance_id").(string))},
-	})
+	instance, err := resourceAwsInstanceFindByID(conn, d.Get("spot_instance_id").(string))
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+		if isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 			return fmt.Errorf("no instance found")
 		}
 
@@ -314,11 +313,9 @@ func readInstance(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	// If nothing was found, then return no state
-	if len(resp.Reservations) == 0 {
+	if instance == nil {
 		return fmt.Errorf("no instances found")
 	}
-
-	instance := resp.Reservations[0].Instances[0]
 
 	// Set these fields for connection information
 	if instance != nil {

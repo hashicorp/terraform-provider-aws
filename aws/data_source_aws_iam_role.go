@@ -2,9 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	"net/url"
 	"time"
+
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
@@ -74,6 +75,8 @@ func dataSourceAwsIAMRole() *schema.Resource {
 
 func dataSourceAwsIAMRoleRead(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	name := d.Get("name").(string)
 
 	input := &iam.GetRoleInput{
@@ -98,7 +101,7 @@ func dataSourceAwsIAMRoleRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("permissions_boundary", output.Role.PermissionsBoundary.PermissionsBoundaryArn)
 	}
 	d.Set("unique_id", output.Role.RoleId)
-	d.Set("tags", keyvaluetags.IamKeyValueTags(output.Role.Tags).IgnoreAws().Map())
+	d.Set("tags", keyvaluetags.IamKeyValueTags(output.Role.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 
 	assumRolePolicy, err := url.QueryUnescape(aws.StringValue(output.Role.AssumeRolePolicyDocument))
 	if err != nil {

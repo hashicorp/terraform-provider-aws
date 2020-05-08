@@ -685,8 +685,8 @@ func resourceAwsCodeDeployDeploymentGroupUpdate(d *schema.ResourceData, meta int
 		input.DeploymentConfigName = aws.String(n.(string))
 	}
 
-	// include (original or new) autoscaling groups when blue_green_deployment_config changes
-	if d.HasChange("autoscaling_groups") || d.HasChange("blue_green_deployment_config") {
+	// include (original or new) autoscaling groups when blue_green_deployment_config changes except for ECS
+	if _, isEcs := d.GetOk("ecs_service"); d.HasChange("autoscaling_groups") || (d.HasChange("blue_green_deployment_config") && !isEcs) {
 		_, n := d.GetChange("autoscaling_groups")
 		input.AutoScalingGroups = expandStringList(n.(*schema.Set).List())
 	}

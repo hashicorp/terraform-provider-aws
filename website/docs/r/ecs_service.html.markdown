@@ -96,7 +96,7 @@ The following arguments are supported:
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition or the service to the tasks. The valid values are `SERVICE` and `TASK_DEFINITION`.
 * `scheduling_strategy` - (Optional) The scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Fargate tasks do not support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/scheduling_tasks.html).
 * `service_registries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 * `task_definition` - (Required) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service.
 
 ## capacity_provider_strategy

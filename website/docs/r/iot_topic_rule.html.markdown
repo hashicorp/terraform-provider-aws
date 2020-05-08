@@ -16,7 +16,7 @@ resource "aws_iot_topic_rule" "rule" {
   description = "Example rule"
   enabled     = true
   sql         = "SELECT * FROM 'topic/test'"
-  sql_version = "2015-10-08"
+  sql_version = "2016-03-23"
 
   sns {
     message_format = "RAW"
