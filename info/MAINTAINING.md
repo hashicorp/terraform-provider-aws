@@ -19,7 +19,7 @@
 
 ## Triage
 
-Incoming issues are classified using labels. These are assigned either by automation, or manually during the triage process. At a minimum tickets should be classified by type and by the area of the provider they affect. A full listing of the labels and how they are used can be found in the [Label Dictionary](#label-dictionary)
+Incoming issues are classified using labels. These are assigned either by automation, or manually during the triage process. At a minimum tickets should be classified by type and by the area of the provider they affect. A full listing of the labels and how they are used can be found in the [Label Dictionary](#label-dictionary).
 
 
 ## Pull Requests
@@ -337,7 +337,7 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 | [![thinking][thinking-badge]][thinking] | Requires additional research by the maintainers. | None |
 | [![upstream-terraform][upstream-terraform-badge]][upstream-terraform] | Addresses functionality related to the Terraform core binary. | None |
 | [![upstream][upstream-badge]][upstream] | Addresses functionality related to the cloud provider. | None |
-| [![waiting-response](https://img.shields.io/badge/waiting--response-5319e7)](https://github.com/terraform-providers/terraform-provider-aws/labels/waiting-response) | Addresses functionality related to the cloud provider. | None |
+| [![waiting-response][waiting-response-badge]][waiting-response] | Addresses functionality related to the cloud provider. | None |
 
 [breaking-change-badge]: https://img.shields.io/badge/breaking--change-d93f0b
 [breaking-change]: https://github.com/terraform-providers/terraform-provider-aws/labels/breaking-change
@@ -389,5 +389,5 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 [upstream-terraform]: https://github.com/terraform-providers/terraform-provider-aws/labels/upstream-terraform
 [upstream-badge]: https://img.shields.io/badge/upstream-fad8c7
 [upstream]: https://github.com/terraform-providers/terraform-provider-aws/labels/upstream
-[waiting-response-badge]: https://img.shields.io/badge/waiting-response-bfd4f2
+[waiting-response-badge]: https://img.shields.io/badge/waiting--response-5319e7
 [waiting-response]: https://github.com/terraform-providers/terraform-provider-aws/labels/waiting-response
