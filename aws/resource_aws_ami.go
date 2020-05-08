@@ -215,10 +215,10 @@ func resourceAwsAmi() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  "paravirtual",
+				Default:  ec2.VirtualizationTypeParavirtual,
 				ValidateFunc: validation.StringInSlice([]string{
-					"paravirtual",
-					"hvm",
+					ec2.VirtualizationTypeParavirtual,
+					ec2.VirtualizationTypeHvm,
 				}, false),
 			},
 			"arn": {
@@ -332,8 +332,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 				if d.IsNewResource() {
 					return resource.RetryableError(err)
 				}
-
-				log.Printf("[DEBUG] %s no longer exists, so we'll drop it from the state", id)
+				log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
 				d.SetId("")
 				return nil
 			}
@@ -350,6 +349,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if len(res.Images) != 1 {
+		log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -371,6 +371,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if state == ec2.ImageStateDeregistered {
+		log.Printf("[WARN] AMI (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}

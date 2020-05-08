@@ -101,7 +101,7 @@ func TestAccAWSAMI_disappears(t *testing.T) {
 				Config: testAccAmiConfigBasic(rName, 8),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAmiExists(resourceName, &ami),
-					testAccCheckAmiDisappears(&ami),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAmi(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -225,20 +225,6 @@ func testAccCheckAmiDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
-}
-
-func testAccCheckAmiDisappears(image *ec2.Image) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		input := &ec2.DeregisterImageInput{
-			ImageId: image.ImageId,
-		}
-
-		_, err := conn.DeregisterImage(input)
-
-		return err
-	}
 }
 
 func testAccCheckAmiExists(n string, ami *ec2.Image) resource.TestCheckFunc {
