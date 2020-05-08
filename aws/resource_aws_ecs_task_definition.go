@@ -288,6 +288,25 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 			},
 
 			"tags": tagsSchema(),
+			"inference_accelerator": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"device_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+						"device_type": {
+							Type:     schema.TypeString,
+							Required: true,
+							ForceNew: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -354,6 +373,14 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 			return err
 		}
 		input.Volumes = volumes
+	}
+
+	if v, ok := d.GetOk("inference_accelerator"); ok {
+		iAcc, err := expandEcsInferenceAccelerators(v.(*schema.Set).List())
+		if err != nil {
+			return err
+		}
+		input.InferenceAccelerators = iAcc
 	}
 
 	constraints := d.Get("placement_constraints").(*schema.Set).List()
@@ -425,6 +452,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading task definition %s", d.Id())
 	out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
@@ -467,12 +495,16 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
 
-	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(out.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	if err := d.Set("volume", flattenEcsVolumes(taskDefinition.Volumes)); err != nil {
 		return fmt.Errorf("error setting volume: %s", err)
+	}
+
+	if err := d.Set("inference_accelerator", flattenEcsInferenceAccelerators(taskDefinition.InferenceAccelerators)); err != nil {
+		return fmt.Errorf("error setting inference accelerators: %s", err)
 	}
 
 	if err := d.Set("placement_constraints", flattenPlacementConstraints(taskDefinition.PlacementConstraints)); err != nil {
@@ -561,4 +593,31 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 	buf.WriteString(fmt.Sprintf("%s-", m["name"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["host_path"].(string)))
 	return hashcode.String(buf.String())
+}
+
+func flattenEcsInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[string]interface{} {
+	result := make([]map[string]interface{}, 0, len(list))
+	for _, iAcc := range list {
+		l := map[string]interface{}{
+			"device_name": *iAcc.DeviceName,
+			"device_type": *iAcc.DeviceType,
+		}
+
+		result = append(result, l)
+	}
+	return result
+}
+
+func expandEcsInferenceAccelerators(configured []interface{}) ([]*ecs.InferenceAccelerator, error) {
+	iAccs := make([]*ecs.InferenceAccelerator, 0, len(configured))
+	for _, lRaw := range configured {
+		data := lRaw.(map[string]interface{})
+		l := &ecs.InferenceAccelerator{
+			DeviceName: aws.String(data["device_name"].(string)),
+			DeviceType: aws.String(data["device_type"].(string)),
+		}
+		iAccs = append(iAccs, l)
+	}
+
+	return iAccs, nil
 }

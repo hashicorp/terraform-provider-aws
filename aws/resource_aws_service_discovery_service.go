@@ -1,14 +1,14 @@
 package aws
 
 import (
+	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/servicediscovery/waiter"
 )
 
 func resourceAwsServiceDiscoveryService() *schema.Resource {
@@ -225,23 +225,16 @@ func resourceAwsServiceDiscoveryServiceUpdate(d *schema.ResourceData, meta inter
 
 	input.Service = sc
 
-	resp, err := conn.UpdateService(input)
+	output, err := conn.UpdateService(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error updating Service Discovery Service (%s): %w", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{servicediscovery.OperationStatusSubmitted, servicediscovery.OperationStatusPending},
-		Target:     []string{servicediscovery.OperationStatusSuccess},
-		Refresh:    servicediscoveryOperationRefreshStatusFunc(conn, *resp.OperationId),
-		Timeout:    5 * time.Minute,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return err
+	if output != nil && output.OperationId != nil {
+		if _, err := waiter.OperationSuccess(conn, aws.StringValue(output.OperationId)); err != nil {
+			return fmt.Errorf("error waiting for Service Discovery Service (%s) update: %w", d.Id(), err)
+		}
 	}
 
 	return resourceAwsServiceDiscoveryServiceRead(d, meta)
@@ -255,7 +248,16 @@ func resourceAwsServiceDiscoveryServiceDelete(d *schema.ResourceData, meta inter
 	}
 
 	_, err := conn.DeleteService(input)
-	return err
+
+	if isAWSErr(err, servicediscovery.ErrCodeServiceNotFound, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Service Discovery Service (%s): %w", d.Id(), err)
+	}
+
+	return nil
 }
 
 func expandServiceDiscoveryDnsConfig(configured map[string]interface{}) *servicediscovery.DnsConfig {

@@ -32,6 +32,14 @@ func TestAccAWSSSMActivation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", tag)),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"activation_code",
+				},
+			},
 		},
 	})
 }
@@ -56,6 +64,14 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"activation_code",
+				},
+			},
+			{
 				Config: testAccAWSSSMActivationBasicConfig(name, "Foo"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation2),
@@ -64,6 +80,14 @@ func TestAccAWSSSMActivation_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", "Foo"),
 					testAccCheckAWSSSMActivationRecreated(t, &ssmActivation1, &ssmActivation2),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"activation_code",
+				},
 			},
 		},
 	})
@@ -87,6 +111,14 @@ func TestAccAWSSSMActivation_expirationDate(t *testing.T) {
 					testAccCheckAWSSSMActivationExists(resourceName, &ssmActivation),
 					resource.TestCheckResourceAttr(resourceName, "expiration_date", expirationDateS),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"activation_code",
+				},
 			},
 		},
 	})

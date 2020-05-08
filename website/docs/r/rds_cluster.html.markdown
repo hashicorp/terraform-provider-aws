@@ -138,7 +138,7 @@ Default: A 30-minute window selected at random from an 8-hour block of time per 
    The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
 * `scaling_configuration` - (Optional) Nested attribute with scaling properties. Only valid when `engine_mode` is set to `serverless`. More details below.
 * `enable_http_endpoint` - (Optional) Enable HTTP endpoint (data API). Only valid when `engine_mode` is set to `serverless`.
-* `tags` - (Optional) A mapping of tags to assign to the DB cluster.
+* `tags` - (Optional) A map of tags to assign to the DB cluster.
 
 ### S3 Import Options
 

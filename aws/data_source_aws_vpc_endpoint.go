@@ -113,6 +113,7 @@ func dataSourceAwsVpcEndpoint() *schema.Resource {
 
 func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeVpcEndpointsInput{}
 
@@ -208,7 +209,7 @@ func dataSourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) erro
 	if err != nil {
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpce.Tags).IgnoreAws().Map())
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}

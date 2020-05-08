@@ -64,7 +64,7 @@ The following arguments are supported:
 * `tier` - (Optional) The tier of the parameter. If not specified, will default to `Standard`. Valid tiers are `Standard` and `Advanced`. For more information on parameter tiers, see the [AWS SSM Parameter tier comparison and guide](https://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-advanced-parameters.html).
 * `key_id` - (Optional) The KMS key id or arn for encrypting a SecureString.
 * `allowed_pattern` - (Optional) A regular expression used to validate the parameter value.
-* `tags` - (Optional) A mapping of tags to assign to the object.
+* `tags` - (Optional) A map of tags to assign to the object.
 
 ## Attributes Reference
 

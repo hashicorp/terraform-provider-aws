@@ -2,9 +2,10 @@ package aws
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
@@ -118,6 +119,7 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 
 func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
 	out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
@@ -167,7 +169,7 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error listing tags for Directory Service Directory (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

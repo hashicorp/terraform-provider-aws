@@ -119,6 +119,7 @@ func resourceAwsVpcEndpointServiceCreate(d *schema.ResourceData, meta interface{
 
 func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	svcCfgRaw, state, err := vpcEndpointServiceStateRefresh(conn, d.Id())()
 	if err != nil && state != ec2.ServiceStateFailed {
@@ -155,7 +156,7 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 	d.Set("service_name", svcCfg.ServiceName)
 	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
 	d.Set("state", svcCfg.ServiceState)
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(svcCfg.Tags).IgnoreAws().Map())
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(svcCfg.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
@@ -178,7 +179,6 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
 	svcId := d.Id()
 
 	modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
@@ -201,8 +201,6 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		if err := vpcEndpointServiceWaitUntilAvailable(d, conn); err != nil {
 			return err
 		}
-
-		d.SetPartial("network_load_balancer_arns")
 	}
 
 	modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
@@ -214,8 +212,6 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
 			return fmt.Errorf("Error modifying VPC Endpoint Service permissions: %s", err.Error())
 		}
-
-		d.SetPartial("allowed_principals")
 	}
 
 	if d.HasChange("tags") {
@@ -226,7 +222,6 @@ func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{
 		}
 	}
 
-	d.Partial(false)
 	return resourceAwsVpcEndpointServiceRead(d, meta)
 }
 

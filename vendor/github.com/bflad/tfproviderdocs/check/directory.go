@@ -58,7 +58,8 @@ func MixedDirectoriesCheck(directories map[string][]string) error {
 	err := fmt.Errorf("mixed Terraform Provider documentation directory layouts found, must use only legacy or registry layout")
 
 	for directory := range directories {
-		if IsValidRegistryDirectory(directory) {
+		// Allow docs/ with other files
+		if IsValidRegistryDirectory(directory) && directory != RegistryIndexDirectory {
 			registryDirectoryFound = true
 
 			if legacyDirectoryFound {

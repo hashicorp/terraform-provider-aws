@@ -567,6 +567,7 @@ func lbTargetGroupSuffixFromARN(arn *string) string {
 // flattenAwsLbTargetGroupResource takes a *elbv2.TargetGroup and populates all respective resource fields.
 func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, targetGroup *elbv2.TargetGroup) error {
 	elbconn := meta.(*AWSClient).elbv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", lbTargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
@@ -656,7 +657,7 @@ func flattenAwsLbTargetGroupResource(d *schema.ResourceData, meta interface{}, t
 		return fmt.Errorf("error listing tags for LB Target Group (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -755,16 +756,24 @@ func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interfac
 
 	if protocol == elbv2.ProtocolEnumTcp {
 		if diff.HasChange("health_check.0.interval") {
-			old, new := diff.GetChange("health_check.0.interval")
-			return fmt.Errorf("Health check interval cannot be updated from %d to %d for TCP based Target Group %s,"+
-				" use 'terraform taint' to recreate the resource if you wish",
-				old, new, diff.Id())
+			if err := diff.ForceNew("health_check.0.interval"); err != nil {
+				return err
+			}
+		}
+		// The health_check configuration block protocol argument has Default: HTTP, however the block
+		// itself is Computed: true. When not configured, a TLS (Network LB) Target Group will default
+		// to health check protocol TLS. We do not want to trigger recreation in this scenario.
+		// ResourceDiff will show 0 changed keys for the configuration block, which we can use to ensure
+		// there was an actual change to trigger the ForceNew.
+		if diff.HasChange("health_check.0.protocol") && len(diff.GetChangedKeysPrefix("health_check.0")) != 0 {
+			if err := diff.ForceNew("health_check.0.protocol"); err != nil {
+				return err
+			}
 		}
 		if diff.HasChange("health_check.0.timeout") {
-			old, new := diff.GetChange("health_check.0.timeout")
-			return fmt.Errorf("Health check timeout cannot be updated from %d to %d for TCP based Target Group %s,"+
-				" use 'terraform taint' to recreate the resource if you wish",
-				old, new, diff.Id())
+			if err := diff.ForceNew("health_check.0.timeout"); err != nil {
+				return err
+			}
 		}
 	}
 	return nil

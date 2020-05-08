@@ -12166,8 +12166,8 @@ func (c *Lightsail) UpdateRelationalDatabaseParametersWithContext(ctx aws.Contex
 // Lightsail throws this exception when the user cannot be authenticated or
 // uses invalid credentials to access a resource.
 type AccessDeniedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Code_ *string `locationName:"code" type:"string"`
 
@@ -12190,17 +12190,17 @@ func (s AccessDeniedException) GoString() string {
 
 func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
 	return &AccessDeniedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccessDeniedException) Code() string {
+func (s *AccessDeniedException) Code() string {
 	return "AccessDeniedException"
 }
 
 // Message returns the exception's message.
-func (s AccessDeniedException) Message() string {
+func (s *AccessDeniedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12208,29 +12208,29 @@ func (s AccessDeniedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccessDeniedException) OrigErr() error {
+func (s *AccessDeniedException) OrigErr() error {
 	return nil
 }
 
-func (s AccessDeniedException) Error() string {
+func (s *AccessDeniedException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccessDeniedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccessDeniedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Lightsail throws this exception when an account is still in the setup in
 // progress state.
 type AccountSetupInProgressException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Code_ *string `locationName:"code" type:"string"`
 
@@ -12253,17 +12253,17 @@ func (s AccountSetupInProgressException) GoString() string {
 
 func newErrorAccountSetupInProgressException(v protocol.ResponseMetadata) error {
 	return &AccountSetupInProgressException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s AccountSetupInProgressException) Code() string {
+func (s *AccountSetupInProgressException) Code() string {
 	return "AccountSetupInProgressException"
 }
 
 // Message returns the exception's message.
-func (s AccountSetupInProgressException) Message() string {
+func (s *AccountSetupInProgressException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -12271,22 +12271,22 @@ func (s AccountSetupInProgressException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s AccountSetupInProgressException) OrigErr() error {
+func (s *AccountSetupInProgressException) OrigErr() error {
 	return nil
 }
 
-func (s AccountSetupInProgressException) Error() string {
+func (s *AccountSetupInProgressException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s AccountSetupInProgressException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *AccountSetupInProgressException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s AccountSetupInProgressException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *AccountSetupInProgressException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes an add-on that is enabled for an Amazon Lightsail resource.
@@ -23430,8 +23430,8 @@ func (s *InstanceState) SetName(v string) *InstanceState {
 // Please set your AWS Region configuration to us-east-1 to create, view, or
 // edit these resources.
 type InvalidInputException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Code_ *string `locationName:"code" type:"string"`
 
@@ -23454,17 +23454,17 @@ func (s InvalidInputException) GoString() string {
 
 func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
 	return &InvalidInputException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidInputException) Code() string {
+func (s *InvalidInputException) Code() string {
 	return "InvalidInputException"
 }
 
 // Message returns the exception's message.
-func (s InvalidInputException) Message() string {
+func (s *InvalidInputException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -23472,22 +23472,22 @@ func (s InvalidInputException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidInputException) OrigErr() error {
+func (s *InvalidInputException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidInputException) Error() string {
+func (s *InvalidInputException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidInputException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidInputException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidInputException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidInputException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type IsVpcPeeredInput struct {
@@ -24414,8 +24414,8 @@ func (s *MonthlyTransfer) SetGbPerMonthAllocated(v int64) *MonthlyTransfer {
 
 // Lightsail throws this exception when it cannot find a resource.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Code_ *string `locationName:"code" type:"string"`
 
@@ -24438,17 +24438,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -24456,22 +24456,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type OpenInstancePublicPortsInput struct {
@@ -24676,8 +24676,8 @@ func (s *Operation) SetStatusChangedAt(v time.Time) *Operation {
 
 // Lightsail throws this exception when an operation fails to execute.
 type OperationFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Code_ *string `locationName:"code" type:"string"`
 
@@ -24700,17 +24700,17 @@ func (s OperationFailureException) GoString() string {
 
 func newErrorOperationFailureException(v protocol.ResponseMetadata) error {
 	return &OperationFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s OperationFailureException) Code() string {
+func (s *OperationFailureException) Code() string {
 	return "OperationFailureException"
 }
 
 // Message returns the exception's message.
-func (s OperationFailureException) Message() string {
+func (s *OperationFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -24718,22 +24718,22 @@ func (s OperationFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s OperationFailureException) OrigErr() error {
+func (s *OperationFailureException) OrigErr() error {
 	return nil
 }
 
-func (s OperationFailureException) Error() string {
+func (s *OperationFailureException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s OperationFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *OperationFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s OperationFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *OperationFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The password data for the Windows Server-based instance, including the ciphertext
@@ -26455,8 +26455,8 @@ func (s *SendContactMethodVerificationOutput) SetOperations(v []*Operation) *Sen
 
 // A general service exception.
 type ServiceException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Code_ *string `locationName:"code" type:"string"`
 
@@ -26479,17 +26479,17 @@ func (s ServiceException) GoString() string {
 
 func newErrorServiceException(v protocol.ResponseMetadata) error {
 	return &ServiceException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ServiceException) Code() string {
+func (s *ServiceException) Code() string {
 	return "ServiceException"
 }
 
 // Message returns the exception's message.
-func (s ServiceException) Message() string {
+func (s *ServiceException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -26497,22 +26497,22 @@ func (s ServiceException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ServiceException) OrigErr() error {
+func (s *ServiceException) OrigErr() error {
 	return nil
 }
 
-func (s ServiceException) Error() string {
+func (s *ServiceException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ServiceException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ServiceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ServiceException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ServiceException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type StartInstanceInput struct {
@@ -27107,8 +27107,8 @@ func (s *TestAlarmOutput) SetOperations(v []*Operation) *TestAlarmOutput {
 
 // Lightsail throws this exception when the user has not been authenticated.
 type UnauthenticatedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Code_ *string `locationName:"code" type:"string"`
 
@@ -27131,17 +27131,17 @@ func (s UnauthenticatedException) GoString() string {
 
 func newErrorUnauthenticatedException(v protocol.ResponseMetadata) error {
 	return &UnauthenticatedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnauthenticatedException) Code() string {
+func (s *UnauthenticatedException) Code() string {
 	return "UnauthenticatedException"
 }
 
 // Message returns the exception's message.
-func (s UnauthenticatedException) Message() string {
+func (s *UnauthenticatedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -27149,22 +27149,22 @@ func (s UnauthenticatedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnauthenticatedException) OrigErr() error {
+func (s *UnauthenticatedException) OrigErr() error {
 	return nil
 }
 
-func (s UnauthenticatedException) Error() string {
+func (s *UnauthenticatedException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnauthenticatedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnauthenticatedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnauthenticatedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnauthenticatedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UnpeerVpcInput struct {
