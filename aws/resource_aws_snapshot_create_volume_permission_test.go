@@ -11,6 +11,7 @@ import (
 
 func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 	var snapshotId string
+	var snapshotId_group string
 	accountId := "111122223333"
 	group := "all"
 
@@ -24,7 +25,7 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 				Config: testAccAWSSnapshotCreateVolumePermissionConfig(true, accountId, group),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
-					testCheckResourceGetAttr("aws_ebs_snapshot.test-group", "id", &snapshotId),
+					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId_group),
 					testAccAWSSnapshotCreateVolumePermissionExists(&group, &accountId, &snapshotId),
 				),
 			},
@@ -33,6 +34,7 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 				Config: testAccAWSSnapshotCreateVolumePermissionConfig(false, accountId, group),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSSnapshotCreateVolumePermissionDestroyed(&group, &accountId, &snapshotId),
+					testAccAWSSnapshotCreateVolumePermissionDestroyed(&group, &accountId, &snapshotId_group),
 				),
 			},
 		},
@@ -41,6 +43,7 @@ func TestAccAWSSnapshotCreateVolumePermission_Basic(t *testing.T) {
 
 func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 	var snapshotId string
+	var snapshotId_group string
 	accountId := "111122223333"
 	group := "all"
 
@@ -53,7 +56,7 @@ func TestAccAWSSnapshotCreateVolumePermission_disappears(t *testing.T) {
 				Config: testAccAWSSnapshotCreateVolumePermissionConfig(true, accountId, group),
 				Check: resource.ComposeTestCheckFunc(
 					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId),
-					testCheckResourceGetAttr("aws_ebs_snapshot.test-group", "id", &snapshotId),
+					testCheckResourceGetAttr("aws_ebs_snapshot.test", "id", &snapshotId_group),
 					testAccAWSSnapshotCreateVolumePermissionExists(&group, &accountId, &snapshotId),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test"),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSnapshotCreateVolumePermission(), "aws_snapshot_create_volume_permission.test-group"),
