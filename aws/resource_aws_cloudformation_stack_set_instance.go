@@ -13,6 +13,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
+const (
+	StackSetInstanceCreateTimeout  = 30 * time.Minute
+	StackSetInstanceUpdateTimeout  = 30 * time.Minute
+	StackSetInstanceDeletedTimeout = 30 * time.Minute
+)
+
 func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsCloudFormationStackSetInstanceCreate,
@@ -25,9 +31,9 @@ func resourceAwsCloudFormationStackSetInstance() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(StackSetInstanceCreateTimeout),
+			Update: schema.DefaultTimeout(StackSetInstanceUpdateTimeout),
+			Delete: schema.DefaultTimeout(StackSetInstanceDeletedTimeout),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -101,7 +107,7 @@ func resourceAwsCloudFormationStackSetInstanceCreate(d *schema.ResourceData, met
 		return fmt.Errorf("error creating CloudFormation StackSet Instance: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s,%s,%s", stackSetName, accountID, region))
+	d.SetId(resourceAwsCloudFormationStackSetInstanceCreateId(stackSetName, accountID, region))
 
 	if err := waitForCloudFormationStackSetOperation(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) creation: %s", d.Id(), err)
@@ -203,8 +209,12 @@ func resourceAwsCloudFormationStackSetInstanceUpdate(d *schema.ResourceData, met
 func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
-	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
+	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
+	return deleteCloudFormationStackSetInstance(conn, d.Id(), d.Get("retain_stack").(bool), d.Timeout(schema.TimeoutDelete))
+}
 
+func deleteCloudFormationStackSetInstance(conn *cloudformation.CloudFormation, id string, retainStack bool, timeout time.Duration) error {
+	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(id)
 	if err != nil {
 		return err
 	}
@@ -213,30 +223,30 @@ func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, met
 		Accounts:     aws.StringSlice([]string{accountID}),
 		OperationId:  aws.String(resource.UniqueId()),
 		Regions:      aws.StringSlice([]string{region}),
-		RetainStacks: aws.Bool(d.Get("retain_stack").(bool)),
+		RetainStacks: aws.Bool(retainStack),
 		StackSetName: aws.String(stackSetName),
 	}
 
-	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
 	output, err := conn.DeleteStackInstances(input)
-
 	if isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {
 		return nil
 	}
-
 	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		return nil
 	}
-
 	if err != nil {
-		return fmt.Errorf("error deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting CloudFormation StackSet Instance (%s): %w", id, err)
 	}
 
-	if err := waitForCloudFormationStackSetOperation(conn, stackSetName, aws.StringValue(output.OperationId), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) deletion: %s", d.Id(), err)
+	if err := waitForCloudFormationStackSetOperation(conn, stackSetName, aws.StringValue(output.OperationId), timeout); err != nil {
+		return fmt.Errorf("error waiting for CloudFormation StackSet Instance (%s) deletion: %w", id, err)
 	}
 
 	return nil
+}
+
+func resourceAwsCloudFormationStackSetInstanceCreateId(stackSetName, accountID, region string) string {
+	return fmt.Sprintf("%s,%s,%s", stackSetName, accountID, region)
 }
 
 func resourceAwsCloudFormationStackSetInstanceParseId(id string) (string, string, string, error) {
@@ -251,28 +261,36 @@ func resourceAwsCloudFormationStackSetInstanceParseId(id string) (string, string
 }
 
 func listCloudFormationStackSetInstances(conn *cloudformation.CloudFormation, stackSetName string) ([]*cloudformation.StackInstanceSummary, error) {
+	result := make([]*cloudformation.StackInstanceSummary, 0)
+
+	listAllCloudFormationStackSetInstancesPages(conn, stackSetName, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
+		result = append(result, page.Summaries...)
+		return !lastPage
+	})
+
+	return result, nil
+}
+
+// generate
+func listAllCloudFormationStackSetInstancesPages(conn *cloudformation.CloudFormation, stackSetName string, fn func(*cloudformation.ListStackInstancesOutput, bool) bool) error {
 	input := &cloudformation.ListStackInstancesInput{
 		StackSetName: aws.String(stackSetName),
 	}
-	result := make([]*cloudformation.StackInstanceSummary, 0)
-
 	for {
 		output, err := conn.ListStackInstances(input)
-
 		if err != nil {
-			return result, err
+			return err
 		}
 
-		result = append(result, output.Summaries...)
-
-		if aws.StringValue(output.NextToken) == "" {
+		lastPage := aws.StringValue(output.NextToken) == ""
+		if !fn(output, lastPage) || lastPage {
 			break
 		}
 
 		input.NextToken = output.NextToken
 	}
 
-	return result, nil
+	return nil
 }
 
 func refreshCloudformationStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {

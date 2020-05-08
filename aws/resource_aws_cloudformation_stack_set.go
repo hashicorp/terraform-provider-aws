@@ -250,17 +250,8 @@ func resourceAwsCloudFormationStackSetUpdate(d *schema.ResourceData, meta interf
 func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
 
-	input := &cloudformation.DeleteStackSetInput{
-		StackSetName: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())
-	_, err := conn.DeleteStackSet(input)
-
-	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
-		return nil
-	}
-
+	err := deleteCloudFormationStackSet(conn, d.Id())
 	if err != nil {
 		return fmt.Errorf("error deleting CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
@@ -268,27 +259,45 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
+func deleteCloudFormationStackSet(conn *cloudformation.CloudFormation, name string) error {
+	_, err := conn.DeleteStackSet(&cloudformation.DeleteStackSetInput{
+		StackSetName: aws.String(name),
+	})
+	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
+		return nil
+	}
+	return err
+}
+
 func listCloudFormationStackSets(conn *cloudformation.CloudFormation) ([]*cloudformation.StackSetSummary, error) {
+	result := make([]*cloudformation.StackSetSummary, 0)
+
+	listAllCloudFormationStackSetsPages(conn, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
+		result = append(result, page.Summaries...)
+		return !lastPage
+	})
+
+	return result, nil
+}
+
+// generate
+func listAllCloudFormationStackSetsPages(conn *cloudformation.CloudFormation, fn func(*cloudformation.ListStackSetsOutput, bool) bool) error {
 	input := &cloudformation.ListStackSetsInput{
 		Status: aws.String(cloudformation.StackSetStatusActive),
 	}
-	result := make([]*cloudformation.StackSetSummary, 0)
-
 	for {
 		output, err := conn.ListStackSets(input)
-
 		if err != nil {
-			return result, err
+			return err
 		}
 
-		result = append(result, output.Summaries...)
-
-		if aws.StringValue(output.NextToken) == "" {
+		lastPage := aws.StringValue(output.NextToken) == ""
+		if !fn(output, lastPage) || lastPage {
 			break
 		}
 
 		input.NextToken = output.NextToken
 	}
 
-	return result, nil
+	return nil
 }
