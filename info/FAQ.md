@@ -47,8 +47,11 @@ Error: error validating provider credentials: error calling sts:GetCallerIdentit
 
   on main.tf line 1, in provider "aws":
    1: provider "aws" {
+```
 
 To use this new region before support has been added to the Terraform AWS Provider, you can disable the provider's automatic region validation via:
+
+```hcl
 provider "aws" {
   # ... potentially other configuration ...
 
