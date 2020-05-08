@@ -46,7 +46,7 @@ $ make test
 
 In order to run the full suite of Acceptance tests, run `make testacc`.
 
-*Note:* Acceptance tests create real resources, and often cost money to run. Please read [Running an Acceptance Test](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#running-an-acceptance-test) in the contribution guidelines for more information on usage.
+*Note:* Acceptance tests create real resources, and often cost money to run. Please read [Running and Writing Acceptance Tests](contributing/running-and-writing-acceptance-tests.md) in the contribution guidelines for more information on usage.
 
 ```sh
 $ make testacc
