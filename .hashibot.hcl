@@ -1,5 +1,5 @@
 poll "closed_issue_locker" "locker" {
-  schedule             = "0 50 14 * * *"
+  schedule             = "0 10 17 * * *"
   closed_for           = "720h" # 30 days
   max_issues           = 500
   sleep_between_issues = "5s"
@@ -9,21 +9,6 @@ poll "closed_issue_locker" "locker" {
 
     If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
   EOF
-}
-
-poll "stale_issue_closer" "closer" {
-  schedule             = "0 22 23 * * *"
-  no_reply_in_last     = "2160h" # 90 days
-  max_issues           = 500
-  sleep_between_issues = "5s"
-  created_after        = "2019-06-01"
-  exclude_labels       = ["needs-triage", "technical-debt"]
-  extra_search_params  = "reactions:<20 no:milestone no:assignee"
-  message              = <<-EOF
-    I'm going to close this issue due to inactivity (_90 days_ without response ⏳ ). This helps our maintainers find and focus on the active issues.
-
-    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
-    EOF
 }
 
 behavior "deprecated_import_commenter" "hashicorp_terraform" {
@@ -51,7 +36,8 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 }
 
 behavior "opened_pull_request_labeler" "triage" {
-  labels = ["needs-triage"]
+  labels             = ["needs-triage"]
+  skip_collaborators = true
 }
 
 queued_behavior "release_commenter" "releases" {
@@ -242,6 +228,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_main_route_table_association",
       "aws_network_interface",
       "aws_placement_group",
+      "aws_prefix_list",
       "aws_spot",
       "aws_route(\"|`|$)",
       "aws_vpn_",
@@ -344,6 +331,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/kinesisanalytics" = [
       "aws_kinesis_analytics_",
     ],
+    "service/kinesisanalyticsv2" = [
+      "aws_kinesisanalyticsv2_",
+    ],
     "service/kms" = [
       "aws_kms_",
     ],
@@ -440,7 +430,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_route53_([^d]|d[^o]|do[^m]|dom[^a]|doma[^i]|domai[^n]|domain[^s]|domains[^_]|[^r]|r[^e]|re[^s]|res[^o]|reso[^l]|resol[^v]|resolv[^e]|resolve[^r]|resolver[^_])",
     ],
     "service/route53domains" = [
-      "aws_route53_domains_",
+      "aws_route53domains_",
     ],
     "service/route53resolver" = [
       "aws_route53_resolver_",
@@ -535,6 +525,10 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
+      ".github/**/*",
+      ".gitignore",
+      ".go-version",
+      ".hashibot.hcl",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -542,8 +536,14 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_ip_ranges*",
       "aws/*_aws_partition*",
       "aws/*_aws_region*",
+      "aws/internal/flatmap/*",
+      "aws/internal/keyvaluetags/*",
+      "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "GNUmakefile",
+      "infrastructure/**/*",
+      "main.go",
       "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
@@ -554,7 +554,11 @@ behavior "pull_request_path_labeler" "service_labels" {
     # label test related changes
     "tests" = [
       "**/*_test.go",
+      "**/testdata/**/*",
+      "**/test-fixtures/**/*",
+      ".github/workflows/*",
       ".gometalinter.json",
+      ".markdownlinkcheck.json",
       ".markdownlint.yml",
       ".travis.yml",
       "staticcheck.conf"
@@ -793,6 +797,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_network_acl*",
       "aws/*_aws_network_interface*",
       "aws/*_aws_placement_group*",
+      "aws/*_aws_prefix_list*",
       "aws/*_aws_route_table*",
       "aws/*_aws_route.*",
       "aws/*_aws_security_group*",
@@ -821,6 +826,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/network_acl*",
       "website/**/network_interface*",
       "website/**/placement_group*",
+      "website/**/prefix_list*",
       "website/**/route_table*",
       "website/**/route.*",
       "website/**/security_group*",
@@ -963,6 +969,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_kinesis_analytics_*",
       "**/kinesis_analytics_*"
     ]
+    "service/kinesisanalyticsv2" = [
+      "**/*_kinesisanalyticsv2_*",
+      "**/kinesisanalyticsv2_*"
+    ]
     "service/kms" = [
       "**/*_kms_*",
       "**/kms_*"
@@ -1094,8 +1104,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_zone*"
     ]
     "service/route53domains" = [
-      "**/*_route53_domains_*",
-      "**/route53_domains_*"
+      "**/*_route53domains_*",
+      "**/route53domains_*"
     ]
     "service/route53resolver" = [
       "**/*_route53_resolver_*",

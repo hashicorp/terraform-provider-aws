@@ -30,6 +30,24 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.wibble", &networkAcl),
 				),
 			},
+			{
+				ResourceName:      "aws_network_acl_rule.baz",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.baz", "tcp"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_network_acl_rule.qux",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.qux", "icmp"),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      "aws_network_acl_rule.wibble",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.wibble", "icmp"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -124,6 +142,12 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
 				),
 			},
+			{
+				ResourceName:      "aws_network_acl_rule.baz",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc("aws_network_acl_rule.baz", "tcp"),
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -143,6 +167,12 @@ func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, "58"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -176,6 +206,12 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 					resource.TestMatchResourceAttr(vpcResourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
 					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, "tcp"),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -632,7 +668,6 @@ resource "aws_network_acl" "test" {
 }
 
 resource "aws_network_acl_rule" "test" {
-  from_port       = -1
   icmp_code       = -1
   icmp_type       = -1
   ipv6_cidr_block = "::/0"
@@ -640,7 +675,6 @@ resource "aws_network_acl_rule" "test" {
   protocol        = 58
   rule_action     = "allow"
   rule_number     = 150
-  to_port         = -1
 }
 `, rName, rName)
 }
@@ -676,4 +710,22 @@ resource "aws_network_acl_rule" "test" {
   to_port         = 22
 }
 `, ipv6Enabled)
+}
+
+func testAccAWSNetworkAclRuleImportStateIdFunc(resourceName, resourceProtocol string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("not found: %s", resourceName)
+		}
+		networkAclId := rs.Primary.Attributes["network_acl_id"]
+		ruleNumber := rs.Primary.Attributes["rule_number"]
+		protocol := rs.Primary.Attributes["protocol"]
+		// Ensure the resource's ID will be determined from the original protocol value set in the resource's config
+		if protocol != resourceProtocol {
+			protocol = resourceProtocol
+		}
+		egress := rs.Primary.Attributes["egress"]
+		return fmt.Sprintf("%s:%s:%s:%s", networkAclId, ruleNumber, protocol, egress), nil
+	}
 }

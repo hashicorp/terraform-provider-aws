@@ -148,11 +148,11 @@ func main() {
 		SliceServiceNames: sliceServiceNames,
 	}
 	templateFuncMap := template.FuncMap{
-		"TagKeyType":        ServiceTagKeyType,
+		"TagKeyType":        keyvaluetags.ServiceTagKeyType,
 		"TagPackage":        keyvaluetags.ServiceTagPackage,
-		"TagType":           ServiceTagType,
-		"TagTypeKeyField":   ServiceTagTypeKeyField,
-		"TagTypeValueField": ServiceTagTypeValueField,
+		"TagType":           keyvaluetags.ServiceTagType,
+		"TagTypeKeyField":   keyvaluetags.ServiceTagTypeKeyField,
+		"TagTypeValueField": keyvaluetags.ServiceTagTypeValueField,
 		"Title":             strings.Title,
 	}
 
@@ -266,49 +266,3 @@ func {{ . | Title }}KeyValueTags(tags []*{{ . | TagPackage }}.{{ . | TagType }})
 }
 {{- end }}
 `
-
-// ServiceTagKeyType determines the service tagging tag key type.
-func ServiceTagKeyType(serviceName string) string {
-	switch serviceName {
-	case "elb":
-		return "TagKeyOnly"
-	default:
-		return ""
-	}
-}
-
-// ServiceTagType determines the service tagging tag type.
-func ServiceTagType(serviceName string) string {
-	switch serviceName {
-	case "appmesh":
-		return "TagRef"
-	case "datasync":
-		return "TagListEntry"
-	case "fms":
-		return "ResourceTag"
-	case "swf":
-		return "ResourceTag"
-	default:
-		return "Tag"
-	}
-}
-
-// ServiceTagTypeKeyField determines the service tagging tag type key field.
-func ServiceTagTypeKeyField(serviceName string) string {
-	switch serviceName {
-	case "kms":
-		return "TagKey"
-	default:
-		return "Key"
-	}
-}
-
-// ServiceTagTypeValueField determines the service tagging tag type value field.
-func ServiceTagTypeValueField(serviceName string) string {
-	switch serviceName {
-	case "kms":
-		return "TagValue"
-	default:
-		return "Value"
-	}
-}

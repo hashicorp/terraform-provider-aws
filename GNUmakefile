@@ -68,9 +68,14 @@ lint:
 		-AT007 \
 		-AT008 \
 		-AWSR001 \
+		-AWSR002 \
 		-R002 \
+		-R003 \
 		-R004 \
 		-R006 \
+		-R007 \
+		-R008 \
+		-R009 \
 		-R012 \
 		-R013 \
 		-R014 \
@@ -91,7 +96,11 @@ lint:
 		-S016 \
 		-S017 \
 		-S019 \
+		-S020 \
 		-S021 \
+		-S022 \
+		-S023 \
+		-S024 \
 		-S025 \
 		-S026 \
 		-S027 \
@@ -108,6 +117,7 @@ lint:
 		-V002 \
 		-V003 \
 		-V004 \
+		-V005 \
 		-V006 \
 		-V007 \
 		-V008 \
@@ -134,6 +144,9 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 	git clone https://$(WEBSITE_REPO) $(GOPATH)/src/$(WEBSITE_REPO)
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
+
+website-link-check:
+	@scripts/markdown-link-check.sh
 
 website-lint:
 	@echo "==> Checking website against linters..."
@@ -164,5 +177,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-lint website-lint-fix website-test depscheck docscheck
+.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
 

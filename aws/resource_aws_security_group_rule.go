@@ -455,6 +455,7 @@ func (b ByGroupPair) Less(i, j int) bool {
 		return *b[i].GroupName < *b[j].GroupName
 	}
 
+	//lintignore:R009
 	panic("mismatched security group rules, may be a terraform bug")
 }
 
