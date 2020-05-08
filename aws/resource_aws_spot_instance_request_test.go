@@ -335,9 +335,54 @@ func TestAccAWSSpotInstanceRequest_disappears(t *testing.T) {
 				Config: testAccAWSSpotInstanceRequestConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					testAccCheckAWSSpotInstanceRequestDisappears(&sir),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSpotInstanceRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSpotInstanceRequest_tags(t *testing.T) {
+	var sir ec2.SpotInstanceRequest
+	resourceName := "aws_spot_instance_request.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSpotInstanceRequestConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+			{
+				Config: testAccAWSSpotInstanceRequestConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSSpotInstanceRequestConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -454,19 +499,6 @@ func testAccCheckAWSSpotInstanceRequestExists(
 		*sir = *resp.SpotInstanceRequests[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSSpotInstanceRequestDisappears(sir *ec2.SpotInstanceRequest) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		params := &ec2.CancelSpotInstanceRequestsInput{
-			SpotInstanceRequestIds: []*string{sir.SpotInstanceRequestId},
-		}
-		_, err := conn.CancelSpotInstanceRequests(params)
-
-		return err
 	}
 }
 
@@ -859,4 +891,40 @@ resource "aws_spot_instance_request" "test" {
   spot_price           = "0.07"
   wait_for_fulfillment = true
 
-  instance_interruption_behaviour = "%s"
+  instance_interruption_behaviour = %[1]q
+}
+`, interruptionBehavior)
+}
+
+func testAccAWSSpotInstanceRequestConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+resource "aws_spot_instance_request" "test" {
+  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  key_name             = "${aws_key_pair.test.key_name}"
+  spot_price           = "0.05"
+  wait_for_fulfillment = true
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccAWSSpotInstanceRequestConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
+resource "aws_spot_instance_request" "test" {
+  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
+  key_name             = "${aws_key_pair.test.key_name}"
+  spot_price           = "0.05"
+  wait_for_fulfillment = true
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
