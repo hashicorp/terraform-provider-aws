@@ -14,7 +14,7 @@ import (
 
 func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -41,7 +41,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 
 func TestAccAWSKinesisAnalyticsV2Application_update(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -73,7 +73,7 @@ func TestAccAWSKinesisAnalyticsV2Application_update(t *testing.T) {
 
 func TestAccAWSKinesisAnalyticsV2Application_addCloudwatchLoggingOptions(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt)
 	thirdStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_cloudwatchLoggingOptions(rInt, "testStream")
@@ -110,7 +110,7 @@ func TestAccAWSKinesisAnalyticsV2Application_addCloudwatchLoggingOptions(t *test
 
 func TestAccAWSKinesisAnalyticsV2Application_updateCloudwatchLoggingOptions(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_cloudwatchLoggingOptions(rInt, "testStream")
 	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_cloudwatchLoggingOptions(rInt, "testStream2")
@@ -149,7 +149,7 @@ func TestAccAWSKinesisAnalyticsV2Application_updateCloudwatchLoggingOptions(t *t
 
 func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisFirehose(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{PreCheck: func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) }, Providers: testAccProviders,
@@ -174,7 +174,7 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisFirehose(t *testing.T)
 
 func TestAccAWSKinesisAnalyticsV2Application_flinkApplication(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -215,7 +215,7 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplication(t *testing.T) {
 
 func TestAccAWSKinesisAnalyticsV2Application_flinkApplicationUpdate(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -248,7 +248,7 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplicationUpdate(t *testing.T
 
 func TestAccAWSKinesisAnalayticsApplicationV2_inputsKinesisStream(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -282,7 +282,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_inputsKinesisStream(t *testing.T) 
 
 func TestAccAWSKinesisAnalayticsApplicationV2_inputsAdd(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt)
 	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsKinesisStream(rInt)
@@ -326,7 +326,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_inputsAdd(t *testing.T) {
 
 func TestAccAWSKinesisAnalayticsApplicationV2_inputsUpdateKinesisStream(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsKinesisStream(rInt)
 	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsUpdateKinesisStream(rInt, "testStream")
@@ -371,7 +371,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_inputsUpdateKinesisStream(t *testi
 
 func TestAccAWSKinesisAnalayticsApplicationV2_outputsKinesisStream(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsKinesisStream(rInt)
 
@@ -403,7 +403,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsKinesisStream(t *testing.T)
 
 func TestAccAWSKinesisAnalayticsApplicationV2_outputsMultiple(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt1 := acctest.RandInt()
 	rInt2 := acctest.RandInt()
 	step := testAccKinesisAnalayticsApplicationV2_prereq(rInt1) + testAccKinesisAnalayticsApplicationV2_outputsMultiple(rInt1, rInt2)
@@ -431,7 +431,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsMultiple(t *testing.T) {
 
 func TestAccAWSKinesisAnalayticsApplicationV2_outputsAdd(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt)
 	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsKinesisStream(rInt)
@@ -471,7 +471,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsAdd(t *testing.T) {
 
 func TestAccAWSKinesisAnalayticsApplicationV2_outputsUpdateKinesisStream(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsKinesisStream(rInt)
 	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsUpdateKinesisStream(rInt, "testStream")
@@ -518,7 +518,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsUpdateKinesisStream(t *test
 func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Add(t *testing.T) {
 	var application1, application2 kinesisanalyticsv2.ApplicationDetail
 	lambdaFunctionResourceName := "aws_lambda_function.test"
-	resourceName := "aws_kinesis_analytics_application_v2.test"
+	resourceName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -556,7 +556,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Add(t *testing.T) {
 func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Create(t *testing.T) {
 	var application1 kinesisanalyticsv2.ApplicationDetail
 	lambdaFunctionResourceName := "aws_lambda_function.test"
-	resourceName := "aws_kinesis_analytics_application_v2.test"
+	resourceName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -585,7 +585,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Create(t *testing.T
 
 func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSource(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_referenceDataSource(rInt)
 
@@ -617,7 +617,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSource(t *testing.T) 
 
 func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSourceUpdate(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_referenceDataSource(rInt)
 	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_referenceDataSourceUpdate(rInt)
@@ -654,7 +654,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSourceUpdate(t *testi
 
 func TestAccAWSKinesisAnalayticsApplicationV2_tags(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
-	resName := "aws_kinesis_analytics_application_v2.test"
+	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -725,7 +725,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_SQLConflictsWithFlinkConfig(t *tes
 
 func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_kinesis_analytics_application_v2" {
+		if rs.Type != "aws_kinesis_analyticsv2_application" {
 			continue
 		}
 		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
@@ -786,7 +786,7 @@ func testAccPreCheckAWSKinesisAnalyticsV2(t *testing.T) {
 
 func testAccKinesisAnalayticsApplicationV2_basic(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   code_content_type      = "plain_text"
@@ -800,7 +800,7 @@ resource "aws_kinesis_analytics_application_v2" "test" {
 
 func testAccKinesisAnalayticsApplicationV2_update(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode2\n"
   code_content_type      = "plain_text"
@@ -823,7 +823,7 @@ resource "aws_cloudwatch_log_stream" "test" {
   log_group_name = "${aws_cloudwatch_log_group.test.name}"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
@@ -896,7 +896,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   }
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
@@ -963,7 +963,7 @@ data "aws_iam_policy_document" "flink_assume_role_policy" {
   }
 }
 
-resource "aws_iam_role" "kinesis_analytics_application_v2" {
+resource "aws_iam_role" "kinesis_analyticsv2_application" {
   name               = "tf-acc-test-flink-%d-kinesis"
   assume_role_policy = "${data.aws_iam_policy_document.flink_assume_role_policy.json}"
 }
@@ -985,7 +985,7 @@ resource "aws_iam_policy" "flink_test" {
 }
 
 resource "aws_iam_role_policy_attachment" "flink_test" {
-  role       = "${aws_iam_role.kinesis_analytics_application_v2.name}"
+  role       = "${aws_iam_role.kinesis_analyticsv2_application.name}"
   policy_arn = "${aws_iam_policy.flink_test.arn}"
 }
 
@@ -1002,7 +1002,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 
 func testAccKinesisAnalayticsApplicationV2_FlinkApplication(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name    = "testAccFlink-%d"
 
   runtime           = "FLINK-1_8"
@@ -1041,7 +1041,7 @@ resource "aws_kinesis_analytics_application_v2" "test" {
     }
   }
 
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application_v2.arn}"
+  service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
 
   cloudwatch_logging_options {
     log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
@@ -1052,7 +1052,7 @@ resource "aws_kinesis_analytics_application_v2" "test" {
 
 func testAccKinesisAnalayticsApplicationV2_FlinkApplication_update(rInt int) string {
 	return fmt.Sprintf(`
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name    = "testAccFlink-%d"
 
   runtime           = "FLINK-1_8"
@@ -1083,7 +1083,7 @@ resource "aws_kinesis_analytics_application_v2" "test" {
     }
   }
 
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application_v2.arn}"
+  service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
 
   cloudwatch_logging_options {
     log_stream_arn = "${aws_cloudwatch_log_stream.test.arn}"
@@ -1099,7 +1099,7 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
@@ -1148,7 +1148,7 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
@@ -1198,7 +1198,7 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
@@ -1246,17 +1246,17 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-resource "aws_iam_role" "kinesis_analytics_application_v2" {
+resource "aws_iam_role" "kinesis_analyticsv2_application" {
   name               = "tf-acc-test-%d-kinesis"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
   code_content_type      = "plain_text"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application_v2.arn}"
+  service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
 
   sql_application_configuration {
     outputs {
@@ -1338,7 +1338,7 @@ resource "aws_lambda_function" "test" {
   runtime       = "nodejs12.x"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
@@ -1369,7 +1369,7 @@ resource "aws_kinesis_stream" "test" {
   shard_count = 1
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   code                   = "testCode\n"
   runtime                = "SQL-1_0"
@@ -1399,7 +1399,7 @@ resource "aws_s3_bucket" "test" {
   bucket = "testacc-%d"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL-1_0"
   code                   = "testCode\n"
@@ -1444,7 +1444,7 @@ resource "aws_s3_bucket" "test" {
   bucket = "testacc2-%d"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL-1_0"
   code                   = "testCode\n"
@@ -1536,15 +1536,15 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-resource "aws_iam_role" "kinesis_analytics_application_v2" {
+resource "aws_iam_role" "kinesis_analyticsv2_application" {
   name               = "tf-acc-test-%d-kinesis"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL-1_0"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application_v2.arn}"
+  service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
   code_content_type      = "plain_text"
   code                   = "testCode\n"
 
@@ -1572,15 +1572,15 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-resource "aws_iam_role" "kinesis_analytics_application_v2" {
+resource "aws_iam_role" "kinesis_analyticsv2_application" {
   name               = "tf-acc-test-%d-kinesis"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL-1_0"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application_v2.arn}"
+  service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
   code_content_type      = "plain_text"
   code                   = "testCode\n"
 
@@ -1609,15 +1609,15 @@ data "aws_iam_policy_document" "assume_role_policy" {
   }
 }
 
-resource "aws_iam_role" "kinesis_analytics_application_v2" {
+resource "aws_iam_role" "kinesis_analyticsv2_application" {
   name               = "tf-acc-test-%d-kinesis"
   assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
 }
 
-resource "aws_kinesis_analytics_application_v2" "test" {
+resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
   runtime                = "SQL-1_0"
-  service_execution_role = "${aws_iam_role.kinesis_analytics_application_v2.arn}"
+  service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
   code_content_type      = "plain_text"
   code                   = "testCode\n"
 
