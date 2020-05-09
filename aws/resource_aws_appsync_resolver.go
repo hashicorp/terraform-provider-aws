@@ -294,3 +294,36 @@ func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig 
 
 	return cachingConfig
 }
+
+func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.Functions) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"functions": flattenStringList(c.Functions),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAppsyncCachingConfig(c *appsync.CachingConfig) []interface{} {
+	if c == nil {
+		return nil
+	}
+
+	if len(c.CachingKeys) == 0 && *(c.Ttl) == 0 {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"caching_keys": flattenStringSet(c.CachingKeys),
+		"ttl":          int(aws.Int64Value(c.Ttl)),
+	}
+
+	return []interface{}{m}
+}

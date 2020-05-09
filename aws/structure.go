@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -5547,39 +5546,6 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	return []interface{}{mSpec}
-}
-
-func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
-	if c == nil {
-		return nil
-	}
-
-	if len(c.Functions) == 0 {
-		return nil
-	}
-
-	m := map[string]interface{}{
-		"functions": flattenStringList(c.Functions),
-	}
-
-	return []interface{}{m}
-}
-
-func flattenAppsyncCachingConfig(c *appsync.CachingConfig) []interface{} {
-	if c == nil {
-		return nil
-	}
-
-	if len(c.CachingKeys) == 0 && *(c.Ttl) == 0 {
-		return nil
-	}
-
-	m := map[string]interface{}{
-		"caching_keys": flattenStringSet(c.CachingKeys),
-		"ttl":          int(aws.Int64Value(c.Ttl)),
-	}
-
-	return []interface{}{m}
 }
 
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
