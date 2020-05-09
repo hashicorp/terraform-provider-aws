@@ -2785,9 +2785,7 @@ func (s *Ac3Settings) SetSampleRate(v int64) *Ac3Settings {
 }
 
 // Accelerated transcoding can significantly speed up jobs with long, visually
-// complex content. Outputs that use this feature incur pro-tier pricing. For
-// information about feature limitations, see the AWS Elemental MediaConvert
-// User Guide.
+// complex content.
 type AccelerationSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -4633,6 +4631,65 @@ func (s *CaptionSelector) SetSourceSettings(v *CaptionSourceSettings) *CaptionSe
 	return s
 }
 
+// Ignore this setting unless your input captions format is SCC. To have the
+// service compensate for differing framerates between your input captions and
+// input video, specify the framerate of the captions file. Specify this value
+// as a fraction, using the settings Framerate numerator (framerateNumerator)
+// and Framerate denominator (framerateDenominator). For example, you might
+// specify 24 / 1 for 24 fps, 25 / 1 for 25 fps, 24000 / 1001 for 23.976 fps,
+// or 30000 / 1001 for 29.97 fps.
+type CaptionSourceFramerate struct {
+	_ struct{} `type:"structure"`
+
+	// Specify the denominator of the fraction that represents the framerate for
+	// the setting Caption source framerate (CaptionSourceFramerate). Use this setting
+	// along with the setting Framerate numerator (framerateNumerator).
+	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
+
+	// Specify the numerator of the fraction that represents the framerate for the
+	// setting Caption source framerate (CaptionSourceFramerate). Use this setting
+	// along with the setting Framerate denominator (framerateDenominator).
+	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s CaptionSourceFramerate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CaptionSourceFramerate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CaptionSourceFramerate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CaptionSourceFramerate"}
+	if s.FramerateDenominator != nil && *s.FramerateDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateDenominator", 1))
+	}
+	if s.FramerateNumerator != nil && *s.FramerateNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateNumerator", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFramerateDenominator sets the FramerateDenominator field's value.
+func (s *CaptionSourceFramerate) SetFramerateDenominator(v int64) *CaptionSourceFramerate {
+	s.FramerateDenominator = &v
+	return s
+}
+
+// SetFramerateNumerator sets the FramerateNumerator field's value.
+func (s *CaptionSourceFramerate) SetFramerateNumerator(v int64) *CaptionSourceFramerate {
+	s.FramerateNumerator = &v
+	return s
+}
+
 // If your input captions are SCC, TTML, STL, SMI, SRT, or IMSC in an xml file,
 // specify the URI of the input captions source file. If your input captions
 // are IMSC in an IMF package, use TrackSourceSettings instead of FileSoureSettings.
@@ -5439,6 +5496,9 @@ type ContainerSettings struct {
 
 	// Settings for MP4 segments in DASH
 	MpdSettings *MpdSettings `locationName:"mpdSettings" type:"structure"`
+
+	// MXF settings
+	MxfSettings *MxfSettings `locationName:"mxfSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -5519,14 +5579,20 @@ func (s *ContainerSettings) SetMpdSettings(v *MpdSettings) *ContainerSettings {
 	return s
 }
 
+// SetMxfSettings sets the MxfSettings field's value.
+func (s *ContainerSettings) SetMxfSettings(v *MxfSettings) *ContainerSettings {
+	s.MxfSettings = v
+	return s
+}
+
 // Send your create job request with your job settings and IAM role. Optionally,
 // include user metadata and the ARN for the queue.
 type CreateJobInput struct {
 	_ struct{} `type:"structure"`
 
-	// Accelerated transcoding can significantly speed up jobs with long, visually
-	// complex content. Outputs that use this feature incur pro-tier pricing. For
-	// information about feature limitations, see the AWS Elemental MediaConvert
+	// Optional. Accelerated transcoding can significantly speed up jobs with long,
+	// visually complex content. Outputs that use this feature incur pro-tier pricing.
+	// For information about feature limitations, see the AWS Elemental MediaConvert
 	// User Guide.
 	AccelerationSettings *AccelerationSettings `locationName:"accelerationSettings" type:"structure"`
 
@@ -5537,18 +5603,25 @@ type CreateJobInput struct {
 	// for this field, your job outputs will appear on the billing report unsorted.
 	BillingTagsSource *string `locationName:"billingTagsSource" type:"string" enum:"BillingTagsSource"`
 
-	// Idempotency token for CreateJob operation.
+	// Optional. Idempotency token for CreateJob operation.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
 
-	// When you create a job, you can either specify a job template or specify the
-	// transcoding settings individually
+	// Optional. Use queue hopping to avoid overly long waits in the backlog of
+	// the queue that you submit your job to. Specify an alternate queue and the
+	// maximum time that your job will wait in the initial queue before hopping.
+	// For more information about this feature, see the AWS Elemental MediaConvert
+	// User Guide.
+	HopDestinations []*HopDestination `locationName:"hopDestinations" type:"list"`
+
+	// Optional. When you create a job, you can either specify a job template or
+	// specify the transcoding settings individually.
 	JobTemplate *string `locationName:"jobTemplate" type:"string"`
 
-	// Specify the relative priority for this job. In any given queue, the service
-	// begins processing the job with the highest value first. When more than one
-	// job has the same priority, the service begins processing the job that you
-	// submitted first. If you don't specify a priority, the service uses the default
-	// value 0.
+	// Optional. Specify the relative priority for this job. In any given queue,
+	// the service begins processing the job with the highest value first. When
+	// more than one job has the same priority, the service begins processing the
+	// job that you submitted first. If you don't specify a priority, the service
+	// uses the default value 0.
 	Priority *int64 `locationName:"priority" type:"integer"`
 
 	// Optional. When you create a job, you can specify a queue to send it to. If
@@ -5567,24 +5640,25 @@ type CreateJobInput struct {
 	// Settings is a required field
 	Settings *JobSettings `locationName:"settings" type:"structure" required:"true"`
 
-	// Enable this setting when you run a test job to estimate how many reserved
-	// transcoding slots (RTS) you need. When this is enabled, MediaConvert runs
-	// your job from an on-demand queue with similar performance to what you will
-	// see with one RTS in a reserved queue. This setting is disabled by default.
+	// Optional. Enable this setting when you run a test job to estimate how many
+	// reserved transcoding slots (RTS) you need. When this is enabled, MediaConvert
+	// runs your job from an on-demand queue with similar performance to what you
+	// will see with one RTS in a reserved queue. This setting is disabled by default.
 	SimulateReservedQueue *string `locationName:"simulateReservedQueue" type:"string" enum:"SimulateReservedQueue"`
 
-	// Specify how often MediaConvert sends STATUS_UPDATE events to Amazon CloudWatch
-	// Events. Set the interval, in seconds, between status updates. MediaConvert
-	// sends an update at this interval from the time the service begins processing
-	// your job to the time it completes the transcode or encounters an error.
+	// Optional. Specify how often MediaConvert sends STATUS_UPDATE events to Amazon
+	// CloudWatch Events. Set the interval, in seconds, between status updates.
+	// MediaConvert sends an update at this interval from the time the service begins
+	// processing your job to the time it completes the transcode or encounters
+	// an error.
 	StatusUpdateInterval *string `locationName:"statusUpdateInterval" type:"string" enum:"StatusUpdateInterval"`
 
-	// The tags that you want to add to the resource. You can tag resources with
-	// a key-value pair or with only a key.
+	// Optional. The tags that you want to add to the resource. You can tag resources
+	// with a key-value pair or with only a key.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
-	// User-defined metadata that you want to associate with an MediaConvert job.
-	// You specify metadata in key/value pairs.
+	// Optional. User-defined metadata that you want to associate with an MediaConvert
+	// job. You specify metadata in key/value pairs.
 	UserMetadata map[string]*string `locationName:"userMetadata" type:"map"`
 }
 
@@ -5615,6 +5689,16 @@ func (s *CreateJobInput) Validate() error {
 			invalidParams.AddNested("AccelerationSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.HopDestinations != nil {
+		for i, v := range s.HopDestinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "HopDestinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -5642,6 +5726,12 @@ func (s *CreateJobInput) SetBillingTagsSource(v string) *CreateJobInput {
 // SetClientRequestToken sets the ClientRequestToken field's value.
 func (s *CreateJobInput) SetClientRequestToken(v string) *CreateJobInput {
 	s.ClientRequestToken = &v
+	return s
+}
+
+// SetHopDestinations sets the HopDestinations field's value.
+func (s *CreateJobInput) SetHopDestinations(v []*HopDestination) *CreateJobInput {
+	s.HopDestinations = v
 	return s
 }
 
@@ -5742,6 +5832,13 @@ type CreateJobTemplateInput struct {
 	// Optional. A description of the job template you are creating.
 	Description *string `locationName:"description" type:"string"`
 
+	// Optional. Use queue hopping to avoid overly long waits in the backlog of
+	// the queue that you submit your job to. Specify an alternate queue and the
+	// maximum time that your job will wait in the initial queue before hopping.
+	// For more information about this feature, see the AWS Elemental MediaConvert
+	// User Guide.
+	HopDestinations []*HopDestination `locationName:"hopDestinations" type:"list"`
+
 	// The name of the job template you are creating.
 	//
 	// Name is a required field
@@ -5802,6 +5899,16 @@ func (s *CreateJobTemplateInput) Validate() error {
 			invalidParams.AddNested("AccelerationSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.HopDestinations != nil {
+		for i, v := range s.HopDestinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "HopDestinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -5829,6 +5936,12 @@ func (s *CreateJobTemplateInput) SetCategory(v string) *CreateJobTemplateInput {
 // SetDescription sets the Description field's value.
 func (s *CreateJobTemplateInput) SetDescription(v string) *CreateJobTemplateInput {
 	s.Description = &v
+	return s
+}
+
+// SetHopDestinations sets the HopDestinations field's value.
+func (s *CreateJobTemplateInput) SetHopDestinations(v []*HopDestination) *CreateJobTemplateInput {
+	s.HopDestinations = v
 	return s
 }
 
@@ -8161,6 +8274,15 @@ type FileSourceSettings struct {
 	// 608 data into 708.
 	Convert608To708 *string `locationName:"convert608To708" type:"string" enum:"FileSourceConvert608To708"`
 
+	// Ignore this setting unless your input captions format is SCC. To have the
+	// service compensate for differing framerates between your input captions and
+	// input video, specify the framerate of the captions file. Specify this value
+	// as a fraction, using the settings Framerate numerator (framerateNumerator)
+	// and Framerate denominator (framerateDenominator). For example, you might
+	// specify 24 / 1 for 24 fps, 25 / 1 for 25 fps, 24000 / 1001 for 23.976 fps,
+	// or 30000 / 1001 for 29.97 fps.
+	Framerate *CaptionSourceFramerate `locationName:"framerate" type:"structure"`
+
 	// External caption file used for loading captions. Accepted file extensions
 	// are 'scc', 'ttml', 'dfxp', 'stl', 'srt', 'xml', and 'smi'.
 	SourceFile *string `locationName:"sourceFile" min:"14" type:"string"`
@@ -8189,6 +8311,11 @@ func (s *FileSourceSettings) Validate() error {
 	if s.TimeDelta != nil && *s.TimeDelta < -2.147483648e+09 {
 		invalidParams.Add(request.NewErrParamMinValue("TimeDelta", -2.147483648e+09))
 	}
+	if s.Framerate != nil {
+		if err := s.Framerate.Validate(); err != nil {
+			invalidParams.AddNested("Framerate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8199,6 +8326,12 @@ func (s *FileSourceSettings) Validate() error {
 // SetConvert608To708 sets the Convert608To708 field's value.
 func (s *FileSourceSettings) SetConvert608To708(v string) *FileSourceSettings {
 	s.Convert608To708 = &v
+	return s
+}
+
+// SetFramerate sets the Framerate field's value.
+func (s *FileSourceSettings) SetFramerate(v *CaptionSourceFramerate) *FileSourceSettings {
+	s.Framerate = v
 	return s
 }
 
@@ -10545,6 +10678,70 @@ func (s *HlsSettings) SetSegmentModifier(v string) *HlsSettings {
 	return s
 }
 
+// Optional. Configuration for a destination queue to which the job can hop
+// once a customer-defined minimum wait time has passed.
+type HopDestination struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. When you set up a job to use queue hopping, you can specify a different
+	// relative priority for the job in the destination queue. If you don't specify,
+	// the relative priority will remain the same as in the previous queue.
+	Priority *int64 `locationName:"priority" type:"integer"`
+
+	// Optional unless the job is submitted on the default queue. When you set up
+	// a job to use queue hopping, you can specify a destination queue. This queue
+	// cannot be the original queue to which the job is submitted. If the original
+	// queue isn't the default queue and you don't specify the destination queue,
+	// the job will move to the default queue.
+	Queue *string `locationName:"queue" type:"string"`
+
+	// Required for setting up a job to use queue hopping. Minimum wait time in
+	// minutes until the job can hop to the destination queue. Valid range is 1
+	// to 1440 minutes, inclusive.
+	WaitMinutes *int64 `locationName:"waitMinutes" type:"integer"`
+}
+
+// String returns the string representation
+func (s HopDestination) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s HopDestination) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *HopDestination) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "HopDestination"}
+	if s.Priority != nil && *s.Priority < -50 {
+		invalidParams.Add(request.NewErrParamMinValue("Priority", -50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPriority sets the Priority field's value.
+func (s *HopDestination) SetPriority(v int64) *HopDestination {
+	s.Priority = &v
+	return s
+}
+
+// SetQueue sets the Queue field's value.
+func (s *HopDestination) SetQueue(v string) *HopDestination {
+	s.Queue = &v
+	return s
+}
+
+// SetWaitMinutes sets the WaitMinutes field's value.
+func (s *HopDestination) SetWaitMinutes(v int64) *HopDestination {
+	s.WaitMinutes = &v
+	return s
+}
+
 // To insert ID3 tags in your output, specify two values. Use ID3 tag (Id3)
 // to specify the base 64 encoded string and use Timecode (TimeCode) to specify
 // the time when the tag should be inserted. To insert multiple ID3 tags in
@@ -10634,8 +10831,8 @@ type ImscDestinationSettings struct {
 
 	// Keep this setting enabled to have MediaConvert use the font style and position
 	// information from the captions source in the output. This option is available
-	// only when your input captions are CFF-TT, IMSC, SMPTE-TT, or TTML. Disable
-	// this setting for simplified output captions.
+	// only when your input captions are IMSC, SMPTE-TT, or TTML. Disable this setting
+	// for simplified output captions.
 	StylePassthrough *string `locationName:"stylePassthrough" type:"string" enum:"ImscStylePassthrough"`
 }
 
@@ -11601,11 +11798,8 @@ type Job struct {
 	// An identifier for this resource that is unique within all of AWS.
 	Arn *string `locationName:"arn" type:"string"`
 
-	// Optional. Choose a tag type that AWS Billing and Cost Management will use
-	// to sort your AWS Elemental MediaConvert costs on any billing report that
-	// you set up. Any transcoding outputs that don't have an associated tag will
-	// appear in your billing report unsorted. If you don't choose a valid value
-	// for this field, your job outputs will appear on the billing report unsorted.
+	// The tag type that AWS Billing and Cost Management will use to sort your AWS
+	// Elemental MediaConvert costs on any billing report that you set up.
 	BillingTagsSource *string `locationName:"billingTagsSource" type:"string" enum:"BillingTagsSource"`
 
 	// The time, in Unix epoch format in seconds, when the job got created.
@@ -11619,6 +11813,9 @@ type Job struct {
 
 	// Error message of Job
 	ErrorMessage *string `locationName:"errorMessage" type:"string"`
+
+	// Optional list of hop destinations.
+	HopDestinations []*HopDestination `locationName:"hopDestinations" type:"list"`
 
 	// A portion of the job's ARN, unique within your AWS Elemental MediaConvert
 	// resources
@@ -11648,10 +11845,13 @@ type Job struct {
 	// Relative priority on the job.
 	Priority *int64 `locationName:"priority" type:"integer"`
 
-	// Optional. When you create a job, you can specify a queue to send it to. If
-	// you don't specify, the job will go to the default queue. For more about queues,
-	// see the User Guide topic at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
+	// When you create a job, you can specify a queue to send it to. If you don't
+	// specify, the job will go to the default queue. For more about queues, see
+	// the User Guide topic at http://docs.aws.amazon.com/mediaconvert/latest/ug/what-is.html
 	Queue *string `locationName:"queue" type:"string"`
+
+	// The job's queue hopping history.
+	QueueTransitions []*QueueTransition `locationName:"queueTransitions" type:"list"`
 
 	// The number of times that the service automatically attempted to process your
 	// job after encountering an error.
@@ -11750,6 +11950,12 @@ func (s *Job) SetErrorMessage(v string) *Job {
 	return s
 }
 
+// SetHopDestinations sets the HopDestinations field's value.
+func (s *Job) SetHopDestinations(v []*HopDestination) *Job {
+	s.HopDestinations = v
+	return s
+}
+
 // SetId sets the Id field's value.
 func (s *Job) SetId(v string) *Job {
 	s.Id = &v
@@ -11789,6 +11995,12 @@ func (s *Job) SetPriority(v int64) *Job {
 // SetQueue sets the Queue field's value.
 func (s *Job) SetQueue(v string) *Job {
 	s.Queue = &v
+	return s
+}
+
+// SetQueueTransitions sets the QueueTransitions field's value.
+func (s *Job) SetQueueTransitions(v []*QueueTransition) *Job {
+	s.QueueTransitions = v
 	return s
 }
 
@@ -12058,6 +12270,9 @@ type JobTemplate struct {
 	// An optional description you create for each job template.
 	Description *string `locationName:"description" type:"string"`
 
+	// Optional list of hop destinations.
+	HopDestinations []*HopDestination `locationName:"hopDestinations" type:"list"`
+
 	// The timestamp in epoch seconds when the Job template was last updated.
 	LastUpdated *time.Time `locationName:"lastUpdated" type:"timestamp" timestampFormat:"unixTimestamp"`
 
@@ -12128,6 +12343,12 @@ func (s *JobTemplate) SetCreatedAt(v time.Time) *JobTemplate {
 // SetDescription sets the Description field's value.
 func (s *JobTemplate) SetDescription(v string) *JobTemplate {
 	s.Description = &v
+	return s
+}
+
+// SetHopDestinations sets the HopDestinations field's value.
+func (s *JobTemplate) SetHopDestinations(v []*HopDestination) *JobTemplate {
+	s.HopDestinations = v
 	return s
 }
 
@@ -12359,7 +12580,7 @@ type ListJobTemplatesInput struct {
 	// the next batch of job templates.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// When you request lists of resources, you can optionally specify whether they
+	// Optional. When you request lists of resources, you can specify whether they
 	// are sorted in ASCENDING or DESCENDING order. Default varies by resource.
 	Order *string `location:"querystring" locationName:"order" type:"string" enum:"Order"`
 }
@@ -12462,18 +12683,19 @@ type ListJobsInput struct {
 	// Optional. Number of jobs, up to twenty, that will be returned at one time.
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
-	// Use this string, provided with the response to a previous request, to request
-	// the next batch of jobs.
+	// Optional. Use this string, provided with the response to a previous request,
+	// to request the next batch of jobs.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// When you request lists of resources, you can optionally specify whether they
+	// Optional. When you request lists of resources, you can specify whether they
 	// are sorted in ASCENDING or DESCENDING order. Default varies by resource.
 	Order *string `location:"querystring" locationName:"order" type:"string" enum:"Order"`
 
-	// Provide a queue name to get back only jobs from that queue.
+	// Optional. Provide a queue name to get back only jobs from that queue.
 	Queue *string `location:"querystring" locationName:"queue" type:"string"`
 
-	// A job's status can be SUBMITTED, PROGRESSING, COMPLETE, CANCELED, or ERROR.
+	// Optional. A job's status can be SUBMITTED, PROGRESSING, COMPLETE, CANCELED,
+	// or ERROR.
 	Status *string `location:"querystring" locationName:"status" type:"string" enum:"JobStatus"`
 }
 
@@ -12587,7 +12809,7 @@ type ListPresetsInput struct {
 	// the next batch of presets.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// When you request lists of resources, you can optionally specify whether they
+	// Optional. When you request lists of resources, you can specify whether they
 	// are sorted in ASCENDING or DESCENDING order. Default varies by resource.
 	Order *string `location:"querystring" locationName:"order" type:"string" enum:"Order"`
 }
@@ -12696,7 +12918,7 @@ type ListQueuesInput struct {
 	// the next batch of queues.
 	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
 
-	// When you request lists of resources, you can optionally specify whether they
+	// Optional. When you request lists of resources, you can specify whether they
 	// are sorted in ASCENDING or DESCENDING order. Default varies by resource.
 	Order *string `location:"querystring" locationName:"order" type:"string" enum:"Order"`
 }
@@ -14690,6 +14912,38 @@ func (s *MsSmoothGroupSettings) SetManifestEncoding(v string) *MsSmoothGroupSett
 	return s
 }
 
+// MXF settings
+type MxfSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. When you have AFD signaling set up in your output video stream,
+	// use this setting to choose whether to also include it in the MXF wrapper.
+	// Choose Don't copy (NO_COPY) to exclude AFD signaling from the MXF wrapper.
+	// Choose Copy from video stream (COPY_FROM_VIDEO) to copy the AFD values from
+	// the video stream for this output to the MXF wrapper. Regardless of which
+	// option you choose, the AFD values remain in the video stream. Related settings:
+	// To set up your output to include or exclude AFD values, see AfdSignaling,
+	// under VideoDescription. On the console, find AFD signaling under the output's
+	// video encoding settings.
+	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"MxfAfdSignaling"`
+}
+
+// String returns the string representation
+func (s MxfSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MxfSettings) GoString() string {
+	return s.String()
+}
+
+// SetAfdSignaling sets the AfdSignaling field's value.
+func (s *MxfSettings) SetAfdSignaling(v string) *MxfSettings {
+	s.AfdSignaling = &v
+	return s
+}
+
 // Settings for your Nielsen configuration. If you don't do Nielsen measurement
 // and analytics, ignore these settings. When you enable Nielsen configuration
 // (nielsenConfiguration), MediaConvert enables PCM to ID3 tagging for all outputs
@@ -15942,6 +16196,50 @@ func (s *Queue) SetType(v string) *Queue {
 	return s
 }
 
+// Description of the source and destination queues between which the job has
+// moved, along with the timestamp of the move
+type QueueTransition struct {
+	_ struct{} `type:"structure"`
+
+	// The queue that the job was on after the transition.
+	DestinationQueue *string `locationName:"destinationQueue" type:"string"`
+
+	// The queue that the job was on before the transition.
+	SourceQueue *string `locationName:"sourceQueue" type:"string"`
+
+	// The time, in Unix epoch format, that the job moved from the source queue
+	// to the destination queue.
+	Timestamp *time.Time `locationName:"timestamp" type:"timestamp" timestampFormat:"unixTimestamp"`
+}
+
+// String returns the string representation
+func (s QueueTransition) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s QueueTransition) GoString() string {
+	return s.String()
+}
+
+// SetDestinationQueue sets the DestinationQueue field's value.
+func (s *QueueTransition) SetDestinationQueue(v string) *QueueTransition {
+	s.DestinationQueue = &v
+	return s
+}
+
+// SetSourceQueue sets the SourceQueue field's value.
+func (s *QueueTransition) SetSourceQueue(v string) *QueueTransition {
+	s.SourceQueue = &v
+	return s
+}
+
+// SetTimestamp sets the Timestamp field's value.
+func (s *QueueTransition) SetTimestamp(v time.Time) *QueueTransition {
+	s.Timestamp = &v
+	return s
+}
+
 // Use Rectangle to identify a specific area of the video frame.
 type Rectangle struct {
 	_ struct{} `type:"structure"`
@@ -17074,7 +17372,7 @@ type TtmlDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Pass through style and position information from a TTML-like input source
-	// (TTML, SMPTE-TT, CFF-TT) to the CFF-TT output or TTML output.
+	// (TTML, SMPTE-TT) to the TTML output.
 	StylePassthrough *string `locationName:"stylePassthrough" type:"string" enum:"TtmlStylePassthrough"`
 }
 
@@ -17180,6 +17478,9 @@ type UpdateJobTemplateInput struct {
 	// The new description for the job template, if you are changing it.
 	Description *string `locationName:"description" type:"string"`
 
+	// Optional list of hop destinations.
+	HopDestinations []*HopDestination `locationName:"hopDestinations" type:"list"`
+
 	// The name of the job template you are modifying
 	//
 	// Name is a required field
@@ -17233,6 +17534,16 @@ func (s *UpdateJobTemplateInput) Validate() error {
 			invalidParams.AddNested("AccelerationSettings", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.HopDestinations != nil {
+		for i, v := range s.HopDestinations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "HopDestinations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 	if s.Settings != nil {
 		if err := s.Settings.Validate(); err != nil {
 			invalidParams.AddNested("Settings", err.(request.ErrInvalidParams))
@@ -17260,6 +17571,12 @@ func (s *UpdateJobTemplateInput) SetCategory(v string) *UpdateJobTemplateInput {
 // SetDescription sets the Description field's value.
 func (s *UpdateJobTemplateInput) SetDescription(v string) *UpdateJobTemplateInput {
 	s.Description = &v
+	return s
+}
+
+// SetHopDestinations sets the HopDestinations field's value.
+func (s *UpdateJobTemplateInput) SetHopDestinations(v []*HopDestination) *UpdateJobTemplateInput {
+	s.HopDestinations = v
 	return s
 }
 
@@ -18734,11 +19051,8 @@ const (
 	Av1SpatialAdaptiveQuantizationEnabled = "ENABLED"
 )
 
-// Optional. Choose a tag type that AWS Billing and Cost Management will use
-// to sort your AWS Elemental MediaConvert costs on any billing report that
-// you set up. Any transcoding outputs that don't have an associated tag will
-// appear in your billing report unsorted. If you don't choose a valid value
-// for this field, your job outputs will appear on the billing report unsorted.
+// The tag type that AWS Billing and Cost Management will use to sort your AWS
+// Elemental MediaConvert costs on any billing report that you set up.
 const (
 	// BillingTagsSourceQueue is a BillingTagsSource enum value
 	BillingTagsSourceQueue = "QUEUE"
@@ -20802,8 +21116,8 @@ const (
 
 // Keep this setting enabled to have MediaConvert use the font style and position
 // information from the captions source in the output. This option is available
-// only when your input captions are CFF-TT, IMSC, SMPTE-TT, or TTML. Disable
-// this setting for simplified output captions.
+// only when your input captions are IMSC, SMPTE-TT, or TTML. Disable this setting
+// for simplified output captions.
 const (
 	// ImscStylePassthroughEnabled is a ImscStylePassthrough enum value
 	ImscStylePassthroughEnabled = "ENABLED"
@@ -22135,6 +22449,23 @@ const (
 	MsSmoothManifestEncodingUtf16 = "UTF16"
 )
 
+// Optional. When you have AFD signaling set up in your output video stream,
+// use this setting to choose whether to also include it in the MXF wrapper.
+// Choose Don't copy (NO_COPY) to exclude AFD signaling from the MXF wrapper.
+// Choose Copy from video stream (COPY_FROM_VIDEO) to copy the AFD values from
+// the video stream for this output to the MXF wrapper. Regardless of which
+// option you choose, the AFD values remain in the video stream. Related settings:
+// To set up your output to include or exclude AFD values, see AfdSignaling,
+// under VideoDescription. On the console, find AFD signaling under the output's
+// video encoding settings.
+const (
+	// MxfAfdSignalingNoCopy is a MxfAfdSignaling enum value
+	MxfAfdSignalingNoCopy = "NO_COPY"
+
+	// MxfAfdSignalingCopyFromVideo is a MxfAfdSignaling enum value
+	MxfAfdSignalingCopyFromVideo = "COPY_FROM_VIDEO"
+)
+
 // Use Noise reducer filter (NoiseReducerFilter) to select one of the following
 // spatial image filtering functions. To use this setting, you must also enable
 // Noise reducer (NoiseReducer). * Bilateral preserves edges while reducing
@@ -22168,7 +22499,7 @@ const (
 	NoiseReducerFilterTemporal = "TEMPORAL"
 )
 
-// When you request lists of resources, you can optionally specify whether they
+// Optional. When you request lists of resources, you can specify whether they
 // are sorted in ASCENDING or DESCENDING order. Default varies by resource.
 const (
 	// OrderAscending is a Order enum value
@@ -22627,7 +22958,7 @@ const (
 )
 
 // Pass through style and position information from a TTML-like input source
-// (TTML, SMPTE-TT, CFF-TT) to the CFF-TT output or TTML output.
+// (TTML, SMPTE-TT) to the TTML output.
 const (
 	// TtmlStylePassthroughEnabled is a TtmlStylePassthrough enum value
 	TtmlStylePassthroughEnabled = "ENABLED"

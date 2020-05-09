@@ -468,6 +468,7 @@ func resourceAwsNeptuneClusterRead(d *schema.ResourceData, meta interface{}) err
 
 func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, dbc *neptune.DBCluster) error {
 	conn := meta.(*AWSClient).neptuneconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
 		return fmt.Errorf("Error saving AvailabilityZones to state for Neptune Cluster (%s): %s", d.Id(), err)
@@ -531,7 +532,7 @@ func flattenAwsNeptuneClusterResource(d *schema.ResourceData, meta interface{}, 
 		return fmt.Errorf("error listing tags for Neptune Cluster (%s): %s", d.Get("arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

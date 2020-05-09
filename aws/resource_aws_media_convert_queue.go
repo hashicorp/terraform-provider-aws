@@ -129,6 +129,8 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
 
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	getOpts := &mediaconvert.GetQueueInput{
 		Name: aws.String(d.Id()),
 	}
@@ -159,7 +161,7 @@ func resourceAwsMediaConvertQueueRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error listing tags for Media Convert Queue (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

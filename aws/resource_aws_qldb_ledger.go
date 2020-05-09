@@ -106,6 +106,7 @@ func resourceAwsQLDBLedgerCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).qldbconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	// Refresh the QLDB state
 	input := &qldb.DescribeLedgerInput{
@@ -145,7 +146,7 @@ func resourceAwsQLDBLedgerRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error listing tags for QLDB Ledger: %s", err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

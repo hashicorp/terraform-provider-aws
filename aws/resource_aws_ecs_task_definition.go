@@ -452,6 +452,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading task definition %s", d.Id())
 	out, err := conn.DescribeTaskDefinition(&ecs.DescribeTaskDefinitionInput{
@@ -494,7 +495,7 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("ipc_mode", taskDefinition.IpcMode)
 	d.Set("pid_mode", taskDefinition.PidMode)
 
-	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(out.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

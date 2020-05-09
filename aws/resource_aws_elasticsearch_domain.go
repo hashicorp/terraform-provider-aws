@@ -28,6 +28,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			State: resourceAwsElasticSearchDomainImport,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(60 * time.Minute),
+		},
+
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIf("elasticsearch_version", func(d *schema.ResourceDiff, meta interface{}) bool {
 				newVersion := d.Get("elasticsearch_version").(string)
@@ -58,7 +62,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"advanced_options": {
@@ -579,6 +583,7 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 
 func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -687,7 +692,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -843,7 +848,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 				return out, aws.StringValue(out.StepStatus), nil
 			},
-			Timeout:    60 * time.Minute, // TODO: Make this configurable. Large ES domains may take a very long time to upgrade
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // The upgrade status isn't instantly available for the current upgrade so will either be nil or reflect a previous upgrade
 		}

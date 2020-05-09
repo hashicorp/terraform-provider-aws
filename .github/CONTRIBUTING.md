@@ -410,11 +410,11 @@ More details about this code generation, including fixes for potential error mes
 - Otherwise if the API does not support tagging on creation (the `Input` struct does not accept a `Tags` field), in the resource `Create` function, implement the logic to convert the configuration tags into the service API call to tag a resource, e.g. with ElasticSearch Domain:
 
   ```go
-if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-	if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, v); err != nil {
-		return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
-	}
-}
+  if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+    if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, v); err != nil {
+      return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+    }
+  }
   ```
 
 - Some EC2 resources (for example [`aws_ec2_fleet`](https://www.terraform.io/docs/providers/aws/r/ec2_fleet.html)) have a `TagsSpecification` field in the `InputStruct` instead of a `Tags` field. In these cases the `ec2TagSpecificationsFromMap()` helper function should be used, e.g.:
@@ -429,7 +429,10 @@ if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
 - In the resource `Read` function, implement the logic to convert the service tags to save them into the Terraform state for drift detection, e.g. with EKS Clusters (which had the tags available in the DescribeCluster API call):
 
   ```go
-  if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+  // Typically declared near conn := /* ... */
+  ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+  if err := d.Set("tags", keyvaluetags.EksKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %s", err)
   }
   ```
@@ -437,13 +440,16 @@ if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
   If the service API does not return the tags directly from reading the resource and requires a separate API call, its possible to use the `keyvaluetags` functionality like the following, e.g. with Athena Workgroups:
 
   ```go
+  // Typically declared near conn := /* ... */
+  ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
   tags, err := keyvaluetags.AthenaListTags(conn, arn.String())
 
   if err != nil {
     return fmt.Errorf("error listing tags for resource (%s): %s", arn, err)
   }
 
-  if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+  if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
     return fmt.Errorf("error setting tags: %s", err)
   }
   ```
@@ -638,6 +644,7 @@ into Terraform.
   - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
   - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
+  - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
   - In `.hashibot.hcl`: Add the new service to automated issue and pull request labeling. e.g. with the `quicksight` service
 
   ```hcl
@@ -691,12 +698,12 @@ While region validation is automatically added with SDK updates, new regions
 are generally limited in which services they support. Below are some
 manually sourced values from documentation.
 
- - [ ] Check [Regions and Endpoints ELB regions](https://docs.aws.amazon.com/general/latest/gr/rande.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
- - [ ] Check [Regions and Endpoints S3 website endpoints](https://docs.aws.amazon.com/general/latest/gr/rande.html#s3_website_region_endpoints) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
+ - [ ] Check [Elastic Load Balancing endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elb.html#elb_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elb_hosted_zone_id.go`
+ - [ ] Check [Amazon Simple Storage Service endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/s3.html#s3_region) and add Route53 Hosted Zone ID if available to `aws/hosted_zones.go`
  - [ ] Check [CloudTrail Supported Regions docs](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html#cloudtrail-supported-regions) and add AWS Account ID if available to `aws/data_source_aws_cloudtrail_service_account.go`
  - [ ] Check [Elastic Load Balancing Access Logs docs](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) and add Elastic Load Balancing Account ID if available to `aws/data_source_aws_elb_service_account.go`
  - [ ] Check [Redshift Database Audit Logging docs](https://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-bucket-permissions) and add AWS Account ID if available to `aws/data_source_aws_redshift_service_account.go`
- - [ ] Check [Regions and Endpoints Elastic Beanstalk](https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
+ - [ ] Check [AWS Elastic Beanstalk endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/elasticbeanstalk.html#elasticbeanstalk_region) and add Route53 Hosted Zone ID if available to `aws/data_source_aws_elastic_beanstalk_hosted_zone.go`
 
 ### Common Review Items
 
@@ -918,6 +925,8 @@ TF_ACC=1 go test ./aws -v -run=TestAccAWSCloudWatchDashboard -timeout 120m
 PASS
 ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
 ```
+
+Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
 #### Writing an Acceptance Test
 

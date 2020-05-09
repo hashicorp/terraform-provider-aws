@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"reflect"
 	"regexp"
 	"sort"
@@ -45,6 +46,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/mitchellh/copystructure"
@@ -998,6 +1000,16 @@ func flattenStringSet(list []*string) *schema.Set {
 	return schema.NewSet(schema.HashString, flattenStringList(list))
 }
 
+// hashStringCaseInsensitive hashes strings in a case insensitive manner.
+// If you want a Set of strings and are case inensitive, this is the SchemaSetFunc you want.
+func hashStringCaseInsensitive(v interface{}) int {
+	return hashcode.String(strings.ToLower(v.(string)))
+}
+
+func flattenCaseInsensitiveStringSet(list []*string) *schema.Set {
+	return schema.NewSet(hashStringCaseInsensitive, flattenStringList(list))
+}
+
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
 func flattenNetworkInterfacesPrivateIPAddresses(dtos []*ec2.NetworkInterfacePrivateIpAddress) []string {
 	ips := make([]string, 0, len(dtos))
@@ -1557,6 +1569,32 @@ func stringMapToPointers(m map[string]interface{}) map[string]*string {
 		list[i] = aws.String(v.(string))
 	}
 	return list
+}
+
+// diffStringMaps returns the set of keys and values that must be created,
+// and the set of keys and values that must be destroyed.
+// Equivalent to 'diffTagsGeneric'.
+func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string) {
+	// First, we're creating everything we have
+	create := map[string]*string{}
+	for k, v := range newMap {
+		create[k] = aws.String(v.(string))
+	}
+
+	// Build the map of what to remove
+	remove := map[string]*string{}
+	for k, v := range oldMap {
+		old, ok := create[k]
+		if !ok || aws.StringValue(old) != v.(string) {
+			// Delete it!
+			remove[k] = aws.String(v.(string))
+		} else if ok {
+			// already present so remove from new
+			delete(create, k)
+		}
+	}
+
+	return create, remove
 }
 
 func flattenDSVpcSettings(
@@ -5645,4 +5683,14 @@ func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.Targ
 	}
 
 	return vTargetIps
+}
+
+func isIpv6CidrsEquals(first, second string) bool {
+	if first == "" || second == "" {
+		return false
+	}
+	_, firstMask, _ := net.ParseCIDR(first)
+	_, secondMask, _ := net.ParseCIDR(second)
+
+	return firstMask.String() == secondMask.String()
 }
