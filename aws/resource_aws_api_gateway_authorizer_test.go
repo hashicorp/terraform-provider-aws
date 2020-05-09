@@ -247,7 +247,7 @@ func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 				Config: testAccAWSAPIGatewayAuthorizerConfig_lambda(apiGatewayName, authorizerName, lambdaName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayAuthorizerExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayAuthorizerDisappears(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayAuthorizer(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
