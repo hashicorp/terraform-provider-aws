@@ -80,6 +80,7 @@ func resourceAwsAppsyncResolver() *schema.Resource {
 			"caching_config": {
 				Type:     schema.TypeList,
 				Optional: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"caching_keys": {
