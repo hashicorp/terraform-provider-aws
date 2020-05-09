@@ -51,6 +51,7 @@ func resourceAwsSpotInstanceRequest() *schema.Resource {
 			s["spot_price"] = &schema.Schema{
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					oldFloat, _ := strconv.ParseFloat(old, 64)
@@ -313,17 +314,6 @@ func resourceAwsSpotInstanceRequestRead(d *schema.ResourceData, meta interface{}
 	d.Set("key_name", request.LaunchSpecification.KeyName)
 	d.Set("instance_type", request.LaunchSpecification.InstanceType)
 	d.Set("ami", request.LaunchSpecification.ImageId)
-
-	//if d.Get("get_password_data").(bool) {
-	//	passwordData, err := getAwsEc2InstancePasswordData(*request.InstanceId, conn)
-	//	if err != nil {
-	//		return err
-	//	}
-	//	d.Set("password_data", passwordData)
-	//} else {
-	//	d.Set("get_password_data", false)
-	//	d.Set("password_data", nil)
-	//}
 
 	return nil
 }

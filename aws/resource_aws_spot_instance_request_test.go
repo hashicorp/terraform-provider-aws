@@ -315,7 +315,7 @@ func TestAccAWSSpotInstanceRequest_getPasswordData(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+				ImportStateVerifyIgnore: []string{"wait_for_fulfillment", "password_data", "get_password_data"},
 			},
 		},
 	})
@@ -382,51 +382,6 @@ func TestAccAWSSpotInstanceRequest_tags(t *testing.T) {
 					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSSpotInstanceRequest_volumeTags(t *testing.T) {
-	var sir ec2.SpotInstanceRequest
-	resourceName := "aws_spot_instance_request.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSpotInstanceRequestDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSpotInstanceRequestConfigVolumeTags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
-			},
-			{
-				Config: testAccAWSSpotInstanceRequestConfigVolumeTags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSSpotInstanceRequestConfigVolumeTags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSpotInstanceRequestExists(resourceName, &sir),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "volume_tags.key2", "value2"),
 				),
 			},
 		},
@@ -967,39 +922,6 @@ resource "aws_spot_instance_request" "test" {
   wait_for_fulfillment = true
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
-  }
-}
-`, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccAWSSpotInstanceRequestConfigVolumeTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
-resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
-  spot_price           = "0.05"
-  wait_for_fulfillment = true
-
-  volume_tags = {
-    %[1]q = %[2]q
-  }
-}
-`, tagKey1, tagValue1)
-}
-
-func testAccAWSSpotInstanceRequestConfigVolumeTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSSpotInstanceRequestConfigBase(rName) + fmt.Sprintf(`
-resource "aws_spot_instance_request" "test" {
-  ami                  = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
-  instance_type        = "${data.aws_ec2_instance_type_offering.available.instance_type}"
-  key_name             = "${aws_key_pair.test.key_name}"
-  spot_price           = "0.05"
-  wait_for_fulfillment = true
-
-  volume_tags = {
     %[1]q = %[2]q
     %[3]q = %[4]q
   }
