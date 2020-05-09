@@ -13,6 +13,7 @@
             - [yaml.v2 Updates](#yaml-v2-updates)
     - [Pull Request Merge Process](#pull-request-merge-process)
     - [Pull Request Types to CHANGELOG](#pull-request-types-to-changelog)
+- [Breaking Changes](#breaking-changes)
 - [Label Dictionary](#label-dictionary)
 
 <!-- /TOC -->
@@ -304,6 +305,13 @@ The CHANGELOG is intended to show operator-impacting changes to the codebase for
 
 - Resource and provider documentation updates
 - Testing updates
+
+## Breaking Changes
+
+When breaking changes to the provider are necessary we release them in a major version. If an issue or PR necessitates a breaking change, then the following procedure should be observed:
+- Add the `breaking-change` label.
+- Add the issue/PR to the next major version milestone.
+- Leave a comment why this is a breaking change or otherwise only being considered for a major version update. If possible, detail any changes that might be made for the contributor to accomplish the task without a breaking change.
 
 ## Label Dictionary
 
