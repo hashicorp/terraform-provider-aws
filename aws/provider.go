@@ -744,6 +744,7 @@ func Provider() *schema.Provider {
 			"aws_kms_key":                                             resourceAwsKmsKey(),
 			"aws_kms_ciphertext":                                      resourceAwsKmsCiphertext(),
 			"aws_lakeformation_resource":                              resourceAwsLakeFormationResource(),
+			"aws_lakeformation_datalake_settings":                     resourceAwsLakeFormationDataLakeSettings(),
 			"aws_lambda_alias":                                        resourceAwsLambdaAlias(),
 			"aws_lambda_code_signing_config":                          resourceAwsLambdaCodeSigningConfig(),
 			"aws_lambda_event_source_mapping":                         resourceAwsLambdaEventSourceMapping(),
