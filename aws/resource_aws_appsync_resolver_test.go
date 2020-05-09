@@ -234,8 +234,7 @@ func TestAccAwsAppsyncResolver_CachingConfig(t *testing.T) {
 				Config: testAccAppsyncResolver_cachingConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppsyncResolverExists(resourceName, &resolver),
-					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.0", "$context.identity.sub"),
-					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.1", "$context.arguments.id"),
+					resource.TestCheckResourceAttr(resourceName, "caching_config.0.caching_keys.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "caching_config.0.ttl", "60"),
 				),
 			},

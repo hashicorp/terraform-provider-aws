@@ -84,11 +84,12 @@ func resourceAwsAppsyncResolver() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"caching_keys": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
+							Set: schema.HashString,
 						},
 						"ttl": {
 							Type:     schema.TypeInt,
@@ -284,7 +285,7 @@ func expandAppsyncResolverCachingConfig(l []interface{}) *appsync.CachingConfig 
 	m := l[0].(map[string]interface{})
 
 	cachingConfig := &appsync.CachingConfig{
-		CachingKeys: expandStringList(m["caching_keys"].([]interface{})),
+		CachingKeys: expandStringSet(m["caching_keys"].(*schema.Set)),
 	}
 
 	if v, ok := m["ttl"].(int); ok && v != 0 {

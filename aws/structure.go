@@ -5575,7 +5575,7 @@ func flattenAppsyncCachingConfig(c *appsync.CachingConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"caching_keys": flattenStringList(c.CachingKeys),
+		"caching_keys": flattenStringSet(c.CachingKeys),
 		"ttl":          int(aws.Int64Value(c.Ttl)),
 	}
 
