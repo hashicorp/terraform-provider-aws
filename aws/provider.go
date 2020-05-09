@@ -256,6 +256,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_iam_user":                                  dataSourceAwsIAMUser(),
 			"aws_internet_gateway":                          dataSourceAwsInternetGateway(),
 			"aws_iot_endpoint":                              dataSourceAwsIotEndpoint(),
+			"aws_iot_greengrass_service_role":               dataSourceAwsIotGreengrassServiceRole(),
 			"aws_inspector_rules_packages":                  dataSourceAwsInspectorRulesPackages(),
 			"aws_instance":                                  dataSourceAwsInstance(),
 			"aws_instances":                                 dataSourceAwsInstances(),
