@@ -15,7 +15,7 @@ Manages a revision of an ECS task definition to be used in `aws_ecs_service`.
 ```hcl
 resource "aws_ecs_task_definition" "service" {
   family                = "service"
-  container_definitions = "${file("task-definitions/service.json")}"
+  container_definitions = file("task-definitions/service.json")
 
   volume {
     name      = "service-storage"
@@ -70,7 +70,7 @@ contains only a small subset of the available parameters.
 ```hcl
 resource "aws_ecs_task_definition" "service" {
   family                = "service"
-  container_definitions = "${file("task-definitions/service.json")}"
+  container_definitions = file("task-definitions/service.json")
 
   proxy_configuration {
     type           = "APPMESH"
@@ -112,7 +112,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
 * `inference_accelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. Detailed below.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 #### Volume Block Arguments
 
@@ -137,7 +137,7 @@ For more information, see [Specifying a Docker volume in your Task Definition De
 ```hcl
 resource "aws_ecs_task_definition" "service" {
   family                = "service"
-  container_definitions = "${file("task-definitions/service.json")}"
+  container_definitions = file("task-definitions/service.json")
 
   volume {
     name = "service-storage"
@@ -150,7 +150,7 @@ resource "aws_ecs_task_definition" "service" {
       driver_opts = {
         "type"   = "nfs"
         "device" = "${aws_efs_file_system.fs.dns_name}:/"
-        "o"      = "addr=${aws_efs_file_system.fs.dns_name},nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,nosuid"
+        "o"      = "addr=${aws_efs_file_system.fs.dns_name},rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport"
       }
     }
   }
@@ -175,7 +175,7 @@ resource "aws_ecs_task_definition" "service" {
     name = "service-storage"
 
     efs_volume_configuration {
-      file_system_id = "${aws_efs_file_system.fs.id}"
+      file_system_id = aws_efs_file_system.fs.id
       root_directory = "/opt/data"
     }
   }

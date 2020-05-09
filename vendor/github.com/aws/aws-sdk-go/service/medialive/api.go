@@ -5328,6 +5328,9 @@ type AudioSelectorSettings struct {
 
 	// Audio Pid Selection
 	AudioPidSelection *AudioPidSelection `locationName:"audioPidSelection" type:"structure"`
+
+	// Audio Track Selection
+	AudioTrackSelection *AudioTrackSelection `locationName:"audioTrackSelection" type:"structure"`
 }
 
 // String returns the string representation
@@ -5353,6 +5356,11 @@ func (s *AudioSelectorSettings) Validate() error {
 			invalidParams.AddNested("AudioPidSelection", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.AudioTrackSelection != nil {
+		if err := s.AudioTrackSelection.Validate(); err != nil {
+			invalidParams.AddNested("AudioTrackSelection", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -5369,6 +5377,152 @@ func (s *AudioSelectorSettings) SetAudioLanguageSelection(v *AudioLanguageSelect
 // SetAudioPidSelection sets the AudioPidSelection field's value.
 func (s *AudioSelectorSettings) SetAudioPidSelection(v *AudioPidSelection) *AudioSelectorSettings {
 	s.AudioPidSelection = v
+	return s
+}
+
+// SetAudioTrackSelection sets the AudioTrackSelection field's value.
+func (s *AudioSelectorSettings) SetAudioTrackSelection(v *AudioTrackSelection) *AudioSelectorSettings {
+	s.AudioTrackSelection = v
+	return s
+}
+
+// Audio Track
+type AudioTrack struct {
+	_ struct{} `type:"structure"`
+
+	// 1-based integer value that maps to a specific audio track
+	//
+	// Track is a required field
+	Track *int64 `locationName:"track" min:"1" type:"integer" required:"true"`
+}
+
+// String returns the string representation
+func (s AudioTrack) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AudioTrack) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioTrack) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioTrack"}
+	if s.Track == nil {
+		invalidParams.Add(request.NewErrParamRequired("Track"))
+	}
+	if s.Track != nil && *s.Track < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Track", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTrack sets the Track field's value.
+func (s *AudioTrack) SetTrack(v int64) *AudioTrack {
+	s.Track = &v
+	return s
+}
+
+// Audio Track Selection
+type AudioTrackSelection struct {
+	_ struct{} `type:"structure"`
+
+	// Selects one or more unique audio tracks from within an mp4 source.
+	//
+	// Tracks is a required field
+	Tracks []*AudioTrack `locationName:"tracks" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AudioTrackSelection) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AudioTrackSelection) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AudioTrackSelection) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AudioTrackSelection"}
+	if s.Tracks == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tracks"))
+	}
+	if s.Tracks != nil {
+		for i, v := range s.Tracks {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tracks", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetTracks sets the Tracks field's value.
+func (s *AudioTrackSelection) SetTracks(v []*AudioTrack) *AudioTrackSelection {
+	s.Tracks = v
+	return s
+}
+
+// The settings for Automatic Input Failover.
+type AutomaticInputFailoverSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Input preference when deciding which input to make active when a previously
+	// failed input has recovered.
+	InputPreference *string `locationName:"inputPreference" type:"string" enum:"InputPreference"`
+
+	// The input ID of the secondary input in the automatic input failover pair.
+	//
+	// SecondaryInputId is a required field
+	SecondaryInputId *string `locationName:"secondaryInputId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AutomaticInputFailoverSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutomaticInputFailoverSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AutomaticInputFailoverSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AutomaticInputFailoverSettings"}
+	if s.SecondaryInputId == nil {
+		invalidParams.Add(request.NewErrParamRequired("SecondaryInputId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputPreference sets the InputPreference field's value.
+func (s *AutomaticInputFailoverSettings) SetInputPreference(v string) *AutomaticInputFailoverSettings {
+	s.InputPreference = &v
+	return s
+}
+
+// SetSecondaryInputId sets the SecondaryInputId field's value.
+func (s *AutomaticInputFailoverSettings) SetSecondaryInputId(v string) *AutomaticInputFailoverSettings {
+	s.SecondaryInputId = &v
 	return s
 }
 
@@ -5515,8 +5669,8 @@ func (s *AvailSettings) SetScte35TimeSignalApos(v *Scte35TimeSignalApos) *AvailS
 }
 
 type BadGatewayException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5533,17 +5687,17 @@ func (s BadGatewayException) GoString() string {
 
 func newErrorBadGatewayException(v protocol.ResponseMetadata) error {
 	return &BadGatewayException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadGatewayException) Code() string {
+func (s *BadGatewayException) Code() string {
 	return "BadGatewayException"
 }
 
 // Message returns the exception's message.
-func (s BadGatewayException) Message() string {
+func (s *BadGatewayException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5551,27 +5705,27 @@ func (s BadGatewayException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadGatewayException) OrigErr() error {
+func (s *BadGatewayException) OrigErr() error {
 	return nil
 }
 
-func (s BadGatewayException) Error() string {
+func (s *BadGatewayException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadGatewayException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadGatewayException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadGatewayException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadGatewayException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -5588,17 +5742,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5606,22 +5760,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A list of schedule actions to create (in a request) or that have been created
@@ -6984,8 +7138,8 @@ func (s ColorSpacePassthroughSettings) GoString() string {
 }
 
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -7002,17 +7156,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -7020,22 +7174,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type CreateChannelInput struct {
@@ -10704,6 +10858,14 @@ type Fmp4HlsSettings struct {
 	// List all the audio groups that are used with the video output stream. Input
 	// all the audio GROUP-IDs that are associated to the video, separate by ','.
 	AudioRenditionSets *string `locationName:"audioRenditionSets" type:"string"`
+
+	// If set to passthrough, Nielsen inaudible tones for media tracking will be
+	// detected in the input audio and an equivalent ID3 tag will be inserted in
+	// the output.
+	NielsenId3Behavior *string `locationName:"nielsenId3Behavior" type:"string" enum:"Fmp4NielsenId3Behavior"`
+
+	// When set to passthrough, timed metadata is passed through from input to output.
+	TimedMetadataBehavior *string `locationName:"timedMetadataBehavior" type:"string" enum:"Fmp4TimedMetadataBehavior"`
 }
 
 // String returns the string representation
@@ -10719,6 +10881,18 @@ func (s Fmp4HlsSettings) GoString() string {
 // SetAudioRenditionSets sets the AudioRenditionSets field's value.
 func (s *Fmp4HlsSettings) SetAudioRenditionSets(v string) *Fmp4HlsSettings {
 	s.AudioRenditionSets = &v
+	return s
+}
+
+// SetNielsenId3Behavior sets the NielsenId3Behavior field's value.
+func (s *Fmp4HlsSettings) SetNielsenId3Behavior(v string) *Fmp4HlsSettings {
+	s.NielsenId3Behavior = &v
+	return s
+}
+
+// SetTimedMetadataBehavior sets the TimedMetadataBehavior field's value.
+func (s *Fmp4HlsSettings) SetTimedMetadataBehavior(v string) *Fmp4HlsSettings {
+	s.TimedMetadataBehavior = &v
 	return s
 }
 
@@ -10777,8 +10951,8 @@ func (s *FollowModeScheduleActionStartSettings) SetReferenceActionName(v string)
 }
 
 type ForbiddenException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -10795,17 +10969,17 @@ func (s ForbiddenException) GoString() string {
 
 func newErrorForbiddenException(v protocol.ResponseMetadata) error {
 	return &ForbiddenException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ForbiddenException) Code() string {
+func (s *ForbiddenException) Code() string {
 	return "ForbiddenException"
 }
 
 // Message returns the exception's message.
-func (s ForbiddenException) Message() string {
+func (s *ForbiddenException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -10813,22 +10987,22 @@ func (s ForbiddenException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ForbiddenException) OrigErr() error {
+func (s *ForbiddenException) OrigErr() error {
 	return nil
 }
 
-func (s ForbiddenException) Error() string {
+func (s *ForbiddenException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ForbiddenException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ForbiddenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ForbiddenException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ForbiddenException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Frame Capture Group Settings
@@ -10954,8 +11128,8 @@ func (s *FrameCaptureSettings) SetCaptureIntervalUnits(v string) *FrameCaptureSe
 }
 
 type GatewayTimeoutException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -10972,17 +11146,17 @@ func (s GatewayTimeoutException) GoString() string {
 
 func newErrorGatewayTimeoutException(v protocol.ResponseMetadata) error {
 	return &GatewayTimeoutException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s GatewayTimeoutException) Code() string {
+func (s *GatewayTimeoutException) Code() string {
 	return "GatewayTimeoutException"
 }
 
 // Message returns the exception's message.
-func (s GatewayTimeoutException) Message() string {
+func (s *GatewayTimeoutException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -10990,22 +11164,22 @@ func (s GatewayTimeoutException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s GatewayTimeoutException) OrigErr() error {
+func (s *GatewayTimeoutException) OrigErr() error {
 	return nil
 }
 
-func (s GatewayTimeoutException) Error() string {
+func (s *GatewayTimeoutException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s GatewayTimeoutException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *GatewayTimeoutException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s GatewayTimeoutException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *GatewayTimeoutException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Global Configuration
@@ -11150,6 +11324,30 @@ func (s *H264ColorSpaceSettings) SetRec709Settings(v *Rec709Settings) *H264Color
 	return s
 }
 
+// H264 Filter Settings
+type H264FilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Temporal Filter Settings
+	TemporalFilterSettings *TemporalFilterSettings `locationName:"temporalFilterSettings" type:"structure"`
+}
+
+// String returns the string representation
+func (s H264FilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s H264FilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetTemporalFilterSettings sets the TemporalFilterSettings field's value.
+func (s *H264FilterSettings) SetTemporalFilterSettings(v *TemporalFilterSettings) *H264FilterSettings {
+	s.TemporalFilterSettings = v
+	return s
+}
+
 // H264 Settings
 type H264Settings struct {
 	_ struct{} `type:"structure"`
@@ -11185,6 +11383,9 @@ type H264Settings struct {
 	// Entropy encoding mode. Use cabac (must be in Main or High profile) or cavlc.
 	EntropyEncoding *string `locationName:"entropyEncoding" type:"string" enum:"H264EntropyEncoding"`
 
+	// Settings associated with the specified filter.
+	FilterSettings *H264FilterSettings `locationName:"filterSettings" type:"structure"`
+
 	// Four bit AFD value to write on all frames of video in the output stream.
 	// Only valid when afdSignaling is set to 'Fixed'.
 	FixedAfd *string `locationName:"fixedAfd" type:"string" enum:"FixedAfd"`
@@ -11192,6 +11393,15 @@ type H264Settings struct {
 	// If set to enabled, adjust quantization within each frame to reduce flicker
 	// or 'pop' on I-frames.
 	FlickerAq *string `locationName:"flickerAq" type:"string" enum:"H264FlickerAq"`
+
+	// This setting applies only when scan type is "interlaced." It controls whether
+	// coding is performed on a field basis or on a frame basis. (When the video
+	// is progressive, the coding is always performed on a frame basis.)enabled:
+	// Force MediaLive to code on a field basis, so that odd and even sets of fields
+	// are coded separately.disabled: Code the two sets of fields separately (on
+	// a field basis) or together (on a frame basis using PAFF), depending on what
+	// is most appropriate for the content.
+	ForceFieldPictures *string `locationName:"forceFieldPictures" type:"string" enum:"H264ForceFieldPictures"`
 
 	// This field indicates how the output video frame rate is specified. If "specified"
 	// is selected then the output video frame rate is determined by framerateNumerator
@@ -11268,6 +11478,11 @@ type H264Settings struct {
 
 	// H.264 Profile.
 	Profile *string `locationName:"profile" type:"string" enum:"H264Profile"`
+
+	// If set to "ENHANCEDQUALITY," improves visual quality at an increased output
+	// cost. If this video is being delivered to a MediaLive Multiplex, "ENHANCEDQUALITY"
+	// is always used.
+	QualityLevel *string `locationName:"qualityLevel" type:"string" enum:"H264QualityLevel"`
 
 	// Controls the target quality for the video encode. Applies only when the rate
 	// control mode is QVBR. Set values for the QVBR quality level field and Max
@@ -11420,6 +11635,12 @@ func (s *H264Settings) SetEntropyEncoding(v string) *H264Settings {
 	return s
 }
 
+// SetFilterSettings sets the FilterSettings field's value.
+func (s *H264Settings) SetFilterSettings(v *H264FilterSettings) *H264Settings {
+	s.FilterSettings = v
+	return s
+}
+
 // SetFixedAfd sets the FixedAfd field's value.
 func (s *H264Settings) SetFixedAfd(v string) *H264Settings {
 	s.FixedAfd = &v
@@ -11429,6 +11650,12 @@ func (s *H264Settings) SetFixedAfd(v string) *H264Settings {
 // SetFlickerAq sets the FlickerAq field's value.
 func (s *H264Settings) SetFlickerAq(v string) *H264Settings {
 	s.FlickerAq = &v
+	return s
+}
+
+// SetForceFieldPictures sets the ForceFieldPictures field's value.
+func (s *H264Settings) SetForceFieldPictures(v string) *H264Settings {
+	s.ForceFieldPictures = &v
 	return s
 }
 
@@ -11531,6 +11758,12 @@ func (s *H264Settings) SetParNumerator(v int64) *H264Settings {
 // SetProfile sets the Profile field's value.
 func (s *H264Settings) SetProfile(v string) *H264Settings {
 	s.Profile = &v
+	return s
+}
+
+// SetQualityLevel sets the QualityLevel field's value.
+func (s *H264Settings) SetQualityLevel(v string) *H264Settings {
+	s.QualityLevel = &v
 	return s
 }
 
@@ -12372,8 +12605,9 @@ type HlsGroupSettings struct {
 	Mode *string `locationName:"mode" type:"string" enum:"HlsMode"`
 
 	// MANIFESTSANDSEGMENTS: Generates manifests (master manifest, if applicable,
-	// and media manifests) for this output group.SEGMENTSONLY: Does not generate
-	// any manifests for this output group.
+	// and media manifests) for this output group.VARIANTMANIFESTSANDSEGMENTS: Generates
+	// media manifests for this output group, but not a master manifest.SEGMENTSONLY:
+	// Does not generate any manifests for this output group.
 	OutputSelection *string `locationName:"outputSelection" type:"string" enum:"HlsOutputSelection"`
 
 	// Includes or excludes EXT-X-PROGRAM-DATE-TIME tag in .m3u8 manifest files.
@@ -13131,8 +13365,7 @@ func (s *HlsWebdavSettings) SetRestartDelay(v int64) *HlsWebdavSettings {
 	return s
 }
 
-// Settings to configure an action so that it occurs immediately. This is only
-// supported for input switch actions currently.
+// Settings to configure an action so that it occurs as soon as possible.
 type ImmediateModeScheduleActionStartSettings struct {
 	_ struct{} `type:"structure"`
 }
@@ -13298,6 +13531,10 @@ func (s *Input) SetType(v string) *Input {
 type InputAttachment struct {
 	_ struct{} `type:"structure"`
 
+	// User-specified settings for defining what the conditions are for declaring
+	// the input unhealthy and failing over to a different input.
+	AutomaticInputFailoverSettings *AutomaticInputFailoverSettings `locationName:"automaticInputFailoverSettings" type:"structure"`
+
 	// User-specified name for the attachment. This is required if the user wants
 	// to use this input in an input switch action.
 	InputAttachmentName *string `locationName:"inputAttachmentName" type:"string"`
@@ -13322,6 +13559,11 @@ func (s InputAttachment) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *InputAttachment) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "InputAttachment"}
+	if s.AutomaticInputFailoverSettings != nil {
+		if err := s.AutomaticInputFailoverSettings.Validate(); err != nil {
+			invalidParams.AddNested("AutomaticInputFailoverSettings", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.InputSettings != nil {
 		if err := s.InputSettings.Validate(); err != nil {
 			invalidParams.AddNested("InputSettings", err.(request.ErrInvalidParams))
@@ -13332,6 +13574,12 @@ func (s *InputAttachment) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAutomaticInputFailoverSettings sets the AutomaticInputFailoverSettings field's value.
+func (s *InputAttachment) SetAutomaticInputFailoverSettings(v *AutomaticInputFailoverSettings) *InputAttachment {
+	s.AutomaticInputFailoverSettings = v
+	return s
 }
 
 // SetInputAttachmentName sets the InputAttachmentName field's value.
@@ -14223,8 +14471,8 @@ func (s *InputWhitelistRuleCidr) SetCidr(v string) *InputWhitelistRuleCidr {
 }
 
 type InternalServerErrorException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -14241,17 +14489,17 @@ func (s InternalServerErrorException) GoString() string {
 
 func newErrorInternalServerErrorException(v protocol.ResponseMetadata) error {
 	return &InternalServerErrorException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalServerErrorException) Code() string {
+func (s *InternalServerErrorException) Code() string {
 	return "InternalServerErrorException"
 }
 
 // Message returns the exception's message.
-func (s InternalServerErrorException) Message() string {
+func (s *InternalServerErrorException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -14259,22 +14507,22 @@ func (s InternalServerErrorException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalServerErrorException) OrigErr() error {
+func (s *InternalServerErrorException) OrigErr() error {
 	return nil
 }
 
-func (s InternalServerErrorException) Error() string {
+func (s *InternalServerErrorException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalServerErrorException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalServerErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalServerErrorException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalServerErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Key Provider Settings
@@ -16035,7 +16283,9 @@ type MsSmoothGroupSettings struct {
 	SendDelayMs *int64 `locationName:"sendDelayMs" type:"integer"`
 
 	// If set to scte35, use incoming SCTE-35 messages to generate a sparse track
-	// in this group of MS-Smooth outputs.
+	// in this group of MS-Smooth outputs. scte35WithoutSegmentation is the same
+	// as scte35, except EML will not start a new segment at a SCTE-35 marker. It
+	// will still encode an IDR frame at a SCTE-35 marker.
 	SparseTrackType *string `locationName:"sparseTrackType" type:"string" enum:"SmoothGroupSparseTrackType"`
 
 	// When set to send, send stream manifest so publishing point doesn't start
@@ -17190,8 +17440,8 @@ func (s *NielsenConfiguration) SetNielsenPcmToId3Tagging(v string) *NielsenConfi
 }
 
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -17208,17 +17458,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -17226,22 +17476,22 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Reserved resources available for purchase
@@ -20754,6 +21004,41 @@ func (s *TeletextSourceSettings) SetPageNumber(v string) *TeletextSourceSettings
 	return s
 }
 
+// Temporal Filter Settings
+type TemporalFilterSettings struct {
+	_ struct{} `type:"structure"`
+
+	// If set to "ENABLED," applies post-filter sharpening to improve visual quality.
+	// This is most beneficial when using a noisy or compressed input source and
+	// low output bitrates.
+	PostFilterSharpening *string `locationName:"postFilterSharpening" type:"string" enum:"TemporalFilterPostFilterSharpening"`
+
+	// Filter strength. A higher value produces stronger filtering.
+	Strength *string `locationName:"strength" type:"string" enum:"TemporalFilterStrength"`
+}
+
+// String returns the string representation
+func (s TemporalFilterSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TemporalFilterSettings) GoString() string {
+	return s.String()
+}
+
+// SetPostFilterSharpening sets the PostFilterSharpening field's value.
+func (s *TemporalFilterSettings) SetPostFilterSharpening(v string) *TemporalFilterSettings {
+	s.PostFilterSharpening = &v
+	return s
+}
+
+// SetStrength sets the Strength field's value.
+func (s *TemporalFilterSettings) SetStrength(v string) *TemporalFilterSettings {
+	s.Strength = &v
+	return s
+}
+
 // Timecode Config
 type TimecodeConfig struct {
 	_ struct{} `type:"structure"`
@@ -20814,8 +21099,8 @@ func (s *TimecodeConfig) SetSyncThreshold(v int64) *TimecodeConfig {
 }
 
 type TooManyRequestsException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -20832,17 +21117,17 @@ func (s TooManyRequestsException) GoString() string {
 
 func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
 	return &TooManyRequestsException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s TooManyRequestsException) Code() string {
+func (s *TooManyRequestsException) Code() string {
 	return "TooManyRequestsException"
 }
 
 // Message returns the exception's message.
-func (s TooManyRequestsException) Message() string {
+func (s *TooManyRequestsException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -20850,22 +21135,22 @@ func (s TooManyRequestsException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s TooManyRequestsException) OrigErr() error {
+func (s *TooManyRequestsException) OrigErr() error {
 	return nil
 }
 
-func (s TooManyRequestsException) Error() string {
+func (s *TooManyRequestsException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s TooManyRequestsException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s TooManyRequestsException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Ttml Destination Settings
@@ -21067,8 +21352,8 @@ func (s *UdpOutputSettings) SetFecOutputSettings(v *FecOutputSettings) *UdpOutpu
 }
 
 type UnprocessableEntityException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -21087,17 +21372,17 @@ func (s UnprocessableEntityException) GoString() string {
 
 func newErrorUnprocessableEntityException(v protocol.ResponseMetadata) error {
 	return &UnprocessableEntityException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s UnprocessableEntityException) Code() string {
+func (s *UnprocessableEntityException) Code() string {
 	return "UnprocessableEntityException"
 }
 
 // Message returns the exception's message.
-func (s UnprocessableEntityException) Message() string {
+func (s *UnprocessableEntityException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -21105,22 +21390,22 @@ func (s UnprocessableEntityException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s UnprocessableEntityException) OrigErr() error {
+func (s *UnprocessableEntityException) OrigErr() error {
 	return nil
 }
 
-func (s UnprocessableEntityException) Error() string {
+func (s *UnprocessableEntityException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s UnprocessableEntityException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *UnprocessableEntityException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s UnprocessableEntityException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *UnprocessableEntityException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UpdateChannelClassInput struct {
@@ -22907,6 +23192,24 @@ const (
 	FixedAfdAfd1111 = "AFD_1111"
 )
 
+// Fmp4 Nielsen Id3 Behavior
+const (
+	// Fmp4NielsenId3BehaviorNoPassthrough is a Fmp4NielsenId3Behavior enum value
+	Fmp4NielsenId3BehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// Fmp4NielsenId3BehaviorPassthrough is a Fmp4NielsenId3Behavior enum value
+	Fmp4NielsenId3BehaviorPassthrough = "PASSTHROUGH"
+)
+
+// Fmp4 Timed Metadata Behavior
+const (
+	// Fmp4TimedMetadataBehaviorNoPassthrough is a Fmp4TimedMetadataBehavior enum value
+	Fmp4TimedMetadataBehaviorNoPassthrough = "NO_PASSTHROUGH"
+
+	// Fmp4TimedMetadataBehaviorPassthrough is a Fmp4TimedMetadataBehavior enum value
+	Fmp4TimedMetadataBehaviorPassthrough = "PASSTHROUGH"
+)
+
 // Follow reference point.
 const (
 	// FollowPointEnd is a FollowPoint enum value
@@ -23007,6 +23310,15 @@ const (
 
 	// H264FlickerAqEnabled is a H264FlickerAq enum value
 	H264FlickerAqEnabled = "ENABLED"
+)
+
+// H264 Force Field Pictures
+const (
+	// H264ForceFieldPicturesDisabled is a H264ForceFieldPictures enum value
+	H264ForceFieldPicturesDisabled = "DISABLED"
+
+	// H264ForceFieldPicturesEnabled is a H264ForceFieldPictures enum value
+	H264ForceFieldPicturesEnabled = "ENABLED"
 )
 
 // H264 Framerate Control
@@ -23130,6 +23442,15 @@ const (
 
 	// H264ProfileMain is a H264Profile enum value
 	H264ProfileMain = "MAIN"
+)
+
+// H264 Quality Level
+const (
+	// H264QualityLevelEnhancedQuality is a H264QualityLevel enum value
+	H264QualityLevelEnhancedQuality = "ENHANCED_QUALITY"
+
+	// H264QualityLevelStandardQuality is a H264QualityLevel enum value
+	H264QualityLevelStandardQuality = "STANDARD_QUALITY"
 )
 
 // H264 Rate Control Mode
@@ -23712,6 +24033,18 @@ const (
 
 	// InputMaximumBitrateMax50Mbps is a InputMaximumBitrate enum value
 	InputMaximumBitrateMax50Mbps = "MAX_50_MBPS"
+)
+
+// Input preference when deciding which input to make active when a previously
+// failed input has recovered.If \"EQUAL_INPUT_PREFERENCE\", then the active
+// input will stay active as long as it is healthy.If \"PRIMARY_INPUT_PREFERRED\",
+// then always switch back to the primary input when it is healthy.
+const (
+	// InputPreferenceEqualInputPreference is a InputPreference enum value
+	InputPreferenceEqualInputPreference = "EQUAL_INPUT_PREFERENCE"
+
+	// InputPreferencePrimaryInputPreferred is a InputPreference enum value
+	InputPreferencePrimaryInputPreferred = "PRIMARY_INPUT_PREFERRED"
 )
 
 // Input resolution based on lines of vertical resolution in the input; SD is
@@ -24465,6 +24798,9 @@ const (
 
 	// SmoothGroupSparseTrackTypeScte35 is a SmoothGroupSparseTrackType enum value
 	SmoothGroupSparseTrackTypeScte35 = "SCTE_35"
+
+	// SmoothGroupSparseTrackTypeScte35WithoutSegmentation is a SmoothGroupSparseTrackType enum value
+	SmoothGroupSparseTrackTypeScte35WithoutSegmentation = "SCTE_35_WITHOUT_SEGMENTATION"
 )
 
 // Smooth Group Stream Manifest Behavior
@@ -24483,6 +24819,72 @@ const (
 
 	// SmoothGroupTimestampOffsetModeUseEventStartDate is a SmoothGroupTimestampOffsetMode enum value
 	SmoothGroupTimestampOffsetModeUseEventStartDate = "USE_EVENT_START_DATE"
+)
+
+// Temporal Filter Post Filter Sharpening
+const (
+	// TemporalFilterPostFilterSharpeningAuto is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningAuto = "AUTO"
+
+	// TemporalFilterPostFilterSharpeningDisabled is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningDisabled = "DISABLED"
+
+	// TemporalFilterPostFilterSharpeningEnabled is a TemporalFilterPostFilterSharpening enum value
+	TemporalFilterPostFilterSharpeningEnabled = "ENABLED"
+)
+
+// Temporal Filter Strength
+const (
+	// TemporalFilterStrengthAuto is a TemporalFilterStrength enum value
+	TemporalFilterStrengthAuto = "AUTO"
+
+	// TemporalFilterStrengthStrength1 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength1 = "STRENGTH_1"
+
+	// TemporalFilterStrengthStrength10 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength10 = "STRENGTH_10"
+
+	// TemporalFilterStrengthStrength11 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength11 = "STRENGTH_11"
+
+	// TemporalFilterStrengthStrength12 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength12 = "STRENGTH_12"
+
+	// TemporalFilterStrengthStrength13 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength13 = "STRENGTH_13"
+
+	// TemporalFilterStrengthStrength14 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength14 = "STRENGTH_14"
+
+	// TemporalFilterStrengthStrength15 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength15 = "STRENGTH_15"
+
+	// TemporalFilterStrengthStrength16 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength16 = "STRENGTH_16"
+
+	// TemporalFilterStrengthStrength2 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength2 = "STRENGTH_2"
+
+	// TemporalFilterStrengthStrength3 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength3 = "STRENGTH_3"
+
+	// TemporalFilterStrengthStrength4 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength4 = "STRENGTH_4"
+
+	// TemporalFilterStrengthStrength5 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength5 = "STRENGTH_5"
+
+	// TemporalFilterStrengthStrength6 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength6 = "STRENGTH_6"
+
+	// TemporalFilterStrengthStrength7 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength7 = "STRENGTH_7"
+
+	// TemporalFilterStrengthStrength8 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength8 = "STRENGTH_8"
+
+	// TemporalFilterStrengthStrength9 is a TemporalFilterStrength enum value
+	TemporalFilterStrengthStrength9 = "STRENGTH_9"
 )
 
 // Timecode Config Source

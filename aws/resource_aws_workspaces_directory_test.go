@@ -57,6 +57,7 @@ func TestAccAwsWorkspacesDirectory(t *testing.T) {
 		"basic":      testAccAwsWorkspacesDirectory_basic,
 		"disappears": testAccAwsWorkspacesDirectory_disappears,
 		"subnetIds":  testAccAwsWorkspacesDirectory_subnetIds,
+		"tags":       testAccAwsWorkspacesDirectory_tags,
 	}
 	for name, tc := range testCases {
 		tc := tc
@@ -70,6 +71,8 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 	var v workspaces.WorkspaceDirectory
 	booster := acctest.RandString(8)
 	resourceName := "aws_workspaces_directory.main"
+	directoryResourceName := "aws_directory_service_directory.main"
+	iamRoleResourceName := "aws_iam_role.workspaces-default"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -87,10 +90,15 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Terraform", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Directory", "tf-acctest.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "dns_ip_addresses.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "directory_type", "SIMPLE_AD"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_name", directoryResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "alias", directoryResourceName, "alias"),
+					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_id", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "workspace_security_group_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "registration_code"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -103,9 +111,6 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Directory", "tf-acctest.example.com"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Purpose", "test"),
 				),
 			},
 			{
@@ -118,7 +123,6 @@ func testAccAwsWorkspacesDirectory_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.rebuild_workspace", "false"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.restart_workspace", "true"),
 					resource.TestCheckResourceAttr(resourceName, "self_service_permissions.0.switch_running_mode", "true"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -173,6 +177,50 @@ func testAccAwsWorkspacesDirectory_subnetIds(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsWorkspacesDirectory_tags(t *testing.T) {
+	var v workspaces.WorkspaceDirectory
+	rName := acctest.RandString(8)
+	resourceName := "aws_workspaces_directory.main"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWorkspacesDirectoryDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkspacesDirectoryConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccWorkspacesDirectoryConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccWorkspacesDirectoryConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAwsWorkspacesDirectoryExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -344,7 +392,7 @@ locals {
    cidr_block = "10.0.0.0/16"
 
    tags = {
-     Name = "tf-testacc-workspaces-directory-%s"
+     Name = "tf-testacc-workspaces-directory-%[1]s"
    }
  }
 
@@ -354,7 +402,7 @@ locals {
    cidr_block = "10.0.1.0/24"
 
    tags = {
-     Name = "tf-testacc-workspaces-directory-%s-primary"
+     Name = "tf-testacc-workspaces-directory-%[1]s-primary"
    }
  }
 
@@ -364,7 +412,7 @@ locals {
    cidr_block = "10.0.2.0/24"
 
    tags = {
-     Name = "tf-testacc-workspaces-directory-%s-secondary"
+     Name = "tf-testacc-workspaces-directory-%[1]s-secondary"
    }
  }
 
@@ -376,6 +424,10 @@ resource "aws_directory_service_directory" "main" {
   vpc_settings {
     vpc_id = "${aws_vpc.main.id}"
     subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
+  }
+
+  tags = {
+    Name = "tf-testacc-workspaces-directory-%[1]s"
   }
 }
 
@@ -404,19 +456,13 @@ resource "aws_iam_role_policy_attachment" "workspaces-default-self-service-acces
   role       = aws_iam_role.workspaces-default.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
 }
-`, booster, booster, booster)
+`, booster)
 }
 
 func testAccWorkspacesDirectoryConfigA(booster string) string {
 	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(booster) + fmt.Sprintf(`
 resource "aws_workspaces_directory" "main" {
   directory_id = "${aws_directory_service_directory.main.id}"
-
-  tags = {
-    Name = "test"
-    Terraform = true
-    Directory = "tf-acctest.example.com"
-  }
 }
 `)
 }
@@ -432,11 +478,6 @@ resource "aws_workspaces_directory" "main" {
     rebuild_workspace = true
     restart_workspace = false
     switch_running_mode = true
-  }
-
-  tags = {
-    Purpose   = "test"
-    Directory = "tf-acctest.example.com"
   }
 }
 `)
@@ -462,4 +503,29 @@ resource "aws_workspaces_directory" "main" {
   subnet_ids = ["${aws_subnet.primary.id}","${aws_subnet.secondary.id}"]
 }
 `)
+}
+
+func testAccWorkspacesDirectoryConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = "${aws_directory_service_directory.main.id}"
+
+  tags = {
+    %[1]q = %[2]q
+  }
+}
+`, tagKey1, tagValue1)
+}
+
+func testAccWorkspacesDirectoryConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName) + fmt.Sprintf(`
+resource "aws_workspaces_directory" "main" {
+  directory_id = "${aws_directory_service_directory.main.id}"
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }

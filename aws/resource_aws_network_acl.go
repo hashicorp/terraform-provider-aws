@@ -175,7 +175,12 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 	// Get the ID and store it
 	networkAcl := resp.NetworkAcl
 	d.SetId(*networkAcl.NetworkAclId)
-	log.Printf("[INFO] Network Acl ID: %s", *networkAcl.NetworkAclId)
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding EC2 VPN Gateway (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	// Update rules and subnet association once acl is created
 	return resourceAwsNetworkAclUpdate(d, meta)
@@ -183,6 +188,7 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
 		NetworkAclIds: []*string{aws.String(d.Id())},
@@ -224,7 +230,7 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("vpc_id", networkAcl.VpcId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(networkAcl.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(networkAcl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -251,7 +257,6 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	d.Partial(true)
 
 	if d.HasChange("ingress") {
 		err := updateNetworkAclEntries(d, "ingress", conn)
@@ -327,7 +332,7 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 
 	}
 
-	if d.HasChange("tags") {
+	if d.HasChange("tags") && !d.IsNewResource() {
 		o, n := d.GetChange("tags")
 
 		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
@@ -335,7 +340,6 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	d.Partial(false)
 	return resourceAwsNetworkAclRead(d, meta)
 }
 

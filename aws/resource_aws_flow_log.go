@@ -194,6 +194,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	opts := &ec2.DescribeFlowLogsInput{
 		FlowLogIds: []*string{aws.String(d.Id())},
@@ -232,7 +233,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set(resourceKey, fl.ResourceId)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

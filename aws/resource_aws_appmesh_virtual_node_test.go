@@ -176,9 +176,10 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAppmeshVirtualNodeDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppmeshVirtualNodeConfig_listenerHealthChecks(meshName, vnName),

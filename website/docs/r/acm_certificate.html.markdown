@@ -93,7 +93,7 @@ The following arguments are supported:
   * `domain_name` - (Required) A domain name for which the certificate should be issued
   * `certificate_authority_arn` - (Required) ARN of an ACMPCA
   * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## options Configuration Block
 

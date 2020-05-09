@@ -25,7 +25,7 @@ The following arguments are supported:
 
 * `db_cluster_identifier` - (Required) The DB Cluster Identifier from which to take the snapshot.
 * `db_cluster_snapshot_identifier` - (Required) The Identifier for the snapshot.
-* `tags` - (Optional) A mapping of tags to assign to the DB cluster.
+* `tags` - (Optional) A map of tags to assign to the DB cluster.
 
 ## Attributes Reference
 

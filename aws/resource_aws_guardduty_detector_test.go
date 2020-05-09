@@ -80,6 +80,11 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccGuardDutyDetectorConfig_basic2,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyDetectorExists(resourceName),
@@ -99,27 +104,6 @@ func testAccAwsGuardDutyDetector_basic(t *testing.T) {
 					testAccCheckAwsGuardDutyDetectorExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "finding_publishing_frequency", "FIFTEEN_MINUTES"),
 				),
-			},
-		},
-	})
-}
-
-func testAccAwsGuardDutyDetector_import(t *testing.T) {
-	resourceName := "aws_guardduty_detector.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsGuardDutyDetectorDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGuardDutyDetectorConfig_basic1,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

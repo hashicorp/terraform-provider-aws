@@ -2008,6 +2008,8 @@ func validateCognitoRoles(v map[string]interface{}) (errors []error) {
 func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"1Gbps",
+		"2Gbps",
+		"5Gbps",
 		"10Gbps",
 		"50Mbps",
 		"100Mbps",
