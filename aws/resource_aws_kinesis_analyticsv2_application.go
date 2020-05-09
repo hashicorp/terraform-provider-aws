@@ -16,12 +16,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func resourceAwsKinesisAnalyticsApplicationV2() *schema.Resource {
+func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAwsKinesisAnalyticsApplicationV2Create,
-		Read:   resourceAwsKinesisAnalyticsApplicationV2Read,
-		Update: resourceAwsKinesisAnalyticsApplicationV2Update,
-		Delete: resourceAwsKinesisAnalyticsApplicationV2Delete,
+		Create: resourceAwsKinesisAnalyticsV2ApplicationCreate,
+		Read:   resourceAwsKinesisAnalyticsV2ApplicationRead,
+		Update: resourceAwsKinesisAnalyticsV2ApplicationUpdate,
+		Delete: resourceAwsKinesisAnalyticsV2ApplicationDelete,
 
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -666,7 +666,7 @@ func resourceAwsKinesisAnalyticsApplicationV2() *schema.Resource {
 	}
 }
 
-func resourceAwsKinesisAnalyticsApplicationV2Create(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
 	serviceExecutionRole := d.Get("service_execution_role").(string)
@@ -804,10 +804,10 @@ func resourceAwsKinesisAnalyticsApplicationV2Create(d *schema.ResourceData, meta
 		return fmt.Errorf("Unable to create Kinesis Analytics application: %s", err)
 	}
 
-	return resourceAwsKinesisAnalyticsApplicationV2Update(d, meta)
+	return resourceAwsKinesisAnalyticsV2ApplicationUpdate(d, meta)
 }
 
-func resourceAwsKinesisAnalyticsApplicationV2Read(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
 
@@ -892,7 +892,7 @@ func resourceAwsKinesisAnalyticsApplicationV2Read(d *schema.ResourceData, meta i
 	return nil
 }
 
-func resourceAwsKinesisAnalyticsApplicationV2Update(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta interface{}) error {
 	var version int
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
@@ -1036,10 +1036,10 @@ func resourceAwsKinesisAnalyticsApplicationV2Update(d *schema.ResourceData, meta
 		}
 	}
 
-	return resourceAwsKinesisAnalyticsApplicationV2Read(d, meta)
+	return resourceAwsKinesisAnalyticsV2ApplicationRead(d, meta)
 }
 
-func resourceAwsKinesisAnalyticsApplicationV2Delete(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
 	name := d.Get("name").(string)
 	createTimestamp, parseErr := time.Parse(time.RFC3339, d.Get("create_timestamp").(string))
@@ -1056,7 +1056,7 @@ func resourceAwsKinesisAnalyticsApplicationV2Delete(d *schema.ResourceData, meta
 	if isAWSErr(deleteErr, kinesisanalyticsv2.ErrCodeResourceNotFoundException, "") {
 		return nil
 	}
-	deleteErr = waitForDeleteKinesisAnalyticsApplicationV2(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	deleteErr = waitForDeleteKinesisAnalyticsV2Application(conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 	if deleteErr != nil {
 		return fmt.Errorf("error waiting for deletion of Kinesis Analytics Application (%s): %s", d.Id(), deleteErr)
 	}
@@ -2034,7 +2034,7 @@ func flattenKinesisAnalyticsV2ReferenceDataSources(dataSources []*kinesisanalyti
 	return s
 }
 
-func waitForDeleteKinesisAnalyticsApplicationV2(conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationId string, timeout time.Duration) error {
+func waitForDeleteKinesisAnalyticsV2Application(conn *kinesisanalyticsv2.KinesisAnalyticsV2, applicationId string, timeout time.Duration) error {
 	stateConf := resource.StateChangeConf{
 		Pending: []string{
 			kinesisanalyticsv2.ApplicationStatusRunning,
