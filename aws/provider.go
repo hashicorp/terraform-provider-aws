@@ -341,6 +341,7 @@ func Provider() *schema.Provider {
 			"aws_instances":                                  dataSourceAwsInstances(),
 			"aws_internet_gateway":                           dataSourceAwsInternetGateway(),
 			"aws_iot_endpoint":                               dataSourceAwsIotEndpoint(),
+			"aws_iot_greengrass_service_role":                dataSourceAwsIotGreengrassServiceRole(),
 			"aws_ip_ranges":                                  dataSourceAwsIPRanges(),
 			"aws_kinesis_firehose_delivery_stream":           dataSourceAwsKinesisFirehoseDeliveryStream(),
 			"aws_kinesis_stream":                             dataSourceAwsKinesisStream(),
