@@ -56,6 +56,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lightsail"
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/ram"
@@ -1843,6 +1844,33 @@ func (tags KeyValueTags) NeptuneTags() []*neptune.Tag {
 
 // NeptuneKeyValueTags creates KeyValueTags from neptune service tags.
 func NeptuneKeyValueTags(tags []*neptune.Tag) KeyValueTags {
+	m := make(map[string]*string, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = tag.Value
+	}
+
+	return New(m)
+}
+
+// NetworkmanagerTags returns networkmanager service tags.
+func (tags KeyValueTags) NetworkmanagerTags() []*networkmanager.Tag {
+	result := make([]*networkmanager.Tag, 0, len(tags))
+
+	for k, v := range tags.Map() {
+		tag := &networkmanager.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
+}
+
+// NetworkmanagerKeyValueTags creates KeyValueTags from networkmanager service tags.
+func NetworkmanagerKeyValueTags(tags []*networkmanager.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
