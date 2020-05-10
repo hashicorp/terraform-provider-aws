@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -652,43 +651,6 @@ func validateAwsAccountId(v interface{}, k string) (ws []string, errors []error)
 			k, value))
 	}
 
-	return
-}
-
-func validateKinesisAnalyticsV2MetricsLevel(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != kinesisanalyticsv2.MetricsLevelApplication &&
-		value != kinesisanalyticsv2.MetricsLevelOperator &&
-		value != kinesisanalyticsv2.MetricsLevelParallelism &&
-		value != kinesisanalyticsv2.MetricsLevelTask {
-		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics metrics level. Valid values are: %s", value,
-			fmt.Sprintf("%s, %s, %s, %s", kinesisanalyticsv2.MetricsLevelApplication, kinesisanalyticsv2.MetricsLevelOperator,
-				kinesisanalyticsv2.MetricsLevelParallelism, kinesisanalyticsv2.MetricsLevelTask)))
-	}
-	return
-}
-
-func validateKinesisAnalyticsV2ConfigurationType(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != kinesisanalyticsv2.ConfigurationTypeCustom &&
-		value != kinesisanalyticsv2.ConfigurationTypeDefault {
-		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics configuration type. Valid values are: %s", value,
-			fmt.Sprintf("%s, %s", kinesisanalyticsv2.ConfigurationTypeCustom, kinesisanalyticsv2.ConfigurationTypeDefault)))
-
-	}
-	return
-}
-
-func validateKinesisAnalyticsV2LogLevel(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value != kinesisanalyticsv2.LogLevelInfo &&
-		value != kinesisanalyticsv2.LogLevelWarn &&
-		value != kinesisanalyticsv2.LogLevelError &&
-		value != kinesisanalyticsv2.LogLevelDebug {
-		errors = append(errors, fmt.Errorf("'%s' is an invalid kinesisanalytics log level. Valid values are: %s", value,
-			fmt.Sprintf("%s, %s, %s, %s", kinesisanalyticsv2.LogLevelInfo, kinesisanalyticsv2.LogLevelWarn,
-				kinesisanalyticsv2.LogLevelError, kinesisanalyticsv2.LogLevelDebug)))
-	}
 	return
 }
 

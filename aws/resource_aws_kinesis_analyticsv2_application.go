@@ -18,11 +18,31 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-var validateKinesisAnalyticsV2Runtime = validation.StringInSlice([]string{
-	kinesisanalyticsv2.RuntimeEnvironmentSql10,
-	kinesisanalyticsv2.RuntimeEnvironmentFlink16,
-	kinesisanalyticsv2.RuntimeEnvironmentFlink18,
-}, false)
+var (
+	validateKinesisAnalyticsV2Runtime = validation.StringInSlice([]string{
+		kinesisanalyticsv2.RuntimeEnvironmentSql10,
+		kinesisanalyticsv2.RuntimeEnvironmentFlink16,
+		kinesisanalyticsv2.RuntimeEnvironmentFlink18,
+	}, false)
+
+	validateKinesisAnalyticsV2MetricsLevel = validation.StringInSlice([]string{
+		kinesisanalyticsv2.RuntimeEnvironmentSql10,
+		kinesisanalyticsv2.RuntimeEnvironmentFlink16,
+		kinesisanalyticsv2.RuntimeEnvironmentFlink18,
+	}, false)
+
+	validateKinesisAnalyticsV2LogLevel = validation.StringInSlice([]string{
+		kinesisanalyticsv2.LogLevelInfo,
+		kinesisanalyticsv2.LogLevelWarn,
+		kinesisanalyticsv2.LogLevelError,
+		kinesisanalyticsv2.LogLevelDebug,
+	}, false)
+
+	validateKinesisAnalyticsV2ConfigurationType = validation.StringInSlice([]string{
+		kinesisanalyticsv2.ConfigurationTypeCustom,
+		kinesisanalyticsv2.ConfigurationTypeDefault,
+	}, false)
+)
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 	return &schema.Resource{
