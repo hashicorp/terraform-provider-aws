@@ -696,6 +696,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_network_acl_rule":                                    resourceAwsNetworkAclRule(),
 			"aws_network_interface":                                   resourceAwsNetworkInterface(),
 			"aws_network_interface_attachment":                        resourceAwsNetworkInterfaceAttachment(),
+			"aws_networkmanager_global_network":                       resourceAwsNetworkManagerGlobalNetwork(),
 			"aws_opsworks_application":                                resourceAwsOpsworksApplication(),
 			"aws_opsworks_stack":                                      resourceAwsOpsworksStack(),
 			"aws_opsworks_java_app_layer":                             resourceAwsOpsworksJavaAppLayer(),
