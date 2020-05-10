@@ -56,9 +56,12 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md
 
-lint:
-	@echo "==> Checking source code against linters..."
+lint: golangci-lint awsproviderlint
+
+golangci-lint:
 	@golangci-lint run ./$(PKG_NAME)/...
+
+awsproviderlint:
 	@awsproviderlint \
 		-c 1 \
 		-AT001 \
@@ -177,5 +180,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
+.PHONY: awsproviderlint build gen golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
 
