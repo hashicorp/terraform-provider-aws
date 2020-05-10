@@ -2876,7 +2876,7 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 	}
 }
 
-func TestValidateKinesisAnalyticsMetricLevel(t *testing.T) {
+func TestValidateKinesisAnalyticsV2MetricLevel(t *testing.T) {
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -2907,7 +2907,7 @@ func TestValidateKinesisAnalyticsMetricLevel(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validateKineisAnalyticsMetricsLevel(tc.Value, "")
+		_, errors := validateKinesisAnalyticsV2MetricsLevel(tc.Value, "")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d errors but found %d for %s",
 				tc.ErrCount, len(errors), tc.Value)
@@ -2915,7 +2915,7 @@ func TestValidateKinesisAnalyticsMetricLevel(t *testing.T) {
 	}
 }
 
-func TestValidateKinesisAnalyticsConfigurationType(t *testing.T) {
+func TestValidateKinesisAnalyticsV2ConfigurationType(t *testing.T) {
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -2938,7 +2938,7 @@ func TestValidateKinesisAnalyticsConfigurationType(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validateKinesisAnalyticsConfigurationType(tc.Value, "")
+		_, errors := validateKinesisAnalyticsV2ConfigurationType(tc.Value, "")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d errors but found %d for %s",
 				tc.ErrCount, len(errors), tc.Value)
@@ -2946,7 +2946,7 @@ func TestValidateKinesisAnalyticsConfigurationType(t *testing.T) {
 	}
 }
 
-func TestValidateLogLevel(t *testing.T) {
+func TestValidateKinesisAnalyticsV2LogLevel(t *testing.T) {
 	cases := []struct {
 		Value    string
 		ErrCount int
@@ -2977,7 +2977,7 @@ func TestValidateLogLevel(t *testing.T) {
 		},
 	}
 	for _, tc := range cases {
-		_, errors := validateLogLevel(tc.Value, "")
+		_, errors := validateKinesisAnalyticsV2LogLevel(tc.Value, "")
 		if len(errors) != tc.ErrCount {
 			t.Fatalf("Expected %d errors but found %d for %s",
 				tc.ErrCount, len(errors), tc.Value)

@@ -655,7 +655,7 @@ func validateAwsAccountId(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validateKineisAnalyticsMetricsLevel(v interface{}, k string) (ws []string, errors []error) {
+func validateKinesisAnalyticsV2MetricsLevel(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if value != kinesisanalyticsv2.MetricsLevelApplication &&
 		value != kinesisanalyticsv2.MetricsLevelOperator &&
@@ -668,7 +668,7 @@ func validateKineisAnalyticsMetricsLevel(v interface{}, k string) (ws []string, 
 	return
 }
 
-func validateKinesisAnalyticsConfigurationType(v interface{}, k string) (ws []string, errors []error) {
+func validateKinesisAnalyticsV2ConfigurationType(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if value != kinesisanalyticsv2.ConfigurationTypeCustom &&
 		value != kinesisanalyticsv2.ConfigurationTypeDefault {
@@ -679,7 +679,7 @@ func validateKinesisAnalyticsConfigurationType(v interface{}, k string) (ws []st
 	return
 }
 
-func validateLogLevel(v interface{}, k string) (ws []string, errors []error) {
+func validateKinesisAnalyticsV2LogLevel(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if value != kinesisanalyticsv2.LogLevelInfo &&
 		value != kinesisanalyticsv2.LogLevelWarn &&

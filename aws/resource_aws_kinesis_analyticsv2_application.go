@@ -180,7 +180,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									"configuration_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateKinesisAnalyticsConfigurationType,
+										ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
 									},
 									"min_pause_between_checkpoints": {
 										Type:     schema.TypeInt,
@@ -198,17 +198,17 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									"configuration_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateKinesisAnalyticsConfigurationType,
+										ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
 									},
 									"log_level": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateLogLevel,
+										ValidateFunc: validateKinesisAnalyticsV2LogLevel,
 									},
 									"metrics_level": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validateKineisAnalyticsMetricsLevel,
+										ValidateFunc: validateKinesisAnalyticsV2MetricsLevel,
 									},
 								},
 							},
@@ -226,7 +226,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 									"configuration_type": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validateKinesisAnalyticsConfigurationType,
+										ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
 									},
 									"parallelism": {
 										Type:     schema.TypeInt,
