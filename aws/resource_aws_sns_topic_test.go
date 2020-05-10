@@ -28,6 +28,7 @@ func init() {
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
 			"aws_glacier_vault",
+			"aws_iot_topic_rule",
 			"aws_neptune_event_subscription",
 			"aws_redshift_event_subscription",
 			"aws_s3_bucket",
