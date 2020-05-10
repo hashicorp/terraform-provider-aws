@@ -26,9 +26,10 @@ var (
 	}, false)
 
 	validateKinesisAnalyticsV2MetricsLevel = validation.StringInSlice([]string{
-		kinesisanalyticsv2.RuntimeEnvironmentSql10,
-		kinesisanalyticsv2.RuntimeEnvironmentFlink16,
-		kinesisanalyticsv2.RuntimeEnvironmentFlink18,
+		kinesisanalyticsv2.MetricsLevelApplication,
+		kinesisanalyticsv2.MetricsLevelOperator,
+		kinesisanalyticsv2.MetricsLevelParallelism,
+		kinesisanalyticsv2.MetricsLevelTask,
 	}, false)
 
 	validateKinesisAnalyticsV2LogLevel = validation.StringInSlice([]string{
