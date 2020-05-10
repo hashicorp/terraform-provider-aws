@@ -56,7 +56,8 @@ func resourceAwsLakeFormationDataLakeSettingsPut(d *schema.ResourceData, meta in
 		return fmt.Errorf("Error updating DataLakeSettings: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("lakeformation:settings:%s", catalogId))
+	awsRegion := meta.(*AWSClient).region
+	d.SetId(fmt.Sprintf("lakeformation:%s:%s", awsRegion, catalogId))
 	d.Set("catalog_id", catalogId)
 
 	return resourceAwsLakeFormationDataLakeSettingsRead(d, meta)

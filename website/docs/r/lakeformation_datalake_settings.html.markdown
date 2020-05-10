@@ -43,4 +43,4 @@ The following arguments are optional:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - Resource identifier with the pattern `lakeformation:settings:ACCOUNT_ID`.
+* `id` - Resource identifier with the pattern `lakeformation:AWS_REGION:ACCOUNT_ID`.
