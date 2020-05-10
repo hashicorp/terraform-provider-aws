@@ -2876,41 +2876,6 @@ func TestValidateDxConnectionBandWidth(t *testing.T) {
 	}
 }
 
-func TestValidateKinesisAnalyticsRuntime(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "SQL-1_0",
-			ErrCount: 0,
-		},
-		{
-			Value:    "FLINK-1_6",
-			ErrCount: 0,
-		},
-		{
-			Value:    "FLINK-1_8",
-			ErrCount: 0,
-		},
-		{
-			Value:    "sql-1_0",
-			ErrCount: 1,
-		},
-		{
-			Value:    "INVALID",
-			ErrCount: 1,
-		},
-	}
-	for _, tc := range cases {
-		_, errors := validateKinesisAnalyticsRuntime(tc.Value, "")
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected %d errors but found %d for %s",
-				tc.ErrCount, len(errors), tc.Value)
-		}
-	}
-}
-
 func TestValidateKinesisAnalyticsMetricLevel(t *testing.T) {
 	cases := []struct {
 		Value    string

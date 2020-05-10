@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"reflect"
@@ -10,11 +11,18 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
+
+var validateKinesisAnalyticsV2Runtime = validation.StringInSlice([]string{
+	kinesisanalyticsv2.RuntimeEnvironmentSql10,
+	kinesisanalyticsv2.RuntimeEnvironmentFlink16,
+	kinesisanalyticsv2.RuntimeEnvironmentFlink18,
+}, false)
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 	return &schema.Resource{
@@ -52,7 +60,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 			"runtime": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validateKinesisAnalyticsRuntime,
+				ValidateFunc: validateKinesisAnalyticsV2Runtime,
 			},
 
 			"s3_bucket": {
@@ -156,7 +164,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"checkpoint_configuration": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -182,7 +190,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							},
 						},
 						"monitoring_configuration": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -206,7 +214,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							},
 						},
 						"parallelism_configuration": {
-							Type:     schema.TypeMap,
+							Type:     schema.TypeSet,
 							Optional: true,
 							Computed: true,
 							Elem: &schema.Resource{
@@ -809,6 +817,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 
 func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsv2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 	name := d.Get("name").(string)
 
 	describeOpts := &kinesisanalyticsv2.DescribeApplicationInput{
@@ -885,7 +894,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error listing tags for Kinesis Analytics Application (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -1398,7 +1407,7 @@ func createKinesisAnalyticsFlinkUpdateOpts(d *schema.ResourceData) *kinesisanaly
 	var parallelismUpdate *kinesisanalyticsv2.ParallelismConfigurationUpdate
 	if d.HasChange("flink_application_configuration") {
 		fc := d.Get("flink_application_configuration").([]interface{})[0].(map[string]interface{})
-		cpConf := fc["checkpoint_configuration"].(map[string]interface{})
+		cpConf := fc["checkpoint_configuration"].(*schema.Set)
 		checkpointConfig := expandCheckpointConfiguration(cpConf)
 		checkpointUpdate = &kinesisanalyticsv2.CheckpointConfigurationUpdate{
 			CheckpointIntervalUpdate:         checkpointConfig.CheckpointInterval,
@@ -1406,14 +1415,14 @@ func createKinesisAnalyticsFlinkUpdateOpts(d *schema.ResourceData) *kinesisanaly
 			ConfigurationTypeUpdate:          checkpointConfig.ConfigurationType,
 			MinPauseBetweenCheckpointsUpdate: checkpointConfig.MinPauseBetweenCheckpoints,
 		}
-		montConf := fc["monitoring_configuration"].(map[string]interface{})
-		monitoringConfig := expandKinesisAnalyticsMonitoringConfiguration(montConf)
+		montConf := fc["monitoring_configuration"].(*schema.Set)
+		monitoringConfig := expandMonitoringConfiguration(montConf)
 		monitoringUpdate = &kinesisanalyticsv2.MonitoringConfigurationUpdate{
 			ConfigurationTypeUpdate: monitoringConfig.ConfigurationType,
 			LogLevelUpdate:          monitoringConfig.LogLevel,
 			MetricsLevelUpdate:      monitoringConfig.MetricsLevel,
 		}
-		paraConf := fc["parallelism_configuration"].(map[string]interface{})
+		paraConf := fc["parallelism_configuration"].(*schema.Set)
 		parallelismConfig := expandParallelismConfiguration(paraConf)
 		parallelismUpdate = &kinesisanalyticsv2.ParallelismConfigurationUpdate{
 			AutoScalingEnabledUpdate: parallelismConfig.AutoScalingEnabled,
@@ -1433,48 +1442,51 @@ func createKinesisAnalyticsFlinkUpdateOpts(d *schema.ResourceData) *kinesisanaly
 	return flinkUpdate
 }
 
-func expandParallelismConfiguration(v map[string]interface{}) *kinesisanalyticsv2.ParallelismConfiguration {
-	var autoscalingEnabled *bool
+func expandCheckpointConfiguration(config *schema.Set) *kinesisanalyticsv2.CheckpointConfiguration {
+	var checkpointingEnabled *bool
+	var checkpointInterval *int64
 	var configurationType *string
-	var parallelism *int64
-	var parallelismPerKPU *int64
+	var checkpointMinPause *int64
 
-	if aEnabled, ok := v["autoscaling_enabled"]; ok {
-		v, _ := strconv.ParseBool(aEnabled.(string))
-		autoscalingEnabled = aws.Bool(v)
+	for _, v := range config.List() {
+		m := v.(map[string]interface{})
+		if interval, ok := m["checkpoint_interval"]; ok {
+			checkpointInterval = aws.Int64(int64(interval.(int)))
+		}
+		if enabled, ok := m["checkpointing_enabled"]; ok {
+			checkpointingEnabled = aws.Bool(enabled.(bool))
+		}
+		if confType, ok := m["configuration_type"]; ok {
+			configurationType = aws.String(confType.(string))
+		}
+		if minPause, ok := m["min_pause_between_checkpoints"]; ok {
+			checkpointMinPause = aws.Int64(int64(minPause.(int)))
+		}
 	}
-	if confType, ok := v["configuration_type"]; ok {
-		configurationType = aws.String(confType.(string))
-	}
-	if p, ok := v["parallelism"]; ok {
-		num, _ := strconv.ParseInt(p.(string), 10, 64)
-		parallelism = aws.Int64(num)
-	}
-	if p, ok := v["parallelism_per_kpu"]; ok {
-		num, _ := strconv.ParseInt(p.(string), 10, 64)
-		parallelismPerKPU = aws.Int64(num)
-	}
-	return &kinesisanalyticsv2.ParallelismConfiguration{
-		AutoScalingEnabled: autoscalingEnabled,
-		ConfigurationType:  configurationType,
-		Parallelism:        parallelism,
-		ParallelismPerKPU:  parallelismPerKPU,
+	return &kinesisanalyticsv2.CheckpointConfiguration{
+		CheckpointInterval:         checkpointInterval,
+		CheckpointingEnabled:       checkpointingEnabled,
+		ConfigurationType:          configurationType,
+		MinPauseBetweenCheckpoints: checkpointMinPause,
 	}
 }
 
-func expandKinesisAnalyticsMonitoringConfiguration(v map[string]interface{}) *kinesisanalyticsv2.MonitoringConfiguration {
+func expandMonitoringConfiguration(config *schema.Set) *kinesisanalyticsv2.MonitoringConfiguration {
 	var configurationType *string
 	var logLevel *string
 	var metricsLevel *string
 
-	if confType, ok := v["configuration_type"]; ok {
-		configurationType = aws.String(confType.(string))
-	}
-	if level, ok := v["log_level"]; ok {
-		logLevel = aws.String(level.(string))
-	}
-	if level, ok := v["metrics_level"]; ok {
-		metricsLevel = aws.String(level.(string))
+	for _, v := range config.List() {
+		m := v.(map[string]interface{})
+		if confType, ok := m["configuration_type"]; ok {
+			configurationType = aws.String(confType.(string))
+		}
+		if level, ok := m["log_level"]; ok {
+			logLevel = aws.String(level.(string))
+		}
+		if level, ok := m["metrics_level"]; ok {
+			metricsLevel = aws.String(level.(string))
+		}
 	}
 	return &kinesisanalyticsv2.MonitoringConfiguration{
 		ConfigurationType: configurationType,
@@ -1483,32 +1495,32 @@ func expandKinesisAnalyticsMonitoringConfiguration(v map[string]interface{}) *ki
 	}
 }
 
-func expandCheckpointConfiguration(v map[string]interface{}) *kinesisanalyticsv2.CheckpointConfiguration {
-	var checkpointingEnabled *bool
-	var checkpointInterval *int64
+func expandParallelismConfiguration(config *schema.Set) *kinesisanalyticsv2.ParallelismConfiguration {
+	var autoscalingEnabled *bool
 	var configurationType *string
-	var configurationMinPause *int64
+	var parallelism *int64
+	var parallelismPerKPU *int64
 
-	if interval, ok := v["checkpoint_interval"]; ok {
-		v, _ := strconv.ParseInt(interval.(string), 10, 64)
-		checkpointInterval = aws.Int64(v)
+	for _, v := range config.List() {
+		m := v.(map[string]interface{})
+		if aEnabled, ok := m["autoscaling_enabled"]; ok {
+			autoscalingEnabled = aws.Bool(aEnabled.(bool))
+		}
+		if confType, ok := m["configuration_type"]; ok {
+			configurationType = aws.String(confType.(string))
+		}
+		if p, ok := m["parallelism"]; ok {
+			parallelism = aws.Int64(int64(p.(int)))
+		}
+		if p, ok := m["parallelism_per_kpu"]; ok {
+			parallelismPerKPU = aws.Int64(int64(p.(int)))
+		}
 	}
-	if enabled, ok := v["checkpointing_enabled"]; ok {
-		v, _ := strconv.ParseBool(enabled.(string))
-		checkpointingEnabled = aws.Bool(v)
-	}
-	if confType, ok := v["configuration_type"]; ok {
-		configurationType = aws.String(confType.(string))
-	}
-	if minPause, ok := v["min_pause_between_checkpoints"]; ok {
-		v, _ := strconv.ParseInt(minPause.(string), 10, 64)
-		configurationMinPause = aws.Int64(v)
-	}
-	return &kinesisanalyticsv2.CheckpointConfiguration{
-		CheckpointInterval:         checkpointInterval,
-		CheckpointingEnabled:       checkpointingEnabled,
-		ConfigurationType:          configurationType,
-		MinPauseBetweenCheckpoints: configurationMinPause,
+	return &kinesisanalyticsv2.ParallelismConfiguration{
+		AutoScalingEnabled: autoscalingEnabled,
+		ConfigurationType:  configurationType,
+		Parallelism:        parallelism,
+		ParallelismPerKPU:  parallelismPerKPU,
 	}
 }
 
@@ -1699,15 +1711,11 @@ func expandKinesisAnalayticsSqlApplicationConfiguration(appConfig map[string]int
 
 func expandKinesisAnalyticsFlinkApplicationConfiguration(appConfig map[string]interface{}) *kinesisanalyticsv2.FlinkApplicationConfiguration {
 	flinkApplicationConfiguration := &kinesisanalyticsv2.FlinkApplicationConfiguration{}
-	if v := appConfig["checkpoint_configuration"].(map[string]interface{}); len(v) > 0 {
-		flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(v)
-	}
-	if v := appConfig["monitoring_configuration"].(map[string]interface{}); len(v) > 0 {
-		flinkApplicationConfiguration.MonitoringConfiguration = expandKinesisAnalyticsMonitoringConfiguration(v)
-	}
-	if v := appConfig["parallelism_configuration"].(map[string]interface{}); len(v) > 0 {
-		flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(v)
-	}
+
+	flinkApplicationConfiguration.CheckpointConfiguration = expandCheckpointConfiguration(appConfig["checkpoint_configuration"].(*schema.Set))
+	flinkApplicationConfiguration.MonitoringConfiguration = expandMonitoringConfiguration(appConfig["monitoring_configuration"].(*schema.Set))
+	flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(appConfig["parallelism_configuration"].(*schema.Set))
+
 	return flinkApplicationConfiguration
 }
 
@@ -1725,28 +1733,41 @@ func flattenSqlApplicationConfigurationDescription(sqlApplicationConfig *kinesis
 }
 
 func flattenFlinkApplicationConfigurationDescription(flinkApplicationConfig *kinesisanalyticsv2.FlinkApplicationConfigurationDescription) []interface{} {
-	ret := map[string]interface{}{}
 	if flinkApplicationConfig == nil {
-		return []interface{}{ret}
+		return []interface{}{}
 	}
-	ret["checkpoint_configuration"] = map[string]interface{}{
-		"checkpoint_interval":           strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.CheckpointConfigurationDescription.CheckpointInterval), 10),
-		"checkpointing_enabled":         strconv.FormatBool(aws.BoolValue(flinkApplicationConfig.CheckpointConfigurationDescription.CheckpointingEnabled)),
-		"configuration_type":            aws.StringValue(flinkApplicationConfig.CheckpointConfigurationDescription.ConfigurationType),
-		"min_pause_between_checkpoints": strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.CheckpointConfigurationDescription.MinPauseBetweenCheckpoints), 10),
+	return []interface{}{map[string]interface{}{
+		"checkpoint_configuration":  flattenCheckpointConfiguration(flinkApplicationConfig.CheckpointConfigurationDescription),
+		"monitoring_configuration":  flattenMonitoringConfiguration(flinkApplicationConfig.MonitoringConfigurationDescription),
+		"parallelism_configuration": flattenParallelismConfiguration(flinkApplicationConfig.ParallelismConfigurationDescription),
+	},
 	}
-	ret["monitoring_configuration"] = map[string]interface{}{
-		"configuration_type": aws.StringValue(flinkApplicationConfig.MonitoringConfigurationDescription.ConfigurationType),
-		"log_level":          aws.StringValue(flinkApplicationConfig.MonitoringConfigurationDescription.LogLevel),
-		"metrics_level":      aws.StringValue(flinkApplicationConfig.MonitoringConfigurationDescription.MetricsLevel),
-	}
-	ret["parallelism_configuration"] = map[string]interface{}{
-		"autoscaling_enabled": strconv.FormatBool(aws.BoolValue(flinkApplicationConfig.ParallelismConfigurationDescription.AutoScalingEnabled)),
-		"configuration_type":  aws.StringValue(flinkApplicationConfig.ParallelismConfigurationDescription.ConfigurationType),
-		"parallelism":         strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.ParallelismConfigurationDescription.Parallelism), 10),
-		"parallelism_per_kpu": strconv.FormatInt(aws.Int64Value(flinkApplicationConfig.ParallelismConfigurationDescription.ParallelismPerKPU), 10),
-	}
-	return []interface{}{ret}
+}
+
+func flattenCheckpointConfiguration(checkpointConfiguration *kinesisanalyticsv2.CheckpointConfigurationDescription) *schema.Set {
+	return schema.NewSet(resourceCheckpointConfigurationHash, []interface{}{map[string]interface{}{
+		"checkpoint_interval":           aws.Int64Value(checkpointConfiguration.CheckpointInterval),
+		"checkpointing_enabled":         aws.BoolValue(checkpointConfiguration.CheckpointingEnabled),
+		"configuration_type":            aws.StringValue(checkpointConfiguration.ConfigurationType),
+		"min_pause_between_checkpoints": aws.Int64Value(checkpointConfiguration.MinPauseBetweenCheckpoints),
+	}})
+}
+
+func flattenMonitoringConfiguration(monitoringConfiguration *kinesisanalyticsv2.MonitoringConfigurationDescription) *schema.Set {
+	return schema.NewSet(resourceMonitoringConfigurationHash, []interface{}{map[string]interface{}{
+		"configuration_type": aws.StringValue(monitoringConfiguration.ConfigurationType),
+		"log_level":          aws.StringValue(monitoringConfiguration.LogLevel),
+		"metrics_level":      aws.StringValue(monitoringConfiguration.MetricsLevel),
+	}})
+}
+
+func flattenParallelismConfiguration(parallelismConfiguration *kinesisanalyticsv2.ParallelismConfigurationDescription) *schema.Set {
+	return schema.NewSet(resourceParallelismConfigurationHash, []interface{}{map[string]interface{}{
+		"autoscaling_enabled": aws.BoolValue(parallelismConfiguration.AutoScalingEnabled),
+		"configuration_type":  aws.StringValue(parallelismConfiguration.ConfigurationType),
+		"parallelism":         aws.Int64Value(parallelismConfiguration.Parallelism),
+		"parallelism_per_kpu": aws.Int64Value(parallelismConfiguration.ParallelismPerKPU),
+	}})
 }
 
 func flattenKinesisAnalyticsPropertyGroups(propGroups []*kinesisanalyticsv2.PropertyGroup) []interface{} {
@@ -2075,4 +2096,61 @@ func refreshKinesisAnalyticsApplicationStatusV2(conn *kinesisanalyticsv2.Kinesis
 func runtimeIsFlink(runtime string) bool {
 	return runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
 		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18
+}
+
+func resourceCheckpointConfigurationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["checkpoint_interval"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int64)))
+	}
+	if v, ok := m["checkpointing_enabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+	if v, ok := m["configuration_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["min_pause_between_checkpoints"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int64)))
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func resourceMonitoringConfigurationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["log_level"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["configuration_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["metrics_level"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func resourceParallelismConfigurationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["autoscaling_enabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+	if v, ok := m["parallelism"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int64)))
+	}
+	if v, ok := m["parallelism_per_kpu"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int64)))
+	}
+	if v, ok := m["configuration_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	return hashcode.String(buf.String())
 }

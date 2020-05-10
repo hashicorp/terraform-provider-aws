@@ -23,7 +23,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -50,13 +50,13 @@ func TestAccAWSKinesisAnalyticsV2Application_update(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 				),
 			},
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_update(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "code", "testCode2\n"),
@@ -75,8 +75,8 @@ func TestAccAWSKinesisAnalyticsV2Application_addCloudwatchLoggingOptions(t *test
 	var application kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt)
-	thirdStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_cloudwatchLoggingOptions(rInt, "testStream")
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_basic(rInt)
+	thirdStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_cloudwatchLoggingOptions(rInt, "testStream")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -112,8 +112,8 @@ func TestAccAWSKinesisAnalyticsV2Application_updateCloudwatchLoggingOptions(t *t
 	var application kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_cloudwatchLoggingOptions(rInt, "testStream")
-	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_cloudwatchLoggingOptions(rInt, "testStream2")
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_cloudwatchLoggingOptions(rInt, "testStream")
+	secondStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_cloudwatchLoggingOptions(rInt, "testStream2")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -156,7 +156,7 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisFirehose(t *testing.T)
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsKinesisFirehose(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_inputsKinesisFirehose(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "sql_application_configuration.0.inputs.#", "1"),
@@ -183,7 +183,7 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplication(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalayticsApplicationV2_FlinkApplication(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalyticsV2Application_FlinkApplication(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -191,17 +191,20 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplication(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resName, "cloudwatch_logging_options.0.log_stream_arn", "aws_cloudwatch_log_stream.test", "arn"),
 					resource.TestCheckResourceAttr(resName, "property_groups.#", "1"),
 					resource.TestCheckResourceAttr(resName, "property_groups.0.property_group_id", "abcdef"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.checkpointing_enabled", "false"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.checkpoint_interval", "30000"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.min_pause_between_checkpoints", "10000"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.log_level", "WARN"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.metrics_level", "APPLICATION"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.configuration_type", "CUSTOM"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.autoscaling_enabled", "true"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.parallelism", "1"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.parallelism_per_kpu", "1"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.2352194959.checkpointing_enabled", "true"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.2352194959.checkpoint_interval", "30000"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.2352194959.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.checkpoint_configuration.2352194959.min_pause_between_checkpoints", "10000"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.4100071217.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.4100071217.log_level", "WARN"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.monitoring_configuration.4100071217.metrics_level", "APPLICATION"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.1948903381.configuration_type", "CUSTOM"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.1948903381.autoscaling_enabled", "true"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.1948903381.parallelism", "1"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.1948903381.parallelism_per_kpu", "1"),
 				),
 			},
 			{
@@ -224,17 +227,17 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplicationUpdate(t *testing.T
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalayticsApplicationV2_FlinkApplication(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalyticsV2Application_FlinkApplication(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 				),
 			},
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalayticsApplicationV2_FlinkApplication_update(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_FlinkApplication_prereq(rInt, "testStream") + testAccKinesisAnalyticsV2Application_FlinkApplication_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.autoscaling_enabled", "false"),
+					resource.TestCheckResourceAttr(resName, "flink_application_configuration.0.parallelism_configuration.4212968000.autoscaling_enabled", "false"),
 				),
 			},
 			{
@@ -246,7 +249,7 @@ func TestAccAWSKinesisAnalyticsV2Application_flinkApplicationUpdate(t *testing.T
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_inputsKinesisStream(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisStream(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
@@ -257,7 +260,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_inputsKinesisStream(t *testing.T) 
 		CheckDestroy: testAccCheckKinesisAnalyticsApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsKinesisStream(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_inputsKinesisStream(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
@@ -280,12 +283,12 @@ func TestAccAWSKinesisAnalayticsApplicationV2_inputsKinesisStream(t *testing.T) 
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_inputsAdd(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_inputsAdd(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt)
-	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsKinesisStream(rInt)
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_basic(rInt)
+	secondStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_inputsKinesisStream(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -324,12 +327,12 @@ func TestAccAWSKinesisAnalayticsApplicationV2_inputsAdd(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_inputsUpdateKinesisStream(t *testing.T) {
+func TestAccAWSKineissAnalyticsV2Application_inputsUpdateKinesisStream(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsKinesisStream(rInt)
-	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_inputsUpdateKinesisStream(rInt, "testStream")
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_inputsKinesisStream(rInt)
+	secondStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_inputsUpdateKinesisStream(rInt, "testStream")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalytics(t) },
@@ -369,11 +372,11 @@ func TestAccAWSKinesisAnalayticsApplicationV2_inputsUpdateKinesisStream(t *testi
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_outputsKinesisStream(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_outputsKinesisStream(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsKinesisStream(rInt)
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_outputsKinesisStream(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -401,12 +404,12 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsKinesisStream(t *testing.T)
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_outputsMultiple(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_outputsMultiple(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt1 := acctest.RandInt()
 	rInt2 := acctest.RandInt()
-	step := testAccKinesisAnalayticsApplicationV2_prereq(rInt1) + testAccKinesisAnalayticsApplicationV2_outputsMultiple(rInt1, rInt2)
+	step := testAccKinesisAnalyticsV2Application_prereq(rInt1) + testAccKinesisAnalyticsV2Application_outputsMultiple(rInt1, rInt2)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -429,12 +432,12 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsMultiple(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_outputsAdd(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_outputsAdd(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt)
-	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsKinesisStream(rInt)
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_basic(rInt)
+	secondStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_outputsKinesisStream(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -469,12 +472,12 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsAdd(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_outputsUpdateKinesisStream(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsKinesisStream(rInt)
-	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_outputsUpdateKinesisStream(rInt, "testStream")
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_outputsKinesisStream(rInt)
+	secondStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_outputsUpdateKinesisStream(rInt, "testStream")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -515,7 +518,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_outputsUpdateKinesisStream(t *test
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Add(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Add(t *testing.T) {
 	var application1, application2 kinesisanalyticsv2.ApplicationDetail
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_kinesis_analyticsv2_application.test"
@@ -527,7 +530,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Add(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_basic(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -535,7 +538,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalyticsV2ApplicationConfigOutputsLambda(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2ApplicationConfigOutputsLambda(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application2),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
@@ -553,7 +556,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Add(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Create(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Create(t *testing.T) {
 	var application1 kinesisanalyticsv2.ApplicationDetail
 	lambdaFunctionResourceName := "aws_lambda_function.test"
 	resourceName := "aws_kinesis_analyticsv2_application.test"
@@ -565,7 +568,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Create(t *testing.T
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalyticsApplicationConfigOutputsLambda(rInt),
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2ApplicationConfigOutputsLambda(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
@@ -583,11 +586,11 @@ func TestAccAWSKinesisAnalayticsApplicationV2_Outputs_Lambda_Create(t *testing.T
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSource(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_referenceDataSource(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_referenceDataSource(rInt)
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_referenceDataSource(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -615,12 +618,12 @@ func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSource(t *testing.T) 
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSourceUpdate(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_referenceDataSourceUpdate(t *testing.T) {
 	var before, after kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
-	firstStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_referenceDataSource(rInt)
-	secondStep := testAccKinesisAnalayticsApplicationV2_prereq(rInt) + testAccKinesisAnalayticsApplicationV2_referenceDataSourceUpdate(rInt)
+	firstStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_referenceDataSource(rInt)
+	secondStep := testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_referenceDataSourceUpdate(rInt)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -652,7 +655,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_referenceDataSourceUpdate(t *testi
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_tags(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_tags(t *testing.T) {
 	var application kinesisanalyticsv2.ApplicationDetail
 	resName := "aws_kinesis_analyticsv2_application.test"
 	rInt := acctest.RandInt()
@@ -663,7 +666,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_tags(t *testing.T) {
 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKinesisAnalyticsApplicationWithTags(rInt, "test1", "test2"),
+				Config: testAccKinesisAnalyticsV2ApplicationWithTags(rInt, "test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "tags.%", "2"),
@@ -708,7 +711,7 @@ func TestAccAWSKinesisAnalayticsApplicationV2_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalayticsApplicationV2_SQLConflictsWithFlinkConfig(t *testing.T) {
+func TestAccAWSKinesisAnalyticsV2Application_SQLConflictsWithFlinkConfig(t *testing.T) {
 	rInt := acctest.RandInt()
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
@@ -784,7 +787,7 @@ func testAccPreCheckAWSKinesisAnalyticsV2(t *testing.T) {
 	}
 }
 
-func testAccKinesisAnalayticsApplicationV2_basic(rInt int) string {
+func testAccKinesisAnalyticsV2Application_basic(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
@@ -798,7 +801,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_update(rInt int) string {
+func testAccKinesisAnalyticsV2Application_update(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_analyticsv2_application" "test" {
   name                   = "testAcc-%d"
@@ -812,7 +815,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_cloudwatchLoggingOptions(rInt int, streamName string) string {
+func testAccKinesisAnalyticsV2Application_cloudwatchLoggingOptions(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudwatch_log_group" "test" {
   name = "testAcc-%d"
@@ -839,7 +842,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt, streamName, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_inputsKinesisFirehose(rInt int) string {
+func testAccKinesisAnalyticsV2Application_inputsKinesisFirehose(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "trust_firehose" {
   statement {
@@ -939,7 +942,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt, rInt, rInt, rInt, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_FlinkApplication_prereq(rInt int, streamName string) string {
+func testAccKinesisAnalyticsV2Application_FlinkApplication_prereq(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "test-acc-flink-%d"
@@ -1000,7 +1003,7 @@ resource "aws_cloudwatch_log_stream" "test" {
 `, rInt, rInt, rInt, rInt, streamName, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_FlinkApplication(rInt int) string {
+func testAccKinesisAnalyticsV2Application_FlinkApplication(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_analyticsv2_application" "test" {
   name    = "testAccFlink-%d"
@@ -1012,21 +1015,21 @@ resource "aws_kinesis_analyticsv2_application" "test" {
   snapshots_enabled = true
 
   flink_application_configuration {
-    checkpoint_configuration = {
-      checkpointing_enabled         = false
+    checkpoint_configuration {
+      checkpointing_enabled         = true
       checkpoint_interval           = 30000
       configuration_type            = "CUSTOM"
       min_pause_between_checkpoints = 10000
     }
 
-    parallelism_configuration = {
+    parallelism_configuration {
       configuration_type  = "CUSTOM"
       autoscaling_enabled = true
       parallelism         = 1
       parallelism_per_kpu = 1
     }
 
-    monitoring_configuration = {
+    monitoring_configuration {
       configuration_type = "CUSTOM"
       log_level          = "WARN"
       metrics_level      = "APPLICATION"
@@ -1050,7 +1053,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_FlinkApplication_update(rInt int) string {
+func testAccKinesisAnalyticsV2Application_FlinkApplication_update(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_analyticsv2_application" "test" {
   name    = "testAccFlink-%d"
@@ -1062,21 +1065,21 @@ resource "aws_kinesis_analyticsv2_application" "test" {
   snapshots_enabled = true
 
   flink_application_configuration {
-    checkpoint_configuration = {
-      checkpointing_enabled         = false
+    checkpoint_configuration {
+      checkpointing_enabled         = true
       checkpoint_interval           = 30000
       configuration_type            = "CUSTOM"
       min_pause_between_checkpoints = 10000
     }
 
-    parallelism_configuration = {
+    parallelism_configuration {
       configuration_type  = "CUSTOM"
       autoscaling_enabled = false
       parallelism         = 1
       parallelism_per_kpu = 1
     }
 
-    monitoring_configuration = {
+    monitoring_configuration {
       configuration_type = "CUSTOM"
       log_level          = "WARN"
       metrics_level      = "APPLICATION"
@@ -1092,7 +1095,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_inputsKinesisStream(rInt int) string {
+func testAccKinesisAnalyticsV2Application_inputsKinesisStream(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "testAcc-%d"
@@ -1141,7 +1144,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_inputsUpdateKinesisStream(rInt int, streamName string) string {
+func testAccKinesisAnalyticsV2Application_inputsUpdateKinesisStream(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "testAcc-%s-%d"
@@ -1191,7 +1194,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, streamName, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_outputsKinesisStream(rInt int) string {
+func testAccKinesisAnalyticsV2Application_outputsKinesisStream(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "testAcc-%d"
@@ -1222,7 +1225,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_outputsMultiple(rInt1, rInt2 int) string {
+func testAccKinesisAnalyticsV2Application_outputsMultiple(rInt1, rInt2 int) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test1" {
   name        = "testAcc-%d"
@@ -1362,7 +1365,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_outputsUpdateKinesisStream(rInt int, streamName string) string {
+func testAccKinesisAnalyticsV2Application_outputsUpdateKinesisStream(rInt int, streamName string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_stream" "test" {
   name        = "testAcc-%s-%d"
@@ -1393,7 +1396,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, streamName, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_referenceDataSource(rInt int) string {
+func testAccKinesisAnalyticsV2Application_referenceDataSource(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "testacc-%d"
@@ -1438,7 +1441,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 `, rInt, rInt)
 }
 
-func testAccKinesisAnalayticsApplicationV2_referenceDataSourceUpdate(rInt int) string {
+func testAccKinesisAnalyticsV2Application_referenceDataSourceUpdate(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = "testacc2-%d"
@@ -1485,7 +1488,7 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 }
 
 // this is used to set up the IAM role
-func testAccKinesisAnalayticsApplicationV2_prereq(rInt int) string {
+func testAccKinesisAnalyticsV2Application_prereq(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "trust" {
   statement {
