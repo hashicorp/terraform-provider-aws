@@ -120,7 +120,7 @@ func resourceAwsIamSamlProviderDelete(d *schema.ResourceData, meta interface{}) 
 func extractNameFromIAMSamlProviderArn(samlArn string) (string, error) {
 	parsedArn, err := arn.Parse(samlArn)
 	if err != nil {
-		return "", fmt.Errorf("Unable to extract name from a given ARN: %q", parsedArn)
+		return "", fmt.Errorf("Unable to extract name from a given ARN: %q", samlArn)
 	}
 
 	name := strings.TrimPrefix(parsedArn.Resource, "saml-provider/")
