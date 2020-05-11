@@ -9,7 +9,7 @@ The HashiCorp Terraform AWS provider team is :
 * Graham Davison, Engineer - GitHub [@gdavison](https://github.com/gdavison)
 * Angie Pinilla, Engineer - GitHub [@angie44](https://github.com/angie44)
 * Simon Davis, Engineering Manager - GitHub [@breathingdust](https://github.com/breathingdust)
-* Kerim Satirli,  Developer Advocate - GitHub [@satirli](https://github.com/ksatirli)
+* Kerim Satirli,  Developer Advocate - GitHub [@ksatirli](https://github.com/ksatirli)
 
 ### Why isn’t my PR merged yet?
 
