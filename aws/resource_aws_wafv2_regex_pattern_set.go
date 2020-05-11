@@ -126,7 +126,7 @@ func resourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{
 
 	resp, err := conn.GetRegexPatternSet(params)
 	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "AWS WAF couldn’t perform the operation because your resource doesn’t exist") {
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
 			log.Printf("[WARN] WAFv2 RegexPatternSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -207,7 +207,7 @@ func resourceAwsWafv2RegexPatternSetDelete(d *schema.ResourceData, meta interfac
 		_, err := conn.DeleteRegexPatternSet(params)
 
 		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "AWS WAF couldn’t perform the operation because your resource is being used by another resource or it’s associated with another resource") {
+			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
