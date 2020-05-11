@@ -30,6 +30,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `addresses` - An array of strings that specify one or more IP addresses or blocks of IP addresses in Classless Inter-Domain Routing (CIDR) notation.
 * `arn` - The Amazon Resource Name (ARN) of the entity.
 * `description` - The description of the set that helps with identification.
 * `id` - The unique identifier for the set.
+* `ip_address_version` - The IP address version of the set.

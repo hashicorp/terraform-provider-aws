@@ -20,14 +20,16 @@ func TestAccDataSourceAwsWafv2IPSet_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceAwsWafv2IPSet_NonExistent(name),
-				ExpectError: regexp.MustCompile(`WAFV2 IPSet not found`),
+				ExpectError: regexp.MustCompile(`WAFv2 IPSet not found`),
 			},
 			{
 				Config: testAccDataSourceAwsWafv2IPSet_Name(name),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "addresses", resourceName, "addresses"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ip_address_version", resourceName, "ip_address_version"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scope", resourceName, "scope"),
 				),
