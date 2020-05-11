@@ -321,6 +321,7 @@ The `elasticsearch_configuration` object supports the following:
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Required) The Elasticsearch type name with maximum length of 100 characters.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
+* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to Elastic Search associated with the VPC. More details are given below
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
 The `splunk_configuration` objects supports the following:
@@ -354,6 +355,12 @@ The `parameters` array objects support the following:
 
 * `parameter_name` - (Required) Parameter name. Valid Values: `LambdaArn`, `NumberOfRetries`, `RoleArn`, `BufferSizeInMBs`, `BufferIntervalInSeconds`
 * `parameter_value` - (Required) Parameter value. Must be between 1 and 512 length (inclusive). When providing a Lambda ARN, you should specify the resource version as well.
+
+The `vpc_config` object supports the following:
+
+* `subnet_ids` - (Required) A list of subnet IDs to associate with Kinesis Firehose.
+* `security_group_ids` - (Required) A list of security group IDs to associate with Kinesis Firehose.
+* `role_arn` - (Required) The ARN of the IAM role to be assumed by Firehose for calling the Amazon EC2 configuration API and for creating network interfaces.  Make sure role has permissions of `ec2:CreateNetworkInterface`, `ec2:CreateNetworkInterfacePermission`, `ec2:Describe*` and `ec2:DeleteNetworkInterface`
 
 ### data_format_conversion_configuration
 
