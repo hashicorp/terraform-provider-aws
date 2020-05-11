@@ -28,7 +28,7 @@ func init() {
 			"aws_ec2_client_vpn_endpoint",
 			"aws_eks_cluster",
 			"aws_elasticsearch_domain",
-			// Not currently implemented: "aws_flow_log",
+			"aws_flow_log",
 			"aws_glue_job",
 			"aws_kinesis_analytics_application",
 			"aws_kinesis_firehose_delivery_stream",
