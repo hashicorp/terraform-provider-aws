@@ -8,6 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/lakeformation"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
@@ -26,7 +27,7 @@ func TestAccAWSLakeFormationDataLakeSettings_basic(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "arn", resourceName, "admins.0"),
+					testAccCheckAWSLakeFormationDataLakePrincipal(callerIdentityName, "arn", resourceName, "admins"),
 				),
 			},
 		},
@@ -56,7 +57,7 @@ func TestAccAWSLakeFormationDataLakeSettings_withCatalogId(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttr(resourceName, "admins.#", "1"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "arn", resourceName, "admins.0"),
+					testAccCheckAWSLakeFormationDataLakePrincipal(callerIdentityName, "arn", resourceName, "admins"),
 				),
 			},
 		},
@@ -95,4 +96,21 @@ func testAccCheckAWSLakeFormationDataLakeSettingsEmpty(s *terraform.State) error
 	}
 
 	return nil
+}
+
+func testAccCheckAWSLakeFormationDataLakePrincipal(nameFirst, keyFirst, nameSecond, keySecond string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		isFirst, err := primaryInstanceState(s, nameFirst)
+		if err != nil {
+			return err
+		}
+
+		valueFirst, okFirst := isFirst.Attributes[keyFirst]
+		if !okFirst {
+			return fmt.Errorf("%s: Attribute %q not set", nameFirst, keyFirst)
+		}
+
+		expandedKey := fmt.Sprintf("%s.%d", keySecond, schema.HashString(valueFirst))
+		return resource.TestCheckResourceAttr(nameSecond, expandedKey, valueFirst)(s)
+	}
 }

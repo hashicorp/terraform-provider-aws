@@ -27,7 +27,8 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 				Computed: true,
 			},
 			"admins": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
+				Set:      schema.HashString,
 				Required: true,
 				MinItems: 0,
 				MaxItems: 10,
@@ -114,10 +115,10 @@ func createAwsDataCatalogId(d *schema.ResourceData, accountId string) (catalogId
 }
 
 func expandLakeFormationDataLakePrincipal(d *schema.ResourceData) []*lakeformation.DataLakePrincipal {
-	xs := d.Get("admins")
-	ys := make([]*lakeformation.DataLakePrincipal, len(xs.([]interface{})))
+	xs := d.Get("admins").(*schema.Set).List()
+	ys := make([]*lakeformation.DataLakePrincipal, len(xs))
 
-	for i, x := range xs.([]interface{}) {
+	for i, x := range xs {
 		ys[i] = &lakeformation.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(x.(string)),
 		}
@@ -127,10 +128,10 @@ func expandLakeFormationDataLakePrincipal(d *schema.ResourceData) []*lakeformati
 }
 
 func flattenLakeFormationDataLakePrincipal(xs []*lakeformation.DataLakePrincipal) []string {
-	admins := make([]string, len(xs))
+	ys := make([]string, len(xs))
 	for i, x := range xs {
-		admins[i] = aws.StringValue(x.DataLakePrincipalIdentifier)
+		ys[i] = aws.StringValue(x.DataLakePrincipalIdentifier)
 	}
 
-	return admins
+	return ys
 }
