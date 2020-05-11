@@ -1,5 +1,5 @@
 ---
-subcategory: "LakeFormation"
+subcategory: "Lake Formation"
 layout: "aws"
 page_title: "AWS: aws_lakeformation_datalake_settings"
 description: |-
