@@ -47,7 +47,7 @@ func resourceAwsLakeFormationDataLakeSettingsPut(d *schema.ResourceData, meta in
 	input := &lakeformation.PutDataLakeSettingsInput{
 		CatalogId: aws.String(catalogId),
 		DataLakeSettings: &lakeformation.DataLakeSettings{
-			DataLakeAdmins: expandAdmins(d),
+			DataLakeAdmins: expandLakeFormationDataLakePrincipal(d),
 		},
 	}
 
@@ -77,7 +77,7 @@ func resourceAwsLakeFormationDataLakeSettingsRead(d *schema.ResourceData, meta i
 	}
 
 	d.Set("catalog_id", catalogId)
-	if err := d.Set("admins", flattenAdmins(out.DataLakeSettings.DataLakeAdmins)); err != nil {
+	if err := d.Set("admins", flattenLakeFormationDataLakePrincipal(out.DataLakeSettings.DataLakeAdmins)); err != nil {
 		return fmt.Errorf("Error setting admins from DataLakeSettings: %s", err)
 	}
 	// TODO: Add CreateDatabaseDefaultPermissions and CreateTableDefaultPermissions
@@ -113,7 +113,7 @@ func createAwsDataCatalogId(d *schema.ResourceData, accountId string) (catalogId
 	return
 }
 
-func expandAdmins(d *schema.ResourceData) []*lakeformation.DataLakePrincipal {
+func expandLakeFormationDataLakePrincipal(d *schema.ResourceData) []*lakeformation.DataLakePrincipal {
 	xs := d.Get("admins")
 	ys := make([]*lakeformation.DataLakePrincipal, len(xs.([]interface{})))
 
@@ -126,7 +126,7 @@ func expandAdmins(d *schema.ResourceData) []*lakeformation.DataLakePrincipal {
 	return ys
 }
 
-func flattenAdmins(xs []*lakeformation.DataLakePrincipal) []string {
+func flattenLakeFormationDataLakePrincipal(xs []*lakeformation.DataLakePrincipal) []string {
 	admins := make([]string, len(xs))
 	for i, x := range xs {
 		admins[i] = aws.StringValue(x.DataLakePrincipalIdentifier)
