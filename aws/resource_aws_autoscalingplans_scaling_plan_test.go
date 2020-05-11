@@ -12,6 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -27,19 +28,21 @@ func init() {
 func testSweepAutoScalingPlansScalingPlans(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).autoscalingplansconn
-
 	input := &autoscalingplans.DescribeScalingPlansInput{}
+	var sweeperErrs *multierror.Error
+
 	for {
 		output, err := conn.DescribeScalingPlans(input)
 		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Auto Scaling scaling plan sweep for %s: %s", region, err)
-			return nil
+			log.Printf("[WARN] Skipping Auto Scaling Scaling Plans sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 		}
 		if err != nil {
-			return fmt.Errorf("error listing Auto Scaling scaling plans: %s", err)
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Auto Scaling Scaling Plans: %w", err))
+			return sweeperErrs
 		}
 
 		for _, scalingPlan := range output.ScalingPlans {
@@ -54,11 +57,16 @@ func testSweepAutoScalingPlansScalingPlans(region string) error {
 				continue
 			}
 			if err != nil {
-				return fmt.Errorf("error deleting Auto Scaling scaling plan (%s): %s", scalingPlanName, err)
+				sweeperErr := fmt.Errorf("error deleting Auto Scaling Scaling Plan (%s): %w", scalingPlanName, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			}
 
 			if err := waitForAutoScalingPlansScalingPlanDeletion(conn, scalingPlanName, scalingPlanVersion, 5*time.Minute); err != nil {
-				return fmt.Errorf("error waiting for Auto Scaling scaling plan (%s) to be deleted: %s", scalingPlanName, err)
+				sweeperErr := fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be deleted: %w", scalingPlanName, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
@@ -68,7 +76,7 @@ func testSweepAutoScalingPlansScalingPlans(region string) error {
 		input.NextToken = output.NextToken
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
