@@ -30,21 +30,14 @@ func testSweepSnsPlatformApplications(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).snsconn
-	input := &sns.ListPlatformApplicationsInput{}
 	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.ListPlatformApplications(input)
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Platform Applications: %w", err))
-			return sweeperErrs
+	err = conn.ListPlatformApplicationsPages(&sns.ListPlatformApplicationsInput{}, func(page *sns.ListPlatformApplicationsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
 		}
 
-		for _, platformApplication := range output.PlatformApplications {
+		for _, platformApplication := range page.PlatformApplications {
 			arn := aws.StringValue(platformApplication.PlatformApplicationArn)
 
 			log.Printf("[INFO] Deleting SNS Platform Application: %s", arn)
@@ -62,10 +55,15 @@ func testSweepSnsPlatformApplications(region string) error {
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Platform Applications: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
