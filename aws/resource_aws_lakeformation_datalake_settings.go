@@ -15,9 +15,6 @@ func resourceAwsLakeFormationDataLakeSettings() *schema.Resource {
 		Update: resourceAwsLakeFormationDataLakeSettingsPut,
 		Read:   resourceAwsLakeFormationDataLakeSettingsRead,
 		Delete: resourceAwsLakeFormationDataLakeSettingsReset,
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
 
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
