@@ -37,13 +37,14 @@ func dataSourceAwsIotGreengrassServiceRoleRead(d *schema.ResourceData, meta inte
 	roleArn := aws.StringValue(output.RoleArn)
 	associatedAt := aws.StringValue(output.AssociatedAt)
 
-	d.SetId(roleArn)
 	if err := d.Set("role_arn", roleArn); err != nil {
 		return fmt.Errorf("error setting role_arn: %s", err)
 	}
 	if err := d.Set("associated_at", associatedAt); err != nil {
 		return fmt.Errorf("error setting associated_at: %s", err)
 	}
+
+	d.SetId(roleArn)
 
 	return nil
 }
