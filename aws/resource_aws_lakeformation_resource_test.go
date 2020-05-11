@@ -128,7 +128,6 @@ func testAccCheckAWSLakeFormationResourceDeregister(s *terraform.State) error {
 		}
 
 		resourceArn := rs.Primary.Attributes["resource_arn"]
-		fmt.Printf("resourceArn: %s", resourceArn)
 
 		input := &lakeformation.DescribeResourceInput{
 			ResourceArn: aws.String(resourceArn),
