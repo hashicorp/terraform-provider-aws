@@ -258,7 +258,7 @@ The following arguments are supported:
 * `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
 * `warm_enabled` - (Optional) Indicates whether to enable warm storage.
 * `warm_count` - (Optional) The number of warm nodes in the cluster.
-* `warm_enabled` - (Optional) The instance type for the Elasticsearch cluster's warm nodes. Valid values are `ultrawarm1.medium.elasticsearch` and `ultrawarm1.large.elasticsearch`.
+* `warm_type` - (Optional) The instance type for the Elasticsearch cluster's warm nodes. Valid values are `ultrawarm1.medium.elasticsearch` and `ultrawarm1.large.elasticsearch`.
 
 **zone_awareness_config** supports the following attributes:
 
