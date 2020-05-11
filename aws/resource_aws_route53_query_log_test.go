@@ -55,7 +55,9 @@ func testSweepRoute53QueryLogs(region string) error {
 
 		return !isLast
 	})
-	if testSweepSkipSweepError(err) {
+	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
+	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
+	if testSweepSkipSweepError(err) || isAWSErr(err, "SerializationError", "failed to unmarshal error message") || isAWSErr(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
 		log.Printf("[WARN] Skipping Route53 query logging configurations sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
