@@ -8,7 +8,6 @@ import (
 	"sort"
 	"strconv"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 )
 
 func init() {
@@ -62,8 +62,12 @@ func testSweepAutoScalingPlansScalingPlans(region string) error {
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			}
 
-			if err := waitForAutoScalingPlansScalingPlanDeletion(conn, scalingPlanName, scalingPlanVersion, 5*time.Minute); err != nil {
-				sweeperErr := fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be deleted: %w", scalingPlanName, err)
+			_, err = waiter.ScalingPlanDeleted(conn, scalingPlanName, scalingPlanVersion)
+			if isAWSErr(err, autoscalingplans.ErrCodeObjectNotFoundException, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) deletion: %w", scalingPlanName, err)
 				log.Printf("[ERROR] %s", sweeperErr)
 				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 				continue

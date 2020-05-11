@@ -211,15 +211,6 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The scaling plan identifier.
 * `scaling_plan_version` - The version number of the scaling plan. This value is always 1.
 
-## Timeouts
-
-`aws_autoscalingplans_scaling_plan` provides the following
-[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `5 minutes`) Used for creating Auto Scaling scaling plan
-- `update` - (Default `5 minutes`) Used for updating Auto Scaling scaling plan
-- `delete` - (Default `5 minutes`) Used for destroying Auto Scaling scaling plan
-
 ## Import
 
 Auto Scaling scaling plans can be imported using the `name`, e.g.

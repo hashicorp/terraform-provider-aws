@@ -6,18 +6,13 @@ import (
 	"log"
 	"regexp"
 	"sort"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-)
-
-const (
-	autoscalingplansScalingPlanStatusDeleted = "Deleted"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
 )
 
 func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
@@ -28,12 +23,6 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 		Delete: resourceAwsAutoScalingPlansScalingPlanDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsAutoScalingPlansScalingPlanImport,
-		},
-
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(5 * time.Minute),
-			Update: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -386,24 +375,26 @@ func resourceAwsAutoScalingPlansScalingPlanCreate(d *schema.ResourceData, meta i
 	conn := meta.(*AWSClient).autoscalingplansconn
 
 	scalingPlanName := d.Get("name").(string)
-	req := &autoscalingplans.CreateScalingPlanInput{
+
+	input := &autoscalingplans.CreateScalingPlanInput{
 		ApplicationSource:   expandAutoScalingPlansApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandAutoScalingPlansScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 	}
 
-	log.Printf("[DEBUG] Creating Auto Scaling scaling plan: %s", req)
-	resp, err := conn.CreateScalingPlan(req)
+	log.Printf("[DEBUG] Creating Auto Scaling Scaling Plan: %s", input)
+	output, err := conn.CreateScalingPlan(input)
 	if err != nil {
-		return fmt.Errorf("error creating Auto Scaling scaling plan: %s", err)
+		return fmt.Errorf("error creating Auto Scaling Scaling Plan: %w", err)
 	}
 
-	scalingPlanVersion := int(aws.Int64Value(resp.ScalingPlanVersion))
+	scalingPlanVersion := int(aws.Int64Value(output.ScalingPlanVersion))
 	d.SetId(autoScalingPlansScalingPlanId(scalingPlanName, scalingPlanVersion))
 	d.Set("scaling_plan_version", scalingPlanVersion)
 
-	if err := waitForAutoScalingPlansScalingPlanAvailabilityOnCreate(conn, scalingPlanName, scalingPlanVersion, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling scaling plan (%s) to become available: %s", d.Id(), err)
+	_, err = waiter.ScalingPlanCreated(conn, scalingPlanName, scalingPlanVersion)
+	if err != nil {
+		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be created: %w", d.Id(), err)
 	}
 
 	return resourceAwsAutoScalingPlansScalingPlanRead(d, meta)
@@ -415,26 +406,25 @@ func resourceAwsAutoScalingPlansScalingPlanRead(d *schema.ResourceData, meta int
 	scalingPlanName := d.Get("name").(string)
 	scalingPlanVersion := d.Get("scaling_plan_version").(int)
 
-	scalingPlanRaw, state, err := autoScalingPlansScalingPlanRefresh(conn, scalingPlanName, scalingPlanVersion)()
-	if err != nil {
-		return fmt.Errorf("error reading Auto Scaling scaling plan (%s): %s", d.Id(), err)
-	}
-
-	if state == autoscalingplansScalingPlanStatusDeleted {
-		log.Printf("[WARN] Auto Scaling scaling plan (%s) not found, removing from state", d.Id())
+	v, state, err := waiter.ScalingPlanStatus(conn, scalingPlanName, scalingPlanVersion)()
+	if isAWSErr(err, autoscalingplans.ErrCodeObjectNotFoundException, "") || state == waiter.ScalingPlanStatusNotFound {
+		log.Printf("[WARN] Auto Scaling Scaling Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("error reading Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
+	}
 
-	scalingPlan := scalingPlanRaw.(*autoscalingplans.ScalingPlan)
+	scalingPlan := v.(*autoscalingplans.ScalingPlan)
 	err = d.Set("application_source", flattenAutoScalingPlansApplicationSource(scalingPlan.ApplicationSource))
 	if err != nil {
-		return fmt.Errorf("error setting application_source: %s", err)
+		return fmt.Errorf("error setting application_source: %w", err)
 	}
 	d.Set("name", scalingPlan.ScalingPlanName)
 	err = d.Set("scaling_instruction", flattenAutoScalingPlansScalingInstructions(scalingPlan.ScalingInstructions))
 	if err != nil {
-		return fmt.Errorf("error setting application_source: %s", err)
+		return fmt.Errorf("error setting application_source: %w", err)
 	}
 	d.Set("scaling_plan_version", int(aws.Int64Value(scalingPlan.ScalingPlanVersion)))
 
@@ -447,21 +437,22 @@ func resourceAwsAutoScalingPlansScalingPlanUpdate(d *schema.ResourceData, meta i
 	scalingPlanName := d.Get("name").(string)
 	scalingPlanVersion := d.Get("scaling_plan_version").(int)
 
-	req := &autoscalingplans.UpdateScalingPlanInput{
+	input := &autoscalingplans.UpdateScalingPlanInput{
 		ApplicationSource:   expandAutoScalingPlansApplicationSource(d.Get("application_source").([]interface{})),
 		ScalingInstructions: expandAutoScalingPlansScalingInstructions(d.Get("scaling_instruction").(*schema.Set)),
 		ScalingPlanName:     aws.String(scalingPlanName),
 		ScalingPlanVersion:  aws.Int64(int64(scalingPlanVersion)),
 	}
 
-	log.Printf("[DEBUG] Updating Auto Scaling scaling plan: %s", req)
-	_, err := conn.UpdateScalingPlan(req)
+	log.Printf("[DEBUG] Updating Auto Scaling Scaling Plan: %s", input)
+	_, err := conn.UpdateScalingPlan(input)
 	if err != nil {
-		return fmt.Errorf("error updating Auto Scaling scaling plan (%s): %s", d.Id(), err)
+		return fmt.Errorf("error updating Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForAutoScalingPlansScalingPlanAvailabilityOnUpdate(conn, scalingPlanName, scalingPlanVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling scaling plan (%s) to become available: %s", d.Id(), err)
+	_, err = waiter.ScalingPlanUpdated(conn, scalingPlanName, scalingPlanVersion)
+	if err != nil {
+		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be updated: %w", d.Id(), err)
 	}
 
 	return resourceAwsAutoScalingPlansScalingPlanRead(d, meta)
@@ -473,7 +464,7 @@ func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta i
 	scalingPlanName := d.Get("name").(string)
 	scalingPlanVersion := d.Get("scaling_plan_version").(int)
 
-	log.Printf("[DEBUG] Deleting Auto Scaling scaling plan: %s", d.Id())
+	log.Printf("[DEBUG] Deleting Auto Scaling Scaling Plan: %s", d.Id())
 	_, err := conn.DeleteScalingPlan(&autoscalingplans.DeleteScalingPlanInput{
 		ScalingPlanName:    aws.String(scalingPlanName),
 		ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
@@ -482,11 +473,15 @@ func resourceAwsAutoScalingPlansScalingPlanDelete(d *schema.ResourceData, meta i
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting Auto Scaling scaling plan (%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting Auto Scaling Scaling Plan (%s): %w", d.Id(), err)
 	}
 
-	if err := waitForAutoScalingPlansScalingPlanDeletion(conn, scalingPlanName, scalingPlanVersion, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Auto Scaling scaling plan (%s) to be deleted: %s", d.Id(), err)
+	_, err = waiter.ScalingPlanDeleted(conn, scalingPlanName, scalingPlanVersion)
+	if isAWSErr(err, autoscalingplans.ErrCodeObjectNotFoundException, "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error waiting for Auto Scaling Scaling Plan (%s) to be deleted: %w", d.Id(), err)
 	}
 
 	return nil
@@ -506,76 +501,6 @@ func resourceAwsAutoScalingPlansScalingPlanImport(d *schema.ResourceData, meta i
 // Terraform resource ID.
 func autoScalingPlansScalingPlanId(scalingPlanName string, scalingPlanVersion int) string {
 	return fmt.Sprintf("%s/%d", scalingPlanName, scalingPlanVersion)
-}
-
-func autoScalingPlansScalingPlanRefresh(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeScalingPlans(&autoscalingplans.DescribeScalingPlansInput{
-			ScalingPlanNames:   aws.StringSlice([]string{scalingPlanName}),
-			ScalingPlanVersion: aws.Int64(int64(scalingPlanVersion)),
-		})
-		if err != nil {
-			return nil, "", err
-		}
-
-		if n := len(resp.ScalingPlans); n == 0 {
-			return "", autoscalingplansScalingPlanStatusDeleted, nil
-		} else if n > 1 {
-			return nil, "", fmt.Errorf("Found %d Auto Scaling scaling plans for %s, expected 1", n, scalingPlanName)
-		}
-
-		scalingPlan := resp.ScalingPlans[0]
-		if statusMessage := aws.StringValue(scalingPlan.StatusMessage); statusMessage != "" {
-			log.Printf("[INFO] Auto Scaling scaling plan (%s) status message: %s", scalingPlanName, statusMessage)
-		}
-
-		return scalingPlan, aws.StringValue(scalingPlan.StatusCode), nil
-	}
-}
-
-func waitForAutoScalingPlansScalingPlanAvailabilityOnCreate(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{autoscalingplans.ScalingPlanStatusCodeCreationInProgress},
-		Target:     []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
-		Refresh:    autoScalingPlansScalingPlanRefresh(conn, scalingPlanName, scalingPlanVersion),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForAutoScalingPlansScalingPlanAvailabilityOnUpdate(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{autoscalingplans.ScalingPlanStatusCodeUpdateInProgress},
-		Target:     []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
-		Refresh:    autoScalingPlansScalingPlanRefresh(conn, scalingPlanName, scalingPlanVersion),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
-}
-
-func waitForAutoScalingPlansScalingPlanDeletion(conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int, timeout time.Duration) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{autoscalingplans.ScalingPlanStatusCodeDeletionInProgress},
-		Target:     []string{autoscalingplansScalingPlanStatusDeleted},
-		Refresh:    autoScalingPlansScalingPlanRefresh(conn, scalingPlanName, scalingPlanVersion),
-		Timeout:    timeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 5 * time.Second,
-	}
-
-	_, err := stateConf.WaitForState()
-
-	return err
 }
 
 //
