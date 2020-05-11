@@ -1,31 +1,40 @@
 package aws
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAWSIotGreengrassServiceRoleDataSource_basic(t *testing.T) {
+func TestAccAWSIotGreengrassServiceRoleDataSource(t *testing.T) {
 	dataSourceName := "data.aws_iot_greengrass_service_role.test"
+	resourceName := "aws_iam_role.greengrass_service_role"
+	rInt := acctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:                  func() { testAccPreCheck(t) },
+		Providers:                 testAccProviders,
+		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIotGreengrassServiceRoleConfig,
+				Config: testAccAWSIotGreengrassServiceRoleConfigResources(rInt),
+			},
+			{
+				Config: testAccAWSIotGreengrassServiceRoleConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "role_arn", "arn_of_some_service_role"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "role_arn", resourceName, "arn"),
 				),
 			},
 		},
 	})
 }
 
-const testAccAWSIotGreengrassServiceRoleConfig = `
+func testAccAWSIotGreengrassServiceRoleConfigResources(rInt int) string {
+	return fmt.Sprintf(`
 resource "aws_iam_role" "greengrass_service_role" {
-  name = "greengrass_service_role"
+  name = "greengrass_service_role_test_%[1]d"
   assume_role_policy = <<EOF
 {
 "Version": "2012-10-17",
@@ -42,5 +51,16 @@ resource "aws_iam_role" "greengrass_service_role" {
 EOF
 }
 
+resource "aws_iot_greengrass_service_role" "test" {
+	role_arn    = aws_iam_role.greengrass_service_role.arn
+}
+`, rInt)
+}
+
+func testAccAWSIotGreengrassServiceRoleConfig(rInt int) string {
+	return fmt.Sprintf(`
+%s
+
 data "aws_iot_greengrass_service_role" "test" {}
-`
+`, testAccAWSIotGreengrassServiceRoleConfigResources(rInt))
+}
