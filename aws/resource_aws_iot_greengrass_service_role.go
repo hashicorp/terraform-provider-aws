@@ -12,7 +12,6 @@ func resourceAwsIotGreengrassServiceRole() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsIotGreengrassServiceRoleCreate,
 		Read:   resourceAwsIotGreengrassServiceRoleRead,
-		Update: resourceAwsIotGreengrassServiceRoleUpdate,
 		Delete: resourceAwsIotGreengrassServiceRoleDelete,
 		Schema: map[string]*schema.Schema{
 			"associated_at": {
@@ -22,6 +21,7 @@ func resourceAwsIotGreengrassServiceRole() *schema.Resource {
 			"role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
@@ -69,27 +69,6 @@ func resourceAwsIotGreengrassServiceRoleRead(d *schema.ResourceData, meta interf
 	}
 
 	return nil
-}
-
-func resourceAwsIotGreengrassServiceRoleUpdate(d *schema.ResourceData, meta interface{}) error {
-
-	if d.HasChange("role_arn") {
-		conn := meta.(*AWSClient).greengrassconn
-		roleArn := d.Get("role_arn").(string)
-		input := &greengrass.AssociateServiceRoleToAccountInput{
-			RoleArn: aws.String(roleArn),
-		}
-
-		_, err := conn.AssociateServiceRoleToAccount(input)
-
-		if err != nil {
-			return fmt.Errorf("greengrass service role could not be associated with account: %v", err)
-		}
-
-		d.SetId(roleArn)
-	}
-
-	return resourceAwsIotGreengrassServiceRoleRead(d, meta)
 }
 
 func resourceAwsIotGreengrassServiceRoleDelete(d *schema.ResourceData, meta interface{}) error {
