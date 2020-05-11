@@ -572,13 +572,12 @@ resource "aws_apigatewayv2_integration" "test" {
   api_id           = "${aws_apigatewayv2_api.test.id}"
   integration_type = "AWS"
 
-  connection_type               = "INTERNET"
-  content_handling_strategy     = "CONVERT_TO_TEXT"
-  credentials_arn               = "${data.aws_caller_identity.current.arn}"
-  description                   = "Test Lambda"
-  integration_method            = "POST"
-  integration_uri               = "${aws_lambda_function.test.invoke_arn}"
-  passthrough_behavior          = "WHEN_NO_MATCH"
+  connection_type           = "INTERNET"
+  content_handling_strategy = "CONVERT_TO_TEXT"
+  credentials_arn           = "${data.aws_caller_identity.current.arn}"
+  description               = "Test Lambda"
+  integration_uri           = "${aws_lambda_function.test.invoke_arn}"
+  passthrough_behavior      = "WHEN_NO_MATCH"
 }
 `, rName)
 }

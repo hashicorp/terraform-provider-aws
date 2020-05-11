@@ -62,6 +62,14 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateHTTPMethod(),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// Default HTTP method for Lambda integration is POST.
+					if v := d.Get("integration_type").(string); (v == apigatewayv2.IntegrationTypeAws || v == apigatewayv2.IntegrationTypeAwsProxy) && old == "POST" && new == "" {
+						return true
+					}
+
+					return false
+				},
 			},
 			"integration_response_selection_expression": {
 				Type:     schema.TypeString,
