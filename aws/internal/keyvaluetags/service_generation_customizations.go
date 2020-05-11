@@ -465,6 +465,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "ResourceTags.Tags"
 	case "neptune":
 		return "TagList"
+	case "networkmanager":
+		return "TagList"
 	case "pinpoint":
 		return "TagsModel.Tags"
 	case "rds":
