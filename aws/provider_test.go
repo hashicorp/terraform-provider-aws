@@ -692,6 +692,10 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "InvalidAction", "is not valid") {
 		return true
 	}
+	// For example from GovCloud SES.SetActiveReceiptRuleSet.
+	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
 	return false
 }
 
