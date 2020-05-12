@@ -1,3 +1,40 @@
+# v0.6.0
+
+ENHANCEMENTS
+
+* check: Add `-ignore-file-mismatch-data-sources` option
+* check: Add `-ignore-file-mismatch-resources` option
+* check: Add `-ignore-file-missing-data-sources` option
+* check: Add `-ignore-file-missing-resources` option
+
+# v0.5.3
+
+BUG FIXES
+
+* check: Prevent additional errors when `docs/` contains files outside Terraform Provider documentation
+
+# v0.5.2
+
+BUG FIXES
+
+* check: Prevent `mixed Terraform Provider documentation directory layouts found` error when using `website/docs` and `docs/` contains files outside Terraform Provider documentation
+
+# v0.5.1
+
+Released without changes.
+
+# v0.5.0
+
+ENHANCEMENTS
+
+* check: Verify sidebar navigation for missing links and mismatched link text (if legacy directory structure)
+
+# v0.4.1
+
+BUG FIXES
+
+* check: Only verify valid file extensions at end of path (e.g. support additional periods in guide paths) (#25)
+
 # v0.4.0
 
 ENHANCEMENTS

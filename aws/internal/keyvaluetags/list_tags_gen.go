@@ -8,11 +8,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/acm"
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/backup"
+	"github.com/aws/aws-sdk-go/service/cloud9"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -21,6 +24,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/aws/aws-sdk-go/service/codestarnotifications"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
@@ -41,9 +45,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
+	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/aws/aws-sdk-go/service/firehose"
 	"github.com/aws/aws-sdk-go/service/fsx"
+	"github.com/aws/aws-sdk-go/service/gamelift"
+	"github.com/aws/aws-sdk-go/service/glacier"
+	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/aws/aws-sdk-go/service/greengrass"
 	"github.com/aws/aws-sdk-go/service/guardduty"
@@ -53,8 +61,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/iotanalytics"
 	"github.com/aws/aws-sdk-go/service/iotevents"
 	"github.com/aws/aws-sdk-go/service/kafka"
+	"github.com/aws/aws-sdk-go/service/kinesis"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
+	"github.com/aws/aws-sdk-go/service/kinesisvideo"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
@@ -67,7 +77,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/neptune"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -155,6 +167,23 @@ func AmplifyListTags(conn *amplify.Amplify, identifier string) (KeyValueTags, er
 	return AmplifyKeyValueTags(output.Tags), nil
 }
 
+// Apigatewayv2ListTags lists apigatewayv2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Apigatewayv2ListTags(conn *apigatewayv2.ApiGatewayV2, identifier string) (KeyValueTags, error) {
+	input := &apigatewayv2.GetTagsInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.GetTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Apigatewayv2KeyValueTags(output.Tags), nil
+}
+
 // AppmeshListTags lists appmesh service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -238,6 +267,40 @@ func BackupListTags(conn *backup.Backup, identifier string) (KeyValueTags, error
 	}
 
 	return BackupKeyValueTags(output.Tags), nil
+}
+
+// Cloud9ListTags lists cloud9 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Cloud9ListTags(conn *cloud9.Cloud9, identifier string) (KeyValueTags, error) {
+	input := &cloud9.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Cloud9KeyValueTags(output.Tags), nil
+}
+
+// CloudfrontListTags lists cloudfront service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CloudfrontListTags(conn *cloudfront.CloudFront, identifier string) (KeyValueTags, error) {
+	input := &cloudfront.ListTagsForResourceInput{
+		Resource: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CloudfrontKeyValueTags(output.Tags.Items), nil
 }
 
 // Cloudhsmv2ListTags lists cloudhsmv2 service tags.
@@ -374,6 +437,23 @@ func CodepipelineListTags(conn *codepipeline.CodePipeline, identifier string) (K
 	}
 
 	return CodepipelineKeyValueTags(output.Tags), nil
+}
+
+// CodestarnotificationsListTags lists codestarnotifications service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func CodestarnotificationsListTags(conn *codestarnotifications.CodeStarNotifications, identifier string) (KeyValueTags, error) {
+	input := &codestarnotifications.ListTagsForResourceInput{
+		Arn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return CodestarnotificationsKeyValueTags(output.Tags), nil
 }
 
 // CognitoidentityListTags lists cognitoidentity service tags.
@@ -716,6 +796,23 @@ func ElasticsearchserviceListTags(conn *elasticsearchservice.ElasticsearchServic
 	return ElasticsearchserviceKeyValueTags(output.TagList), nil
 }
 
+// ElbListTags lists elb service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ElbListTags(conn *elb.ELB, identifier string) (KeyValueTags, error) {
+	input := &elb.DescribeTagsInput{
+		LoadBalancerNames: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ElbKeyValueTags(output.TagDescriptions[0].Tags), nil
+}
+
 // Elbv2ListTags lists elbv2 service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -765,6 +862,57 @@ func FsxListTags(conn *fsx.FSx, identifier string) (KeyValueTags, error) {
 	}
 
 	return FsxKeyValueTags(output.Tags), nil
+}
+
+// GameliftListTags lists gamelift service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GameliftListTags(conn *gamelift.GameLift, identifier string) (KeyValueTags, error) {
+	input := &gamelift.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GameliftKeyValueTags(output.Tags), nil
+}
+
+// GlacierListTags lists glacier service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlacierListTags(conn *glacier.Glacier, identifier string) (KeyValueTags, error) {
+	input := &glacier.ListTagsForVaultInput{
+		VaultName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForVault(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GlacierKeyValueTags(output.Tags), nil
+}
+
+// GlobalacceleratorListTags lists globalaccelerator service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func GlobalacceleratorListTags(conn *globalaccelerator.GlobalAccelerator, identifier string) (KeyValueTags, error) {
+	input := &globalaccelerator.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return GlobalacceleratorKeyValueTags(output.Tags), nil
 }
 
 // GlueListTags lists glue service tags.
@@ -920,6 +1068,23 @@ func KafkaListTags(conn *kafka.Kafka, identifier string) (KeyValueTags, error) {
 	return KafkaKeyValueTags(output.Tags), nil
 }
 
+// KinesisListTags lists kinesis service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisListTags(conn *kinesis.Kinesis, identifier string) (KeyValueTags, error) {
+	input := &kinesis.ListTagsForStreamInput{
+		StreamName: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisKeyValueTags(output.Tags), nil
+}
+
 // KinesisanalyticsListTags lists kinesisanalytics service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -952,6 +1117,23 @@ func Kinesisanalyticsv2ListTags(conn *kinesisanalyticsv2.KinesisAnalyticsV2, ide
 	}
 
 	return Kinesisanalyticsv2KeyValueTags(output.Tags), nil
+}
+
+// KinesisvideoListTags lists kinesisvideo service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func KinesisvideoListTags(conn *kinesisvideo.KinesisVideo, identifier string) (KeyValueTags, error) {
+	input := &kinesisvideo.ListTagsForStreamInput{
+		StreamARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForStream(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return KinesisvideoKeyValueTags(output.Tags), nil
 }
 
 // KmsListTags lists kms service tags.
@@ -1158,6 +1340,23 @@ func OrganizationsListTags(conn *organizations.Organizations, identifier string)
 	return OrganizationsKeyValueTags(output.Tags), nil
 }
 
+// PinpointListTags lists pinpoint service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func PinpointListTags(conn *pinpoint.Pinpoint, identifier string) (KeyValueTags, error) {
+	input := &pinpoint.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return PinpointKeyValueTags(output.TagsModel.Tags), nil
+}
+
 // QldbListTags lists qldb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1173,6 +1372,23 @@ func QldbListTags(conn *qldb.QLDB, identifier string) (KeyValueTags, error) {
 	}
 
 	return QldbKeyValueTags(output.Tags), nil
+}
+
+// QuicksightListTags lists quicksight service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func QuicksightListTags(conn *quicksight.QuickSight, identifier string) (KeyValueTags, error) {
+	input := &quicksight.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return QuicksightKeyValueTags(output.Tags), nil
 }
 
 // RdsListTags lists rds service tags.

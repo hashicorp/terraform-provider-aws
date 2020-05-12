@@ -1728,7 +1728,7 @@ func expandFirehoseSchemaConfiguration(l []interface{}) *firehose.SchemaConfigur
 
 func extractProcessingConfiguration(s3 map[string]interface{}) *firehose.ProcessingConfiguration {
 	config := s3["processing_configuration"].([]interface{})
-	if len(config) == 0 {
+	if len(config) == 0 || config[0] == nil {
 		// It is possible to just pass nil here, but this seems to be the
 		// canonical form that AWS uses, and is less likely to produce diffs.
 		return &firehose.ProcessingConfiguration{
@@ -1749,17 +1749,25 @@ func extractProcessors(processingConfigurationProcessors []interface{}) []*fireh
 	processors := []*firehose.Processor{}
 
 	for _, processor := range processingConfigurationProcessors {
-		processors = append(processors, extractProcessor(processor.(map[string]interface{})))
+		extractedProcessor := extractProcessor(processor.(map[string]interface{}))
+		if extractedProcessor != nil {
+			processors = append(processors, extractedProcessor)
+		}
 	}
 
 	return processors
 }
 
 func extractProcessor(processingConfigurationProcessor map[string]interface{}) *firehose.Processor {
-	return &firehose.Processor{
-		Type:       aws.String(processingConfigurationProcessor["type"].(string)),
-		Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+	var processor *firehose.Processor
+	processorType := processingConfigurationProcessor["type"].(string)
+	if processorType != "" {
+		processor = &firehose.Processor{
+			Type:       aws.String(processorType),
+			Parameters: extractProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+		}
 	}
+	return processor
 }
 
 func extractProcessorParameters(processorParameters []interface{}) []*firehose.ProcessorParameter {
@@ -2348,6 +2356,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamUpdate(d *schema.ResourceData, meta
 
 func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).firehoseconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sn := d.Get("name").(string)
 	resp, err := conn.DescribeDeliveryStream(&firehose.DescribeDeliveryStreamInput{
@@ -2375,7 +2384,7 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 		return fmt.Errorf("error listing tags for Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

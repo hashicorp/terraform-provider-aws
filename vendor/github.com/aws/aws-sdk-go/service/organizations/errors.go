@@ -2,6 +2,10 @@
 
 package organizations
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAWSOrganizationsNotInUseException for service response error code
@@ -29,13 +33,25 @@ const (
 	// create the required service-linked role. You don't have that permission.
 	ErrCodeAccessDeniedForDependencyException = "AccessDeniedForDependencyException"
 
+	// ErrCodeAccountAlreadyRegisteredException for service response error code
+	// "AccountAlreadyRegisteredException".
+	//
+	// The specified account is already a delegated administrator for this AWS service.
+	ErrCodeAccountAlreadyRegisteredException = "AccountAlreadyRegisteredException"
+
 	// ErrCodeAccountNotFoundException for service response error code
 	// "AccountNotFoundException".
 	//
-	// We can't find an AWS account with the AccountId that you specified. Or the
+	// We can't find an AWS account with the AccountId that you specified, or the
 	// account whose credentials you used to make this request isn't a member of
 	// an organization.
 	ErrCodeAccountNotFoundException = "AccountNotFoundException"
+
+	// ErrCodeAccountNotRegisteredException for service response error code
+	// "AccountNotRegisteredException".
+	//
+	// The specified account is not a delegated administrator for this AWS service.
+	ErrCodeAccountNotRegisteredException = "AccountNotRegisteredException"
 
 	// ErrCodeAccountOwnerNotVerifiedException for service response error code
 	// "AccountOwnerNotVerifiedException".
@@ -70,11 +86,12 @@ const (
 	// ErrCodeConstraintViolationException for service response error code
 	// "ConstraintViolationException".
 	//
-	// Performing this operation violates a minimum or maximum value limit. Examples
-	// include attempting to remove the last service control policy (SCP) from an
-	// OU or root, or attaching too many policies to an account, OU, or root. This
-	// exception includes a reason that contains additional information about the
-	// violated limit.
+	// Performing this operation violates a minimum or maximum value limit. For
+	// example, attempting to remove the last service control policy (SCP) from
+	// an OU or root, inviting or creating too many accounts to the organization,
+	// or attaching too many policies to an account, OU, or root. This exception
+	// includes a reason that contains additional information about the violated
+	// limit.
 	//
 	// Some of the reasons in the following list might not be applicable to this
 	// specific API or operation:
@@ -108,6 +125,15 @@ const (
 	//    try again. If after an hour it continues to fail with this error, contact
 	//    AWS Support (https://console.aws.amazon.com/support/home#/).
 	//
+	//    * CANNOT_REGISTER_MASTER_AS_DELEGATED_ADMINISTRATOR: You can designate
+	//    only a member account as a delegated administrator.
+	//
+	//    * CANNOT_REMOVE_DELEGATED_ADMINISTRATOR_FROM_ORG: To complete this operation,
+	//    you must first deregister this account as a delegated administrator.
+	//
+	//    * DELEGATED_ADMINISTRATOR_EXISTS_FOR_THIS_SERVICE: To complete this operation,
+	//    you must first deregister all delegated administrators for this service.
+	//
 	//    * HANDSHAKE_RATE_LIMIT_EXCEEDED: You attempted to exceed the number of
 	//    handshakes that you can send in one day.
 	//
@@ -134,6 +160,10 @@ const (
 	//    provided (http://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_accounts_remove.html#leave-without-all-info)
 	//    in the AWS Organizations User Guide.
 	//
+	//    * MAX_DELEGATED_ADMINISTRATORS_FOR_SERVICE_LIMIT_EXCEEDED: You attempted
+	//    to register more delegated administrators than allowed for the service
+	//    principal.
+	//
 	//    * MAX_POLICY_TYPE_ATTACHMENT_LIMIT_EXCEEDED: You attempted to exceed the
 	//    number of policies of a certain type that can be attached to an entity
 	//    at one time.
@@ -149,8 +179,8 @@ const (
 	//    in the AWS Organizations User Guide.
 	//
 	//    * MIN_POLICY_TYPE_ATTACHMENT_LIMIT_EXCEEDED: You attempted to detach a
-	//    policy from an entity, which would cause the entity to have fewer than
-	//    the minimum number of policies of the required type.
+	//    policy from an entity that would cause the entity to have fewer than the
+	//    minimum number of policies of a certain type required.
 	//
 	//    * OU_DEPTH_LIMIT_EXCEEDED: You attempted to create an OU tree that is
 	//    too many levels deep.
@@ -170,7 +200,7 @@ const (
 	// ErrCodeCreateAccountStatusNotFoundException for service response error code
 	// "CreateAccountStatusNotFoundException".
 	//
-	// We can't find a create account request with the CreateAccountRequestId that
+	// We can't find an create account request with the CreateAccountRequestId that
 	// you specified.
 	ErrCodeCreateAccountStatusNotFoundException = "CreateAccountStatusNotFoundException"
 
@@ -313,8 +343,6 @@ const (
 	//    * INPUT_REQUIRED: You must include a value for all required parameters.
 	//
 	//    * INVALID_ENUM: You specified an invalid value.
-	//
-	//    * INVALID_ENUM_POLICY_TYPE: You specified an invalid policy type.
 	//
 	//    * INVALID_FULL_NAME_TARGET: You specified a full name that contains invalid
 	//    characters.
@@ -503,3 +531,50 @@ const (
 	// This action isn't available in the current Region.
 	ErrCodeUnsupportedAPIEndpointException = "UnsupportedAPIEndpointException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AWSOrganizationsNotInUseException":              newErrorAWSOrganizationsNotInUseException,
+	"AccessDeniedException":                          newErrorAccessDeniedException,
+	"AccessDeniedForDependencyException":             newErrorAccessDeniedForDependencyException,
+	"AccountAlreadyRegisteredException":              newErrorAccountAlreadyRegisteredException,
+	"AccountNotFoundException":                       newErrorAccountNotFoundException,
+	"AccountNotRegisteredException":                  newErrorAccountNotRegisteredException,
+	"AccountOwnerNotVerifiedException":               newErrorAccountOwnerNotVerifiedException,
+	"AlreadyInOrganizationException":                 newErrorAlreadyInOrganizationException,
+	"ChildNotFoundException":                         newErrorChildNotFoundException,
+	"ConcurrentModificationException":                newErrorConcurrentModificationException,
+	"ConstraintViolationException":                   newErrorConstraintViolationException,
+	"CreateAccountStatusNotFoundException":           newErrorCreateAccountStatusNotFoundException,
+	"DestinationParentNotFoundException":             newErrorDestinationParentNotFoundException,
+	"DuplicateAccountException":                      newErrorDuplicateAccountException,
+	"DuplicateHandshakeException":                    newErrorDuplicateHandshakeException,
+	"DuplicateOrganizationalUnitException":           newErrorDuplicateOrganizationalUnitException,
+	"DuplicatePolicyAttachmentException":             newErrorDuplicatePolicyAttachmentException,
+	"DuplicatePolicyException":                       newErrorDuplicatePolicyException,
+	"EffectivePolicyNotFoundException":               newErrorEffectivePolicyNotFoundException,
+	"FinalizingOrganizationException":                newErrorFinalizingOrganizationException,
+	"HandshakeAlreadyInStateException":               newErrorHandshakeAlreadyInStateException,
+	"HandshakeConstraintViolationException":          newErrorHandshakeConstraintViolationException,
+	"HandshakeNotFoundException":                     newErrorHandshakeNotFoundException,
+	"InvalidHandshakeTransitionException":            newErrorInvalidHandshakeTransitionException,
+	"InvalidInputException":                          newErrorInvalidInputException,
+	"MalformedPolicyDocumentException":               newErrorMalformedPolicyDocumentException,
+	"MasterCannotLeaveOrganizationException":         newErrorMasterCannotLeaveOrganizationException,
+	"OrganizationNotEmptyException":                  newErrorOrganizationNotEmptyException,
+	"OrganizationalUnitNotEmptyException":            newErrorOrganizationalUnitNotEmptyException,
+	"OrganizationalUnitNotFoundException":            newErrorOrganizationalUnitNotFoundException,
+	"ParentNotFoundException":                        newErrorParentNotFoundException,
+	"PolicyChangesInProgressException":               newErrorPolicyChangesInProgressException,
+	"PolicyInUseException":                           newErrorPolicyInUseException,
+	"PolicyNotAttachedException":                     newErrorPolicyNotAttachedException,
+	"PolicyNotFoundException":                        newErrorPolicyNotFoundException,
+	"PolicyTypeAlreadyEnabledException":              newErrorPolicyTypeAlreadyEnabledException,
+	"PolicyTypeNotAvailableForOrganizationException": newErrorPolicyTypeNotAvailableForOrganizationException,
+	"PolicyTypeNotEnabledException":                  newErrorPolicyTypeNotEnabledException,
+	"RootNotFoundException":                          newErrorRootNotFoundException,
+	"ServiceException":                               newErrorServiceException,
+	"SourceParentNotFoundException":                  newErrorSourceParentNotFoundException,
+	"TargetNotFoundException":                        newErrorTargetNotFoundException,
+	"TooManyRequestsException":                       newErrorTooManyRequestsException,
+	"UnsupportedAPIEndpointException":                newErrorUnsupportedAPIEndpointException,
+}

@@ -2,6 +2,10 @@
 
 package directoryservice
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -202,3 +206,37 @@ const (
 	// The user provided a username that does not exist in your directory.
 	ErrCodeUserDoesNotExistException = "UserDoesNotExistException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":                  newErrorAccessDeniedException,
+	"AuthenticationFailedException":          newErrorAuthenticationFailedException,
+	"CertificateAlreadyExistsException":      newErrorCertificateAlreadyExistsException,
+	"CertificateDoesNotExistException":       newErrorCertificateDoesNotExistException,
+	"CertificateInUseException":              newErrorCertificateInUseException,
+	"CertificateLimitExceededException":      newErrorCertificateLimitExceededException,
+	"ClientException":                        newErrorClientException,
+	"DirectoryAlreadySharedException":        newErrorDirectoryAlreadySharedException,
+	"DirectoryDoesNotExistException":         newErrorDirectoryDoesNotExistException,
+	"DirectoryLimitExceededException":        newErrorDirectoryLimitExceededException,
+	"DirectoryNotSharedException":            newErrorDirectoryNotSharedException,
+	"DirectoryUnavailableException":          newErrorDirectoryUnavailableException,
+	"DomainControllerLimitExceededException": newErrorDomainControllerLimitExceededException,
+	"EntityAlreadyExistsException":           newErrorEntityAlreadyExistsException,
+	"EntityDoesNotExistException":            newErrorEntityDoesNotExistException,
+	"InsufficientPermissionsException":       newErrorInsufficientPermissionsException,
+	"InvalidCertificateException":            newErrorInvalidCertificateException,
+	"InvalidLDAPSStatusException":            newErrorInvalidLDAPSStatusException,
+	"InvalidNextTokenException":              newErrorInvalidNextTokenException,
+	"InvalidParameterException":              newErrorInvalidParameterException,
+	"InvalidPasswordException":               newErrorInvalidPasswordException,
+	"InvalidTargetException":                 newErrorInvalidTargetException,
+	"IpRouteLimitExceededException":          newErrorIpRouteLimitExceededException,
+	"NoAvailableCertificateException":        newErrorNoAvailableCertificateException,
+	"OrganizationsException":                 newErrorOrganizationsException,
+	"ServiceException":                       newErrorServiceException,
+	"ShareLimitExceededException":            newErrorShareLimitExceededException,
+	"SnapshotLimitExceededException":         newErrorSnapshotLimitExceededException,
+	"TagLimitExceededException":              newErrorTagLimitExceededException,
+	"UnsupportedOperationException":          newErrorUnsupportedOperationException,
+	"UserDoesNotExistException":              newErrorUserDoesNotExistException,
+}

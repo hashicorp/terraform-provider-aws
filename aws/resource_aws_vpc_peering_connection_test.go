@@ -180,8 +180,9 @@ func TestAccAWSVPCPeeringConnection_tags(t *testing.T) {
 						resourceName,
 						&connection,
 					),
-					testAccCheckTags(&connection.Tags, "Name", rName),
-					testAccCheckTags(&connection.Tags, "test", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.test", "bar"),
 				),
 			},
 			{
@@ -221,8 +222,9 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"auto_accept"},
 
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSVpcPeeringConnectionDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcPeeringConfig_options(rName),

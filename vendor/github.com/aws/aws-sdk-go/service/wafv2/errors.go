@@ -2,6 +2,10 @@
 
 package wafv2
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeWAFAssociatedItemException for service response error code
@@ -25,6 +29,12 @@ const (
 	// of a system problem. Retry your request.
 	ErrCodeWAFInternalErrorException = "WAFInternalErrorException"
 
+	// ErrCodeWAFInvalidOperationException for service response error code
+	// "WAFInvalidOperationException".
+	//
+	// The operation isn't valid.
+	ErrCodeWAFInvalidOperationException = "WAFInvalidOperationException"
+
 	// ErrCodeWAFInvalidParameterException for service response error code
 	// "WAFInvalidParameterException".
 	//
@@ -42,6 +52,28 @@ const (
 	//    * Your request references an ARN that is malformed, or corresponds to
 	//    a resource with which a Web ACL cannot be associated.
 	ErrCodeWAFInvalidParameterException = "WAFInvalidParameterException"
+
+	// ErrCodeWAFInvalidPermissionPolicyException for service response error code
+	// "WAFInvalidPermissionPolicyException".
+	//
+	// The operation failed because the specified policy isn't in the proper format.
+	//
+	// The policy specifications must conform to the following:
+	//
+	//    * The policy must be composed using IAM Policy version 2012-10-17 or version
+	//    2015-01-01.
+	//
+	//    * The policy must include specifications for Effect, Action, and Principal.
+	//
+	//    * Effect must specify Allow.
+	//
+	//    * Action must specify wafv2:CreateWebACL, wafv2:UpdateWebACL, and wafv2:PutFirewallManagerRuleGroups.
+	//    AWS WAF rejects any extra actions or wildcard actions in the policy.
+	//
+	//    * The policy must not include a Resource parameter.
+	//
+	// For more information, see IAM Policies (https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies.html).
+	ErrCodeWAFInvalidPermissionPolicyException = "WAFInvalidPermissionPolicyException"
 
 	// ErrCodeWAFInvalidResourceException for service response error code
 	// "WAFInvalidResourceException".
@@ -88,6 +120,10 @@ const (
 	// time until the role is unlocked.
 	ErrCodeWAFServiceLinkedRoleErrorException = "WAFServiceLinkedRoleErrorException"
 
+	// ErrCodeWAFSubscriptionNotFoundException for service response error code
+	// "WAFSubscriptionNotFoundException".
+	ErrCodeWAFSubscriptionNotFoundException = "WAFSubscriptionNotFoundException"
+
 	// ErrCodeWAFTagOperationException for service response error code
 	// "WAFTagOperationException".
 	//
@@ -107,3 +143,21 @@ const (
 	// AWS WAF couldn’t retrieve the resource that you requested. Retry your request.
 	ErrCodeWAFUnavailableEntityException = "WAFUnavailableEntityException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"WAFAssociatedItemException":            newErrorWAFAssociatedItemException,
+	"WAFDuplicateItemException":             newErrorWAFDuplicateItemException,
+	"WAFInternalErrorException":             newErrorWAFInternalErrorException,
+	"WAFInvalidOperationException":          newErrorWAFInvalidOperationException,
+	"WAFInvalidParameterException":          newErrorWAFInvalidParameterException,
+	"WAFInvalidPermissionPolicyException":   newErrorWAFInvalidPermissionPolicyException,
+	"WAFInvalidResourceException":           newErrorWAFInvalidResourceException,
+	"WAFLimitsExceededException":            newErrorWAFLimitsExceededException,
+	"WAFNonexistentItemException":           newErrorWAFNonexistentItemException,
+	"WAFOptimisticLockException":            newErrorWAFOptimisticLockException,
+	"WAFServiceLinkedRoleErrorException":    newErrorWAFServiceLinkedRoleErrorException,
+	"WAFSubscriptionNotFoundException":      newErrorWAFSubscriptionNotFoundException,
+	"WAFTagOperationException":              newErrorWAFTagOperationException,
+	"WAFTagOperationInternalErrorException": newErrorWAFTagOperationInternalErrorException,
+	"WAFUnavailableEntityException":         newErrorWAFUnavailableEntityException,
+}

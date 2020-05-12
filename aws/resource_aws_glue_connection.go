@@ -32,6 +32,7 @@ func resourceAwsGlueConnection() *schema.Resource {
 				Type:      schema.TypeMap,
 				Required:  true,
 				Sensitive: true,
+				Elem:      &schema.Schema{Type: schema.TypeString},
 			},
 			"connection_type": {
 				Type:     schema.TypeString,
@@ -40,6 +41,8 @@ func resourceAwsGlueConnection() *schema.Resource {
 				ValidateFunc: validation.StringInSlice([]string{
 					glue.ConnectionTypeJdbc,
 					glue.ConnectionTypeSftp,
+					glue.ConnectionTypeMongodb,
+					glue.ConnectionTypeKafka,
 				}, false),
 			},
 			"description": {

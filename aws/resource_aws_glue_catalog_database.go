@@ -17,7 +17,6 @@ func resourceAwsGlueCatalogDatabase() *schema.Resource {
 		Read:   resourceAwsGlueCatalogDatabaseRead,
 		Update: resourceAwsGlueCatalogDatabaseUpdate,
 		Delete: resourceAwsGlueCatalogDatabaseDelete,
-		Exists: resourceAwsGlueCatalogDatabaseExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -173,28 +172,6 @@ func resourceAwsGlueCatalogDatabaseDelete(d *schema.ResourceData, meta interface
 		return fmt.Errorf("Error deleting Glue Catalog Database: %s", err.Error())
 	}
 	return nil
-}
-
-func resourceAwsGlueCatalogDatabaseExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	glueconn := meta.(*AWSClient).glueconn
-	catalogID, name, err := readAwsGlueCatalogID(d.Id())
-	if err != nil {
-		return false, err
-	}
-
-	input := &glue.GetDatabaseInput{
-		CatalogId: aws.String(catalogID),
-		Name:      aws.String(name),
-	}
-
-	_, err = glueconn.GetDatabase(input)
-	if err != nil {
-		if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-			return false, nil
-		}
-		return false, err
-	}
-	return true, nil
 }
 
 func readAwsGlueCatalogID(id string) (catalogID string, name string, err error) {

@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsFsxWindowsFileSystem() *schema.Resource {
@@ -213,7 +214,7 @@ func resourceAwsFsxWindowsFileSystemCreate(d *schema.ResourceData, meta interfac
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapFSX(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().FsxTags()
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -240,8 +241,10 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 	conn := meta.(*AWSClient).fsxconn
 
 	if d.HasChange("tags") {
-		if err := setTagsFSX(conn, d); err != nil {
-			return fmt.Errorf("Error updating tags for FSx filesystem: %s", err)
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.FsxUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating FSx Windows File System (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -284,6 +287,7 @@ func resourceAwsFsxWindowsFileSystemUpdate(d *schema.ResourceData, meta interfac
 
 func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).fsxconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filesystem, err := describeFsxFileSystem(conn, d.Id())
 
@@ -335,7 +339,7 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting subnet_ids: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMapFSX(filesystem.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.FsxKeyValueTags(filesystem.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -407,7 +411,7 @@ func expandFsxSelfManagedActiveDirectoryConfigurationUpdate(l []interface{}) *fs
 
 	data := l[0].(map[string]interface{})
 	req := &fsx.SelfManagedActiveDirectoryConfigurationUpdates{
-		DnsIps:   expandStringList(data["dns_ips"].([]interface{})),
+		DnsIps:   expandStringSet(data["dns_ips"].(*schema.Set)),
 		Password: aws.String(data["password"].(string)),
 		UserName: aws.String(data["username"].(string)),
 	}

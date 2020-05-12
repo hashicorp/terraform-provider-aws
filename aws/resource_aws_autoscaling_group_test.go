@@ -86,9 +86,10 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupConfig(randName),
@@ -380,9 +381,10 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithAZ,
@@ -682,7 +684,7 @@ func TestAccAWSAutoScalingGroup_withMetrics(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "enabled_metrics.#", "7"),
+						"aws_autoscaling_group.bar", "enabled_metrics.#", "13"),
 				),
 			},
 			{
@@ -931,7 +933,14 @@ data "aws_ami" "test" {
 }
 
 data "aws_availability_zones" "available" {
-  state = "available"
+  # t2.micro is not supported in us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_launch_template" "test" {
@@ -986,9 +995,10 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupWithHookConfig(randName),
@@ -2036,9 +2046,9 @@ func TestAccAWSAutoScalingGroup_MixedInstancesPolicy_LaunchTemplate_Override_Wei
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.instance_type", "t2.micro"),
-					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.0.weighted_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.instance_type", "t3.small"),
-					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "mixed_instances_policy.0.launch_template.0.override.1.weighted_capacity", "4"),
 				),
 			},
 			{
@@ -2314,7 +2324,20 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 }
 
+data "aws_availability_zones" "available" {
+  # t2.micro is not supported in us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+   
+
 resource "aws_subnet" "foo" {
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags = {
@@ -2381,7 +2404,6 @@ resource "aws_launch_configuration" "foobar" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${aws_subnet.foo.availability_zone}"]
   vpc_zone_identifier = ["${aws_subnet.foo.id}"]
   max_size = 2
   min_size = 2
@@ -2407,11 +2429,23 @@ resource "aws_internet_gateway" "gw" {
   vpc_id = "${aws_vpc.foo.id}"
 }
 
+data "aws_availability_zones" "available" {
+  # t2.micro is not supported in us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
 resource "aws_subnet" "foo" {
+	availability_zone = "${data.aws_availability_zones.available.names[0]}"
 	cidr_block = "10.1.1.0/24"
 	vpc_id = "${aws_vpc.foo.id}"
 	tags = {
-		Name = "tf-acc-autoscaling-group-with-load-balancer"
+		Name = "tf-acc-autoscaling-group-with-target-group"
 	}
 }
 
@@ -2739,7 +2773,13 @@ resource "aws_autoscaling_group" "bar" {
   	     "GroupDesiredCapacity",
   	     "GroupInServiceInstances",
   	     "GroupMinSize",
-  	     "GroupMaxSize"
+  	     "GroupMaxSize",
+  	     "GroupPendingCapacity",
+  	     "GroupInServiceCapacity",
+  	     "GroupStandbyCapacity",
+  	     "GroupTotalCapacity",
+  	     "GroupTerminatingCapacity",
+  	     "GroupStandbyInstances"
   ]
   metrics_granularity = "1Minute"
 }
@@ -3357,7 +3397,19 @@ resource "aws_vpc" "test" {
   }
 }
 
+data "aws_availability_zones" "available" {
+  # t2.micro is not supported in us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+  
 resource "aws_subnet" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.0.0.0/16"
   tags = {
@@ -3407,7 +3459,14 @@ resource "aws_launch_template" "foobar" {
   instance_type = "t2.micro"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
@@ -3443,7 +3502,14 @@ resource "aws_launch_configuration" "test" {
   instance_type = "t2.micro"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
@@ -3482,7 +3548,14 @@ resource "aws_launch_template" "foobar2" {
   instance_type = "t2.micro"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
@@ -3523,7 +3596,14 @@ resource "aws_launch_template" "foobar2" {
   instance_type = "t2.micro"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_autoscaling_group" "bar" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
@@ -3549,7 +3629,14 @@ data "aws_ami" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_iam_role" "test" {
   assume_role_policy = "{\"Version\":\"2012-10-17\",\"Statement\":[{\"Effect\":\"Allow\",\"Principal\":{\"Service\":[\"ec2.amazonaws.com\"]},\"Action\":[\"sts:AssumeRole\"]}]}"
@@ -3598,7 +3685,14 @@ data "aws_ami" "test" {
 }
 
 data "aws_availability_zones" "available" {
-  state = "available"
+  # t2.micro is not supported in us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_launch_template" "test" {
@@ -3669,7 +3763,14 @@ data "aws_ami" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_launch_template" "test" {
   image_id      = "${data.aws_ami.test.id}"
@@ -3980,9 +4081,9 @@ func testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_LaunchTemplate_Overri
 	return testAccAWSAutoScalingGroupConfig_MixedInstancesPolicy_Base(rName) + fmt.Sprintf(`
 resource "aws_autoscaling_group" "test" {
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
+  desired_capacity   = 4
+  max_size           = 6
+  min_size           = 2
   name               = %q
 
   mixed_instances_policy {
@@ -3993,11 +4094,11 @@ resource "aws_autoscaling_group" "test" {
 
       override {
         instance_type = "t2.micro"
-        weighted_capacity = "1"
+        weighted_capacity = "2"
       }
       override {
         instance_type = "t3.small"
-        weighted_capacity = "2"
+        weighted_capacity = "4"
       }
     }
   }

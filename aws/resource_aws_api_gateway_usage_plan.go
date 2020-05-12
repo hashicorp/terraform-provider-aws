@@ -119,7 +119,7 @@ func resourceAwsApiGatewayUsagePlan() *schema.Resource {
 }
 
 func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Print("[DEBUG] Creating API Gateway Usage Plan")
 
 	params := &apigateway.CreateUsagePlanInput{
@@ -239,7 +239,9 @@ func resourceAwsApiGatewayUsagePlanCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	log.Printf("[DEBUG] Reading API Gateway Usage Plan: %s", d.Id())
 
 	up, err := conn.GetUsagePlan(&apigateway.GetUsagePlanInput{
@@ -254,7 +256,7 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 		return err
 	}
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(up.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(up.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -292,7 +294,7 @@ func resourceAwsApiGatewayUsagePlanRead(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Print("[DEBUG] Updating API Gateway Usage Plan")
 
 	operations := make([]*apigateway.PatchOperation, 0)
@@ -490,7 +492,7 @@ func resourceAwsApiGatewayUsagePlanUpdate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsApiGatewayUsagePlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	// Removing existing api stages associated
 	if apistages, ok := d.GetOk("api_stages"); ok {

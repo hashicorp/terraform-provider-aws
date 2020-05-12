@@ -182,6 +182,36 @@ func TestAccAWSSSMParameter_tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMParameter_updateType(t *testing.T) {
+	var param ssm.Parameter
+	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))
+	resourceName := "aws_ssm_parameter.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMParameterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMParameterBasicConfig(name, "SecureString", "test2"),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"overwrite"},
+			},
+			{
+				Config: testAccAWSSSMParameterBasicConfig(name, "String", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMParameterExists(resourceName, &param),
+					resource.TestCheckResourceAttr(resourceName, "type", "String"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMParameter_updateDescription(t *testing.T) {
 	var param ssm.Parameter
 	name := fmt.Sprintf("%s_%s", t.Name(), acctest.RandString(10))

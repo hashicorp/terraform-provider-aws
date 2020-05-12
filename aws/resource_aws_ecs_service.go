@@ -100,6 +100,10 @@ func resourceAwsEcsService() *schema.Resource {
 				ForceNew: true,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ecs.LaunchTypeEc2,
+					ecs.LaunchTypeFargate,
+				}, false),
 			},
 
 			"platform_version": {
@@ -190,9 +194,10 @@ func resourceAwsEcsService() *schema.Resource {
 						},
 
 						"target_group_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
 						},
 
 						"container_name": {
@@ -202,9 +207,10 @@ func resourceAwsEcsService() *schema.Resource {
 						},
 
 						"container_port": {
-							Type:     schema.TypeInt,
-							Required: true,
-							ForceNew: true,
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(0, 65536),
 						},
 					},
 				},
@@ -247,6 +253,11 @@ func resourceAwsEcsService() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.PlacementStrategyTypeBinpack,
+								ecs.PlacementStrategyTypeRandom,
+								ecs.PlacementStrategyTypeSpread,
+							}, false),
 						},
 						"field": {
 							Type:     schema.TypeString,
@@ -299,6 +310,10 @@ func resourceAwsEcsService() *schema.Resource {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.PlacementConstraintTypeDistinctInstance,
+								ecs.PlacementConstraintTypeMemberOf,
+							}, false),
 						},
 						"expression": {
 							Type:     schema.TypeString,
@@ -512,6 +527,10 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "Unable to assume the service linked role."+
+				" Please verify that the ECS service linked role exists") {
+				return resource.RetryableError(err)
+			}
 			return resource.NonRetryableError(err)
 		}
 
@@ -534,6 +553,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading ECS service %s", d.Id())
 	input := ecs.DescribeServicesInput{
@@ -666,7 +686,7 @@ func resourceAwsEcsServiceRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting service_registries for (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(service.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(service.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

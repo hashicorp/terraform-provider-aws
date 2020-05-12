@@ -7,6 +7,8 @@ import (
 	"go/token"
 	"go/types"
 	"reflect"
+
+	"golang.org/x/tools/internal/analysisinternal"
 )
 
 // An Analyzer describes an analysis function and its options.
@@ -68,6 +70,17 @@ type Analyzer struct {
 }
 
 func (a *Analyzer) String() string { return a.Name }
+
+func init() {
+	// Set the analysisinternal functions to be able to pass type errors
+	// to the Pass type without modifying the go/analysis API.
+	analysisinternal.SetTypeErrors = func(p interface{}, errors []types.Error) {
+		p.(*Pass).typeErrors = errors
+	}
+	analysisinternal.GetTypeErrors = func(p interface{}) []types.Error {
+		return p.(*Pass).typeErrors
+	}
+}
 
 // A Pass provides information to the Run function that
 // applies a specific analyzer to a single Go package.
@@ -138,6 +151,9 @@ type Pass struct {
 	// WARNING: This is an experimental API and may change in the future.
 	AllObjectFacts func() []ObjectFact
 
+	// typeErrors contains types.Errors that are associated with the pkg.
+	typeErrors []types.Error
+
 	/* Further fields may be added in future. */
 	// For example, suggested or applied refactorings.
 }
@@ -163,13 +179,19 @@ func (pass *Pass) Reportf(pos token.Pos, format string, args ...interface{}) {
 	pass.Report(Diagnostic{Pos: pos, Message: msg})
 }
 
-// reportNodef is a helper function that reports a Diagnostic using the
-// range denoted by the AST node.
-//
-// WARNING: This is an experimental API and may change in the future.
-func (pass *Pass) reportNodef(node ast.Node, format string, args ...interface{}) {
+// The Range interface provides a range. It's equivalent to and satisfied by
+// ast.Node.
+type Range interface {
+	Pos() token.Pos // position of first character belonging to the node
+	End() token.Pos // position of first character immediately after the node
+}
+
+// ReportRangef is a helper function that reports a Diagnostic using the
+// range provided. ast.Node values can be passed in as the range because
+// they satisfy the Range interface.
+func (pass *Pass) ReportRangef(rng Range, format string, args ...interface{}) {
 	msg := fmt.Sprintf(format, args...)
-	pass.Report(Diagnostic{Pos: node.Pos(), End: node.End(), Message: msg})
+	pass.Report(Diagnostic{Pos: rng.Pos(), End: rng.End(), Message: msg})
 }
 
 func (pass *Pass) String() string {

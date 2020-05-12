@@ -15,10 +15,11 @@ func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_default_security_group.web",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSDefaultSecurityGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_default_security_group.web",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSDefaultSecurityGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDefaultSecurityGroupConfig,
@@ -27,6 +28,8 @@ func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 					testAccCheckAWSDefaultSecurityGroupAttributes(&group),
 					resource.TestCheckResourceAttr(
 						"aws_default_security_group.web", "name", "default"),
+					resource.TestCheckResourceAttr(
+						"aws_default_security_group.web", "description", "default VPC security group"),
 					resource.TestCheckResourceAttr(
 						"aws_default_security_group.web", "ingress.3629188364.protocol", "tcp"),
 					resource.TestCheckResourceAttr(
@@ -47,10 +50,11 @@ func TestAccAWSDefaultSecurityGroup_classic(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_default_security_group.web",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSDefaultSecurityGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		IDRefreshName:       "aws_default_security_group.web",
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSDefaultSecurityGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDefaultSecurityGroupConfig_classic,

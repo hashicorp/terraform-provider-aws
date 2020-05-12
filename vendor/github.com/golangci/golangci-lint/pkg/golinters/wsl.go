@@ -3,7 +3,7 @@ package golinters
 import (
 	"sync"
 
-	"github.com/bombsimon/wsl"
+	"github.com/bombsimon/wsl/v3"
 	"golang.org/x/tools/go/analysis"
 
 	"github.com/golangci/golangci-lint/pkg/golinters/goanalysis"
@@ -37,13 +37,17 @@ func NewWSL() *goanalysis.Linter {
 				files        = []string{}
 				linterCfg    = lintCtx.Cfg.LintersSettings.WSL
 				processorCfg = wsl.Configuration{
-					StrictAppend:                linterCfg.StrictAppend,
-					AllowAssignAndCallCuddle:    linterCfg.AllowAssignAndCallCuddle,
-					AllowMultiLineAssignCuddle:  linterCfg.AllowMultiLineAssignCuddle,
-					AllowCaseTrailingWhitespace: linterCfg.AllowCaseTrailingWhitespace,
-					AllowCuddleDeclaration:      linterCfg.AllowCuddleDeclaration,
-					AllowCuddleWithCalls:        []string{"Lock", "RLock"},
-					AllowCuddleWithRHS:          []string{"Unlock", "RUnlock"},
+					StrictAppend:                     linterCfg.StrictAppend,
+					AllowAssignAndCallCuddle:         linterCfg.AllowAssignAndCallCuddle,
+					AllowMultiLineAssignCuddle:       linterCfg.AllowMultiLineAssignCuddle,
+					AllowCuddleDeclaration:           linterCfg.AllowCuddleDeclaration,
+					AllowTrailingComment:             linterCfg.AllowTrailingComment,
+					AllowSeparatedLeadingComment:     linterCfg.AllowSeparatedLeadingComment,
+					ForceCuddleErrCheckAndAssign:     linterCfg.ForceCuddleErrCheckAndAssign,
+					ForceCaseTrailingWhitespaceLimit: linterCfg.ForceCaseTrailingWhitespaceLimit,
+					AllowCuddleWithCalls:             []string{"Lock", "RLock"},
+					AllowCuddleWithRHS:               []string{"Unlock", "RUnlock"},
+					ErrorVariableNames:               []string{"err"},
 				}
 			)
 
@@ -62,7 +66,7 @@ func NewWSL() *goanalysis.Linter {
 			defer mu.Unlock()
 
 			for _, err := range wslErrors {
-				issues = append(issues, goanalysis.NewIssue(&result.Issue{ //nolint:scopelint
+				issues = append(issues, goanalysis.NewIssue(&result.Issue{
 					FromLinter: name,
 					Pos:        err.Position,
 					Text:       err.Reason,

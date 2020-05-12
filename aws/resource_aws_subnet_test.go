@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -25,12 +26,13 @@ func init() {
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
-			"aws_beanstalk_environment",
+			"aws_elastic_beanstalk_environment",
 			"aws_cloudhsm_v2_cluster",
 			"aws_db_subnet_group",
 			"aws_directory_service_directory",
 			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
+			"aws_efs_file_system",
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
@@ -146,21 +148,15 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 			{
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						resourceName, &v),
+					testAccCheckSubnetExists(resourceName, &v),
 					testCheck,
 					// ipv6 should be empty if disabled so we can still use the property in conditionals
-					resource.TestCheckResourceAttr(
-						resourceName, "ipv6_cidr_block", ""),
-					resource.TestMatchResourceAttr(
-						resourceName,
-						"arn",
-						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile("subnet/subnet-.+$")),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "availability_zone"),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 				),
 			},
 			{
@@ -191,11 +187,11 @@ func TestAccAWSSubnet_ignoreTags(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTagPrefixes1("ignorekey") + testAccSubnetConfig,
+				Config:   testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccSubnetConfig,
 				PlanOnly: true,
 			},
 			{
-				Config:   testAccProviderConfigIgnoreTags1("ignorekey1") + testAccSubnetConfig,
+				Config:   testAccProviderConfigIgnoreTagsKeys1("ignorekey1") + testAccSubnetConfig,
 				PlanOnly: true,
 			},
 		},
@@ -215,8 +211,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 			{
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						resourceName, &before),
+					testAccCheckSubnetExists(resourceName, &before),
 					testAccCheckAwsSubnetIpv6BeforeUpdate(t, &before),
 				),
 			},
@@ -228,16 +223,14 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 			{
 				Config: testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						resourceName, &after),
+					testAccCheckSubnetExists(resourceName, &after),
 					testAccCheckAwsSubnetIpv6AfterUpdate(t, &after),
 				),
 			},
 			{
 				Config: testAccSubnetConfigIpv6UpdateIpv6Cidr,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						resourceName, &after),
+					testAccCheckSubnetExists(resourceName, &after),
 
 					testAccCheckAwsSubnetNotRecreated(t, &before, &after),
 				),
@@ -259,8 +252,7 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 			{
 				Config: testAccSubnetConfigPreIpv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						resourceName, &subnet),
+					testAccCheckSubnetExists(resourceName, &subnet),
 				),
 			},
 			{
@@ -271,8 +263,7 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 			{
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						resourceName, &subnet),
+					testAccCheckSubnetExists(resourceName, &subnet),
 				),
 			},
 		},
@@ -292,12 +283,45 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 			{
 				Config: testAccSubnetConfigAvailabilityZoneId,
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_id", "usw2-az3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSubnet_outpost(t *testing.T) {
+	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigOutpost(outpostArn),
+				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(
 						resourceName, &v),
-					resource.TestCheckResourceAttrSet(
-						resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(
-						resourceName, "availability_zone_id", "usw2-az3"),
+						resourceName, "outpost_arn", outpostArn),
 				),
 			},
 			{
@@ -529,3 +553,29 @@ resource "aws_subnet" "test" {
   }
 }
 `
+
+func testAccSubnetConfigOutpost(outpostArn string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = "terraform-testacc-subnet-outpost"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.test.id}"
+  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
+  outpost_arn = "%s"
+  tags = {
+    Name = "tf-acc-subnet-outpost"
+  }
+}
+`, outpostArn)
+}

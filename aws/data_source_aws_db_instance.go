@@ -18,7 +18,6 @@ func dataSourceAwsDbInstance() *schema.Resource {
 			"db_instance_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"tags": tagsSchemaComputed(),
@@ -218,6 +217,7 @@ func dataSourceAwsDbInstance() *schema.Resource {
 
 func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	opts := &rds.DescribeDBInstancesInput{
 		DBInstanceIdentifier: aws.String(d.Get("db_instance_identifier").(string)),
@@ -282,6 +282,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("master_username", dbInstance.MasterUsername)
 	d.Set("monitoring_interval", dbInstance.MonitoringInterval)
 	d.Set("monitoring_role_arn", dbInstance.MonitoringRoleArn)
+	d.Set("multi_az", dbInstance.MultiAZ)
 	d.Set("address", dbInstance.Endpoint.Address)
 	d.Set("port", dbInstance.Endpoint.Port)
 	d.Set("hosted_zone_id", dbInstance.Endpoint.HostedZoneId)
@@ -322,7 +323,7 @@ func dataSourceAwsDbInstanceRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error listing tags for RDS DB Instance (%s): %s", d.Get("db_instance_arn").(string), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
