@@ -3032,6 +3032,26 @@ func flattenIoTRuleIotAnalyticsActions(actions []*iot.Action) []map[string]inter
 	return results
 }
 
+func flattenIoTRuleIotEventsActions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.IotEvents
+		if v != nil {
+			result["role_arn"] = aws.StringValue(v.RoleArn)
+			result["input_name"] = aws.StringValue(v.InputName)
+			if v.MessageId != nil {
+				result["message_id"] = aws.StringValue(v.MessageId)
+			}
+
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
 func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
 	m := map[string]interface{}{}
 

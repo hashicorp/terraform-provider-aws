@@ -162,6 +162,13 @@ The `iot_analytics` object takes the following arguments:
 
 * `channel_name` - (Required) Name of AWS IOT Analytics channel.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
+
+The `iot_events` object takes the following arguments:
+
+* `input_name` - (Required) The name of the AWS IoT Events input.
+* `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector. 
+
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
