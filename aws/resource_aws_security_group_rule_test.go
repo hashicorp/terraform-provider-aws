@@ -170,12 +170,6 @@ func TestAccAWSSecurityGroupRule_Ingress_Source_With_Account_Id(t *testing.T) {
 					testAccCheckAWSSecurityGroupRuleExists("aws_security_group.web", &group),
 				),
 			},
-			// Ensure plan shows no difference after state is refreshed
-			{
-				Config:             testAccAWSSecurityGroupRule_Ingress_Source_with_AccountId(rInt),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
-			},
 		},
 	})
 }
