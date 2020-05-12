@@ -7,6 +7,10 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_appsync_resolver: Add `cache_config` configuration block [GH-12747]
+* resource/aws_iot_topic_rule: Add `dynamodbv2` configuration block [GH-7469]
+* resource/aws_iot_topic_rule: Add `iot_analytics` configuration block [GH-9859]
+* resource/aws_iot_topic_rule: Add `iot_events` configuration block [GH-9890]
+* resource/aws_iot_topic_rule: Add `operation` argument to `dynamodb` configuration block [GH-12714]
 
 ## 2.61.0 (May 08, 2020)
 
