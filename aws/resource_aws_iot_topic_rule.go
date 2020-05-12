@@ -442,7 +442,7 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting cloudwatch_alarm: %w", err)
 	}
 
-	if err := d.Set("cloudwatch_metric", flattenIotCloudWatchMetricActions(out.Rule.Actions)); err != nil {
+	if err := d.Set("cloudwatch_metric", flattenIotCloudwatchMetricActions(out.Rule.Actions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_metric: %w", err)
 	}
 
@@ -1113,42 +1113,8 @@ func flattenIotCloudWatchAlarmActions(actions []*iot.Action) []interface{} {
 	return results
 }
 
-func flattenIotCloudwatchMetricAction(apiObject *iot.CloudwatchMetricAction) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := make(map[string]interface{})
-
-	if v := apiObject.MetricName; v != nil {
-		tfMap["metric_name"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.MetricNamespace; v != nil {
-		tfMap["metric_namespace"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.MetricTimestamp; v != nil {
-		tfMap["metric_timestamp"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.MetricUnit; v != nil {
-		tfMap["metric_unit"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.MetricValue; v != nil {
-		tfMap["metric_value"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.RoleArn; v != nil {
-		tfMap["role_arn"] = aws.StringValue(v)
-	}
-
-	return []interface{}{tfMap}
-}
-
 // Legacy root attribute handling
-func flattenIotCloudWatchMetricActions(actions []*iot.Action) []interface{} {
+func flattenIotCloudwatchMetricActions(actions []*iot.Action) []interface{} {
 	results := make([]interface{}, 0)
 
 	for _, action := range actions {
@@ -1164,7 +1130,7 @@ func flattenIotCloudWatchMetricActions(actions []*iot.Action) []interface{} {
 	return results
 }
 
-func flattenIotCloudWatchMetricAction(apiObject *iot.CloudwatchMetricAction) []interface{} {
+func flattenIotCloudwatchMetricAction(apiObject *iot.CloudwatchMetricAction) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
