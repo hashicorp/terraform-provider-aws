@@ -87,28 +87,25 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceIdMap := map[string]string{}
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
-	asgName := fmt.Sprintf("tf-testacc-asg-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	asgResourceId := fmt.Sprintf("autoScalingGroup/%s", asgName)
-	scalingPlanName := fmt.Sprintf("tf-testacc-scalingplan-%s", acctest.RandStringFromCharSet(9, acctest.CharSetAlphaNum))
-	// Application source must be unique across scaling plans.
-	tagKey := fmt.Sprintf("tf-testacc-key-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	tagValue := fmt.Sprintf("tf-testacc-value-%s", acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	asgResourceId := fmt.Sprintf("autoScalingGroup/%s", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAutoScalingPlansScalingPlanDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoScalingPlansScalingPlanConfig_basicDynamicScaling(asgName, scalingPlanName, tagKey, tagValue),
+				Config: testAccAutoScalingPlansScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingPlansScalingPlanExists(resourceName, &scalingPlan, &resourceIdMap),
-					resource.TestCheckResourceAttr(resourceName, "name", scalingPlanName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
 					testAccCheckAutoScalingPlansApplicationSourceTags(&scalingPlan, map[string][]string{
-						tagKey: {tagValue},
+						rName: {rName},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					testAccCheckAutoScalingPlansScalingPlanAttr(resourceName, &resourceIdMap, asgResourceId, "customized_load_metric_specification.#", "0"),
@@ -139,7 +136,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicDynamicScaling(t *testing.T) {
 			{
 				ResourceName: resourceName,
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					return scalingPlanName, nil
+					return rName, nil
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -152,28 +149,25 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceIdMap := map[string]string{}
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
-	asgName := fmt.Sprintf("tf-testacc-asg-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	asgResourceId := fmt.Sprintf("autoScalingGroup/%s", asgName)
-	scalingPlanName := fmt.Sprintf("tf-testacc-scalingplan-%s", acctest.RandStringFromCharSet(9, acctest.CharSetAlphaNum))
-	// Application source must be unique across scaling plans.
-	tagKey := fmt.Sprintf("tf-testacc-key-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	tagValue := fmt.Sprintf("tf-testacc-value-%s", acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	asgResourceId := fmt.Sprintf("autoScalingGroup/%s", rName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAutoScalingPlansScalingPlanDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoScalingPlansScalingPlanConfig_basicPredictiveScaling(asgName, scalingPlanName, tagKey, tagValue),
+				Config: testAccAutoScalingPlansScalingPlanConfig_basicPredictiveScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingPlansScalingPlanExists(resourceName, &scalingPlan, &resourceIdMap),
-					resource.TestCheckResourceAttr(resourceName, "name", scalingPlanName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
 					testAccCheckAutoScalingPlansApplicationSourceTags(&scalingPlan, map[string][]string{
-						tagKey: {tagValue},
+						rName: {rName},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					testAccCheckAutoScalingPlansScalingPlanAttr(resourceName, &resourceIdMap, asgResourceId, "customized_load_metric_specification.#", "0"),
@@ -206,7 +200,7 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicPredictiveScaling(t *testing.T) 
 			{
 				ResourceName: resourceName,
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					return scalingPlanName, nil
+					return rName, nil
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -219,30 +213,26 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 	var scalingPlan autoscalingplans.ScalingPlan
 	resourceIdMap := map[string]string{}
 	resourceName := "aws_autoscalingplans_scaling_plan.test"
-	asgName := fmt.Sprintf("tf-testacc-asg-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	asgResourceId := fmt.Sprintf("autoScalingGroup/%s", asgName)
-	scalingPlanName := fmt.Sprintf("tf-testacc-scalingplan-%s", acctest.RandStringFromCharSet(9, acctest.CharSetAlphaNum))
-	// Application source must be unique across scaling plans.
-	tagKey1 := fmt.Sprintf("tf-testacc-key-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	tagValue1 := fmt.Sprintf("tf-testacc-value-%s", acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum))
-	tagKey2 := fmt.Sprintf("tf-testacc-key-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
-	tagValue2 := fmt.Sprintf("tf-testacc-value-%s", acctest.RandStringFromCharSet(15, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	asgResourceId := fmt.Sprintf("autoScalingGroup/%s", rName)
+	rNameUpdated := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAutoScalingPlansScalingPlanDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAutoScalingPlansScalingPlanConfig_basicDynamicScaling(asgName, scalingPlanName, tagKey1, tagValue1),
+				Config: testAccAutoScalingPlansScalingPlanConfig_basicDynamicScaling(rName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingPlansScalingPlanExists(resourceName, &scalingPlan, &resourceIdMap),
-					resource.TestCheckResourceAttr(resourceName, "name", scalingPlanName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
 					testAccCheckAutoScalingPlansApplicationSourceTags(&scalingPlan, map[string][]string{
-						tagKey1: {tagValue1},
+						rName: {rName},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					testAccCheckAutoScalingPlansScalingPlanAttr(resourceName, &resourceIdMap, asgResourceId, "customized_load_metric_specification.#", "0"),
@@ -271,15 +261,15 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAutoScalingPlansScalingPlanConfig_basicPredictiveScaling(asgName, scalingPlanName, tagKey2, tagValue2),
+				Config: testAccAutoScalingPlansScalingPlanConfig_basicPredictiveScaling(rName, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAutoScalingPlansScalingPlanExists(resourceName, &scalingPlan, &resourceIdMap),
-					resource.TestCheckResourceAttr(resourceName, "name", scalingPlanName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "scaling_plan_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_source.0.cloudformation_stack_arn", ""),
 					testAccCheckAutoScalingPlansApplicationSourceTags(&scalingPlan, map[string][]string{
-						tagKey2: {tagValue2},
+						rNameUpdated: {rNameUpdated},
 					}),
 					resource.TestCheckResourceAttr(resourceName, "scaling_instruction.#", "1"),
 					testAccCheckAutoScalingPlansScalingPlanAttr(resourceName, &resourceIdMap, asgResourceId, "customized_load_metric_specification.#", "0"),
@@ -312,10 +302,33 @@ func TestAccAwsAutoScalingPlansScalingPlan_basicUpdate(t *testing.T) {
 			{
 				ResourceName: resourceName,
 				ImportStateIdFunc: func(s *terraform.State) (string, error) {
-					return scalingPlanName, nil
+					return rName, nil
 				},
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsAutoScalingPlansScalingPlan_disappears(t *testing.T) {
+	var scalingPlan autoscalingplans.ScalingPlan
+	resourceIdMap := map[string]string{}
+	resourceName := "aws_autoscalingplans_scaling_plan.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAutoScalingPlansScalingPlanDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAutoScalingPlansScalingPlanConfig_basicDynamicScaling(rName, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAutoScalingPlansScalingPlanExists(resourceName, &scalingPlan, &resourceIdMap),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsAutoScalingPlansScalingPlan(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -421,21 +434,14 @@ func testAccCheckAutoScalingPlansScalingPlanAttr(name string, resourceIdMap *map
 	}
 }
 
-func testAccAutoScalingPlansScalingPlanConfig_asg(asgName, tagKey, tagValue string) string {
-	return fmt.Sprintf(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-hvm-*-x86_64-gp2"]
-  }
-}
-
+func testAccAutoScalingPlansScalingPlanConfig_asg(rName, tagName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  image_id      = "${data.aws_ami.test.id}"
-  instance_type = "t2.micro"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 
 data "aws_availability_zones" "available" {}
@@ -443,8 +449,8 @@ data "aws_availability_zones" "available" {}
 resource "aws_autoscaling_group" "test" {
   name = %[1]q
 
-  launch_configuration = "${aws_launch_configuration.test.name}"
-  availability_zones   = ["${data.aws_availability_zones.available.names[0]}"]
+  launch_configuration = aws_launch_configuration.test.name
+  availability_zones   = [data.aws_availability_zones.available.names[0]]
 
   min_size         = 0
   max_size         = 3
@@ -453,30 +459,31 @@ resource "aws_autoscaling_group" "test" {
   tags = [
     {
       key                 = %[2]q
-      value               = %[3]q
+      value               = %[2]q
       propagate_at_launch = true
     },
   ]
 }
-`, asgName, tagKey, tagValue)
+`, rName, tagName))
 }
 
-func testAccAutoScalingPlansScalingPlanConfig_basicDynamicScaling(asgName, scalingPlanName, tagKey, tagValue string) string {
-	return testAccAutoScalingPlansScalingPlanConfig_asg(asgName, tagKey, tagValue) + fmt.Sprintf(`
+func testAccAutoScalingPlansScalingPlanConfig_basicDynamicScaling(rName, tagName string) string {
+	return composeConfig(
+		testAccAutoScalingPlansScalingPlanConfig_asg(rName, tagName) + fmt.Sprintf(`
 resource "aws_autoscalingplans_scaling_plan" "test" {
   name = %[1]q
 
   application_source {
     tag_filter {
       key    = %[2]q
-      values = [%[3]q]
+      values = [%[2]q]
     }
   }
 
   scaling_instruction {
-    max_capacity       = "${aws_autoscaling_group.test.max_size}"
-    min_capacity       = "${aws_autoscaling_group.test.min_size}"
-    resource_id        = "${format("autoScalingGroup/%%s", aws_autoscaling_group.test.name)}"
+    max_capacity       = aws_autoscaling_group.test.max_size
+    min_capacity       = aws_autoscaling_group.test.min_size
+    resource_id        = format("autoScalingGroup/%%s", aws_autoscaling_group.test.name)
     scalable_dimension = "autoscaling:autoScalingGroup:DesiredCapacity"
     service_namespace  = "autoscaling"
 
@@ -489,27 +496,28 @@ resource "aws_autoscalingplans_scaling_plan" "test" {
     }
   }
 }
-`, scalingPlanName, tagKey, tagValue)
+`, rName, tagName))
 }
 
-func testAccAutoScalingPlansScalingPlanConfig_basicPredictiveScaling(asgName, scalingPlanName, tagKey, tagValue string) string {
-	return testAccAutoScalingPlansScalingPlanConfig_asg(asgName, tagKey, tagValue) + fmt.Sprintf(`
+func testAccAutoScalingPlansScalingPlanConfig_basicPredictiveScaling(rName, tagName string) string {
+	return composeConfig(
+		testAccAutoScalingPlansScalingPlanConfig_asg(rName, tagName) + fmt.Sprintf(`
 resource "aws_autoscalingplans_scaling_plan" "test" {
   name = %[1]q
 
   application_source {
     tag_filter {
       key    = %[2]q
-      values = [%[3]q]
+      values = [%[2]q]
     }
   }
 
   scaling_instruction {
     disable_dynamic_scaling = true
 
-    max_capacity       = "${aws_autoscaling_group.test.max_size}"
-    min_capacity       = "${aws_autoscaling_group.test.min_size}"
-    resource_id        = "${format("autoScalingGroup/%%s", aws_autoscaling_group.test.name)}"
+    max_capacity       = aws_autoscaling_group.test.max_size
+    min_capacity       = aws_autoscaling_group.test.min_size
+    resource_id        = format("autoScalingGroup/%%s", aws_autoscaling_group.test.name)
     scalable_dimension = "autoscaling:autoScalingGroup:DesiredCapacity"
     service_namespace  = "autoscaling"
 
@@ -529,5 +537,5 @@ resource "aws_autoscalingplans_scaling_plan" "test" {
     }
   }
 }
-`, scalingPlanName, tagKey, tagValue)
+`, rName, tagName))
 }
