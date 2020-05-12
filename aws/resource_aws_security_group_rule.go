@@ -763,9 +763,9 @@ func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPe
 				sgIdComponents := strings.Split(existingSourceSgId.(string), "/")
 				hasAccountIdPrefix := len(sgIdComponents) == 2
 
-				if hasAccountIdPrefix {
-					// then ensure on refresh that we prefix the account id
-					d.Set("source_security_group_id", *s.UserId+"/"+*s.GroupId)
+				if hasAccountIdPrefix && s.UserId != nil {
+					// then ensure on refresh that we preserve the account id prefix
+					d.Set("source_security_group_id", fmt.Sprintf("%s/%s", aws.StringValue(s.UserId), aws.StringValue(s.GroupId)))
 				} else {
 					d.Set("source_security_group_id", s.GroupId)
 				}
