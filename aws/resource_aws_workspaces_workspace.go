@@ -326,10 +326,10 @@ func workspaceDelete(id string, conn *workspaces.WorkSpaces) error {
 			workspaces.WorkspaceStateUpdating,
 			workspaces.WorkspaceStateStopping,
 			workspaces.WorkspaceStateStopped,
+			workspaces.WorkspaceStateTerminating,
 			workspaces.WorkspaceStateError,
 		},
 		Target: []string{
-			workspaces.WorkspaceStateTerminating,
 			workspaces.WorkspaceStateTerminated,
 		},
 		Refresh:      workspaceRefreshStateFunc(conn, id),
@@ -425,7 +425,7 @@ func workspaceRefreshStateFunc(conn *workspaces.WorkSpaces, workspaceID string) 
 			return nil, workspaces.WorkspaceStateError, err
 		}
 		if len(resp.Workspaces) == 0 {
-			return resp, workspaces.WorkspaceStateTerminated, nil
+			return nil, workspaces.WorkspaceStateTerminated, nil
 		}
 		workspace := resp.Workspaces[0]
 		return workspace, aws.StringValue(workspace.State), nil

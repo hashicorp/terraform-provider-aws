@@ -265,86 +265,34 @@ func testAccCheckAwsWorkspacesWorkspaceExists(n string) resource.TestCheckFunc {
 }
 
 func testAccAwsWorkspacesWorkspaceConfig_Prerequisites() string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
-locals {
-  region_workspaces_az_ids = {
-    "us-east-1" = formatlist("use1-az%%d", [2, 4, 6])
-  }
-
-  workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)
-}
-
-data "aws_vpc" "default" {
-  default = true
-}
-
-data "aws_subnet" "default" {
-  count = length(local.workspaces_az_ids)
-  availability_zone_id = "${local.workspaces_az_ids[count.index]}"
-  default_for_az = true
-}
-
-resource "aws_directory_service_directory" "test" {
-  size = "Small"
-  name = "tf-acctest.neverland.com"
-  password = "#S1ncerely"
-
-  vpc_settings {
-    vpc_id = "${data.aws_vpc.default.id}"
-	subnet_ids = ["${data.aws_subnet.default.*.id[0]}", "${data.aws_subnet.default.*.id[1]}"]
-  }
-}
-
-data "aws_iam_policy_document" "workspaces" {
-  statement {
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["workspaces.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "workspaces-default" {
-  name               = "workspaces_DefaultRole"
-  assume_role_policy = data.aws_iam_policy_document.workspaces.json
-}
-
-resource "aws_iam_role_policy_attachment" "workspaces-default-service-access" {
-  role       = aws_iam_role.workspaces-default.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess"
-}
-
-resource "aws_iam_role_policy_attachment" "workspaces-default-self-service-access" {
-  role       = aws_iam_role.workspaces-default.name
-  policy_arn = "arn:aws:iam::aws:policy/AmazonWorkSpacesSelfServiceAccess"
-}
-
+	return composeConfig(
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(""),
+		fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
 resource "aws_workspaces_directory" "test" {
- directory_id = "${aws_directory_service_directory.test.id}"
+ directory_id = "${aws_directory_service_directory.main.id}"
 }
-`)
+`))
 }
 
 func testAccWorkspacesWorkspaceConfig() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -352,8 +300,9 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_TagsA() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id  = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
@@ -362,6 +311,12 @@ resource "aws_workspaces_workspace" "test" {
     TerraformProviderAwsTest = true
     Alpha                    = 1
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -369,8 +324,9 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_TagsB() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
@@ -379,6 +335,12 @@ resource "aws_workspaces_workspace" "test" {
     TerraformProviderAwsTest = true
     Beta                     = 2
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -386,8 +348,9 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_TagsC() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
@@ -395,6 +358,12 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -402,8 +371,9 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
@@ -417,6 +387,12 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -424,8 +400,9 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator" 
@@ -438,6 +415,12 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -445,14 +428,21 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
 
   workspace_properties {
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -460,8 +450,9 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator" 
@@ -474,6 +465,12 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
@@ -481,8 +478,9 @@ resource "aws_workspaces_workspace" "test" {
 func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize() string {
 	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
-  bundle_id = "${data.aws_workspaces_bundle.test.id}"
+  bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
+
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator" 
@@ -495,6 +493,12 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }

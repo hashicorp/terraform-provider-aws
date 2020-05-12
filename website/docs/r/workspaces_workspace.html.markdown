@@ -10,6 +10,9 @@ description: |-
 
 Provides a workspace in [AWS Workspaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service
 
+~> **NOTE:** During deletion of an `aws_workspaces_workspace` resource, the service role `workspaces_DefaultRole` must be attached to the
+policy `arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess`, or it will leak the ENI that the Workspaces service creates for the Workspace.
+
 ## Example Usage
 
 ```hcl
