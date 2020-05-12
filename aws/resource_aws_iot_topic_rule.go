@@ -147,6 +147,23 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					},
 				},
 			},
+			"dynamodbv2": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"elasticsearch": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -327,6 +344,7 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	cloudwatchAlarmActions := d.Get("cloudwatch_alarm").(*schema.Set).List()
 	cloudwatchMetricActions := d.Get("cloudwatch_metric").(*schema.Set).List()
 	dynamoDbActions := d.Get("dynamodb").(*schema.Set).List()
+	dynamoDbv2Actions := d.Get("dynamodbv2").(*schema.Set).List()
 	elasticsearchActions := d.Get("elasticsearch").(*schema.Set).List()
 	firehoseActions := d.Get("firehose").(*schema.Set).List()
 	kinesisActions := d.Get("kinesis").(*schema.Set).List()
@@ -337,9 +355,9 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 	sqsActions := d.Get("sqs").(*schema.Set).List()
 
 	numActions := len(cloudwatchAlarmActions) + len(cloudwatchMetricActions) +
-		len(dynamoDbActions) + len(elasticsearchActions) + len(firehoseActions) +
-		len(kinesisActions) + len(lambdaActions) + len(republishActions) +
-		len(s3Actions) + len(snsActions) + len(sqsActions)
+		len(dynamoDbActions) + len(dynamoDbv2Actions) + len(elasticsearchActions) +
+		len(firehoseActions) + len(kinesisActions) + len(lambdaActions) +
+		len(republishActions) + len(s3Actions) + len(snsActions) + len(sqsActions)
 	actions := make([]*iot.Action, numActions)
 
 	i := 0
@@ -401,6 +419,19 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		}
 		if v, ok := raw["payload_field"].(string); ok && v != "" {
 			act.DynamoDB.PayloadField = aws.String(v)
+		}
+		actions[i] = act
+		i++
+	}
+
+	// Add DynamoDBv2 actions
+	for _, a := range dynamoDbv2Actions {
+		raw := a.(map[string]interface{})
+		act := &iot.Action{
+			DynamoDBv2: &iot.DynamoDBv2Action{
+				PutItem: &iot.PutItemInput{TableName: aws.String(raw["table_name"].(string))},
+				RoleArn: aws.String(raw["role_arn"].(string)),
+			},
 		}
 		actions[i] = act
 		i++
@@ -575,6 +606,7 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cloudwatch_alarm", flattenIoTRuleCloudWatchAlarmActions(out.Rule.Actions))
 	d.Set("cloudwatch_metric", flattenIoTRuleCloudWatchMetricActions(out.Rule.Actions))
 	d.Set("dynamodb", flattenIoTRuleDynamoDbActions(out.Rule.Actions))
+	d.Set("dynamodbv2", flattenIoTRuleDynamoDbv2Actions(out.Rule.Actions))
 	d.Set("elasticsearch", flattenIoTRuleElasticSearchActions(out.Rule.Actions))
 	d.Set("firehose", flattenIoTRuleFirehoseActions(out.Rule.Actions))
 	d.Set("kinesis", flattenIoTRuleKinesisActions(out.Rule.Actions))

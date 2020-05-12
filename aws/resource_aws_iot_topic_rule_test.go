@@ -174,6 +174,24 @@ func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
 	})
 }
 
+func TestAccAWSIoTTopicRule_dynamoDbv2(t *testing.T) {
+	rName := acctest.RandString(5)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTTopicRule_dynamoDbv2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
@@ -519,6 +537,27 @@ resource "aws_iot_topic_rule" "rule" {
     metric_value     = "FakeData"
     metric_unit      = "FakeData"
     role_arn         = "${aws_iam_role.iot_role.arn}"
+  }
+}
+`, rName)
+}
+
+func testAccAWSIoTTopicRule_dynamoDbv2(rName string) string {
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+data "aws_region" "current" {
+  current = true
+}
+
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT field as column_name FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  dynamodbv2 {
+    table_name = "${aws_iam_role.iot_role.arn}"
+    role_arn   = "${aws_dynamodb_table.iot_table.arn}"
   }
 }
 `, rName)

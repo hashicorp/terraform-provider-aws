@@ -105,6 +105,11 @@ The `dynamodb` object takes the following arguments:
 * `role_arn` - (Required) The ARN of the IAM role that grants access to the DynamoDB table.
 * `table_name` - (Required) The name of the DynamoDB table.
 
+The `dynamodbv2` object takes the following arguments:
+
+* `role_arn` - (Required) The ARN of the IAM role that grants access to the DynamoDB table.
+* `table_name` - (Required) The name of the DynamoDB table.
+
 The `elasticsearch` object takes the following arguments:
 
 * `endpoint` - (Required) The endpoint of your Elasticsearch domain.

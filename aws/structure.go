@@ -2853,6 +2853,22 @@ func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface
 	return items
 }
 
+func flattenIoTRuleDynamoDbv2Actions(actions []*iot.Action) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0)
+
+	for _, a := range actions {
+		result := make(map[string]interface{})
+		v := a.DynamoDBv2
+		if v != nil {
+			result["role_arn"] = *v.RoleArn
+			result["table_name"] = *v.PutItem
+			results = append(results, result)
+		}
+	}
+
+	return results
+}
+
 func flattenIoTRuleElasticSearchActions(actions []*iot.Action) []map[string]interface{} {
 	results := make([]map[string]interface{}, 0)
 
