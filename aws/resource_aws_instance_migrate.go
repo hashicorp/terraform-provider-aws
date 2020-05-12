@@ -105,5 +105,4 @@ func writeV1BlockDevice(
 	countAttr := fmt.Sprintf("%s.#", bdType)
 	count, _ := strconv.Atoi(is.Attributes[countAttr])
 	is.Attributes[countAttr] = strconv.Itoa(count + 1)
-	return
 }
