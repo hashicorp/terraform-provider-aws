@@ -1047,7 +1047,7 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		}
 	}
 
-	// Only valid for CODECOMMIT source types.
+	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE source types.
 	if sourceType == codebuild.SourceTypeCodecommit || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise {
 		if v, ok := data["git_submodules_config"]; ok && len(v.([]interface{})) > 0 {
 			config := v.([]interface{})[0].(map[string]interface{})
