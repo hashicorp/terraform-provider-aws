@@ -195,6 +195,50 @@ func TestAccAWSAPIGatewayMethod_customrequestvalidator(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayMethod_customoperationname(t *testing.T) {
+	var conf apigateway.Method
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayMethodDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayMethodConfigWithCustomOperationName(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodAttributes(&conf),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_method.test", "http_method", "GET"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_method.test", "authorization", "NONE"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_method.test", "request_models.application/json", "Error"),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_method.test", "operation_name", "getTest"),
+				),
+			},
+			{
+				ResourceName:      "aws_api_gateway_method.test",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAPIGatewayMethodImportStateIdFunc("aws_api_gateway_method.test"),
+				ImportStateVerify: true,
+			},
+
+			{
+				Config: testAccAWSAPIGatewayMethodConfigWithCustomOperationNameUpdate(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayMethodExists("aws_api_gateway_method.test", &conf),
+					testAccCheckAWSAPIGatewayMethodAttributesUpdate(&conf),
+					resource.TestCheckResourceAttr(
+						"aws_api_gateway_method.test", "operation_name", "describeTest"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayMethodAttributes(conf *apigateway.Method) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.HttpMethod != "GET" {
@@ -719,6 +763,69 @@ resource "aws_api_gateway_method" "test" {
   request_parameters = {
     "method.request.querystring.page" = false
   }
+}
+`, rInt)
+}
+
+func testAccAWSAPIGatewayMethodConfigWithCustomOperationName(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = "tf-acc-test-apig-method-custom-op-name-%d"
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_resource.test.id}"
+  http_method   = "GET"
+  authorization = "NONE"
+
+  request_models = {
+    "application/json" = "Error"
+  }
+
+  request_parameters = {
+    "method.request.header.Content-Type" = false
+    "method.request.querystring.page"    = true
+  }
+
+  operation_name = "getTest"
+}
+`, rInt)
+}
+
+func testAccAWSAPIGatewayMethodConfigWithCustomOperationNameUpdate(rInt int) string {
+	return fmt.Sprintf(`
+resource "aws_api_gateway_rest_api" "test" {
+  name = "tf-acc-test-apig-method-custom-op-name-%d"
+}
+
+resource "aws_api_gateway_resource" "test" {
+  rest_api_id = "${aws_api_gateway_rest_api.test.id}"
+  parent_id   = "${aws_api_gateway_rest_api.test.root_resource_id}"
+  path_part   = "test"
+}
+
+resource "aws_api_gateway_method" "test" {
+  rest_api_id   = "${aws_api_gateway_rest_api.test.id}"
+  resource_id   = "${aws_api_gateway_resource.test.id}"
+  http_method   = "GET"
+  authorization = "NONE"
+
+  request_models = {
+    "application/json" = "Error"
+  }
+
+  request_parameters = {
+    "method.request.querystring.page"    = false
+  }
+
+  operation_name = "describeTest"
 }
 `, rInt)
 }
