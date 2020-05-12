@@ -16,8 +16,9 @@ import (
 
 func init() {
 	resource.AddTestSweepers("aws_workspaces_directory", &resource.Sweeper{
-		Name: "aws_workspaces_directory",
-		F:    testSweepWorkspacesDirectories,
+		Name:         "aws_workspaces_directory",
+		F:            testSweepWorkspacesDirectories,
+		Dependencies: []string{"aws_workspaces_workspace"},
 	})
 }
 
