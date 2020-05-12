@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -104,6 +105,15 @@ func resourceAwsIotTopicRule() *schema.Resource {
 						"hash_key_type": {
 							Type:     schema.TypeString,
 							Optional: true,
+						},
+						"operation": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								"DELETE",
+								"INSERT",
+								"UPDATE",
+							}, false),
 						},
 						"payload_field": {
 							Type:     schema.TypeString,
@@ -615,6 +625,10 @@ func expandIotDynamoDBAction(tfList []interface{}) *iot.DynamoDBAction {
 
 	if v, ok := tfMap["hash_key_value"].(string); ok && v != "" {
 		apiObject.HashKeyValue = aws.String(v)
+	}
+
+	if v, ok := tfMap["operation"].(string); ok && v != "" {
+		apiObject.Operation = aws.String(v)
 	}
 
 	if v, ok := tfMap["payload_field"].(string); ok && v != "" {
@@ -1222,6 +1236,10 @@ func flattenIotDynamoDBAction(apiObject *iot.DynamoDBAction) []interface{} {
 
 	if v := apiObject.PayloadField; v != nil {
 		tfMap["payload_field"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Operation; v != nil {
+		tfMap["operation"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.RangeKeyField; v != nil {

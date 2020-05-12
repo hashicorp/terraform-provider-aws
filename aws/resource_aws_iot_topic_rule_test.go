@@ -629,7 +629,7 @@ resource "aws_iot_topic_rule" "rule" {
     hash_key_value = "hash_key_value"
     payload_field = "payload_field"
     role_arn = "${aws_iam_role.iot_role.arn}"
-    table_name = "table_name"
+	table_name = "table_name"
   }
 }
 `, rName)
@@ -652,7 +652,8 @@ resource "aws_iot_topic_rule" "rule" {
     range_key_value = "range_key_value"
     range_key_type  = "STRING"
     role_arn = "${aws_iam_role.iot_role.arn}"
-    table_name = "table_name"
+	table_name = "table_name"
+	operation = "INSERT"
   }
 }
 `, rName)
