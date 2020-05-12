@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -152,14 +153,23 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"put_item": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"table_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validateArn,
-						},
-						"table_name": {
-							Type:     schema.TypeString,
-							Required: true,
 						},
 					},
 				},
@@ -429,7 +439,7 @@ func createTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		raw := a.(map[string]interface{})
 		act := &iot.Action{
 			DynamoDBv2: &iot.DynamoDBv2Action{
-				PutItem: &iot.PutItemInput{TableName: aws.String(raw["table_name"].(string))},
+				PutItem: expandIotPutItemInput(raw["put_item"].([]interface{})),
 				RoleArn: aws.String(raw["role_arn"].(string)),
 			},
 		}
@@ -606,7 +616,9 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("cloudwatch_alarm", flattenIoTRuleCloudWatchAlarmActions(out.Rule.Actions))
 	d.Set("cloudwatch_metric", flattenIoTRuleCloudWatchMetricActions(out.Rule.Actions))
 	d.Set("dynamodb", flattenIoTRuleDynamoDbActions(out.Rule.Actions))
-	d.Set("dynamodbv2", flattenIoTRuleDynamoDbv2Actions(out.Rule.Actions))
+	if err := d.Set("dynamodbv2", flattenIoTRuleDynamoDbv2Actions(out.Rule.Actions)); err != nil {
+		return fmt.Errorf("error setting dynamodbv2: %w", err)
+	}
 	d.Set("elasticsearch", flattenIoTRuleElasticSearchActions(out.Rule.Actions))
 	d.Set("firehose", flattenIoTRuleFirehoseActions(out.Rule.Actions))
 	d.Set("kinesis", flattenIoTRuleKinesisActions(out.Rule.Actions))
@@ -646,4 +658,33 @@ func resourceAwsIotTopicRuleDelete(d *schema.ResourceData, meta interface{}) err
 	_, err := conn.DeleteTopicRule(params)
 
 	return err
+}
+
+func expandIotPutItemInput(tfList []interface{}) *iot.PutItemInput {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.PutItemInput{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["table_name"].(string); ok && v != "" {
+		apiObject.TableName = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenIotPutItemInput(apiObject *iot.PutItemInput) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.TableName; v != nil {
+		tfMap["table_name"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
 }

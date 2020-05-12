@@ -544,10 +544,6 @@ resource "aws_iot_topic_rule" "rule" {
 
 func testAccAWSIoTTopicRule_dynamoDbv2(rName string) string {
 	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
-data "aws_region" "current" {
-  current = true
-}
-
 resource "aws_iot_topic_rule" "rule" {
   name        = "test_rule_%[1]s"
   description = "Example rule"
@@ -556,8 +552,11 @@ resource "aws_iot_topic_rule" "rule" {
   sql_version = "2015-10-08"
 
   dynamodbv2 {
-    table_name = "${aws_iam_role.iot_role.arn}"
-    role_arn   = "${aws_dynamodb_table.iot_table.arn}"
+    put_item {
+      table_name = "test"
+    }
+
+    role_arn = aws_iam_role.iot_role.arn
   }
 }
 `, rName)

@@ -2861,7 +2861,7 @@ func flattenIoTRuleDynamoDbv2Actions(actions []*iot.Action) []map[string]interfa
 		v := a.DynamoDBv2
 		if v != nil {
 			result["role_arn"] = *v.RoleArn
-			result["table_name"] = *v.PutItem
+			result["put_item"] = flattenIotPutItemInput(v.PutItem)
 			results = append(results, result)
 		}
 	}

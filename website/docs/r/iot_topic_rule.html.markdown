@@ -107,8 +107,9 @@ The `dynamodb` object takes the following arguments:
 
 The `dynamodbv2` object takes the following arguments:
 
+* `put_item` - (Required) Configuration block with DynamoDB Table to which the message will be written. Nested arguments below.
+    * `table_name` - (Required) The name of the DynamoDB table.
 * `role_arn` - (Required) The ARN of the IAM role that grants access to the DynamoDB table.
-* `table_name` - (Required) The name of the DynamoDB table.
 
 The `elasticsearch` object takes the following arguments:
 
