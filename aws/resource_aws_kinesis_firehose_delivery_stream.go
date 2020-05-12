@@ -1289,8 +1289,9 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 										Set:      schema.HashString,
 									},
 									"role_arn": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
 									},
 								},
 							},
@@ -1844,21 +1845,13 @@ func extractVpcConfiguration(es map[string]interface{}) *firehose.VpcConfigurati
 	if len(config) == 0 {
 		return nil
 	}
+
 	vpcConfig := config[0].(map[string]interface{})
-	s := vpcConfig["subnet_ids"].(*schema.Set).List()
-	subnets := make([]string, len(s))
-	for i, v := range s {
-		subnets[i] = fmt.Sprint(v)
-	}
-	sg := vpcConfig["security_group_ids"].(*schema.Set).List()
-	securityGroups := make([]string, len(sg))
-	for i, v := range sg {
-		securityGroups[i] = fmt.Sprint(v)
-	}
+
 	return &firehose.VpcConfiguration{
 		RoleARN:          aws.String(vpcConfig["role_arn"].(string)),
-		SubnetIds:        aws.StringSlice(subnets),
-		SecurityGroupIds: aws.StringSlice(securityGroups),
+		SubnetIds:        expandStringSet(vpcConfig["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: expandStringSet(vpcConfig["security_group_ids"].(*schema.Set)),
 	}
 }
 
