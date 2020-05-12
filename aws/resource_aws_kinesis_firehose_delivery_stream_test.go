@@ -2493,7 +2493,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       subnet_ids = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
       security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
       role_arn   = "${aws_iam_role.firehose.arn}"
-	}
+    }
   }
 }
 `
@@ -2546,7 +2546,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       subnet_ids = ["${aws_subnet.first.id}", "${aws_subnet.second.id}"]
       security_group_ids = ["${aws_security_group.first.id}", "${aws_security_group.second.id}"]
       role_arn   = "${aws_iam_role.firehose.arn}"
-	}
+    }
     processing_configuration {
       enabled = false
       processors {
