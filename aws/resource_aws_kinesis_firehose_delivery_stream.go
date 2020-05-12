@@ -209,6 +209,7 @@ func flattenFirehoseElasticsearchConfiguration(description *firehose.Elasticsear
 		"index_name":                 aws.StringValue(description.IndexName),
 		"s3_backup_mode":             aws.StringValue(description.S3BackupMode),
 		"index_rotation_period":      aws.StringValue(description.IndexRotationPeriod),
+		"vpc_config":                 flattenVpcConfiguration(description.VpcConfigurationDescription),
 		"processing_configuration":   flattenProcessingConfiguration(description.ProcessingConfiguration, aws.StringValue(description.RoleARN)),
 	}
 
@@ -219,6 +220,21 @@ func flattenFirehoseElasticsearchConfiguration(description *firehose.Elasticsear
 
 	if description.RetryOptions != nil {
 		m["retry_duration"] = int(aws.Int64Value(description.RetryOptions.DurationInSeconds))
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenVpcConfiguration(description *firehose.VpcConfigurationDescription) []map[string]interface{} {
+	if description == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"vpc_id":             aws.StringValue(description.VpcId),
+		"subnet_ids":         flattenStringList(description.SubnetIds),
+		"security_group_ids": flattenStringList(description.SecurityGroupIds),
+		"role_arn":           aws.StringValue(description.RoleARN),
 	}
 
 	return []map[string]interface{}{m}
@@ -1275,6 +1291,38 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							},
 						},
 
+						"vpc_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"vpc_id": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+									"subnet_ids": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										Set:      schema.HashString,
+									},
+									"security_group_ids": {
+										Type:     schema.TypeSet,
+										Required: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+										Set:      schema.HashString,
+									},
+									"role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateArn,
+									},
+								},
+							},
+						},
+
 						"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
 
 						"processing_configuration": processingConfigurationSchema(),
@@ -1826,6 +1874,21 @@ func extractCloudWatchLoggingConfiguration(s3 map[string]interface{}) *firehose.
 
 }
 
+func extractVpcConfiguration(es map[string]interface{}) *firehose.VpcConfiguration {
+	config := es["vpc_config"].([]interface{})
+	if len(config) == 0 {
+		return nil
+	}
+
+	vpcConfig := config[0].(map[string]interface{})
+
+	return &firehose.VpcConfiguration{
+		RoleARN:          aws.String(vpcConfig["role_arn"].(string)),
+		SubnetIds:        expandStringSet(vpcConfig["subnet_ids"].(*schema.Set)),
+		SecurityGroupIds: expandStringSet(vpcConfig["security_group_ids"].(*schema.Set)),
+	}
+}
+
 func extractPrefixConfiguration(s3 map[string]interface{}) *string {
 	if v, ok := s3["prefix"]; ok {
 		return aws.String(v.(string))
@@ -1932,6 +1995,10 @@ func createElasticsearchConfig(d *schema.ResourceData, s3Config *firehose.S3Dest
 	}
 	if s3BackupMode, ok := es["s3_backup_mode"]; ok {
 		config.S3BackupMode = aws.String(s3BackupMode.(string))
+	}
+
+	if _, ok := es["vpc_config"]; ok {
+		config.VpcConfiguration = extractVpcConfiguration(es)
 	}
 
 	return config, nil
