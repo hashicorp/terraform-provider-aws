@@ -30,12 +30,12 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 }
 ```
 
-### Public snapshot
+### Public Snapshot
 
 ```hcl
 resource "aws_snapshot_create_volume_permission" "example_perm" {
   snapshot_id = "${aws_ebs_snapshot.example_snapshot.id}"
-  group  = "all"
+  group       = "all"
 }
 
 resource "aws_ebs_volume" "example" {
@@ -52,12 +52,12 @@ resource "aws_ebs_snapshot" "example_snapshot" {
 
 The following arguments are supported:
 
-  * `snapshot_id` - (Required) A snapshot ID
+  * `snapshot_id` - (Required) A snapshot ID.
   * `account_id` - (Optional) An AWS Account ID to add create volume permissions. Conflicts with `group`.
   * `group` - (Optional) Only takes the value `all`. Conflicts with `account_id`.
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+In addition to all arguments above, the following attribute is exported:
 
   * `id` - A combination of "`snapshot_id`-`account_id`-`group`".
