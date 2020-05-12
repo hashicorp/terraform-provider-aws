@@ -79,7 +79,7 @@ func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 					resource.TestCheckResourceAttr("aws_iot_topic_rule.rule", "name", fmt.Sprintf("test_rule_%s", rName)),
 					resource.TestCheckResourceAttr("aws_iot_topic_rule.rule", "description", "Example rule"),
 					resource.TestCheckResourceAttr("aws_iot_topic_rule.rule", "enabled", "true"),
@@ -108,7 +108,7 @@ func TestAccAWSIoTTopicRule_cloudwatchalarm(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_cloudwatchalarm(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -132,7 +132,7 @@ func TestAccAWSIoTTopicRule_cloudwatchmetric(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_cloudwatchmetric(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -156,7 +156,7 @@ func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_dynamodb(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -167,7 +167,7 @@ func TestAccAWSIoTTopicRule_dynamodb(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_dynamodb_rangekeys(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 		},
@@ -185,7 +185,7 @@ func TestAccAWSIoTTopicRule_dynamoDbv2(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_dynamoDbv2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 		},
@@ -204,7 +204,7 @@ func TestAccAWSIoTTopicRule_elasticsearch(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_elasticsearch(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -228,7 +228,7 @@ func TestAccAWSIoTTopicRule_firehose(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_firehose(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -252,7 +252,7 @@ func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_firehose_separator(rName, "\n"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -263,7 +263,7 @@ func TestAccAWSIoTTopicRule_firehose_separator(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_firehose_separator(rName, ","),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 		},
@@ -282,7 +282,7 @@ func TestAccAWSIoTTopicRule_kinesis(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_kinesis(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -306,7 +306,7 @@ func TestAccAWSIoTTopicRule_lambda(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -330,7 +330,7 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_republish(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -354,7 +354,7 @@ func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_s3(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -378,7 +378,7 @@ func TestAccAWSIoTTopicRule_sns(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_sns(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -402,7 +402,7 @@ func TestAccAWSIoTTopicRule_sqs(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_sqs(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 			{
@@ -425,7 +425,7 @@ func TestAccAWSIoTTopicRule_iot_analytics(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_iot_analytics(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 		},
@@ -443,7 +443,7 @@ func TestAccAWSIoTTopicRule_iot_events(t *testing.T) {
 			{
 				Config: testAccAWSIoTTopicRule_iot_events(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIoTTopicRuleExists_basic("aws_iot_topic_rule.rule"),
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
 				),
 			},
 		},
@@ -458,7 +458,9 @@ func testAccCheckAWSIoTTopicRuleDestroy(s *terraform.State) error {
 			continue
 		}
 
-		out, err := conn.ListTopicRules(&iot.ListTopicRulesInput{})
+		input := &iot.ListTopicRulesInput{}
+
+		out, err := conn.ListTopicRules(input)
 
 		if err != nil {
 			return err
@@ -475,14 +477,29 @@ func testAccCheckAWSIoTTopicRuleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSIoTTopicRuleExists_basic(name string) resource.TestCheckFunc {
+func testAccCheckAWSIoTTopicRuleExists(name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		return nil
+		conn := testAccProvider.Meta().(*AWSClient).iotconn
+		input := &iot.ListTopicRulesInput{}
+
+		output, err := conn.ListTopicRules(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, rule := range output.Rules {
+			if aws.StringValue(rule.RuleName) == rs.Primary.ID {
+				return nil
+			}
+		}
+
+		return fmt.Errorf("IoT Topic Rule (%s) not found", rs.Primary.ID)
 	}
 }
 
