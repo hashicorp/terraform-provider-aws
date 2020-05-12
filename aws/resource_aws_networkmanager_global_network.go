@@ -116,7 +116,7 @@ func resourceAwsNetworkManagerGlobalNetworkUpdate(d *schema.ResourceData, meta i
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.NetworkmanagerUpdateTags(conn, d.Id(), o, n); err != nil {
+		if err := keyvaluetags.NetworkmanagerUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
 			return fmt.Errorf("error updating networkmanager Global Network (%s) tags: %s", d.Id(), err)
 		}
 	}
@@ -250,7 +250,7 @@ func waitForNetworkManagerGlobalNetworkDeletion(conn *networkmanager.NetworkMana
 		NotFoundChecks: 1,
 	}
 
-	log.Printf("[DEBUG] Waiting for NetworkManager Transit Gateway (%s) deletion", globalNetworkID)
+	log.Printf("[DEBUG] Waiting for NetworkManager Global Network (%s) deletion", globalNetworkID)
 	_, err := stateConf.WaitForState()
 
 	if isResourceNotFoundError(err) {
