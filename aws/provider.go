@@ -887,6 +887,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_worklink_fleet":                                      resourceAwsWorkLinkFleet(),
 			"aws_worklink_website_certificate_authority_association":  resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation(),
 			"aws_workspaces_directory":                                resourceAwsWorkspacesDirectory(),
+			"aws_workspaces_workspace":                                resourceAwsWorkspacesWorkspace(),
 			"aws_batch_compute_environment":                           resourceAwsBatchComputeEnvironment(),
 			"aws_batch_job_definition":                                resourceAwsBatchJobDefinition(),
 			"aws_batch_job_queue":                                     resourceAwsBatchJobQueue(),

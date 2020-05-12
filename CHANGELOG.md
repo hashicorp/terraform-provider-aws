@@ -1,3 +1,13 @@
+## 2.62.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_workspaces_workspace` [GH-11608]
+
+ENHANCEMENTS:
+
+* resource/aws_appsync_resolver: Add `cache_config` configuration block [GH-12747]
+
 ## 2.61.0 (May 08, 2020)
 
 FEATURES:

@@ -2,13 +2,70 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_iot_topic_rule", &resource.Sweeper{
+		Name: "aws_iot_topic_rule",
+		F:    testSweepIotTopicRules,
+	})
+}
+
+func testSweepIotTopicRules(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).iotconn
+	input := &iot.ListTopicRulesInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.ListTopicRules(input)
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping IoT Topic Rules sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving IoT Topic Rules: %w", err))
+			return sweeperErrs
+		}
+
+		for _, rule := range output.Rules {
+			name := aws.StringValue(rule.RuleName)
+
+			log.Printf("[INFO] Deleting IoT Topic Rule: %s", name)
+			_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
+				RuleName: aws.String(name),
+			})
+			if isAWSErr(err, iot.ErrCodeUnauthorizedException, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting IoT Topic Rule (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSIoTTopicRule_basic(t *testing.T) {
 	rName := acctest.RandString(5)
