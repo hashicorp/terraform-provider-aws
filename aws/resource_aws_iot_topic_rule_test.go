@@ -342,6 +342,30 @@ func TestAccAWSIoTTopicRule_republish(t *testing.T) {
 	})
 }
 
+func TestAccAWSIoTTopicRule_republish_with_qos(t *testing.T) {
+	rName := acctest.RandString(5)
+	resourceName := "aws_iot_topic_rule.rule"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIoTTopicRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIoTTopicRule_republish_with_qos(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIoTTopicRuleExists("aws_iot_topic_rule.rule"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSIoTTopicRule_s3(t *testing.T) {
 	rName := acctest.RandString(5)
 	resourceName := "aws_iot_topic_rule.rule"
@@ -761,6 +785,24 @@ resource "aws_iot_topic_rule" "rule" {
   republish {
     role_arn = "${aws_iam_role.iot_role.arn}"
     topic    = "mytopic"
+  }
+}
+`, rName)
+}
+
+func testAccAWSIoTTopicRule_republish_with_qos(rName string) string {
+	return fmt.Sprintf(testAccAWSIoTTopicRuleRole+`
+resource "aws_iot_topic_rule" "rule" {
+  name        = "test_rule_%[1]s"
+  description = "Example rule"
+  enabled     = true
+  sql         = "SELECT * FROM 'topic/test'"
+  sql_version = "2015-10-08"
+
+  republish {
+    role_arn = "${aws_iam_role.iot_role.arn}"
+	topic    = "mytopic"
+	qos = 1
   }
 }
 `, rName)

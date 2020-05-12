@@ -308,6 +308,12 @@ func resourceAwsIotTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"qos": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      0,
+							ValidateFunc: validation.IntBetween(0, 1),
+						},
 						"role_arn": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -818,6 +824,10 @@ func expandIotRepublishAction(tfList []interface{}) *iot.RepublishAction {
 
 	apiObject := &iot.RepublishAction{}
 	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["qos"].(int); ok {
+		apiObject.Qos = aws.Int64(int64(v))
+	}
 
 	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
 		apiObject.RoleArn = aws.String(v)
@@ -1533,6 +1543,10 @@ func flattenIotRepublishAction(apiObject *iot.RepublishAction) []interface{} {
 	}
 
 	tfMap := make(map[string]interface{})
+
+	if v := apiObject.Qos; v != nil {
+		tfMap["qos"] = aws.Int64Value(v)
+	}
 
 	if v := apiObject.RoleArn; v != nil {
 		tfMap["role_arn"] = aws.StringValue(v)
