@@ -25,6 +25,33 @@ func TestAccAWSDataSourceIAMUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
 					resource.TestCheckResourceAttr(resourceName, "user_name", userName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_user.user", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDataSourceIAMUser_tags(t *testing.T) {
+	resourceName := "data.aws_iam_user.test"
+
+	userName := fmt.Sprintf("test-datasource-user-%d", acctest.RandInt())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsDataSourceIAMUserConfig_tags(userName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "user_id", "aws_iam_user.user", "unique_id"),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					resource.TestCheckResourceAttr(resourceName, "user_name", userName),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_user.user", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
 				),
 			},
 		},
@@ -40,6 +67,24 @@ resource "aws_iam_user" "user" {
 
 data "aws_iam_user" "test" {
   user_name = aws_iam_user.user.name
+}
+`, name)
+}
+
+func testAccAwsDataSourceIAMUserConfig_tags(name string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "user" {
+  name = "%s"
+  path = "/"
+
+  tags = {
+    tag1 = "test-value1"
+    tag2 = "test-value2"
+  }
+}
+
+data "aws_iam_user" "test" {
+  user_name = "${aws_iam_user.user.name}"
 }
 `, name)
 }
