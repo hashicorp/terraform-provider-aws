@@ -6,15 +6,11 @@
 
 [![Build Status][travis-badge]][travis]
 [![Forums][discuss-badge]][discuss]
-[![GoReportCard][report-badge]][report]
 
 [travis-badge]: https://api.travis-ci.org/terraform-providers/terraform-provider-aws.svg?branch=master
 [travis]: https://travis-ci.org/github/terraform-providers/terraform-provider-aws
 [discuss-badge]: https://img.shields.io/badge/discuss-terraform--aws-623CE4.svg?style=flat
 [discuss]: https://discuss.hashicorp.com/c/terraform-providers/tf-aws/
-[report-badge]: https://goreportcard.com/badge/github.com/terraform-providers/terraform-provider-aws
-[report]: https://goreportcard.com/report/github.com/terraform-providers/terraform-provider-aws
-
 
 - Website: [terraform.io](https://terraform.io)
 - Tutorials: [learn.hashicorp.com](https://learn.hashicorp.com/terraform?track=getting-started#getting-started)
