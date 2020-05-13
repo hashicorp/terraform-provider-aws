@@ -59,7 +59,7 @@ func resourceAwsNetworkManagerGlobalNetworkCreate(d *schema.ResourceData, meta i
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.GlobalNetworkStatePending},
-		Target:  []string{networkmanager.CustomerGatewayAssociationStateAvailable},
+		Target:  []string{networkmanager.GlobalNetworkStateAvailable},
 		Refresh: networkmanagerGlobalNetworkRefreshFunc(conn, aws.StringValue(output.GlobalNetwork.GlobalNetworkId)),
 		Timeout: 10 * time.Minute,
 	}

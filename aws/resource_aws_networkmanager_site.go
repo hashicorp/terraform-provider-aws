@@ -105,7 +105,7 @@ func resourceAwsNetworkManagerSiteCreate(d *schema.ResourceData, meta interface{
 
 	stateConf := &resource.StateChangeConf{
 		Pending: []string{networkmanager.SiteStatePending},
-		Target:  []string{networkmanager.CustomerGatewayAssociationStateAvailable},
+		Target:  []string{networkmanager.SiteStateAvailable},
 		Refresh: networkmanagerSiteRefreshFunc(conn, aws.StringValue(output.Site.GlobalNetworkId), aws.StringValue(output.Site.SiteId)),
 		Timeout: 10 * time.Minute,
 	}
