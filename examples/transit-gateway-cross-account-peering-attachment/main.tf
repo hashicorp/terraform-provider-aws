@@ -69,6 +69,7 @@ resource "aws_ec2_transit_gateway" "second" {
 // Create the Peering attachment in the second account...
 resource "aws_ec2_transit_gateway_peering_attachment" "example" {
   provider = "aws.second"
+
   peer_account_id         = "${data.aws_caller_identity.first.account_id}"
   peer_region             = "${var.aws_first_region}"
   peer_transit_gateway_id = "${aws_ec2_transit_gateway.first.id}"

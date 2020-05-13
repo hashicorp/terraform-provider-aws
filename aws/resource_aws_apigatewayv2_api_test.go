@@ -374,9 +374,10 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSAPIGatewayV2ApiDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2ApiConfig_corsConfiguration(rName),

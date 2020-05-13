@@ -644,6 +644,7 @@ into Terraform.
   - In `website/allowed-subcategories.txt`: Add a name acceptable for the documentation navigation.
   - In `website/docs/guides/custom-service-endpoints.html.md`: Add the service
     name in the list of customizable endpoints.
+  - In `infrastructure/repository/labels-service.tf`: Add the new service to create a repository label.
   - In `.hashibot.hcl`: Add the new service to automated issue and pull request labeling. e.g. with the `quicksight` service
 
   ```hcl

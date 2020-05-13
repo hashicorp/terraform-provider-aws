@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -252,18 +253,15 @@ func resourceAwsWorkspacesDirectoryDelete(d *schema.ResourceData, meta interface
 	if err != nil {
 		return fmt.Errorf("error deleting workspaces directory (%s): %s", d.Id(), err)
 	}
-	log.Printf("[DEBUG] Workspaces directory %q is deregistered", d.Id())
 
 	return nil
 }
 
 func workspacesDirectoryDelete(id string, conn *workspaces.WorkSpaces) error {
-	input := &workspaces.DeregisterWorkspaceDirectoryInput{
-		DirectoryId: aws.String(id),
-	}
-
 	log.Printf("[DEBUG] Deregistering Workspace Directory %q", id)
-	_, err := conn.DeregisterWorkspaceDirectory(input)
+	_, err := conn.DeregisterWorkspaceDirectory(&workspaces.DeregisterWorkspaceDirectoryInput{
+		DirectoryId: aws.String(id),
+	})
 	if err != nil {
 		return fmt.Errorf("error deregistering Workspace Directory %q: %w", id, err)
 	}
@@ -286,6 +284,8 @@ func workspacesDirectoryDelete(id string, conn *workspaces.WorkSpaces) error {
 	if err != nil {
 		return fmt.Errorf("error waiting for Workspace Directory %q to be deregistered: %w", id, err)
 	}
+	log.Printf("[DEBUG] Workspaces Directory %q is deregistered", id)
+
 	return nil
 }
 
