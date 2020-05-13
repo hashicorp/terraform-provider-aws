@@ -7,6 +7,7 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_appsync_resolver: Add `cache_config` configuration block [GH-12747]
+* resource/aws_codebuild_project: Support `git_submodules_config` with `GITHUB` and `GITHUB_ENTERPRISE` source types [GH-13285]
 * resource/aws_iot_topic_rule: Add `dynamodbv2` configuration block [GH-7469]
 * resource/aws_iot_topic_rule: Add `iot_analytics` configuration block [GH-9859]
 * resource/aws_iot_topic_rule: Add `iot_events` configuration block [GH-9890]
