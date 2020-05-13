@@ -89,6 +89,7 @@ func TestAccAWSEBSVolume_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "false"),
 				),
 			},
 			{
@@ -313,6 +314,33 @@ func TestAccAWSEBSVolume_withTags(t *testing.T) {
 	})
 }
 
+func TestAccAWSEBSVolume_multiAttach(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfigMultiAttach(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "multi_attach_enabled", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEBSVolume_outpost(t *testing.T) {
 	var v ec2.Volume
 	resourceName := "aws_ebs_volume.test"
@@ -342,6 +370,27 @@ func TestAccAWSEBSVolume_outpost(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEBSVolume_disappears(t *testing.T) {
+	var v ec2.Volume
+	resourceName := "aws_ebs_volume.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVolumeDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsVolumeConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEbsVolume(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -721,4 +770,29 @@ resource "aws_ebs_volume" "test" {
   }
 }
 `, outpostArn)
+}
+
+func testAccAwsEbsVolumeConfigMultiAttach(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_ebs_volume" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  type                 = "io1"
+  multi_attach_enabled = true
+  size                 = 4
+  iops                 = 100
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }

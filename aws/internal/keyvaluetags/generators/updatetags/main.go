@@ -116,6 +116,7 @@ var serviceNames = []string{
 	"waf",
 	"wafregional",
 	"wafv2",
+	"workspaces",
 }
 
 type TemplateData struct {
