@@ -19,7 +19,7 @@ See [ECS Services section in AWS developer guide](https://docs.aws.amazon.com/Am
 ```hcl
 resource "aws_ecs_service" "mongo" {
   name            = "mongodb"
-  cluster         = "${aws_ecs_cluster.foo.id}"
+  cluster         = "${aws_ecs_cluster.foo.arn}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   desired_count   = 3
   iam_role        = "${aws_iam_role.foo.arn}"
