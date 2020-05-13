@@ -54,24 +54,30 @@ func dataSourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error
 	var foundIpSet *wafv2.IPSetSummary
 	input := &wafv2.ListIPSetsInput{
 		Scope: aws.String(d.Get("scope").(string)),
+		Limit: aws.Int64(100),
 	}
+
 	for {
-		output, err := conn.ListIPSets(input)
+		resp, err := conn.ListIPSets(input)
 		if err != nil {
 			return fmt.Errorf("Error reading WAFv2 IPSets: %s", err)
 		}
 
-		for _, ipSet := range output.IPSets {
-			if aws.StringValue(ipSet.Name) == name {
+		if resp == nil || resp.IPSets == nil {
+			return fmt.Errorf("Error reading WAFv2 IPSets")
+		}
+
+		for _, ipSet := range resp.IPSets {
+			if ipSet != nil && aws.StringValue(ipSet.Name) == name {
 				foundIpSet = ipSet
 				break
 			}
 		}
 
-		if output.NextMarker == nil || foundIpSet != nil {
+		if resp.NextMarker == nil || foundIpSet != nil {
 			break
 		}
-		input.NextMarker = output.NextMarker
+		input.NextMarker = resp.NextMarker
 	}
 
 	if foundIpSet == nil {
@@ -79,20 +85,27 @@ func dataSourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	resp, err := conn.GetIPSet(&wafv2.GetIPSetInput{
-		Id:    aws.String(*foundIpSet.Id),
-		Name:  aws.String(*foundIpSet.Name),
+		Id:    foundIpSet.Id,
+		Name:  foundIpSet.Name,
 		Scope: aws.String(d.Get("scope").(string)),
 	})
 
 	if err != nil {
-		return fmt.Errorf("WAFv2 IPSet not found for name: %s", name)
+		return fmt.Errorf("Error reading WAFv2 IPSet: %s", err)
+	}
+
+	if resp == nil || resp.IPSet == nil {
+		return fmt.Errorf("Error reading WAFv2 IPSet")
 	}
 
 	d.SetId(aws.StringValue(resp.IPSet.Id))
-	d.Set("addresses", flattenStringList(resp.IPSet.Addresses))
 	d.Set("arn", aws.StringValue(resp.IPSet.ARN))
 	d.Set("description", aws.StringValue(resp.IPSet.Description))
 	d.Set("ip_address_version", aws.StringValue(resp.IPSet.IPAddressVersion))
+
+	if err := d.Set("addresses", flattenStringList(resp.IPSet.Addresses)); err != nil {
+		return fmt.Errorf("Error setting addresses: %s", err)
+	}
 
 	return nil
 }
