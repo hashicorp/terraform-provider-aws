@@ -1,6 +1,7 @@
 # Pull Request Submission and Lifecycle
 
 - [Pull Request Lifecycle](#pull-request-lifecycle)
+- [Branch Prefixes](#branch-prefixes)
 - [Common Review Items](#common-review-items)    
   - [Go Coding Style](#go-coding-style)    
   - [Resource Contribution Guidelines](#resource-contribution-guidelines)
@@ -43,6 +44,18 @@ expect:
 
 1. In some cases, we might decide that a PR should be closed without merging.
    We'll make sure to provide clear reasoning when this happens.
+
+## Branch Prefixes
+
+We try to use a common set of branch name prefixes when submitting pull requests. Prefixes give us an idea of what the branch is for. For example, `td-staticcheck-st1008` would let us know the branch was created to fix a technical debt issue, and `f-aws_emr_instance_group-refactor` would indicate a feature request for the `aws_emr_instance_group` resource that’s being refactored. These are the prefixes we currently use:
+
+- f = feature
+- b = bug fix
+- d = documentation
+- td = technical debt
+- v = "vendoring"/dependencies
+
+Conventions across non-AWS providers varies so when working with other providers please check the names of previously created branches and conform to their standard practices.
 
 ## Common Review Items
 
