@@ -68,6 +68,8 @@ subnet whose data will be exported as attributes.
 
 * `vpc_id` - (Optional) The id of the VPC that the desired subnet belongs to.
 
+* `availabile_ip_address_count` - (Optional) The number of free IP addresses in a subnet.
+
 More complex filters can be expressed using one or more `filter` sub-blocks,
 which take the following arguments:
 
