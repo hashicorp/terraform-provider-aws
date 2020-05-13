@@ -423,6 +423,14 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "environment.1701234421.environment_variable.1.type", "PARAMETER_STORE"),
 				),
 			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Type(rName, "SECRETS_MANAGER"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "environment.198523880.environment_variable.0.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "environment.198523880.environment_variable.1.type", "SECRETS_MANAGER"),
+				),
+			},
 		},
 	})
 }

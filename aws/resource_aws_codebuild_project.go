@@ -195,6 +195,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										ValidateFunc: validation.StringInSlice([]string{
 											codebuild.EnvironmentVariableTypePlaintext,
 											codebuild.EnvironmentVariableTypeParameterStore,
+											codebuild.EnvironmentVariableTypeSecretsManager,
 										}, false),
 										Default: codebuild.EnvironmentVariableTypePlaintext,
 									},
