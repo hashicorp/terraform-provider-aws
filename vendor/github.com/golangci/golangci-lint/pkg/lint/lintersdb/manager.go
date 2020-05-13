@@ -125,6 +125,7 @@ func (m Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithPresets(linter.PresetUnused).
 			WithAlternativeNames(megacheckName).
 			ConsiderSlow().
+			WithChangeTypes().
 			WithURL("https://github.com/dominikh/go-tools/tree/master/unused"),
 		linter.NewConfig(golinters.NewGosimple()).
 			WithLoadForGoAnalysis().
@@ -254,6 +255,7 @@ func (m Manager) GetAllSupportedLinterConfigs() []*linter.Config {
 			WithURL("https://github.com/tommy-muehle/go-mnd"),
 		linter.NewConfig(golinters.NewGoerr113()).
 			WithPresets(linter.PresetStyle).
+			WithLoadForGoAnalysis().
 			WithURL("https://github.com/Djarvur/go-err113"),
 		linter.NewConfig(golinters.NewGomodguard()).
 			WithPresets(linter.PresetStyle).

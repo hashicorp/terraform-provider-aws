@@ -106,6 +106,10 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	fs.BoolVar(&rc.UseDefaultSkipDirs, "skip-dirs-use-default", true, getDefaultDirectoryExcludeHelp())
 	fs.StringSliceVar(&rc.SkipFiles, "skip-files", nil, wh("Regexps of files to skip"))
 
+	const allowParallelDesc = "Allow multiple parallel golangci-lint instances running. " +
+		"If false (default) - golangci-lint acquires file lock on start."
+	fs.BoolVar(&rc.AllowParallelRunners, "allow-parallel-runners", false, wh(allowParallelDesc))
+
 	// Linters settings config
 	lsc := &cfg.LintersSettings
 
@@ -251,6 +255,14 @@ func (e *Executor) initRun() {
 		Use:   "run",
 		Short: welcomeMessage,
 		Run:   e.executeRun,
+		PreRun: func(_ *cobra.Command, _ []string) {
+			if ok := e.acquireFileLock(); !ok {
+				e.log.Fatalf("Parallel golangci-lint is running")
+			}
+		},
+		PostRun: func(_ *cobra.Command, _ []string) {
+			e.releaseFileLock()
+		},
 	}
 	e.rootCmd.AddCommand(e.runCmd)
 
@@ -285,40 +297,34 @@ func fixSlicesFlags(fs *pflag.FlagSet) {
 func (e *Executor) runAnalysis(ctx context.Context, args []string) ([]result.Issue, error) {
 	e.cfg.Run.Args = args
 
-	enabledLinters, err := e.EnabledLintersSet.Get(true)
+	lintersToRun, err := e.EnabledLintersSet.GetOptimizedLinters()
 	if err != nil {
 		return nil, err
 	}
 
-	enabledOriginalLinters, err := e.EnabledLintersSet.Get(false)
+	enabledLintersMap, err := e.EnabledLintersSet.GetEnabledLintersMap()
 	if err != nil {
 		return nil, err
 	}
 
 	for _, lc := range e.DBManager.GetAllSupportedLinterConfigs() {
-		isEnabled := false
-		for _, enabledLC := range enabledOriginalLinters {
-			if enabledLC.Name() == lc.Name() {
-				isEnabled = true
-				break
-			}
-		}
+		isEnabled := enabledLintersMap[lc.Name()] != nil
 		e.reportData.AddLinter(lc.Name(), isEnabled, lc.EnabledByDefault)
 	}
 
-	lintCtx, err := e.contextLoader.Load(ctx, enabledLinters)
+	lintCtx, err := e.contextLoader.Load(ctx, lintersToRun)
 	if err != nil {
 		return nil, errors.Wrap(err, "context loading failed")
 	}
 	lintCtx.Log = e.log.Child("linters context")
 
 	runner, err := lint.NewRunner(e.cfg, e.log.Child("runner"),
-		e.goenv, e.lineCache, e.DBManager, lintCtx.Packages)
+		e.goenv, e.EnabledLintersSet, e.lineCache, e.DBManager, lintCtx.Packages)
 	if err != nil {
 		return nil, err
 	}
 
-	issues, err := runner.Run(ctx, enabledLinters, lintCtx)
+	issues, err := runner.Run(ctx, lintersToRun, lintCtx)
 	if err != nil {
 		return nil, err
 	}

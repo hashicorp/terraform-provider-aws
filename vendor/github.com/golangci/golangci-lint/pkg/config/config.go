@@ -40,7 +40,7 @@ var DefaultExcludePatterns = []ExcludePattern{
 	{
 		ID: "EXC0001",
 		Pattern: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close" +
-			"|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
+			"|.*Flush|os\\.Remove(All)?|.*print(f|ln)?|os\\.(Un)?Setenv). is not checked",
 		Linter: "errcheck",
 		Why:    "Almost all programs ignore errors on these functions and in most cases it's ok",
 	},
@@ -150,6 +150,8 @@ type Run struct {
 	SkipFiles          []string `mapstructure:"skip-files"`
 	SkipDirs           []string `mapstructure:"skip-dirs"`
 	UseDefaultSkipDirs bool     `mapstructure:"skip-dirs-use-default"`
+
+	AllowParallelRunners bool `mapstructure:"allow-parallel-runners"`
 }
 
 type LintersSettings struct {
