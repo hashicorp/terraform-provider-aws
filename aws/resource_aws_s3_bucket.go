@@ -2188,10 +2188,9 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		// Expiration
 		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).([]interface{})
 		if len(expiration) > 0 {
+			i := &s3.LifecycleExpiration{}
 			if expiration[0] != nil {
-				log.Printf("[INFO] expiration: %v", expiration)
 				e := expiration[0].(map[string]interface{})
-				i := &s3.LifecycleExpiration{}
 
 				if val, ok := e["date"].(string); ok && val != "" {
 					t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
@@ -2204,8 +2203,10 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 				} else if val, ok := e["expired_object_delete_marker"].(bool); ok {
 					i.ExpiredObjectDeleteMarker = aws.Bool(val)
 				}
-				rule.Expiration = i
+			} else {
+				i.ExpiredObjectDeleteMarker = aws.Bool(false)
 			}
+			rule.Expiration = i
 		}
 
 		// NoncurrentVersionExpiration
