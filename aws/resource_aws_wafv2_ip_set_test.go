@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -251,16 +250,15 @@ func testAccCheckAWSWafv2IPSetDestroy(s *terraform.State) error {
 			})
 
 		if err == nil {
-			if *resp.IPSet.Id == rs.Primary.ID {
-				return fmt.Errorf("WAFV2 IPSet %s still exists", rs.Primary.ID)
+			if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID && resp != nil && resp.IPSet != nil {
+				return fmt.Errorf("WAFv2 IPSet %s still exists", rs.Primary.ID)
 			}
+			return nil
 		}
 
 		// Return nil if the IPSet is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == wafv2.ErrCodeWAFNonexistentItemException {
-				return nil
-			}
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			return nil
 		}
 
 		return err
@@ -277,7 +275,7 @@ func testAccCheckAWSWafv2IPSetExists(n string, v *wafv2.IPSet) resource.TestChec
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WAFV2 IPSet ID is set")
+			return fmt.Errorf("No WAFv2 IPSet ID is set")
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).wafv2conn
@@ -291,12 +289,12 @@ func testAccCheckAWSWafv2IPSetExists(n string, v *wafv2.IPSet) resource.TestChec
 			return err
 		}
 
-		if *resp.IPSet.Id == rs.Primary.ID {
+		if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID && resp != nil && resp.IPSet != nil {
 			*v = *resp.IPSet
 			return nil
 		}
 
-		return fmt.Errorf("WAFV2 IPSet (%s) not found", rs.Primary.ID)
+		return fmt.Errorf("WAFv2 IPSet (%s) not found", rs.Primary.ID)
 	}
 }
 

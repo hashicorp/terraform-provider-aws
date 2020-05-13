@@ -130,11 +130,11 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.CreateIPSet(params)
 
-	if err != nil {
+	if err != nil || resp == nil || resp.Summary == nil {
 		return fmt.Errorf("Error creating WAFv2 IPSet: %s", err)
 	}
 
-	d.SetId(*resp.Summary.Id)
+	d.SetId(aws.StringValue(resp.Summary.Id))
 
 	return resourceAwsWafv2IPSetRead(d, meta)
 }
@@ -160,6 +160,10 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
+	if resp == nil || resp.IPSet == nil {
+		return fmt.Errorf("Error reading WAFv2 IPSet")
+	}
+
 	d.Set("name", resp.IPSet.Name)
 	d.Set("description", resp.IPSet.Description)
 	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
@@ -170,7 +174,7 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting addresses: %s", err)
 	}
 
-	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.IPSet.ARN)
+	tags, err := keyvaluetags.Wafv2ListTags(conn, aws.StringValue(resp.IPSet.ARN))
 	if err != nil {
 		return fmt.Errorf("Error listing tags for WAFv2 IpSet (%s): %s", *resp.IPSet.ARN, err)
 	}
