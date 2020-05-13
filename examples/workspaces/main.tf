@@ -37,7 +37,7 @@ data "aws_workspaces_bundle" "value_windows" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
-resource "aws_workspaces_workspace" "jhon.doe" {
+resource "aws_workspaces_workspace" "jhon_doe" {
   directory_id = "${aws_workspaces_directory.main.id}"
   bundle_id    = "${data.aws_workspaces_bundle.value_windows.id}"
   user_name    = "jhon.doe"
