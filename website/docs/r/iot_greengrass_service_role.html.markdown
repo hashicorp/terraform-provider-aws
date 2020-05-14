@@ -14,7 +14,7 @@ Manages the Greengrass service role of the account. See also https://docs.aws.am
 
 ```hcl
 resource "aws_iam_role" "greengrass_service_role" {
-  name = "greengrass_service_role"
+  name               = "greengrass_service_role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -32,7 +32,7 @@ EOF
 }
 
 resource "aws_iot_greengrass_service_role" "example" {
-  role_arn    = aws_iam_role.greengrass_service_role.arn
+  role_arn = aws_iam_role.greengrass_service_role.arn
 }
 ```
 
