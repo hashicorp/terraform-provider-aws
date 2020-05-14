@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_iot_greengrass_service_role
 
-Manages the Greengrass service role of the account.
+Manages the Greengrass service role of the account. See also https://docs.aws.amazon.com/greengrass/latest/apireference/-greengrass-servicerole.html
 
 ## Example Usage
 
