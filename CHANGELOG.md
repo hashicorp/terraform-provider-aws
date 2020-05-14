@@ -15,6 +15,10 @@ ENHANCEMENTS:
 * resource/aws_iot_topic_rule: Add `operation` argument to `dynamodb` configuration block [GH-12714]
 * resource/aws_iot_topic_rule: Add `qos` argument `republish` configuration block [GH-12869]
 
+BUG FIXES:
+
+* resource/aws_codebuild_project: Allow empty value (`""`) environment variables [GH-11572]
+
 ## 2.61.0 (May 08, 2020)
 
 FEATURES:
