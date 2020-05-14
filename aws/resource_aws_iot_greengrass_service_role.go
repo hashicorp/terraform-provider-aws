@@ -14,10 +14,6 @@ func resourceAwsIotGreengrassServiceRole() *schema.Resource {
 		Read:   resourceAwsIotGreengrassServiceRoleRead,
 		Delete: resourceAwsIotGreengrassServiceRoleDelete,
 		Schema: map[string]*schema.Schema{
-			"associated_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"role_arn": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -63,9 +59,6 @@ func resourceAwsIotGreengrassServiceRoleRead(d *schema.ResourceData, meta interf
 
 	if err := d.Set("role_arn", roleArn); err != nil {
 		return fmt.Errorf("error setting role_arn: %s", err)
-	}
-	if err := d.Set("associated_at", associatedAt); err != nil {
-		return fmt.Errorf("error setting associated_at: %s", err)
 	}
 
 	return nil

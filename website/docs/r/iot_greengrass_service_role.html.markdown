@@ -41,9 +41,4 @@ resource "aws_iot_greengrass_service_role" "example" {
 
 * `role_arn` - (Required)  ARN of the IAM role to set as the Greengrass service role for the account 
 
-## Attributes Reference
-
-In addition to the arguments, the following attributes are exported:
-
-* `associated_at` - The time when the service role was associated with the account.
 
