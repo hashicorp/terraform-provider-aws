@@ -18,6 +18,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_codebuild_project: Allow empty value (`""`) environment variables [GH-11572]
+* resource/aws_security_group_rule: Prevent recreation when `source_security_group_id` refers to a security group across accounts [GH-11809]
 
 ## 2.61.0 (May 08, 2020)
 
