@@ -130,8 +130,12 @@ func resourceAwsWafv2IPSetCreate(d *schema.ResourceData, meta interface{}) error
 
 	resp, err := conn.CreateIPSet(params)
 
-	if err != nil || resp == nil || resp.Summary == nil {
+	if err != nil {
 		return fmt.Errorf("Error creating WAFv2 IPSet: %s", err)
+	}
+
+	if resp == nil || resp.Summary == nil {
+		return fmt.Errorf("Error creating WAFv2 IPSet")
 	}
 
 	d.SetId(aws.StringValue(resp.Summary.Id))
@@ -156,7 +160,6 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 			d.SetId("")
 			return nil
 		}
-
 		return err
 	}
 
@@ -164,11 +167,11 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error reading WAFv2 IPSet")
 	}
 
-	d.Set("name", resp.IPSet.Name)
-	d.Set("description", resp.IPSet.Description)
-	d.Set("ip_address_version", resp.IPSet.IPAddressVersion)
-	d.Set("arn", resp.IPSet.ARN)
-	d.Set("lock_token", resp.LockToken)
+	d.Set("name", aws.StringValue(resp.IPSet.Name))
+	d.Set("description", aws.StringValue(resp.IPSet.Description))
+	d.Set("ip_address_version", aws.StringValue(resp.IPSet.IPAddressVersion))
+	d.Set("arn", aws.StringValue(resp.IPSet.ARN))
+	d.Set("lock_token", aws.StringValue(resp.LockToken))
 
 	if err := d.Set("addresses", flattenStringSet(resp.IPSet.Addresses)); err != nil {
 		return fmt.Errorf("Error setting addresses: %s", err)

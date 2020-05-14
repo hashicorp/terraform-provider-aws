@@ -250,7 +250,10 @@ func testAccCheckAWSWafv2IPSetDestroy(s *terraform.State) error {
 			})
 
 		if err == nil {
-			if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID && resp != nil && resp.IPSet != nil {
+			if resp == nil || resp.IPSet == nil {
+				return fmt.Errorf("Error getting WAFv2 IPSet")
+			}
+			if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID {
 				return fmt.Errorf("WAFv2 IPSet %s still exists", rs.Primary.ID)
 			}
 			return nil
@@ -289,7 +292,11 @@ func testAccCheckAWSWafv2IPSetExists(n string, v *wafv2.IPSet) resource.TestChec
 			return err
 		}
 
-		if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID && resp != nil && resp.IPSet != nil {
+		if resp == nil || resp.IPSet == nil {
+			return fmt.Errorf("Error getting WAFv2 IPSet")
+		}
+
+		if aws.StringValue(resp.IPSet.Id) == rs.Primary.ID {
 			*v = *resp.IPSet
 			return nil
 		}
