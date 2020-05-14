@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * resource/aws_appsync_resolver: Add `cache_config` configuration block [GH-12747]
 * resource/aws_codebuild_project: Support `git_submodules_config` with `GITHUB` and `GITHUB_ENTERPRISE` source types [GH-13285]
 * resource/aws_codebuild_project: Support `SECRETS_MANAGER` environment variable type [GH-12572]
+* resource/aws_datasync_task: Support `ONLY_FILES_TRANSFERRED` value in `verify_mode` argument [GH-12897]
 * resource/aws_iot_topic_rule: Add `dynamodbv2` configuration block [GH-7469]
 * resource/aws_iot_topic_rule: Add `iot_analytics` configuration block [GH-9859]
 * resource/aws_iot_topic_rule: Add `iot_events` configuration block [GH-9890]
