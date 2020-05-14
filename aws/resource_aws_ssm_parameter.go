@@ -67,6 +67,10 @@ func resourceAwsSsmParameter() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
+			"data_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"overwrite": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -147,6 +151,10 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
 
+	if detail.DataType != nil {
+		d.Set("data_type", detail.DataType)
+	}
+
 	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
@@ -196,6 +204,7 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		Value:          aws.String(d.Get("value").(string)),
 		Overwrite:      aws.Bool(shouldUpdateSsmParameter(d)),
 		AllowedPattern: aws.String(d.Get("allowed_pattern").(string)),
+		DataType:       aws.String(d.Get("data_type").(string)),
 	}
 
 	if d.HasChange("description") {
