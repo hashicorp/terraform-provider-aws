@@ -18,11 +18,11 @@ resource "aws_wafv2_regex_pattern_set" "example" {
   description = "Example regex pattern set"
   scope       = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "two"
   }
 
@@ -40,12 +40,10 @@ The following arguments are supported:
 * `name` - (Required) A friendly name of the regular expression pattern set.
 * `description` - (Optional) A friendly description of the regular expression pattern set.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
-* `regular_expression_list` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`.
+* `regular_expression` - (Optional) One or more blocks of regular expression patterns that you want AWS WAF to search for, such as `B[a@]dB[o0]t`. See [Visibility Configuration](#regular-expression) below for details.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource.
 
-## Nested blocks
-
-### `regular_expression_list`
+### Regular Expression
 
 * `regex_string` - (Required) The string representing the regular expression, see the AWS WAF [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-regex-pattern-set-creating.html) for more information.
 

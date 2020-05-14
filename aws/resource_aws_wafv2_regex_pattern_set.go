@@ -56,7 +56,7 @@ func resourceAwsWafv2RegexPatternSet() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
-			"regular_expression_list": {
+			"regular_expression": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 10,
@@ -96,7 +96,7 @@ func resourceAwsWafv2RegexPatternSetCreate(d *schema.ResourceData, meta interfac
 		params.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("regular_expression_list"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("regular_expression"); ok && v.(*schema.Set).Len() > 0 {
 		params.RegularExpressionList = expandWafv2RegexPatternSet(v.(*schema.Set).List())
 	}
 
@@ -110,7 +110,11 @@ func resourceAwsWafv2RegexPatternSetCreate(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Error creating WAFv2 RegexPatternSet: %s", err)
 	}
 
-	d.SetId(*resp.Summary.Id)
+	if resp == nil || resp.Summary == nil {
+		return fmt.Errorf("Error creating WAFv2 RegexPatternSet")
+	}
+
+	d.SetId(aws.StringValue(resp.Summary.Id))
 
 	return resourceAwsWafv2RegexPatternSetRead(d, meta)
 }
@@ -131,22 +135,25 @@ func resourceAwsWafv2RegexPatternSetRead(d *schema.ResourceData, meta interface{
 			d.SetId("")
 			return nil
 		}
-
 		return err
 	}
 
-	d.Set("name", resp.RegexPatternSet.Name)
-	d.Set("description", resp.RegexPatternSet.Description)
-	d.Set("arn", resp.RegexPatternSet.ARN)
-	d.Set("lock_token", resp.LockToken)
-
-	if err := d.Set("regular_expression_list", flattenWafv2RegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
-		return fmt.Errorf("Error setting regular_expression_list: %s", err)
+	if resp == nil || resp.RegexPatternSet == nil {
+		return fmt.Errorf("Error getting WAFv2 RegexPatternSet")
 	}
 
-	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.RegexPatternSet.ARN)
+	d.Set("name", aws.StringValue(resp.RegexPatternSet.Name))
+	d.Set("description", aws.StringValue(resp.RegexPatternSet.Description))
+	d.Set("arn", aws.StringValue(resp.RegexPatternSet.ARN))
+	d.Set("lock_token", aws.StringValue(resp.LockToken))
+
+	if err := d.Set("regular_expression", flattenWafv2RegexPatternSet(resp.RegexPatternSet.RegularExpressionList)); err != nil {
+		return fmt.Errorf("Error setting regular_expression: %s", err)
+	}
+
+	tags, err := keyvaluetags.Wafv2ListTags(conn, aws.StringValue(resp.RegexPatternSet.ARN))
 	if err != nil {
-		return fmt.Errorf("Error listing tags for WAFv2 RegexPatternSet (%s): %s", *resp.RegexPatternSet.ARN, err)
+		return fmt.Errorf("Error listing tags for WAFv2 RegexPatternSet (%s): %s", aws.StringValue(resp.RegexPatternSet.ARN), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -169,7 +176,7 @@ func resourceAwsWafv2RegexPatternSetUpdate(d *schema.ResourceData, meta interfac
 		RegularExpressionList: []*wafv2.Regex{},
 	}
 
-	if v, ok := d.GetOk("regular_expression_list"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("regular_expression"); ok && v.(*schema.Set).Len() > 0 {
 		params.RegularExpressionList = expandWafv2RegexPatternSet(v.(*schema.Set).List())
 	}
 
@@ -205,7 +212,6 @@ func resourceAwsWafv2RegexPatternSetDelete(d *schema.ResourceData, meta interfac
 	}
 	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteRegexPatternSet(params)
-
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
 				return resource.RetryableError(err)
@@ -236,7 +242,6 @@ func expandWafv2RegexPatternSet(l []interface{}) []*wafv2.Regex {
 		if regexPattern == nil {
 			continue
 		}
-
 		regexPatterns = append(regexPatterns, expandWafv2Regex(regexPattern.(map[string]interface{})))
 	}
 
@@ -254,13 +259,20 @@ func expandWafv2Regex(m map[string]interface{}) *wafv2.Regex {
 }
 
 func flattenWafv2RegexPatternSet(r []*wafv2.Regex) interface{} {
-	regexPatterns := make([]interface{}, len(r))
+	if r == nil {
+		return []interface{}{}
+	}
 
-	for i, regexPattern := range r {
-		d := map[string]interface{}{
-			"regex_string": *regexPattern.RegexString,
+	regexPatterns := make([]interface{}, 0)
+
+	for _, regexPattern := range r {
+		if regexPattern == nil {
+			continue
 		}
-		regexPatterns[i] = d
+		d := map[string]interface{}{
+			"regex_string": aws.StringValue(regexPattern.RegexString),
+		}
+		regexPatterns = append(regexPatterns, d)
 	}
 
 	return regexPatterns

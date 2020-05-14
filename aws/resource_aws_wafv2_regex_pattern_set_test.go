@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -31,9 +30,9 @@ func TestAccAwsWafv2RegexPatternSet_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", regexPatternSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", regexPatternSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.1641128102.regex_string", "one"),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.265355341.regex_string", "two"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.1641128102.regex_string", "one"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.265355341.regex_string", "two"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
@@ -47,10 +46,10 @@ func TestAccAwsWafv2RegexPatternSet_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", regexPatternSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.1641128102.regex_string", "one"),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.265355341.regex_string", "two"),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.2339296779.regex_string", "three"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.1641128102.regex_string", "one"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.265355341.regex_string", "two"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.2339296779.regex_string", "three"),
 				),
 			},
 			{
@@ -103,7 +102,7 @@ func TestAccAwsWafv2RegexPatternSet_Minimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", regexPatternSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "0"),
 				),
 			},
 		},
@@ -129,7 +128,7 @@ func TestAccAwsWafv2RegexPatternSet_ChangeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", regexPatternSetName),
 					resource.TestCheckResourceAttr(resourceName, "description", regexPatternSetName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "2"),
 				),
 			},
 			{
@@ -140,7 +139,7 @@ func TestAccAwsWafv2RegexPatternSet_ChangeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", regexPatternSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", regexPatternSetNewName),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
-					resource.TestCheckResourceAttr(resourceName, "regular_expression_list.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "regular_expression.#", "2"),
 				),
 			},
 		},
@@ -210,16 +209,15 @@ func testAccCheckAWSWafv2RegexPatternSetDestroy(s *terraform.State) error {
 			})
 
 		if err == nil {
-			if *resp.RegexPatternSet.Id == rs.Primary.ID {
+			if resp != nil && resp.RegexPatternSet != nil && aws.StringValue(resp.RegexPatternSet.Id) == rs.Primary.ID {
 				return fmt.Errorf("WAFv2 RegexPatternSet %s still exists", rs.Primary.ID)
 			}
+			return nil
 		}
 
 		// Return nil if the RegexPatternSet is already destroyed
-		if awsErr, ok := err.(awserr.Error); ok {
-			if awsErr.Code() == wafv2.ErrCodeWAFNonexistentItemException {
-				return nil
-			}
+		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
+			return nil
 		}
 
 		return err
@@ -250,7 +248,11 @@ func testAccCheckAWSWafv2RegexPatternSetExists(n string, v *wafv2.RegexPatternSe
 			return err
 		}
 
-		if *resp.RegexPatternSet.Id == rs.Primary.ID {
+		if resp == nil || resp.RegexPatternSet == nil {
+			return fmt.Errorf("Error getting WAFv2 RegexPatternSet for %s", rs.Primary.ID)
+		}
+
+		if aws.StringValue(resp.RegexPatternSet.Id) == rs.Primary.ID {
 			*v = *resp.RegexPatternSet
 			return nil
 		}
@@ -266,11 +268,11 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   description = "%s"
   scope       = "REGIONAL"
 
-  regular_expression_list {
+	regular_expression {
     regex_string = "one"
   }
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "two"
   }
 
@@ -289,15 +291,15 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   description = "Updated"
   scope       = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "two"
   }
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "three"
   }
 }
@@ -320,11 +322,11 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   description = "%s"
   scope       = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "two"
   }
 
@@ -342,7 +344,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   description = "%s"
   scope       = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 
