@@ -22,5 +22,4 @@ output "greengrass_service_role" {
 
 ## Attributes Reference
 
-* `associated_at` - The time when the service role was associated with the account.
 * `role_arn` - The ARN of the role which is associated with the account.
