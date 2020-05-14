@@ -59,17 +59,6 @@ func testAccCheckAwsIotGreengrassServiceRoleExists(name string) resource.TestChe
 	}
 }
 
-func testAccCheckAwsIotGreengrassServiceRoleNotExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return nil
-		}
-
-		return fmt.Errorf("Not expecting but found: %s", name)
-	}
-}
-
 func testAccAWSIotGreengrassServiceRoleConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "greengrass_service_role" {
