@@ -111,7 +111,7 @@ func resourceAwsNetworkManagerDeviceCreate(d *schema.ResourceData, meta interfac
 	input := &networkmanager.CreateDeviceInput{
 		Description:     aws.String(d.Get("description").(string)),
 		GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
-		Location:        resourceAwsNetworkManagerDeviceLocation(d),
+		Location:        expandNetworkManagerLocation(d.Get("location").([]interface{})),
 		Model:           aws.String(d.Get("model").(string)),
 		SerialNumber:    aws.String(d.Get("serial_number").(string)),
 		SiteId:          aws.String(d.Get("site_id").(string)),
@@ -174,12 +174,15 @@ func resourceAwsNetworkManagerDeviceRead(d *schema.ResourceData, meta interface{
 
 	d.Set("arn", device.DeviceArn)
 	d.Set("description", device.Description)
-	d.Set("location", device.Location)
 	d.Set("model", device.Model)
 	d.Set("serial_number", device.SerialNumber)
 	d.Set("site_id", device.SiteId)
 	d.Set("type", device.Type)
 	d.Set("vendor", device.Vendor)
+
+	if err := d.Set("location", flattenNetworkManagerLocation(device.Location)); err != nil {
+		return fmt.Errorf("error setting location: %s", err)
+	}
 
 	if err := d.Set("tags", keyvaluetags.NetworkmanagerKeyValueTags(device.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -248,18 +251,6 @@ func resourceAwsNetworkManagerDeviceDelete(d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func resourceAwsNetworkManagerDeviceLocation(d *schema.ResourceData) *networkmanager.Location {
-	count := d.Get("location.#").(int)
-	if count == 0 {
-		return nil
-	}
-
-	return &networkmanager.Location{
-		Address:   aws.String(d.Get("location.0.address").(string)),
-		Latitude:  aws.String(d.Get("location.0.latitude").(string)),
-		Longitude: aws.String(d.Get("location.0.longitude").(string)),
-	}
-}
 func networkmanagerDeviceRefreshFunc(conn *networkmanager.NetworkManager, globalNetworkID, deviceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		device, err := networkmanagerDescribeDevice(conn, globalNetworkID, deviceID)

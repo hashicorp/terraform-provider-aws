@@ -127,19 +127,8 @@ func resourceAwsNetworkManagerTransitGatewayRegistrationDelete(d *schema.Resourc
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Registration (%s): %s", d.Id(), input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		req, _ := conn.DeregisterTransitGatewayRequest(input)
-		if err := req.Send(); err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if isResourceTimeoutError(err) {
-		req, _ := conn.DeregisterTransitGatewayRequest(input)
-		err = req.Send()
-	}
+	req, _ := conn.DeregisterTransitGatewayRequest(input)
+	err := req.Send()
 
 	if isAWSErr(err, "InvalidTransitGatewayRegistrationArn.NotFound", "") {
 		return nil
