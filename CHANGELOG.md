@@ -7,6 +7,18 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_appsync_resolver: Add `cache_config` configuration block [GH-12747]
+* resource/aws_codebuild_project: Support `git_submodules_config` with `GITHUB` and `GITHUB_ENTERPRISE` source types [GH-13285]
+* resource/aws_codebuild_project: Support `SECRETS_MANAGER` environment variable type [GH-12572]
+* resource/aws_iot_topic_rule: Add `dynamodbv2` configuration block [GH-7469]
+* resource/aws_iot_topic_rule: Add `iot_analytics` configuration block [GH-9859]
+* resource/aws_iot_topic_rule: Add `iot_events` configuration block [GH-9890]
+* resource/aws_iot_topic_rule: Add `operation` argument to `dynamodb` configuration block [GH-12714]
+* resource/aws_iot_topic_rule: Add `qos` argument `republish` configuration block [GH-12869]
+
+BUG FIXES:
+
+* resource/aws_codebuild_project: Allow empty value (`""`) environment variables [GH-11572]
+* resource/aws_security_group_rule: Prevent recreation when `source_security_group_id` refers to a security group across accounts [GH-11809]
 
 ## 2.61.0 (May 08, 2020)
 

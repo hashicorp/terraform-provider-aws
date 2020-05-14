@@ -165,6 +165,7 @@ github.com/aws/aws-sdk-go/service/mediastore
 github.com/aws/aws-sdk-go/service/mediastoredata
 github.com/aws/aws-sdk-go/service/mq
 github.com/aws/aws-sdk-go/service/neptune
+github.com/aws/aws-sdk-go/service/networkmanager
 github.com/aws/aws-sdk-go/service/opsworks
 github.com/aws/aws-sdk-go/service/organizations
 github.com/aws/aws-sdk-go/service/personalize

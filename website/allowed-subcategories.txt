@@ -103,6 +103,7 @@ SimpleDB
 Step Function (SFN)
 Storage Gateway
 Transfer
+Transit Gateway Network Manager
 VPC
 WAF Regional
 WAF

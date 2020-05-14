@@ -1095,6 +1095,7 @@ func init() {
 		"mediastoredata",
 		"mq",
 		"neptune",
+		"networkmanager",
 		"opsworks",
 		"organizations",
 		"personalize",
