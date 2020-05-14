@@ -19,10 +19,10 @@ func TestAccAWSIotGreengrassServiceRoleDataSource(t *testing.T) {
 		PreventPostDestroyRefresh: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSIotGreengrassServiceRoleConfigResources(rInt),
+				Config: testAccAWSIotGreengrassServiceRoleDataSourceConfigResources(rInt),
 			},
 			{
-				Config: testAccAWSIotGreengrassServiceRoleConfig(rInt),
+				Config: testAccAWSIotGreengrassServiceRoleDataSourceConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "role_arn", resourceName, "arn"),
 				),
@@ -31,7 +31,7 @@ func TestAccAWSIotGreengrassServiceRoleDataSource(t *testing.T) {
 	})
 }
 
-func testAccAWSIotGreengrassServiceRoleConfigResources(rInt int) string {
+func testAccAWSIotGreengrassServiceRoleDataSourceConfigResources(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "greengrass_service_role" {
   name = "greengrass_service_role_test_%[1]d"
@@ -57,10 +57,10 @@ resource "aws_iot_greengrass_service_role" "test" {
 `, rInt)
 }
 
-func testAccAWSIotGreengrassServiceRoleConfig(rInt int) string {
+func testAccAWSIotGreengrassServiceRoleDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 %s
 
 data "aws_iot_greengrass_service_role" "test" {}
-`, testAccAWSIotGreengrassServiceRoleConfigResources(rInt))
+`, testAccAWSIotGreengrassServiceRoleDataSourceConfigResources(rInt))
 }
