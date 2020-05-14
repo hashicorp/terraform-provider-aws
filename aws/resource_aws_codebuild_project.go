@@ -871,7 +871,7 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 					projectEnvironmentVar.Name = &v
 				}
 
-				if v := config["value"].(string); v != "" {
+				if v, ok := config["value"].(string); ok {
 					projectEnvironmentVar.Value = &v
 				}
 
