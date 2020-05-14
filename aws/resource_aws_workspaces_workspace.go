@@ -14,6 +14,17 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	// Maximum amount of time to wait for a WorkSpace to return Available
+	WorkspaceAvailableTimeout = 30 * time.Minute
+
+	// Maximum amount of time to wait for a WorkSpace while returning Updating
+	WorkspaceUpdatingTimeout = 10 * time.Minute
+
+	// Maximum amount of time to wait for a WorkSpace to return Terminated
+	WorkspaceTerminatedTimeout = 10 * time.Minute
+)
+
 func resourceAwsWorkspacesWorkspace() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsWorkspacesWorkspaceCreate,
@@ -179,10 +190,9 @@ func resourceAwsWorkspacesWorkspaceCreate(d *schema.ResourceData, meta interface
 			workspaces.WorkspaceStatePending,
 			workspaces.WorkspaceStateStarting,
 		},
-		Target:       []string{workspaces.WorkspaceStateAvailable},
-		Refresh:      workspaceRefreshStateFunc(conn, wsPendingID),
-		PollInterval: 30 * time.Second,
-		Timeout:      25 * time.Minute,
+		Target:  []string{workspaces.WorkspaceStateAvailable},
+		Refresh: workspaceRefreshStateFunc(conn, wsPendingID),
+		Timeout: WorkspaceAvailableTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -332,9 +342,8 @@ func workspaceDelete(id string, conn *workspaces.WorkSpaces) error {
 		Target: []string{
 			workspaces.WorkspaceStateTerminated,
 		},
-		Refresh:      workspaceRefreshStateFunc(conn, id),
-		PollInterval: 15 * time.Second,
-		Timeout:      10 * time.Minute,
+		Refresh: workspaceRefreshStateFunc(conn, id),
+		Timeout: WorkspaceTerminatedTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
@@ -402,9 +411,8 @@ func workspacePropertyUpdate(p string, conn *workspaces.WorkSpaces, d *schema.Re
 			workspaces.WorkspaceStateAvailable,
 			workspaces.WorkspaceStateStopped,
 		},
-		Refresh:      workspaceRefreshStateFunc(conn, d.Id()),
-		PollInterval: 30 * time.Second,
-		Timeout:      10 * time.Minute,
+		Refresh: workspaceRefreshStateFunc(conn, d.Id()),
+		Timeout: WorkspaceUpdatingTimeout,
 	}
 
 	_, err = stateConf.WaitForState()
