@@ -385,6 +385,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/neptune" = [
       "aws_neptune_",
     ],
+    "service/networkmanager" = [
+      "aws_networkmanager_",
+    ],
     "service/opsworks" = [
       "aws_opsworks_",
     ],
@@ -1040,6 +1043,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/neptune" = [
       "**/*_neptune_*",
       "**/neptune_*"
+    ]
+    "service/networkmanager" = [
+      "**/*_networkmanager_*",
+      "**/networkmanager_*"
     ]
     "service/opsworks" = [
       "**/*_opsworks_*",
