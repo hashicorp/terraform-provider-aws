@@ -414,12 +414,12 @@ The `transition` object supports the following
 
 The `noncurrent_version_expiration` object supports the following
 
-* `days` (Required) Specifies the number of days an object is noncurrent object versions expire.
+* `days` (Required) Specifies the number of days noncurrent object versions expire.
 
 The `noncurrent_version_transition` object supports the following
 
-* `days` (Required) Specifies the number of days an object is noncurrent object versions expire.
-* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent versions object to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
+* `days` (Required) Specifies the number of days noncurrent object versions transition.
+* `storage_class` (Required) Specifies the Amazon S3 storage class to which you want the noncurrent object versions to transition. Can be `ONEZONE_IA`, `STANDARD_IA`, `INTELLIGENT_TIERING`, `GLACIER`, or `DEEP_ARCHIVE`.
 
 The `replication_configuration` object supports the following:
 

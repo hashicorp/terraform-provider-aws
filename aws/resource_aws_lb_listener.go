@@ -204,6 +204,7 @@ func resourceAwsLbListener() *schema.Resource {
 									"authentication_request_extra_params": {
 										Type:     schema.TypeMap,
 										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"on_unauthenticated_request": {
 										Type:     schema.TypeString,
@@ -256,6 +257,7 @@ func resourceAwsLbListener() *schema.Resource {
 									"authentication_request_extra_params": {
 										Type:     schema.TypeMap,
 										Optional: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"authorization_endpoint": {
 										Type:     schema.TypeString,
