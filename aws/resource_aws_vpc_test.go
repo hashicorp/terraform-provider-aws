@@ -131,6 +131,11 @@ func TestAccAWSVpc_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 		},
 	})
@@ -211,6 +216,11 @@ func TestAccAWSVpc_AssignGeneratedIpv6CidrBlock(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 			{
 				Config: testAccVpcConfigAssignGeneratedIpv6CidrBlock(false),
@@ -259,6 +269,11 @@ func TestAccAWSVpc_Tenancy(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 			{
 				Config: testAccVpcConfig,
@@ -304,6 +319,11 @@ func TestAccAWSVpc_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 			{
 				Config: testAccVpcConfigTagsUpdate,
@@ -483,6 +503,11 @@ func TestAccAWSVpc_bothDnsOptionsSet(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 		},
 	})
@@ -509,6 +534,11 @@ func TestAccAWSVpc_DisabledDnsSupport(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 		},
 	})
@@ -534,6 +564,11 @@ func TestAccAWSVpc_classiclinkOptionSet(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 		},
 	})
@@ -559,6 +594,11 @@ func TestAccAWSVpc_classiclinkDnsSupportOptionSet(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 		},
 	})

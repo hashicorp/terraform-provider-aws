@@ -262,9 +262,9 @@ func resourceAwsVpcRead(d *schema.ResourceData, meta interface{}) error {
 
 	_, tagsAreDefined := d.GetOk("tags")
 	if tagsAreDefined {
-  	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-	  	return fmt.Errorf("error setting tags: %s", err)
-    }
+		if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+			return fmt.Errorf("error setting tags: %s", err)
+		}
 	}
 
 	d.Set("owner_id", vpc.OwnerId)

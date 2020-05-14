@@ -260,6 +260,11 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					// This is needed because we don't always call d.Set() in Read for tags as per
+					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
+					"tags",
+				},
 			},
 			{
 				Config: testAccRouteTableConfigTagsUpdate,
