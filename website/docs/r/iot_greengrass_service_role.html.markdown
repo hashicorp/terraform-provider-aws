@@ -17,16 +17,16 @@ resource "aws_iam_role" "greengrass_service_role" {
   name = "greengrass_service_role"
   assume_role_policy = <<EOF
 {
-"Version": "2012-10-17",
-"Statement": [
-	{
-	"Effect": "Allow",
-	"Principal": {
-		"Service": "greengrass.amazonaws.com"
-	},
-	"Action": "sts:AssumeRole"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+	  "Effect": "Allow",
+	  "Principal": {
+        "Service": "greengrass.amazonaws.com"
+	  },
+	  "Action": "sts:AssumeRole"
 	}
-]
+  ]
 }
 EOF
 }
