@@ -346,16 +346,14 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName),
+				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", "VALUE1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project1),
-					resource.TestCheckResourceAttr(resourceName, "environment.1380979031.environment_variable.#", "1"),
 				),
 			},
 			{
@@ -364,10 +362,9 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Two(rName),
+				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Two(rName, "KEY1", "VALUE1UPDATED", "KEY2", "VALUE2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project2),
-					resource.TestCheckResourceAttr(resourceName, "environment.4178155002.environment_variable.#", "2"),
 				),
 			},
 			{
@@ -430,6 +427,53 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "environment.198523880.environment_variable.0.type", "PLAINTEXT"),
 					resource.TestCheckResourceAttr(resourceName, "environment.198523880.environment_variable.1.type", "SECRETS_MANAGER"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Value(t *testing.T) {
+	var project1, project2, project3 codebuild.Project
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_project.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", "VALUE1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project2),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName, "KEY1", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildProjectExists(resourceName, &project3),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -2488,7 +2532,7 @@ resource "aws_codebuild_project" "test" {
 `, rName)
 }
 
-func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName string) string {
+func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_One(rName, key1, value1 string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2504,8 +2548,8 @@ resource "aws_codebuild_project" "test" {
     type         = "LINUX_CONTAINER"
 
     environment_variable {
-      name  = "SOME_KEY"
-      value = "SOME_VALUE"
+      name  = %[2]q
+      value = %[3]q
     }
   }
 
@@ -2514,10 +2558,10 @@ resource "aws_codebuild_project" "test" {
     location = "https://github.com/hashicorp/packer.git"
   }
 }
-`, rName)
+`, rName, key1, value1)
 }
 
-func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Two(rName string) string {
+func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Two(rName, key1, value1, key2, value2 string) string {
 	return testAccAWSCodeBuildProjectConfig_Base_ServiceRole(rName) + fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
@@ -2533,13 +2577,13 @@ resource "aws_codebuild_project" "test" {
     type         = "LINUX_CONTAINER"
 
     environment_variable {
-      name  = "SOME_KEY"
-      value = "SOME_VALUE"
+      name  = %[2]q
+      value = %[3]q
     }
 
     environment_variable {
-      name  = "SOME_KEY2"
-      value = "SOME_VALUE2"
+      name  = %[4]q
+      value = %[5]q
     }
   }
 
@@ -2548,7 +2592,7 @@ resource "aws_codebuild_project" "test" {
     location = "https://github.com/hashicorp/packer.git"
   }
 }
-`, rName)
+`, rName, key1, value1, key2, value2)
 }
 
 func testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Zero(rName string) string {
