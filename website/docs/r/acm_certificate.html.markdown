@@ -105,8 +105,8 @@ Supported nested arguments for the `options` configuration block:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ARN of the certificate
-* `arn` - The ARN of the certificate
+* `id` - The ID of the certificate
+* `arn` - The ARN of the certificate (same as `id`)
 * `domain_name` - The domain name for which the certificate is issued
 * `domain_validation_options` - A list of attributes to feed into other resources to complete certificate validation. Can have more than one element, e.g. if SANs are defined. Only set if `DNS`-validation was used.
 * `validation_emails` - A list of addresses that received a validation E-Mail. Only set if `EMAIL`-validation was used.
