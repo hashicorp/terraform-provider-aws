@@ -328,6 +328,7 @@ When breaking changes to the provider are necessary we release them in a major v
 | [![dependencies][dependencies-badge]][dependencies] | Used to indicate dependency or vendoring changes. | Added by Hashibot. |
 | [![documentation][documentation-badge]][documentation] | Introduces or discusses updates to documentation. | None |
 | [![enhancement][enhancement-badge]][enhancement] | Requests to existing resources that expand the functionality or scope. | None |
+| [![examples][examples-badge]][examples] | Introduces or discusses updates to examples. | None |
 | [![good first issue][good-first-issue-badge]][good-first-issue] | Call to action for new contributors looking for a place to start. Smaller or straightforward issues. | None |
 | [![hacktoberfest][hacktoberfest-badge]][hacktoberfest] | Call to action for Hacktoberfest (OSS Initiative). | None |
 | [![hashibot ignore][hashibot-ignore-badge]][hashibot-ignore] | Issues or PRs labelled with this are ignored by Hashibot. | None |
@@ -362,6 +363,8 @@ When breaking changes to the provider are necessary we release them in a major v
 [documentation]: https://github.com/terraform-providers/terraform-provider-aws/labels/documentation
 [enhancement-badge]: https://img.shields.io/badge/enhancement-d4c5f9
 [enhancement]: https://github.com/terraform-providers/terraform-provider-aws/labels/enhancement
+[examples-badge]: https://img.shields.io/badge/examples-fef2c0
+[examples]: https://github.com/terraform-providers/terraform-provider-aws/labels/examples
 [good-first-issue-badge]: https://img.shields.io/badge/good%20first%20issue-128A0C
 [good-first-issue]: https://github.com/terraform-providers/terraform-provider-aws/labels/good%20first%20issue
 [hacktoberfest-badge]: https://img.shields.io/badge/hacktoberfest-2c0fad

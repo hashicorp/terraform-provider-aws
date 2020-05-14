@@ -555,7 +555,9 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/partition*",
       "website/**/region*"
     ]
-    # label test related changes
+    "examples" = [
+      "examples/**/*",
+    ]
     "tests" = [
       "**/*_test.go",
       "**/testdata/**/*",
