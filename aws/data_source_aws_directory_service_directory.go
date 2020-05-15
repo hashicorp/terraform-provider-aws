@@ -68,6 +68,12 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"connect_ips": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
 						"customer_dns_ips": {
 							Type:     schema.TypeSet,
 							Computed: true,

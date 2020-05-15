@@ -111,6 +111,12 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 							Set:      schema.HashString,
 						},
+						"connect_ips": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
+						},
 						"vpc_id": {
 							Type:     schema.TypeString,
 							Required: true,

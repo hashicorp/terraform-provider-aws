@@ -100,7 +100,8 @@ func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, me
 	}
 
 	d.Set("load_balancer_name", loadBalancerName)
-	d.Set("instance_port", instancePort)
+	instancePortVal, _ := strconv.ParseInt(instancePort, 10, 64)
+	d.Set("instance_port", instancePortVal)
 	d.Set("policy_names", flattenStringList(policyNames))
 
 	return nil

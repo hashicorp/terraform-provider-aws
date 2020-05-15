@@ -142,7 +142,7 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 	// We can get away with this because there's only one policy returned
 	policyDesc := getResp.PolicyDescriptions[0]
 	attributes := flattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
-	d.Set("attributes", attributes)
+	d.Set("attribute", attributes)
 
 	d.Set("name", policyName)
 	d.Set("load_balancer", lbName)

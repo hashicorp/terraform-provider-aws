@@ -33,8 +33,10 @@ func resourceAwsSsmActivation() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			// this is a breaking change, however since the attr is computed
+			// it has never been correctly set
 			"expired": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 			"expiration_date": {

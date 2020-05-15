@@ -120,6 +120,10 @@ func resourceAwsEMRInstanceGroup() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"instance_role": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"running_instance_count": {
 				Type:     schema.TypeInt,
 				Computed: true,

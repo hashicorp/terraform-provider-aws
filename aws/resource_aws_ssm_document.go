@@ -103,6 +103,10 @@ func resourceAwsSsmDocument() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"document_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,

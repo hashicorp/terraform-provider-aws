@@ -100,7 +100,8 @@ func resourceAwsLoadBalancerListenerPoliciesRead(d *schema.ResourceData, meta in
 	}
 
 	d.Set("load_balancer_name", loadBalancerName)
-	d.Set("load_balancer_port", loadBalancerPort)
+	loadBalancerPortVal, _ := strconv.ParseInt(loadBalancerPort, 10, 64)
+	d.Set("load_balancer_port", loadBalancerPortVal)
 	d.Set("policy_names", flattenStringList(policyNames))
 
 	return nil

@@ -238,7 +238,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 			"processing": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool, // does this cause a breaking change?
 				Computed: true,
 			},
 
