@@ -21,6 +21,7 @@ import (
 )
 
 const rfc3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
+const uuidRegexPattern = `[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[ab89][a-f0-9]{3}-[a-f0-9]{12}`
 
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
@@ -73,6 +74,21 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
+// testAccAlternateAccountProvider returns the schema.Provider for the alternate account
+// Must be used within a resource.TestCheckFunc
+func testAccAlternateAccountProvider(providers *[]*schema.Provider) (result *schema.Provider) {
+	primaryAccountID := testAccGetAccountID()
+
+	for _, provider := range *providers {
+		accountID := testAccAwsProviderAccountID(provider)
+		if accountID != "" && accountID != primaryAccountID {
+			result = provider
+		}
+	}
+
+	return
+}
+
 // testAccAwsProviderAccountID returns the account ID of an AWS provider
 func testAccAwsProviderAccountID(provider *schema.Provider) string {
 	if provider == nil {
@@ -95,6 +111,15 @@ func testAccAwsProviderAccountID(provider *schema.Provider) string {
 func testAccCheckResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return resource.TestCheckResourceAttr(resourceName, attributeName, testAccGetAccountID())(s)
+	}
+}
+
+// testAccCheckResourceAttrAlternateAccountID ensures the Terraform state exactly matches the alternate account ID
+func testAccCheckResourceAttrAlternateAccountID(resourceName, attributeName string, providers *[]*schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		provider := testAccAlternateAccountProvider(providers)
+
+		return resource.TestCheckResourceAttr(resourceName, attributeName, testAccAwsProviderAccountID(provider))(s)
 	}
 }
 
@@ -177,6 +202,37 @@ func testAccMatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, a
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// testAccMatchResourceAttrRegionalARNAccountID ensures the Terraform state regexp matches a formatted ARN with region and specific account ID
+func testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, accountID, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: accountID,
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// testAccMatchResourceAttrRegionalARNAlternateAccount ensures the Terraform state regexp matches a formatted ARN with region in the alternate account
+// assumes the regions for the primary and alternate accounts are the same
+func testAccMatchResourceAttrRegionalARNAlternateAccount(resourceName, attributeName string, providers *[]*schema.Provider, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		provider := testAccAlternateAccountProvider(providers)
+
+		return testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, testAccAwsProviderAccountID(provider), "ram", arnResourceRegexp)(s)
 	}
 }
 
@@ -339,7 +395,7 @@ func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceS
 }
 
 // testAccGetAccountID returns the account ID of testAccProvider
-// Must be used returned within a resource.TestCheckFunc
+// Must be used within a resource.TestCheckFunc
 func testAccGetAccountID() string {
 	return testAccAwsProviderAccountID(testAccProvider)
 }
