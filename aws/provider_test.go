@@ -943,6 +943,21 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 	})
 }
 
+func TestAccAWSProvider_AssumeRole_Empty(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSProviderDnsSuffix(providers *[]*schema.Provider, expectedDnsSuffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
@@ -1464,6 +1479,15 @@ provider "aws" {
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }
+
+const testAccCheckAWSProviderConfigAssumeRoleEmpty = `
+provider "aws" {
+  assume_role {
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`
 
 // composeConfig can be called to concatenate multiple strings to build test configurations
 func composeConfig(config ...string) string {
