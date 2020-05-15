@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -625,14 +626,15 @@ func resourceAwsLaunchTemplateCreate(d *schema.ResourceData, meta interface{}) e
 
 	resp, err := conn.CreateLaunchTemplate(launchTemplateOpts)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EC2 Launch Template (%s): %w", ltName, err)
 	}
 
 	launchTemplate := resp.LaunchTemplate
 	d.SetId(*launchTemplate.LaunchTemplateId)
 
-	log.Printf("[DEBUG] Launch Template created: %q (version %d)",
-		*launchTemplate.LaunchTemplateId, *launchTemplate.LatestVersionNumber)
+	if err := ec2ErrorFromValidationWarning(resp.Warning); err != nil {
+		return fmt.Errorf("error validating EC2 Launch Template (%s): %w", d.Id(), err)
+	}
 
 	return resourceAwsLaunchTemplateRead(d, meta)
 }
@@ -807,9 +809,14 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
 	}
 
-	_, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
-	if createErr != nil {
-		return createErr
+	output, err := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+
+	if err != nil {
+		return fmt.Errorf("error creating EC2 Launch Template (%s) version: %w", d.Id(), err)
+	}
+
+	if err := ec2ErrorFromValidationWarning(output.Warning); err != nil {
+		return fmt.Errorf("error validating EC2 Launch Template (%s) version: %w", d.Id(), err)
 	}
 
 	if d.HasChange("tags") {
@@ -844,6 +851,24 @@ func resourceAwsLaunchTemplateDelete(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Launch Template deleted: %v", d.Id())
 	return nil
+}
+
+func ec2ErrorFromValidationWarning(validationWarning *ec2.ValidationWarning) error {
+	if validationWarning == nil {
+		return nil
+	}
+
+	var errs *multierror.Error
+
+	for _, validationError := range validationWarning.Errors {
+		if validationError == nil {
+			continue
+		}
+
+		errs = multierror.Append(fmt.Errorf("EC2 Validation Error: %s: %s", aws.StringValue(validationError.Code), aws.StringValue(validationError.Message)))
+	}
+
+	return errs.ErrorOrNil()
 }
 
 func getBlockDeviceMappings(m []*ec2.LaunchTemplateBlockDeviceMapping) []interface{} {

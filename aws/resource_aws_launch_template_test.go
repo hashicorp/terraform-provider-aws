@@ -196,6 +196,39 @@ func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeleteOnTermination(t *tes
 	})
 }
 
+func TestAccAWSLaunchTemplate_BlockDeviceMappings_EBS_DeviceName_ValidationError(t *testing.T) {
+	var template ec2.LaunchTemplate
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_launch_template.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS_DeviceName_Missing(rName),
+				ExpectError: regexp.MustCompile("EC2 Validation Error"),
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "block_device_mappings.0.ebs.0.volume_size", "15"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSLaunchTemplate_EbsOptimized(t *testing.T) {
 	var template ec2.LaunchTemplate
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1148,6 +1181,25 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName, deleteOnTermination, rName)
+}
+
+func testAccAWSLaunchTemplateConfig_BlockDeviceMappings_EBS_DeviceName_Missing(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  name          = %[1]q
+
+  block_device_mappings {
+    ebs {
+      volume_size = 15
+    }
+  }
+}
+`, rName))
 }
 
 func testAccAWSLaunchTemplateConfig_EbsOptimized(rName, ebsOptimized string) string {
