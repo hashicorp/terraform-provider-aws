@@ -1168,7 +1168,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	}
 	config.CredsFilename = credsPath
 
-	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
+	assumeRoleList := d.Get("assume_role").([]interface{})
 	if len(assumeRoleList) == 1 {
 		assumeRole := assumeRoleList[0].(map[string]interface{})
 		config.AssumeRoleARN = assumeRole["role_arn"].(string)
@@ -1214,7 +1214,7 @@ var awsMutexKV = mutexkv.NewMutexKV()
 
 func assumeRoleSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
