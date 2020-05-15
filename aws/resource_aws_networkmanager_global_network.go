@@ -49,7 +49,21 @@ func resourceAwsNetworkManagerGlobalNetworkCreate(d *schema.ResourceData, meta i
 	}
 
 	log.Printf("[DEBUG] Creating Network Manager Global Network: %s", input)
-	output, err := conn.CreateGlobalNetwork(input)
+	var output *networkmanager.CreateGlobalNetworkOutput
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		var err error
+		output, err = conn.CreateGlobalNetwork(input)
+		if err != nil {
+			if isAWSErr(err, "ValidationException", "Resource already exists with ID") {
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		output, err = conn.CreateGlobalNetwork(input)
+	}
 	if err != nil {
 		return fmt.Errorf("error creating Network Manager Global Network: %s", err)
 	}
