@@ -51,7 +51,6 @@ func resourceAwsNetworkManagerDevice() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"global_network_id": {
 				Type:     schema.TypeString,
@@ -90,7 +89,6 @@ func resourceAwsNetworkManagerDevice() *schema.Resource {
 			"site_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"tags": tagsSchema(),
 			"type": {
@@ -193,6 +191,25 @@ func resourceAwsNetworkManagerDeviceRead(d *schema.ResourceData, meta interface{
 
 func resourceAwsNetworkManagerDeviceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
+
+	if d.HasChange("description") || d.HasChange("location") || d.HasChange("model") || d.HasChange("serial_number") || d.HasChange("site_id") || d.HasChange("type") || d.HasChange("vendor") {
+		request := &networkmanager.UpdateDeviceInput{
+			Description:     aws.String(d.Get("description").(string)),
+			DeviceId:        aws.String(d.Id()),
+			GlobalNetworkId: aws.String(d.Get("global_network_id").(string)),
+			Location:        expandNetworkManagerLocation(d.Get("location").([]interface{})),
+			Model:           aws.String(d.Get("model").(string)),
+			SerialNumber:    aws.String(d.Get("serial_number").(string)),
+			SiteId:          aws.String(d.Get("site_id").(string)),
+			Type:            aws.String(d.Get("type").(string)),
+			Vendor:          aws.String(d.Get("vendor").(string)),
+		}
+
+		_, err := conn.UpdateDevice(request)
+		if err != nil {
+			return fmt.Errorf("Failure updating Network Manager Device (%s): %s", d.Id(), err)
+		}
+	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")

@@ -30,7 +30,6 @@ func resourceAwsNetworkManagerGlobalNetwork() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"tags": tagsSchema(),
 		},
@@ -112,6 +111,18 @@ func resourceAwsNetworkManagerGlobalNetworkRead(d *schema.ResourceData, meta int
 
 func resourceAwsNetworkManagerGlobalNetworkUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).networkmanagerconn
+
+	if d.HasChange("description") {
+		request := &networkmanager.UpdateGlobalNetworkInput{
+			Description:     aws.String(d.Get("description").(string)),
+			GlobalNetworkId: aws.String(d.Id()),
+		}
+
+		_, err := conn.UpdateGlobalNetwork(request)
+		if err != nil {
+			return fmt.Errorf("Failure updating Network Manager Global Network description: %s", err)
+		}
+	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
