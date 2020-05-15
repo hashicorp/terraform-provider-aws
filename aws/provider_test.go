@@ -944,9 +944,12 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 }
 
 func TestAccAWSProvider_AssumeRole_Empty(t *testing.T) {
+	var providers []*schema.Provider
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
