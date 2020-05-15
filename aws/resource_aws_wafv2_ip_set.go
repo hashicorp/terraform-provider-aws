@@ -177,9 +177,10 @@ func resourceAwsWafv2IPSetRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error setting addresses: %s", err)
 	}
 
-	tags, err := keyvaluetags.Wafv2ListTags(conn, aws.StringValue(resp.IPSet.ARN))
+	arn := aws.StringValue(resp.IPSet.ARN)
+	tags, err := keyvaluetags.Wafv2ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("Error listing tags for WAFv2 IpSet (%s): %s", *resp.IPSet.ARN, err)
+		return fmt.Errorf("Error listing tags for WAFv2 IpSet (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
