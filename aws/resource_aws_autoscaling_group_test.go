@@ -4183,9 +4183,8 @@ resource "aws_placement_group" "test" {
 resource "aws_autoscaling_group" "test" {
   name_prefix        = "test"
   availability_zones = ["${data.aws_availability_zones.available.names[0]}"]
-  desired_capacity   = 1
-  min_size           = 1
-  max_size           = 3
+  min_size           = 0
+  max_size           = 0
 
   launch_template {
     id      = aws_launch_template.this.id
