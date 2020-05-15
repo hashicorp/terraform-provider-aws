@@ -255,13 +255,13 @@ func autoscalingTagDescriptionsToSlice(ts []*autoscaling.TagDescription, forceSt
 	for _, t := range ts {
 		var propagateAtLaunch interface{}
 		if forceStrings {
-			propagateAtLaunch = strconv.FormatBool(*t.PropagateAtLaunch)
+			propagateAtLaunch = strconv.FormatBool(aws.BoolValue(t.PropagateAtLaunch))
 		} else {
-			propagateAtLaunch = *t.PropagateAtLaunch
+			propagateAtLaunch = aws.BoolValue(t.PropagateAtLaunch)
 		}
 		tags = append(tags, map[string]interface{}{
-			"key":                 *t.Key,
-			"value":               *t.Value,
+			"key":                 aws.StringValue(t.Key),
+			"value":               aws.StringValue(t.Value),
 			"propagate_at_launch": propagateAtLaunch,
 		})
 	}
