@@ -102,6 +102,7 @@ Shield
 SimpleDB
 Step Function (SFN)
 Storage Gateway
+Synthetics
 Transfer
 Transit Gateway Network Manager
 VPC
