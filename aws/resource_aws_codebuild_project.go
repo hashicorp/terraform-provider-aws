@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -159,7 +160,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Computed: true,
 			},
 			"environment": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -255,6 +256,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 					},
 				},
+				Set: resourceAwsCodeBuildProjectEnvironmentHash,
 			},
 			"logs_config": {
 				Type:     schema.TypeList,
@@ -472,7 +474,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Required: true,
 			},
 			"source": {
-				Type: schema.TypeList,
+				Type: schema.TypeSet,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth": {
@@ -547,6 +549,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				},
 				Required: true,
 				MaxItems: 1,
+				Set:      resourceAwsCodeBuildProjectSourceHash,
 			},
 			"source_version": {
 				Type:     schema.TypeString,
@@ -809,7 +812,7 @@ func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
 }
 
 func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironment {
-	configs := d.Get("environment").([]interface{})
+	configs := d.Get("environment").(*schema.Set).List()
 
 	envConfig := configs[0].(map[string]interface{})
 
@@ -1003,7 +1006,7 @@ func expandProjectSecondarySources(d *schema.ResourceData) []*codebuild.ProjectS
 }
 
 func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
-	configs := d.Get("source").([]interface{})
+	configs := d.Get("source").(*schema.Set).List()
 
 	data := configs[0].(map[string]interface{})
 	return expandProjectSourceData(data)
@@ -1089,7 +1092,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting artifacts: %s", err)
 	}
 
-	if err := d.Set("environment", flattenAwsCodeBuildProjectEnvironment(project.Environment)); err != nil {
+	if err := d.Set("environment", schema.NewSet(resourceAwsCodeBuildProjectEnvironmentHash, flattenAwsCodeBuildProjectEnvironment(project.Environment))); err != nil {
 		return fmt.Errorf("error setting environment: %s", err)
 	}
 
@@ -1507,6 +1510,84 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 
 	if v, ok := m["type"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func resourceAwsCodeBuildProjectEnvironmentHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	environmentType := m["type"].(string)
+	computeType := m["compute_type"].(string)
+	image := m["image"].(string)
+	privilegedMode := m["privileged_mode"].(bool)
+	imagePullCredentialsType := m["image_pull_credentials_type"].(string)
+	environmentVariables := m["environment_variable"].([]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", environmentType))
+	buf.WriteString(fmt.Sprintf("%s-", computeType))
+	buf.WriteString(fmt.Sprintf("%s-", image))
+	buf.WriteString(fmt.Sprintf("%t-", privilegedMode))
+	buf.WriteString(fmt.Sprintf("%s-", imagePullCredentialsType))
+	if v, ok := m["certificate"]; ok && v.(string) != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["registry_credential"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		m := v.([]interface{})[0].(map[string]interface{})
+
+		if v, ok := m["credential"]; ok && v.(string) != "" {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+
+		if v, ok := m["credential_provider"]; ok && v.(string) != "" {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+	}
+	for _, e := range environmentVariables {
+		if e != nil { // Old statefiles might have nil values in them
+			ev := e.(map[string]interface{})
+			buf.WriteString(fmt.Sprintf("%s:", ev["name"].(string)))
+			// type is sometimes not returned by the API
+			if v, ok := ev["type"]; ok {
+				buf.WriteString(fmt.Sprintf("%s:", v.(string)))
+			}
+			buf.WriteString(fmt.Sprintf("%s-", ev["value"].(string)))
+		}
+	}
+
+	return hashcode.String(buf.String())
+}
+
+func resourceAwsCodeBuildProjectSourceHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
+	if v, ok := m["source_identifier"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
+	}
+	if v, ok := m["buildspec"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["location"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["git_clone_depth"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.Itoa(v.(int))))
+	}
+	if v, ok := m["git_submodules_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		m := v.([]interface{})[0].(map[string]interface{})
+
+		if v, ok := m["fetch_submodules"]; ok {
+			buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
+		}
+	}
+	if v, ok := m["insecure_ssl"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
+	}
+	if v, ok := m["report_build_status"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", strconv.FormatBool(v.(bool))))
 	}
 
 	return hashcode.String(buf.String())
