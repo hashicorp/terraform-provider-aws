@@ -33,10 +33,10 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The Amazon Resource Name (ARN) of the entity.
 * `description` - The description of the set that helps with identification.
 * `id` - The unique identifier for the set.
-* `regular_expression_list` - One or more blocks of regular expression patterns that AWS WAF is searching for. See [Regular Expression](#regular-expression) below for details.
+* `regular_expression` - One or more blocks of regular expression patterns that AWS WAF is searching for. See [Regular Expression](#regular-expression) below for details.
 
 ### Regular Expression
 
-Each `regular_expression_list` supports the following argument:
+Each `regular_expression` supports the following argument:
 
 * `regex_string` - (Required) The string representing the regular expression, see the AWS WAF [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-regex-pattern-set-creating.html) for more information.
