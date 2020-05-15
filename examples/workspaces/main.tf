@@ -24,7 +24,7 @@ resource "aws_workspaces_workspace" "example" {
 
   root_volume_encryption_enabled = true
   user_volume_encryption_enabled = true
-  volume_encryption_key          = data.aws_kms_key.workspaces_default.arn
+  volume_encryption_key          = "${aws_kms_key.example.arn}"
 
   workspace_properties {
     compute_type_name                         = "VALUE"
@@ -73,10 +73,10 @@ data "aws_availability_zones" "available" {
 locals {
   # Workspace instances are not supported in all AZs in some regions
   region_workspaces_az_ids = {
-    "us-east-1" = formatlist("use1-az%d", [2, 4, 6])
+    "us-east-1" = "${formatlist("use1-az%d", [2, 4, 6])}"
   }
 
-  workspaces_az_ids = lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)
+  workspaces_az_ids = "${lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)}"
 }
 
 resource "aws_vpc" "main" {
@@ -105,6 +105,6 @@ resource "aws_directory_service_directory" "example" {
   }
 }
 
-data "aws_kms_key" "workspaces_default" {
-  key_id = "alias/aws/workspaces"
+resource "aws_kms_key" "example" {
+  description = "WorkSpaces example key"
 }
