@@ -82,6 +82,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
@@ -268,6 +269,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(mq.New)
 	case "neptune":
 		funcType = reflect.TypeOf(neptune.New)
+	case "networkmanager":
+		funcType = reflect.TypeOf(networkmanager.New)
 	case "opsworks":
 		funcType = reflect.TypeOf(opsworks.New)
 	case "organizations":
@@ -462,6 +465,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 		return "ResourceTags.Tags"
 	case "neptune":
 		return "TagList"
+	case "networkmanager":
+		return "TagList"
 	case "pinpoint":
 		return "TagsModel.Tags"
 	case "rds":
@@ -576,6 +581,8 @@ func ServiceTagFunction(serviceName string) string {
 		return "AddTagsToResource"
 	case "storagegateway":
 		return "AddTagsToResource"
+	case "workspaces":
+		return "CreateTags"
 	default:
 		return "TagResource"
 	}
@@ -696,6 +703,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceARN"
 	case "wafv2":
 		return "ResourceARN"
+	case "workspaces":
+		return "ResourceId"
 	default:
 		return "ResourceArn"
 	}
@@ -881,6 +890,8 @@ func ServiceUntagFunction(serviceName string) string {
 		return "RemoveTagsFromResource"
 	case "storagegateway":
 		return "RemoveTagsFromResource"
+	case "workspaces":
+		return "DeleteTags"
 	default:
 		return "UntagResource"
 	}

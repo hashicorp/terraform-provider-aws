@@ -63,6 +63,14 @@ func dataSourceAwsEip() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"customer_owned_ipv4_pool": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"customer_owned_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tagsSchemaComputed(),
 		},
 	}
@@ -149,6 +157,8 @@ func dataSourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
+	d.Set("customer_owned_ipv4_pool", eip.CustomerOwnedIpv4Pool)
+	d.Set("customer_owned_ip", eip.CustomerOwnedIp)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eip.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)

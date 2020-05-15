@@ -195,6 +195,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 										ValidateFunc: validation.StringInSlice([]string{
 											codebuild.EnvironmentVariableTypePlaintext,
 											codebuild.EnvironmentVariableTypeParameterStore,
+											codebuild.EnvironmentVariableTypeSecretsManager,
 										}, false),
 										Default: codebuild.EnvironmentVariableTypePlaintext,
 									},
@@ -870,7 +871,7 @@ func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironm
 					projectEnvironmentVar.Name = &v
 				}
 
-				if v := config["value"].(string); v != "" {
+				if v, ok := config["value"].(string); ok {
 					projectEnvironmentVar.Value = &v
 				}
 
@@ -1047,8 +1048,8 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		}
 	}
 
-	// Only valid for CODECOMMIT source types.
-	if sourceType == codebuild.SourceTypeCodecommit {
+	// Only valid for CODECOMMIT, GITHUB, GITHUB_ENTERPRISE source types.
+	if sourceType == codebuild.SourceTypeCodecommit || sourceType == codebuild.SourceTypeGithub || sourceType == codebuild.SourceTypeGithubEnterprise {
 		if v, ok := data["git_submodules_config"]; ok && len(v.([]interface{})) > 0 {
 			config := v.([]interface{})[0].(map[string]interface{})
 

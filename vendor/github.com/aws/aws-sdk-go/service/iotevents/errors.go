@@ -50,30 +50,6 @@ const (
 	// The service is currently unavailable.
 	ErrCodeServiceUnavailableException = "ServiceUnavailableException"
 
-	// ErrCodeTagrisAccessDeniedException for service response error code
-	// "TagrisAccessDeniedException".
-	ErrCodeTagrisAccessDeniedException = "TagrisAccessDeniedException"
-
-	// ErrCodeTagrisInternalServiceException for service response error code
-	// "TagrisInternalServiceException".
-	ErrCodeTagrisInternalServiceException = "TagrisInternalServiceException"
-
-	// ErrCodeTagrisInvalidArnException for service response error code
-	// "TagrisInvalidArnException".
-	ErrCodeTagrisInvalidArnException = "TagrisInvalidArnException"
-
-	// ErrCodeTagrisInvalidParameterException for service response error code
-	// "TagrisInvalidParameterException".
-	ErrCodeTagrisInvalidParameterException = "TagrisInvalidParameterException"
-
-	// ErrCodeTagrisPartialResourcesExistResultsException for service response error code
-	// "TagrisPartialResourcesExistResultsException".
-	ErrCodeTagrisPartialResourcesExistResultsException = "TagrisPartialResourcesExistResultsException"
-
-	// ErrCodeTagrisThrottledException for service response error code
-	// "TagrisThrottledException".
-	ErrCodeTagrisThrottledException = "TagrisThrottledException"
-
 	// ErrCodeThrottlingException for service response error code
 	// "ThrottlingException".
 	//
@@ -88,19 +64,13 @@ const (
 )
 
 var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
-	"InternalFailureException":                    newErrorInternalFailureException,
-	"InvalidRequestException":                     newErrorInvalidRequestException,
-	"LimitExceededException":                      newErrorLimitExceededException,
-	"ResourceAlreadyExistsException":              newErrorResourceAlreadyExistsException,
-	"ResourceInUseException":                      newErrorResourceInUseException,
-	"ResourceNotFoundException":                   newErrorResourceNotFoundException,
-	"ServiceUnavailableException":                 newErrorServiceUnavailableException,
-	"TagrisAccessDeniedException":                 newErrorTagrisAccessDeniedException,
-	"TagrisInternalServiceException":              newErrorTagrisInternalServiceException,
-	"TagrisInvalidArnException":                   newErrorTagrisInvalidArnException,
-	"TagrisInvalidParameterException":             newErrorTagrisInvalidParameterException,
-	"TagrisPartialResourcesExistResultsException": newErrorTagrisPartialResourcesExistResultsException,
-	"TagrisThrottledException":                    newErrorTagrisThrottledException,
-	"ThrottlingException":                         newErrorThrottlingException,
-	"UnsupportedOperationException":               newErrorUnsupportedOperationException,
+	"InternalFailureException":       newErrorInternalFailureException,
+	"InvalidRequestException":        newErrorInvalidRequestException,
+	"LimitExceededException":         newErrorLimitExceededException,
+	"ResourceAlreadyExistsException": newErrorResourceAlreadyExistsException,
+	"ResourceInUseException":         newErrorResourceInUseException,
+	"ResourceNotFoundException":      newErrorResourceNotFoundException,
+	"ServiceUnavailableException":    newErrorServiceUnavailableException,
+	"ThrottlingException":            newErrorThrottlingException,
+	"UnsupportedOperationException":  newErrorUnsupportedOperationException,
 }

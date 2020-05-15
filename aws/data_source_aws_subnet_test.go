@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -31,113 +30,65 @@ func TestAccDataSourceAwsSubnet_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSubnetConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "id", snResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "owner_id", snResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "availability_zone", snResourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrPair(
-						ds1ResourceName, "vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "tags.Name", tag),
-					testAccMatchResourceAttrRegionalARN(ds1ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttr(
-						ds1ResourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(ds1ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds1ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", snResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
-					resource.TestCheckResourceAttrPair(
-						ds2ResourceName, "id", snResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds2ResourceName, "owner_id", snResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(
-						ds2ResourceName, "availability_zone", snResourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(
-						ds2ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrPair(
-						ds2ResourceName, "vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(
-						ds2ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds2ResourceName, "tags.Name", tag),
-					testAccMatchResourceAttrRegionalARN(ds2ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttr(
-						ds2ResourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(ds2ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds2ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "arn", snResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(ds2ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
-					resource.TestCheckResourceAttrPair(
-						ds3ResourceName, "id", snResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds3ResourceName, "owner_id", snResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(
-						ds3ResourceName, "availability_zone", snResourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(
-						ds3ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrPair(
-						ds3ResourceName, "vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(
-						ds3ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds3ResourceName, "tags.Name", tag),
-					testAccMatchResourceAttrRegionalARN(ds3ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttr(
-						ds3ResourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(ds3ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds3ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "arn", snResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(ds3ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
-					resource.TestCheckResourceAttrPair(
-						ds4ResourceName, "id", snResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds4ResourceName, "owner_id", snResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(
-						ds4ResourceName, "availability_zone", snResourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(
-						ds4ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrPair(
-						ds4ResourceName, "vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(
-						ds4ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds4ResourceName, "tags.Name", tag),
-					testAccMatchResourceAttrRegionalARN(ds4ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttr(
-						ds4ResourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(ds4ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds4ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "arn", snResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(ds4ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
-					resource.TestCheckResourceAttrPair(
-						ds5ResourceName, "id", snResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds5ResourceName, "owner_id", snResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(
-						ds5ResourceName, "availability_zone", snResourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(
-						ds5ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrPair(
-						ds5ResourceName, "vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(
-						ds5ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds5ResourceName, "tags.Name", tag),
-					testAccMatchResourceAttrRegionalARN(ds5ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttr(
-						ds5ResourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(ds5ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds5ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "arn", snResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(ds5ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 
-					resource.TestCheckResourceAttrPair(
-						ds6ResourceName, "id", snResourceName, "id"),
-					resource.TestCheckResourceAttrPair(
-						ds6ResourceName, "owner_id", snResourceName, "owner_id"),
-					resource.TestCheckResourceAttrPair(
-						ds6ResourceName, "availability_zone", snResourceName, "availability_zone"),
-					resource.TestCheckResourceAttrPair(
-						ds6ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
-					resource.TestCheckResourceAttrPair(
-						ds6ResourceName, "vpc_id", vpcResourceName, "id"),
-					resource.TestCheckResourceAttr(
-						ds6ResourceName, "cidr_block", cidr),
-					resource.TestCheckResourceAttr(
-						ds6ResourceName, "tags.Name", tag),
-					testAccMatchResourceAttrRegionalARN(ds6ResourceName, "arn", "ec2", regexp.MustCompile(`subnet/subnet-.+`)),
-					resource.TestCheckResourceAttr(
-						ds6ResourceName, "outpost_arn", ""),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "id", snResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "owner_id", snResourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "availability_zone", snResourceName, "availability_zone"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "availability_zone_id", snResourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(ds6ResourceName, "cidr_block", cidr),
+					resource.TestCheckResourceAttr(ds6ResourceName, "tags.Name", tag),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "arn", snResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(ds6ResourceName, "outpost_arn", snResourceName, "outpost_arn"),
 				),
 			},
 		},
@@ -156,10 +107,8 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6Filter(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSubnetConfigIpv6WithDataSourceFilter(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
-					resource.TestCheckResourceAttrSet(
-						"data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
+					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block"),
 				),
 			},
 		},
@@ -178,8 +127,7 @@ func TestAccDataSourceAwsSubnet_ipv6ByIpv6CidrBlock(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsSubnetConfigIpv6WithDataSourceIpv6CidrBlock(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
+					resource.TestCheckResourceAttrSet("data.aws_subnet.by_ipv6_cidr", "ipv6_cidr_block_association_id"),
 				),
 			},
 		},

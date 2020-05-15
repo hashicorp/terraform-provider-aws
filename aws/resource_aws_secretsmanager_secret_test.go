@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func init() {
@@ -78,7 +78,7 @@ func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
 				Config: testAccAwsSecretsManagerSecretConfig_Name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:secretsmanager:[^:]+:[^:]+:secret:%s-.+$", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "secretsmanager", regexp.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -101,7 +101,7 @@ func TestAccAwsSecretsManagerSecret_Basic(t *testing.T) {
 
 func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
-	rName := "tf-acc-test-"
+	rPrefix := "tf-acc-test-"
 	resourceName := "aws_secretsmanager_secret.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -110,11 +110,11 @@ func TestAccAwsSecretsManagerSecret_withNamePrefix(t *testing.T) {
 		CheckDestroy: testAccCheckAwsSecretsManagerSecretDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsSecretsManagerSecretConfig_withNamePrefix(rName),
+				Config: testAccAwsSecretsManagerSecretConfig_withNamePrefix(rPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:secretsmanager:[^:]+:[^:]+:secret:%s.+$", rName))),
-					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", rName))),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "secretsmanager", regexp.MustCompile(fmt.Sprintf("secret:%s[[:digit:]]+-[[:alnum:]]+$", rPrefix))),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(fmt.Sprintf("^%s", rPrefix))),
 				),
 			},
 			{
@@ -234,6 +234,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 	var secret secretsmanager.DescribeSecretOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret.test"
+	lambdaFunctionResourceName := "aws_lambda_function.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
@@ -246,7 +247,7 @@ func TestAccAwsSecretsManagerSecret_RotationLambdaARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSecretsManagerSecretExists(resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
-					resource.TestMatchResourceAttr(resourceName, "rotation_lambda_arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:lambda:[^:]+:[^:]+:function:%s-1$", rName))),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
 				),
 			},
 			// Test updating rotation
@@ -491,10 +492,10 @@ func testAccCheckAwsSecretsManagerSecretHasPolicy(name string, expectedPolicyTex
 
 		equivalent, err := awspolicy.PoliciesAreEquivalent(actualPolicyText, expectedPolicyText)
 		if err != nil {
-			return fmt.Errorf("Error testing policy equivalence: %s", err)
+			return fmt.Errorf("error testing policy equivalence: %w", err)
 		}
 		if !equivalent {
-			return fmt.Errorf("Non-equivalent policy error:\n\nexpected: %s\n\n     got: %s\n",
+			return fmt.Errorf("non-equivalent policy error:\n\nexpected: %s\n\n     got: %s",
 				expectedPolicyText, actualPolicyText)
 		}
 
@@ -588,6 +589,13 @@ resource "aws_secretsmanager_secret" "test" {
 
 func testAccAwsSecretsManagerSecretConfig_RotationLambdaARN(rName string) string {
 	return baseAccAWSLambdaConfig(rName, rName, rName) + fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name                = "%[1]s"
+  rotation_lambda_arn = "${aws_lambda_function.test1.arn}"
+
+  depends_on = ["aws_lambda_permission.test1"]
+}
+
 # Not a real rotation function
 resource "aws_lambda_function" "test1" {
   filename      = "test-fixtures/lambdatest.zip"
@@ -618,13 +626,6 @@ resource "aws_lambda_permission" "test2" {
   function_name  = "${aws_lambda_function.test2.function_name}"
   principal      = "secretsmanager.amazonaws.com"
   statement_id   = "AllowExecutionFromSecretsManager2"
-}
-
-resource "aws_secretsmanager_secret" "test" {
-  name                = "%[1]s"
-  rotation_lambda_arn = "${aws_lambda_function.test1.arn}"
-
-  depends_on = ["aws_lambda_permission.test1"]
 }
 `, rName)
 }

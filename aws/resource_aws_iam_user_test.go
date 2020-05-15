@@ -18,43 +18,6 @@ import (
 	"github.com/pquerna/otp/totp"
 )
 
-func TestValidateIamUserName(t *testing.T) {
-	validNames := []string{
-		"test-user",
-		"test_user",
-		"testuser123",
-		"TestUser",
-		"Test-User",
-		"test.user",
-		"test.123,user",
-		"testuser@hashicorp",
-		"test+user@hashicorp.com",
-	}
-	for _, v := range validNames {
-		_, errors := validateAwsIamUserName(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid IAM User name: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"!",
-		"/",
-		" ",
-		":",
-		";",
-		"test name",
-		"/slash-at-the-beginning",
-		"slash-at-the-end/",
-	}
-	for _, v := range invalidNames {
-		_, errors := validateAwsIamUserName(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid IAM User name", v)
-		}
-	}
-}
-
 func init() {
 	resource.AddTestSweepers("aws_iam_user", &resource.Sweeper{
 		Name: "aws_iam_user",
@@ -742,9 +705,12 @@ func testAccCheckAWSUserCreatesAccessKey(getUserOutput *iam.GetUserOutput) resou
 func testAccCheckAWSUserCreatesLoginProfile(getUserOutput *iam.GetUserOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		iamconn := testAccProvider.Meta().(*AWSClient).iamconn
-
+		password, err := generateIAMPassword(32)
+		if err != nil {
+			return err
+		}
 		input := &iam.CreateLoginProfileInput{
-			Password: aws.String(generateIAMPassword(32)),
+			Password: aws.String(password),
 			UserName: getUserOutput.User.UserName,
 		}
 

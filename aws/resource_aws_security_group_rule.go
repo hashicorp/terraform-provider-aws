@@ -455,6 +455,7 @@ func (b ByGroupPair) Less(i, j int) bool {
 		return *b[i].GroupName < *b[j].GroupName
 	}
 
+	//lintignore:R009
 	panic("mismatched security group rules, may be a terraform bug")
 }
 
@@ -759,7 +760,19 @@ func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPe
 		s := rule.UserIdGroupPairs[0]
 
 		if isVPC {
-			d.Set("source_security_group_id", s.GroupId)
+			if existingSourceSgId, ok := d.GetOk("source_security_group_id"); ok {
+				sgIdComponents := strings.Split(existingSourceSgId.(string), "/")
+				hasAccountIdPrefix := len(sgIdComponents) == 2
+
+				if hasAccountIdPrefix && s.UserId != nil {
+					// then ensure on refresh that we preserve the account id prefix
+					d.Set("source_security_group_id", fmt.Sprintf("%s/%s", aws.StringValue(s.UserId), aws.StringValue(s.GroupId)))
+				} else {
+					d.Set("source_security_group_id", s.GroupId)
+				}
+			} else {
+				d.Set("source_security_group_id", s.GroupId)
+			}
 		} else {
 			d.Set("source_security_group_id", s.GroupName)
 		}

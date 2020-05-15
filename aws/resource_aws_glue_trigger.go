@@ -38,6 +38,7 @@ func resourceAwsGlueTrigger() *schema.Resource {
 						"arguments": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"crawler_name": {
 							Type:     schema.TypeString,
@@ -102,9 +103,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 										}, false),
 									},
 									"state": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.crawl_state"},
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											glue.JobRunStateFailed,
 											glue.JobRunStateStopped,
@@ -113,9 +113,8 @@ func resourceAwsGlueTrigger() *schema.Resource {
 										}, false),
 									},
 									"crawl_state": {
-										Type:          schema.TypeString,
-										Optional:      true,
-										ConflictsWith: []string{"predicate.0.conditions.0.state"},
+										Type:     schema.TypeString,
+										Optional: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											glue.CrawlStateRunning,
 											glue.CrawlStateSucceeded,

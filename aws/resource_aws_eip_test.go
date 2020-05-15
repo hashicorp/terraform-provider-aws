@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -519,6 +520,51 @@ func testAccCheckAWSEIPDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func TestAccAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
+	// Hide Outposts testing behind consistent environment variable
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	// Local Gateway Route Table ID filtering in DescribeCoipPools is not currently working
+	poolId := os.Getenv("AWS_COIP_POOL_ID")
+	if poolId == "" {
+		t.Skip(
+			"Environment variable AWS_COIP_POOL_ID is not set. " +
+				"This environment variable must be set to the ID of " +
+				"a deployed Coip Pool to enable this test.")
+	}
+
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfigCustomerOwnedIpv4Pool(poolId),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "customer_owned_ipv4_pool", poolId),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ip", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
 }
 
 func testAccCheckAWSEIPAttributes(conf *ec2.Address) resource.TestCheckFunc {
@@ -1132,3 +1178,12 @@ resource "aws_eip" "test" {
 	instance = "${aws_instance.test.id}"
 }
 `
+
+func testAccAWSEIPConfigCustomerOwnedIpv4Pool(customerOwnedIpv4Pool string) string {
+	return fmt.Sprintf(`
+resource "aws_eip" "test" {
+  customer_owned_ipv4_pool = %[1]q
+  vpc                      = true
+}
+`, customerOwnedIpv4Pool)
+}
