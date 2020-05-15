@@ -342,7 +342,7 @@ func resourceAwsEcsService() *schema.Resource {
 			},
 
 			"service_registries": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
@@ -486,7 +486,7 @@ func resourceAwsEcsServiceCreate(d *schema.ResourceData, meta interface{}) error
 		input.PlacementConstraints = pc
 	}
 
-	serviceRegistries := d.Get("service_registries").(*schema.Set).List()
+	serviceRegistries := d.Get("service_registries").([]interface{})
 	if len(serviceRegistries) > 0 {
 		srs := make([]*ecs.ServiceRegistry, 0, len(serviceRegistries))
 		for _, v := range serviceRegistries {
