@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -73,10 +72,6 @@ func dataSourceAwsEfsFileSystem() *schema.Resource {
 						},
 					},
 				},
-			},
-			"policy": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -155,25 +150,6 @@ func dataSourceAwsEfsFileSystemRead(d *schema.ResourceData, meta interface{}) er
 
 	if err := d.Set("lifecycle_policy", flattenEfsFileSystemLifecyclePolicies(res.LifecyclePolicies)); err != nil {
 		return fmt.Errorf("error setting lifecycle_policy: %s", err)
-	}
-
-	var policyRes *efs.DescribeFileSystemPolicyOutput
-	policyRes, err = efsconn.DescribeFileSystemPolicy(&efs.DescribeFileSystemPolicyInput{
-		FileSystemId: fs.FileSystemId,
-	})
-	if err != nil {
-		if isAWSErr(err, efs.ErrCodePolicyNotFound, "") {
-			d.Set("policy", "")
-		} else {
-			return fmt.Errorf("Error describing policy for EFS file system (%s): %s",
-				aws.StringValue(fs.FileSystemId), err)
-		}
-	} else {
-		correctedPolicy := strings.Replace(aws.StringValue(policyRes.Policy),
-			fmt.Sprintf("\"Resource\" : \"%s\",", fsARN), "", 1)
-		if err := d.Set("policy", correctedPolicy); err != nil {
-			return err
-		}
 	}
 
 	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
