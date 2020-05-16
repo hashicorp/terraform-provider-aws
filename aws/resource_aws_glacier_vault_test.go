@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -232,7 +233,7 @@ func TestAccAWSGlacierVault_disappears(t *testing.T) {
 				Config: testAccGlacierVaultBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlacierVaultExists(resourceName, &vault),
-					testAccCheckGlacierVaultDisappears(&vault),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlacierVault(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -272,17 +273,6 @@ func testAccCheckGlacierVaultExists(name string, vault *glacier.DescribeVaultOut
 		*vault = *out
 
 		return nil
-	}
-}
-
-func testAccCheckGlacierVaultDisappears(vault *glacier.DescribeVaultOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).glacierconn
-		_, err := conn.DeleteVault(&glacier.DeleteVaultInput{
-			VaultName: vault.VaultName,
-		})
-
-		return err
 	}
 }
 
