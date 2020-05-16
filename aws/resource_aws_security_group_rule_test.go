@@ -2089,6 +2089,7 @@ resource "aws_security_group_rule" "allow_self" {
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
+  description              = "some description"
   security_group_id        = "${aws_security_group.web.id}"
   source_security_group_id = "${data.aws_caller_identity.current.account_id}/${aws_security_group.web.id}"
 }

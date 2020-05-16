@@ -842,20 +842,25 @@ func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) strin
 		}
 	}
 
-	// probe UserIdGroupPairs
-	groupIds := make(map[string]bool)
 	if raw, ok := d.GetOk("source_security_group_id"); ok {
-		groupIds[raw.(string)] = true
-	}
+		components := strings.Split(raw.(string), "/")
 
-	if len(groupIds) > 0 {
-		for _, gp := range rule.UserIdGroupPairs {
-			if _, ok := groupIds[*gp.GroupId]; !ok {
-				continue
+		switch len(components) {
+		case 2:
+			userId := components[0]
+			groupId := components[1]
+
+			for _, gp := range rule.UserIdGroupPairs {
+				if *gp.GroupId == groupId && *gp.UserId == userId {
+					return aws.StringValue(gp.Description)
+				}
 			}
-
-			if desc := aws.StringValue(gp.Description); desc != "" {
-				return desc
+		case 1:
+			groupId := components[0]
+			for _, gp := range rule.UserIdGroupPairs {
+				if *gp.GroupId == groupId {
+					return aws.StringValue(gp.Description)
+				}
 			}
 		}
 	}
