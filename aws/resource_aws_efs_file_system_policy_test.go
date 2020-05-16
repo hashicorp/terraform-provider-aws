@@ -33,13 +33,6 @@ func TestAccAWSEFSFileSystemPolicy_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			{
-				Config: testAccAWSEFSFileSystemPolicyConfigUpdated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEfsFileSystemPolicy(resourceName, &desc),
-					resource.TestCheckResourceAttrSet(resourceName, "policy"),
-				),
-			},
 		},
 	})
 }
@@ -141,43 +134,6 @@ resource "aws_efs_file_system_policy" "test" {
             "Action": [
                 "elasticfilesystem:ClientMount",
                 "elasticfilesystem:ClientWrite"
-            ],
-            "Condition": {
-                "Bool": {
-                    "aws:SecureTransport": "true"
-                }
-            }
-        }
-    ]
-}
-POLICY
-}
-`, rName)
-}
-
-func testAccAWSEFSFileSystemPolicyConfigUpdated(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-	creation_token = %q
-}
-
-resource "aws_efs_file_system_policy" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
-
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Id": "ExamplePolicy01",
-    "Statement": [
-        {
-            "Sid": "ExampleSatement01",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "*"
-            },
-            "Resource": "${aws_efs_file_system.test.arn}",
-            "Action": [
-                "elasticfilesystem:ClientMount"
             ],
             "Condition": {
                 "Bool": {
