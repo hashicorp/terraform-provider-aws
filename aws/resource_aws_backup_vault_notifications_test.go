@@ -51,7 +51,7 @@ func TestAccAwsBackupVaultNotification_disappears(t *testing.T) {
 				Config: testAccBackupVaultNotificationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBackupVaultNotificationExists(resourceName, &vault),
-					testAccCheckAwsBackupVaultNotificationDisappears(&vault),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVaultNotifications(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -101,18 +101,6 @@ func testAccCheckAwsBackupVaultNotificationExists(name string, vault *backup.Get
 		*vault = *resp
 
 		return nil
-	}
-}
-
-func testAccCheckAwsBackupVaultNotificationDisappears(vault *backup.GetBackupVaultNotificationsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).backupconn
-		params := &backup.DeleteBackupVaultNotificationsInput{
-			BackupVaultName: vault.BackupVaultName,
-		}
-		_, err := conn.DeleteBackupVaultNotifications(params)
-
-		return err
 	}
 }
 
