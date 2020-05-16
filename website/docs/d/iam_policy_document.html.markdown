@@ -186,6 +186,7 @@ data "aws_iam_policy_document" "event_stream_bucket_role_assume_role_policy" {
       type        = "AWS"
       identifiers = ["${var.trusted_role_arn}"]
     }
+
     principals {
       type        = "Federated"
       identifiers = ["arn:aws:iam::${var.account_id}:saml-provider/${var.provider_name}", "cognito-identity.amazonaws.com"]
