@@ -851,15 +851,24 @@ func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) strin
 			groupId := components[1]
 
 			for _, gp := range rule.UserIdGroupPairs {
+				if *gp.GroupId != groupId || *gp.UserId != userId {
+					continue
+				}
 				if *gp.GroupId == groupId && *gp.UserId == userId {
-					return aws.StringValue(gp.Description)
+					if desc := aws.StringValue(gp.Description); desc != "" {
+						return desc
+					}
 				}
 			}
 		case 1:
 			groupId := components[0]
 			for _, gp := range rule.UserIdGroupPairs {
-				if *gp.GroupId == groupId {
-					return aws.StringValue(gp.Description)
+				if *gp.GroupId != groupId {
+					continue
+				}
+
+				if desc := aws.StringValue(gp.Description); desc != "" {
+					return desc
 				}
 			}
 		}
