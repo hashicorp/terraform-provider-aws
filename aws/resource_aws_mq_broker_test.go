@@ -892,7 +892,7 @@ func TestAccAWSMqBroker_disappears(t *testing.T) {
 				Config: testAccMqBrokerConfig(sgName, brokerName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMqBrokerExists(resourceName, &broker),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsMqBroker(), resourceName),
+					testAccCheckAwsMqBrokerDisappears(&broker),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -983,6 +983,17 @@ func testAccCheckAwsMqBrokerExists(name string, broker *mq.DescribeBrokerRespons
 		*broker = *resp
 
 		return nil
+	}
+}
+
+func testAccCheckAwsMqBrokerDisappears(broker *mq.DescribeBrokerResponse) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).mqconn
+		_, err := conn.DeleteBroker(&mq.DeleteBrokerInput{
+			BrokerId: broker.BrokerId,
+		})
+
+		return err
 	}
 }
 
