@@ -80,12 +80,6 @@ func resourceAwsEfsFileSystemPolicyRead(d *schema.ResourceData, meta interface{}
 	d.Set("file_system_id", policyRes.FileSystemId)
 	d.Set("policy", policyRes.Policy)
 
-	//correctedPolicy := strings.Replace(aws.StringValue(policyRes.Policy),
-	//	fmt.Sprintf("\"Resource\" : \"%s\",", fsARN), "", 1)
-	//if err := d.Set("policy", correctedPolicy); err != nil {
-	//	return err
-	//}
-
 	return nil
 }
 
