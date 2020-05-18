@@ -842,6 +842,7 @@ func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) strin
 		}
 	}
 
+	// probe UserIdGroupPairs
 	if raw, ok := d.GetOk("source_security_group_id"); ok {
 		components := strings.Split(raw.(string), "/")
 
@@ -851,19 +852,18 @@ func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) strin
 			groupId := components[1]
 
 			for _, gp := range rule.UserIdGroupPairs {
-				if *gp.GroupId != groupId || *gp.UserId != userId {
+				if aws.StringValue(gp.GroupId) != groupId || aws.StringValue(gp.UserId) != userId {
 					continue
 				}
-				if *gp.GroupId == groupId && *gp.UserId == userId {
-					if desc := aws.StringValue(gp.Description); desc != "" {
-						return desc
-					}
+
+				if desc := aws.StringValue(gp.Description); desc != "" {
+					return desc
 				}
 			}
 		case 1:
 			groupId := components[0]
 			for _, gp := range rule.UserIdGroupPairs {
-				if *gp.GroupId != groupId {
+				if aws.StringValue(gp.GroupId) != groupId {
 					continue
 				}
 
