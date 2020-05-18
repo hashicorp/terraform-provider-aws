@@ -279,6 +279,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_network_acls":                              dataSourceAwsNetworkAcls(),
 			"aws_network_interface":                         dataSourceAwsNetworkInterface(),
 			"aws_network_interfaces":                        dataSourceAwsNetworkInterfaces(),
+			"aws_networkmanager_device":                     dataSourceAwsNetworkManagerDevice(),
 			"aws_networkmanager_global_network":             dataSourceAwsNetworkManagerGlobalNetwork(),
 			"aws_networkmanager_site":                       dataSourceAwsNetworkManagerSite(),
 			"aws_organizations_organization":                dataSourceAwsOrganizationsOrganization(),
