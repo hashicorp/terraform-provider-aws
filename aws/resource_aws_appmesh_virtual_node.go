@@ -140,6 +140,8 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													ValidateFunc: validation.StringInSlice([]string{
 														appmesh.PortProtocolHttp,
 														appmesh.PortProtocolTcp,
+														appmesh.PortProtocolGrpc,
+														appmesh.PortProtocolHttp2,
 													}, false),
 												},
 
@@ -177,6 +179,8 @@ func resourceAwsAppmeshVirtualNode() *schema.Resource {
 													ValidateFunc: validation.StringInSlice([]string{
 														appmesh.PortProtocolHttp,
 														appmesh.PortProtocolTcp,
+														appmesh.PortProtocolGrpc,
+														appmesh.PortProtocolHttp2,
 													}, false),
 												},
 											},
