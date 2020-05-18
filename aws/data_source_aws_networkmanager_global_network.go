@@ -53,18 +53,12 @@ func dataSourceAwsNetworkManagerGlobalNetworkRead(d *schema.ResourceData, meta i
 	// do filtering here
 	var filteredGlobalNetworks []*networkmanager.GlobalNetwork
 	if tags, ok := d.GetOk("tags"); ok {
+		keyValueTags := keyvaluetags.New(tags.(map[string]interface{})).IgnoreAws()
 		for _, globalNetwork := range output.GlobalNetworks {
 			tagsMatch := true
-			for key, val := range keyvaluetags.New(tags.(map[string]interface{})).Map() {
-				if v, ok := keyvaluetags.NetworkmanagerKeyValueTags(globalNetwork.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()[key]; ok {
-					if v != val {
-						tagsMatch = false
-						break
-					}
-				} else {
-					tagsMatch = false
-					break
-				}
+			if len(keyValueTags) > 0 {
+				listTags := keyvaluetags.NetworkmanagerKeyValueTags(globalNetwork.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig)
+				tagsMatch = listTags.ContainsAll(keyValueTags)
 			}
 			if tagsMatch {
 				filteredGlobalNetworks = append(filteredGlobalNetworks, globalNetwork)
