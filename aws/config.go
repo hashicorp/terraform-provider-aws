@@ -715,6 +715,22 @@ func (c *Config) Client() (interface{}, error) {
 		}
 	})
 
+	client.wafv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if isAWSErr(r.Error, wafv2.ErrCodeWAFInternalErrorException, "Retry your request") {
+			r.Retryable = aws.Bool(true)
+		}
+
+		if r.Operation.Name == "CreateIPSet" {
+			// WAFv2 supports tag on create which can result in the below error codes according to the documentation
+			if isAWSErr(r.Error, wafv2.ErrCodeWAFTagOperationException, "Retry your request") {
+				r.Retryable = aws.Bool(true)
+			}
+			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "Retry your request") {
+				r.Retryable = aws.Bool(true)
+			}
+		}
+	})
+
 	if !c.SkipGetEC2Platforms {
 		supportedPlatforms, err := GetSupportedEC2Platforms(client.ec2conn)
 		if err != nil {
