@@ -1,4 +1,9 @@
 ## 2.63.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_wafv2_ip_set` [GH-12119]
+
 ## 2.62.0 (May 15, 2020)
 
 FEATURES:
