@@ -497,6 +497,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/swf" = [
       "aws_swf_",
     ],
+    "service/synthetics" = [
+      "aws_synthetics_",
+    ],
     "service/transfer" = [
       "aws_transfer_",
     ],
@@ -1198,6 +1201,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/swf" = [
       "**/*_swf_*",
       "**/swf_*"
+    ]
+    "service/synthetics" = [
+      "**/*_synthetics_*",
+      "**/synthetics_*"
     ]
     "service/transfer" = [
       "**/*_transfer_*",

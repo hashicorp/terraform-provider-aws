@@ -103,6 +103,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -311,6 +312,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(storagegateway.New)
 	case "swf":
 		funcType = reflect.TypeOf(swf.New)
+	case "synthetics":
+		funcType = reflect.TypeOf(synthetics.New)
 	case "transfer":
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
