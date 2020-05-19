@@ -34,11 +34,11 @@ jobs:
 
     - name: install linter
       run: |
-        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.24.0
+        curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.24.0
 
     - name: sanity-check
       run: |
-        ./bin/golangci-lint run ./...
+        make lint
         make test
 
   # See https://github.com/actions/upload-release-asset
