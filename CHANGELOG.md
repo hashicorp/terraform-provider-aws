@@ -11,6 +11,7 @@ ENHANCEMENTS:
 * data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
 * resource/aws_ecs_service: Add `force_new_deployment` argument [GH-13376]
 * resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` [GH-13376]
+* resource/aws_iot_topic_rule: Add `tags` argument [GH-13293]
 
 BUG FIXES:
 
