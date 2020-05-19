@@ -196,6 +196,8 @@ func resourceAwsEfsAccessPointUpdate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).efsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
 		AccessPointId: aws.String(d.Id()),
 	})
@@ -239,7 +241,7 @@ func resourceAwsEfsAccessPointRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("error setting root directory: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(ap.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EfsKeyValueTags(ap.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
