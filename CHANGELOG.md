@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * d/aws_db_instance: 'auto_minor_version_upgrade' now properly set [GH-13362]
 * d/aws_rds_cluster: 'backtrack_window' attribute now available [GH-13362]
+* autoscaling groups `tags` `propagate_at_launch` now properly set [GH-13360]
 
 ## 2.62.0 (May 15, 2020)
 
