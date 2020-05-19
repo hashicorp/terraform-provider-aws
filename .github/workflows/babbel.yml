@@ -38,7 +38,7 @@ jobs:
 
     - name: sanity-check
       run: |
-        make lint
+        ./bin/golangci-lint run ./...
         make test
 
   # See https://github.com/actions/upload-release-asset
