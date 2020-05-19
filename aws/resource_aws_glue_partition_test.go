@@ -28,7 +28,7 @@ func TestAccAWSGluePartition_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 				),
 			},
@@ -214,7 +214,7 @@ func testAccGluePartitionConfig(rName string, parValue string) string {
 resource "aws_glue_partition" "test" {
   database_name = "${aws_glue_catalog_database.test.name}"
   table_name    = "${aws_glue_catalog_table.test.name}"
-  values        =  ["%[1]s"]
+  partition_values        =  ["%[1]s"]
 }
 `, parValue)
 }

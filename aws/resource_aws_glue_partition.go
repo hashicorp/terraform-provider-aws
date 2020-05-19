@@ -42,7 +42,7 @@ func resourceAwsGluePartition() *schema.Resource {
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-			"values": {
+			"partition_values": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
@@ -210,7 +210,7 @@ func resourceAwsGluePartitionCreate(d *schema.ResourceData, meta interface{}) er
 	catalogID := createAwsGlueCatalogID(d, meta.(*AWSClient).accountid)
 	dbName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
-	values := d.Get("values").(*schema.Set)
+	values := d.Get("partition_values").(*schema.Set)
 
 	input := &glue.CreatePartitionInput{
 		CatalogId:      aws.String(catalogID),
@@ -263,7 +263,7 @@ func resourceAwsGluePartitionRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("table_name", partition.TableName)
 	d.Set("catalog_id", catalogID)
 	d.Set("database_name", partition.DatabaseName)
-	d.Set("values", flattenStringSet(partition.Values))
+	d.Set("partition_values", flattenStringSet(partition.Values))
 
 	if partition.LastAccessTime != nil {
 		d.Set("last_accessed_time", partition.LastAccessTime.Format(time.RFC3339))
@@ -344,7 +344,7 @@ func expandGluePartitionInput(d *schema.ResourceData) *glue.PartitionInput {
 		tableInput.Parameters = stringMapToPointers(v.(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("values"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("partition_values"); ok && v.(*schema.Set).Len() > 0 {
 		tableInput.Values = expandStringSet(v.(*schema.Set))
 	}
 
