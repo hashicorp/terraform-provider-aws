@@ -295,7 +295,7 @@ func TestAccAWSEFSAccessPoint_disappears(t *testing.T) {
 				Config: testAccAWSEFSAccessPointConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEfsAccessPointExists(resourceName, &ap),
-					testAccAWSEFSAccessPointDisappears(&ap),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEfsAccessPoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
