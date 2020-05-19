@@ -289,8 +289,8 @@ func waitForDeleteEfsAccessPoint(conn *efs.EFS, id string, timeout time.Duration
 
 			mt := resp.AccessPoints[0]
 
-			log.Printf("[DEBUG] Current status of %q: %q", *mt.AccessPointId, *mt.LifeCycleState)
-			return mt, *mt.LifeCycleState, nil
+			log.Printf("[DEBUG] Current status of %q: %q", aws.StringValue(mt.AccessPointId), aws.StringValue(mt.LifeCycleState))
+			return mt, aws.StringValue(mt.LifeCycleState), nil
 		},
 		Timeout:    timeout,
 		Delay:      2 * time.Second,
