@@ -289,7 +289,7 @@ func TestAccAWSEFSAccessPoint_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckVpnGatewayDestroy,
+		CheckDestroy: testAccCheckEfsAccessPointDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSEFSAccessPointConfig(rName),
