@@ -31,9 +31,6 @@ func resourceAwsEc2Tag() *schema.Resource {
 		Read:   resourceAwsEc2TagRead,
 		Delete: resourceAwsEc2TagDelete,
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(10 * time.Minute),
-		},
 
 		Schema: map[string]*schema.Schema{
 			"resource_id": {
