@@ -315,7 +315,7 @@ func testAccCheckEfsAccessPointDestroy(s *terraform.State) error {
 		})
 		if err != nil {
 			if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
-				return nil
+				continue
 			}
 			return fmt.Errorf("Error describing EFS access point in tests: %s", err)
 		}
