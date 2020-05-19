@@ -16,7 +16,7 @@ Provides a Glue Partition Resource.
 resource "aws_glue_partition" "example" {
   database_name = "some-database"
   table_name    = "some-table"
-  values        =  ["some-value"]
+  values        = ["some-value"]
 }
 ```
 
