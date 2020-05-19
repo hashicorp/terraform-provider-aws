@@ -532,6 +532,7 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
+      "*.md",
       ".github/**/*",
       ".gitignore",
       ".go-version",
@@ -548,6 +549,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "docs/*.md",
+      "docs/contributing/**/*",
       "GNUmakefile",
       "infrastructure/**/*",
       "main.go",
@@ -558,7 +561,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/partition*",
       "website/**/region*"
     ]
-    # label test related changes
+    "documentation" = [
+      "docs/**/*",
+      "*.md",
+    ]
     "tests" = [
       "**/*_test.go",
       "**/testdata/**/*",
