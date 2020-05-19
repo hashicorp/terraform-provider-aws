@@ -289,7 +289,7 @@ The following arguments are supported:
 * `description` - (Optional) A friendly description of the rule group.
 * `name` - (Required) A friendly name of the rule group.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the Region US East (N. Virginia).
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
 
@@ -421,19 +421,19 @@ The `field_to_match` block supports the following arguments:
 
 ### Single Header
 
-Inspect a single header. Provide the name of the header to inspect, for example, `User-Agent` or `Referer`. This setting isn't case sensitive.
+Inspect a single header. Provide the name of the header to inspect, for example, `User-Agent` or `Referer` (provided as lowercase strings).
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting isn't case sensitive, only use lower case characters.
+* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### Single Query Argument
 
-Inspect a single query argument. Provide the name of the query argument to inspect, such as `UserName` or `SalesRegion`. This setting isn't case sensitive.
+Inspect a single query argument. Provide the name of the query argument to inspect, such as `UserName` or `SalesRegion` (provided as lowercase strings).
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting isn't case sensitive, only use lower case characters.
+* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### Text Transformation
 
@@ -459,7 +459,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 Rule Group can be imported using the ID, Name and Scope e.g.
+WAFv2 Rule Group can be imported using `ID/name/scope` e.g.
 
 ```
 $ terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL

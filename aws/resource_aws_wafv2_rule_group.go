@@ -200,9 +200,10 @@ func resourceAwsWafv2RuleGroupRead(d *schema.ResourceData, meta interface{}) err
 		return fmt.Errorf("Error setting visibility_config: %s", err)
 	}
 
-	tags, err := keyvaluetags.Wafv2ListTags(conn, *resp.RuleGroup.ARN)
+	arn := aws.StringValue(resp.RuleGroup.ARN)
+	tags, err := keyvaluetags.Wafv2ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("Error listing tags for WAFv2 RuleGroup (%s): %s", *resp.RuleGroup.ARN, err)
+		return fmt.Errorf("Error listing tags for WAFv2 RuleGroup (%s): %s", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -553,7 +554,7 @@ func wafv2FieldToMatchSchema() *schema.Schema {
 									validation.StringLenBetween(1, 40),
 									// The value is returned in lower case by the API.
 									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-									validateWafv2StringIsLowerCase(),
+									validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 								),
 							},
 						},
@@ -572,7 +573,7 @@ func wafv2FieldToMatchSchema() *schema.Schema {
 									validation.StringLenBetween(1, 30),
 									// The value is returned in lower case by the API.
 									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-									validateWafv2StringIsLowerCase(),
+									validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
 								),
 							},
 						},
@@ -581,22 +582,6 @@ func wafv2FieldToMatchSchema() *schema.Schema {
 				"uri_path": wafv2EmptySchema(),
 			},
 		},
-	}
-}
-
-func validateWafv2StringIsLowerCase() schema.SchemaValidateFunc {
-	return func(i interface{}, k string) (s []string, es []error) {
-		v, ok := i.(string)
-		if !ok {
-			es = append(es, fmt.Errorf("Expected type of %s to be string", k))
-			return
-		}
-
-		if strings.ToLower(v) != v {
-			es = append(es, fmt.Errorf("Expected value of %s to only contain lower case characters", v))
-			return
-		}
-		return
 	}
 }
 
@@ -1162,7 +1147,7 @@ func flattenWafv2ByteMatchStatement(b *wafv2.ByteMatchStatement) interface{} {
 
 	m := map[string]interface{}{
 		"field_to_match":        flattenWafv2FieldToMatch(b.FieldToMatch),
-		"positional_constraint": b.PositionalConstraint,
+		"positional_constraint": aws.StringValue(b.PositionalConstraint),
 		"search_string":         string(b.SearchString),
 		"text_transformation":   flattenWafv2TextTransformations(b.TextTransformations),
 	}
@@ -1353,7 +1338,7 @@ func flattenWafv2VisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 
 	m := map[string]interface{}{
 		"cloudwatch_metrics_enabled": aws.BoolValue(config.CloudWatchMetricsEnabled),
-		"metric_name":                aws.String(*config.MetricName),
+		"metric_name":                aws.StringValue(config.MetricName),
 		"sampled_requests_enabled":   aws.BoolValue(config.SampledRequestsEnabled),
 	}
 

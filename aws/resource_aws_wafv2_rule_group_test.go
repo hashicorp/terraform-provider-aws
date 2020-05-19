@@ -15,7 +15,7 @@ import (
 
 func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -31,14 +31,13 @@ func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Tag1", "Value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Tag2", "Value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -50,6 +49,7 @@ func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", "Updated"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.metric_name", "friendly-metric-name"),
@@ -92,7 +92,7 @@ func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -144,7 +144,7 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -292,8 +292,8 @@ func TestAccAwsWafv2RuleGroup_ByteMatchStatement_FieldToMatch(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
-	ruleGroupNewName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupNewName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -309,6 +309,7 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -324,6 +325,7 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupNewName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -337,7 +339,7 @@ func TestAccAwsWafv2RuleGroup_ChangeNameForceNew(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -353,6 +355,7 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -361,13 +364,14 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_Update_capacity(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_UpdateCapacity(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists(resourceName, &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -381,7 +385,7 @@ func TestAccAwsWafv2RuleGroup_ChangeCapacityForceNew(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 	var before, after wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -397,6 +401,7 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -405,13 +410,14 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2RuleGroupConfig_Update_metricName(ruleGroupName),
+				Config: testAccAwsWafv2RuleGroupConfig_UpdateMetricName(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2RuleGroupExists(resourceName, &after),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ruleGroupName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -425,7 +431,7 @@ func TestAccAwsWafv2RuleGroup_ChangeMetricNameForceNew(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -447,7 +453,7 @@ func TestAccAwsWafv2RuleGroup_Disappears(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -495,7 +501,7 @@ func TestAccAwsWafv2RuleGroup_GeoMatchStatement(t *testing.T) {
 func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	var idx int
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -527,7 +533,7 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -593,7 +599,7 @@ func TestAccAwsWafv2RuleGroup_LogicalRuleStatements(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -609,6 +615,7 @@ func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", ruleGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scope", wafv2.ScopeRegional),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.cloudwatch_metrics_enabled", "false"),
@@ -623,7 +630,7 @@ func TestAccAwsWafv2RuleGroup_Minimal(t *testing.T) {
 func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 	var v wafv2.RuleGroup
 	var idx int
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -657,7 +664,7 @@ func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -728,7 +735,7 @@ func TestAccAwsWafv2RuleGroup_RuleAction(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -778,7 +785,7 @@ func TestAccAwsWafv2RuleGroup_SizeConstraintStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -834,7 +841,7 @@ func TestAccAwsWafv2RuleGroup_SqliMatchStatement(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -882,7 +889,7 @@ func TestAccAwsWafv2RuleGroup_Tags(t *testing.T) {
 
 func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 	var v wafv2.RuleGroup
-	ruleGroupName := fmt.Sprintf("rule-group-%s", acctest.RandString(5))
+	ruleGroupName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -958,7 +965,7 @@ func computeWafv2IpSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resource.T
 					"geo_match_statement":  []interface{}{},
 					"ip_set_reference_statement": []interface{}{
 						map[string]interface{}{
-							"arn": *r.Rules[0].Statement.IPSetReferenceStatement.ARN,
+							"arn": aws.StringValue(r.Rules[0].Statement.IPSetReferenceStatement.ARN),
 						},
 					},
 					"not_statement":                         []interface{}{},
@@ -1010,7 +1017,7 @@ func computeWafv2RegexSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resourc
 					"or_statement":               []interface{}{},
 					"regex_pattern_set_reference_statement": []interface{}{
 						map[string]interface{}{
-							"arn": *r.Rules[0].Statement.RegexPatternSetReferenceStatement.ARN,
+							"arn": aws.StringValue(r.Rules[0].Statement.RegexPatternSetReferenceStatement.ARN),
 							"field_to_match": []interface{}{
 								map[string]interface{}{
 									"all_query_arguments":   []interface{}{},
@@ -1131,11 +1138,6 @@ resource "aws_wafv2_rule_group" "test" {
   description = "%s"
   scope       = "REGIONAL"
 
-  tags = {
-    Tag1 = "Value1"
-    Tag2 = "Value2"
-  }
-
   visibility_config {
     cloudwatch_metrics_enabled = false
     metric_name                = "friendly-metric-name"
@@ -1219,7 +1221,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name)
 }
 
-func testAccAwsWafv2RuleGroupConfig_Update_capacity(name string) string {
+func testAccAwsWafv2RuleGroupConfig_UpdateCapacity(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 3
@@ -1236,7 +1238,7 @@ resource "aws_wafv2_rule_group" "test" {
 `, name, name)
 }
 
-func testAccAwsWafv2RuleGroupConfig_Update_metricName(name string) string {
+func testAccAwsWafv2RuleGroupConfig_UpdateMetricName(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity    = 2
@@ -2091,7 +2093,7 @@ resource "aws_wafv2_regex_pattern_set" "test" {
   name  = "regex-pattern-set-%s"
   scope = "REGIONAL"
 
-  regular_expression_list {
+  regular_expression {
     regex_string = "one"
   }
 }
