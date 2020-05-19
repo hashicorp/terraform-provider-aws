@@ -254,7 +254,7 @@ func resourceAwsEfsAccessPointDelete(d *schema.ResourceData, meta interface{}) e
 		AccessPointId: aws.String(d.Id()),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting EFS Access Point (%s): %w", d.Id(), err)
 	}
 
 	err = waitForDeleteEfsAccessPoint(conn, d.Id(), 10*time.Minute)
