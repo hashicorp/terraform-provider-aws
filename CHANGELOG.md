@@ -2,6 +2,8 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_efs_access_point` [GH-11965]
 * **New Resource:** `aws_wafv2_ip_set` [GH-12119]
 
 ENHANCEMENTS:
