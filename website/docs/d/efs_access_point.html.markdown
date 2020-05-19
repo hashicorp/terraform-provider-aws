@@ -13,16 +13,8 @@ Provides information about an Elastic File System (EFS) Access Point.
 ## Example Usage
 
 ```hcl
-resource "aws_efs_file_system" "test" {
-  creation_token = "some-token"
-}
-
-resource "aws_efs_access_point" "test" {
-  file_system_id = "${aws_efs_file_system.test.id}"
-}
-
 data "aws_efs_access_point" "test" {
-  access_point_id = "${aws_efs_access_point.test.id}"
+  access_point_id = "fsap-12345678"
 }
 ```
 
