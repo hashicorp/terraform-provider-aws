@@ -46,6 +46,7 @@ data "aws_directory_service_directory" "example" {
 `connect_settings` (for `ADConnector`) is also exported with the following attributes:
  
  * `customer_username` - The username corresponding to the password provided.
+ * `connect_ips` - The IP addresses of the AD Connector servers.
  * `customer_dns_ips` - The DNS IP addresses of the domain to connect to.
  * `subnet_ids` - The identifiers of the subnets for the connector servers (2 subnets in 2 different AZs).
  * `vpc_id` - The ID of the VPC that the connector is in.
