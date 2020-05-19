@@ -1,0 +1,115 @@
+# Test and if on version tag create a new GitHub release for the Babbel fork.
+
+name: Babbel Test and Release
+
+on:
+  pull_request:
+    branches: [ master ]
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+
+  test:
+    name: Release Test
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+
+    - name: check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
+
+    - name: install tools
+      run: make tools
+
+    - name: sanity-check
+      run: |
+        make lint
+        make test
+
+  # See https://github.com/actions/upload-release-asset
+  build:
+    name: Build and Release
+    needs: test
+    if: startsWith( github.event.ref, 'refs/tags/v' )
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: set up Go 1.13
+      uses: actions/setup-go@v1
+      with:
+        go-version: 1.13
+
+    - name: check out code into the Go module directory
+      uses: actions/checkout@v2
+
+    - name: get dependencies
+      run: |
+        go get -v -t -d ./...
+        if [ -f Gopkg.toml ]; then
+            curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
+            dep ensure
+        fi
+    - name: parse version string
+      id: parse_version
+      run: |
+        export BUILD_VERSION=$(echo $GITHUB_REF | sed -e 's/refs.tags.\(.*\)$/\1/')
+        export BUILD_NAME=terraform-provider-aws_$BUILD_VERSION
+        echo "::set-output name=BUILD_NAME::$BUILD_NAME"
+        echo ::set-output name=ZIP_NAME_LINUX::"$BUILD_NAME"_linux_amd64.zip
+        echo ::set-output name=ZIP_NAME_DARWIN::"$BUILD_NAME"_darwin_amd64.zip
+    - name: build Linux
+      run: |
+        make build-linux
+        mv terraform-provider-aws ${{ steps.parse_version.outputs.BUILD_NAME }}
+        zip --junk-paths ${{ steps.parse_version.outputs.ZIP_NAME_LINUX }} ${{ steps.parse_version.outputs.BUILD_NAME }}
+    - name: build Darwin
+      run: |
+        make build-darwin
+        mv terraform-provider-aws ${{ steps.parse_version.outputs.BUILD_NAME }}
+        zip --junk-paths ${{ steps.parse_version.outputs.ZIP_NAME_DARWIN }} ${{ steps.parse_version.outputs.BUILD_NAME }}
+    - name: create release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
+
+    - name: upload Release Asset Linux
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./${{ steps.parse_version.outputs.ZIP_NAME_LINUX }}
+        asset_name: ${{ steps.parse_version.outputs.ZIP_NAME_LINUX }}
+
+        asset_content_type: application/zip
+
+    - name: Upload Release Asset Darwin
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./${{ steps.parse_version.outputs.ZIP_NAME_DARWIN }}
+        asset_name: ${{ steps.parse_version.outputs.ZIP_NAME_DARWIN }}
+
+        asset_content_type: application/zip
