@@ -55,12 +55,83 @@ func TestAccAWSGluePartition_disappears(t *testing.T) {
 				Config: testAccGluePartitionConfig(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGluePartitionExists(resourceName),
-					testAccCheckGluePartitionDisappears(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGluePartition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
+}
+
+func testAccCheckGluePartitionDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).glueconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_glue_partition" {
+			continue
+		}
+
+		catalogID, dbName, tableName, values, err := readAwsGluePartitionID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		input := &glue.GetPartitionInput{
+			DatabaseName:    aws.String(dbName),
+			CatalogId:       aws.String(catalogID),
+			TableName:       aws.String(tableName),
+			PartitionValues: aws.StringSlice(values),
+		}
+		if _, err := conn.GetPartition(input); err != nil {
+			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
+				continue
+			}
+
+			return err
+		}
+		return fmt.Errorf("still exists")
+	}
+	return nil
+}
+
+func testAccCheckGluePartitionExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		catalogID, dbName, tableName, values, err := readAwsGluePartitionID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		out, err := conn.GetPartition(&glue.GetPartitionInput{
+			DatabaseName:    aws.String(dbName),
+			CatalogId:       aws.String(catalogID),
+			TableName:       aws.String(tableName),
+			PartitionValues: aws.StringSlice(values),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if out.Partition == nil {
+			return fmt.Errorf("No Glue Partition Found")
+		}
+
+		if !reflect.DeepEqual(aws.StringValueSlice(out.Partition.Values), values) {
+			return fmt.Errorf("Glue Partition Mismatch")
+		}
+
+		return nil
+	}
 }
 
 func testAccGluePartitionConfigBase(rName string) string {
@@ -146,103 +217,4 @@ resource "aws_glue_partition" "test" {
   values        =  ["%[1]s"]
 }
 `, parValue)
-}
-
-func testAccCheckGluePartitionDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).glueconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_partition" {
-			continue
-		}
-
-		catalogID, dbName, tableName, values, err := readAwsGluePartitionID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &glue.GetPartitionInput{
-			DatabaseName:    aws.String(dbName),
-			CatalogId:       aws.String(catalogID),
-			TableName:       aws.String(tableName),
-			PartitionValues: aws.StringSlice(values),
-		}
-		if _, err := conn.GetPartition(input); err != nil {
-			if isAWSErr(err, glue.ErrCodeEntityNotFoundException, "") {
-				continue
-			}
-
-			return err
-		}
-		return fmt.Errorf("still exists")
-	}
-	return nil
-}
-
-func testAccCheckGluePartitionExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		catalogID, dbName, tableName, values, err := readAwsGluePartitionID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
-		out, err := conn.GetPartition(&glue.GetPartitionInput{
-			DatabaseName:    aws.String(dbName),
-			CatalogId:       aws.String(catalogID),
-			TableName:       aws.String(tableName),
-			PartitionValues: aws.StringSlice(values),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if out.Partition == nil {
-			return fmt.Errorf("No Glue Partition Found")
-		}
-
-		if !reflect.DeepEqual(aws.StringValueSlice(out.Partition.Values), values) {
-			return fmt.Errorf("Glue Partition Mismatch")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckGluePartitionDisappears(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		catalogID, dbName, tableName, values, err := readAwsGluePartitionID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
-		_, err = conn.DeletePartition(&glue.DeletePartitionInput{
-			DatabaseName:    aws.String(dbName),
-			CatalogId:       aws.String(catalogID),
-			TableName:       aws.String(tableName),
-			PartitionValues: aws.StringSlice(values),
-		})
-
-		return err
-	}
 }
