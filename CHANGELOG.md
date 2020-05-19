@@ -8,12 +8,12 @@ FEATURES:
 
 ENHANCEMENTS:
 
-* d/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
+* data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
 
 BUG FIXES:
 
-* d/aws_db_instance: `auto_minor_version_upgrade` now properly set [GH-13362]
-* autoscaling groups `tags` `propagate_at_launch` now properly set [GH-13360]
+* data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
+* resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
 
 ## 2.62.0 (May 15, 2020)
 
