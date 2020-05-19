@@ -729,7 +729,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 				tagList = append(tagList, t)
 			}
 		}
-		d.Set("tag", autoscalingTagDescriptionsToSlice(tagList))
+		d.Set("tag", autoscalingTagDescriptionsToSlice(tagList, false))
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
@@ -754,11 +754,11 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 			}
 		}
 		//lintignore:AWSR002
-		d.Set("tags", autoscalingTagDescriptionsToSlice(tagsList))
+		d.Set("tags", autoscalingTagDescriptionsToSlice(tagsList, true))
 	}
 
 	if !tagOk && !tagsOk {
-		d.Set("tag", autoscalingTagDescriptionsToSlice(g.Tags))
+		d.Set("tag", autoscalingTagDescriptionsToSlice(g.Tags, false))
 	}
 
 	if err := d.Set("target_group_arns", flattenStringList(g.TargetGroupARNs)); err != nil {
