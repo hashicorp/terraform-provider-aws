@@ -24,7 +24,7 @@ env:
   AWS_DEFAULT_REGION: us-west-2
   GO_VERSION: "1.14"
   GO111MODULE: on
-  TERRAFORM_VERSION: "0.12.24"
+  TERRAFORM_VERSION: "0.12.25"
 
 jobs:
   go_mod_download:
