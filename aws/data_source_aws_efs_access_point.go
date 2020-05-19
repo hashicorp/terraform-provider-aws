@@ -15,10 +15,6 @@ func dataSourceAwsEfsAccessPoint() *schema.Resource {
 	return &schema.Resource{
 		Read: dataSourceAwsEfsAccessPointRead,
 
-		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
-		},
-
 		Schema: map[string]*schema.Schema{
 			"access_point_id": {
 				Type:     schema.TypeString,
