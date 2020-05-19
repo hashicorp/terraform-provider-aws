@@ -319,8 +319,8 @@ func expandEfsAccessPointPosixUser(pUser []interface{}) *efs.PosixUser {
 		Uid: aws.Int64(int64(m["uid"].(int))),
 	}
 
-	if v, ok := m["secondary_gids"]; ok && len(v.(*schema.Set).List()) > 0 {
-		posixUser.SecondaryGids = expandInt64Set(v.(*schema.Set))
+	if v, ok := m["secondary_gids"].(*schema.Set); ok && len(v.List()) > 0 {
+		posixUser.SecondaryGids = expandInt64Set(v)
 	}
 
 	return posixUser
