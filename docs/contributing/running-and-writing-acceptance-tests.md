@@ -1,11 +1,25 @@
 # Running and Writing Acceptance Tests
 
-  - [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
-  - [Running an Acceptance Test](#running-an-acceptance-test)
-  - [Writing an Acceptance Test](#writing-an-acceptance-test)
-  - [Writing and running Cross-Account Acceptance Tests](#writing-and-running-cross-account-acceptance-tests)
-  - [Writing and running Cross-Region Acceptance Tests](#writing-and-running-cross-region-acceptance-tests)
-  - [Acceptance Test Checklist](#acceptance-test-checklist)  
+- [Acceptance Tests Often Cost Money to Run](#acceptance-tests-often-cost-money-to-run)
+- [Running an Acceptance Test](#running-an-acceptance-test)
+  - [Running Cross-Account Tests](#running-cross-account-tests)
+  - [Running Cross-Region Tests](#running-cross-region-tests)
+- [Writing an Acceptance Test](#writing-an-acceptance-test)
+  - [Anatomy of an Acceptance Test](#anatomy-of-an-acceptance-test)
+  - [Resource Acceptance Testing](#resource-acceptance-testing)
+    - [Test Configurations](#test-configurations)
+    - [Combining Test Configurations](#combining-test-configurations)
+      - [Base Test Configurations](#base-test-configurations)
+      - [Available Common Test Configurations](#available-common-test-configurations)
+    - [Randomized Naming](#randomized-naming)
+    - [Other Recommended Variables](#other-recommended-variables)
+    - [Basic Acceptance Tests](#basic-acceptance-tests)
+    - [Disappears Acceptance Tests](#disappears-acceptance-tests)
+    - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
+    - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
+    - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
+  - [Data Source Acceptance Testing](#data-source-acceptance-testing)
+- [Acceptance Test Checklist](#acceptance-test-checklist)
 
 Terraform includes an acceptance test harness that does most of the repetitive
 work involved in testing a resource. For additional information about testing
@@ -84,13 +98,54 @@ ok  	github.com/terraform-providers/terraform-provider-aws/aws	55.619s
 
 Please Note: On macOS 10.14 and later (and some Linux distributions), the default user open file limit is 256. This may cause unexpected issues when running the acceptance testing since this can prevent various operations from occurring such as opening network connections to AWS. To view this limit, the `ulimit -n` command can be run. To update this limit, run `ulimit -n 1024`  (or higher).
 
+### Running Cross-Account Tests
+
+Certain testing requires multiple AWS accounts. This additional setup is not typically required and the testing will return an error (shown below) if your current setup does not have the secondary AWS configuration:
+
+```console
+$ make testacc TEST=./aws TESTARGS='-run=TestAccAWSDBInstance_DbSubnetGroupName_RamShared'
+=== RUN   TestAccAWSDBInstance_DbSubnetGroupName_RamShared
+=== PAUSE TestAccAWSDBInstance_DbSubnetGroupName_RamShared
+=== CONT  TestAccAWSDBInstance_DbSubnetGroupName_RamShared
+    TestAccAWSDBInstance_DbSubnetGroupName_RamShared: provider_test.go:386: AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests
+--- FAIL: TestAccAWSDBInstance_DbSubnetGroupName_RamShared (2.22s)
+FAIL
+FAIL	github.com/terraform-providers/terraform-provider-aws/aws	4.305s
+FAIL
+```
+
+Running these acceptance tests is the same as before, except the following additional AWS credential information is required:
+
+```sh
+# Using a profile
+export AWS_ALTERNATE_PROFILE=...
+# Otherwise
+export AWS_ALTERNATE_ACCESS_KEY_ID=...
+export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
+```
+
+### Running Cross-Region Tests
+
+Certain testing requires multiple AWS regions. Additional setup is not typically required because the testing defaults the alternate AWS region to `us-east-1`.
+
+Running these acceptance tests is the same as before, but if you wish to override the alternate region:
+
+```sh
+export AWS_ALTERNATE_REGION=...
+```
+
 ## Writing an Acceptance Test
 
 Terraform has a framework for writing acceptance tests which minimises the
-amount of boilerplate code necessary to use common testing patterns. The entry
-point to the framework is the `resource.ParallelTest()` function.
+amount of boilerplate code necessary to use common testing patterns. This guide is meant to augment the general [Extending Terraform documentation](https://www.terraform.io/docs/extend/testing/acceptance-tests/index.html) with Terraform AWS Provider specific conventions and helpers.
 
-Tests are divided into `TestStep`s. Each `TestStep` proceeds by applying some
+### Anatomy of an Acceptance Test
+
+This section describes in detail how the Terraform acceptance testing framework operates with respect to the Terraform AWS Provider. We recommend those unfamiliar with this provider, or Terraform resource testing in general, take a look here first to generally understand how we interact with AWS and the resource code to verify functionality.
+
+The entry point to the framework is the `resource.ParallelTest()` function. This wraps our testing to work with the standard Go testing framework, while also preventing unexpected usage of AWS by requiring the `TF_ACC=1` environment variable. This function accepts a `TestCase` parameter, which has all the details about the test itself. For example, this includes the test steps (`TestSteps`) and how to verify resource deletion in the API after all steps have been run (`CheckDestroy`).
+
+Each `TestStep` proceeds by applying some
 Terraform configuration using the provider under test, and then verifying that
 results are as expected by making assertions using the provider API. It is
 common for a single test function to exercise both the creation of and updates
@@ -102,7 +157,7 @@ to a single resource. Most tests follow a similar structure.
    to running acceptance tests. This is common to all tests exercising a single
    provider.
 
-Each `TestStep` is defined in the call to `resource.ParallelTest()`. Most assertion
+Most assertion
 functions are defined out of band with the tests. This keeps the tests
 readable, and allows reuse of assertion functions across different tests of the
 same type of resource. The definition of a complete test looks like this:
@@ -193,10 +248,10 @@ When executing the test, the following steps are taken for each `TestStep`:
     resource.TestCheckResourceAttr("aws_cloudwatch_dashboard.foobar", "dashboard_name", testAccAWSCloudWatchDashboardName(rInt)),
     ```
 
-2. The resources created by the test are destroyed. This step happens
+1. The resources created by the test are destroyed. This step happens
    automatically, and is the equivalent of calling `terraform destroy`.
 
-3. Assertions are made against the provider API to verify that the resources
+1. Assertions are made against the provider API to verify that the resources
    have indeed been removed. If these checks fail, the test fails and reports
    "dangling resources". The code to ensure that the `aws_cloudwatch_dashboard` shown
    above has been destroyed looks like this:
@@ -229,7 +284,317 @@ When executing the test, the following steps are taken for each `TestStep`:
 
    These functions usually test only for the resource directly under test.
 
-## Writing and running Cross-Account Acceptance Tests
+### Resource Acceptance Testing
+
+Most resources that implement standard Create, Read, Update, and Delete functionality should follow the pattern below. Each test type has a section that describes them in more detail:
+
+- **basic**: This represents the bare minimum verification that the resource can be created, read, deleted, and optionally imported.
+- **disappears**: A test that verifies Terraform will offer to recreate a resource if it is deleted outside of Terraform (e.g. via the Console) instead of returning an error that it cannot be found.
+- **Per Attribute**: A test that verifies the resource with a single additional argument can be created, read, optionally updated (or force resource recreation), deleted, and optionally imported.
+
+The leading sections below highlight additional recommended patterns.
+
+#### Test Configurations
+
+Most of the existing test configurations you will find in the Terraform AWS Provider are written in the following function-based style:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  // ... omitted for brevity ...
+
+  resource.ParallelTest(t, resource.TestCase{
+    // ... omitted for brevity ...
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfig(),
+        // ... omitted for brevity ...
+      },
+    },
+  })
+}
+
+func testAccAwsExampleThingConfig() string {
+  return `
+resource "aws_example_thing" "test" {
+  # ... omitted for brevity ...
+}
+`
+}
+```
+
+Even when no values need to be passed in to the test configuration, we have found this setup to be the most flexible for allowing that to be easily implemented. Any configurable values are handled via `fmt.Sprintf()`. Using `text/template` or other templating styles is explicitly forbidden.
+
+For consistency, resources in the test configuration should be named `resource "..." "test"` unless multiple of that resource are necessary.
+
+We discourage re-using test configurations across test files (except for some common configuration helpers we provide) as it is much harder to discover potential testing regressions.
+
+Please also note that the newline on the first line of the configuration (before `resource`) and the newline after the last line of configuration (after `}`) are important to allow test configurations to be easily combined without generating Terraform configuration language syntax errors.
+
+#### Combining Test Configurations
+
+We include a helper function, `composeConfig()` for iteratively building and chaining test configurations together. It accepts any number of configurations to combine them. This simplifies a single resource's testing by allowing the creation of a "base" test configuration for all the other test configurations (if necessary) and also allows the maintainers to curate common configurations. Each of these is described in more detail in below sections.
+
+Please note that we do discourage _excessive_ chaining of configurations such as implementing multiple layers of "base" configurations. Usually these configurations are harder for maintainers and other future readers to understand due to the multiple levels of indirection.
+
+##### Base Test Configurations
+
+If a resource requires the same Terraform configuration as a prerequisite for all test configurations, then a common pattern is implementing a "base" test configuration that is combined with each test configuration.
+
+For example:
+
+```go
+func testAccAwsExampleThingConfigBase() string {
+  return `
+resource "aws_iam_role" "test" {
+  # ... omitted for brevity ...
+}
+
+resource "aws_iam_role_policy" "test" {
+  # ... omitted for brevity ...
+}
+`
+}
+
+func testAccAwsExampleThingConfig() string {
+  return composeConfig(
+    testAccAwsExampleThingConfigBase(),
+    `
+resource "aws_example_thing" "test" {
+  # ... omitted for brevity ...
+}
+`)
+}
+```
+
+##### Available Common Test Configurations
+
+These test configurations are typical implementations we have found or allow testing to implement best practices easier, since the Terraform AWS Provider testing is expected to run against various AWS Regions and Partitions.
+
+- `testAccAvailableEc2InstanceTypeForRegion("type1", "type2", ...)`: Typically used to replace hardcoded EC2 Instance Types. Uses `aws_ec2_instance_type_offering` data source to return an available EC2 Instance Type in preferred ordering. Reference the instance type via: `data.aws_ec2_instance_type_offering.available.instance_type`
+- `testAccLatestAmazonLinuxHvmEbsAmiConfig()`: Typically used to replace hardcoded EC2 Image IDs (`ami-12345678`). Uses `aws_ami` data source to find the latest Amazon Linux image. Reference the AMI ID via: `data.aws_ami.amzn-ami-minimal-hvm-ebs.id`
+
+#### Randomized Naming
+
+For AWS resources that require unique naming, the tests should implement a randomized name, typically coded as a `rName` variable in the test and passed as a parameter to creating the test configuration.
+
+For example:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  // ... omitted for brevity ...
+
+  resource.ParallelTest(t, resource.TestCase{
+    // ... omitted for brevity ...
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigName(rName),
+        // ... omitted for brevity ...
+      },
+    },
+  })
+}
+
+func testAccAwsExampleThingConfigName(rName string) string {
+  return fmt.Sprintf(`
+resource "aws_example_thing" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+```
+
+Typically the `rName` is always the first argument to the test configuration function, if used, for consistency.
+
+#### Other Recommended Variables
+
+We also typically recommend saving a `resourceName` variable in the test that contains the resource reference, e.g. `aws_example_thing.test`, which is repeatedly used in the checks.
+
+For example:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  // ... omitted for brevity ...
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    // ... omitted for brevity ...
+    Steps: []resource.TestStep{
+      {
+        // ... omitted for brevity ...
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          testAccCheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
+          resource.TestCheckResourceAttr(resourceName, "description", ""),
+          resource.TestCheckResourceAttr(resourceName, "name", rName),
+        ),
+      },
+      {
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+// below all TestAcc functions
+
+func testAccAwsExampleThingConfigName(rName string) string {
+  return fmt.Sprintf(`
+resource "aws_example_thing" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+```
+
+#### Basic Acceptance Tests
+
+Usually this test is implemented first. The test configuration should contain only required arguments (`Required: true` attributes) and it should check the values of all read-only attributes (`Computed: true` without `Optional: true`). If the resource supports it, it verifies import. It should _NOT_ perform other `TestStep` such as updates or verify recreation.
+
+These are typically named `TestAccAws{SERVICE}{THING}_basic`, e.g. `TestAccAwsCloudWatchDashboard_basic`
+
+For example:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigName(rName),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          testAccCheckResourceAttrRegionalARN(resourceName, "arn", "example", fmt.Sprintf("thing/%s", rName)),
+          resource.TestCheckResourceAttr(resourceName, "description", ""),
+          resource.TestCheckResourceAttr(resourceName, "name", rName),
+        ),
+      },
+      {
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+    },
+  })
+}
+
+// below all TestAcc functions
+
+func testAccAwsExampleThingConfigName(rName string) string {
+  return fmt.Sprintf(`
+resource "aws_example_thing" "test" {
+  name = %[1]q
+}
+`, rName)
+}
+```
+
+#### Disappears Acceptance Tests
+
+This test is generally implemented second. It is straightforward to setup once the basic test is passing since it can reuse that test configuration. It prevents a common bug report with Terraform resources that error when they can not be found (e.g. deleted outside Terraform).
+
+These are typically named `TestAccAws{SERVICE}{THING}_disappears`, e.g. `TestAccAwsCloudWatchDashboard_disappears`
+
+For example:
+
+```go
+func TestAccAwsExampleThing_disappears(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigName(rName),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName, &job),
+          testAccCheckResourceDisappears(testAccProvider, resourceAwsExampleThing(), resourceName),
+        ),
+        ExpectNonEmptyPlan: true,
+      },
+    },
+  })
+}
+```
+
+If this test does fail, the fix for this is generally adding error handling immediately after the `Read` API call that catches the error and tells Terraform to remove the resource before returning the error:
+
+```go
+output, err := conn.GetThing(input)
+
+if isAWSErr(err, example.ErrCodeResourceNotFound, "") {
+  log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
+  d.SetId("")
+  return nil
+}
+
+if err != nil {
+  return fmt.Errorf("error reading Example Thing (%s): %w", d.Id(), err)
+}
+```
+
+#### Per Attribute Acceptance Tests
+
+These are typically named `TestAccAws{SERVICE}{THING}_{ATTRIBUTE}`, e.g. `TestAccAwsCloudWatchDashboard_Name`
+
+For example:
+
+```go
+func TestAccAwsExampleThing_Description(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingConfigDescription(rName, "description1"),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+        ),
+      },
+      {
+        ResourceName:      resourceName,
+        ImportState:       true,
+        ImportStateVerify: true,
+      },
+      {
+        Config: testAccAwsExampleThingConfigDescription(rName, "description2"),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+        ),
+      },
+    },
+  })
+}
+
+// below all TestAcc functions
+
+func testAccAwsExampleThingConfigDescription(rName string, description string) string {
+  return fmt.Sprintf(`
+resource "aws_example_thing" "test" {
+  description = %[2]q
+  name        = %[1]q
+}
+`, rName, description)
+}
+```
+
+#### Cross-Account Acceptance Tests
 
 When testing requires AWS infrastructure in a second AWS account, the below changes to the normal setup will allow the management or reference of resources and data sources across accounts:
 
@@ -292,17 +657,7 @@ resource "aws_example" "test" {
 
 Searching for usage of `testAccAlternateAccountPreCheck` in the codebase will yield real world examples of this setup in action.
 
-Running these acceptance tests is the same as before, except the following additional credential information is required:
-
-```sh
-# Using a profile
-export AWS_ALTERNATE_PROFILE=...
-# Otherwise
-export AWS_ALTERNATE_ACCESS_KEY_ID=...
-export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
-```
-
-## Writing and running Cross-Region Acceptance Tests
+#### Cross-Region Acceptance Tests
 
 When testing requires AWS infrastructure in a second AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
@@ -366,16 +721,60 @@ resource "aws_example" "test" {
 
 Searching for usage of `testAccAlternateRegionPreCheck` in the codebase will yield real world examples of this setup in action.
 
-Running these acceptance tests is the same as before, except if an AWS region other than the default alternate region - `us-east-1` - is required,
-in which case the following additional configuration information is required:
+### Data Source Acceptance Testing
 
-```sh
-export AWS_ALTERNATE_REGION=...
+Writing acceptance testing for data sources is similar to resources, with the biggest changes being:
+
+- Adding `DataSource` to the test and configuration naming, such as `TestAccAwsExampleThingDataSource_Filter`
+- The basic test _may_ be named after the easiest lookup attribute instead, e.g. `TestAccAwsExampleThingDataSource_Name`
+- No disappears testing
+- Almost all checks should be done with [`resource.TestCheckResourceAttrPair()`](https://pkg.go.dev/github.com/hashicorp/terraform-plugin-sdk/helper/resource?tab=doc#TestCheckResourceAttrPair) to compare the data source attributes to the resource attributes
+- The usage of an additional `dataSourceName` variable to store a data source reference, e.g. `data.aws_example_thing.test`
+
+Data sources testing should still utilize the `CheckDestroy` function of the resource, just to continue verifying that there are no dangling AWS resources after a test is ran.
+
+Please note that we do not recommend re-using test configurations between resources and their associated data source as it is harder to discover testing regressions. Authors are encouraged to potentially implement similar "base" configurations though.
+
+For example:
+
+```go
+func TestAccAwsExampleThingDataSource_Name(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  dataSourceName := "data.aws_example_thing.test"
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t) },
+    Providers:    testAccProviders,
+    CheckDestroy: testAccCheckAwsExampleThingDestroy,
+    Steps: []resource.TestStep{
+      {
+        Config: testAccAwsExampleThingDataSourceConfigName(rName),
+        Check: resource.ComposeTestCheckFunc(
+          testAccCheckAwsExampleThingExists(resourceName),
+          resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
+          resource.TestCheckResourceAttrPair(resourceName, "description", dataSourceName, "description"),
+          resource.TestCheckResourceAttrPair(resourceName, "name", dataSourceName, "name"),
+        ),
+      },
+    },
+  })
+}
+
+// below all TestAcc functions
+
+func testAccAwsExampleThingDataSourceConfigName(rName string) string {
+  return fmt.Sprintf(`
+resource "aws_example_thing" "test" {
+  name = %[1]q
+}
+
+data "aws_example_thing" "test" {
+  name = aws_example_thing.test.name
+}
+`, rName)
+}
 ```
-
-[website]: https://github.com/terraform-providers/terraform-provider-aws/tree/master/website
-[acctests]: https://github.com/hashicorp/terraform#acceptance-tests
-[ml]: https://groups.google.com/group/terraform-tool
 
 ## Acceptance Test Checklist
 

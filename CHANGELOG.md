@@ -1,24 +1,44 @@
-## 2.62.0 (Unreleased)
+## 2.63.0 (Unreleased)
 
 FEATURES:
 
-* **New Resource:** `aws_workspaces_workspace` [GH-11608]
+* **New Data Source:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_wafv2_ip_set` [GH-12119]
 
 ENHANCEMENTS:
 
-* resource/aws_appsync_resolver: Add `cache_config` configuration block [GH-12747]
-* resource/aws_codebuild_project: Support `git_submodules_config` with `GITHUB` and `GITHUB_ENTERPRISE` source types [GH-13285]
-* resource/aws_codebuild_project: Support `SECRETS_MANAGER` environment variable type [GH-12572]
-* resource/aws_iot_topic_rule: Add `dynamodbv2` configuration block [GH-7469]
-* resource/aws_iot_topic_rule: Add `iot_analytics` configuration block [GH-9859]
-* resource/aws_iot_topic_rule: Add `iot_events` configuration block [GH-9890]
-* resource/aws_iot_topic_rule: Add `operation` argument to `dynamodb` configuration block [GH-12714]
-* resource/aws_iot_topic_rule: Add `qos` argument `republish` configuration block [GH-12869]
+* data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
+* resource/aws_ecs_service: Add `force_new_deployment` argument [GH-13376]
+* resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` [GH-13376]
 
 BUG FIXES:
 
-* resource/aws_codebuild_project: Allow empty value (`""`) environment variables [GH-11572]
-* resource/aws_security_group_rule: Prevent recreation when `source_security_group_id` refers to a security group across accounts [GH-11809]
+* data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
+* resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
+
+## 2.62.0 (May 15, 2020)
+
+FEATURES:
+
+* **New Resource:** `aws_workspaces_workspace` ([#11608](https://github.com/terraform-providers/terraform-provider-aws/issues/11608))
+
+ENHANCEMENTS:
+
+* resource/aws_appsync_resolver: Add `cache_config` configuration block ([#12747](https://github.com/terraform-providers/terraform-provider-aws/issues/12747))
+* resource/aws_codebuild_project: Support `git_submodules_config` with `GITHUB` and `GITHUB_ENTERPRISE` source types ([#13285](https://github.com/terraform-providers/terraform-provider-aws/issues/13285))
+* resource/aws_codebuild_project: Support `SECRETS_MANAGER` environment variable type ([#12572](https://github.com/terraform-providers/terraform-provider-aws/issues/12572))
+* resource/aws_datasync_task: Support `ONLY_FILES_TRANSFERRED` value in `verify_mode` argument ([#12897](https://github.com/terraform-providers/terraform-provider-aws/issues/12897))
+* resource/aws_iot_topic_rule: Add `dynamodbv2` configuration block ([#7469](https://github.com/terraform-providers/terraform-provider-aws/issues/7469))
+* resource/aws_iot_topic_rule: Add `iot_analytics` configuration block ([#9859](https://github.com/terraform-providers/terraform-provider-aws/issues/9859))
+* resource/aws_iot_topic_rule: Add `iot_events` configuration block ([#9890](https://github.com/terraform-providers/terraform-provider-aws/issues/9890))
+* resource/aws_iot_topic_rule: Add `operation` argument to `dynamodb` configuration block ([#12714](https://github.com/terraform-providers/terraform-provider-aws/issues/12714))
+* resource/aws_iot_topic_rule: Add `qos` argument `republish` configuration block ([#12869](https://github.com/terraform-providers/terraform-provider-aws/issues/12869))
+
+BUG FIXES:
+
+* resource/aws_codebuild_project: Allow empty value (`""`) environment variables ([#11572](https://github.com/terraform-providers/terraform-provider-aws/issues/11572))
+* resource/aws_security_group_rule: Prevent recreation when `source_security_group_id` refers to a security group across accounts ([#11809](https://github.com/terraform-providers/terraform-provider-aws/issues/11809))
 
 ## 2.61.0 (May 08, 2020)
 
