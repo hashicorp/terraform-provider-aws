@@ -211,7 +211,6 @@ func TestAccAWSAPIGatewayUsagePlan_throttling(t *testing.T) {
 		PreCheck:            func() { testAccPreCheck(t) },
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSAPIGatewayUsagePlanDestroy,
-		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
@@ -266,7 +265,6 @@ func TestAccAWSAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 		PreCheck:            func() { testAccPreCheck(t) },
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSAPIGatewayUsagePlanDestroy,
-		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSApiGatewayUsagePlanThrottlingConfig(rName),
@@ -293,7 +291,6 @@ func TestAccAWSAPIGatewayUsagePlan_quota(t *testing.T) {
 		PreCheck:            func() { testAccPreCheck(t) },
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSAPIGatewayUsagePlanDestroy,
-		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSApiGatewayUsagePlanBasicConfig(rName),
