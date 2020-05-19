@@ -638,7 +638,7 @@ func testAccCheckAWSEksNodeGroupDisappears(nodeGroup *eks.Nodegroup) resource.Te
 	}
 }
 
-func testAccAWSEksNodeGroupConfigBase(rName string) string {
+func testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
@@ -770,7 +770,13 @@ resource "aws_subnet" "test" {
     "kubernetes.io/cluster/%[1]s" = "shared"
   }
 }
+`, rName)
+}
 
+func testAccAWSEksNodeGroupConfigBase(rName string) string {
+	return composeConfig(
+		testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName),
+		fmt.Sprintf(`
 resource "aws_eks_cluster" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.cluster.arn
@@ -785,7 +791,29 @@ resource "aws_eks_cluster" "test" {
     "aws_main_route_table_association.test",
   ]
 }
-`, rName)
+`, rName))
+}
+
+func testAccAWSEksNodeGroupConfigBaseVersion(rName string, version string) string {
+	return composeConfig(
+		testAccAWSEksNodeGroupConfigBaseIamAndVpc(rName),
+		fmt.Sprintf(`
+resource "aws_eks_cluster" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.cluster.arn
+  version  = %[2]q
+
+  vpc_config {
+    subnet_ids = aws_subnet.test[*].id
+  }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.cluster-AmazonEKSClusterPolicy",
+    "aws_iam_role_policy_attachment.cluster-AmazonEKSServicePolicy",
+    "aws_main_route_table_association.test",
+  ]
+}
+`, rName, version))
 }
 
 func testAccAWSEksNodeGroupConfigNodeGroupName(rName string) string {
@@ -1110,13 +1138,13 @@ resource "aws_eks_node_group" "test" {
 }
 
 func testAccAWSEksNodeGroupConfigVersion(rName, version string) string {
-	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+	return testAccAWSEksNodeGroupConfigBaseVersion(rName, version) + fmt.Sprintf(`
 resource "aws_eks_node_group" "test" {
   cluster_name    = aws_eks_cluster.test.name
   node_group_name = %[1]q
   node_role_arn   = aws_iam_role.node.arn
   subnet_ids      = aws_subnet.test[*].id
-  version         = %[2]q
+  version         = aws_eks_cluster.test.version
 
   scaling_config {
     desired_size = 1
@@ -1130,5 +1158,5 @@ resource "aws_eks_node_group" "test" {
     "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
   ]
 }
-`, rName, version)
+`, rName)
 }
