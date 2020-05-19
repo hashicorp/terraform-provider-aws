@@ -53,6 +53,8 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `id`- The id of the Glue User Defined Function.
+* `arn`- The ARN of the Glue User Defined Function.
 * `create_date`- The time at which the function was created.
 
 ## Import

@@ -27,6 +27,7 @@ func TestAccAWSGlueUserDefinedFunction_basic(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("userDefinedFunction/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "class_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_name", rName),

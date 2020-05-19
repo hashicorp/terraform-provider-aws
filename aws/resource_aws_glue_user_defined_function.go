@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -23,6 +24,10 @@ func resourceAwsGlueUserDefinedFunction() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"catalog_id": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -162,6 +167,16 @@ func resourceAwsGlueUserDefinedFunctionRead(d *schema.ResourceData, meta interfa
 	}
 
 	udf := out.UserDefinedFunction
+
+	udfArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "glue",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("userDefinedFunction/%s/%s", dbName, aws.StringValue(udf.FunctionName)),
+	}.String()
+
+	d.Set("arn", udfArn)
 	d.Set("name", udf.FunctionName)
 	d.Set("catalog_id", catalogID)
 	d.Set("database_name", dbName)
