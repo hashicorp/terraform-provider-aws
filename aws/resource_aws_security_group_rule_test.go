@@ -170,8 +170,8 @@ func TestAccAWSSecurityGroupRule_Ingress_Source_With_Account_Id(t *testing.T) {
 				Config: testAccAWSSecurityGroupRule_Ingress_Source_with_AccountId(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupRuleExists("aws_security_group.web", &group),
-					resource.TestMatchResourceAttr(
-						ruleName, "security_group_id", regexp.MustCompile("^sg-[0-9a-z]{17}$")),
+					resource.TestCheckResourceAttrPair(
+						ruleName, "security_group_id", "aws_security_group.web", "id"),
 					resource.TestMatchResourceAttr(
 						ruleName, "source_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
 					resource.TestCheckResourceAttr(
