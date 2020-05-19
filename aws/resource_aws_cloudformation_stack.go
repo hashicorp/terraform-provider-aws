@@ -355,14 +355,20 @@ func resourceAwsCloudFormationStackRead(d *schema.ResourceData, meta interface{}
 
 func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cfconn
-
+	// Name must conform to regex: [a-zA-Z][-a-zA-Z0-9]*
+	changeSetName := fmt.Sprint("tf-", time.Now().UnixNano())
 	input := &cloudformation.UpdateStackInput{
 		StackName: aws.String(d.Id()),
+	}
+	changeSetInput := &cloudformation.CreateChangeSetInput{
+		StackName:     aws.String(d.Id()),
+		ChangeSetName: aws.String(changeSetName),
 	}
 
 	// Either TemplateBody, TemplateURL or UsePreviousTemplate are required
 	if v, ok := d.GetOk("template_url"); ok {
 		input.TemplateURL = aws.String(v.(string))
+		changeSetInput.TemplateURL = input.TemplateURL
 	}
 	if v, ok := d.GetOk("template_body"); ok && input.TemplateURL == nil {
 		template, err := normalizeCloudFormationTemplate(v)
@@ -370,24 +376,29 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 			return fmt.Errorf("template body contains an invalid JSON or YAML: %s", err)
 		}
 		input.TemplateBody = aws.String(template)
+		changeSetInput.TemplateBody = input.TemplateBody
 	}
 
 	// Capabilities must be present whether they are changed or not
 	if v, ok := d.GetOk("capabilities"); ok {
 		input.Capabilities = expandStringList(v.(*schema.Set).List())
+		changeSetInput.Capabilities = input.Capabilities
 	}
 
 	if d.HasChange("notification_arns") {
 		input.NotificationARNs = expandStringList(d.Get("notification_arns").(*schema.Set).List())
+		changeSetInput.NotificationARNs = input.NotificationARNs
 	}
 
 	// Parameters must be present whether they are changed or not
 	if v, ok := d.GetOk("parameters"); ok {
 		input.Parameters = expandCloudFormationParameters(v.(map[string]interface{}))
+		changeSetInput.Parameters = input.Parameters
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
 		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().CloudformationTags()
+		changeSetInput.Tags = input.Tags
 	}
 
 	if d.HasChange("policy_body") {
@@ -403,10 +414,42 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("iam_role_arn") {
 		input.RoleARN = aws.String(d.Get("iam_role_arn").(string))
+		changeSetInput.RoleARN = input.RoleARN
 	}
 
 	log.Printf("[DEBUG] Updating CloudFormation stack: %s", input)
-	_, err := conn.UpdateStack(input)
+	_, err := conn.CreateChangeSet(changeSetInput)
+	if err != nil {
+		return err
+	}
+
+	defer func() {
+		// appease linter and catch error
+		_, err := conn.DeleteChangeSet(&cloudformation.DeleteChangeSetInput{
+			ChangeSetName: aws.String(changeSetName),
+			StackName:     aws.String(d.Id()),
+		})
+		if err != nil {
+			log.Printf("could not delete Cloudformation change set: %s", changeSetName)
+		}
+	}()
+
+	err = waitForCloudFormationStackChangeSetCreation(conn, d.Id(), changeSetName, 5*time.Minute)
+	if err != nil {
+		return err
+	}
+	describeResponse, err := conn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
+		ChangeSetName: aws.String(changeSetName),
+		StackName:     aws.String(d.Id()),
+	})
+	if err != nil {
+		return err
+	}
+	if len(describeResponse.Changes) == 0 {
+		log.Printf("[DEBUG] Current CloudFormation update has an empty changeset")
+		return resourceAwsCloudFormationStackRead(d, meta)
+	}
+	_, err = conn.UpdateStack(input)
 	if err != nil {
 		awsErr, ok := err.(awserr.Error)
 		// ValidationError: No updates are to be performed.
@@ -415,7 +458,6 @@ func resourceAwsCloudFormationStackUpdate(d *schema.ResourceData, meta interface
 			awsErr.Message() != "No updates are to be performed." {
 			return err
 		}
-
 		log.Printf("[DEBUG] Current CloudFormation stack has no updates")
 	}
 
@@ -720,6 +762,48 @@ func waitForCloudFormationStackDeletion(conn *cloudformation.CloudFormation, sta
 	}
 
 	_, err := stateConf.WaitForState()
+
+	return err
+}
+
+func waitForCloudFormationStackChangeSetCreation(conn *cloudformation.CloudFormation, stackId string, changeSetName string, timeout time.Duration) error {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{
+			cloudformation.ChangeSetStatusCreateInProgress,
+			cloudformation.ChangeSetStatusCreatePending,
+		},
+		Target: []string{
+			cloudformation.ChangeSetStatusCreateComplete,
+			cloudformation.ChangeSetStatusFailed,
+		},
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeChangeSet(&cloudformation.DescribeChangeSetInput{
+				ChangeSetName: aws.String(changeSetName),
+				StackName:     aws.String(stackId),
+			})
+			if err != nil {
+				return nil, "", fmt.Errorf("error describing CloudFormation change set: %s", err)
+			}
+			return resp, *resp.Status, nil
+		},
+		Timeout: timeout,
+		//Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	lastResult, err := stateConf.WaitForState()
+	if err != nil {
+		return err
+	}
+
+	resp := lastResult.(*cloudformation.DescribeChangeSetOutput)
+
+	//log.Printf("[DEBUG] status: %s, reason: %s", *resp.Status, *resp.StatusReason)
+
+	if *resp.Status != cloudformation.ChangeSetStatusCreateComplete &&
+		"The submitted information didn't contain changes. Submit different information to create a change set." != *resp.StatusReason {
+		err = fmt.Errorf("change set for Cloudformation stack could not be created: %s", *resp.StatusReason)
+	}
 
 	return err
 }
