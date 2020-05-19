@@ -4,6 +4,11 @@ FEATURES:
 
 * **New Resource:** `aws_wafv2_ip_set` [GH-12119]
 
+ENHANCEMENTS:
+
+* d/aws_db_instance: 'auto_minor_version_upgrade' now properly set [GH-13362]
+* d/aws_rds_cluster: 'backtrack_window' attribute now available [GH-13362]
+
 ## 2.62.0 (May 15, 2020)
 
 FEATURES:
