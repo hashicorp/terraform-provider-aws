@@ -32,9 +32,3 @@ The following arguments are supported:
 * `resource_id` - (Required) The ID of the EC2 resource to manage the tag for.
 * `key` - (Required) The tag name.
 * `value` - (Required) The value of the tag.
-
-## Timeouts
-
-Tags on EC2 resources are applied asynchronously. `aws_ec2_tag` provides the following [timeouts](/docs/configuration/resources.html#timeouts) configuration options:
-
-- `create` - (Default `10 minutes`) Used for creating tags
