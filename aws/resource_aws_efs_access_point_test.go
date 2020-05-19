@@ -362,45 +362,6 @@ func testAccCheckEfsAccessPointExists(resourceID string, mount *efs.AccessPointD
 	}
 }
 
-func testAccAWSEFSAccessPointDisappears(mount *efs.AccessPointDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).efsconn
-
-		_, err := conn.DeleteAccessPoint(&efs.DeleteAccessPointInput{
-			AccessPointId: mount.AccessPointId,
-		})
-
-		if err != nil {
-			if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
-				return nil
-			}
-			return err
-		}
-
-		return resource.Retry(3*time.Minute, func() *resource.RetryError {
-			resp, err := conn.DescribeAccessPoints(&efs.DescribeAccessPointsInput{
-				AccessPointId: mount.AccessPointId,
-			})
-			if err != nil {
-				if isAWSErr(err, efs.ErrCodeAccessPointNotFound, "") {
-					return nil
-				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error reading EFS access point: %s", err))
-			}
-			if resp.AccessPoints == nil || len(resp.AccessPoints) < 1 {
-				return nil
-			}
-			if *resp.AccessPoints[0].LifeCycleState == efs.LifeCycleStateDeleted {
-				return nil
-			}
-			return resource.RetryableError(fmt.Errorf(
-				"Waiting for EFS access point: %s", *mount.AccessPointId))
-		})
-	}
-
-}
-
 func testAccAWSEFSAccessPointConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
