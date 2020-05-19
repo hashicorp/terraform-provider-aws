@@ -9,7 +9,7 @@ description: |-
 
 # Resource: aws_ec2_tag
 
-Manages a single tag for a given EC2.
+Manages an individual tag for a given EC2 resource. This resource should only be used in cases where EC2 resources are created outside Terraform (e.g. AMIs), being shared via Resource Access Manager (RAM), or implicitly created by other means (e.g. Transit Gateway VPN Attachments).
 
 ## Example Usage
 
