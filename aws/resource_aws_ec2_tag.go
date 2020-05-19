@@ -86,7 +86,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle EC2 eventual consistency on creation
 	log.Printf("[DEBUG] Waiting for tag %s on resource %s to become available", key, resourceID)
-	retryError := resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	retryError := resource.Retry(5 * time.Minute, func() *resource.RetryError {
 		var tags *ec2.DescribeTagsOutput
 		tags, err = conn.DescribeTags(&ec2.DescribeTagsInput{
 			Filters: []*ec2.Filter{
