@@ -98233,7 +98233,7 @@ type RunInstancesInput struct {
 	// For more information, see Ensuring Idempotency (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/Run_Instance_Idempotency.html).
 	//
 	// Constraints: Maximum 64 ASCII characters
-	ClientToken *string `locationName:"clientToken" type:"string"`
+	ClientToken *string `locationName:"clientToken" type:"string" idempotencyToken:"true"`
 
 	// The CPU options for the instance. For more information, see Optimizing CPU
 	// Options (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html)
