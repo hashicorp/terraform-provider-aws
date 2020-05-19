@@ -565,6 +565,9 @@ behavior "pull_request_path_labeler" "service_labels" {
       "docs/**/*",
       "*.md",
     ]
+    "examples" = [
+      "examples/**/*",
+    ]
     "tests" = [
       "**/*_test.go",
       "**/testdata/**/*",
