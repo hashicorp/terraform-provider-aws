@@ -550,7 +550,6 @@ func TestAccAWSLambdaFunction_DeadLetterConfigUpdated(t *testing.T) {
 
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_func_dlcfg_upd_%s", rString)
-	uFuncName := fmt.Sprintf("tf_acc_lambda_func_dlcfg_upd_%s", rString)
 	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_dlcfg_upd_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_func_dlcfg_upd_%s", rString)
 	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_dlcfg_upd_%s", rString)
@@ -567,7 +566,7 @@ func TestAccAWSLambdaFunction_DeadLetterConfigUpdated(t *testing.T) {
 				Config: testAccAWSLambdaConfigWithDeadLetterConfig(funcName, topic1Name, policyName, roleName, sgName),
 			},
 			{
-				Config: testAccAWSLambdaConfigWithDeadLetterConfigUpdated(funcName, topic1Name, topic2Name, policyName, roleName, sgName, uFuncName),
+				Config: testAccAWSLambdaConfigWithDeadLetterConfigUpdated(funcName, topic1Name, topic2Name, policyName, roleName, sgName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
 					func(s *terraform.State) error {
@@ -2373,7 +2372,7 @@ resource "aws_sns_topic" "test" {
 }
 
 func testAccAWSLambdaConfigWithDeadLetterConfigUpdated(funcName, topic1Name, topic2Name, policyName,
-	roleName, sgName, uFuncName string) string {
+	roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_lambda_function" "test" {
     filename = "test-fixtures/lambdatest.zip"
@@ -2394,7 +2393,7 @@ resource "aws_sns_topic" "test" {
 resource "aws_sns_topic" "test_2" {
 	name = "%s"
 }
-`, uFuncName, topic1Name, topic2Name)
+`, funcName, topic1Name, topic2Name)
 }
 
 func testAccAWSLambdaConfigWithNilDeadLetterConfig(funcName, policyName, roleName, sgName string) string {
