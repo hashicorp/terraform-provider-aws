@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
@@ -676,7 +677,7 @@ func testAccAWSCloudTrail_disappears(t *testing.T) {
 				Config: testAccAWSCloudTrailConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					testAccCheckCloudTrailDisappears(&trail),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudTrail(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -711,17 +712,6 @@ func testAccCheckCloudTrailExists(n string, trail *cloudtrail.Trail) resource.Te
 		*trail = *resp.TrailList[0]
 
 		return nil
-	}
-}
-
-func testAccCheckCloudTrailDisappears(trail *cloudtrail.Trail) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).cloudtrailconn
-
-		input := &cloudtrail.DeleteTrailInput{Name: trail.Name}
-		_, err := conn.DeleteTrail(input)
-
-		return err
 	}
 }
 
