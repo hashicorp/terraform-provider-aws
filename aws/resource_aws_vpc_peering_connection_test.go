@@ -222,9 +222,8 @@ func TestAccAWSVPCPeeringConnection_options(t *testing.T) {
 		IDRefreshName:   resourceName,
 		IDRefreshIgnore: []string{"auto_accept"},
 
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSVpcPeeringConnectionDestroy,
-		DisableBinaryDriver: true,
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSVpcPeeringConnectionDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVpcPeeringConfig_options(rName),
