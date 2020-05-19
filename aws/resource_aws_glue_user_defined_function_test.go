@@ -109,7 +109,7 @@ func TestAccAWSGlueUserDefinedFunction_disappears(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueUserDefinedFunctionExists(resourceName),
-					testAccCheckGlueUserDefinedFunctionDisappears(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueUserDefinedFunction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -146,6 +146,46 @@ func testAccCheckGlueUDFDestroy(s *terraform.State) error {
 		return fmt.Errorf("still exists")
 	}
 	return nil
+}
+
+func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		catalogId, dbName, funcName, err := readAwsGlueUDFID(rs.Primary.ID)
+		if err != nil {
+			return err
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).glueconn
+		out, err := conn.GetUserDefinedFunction(&glue.GetUserDefinedFunctionInput{
+			CatalogId:    aws.String(catalogId),
+			DatabaseName: aws.String(dbName),
+			FunctionName: aws.String(funcName),
+		})
+
+		if err != nil {
+			return err
+		}
+
+		if out.UserDefinedFunction == nil {
+			return fmt.Errorf("No Glue Database Found")
+		}
+
+		if *out.UserDefinedFunction.FunctionName != funcName {
+			return fmt.Errorf("Glue UDF Mismatch - existing: %q, state: %q",
+				*out.UserDefinedFunction.FunctionName, funcName)
+		}
+
+		return nil
+	}
 }
 
 func testAccGlueUserDefinedFunctionBasicConfig(rName string, name string) string {
@@ -212,71 +252,4 @@ resource "aws_glue_user_defined_function" "test" {
   }
 }
 `, rName)
-}
-
-func testAccCheckGlueUserDefinedFunctionExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		catalogId, dbName, funcName, err := readAwsGlueUDFID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
-		out, err := conn.GetUserDefinedFunction(&glue.GetUserDefinedFunctionInput{
-			CatalogId:    aws.String(catalogId),
-			DatabaseName: aws.String(dbName),
-			FunctionName: aws.String(funcName),
-		})
-
-		if err != nil {
-			return err
-		}
-
-		if out.UserDefinedFunction == nil {
-			return fmt.Errorf("No Glue Database Found")
-		}
-
-		if *out.UserDefinedFunction.FunctionName != funcName {
-			return fmt.Errorf("Glue UDF Mismatch - existing: %q, state: %q",
-				*out.UserDefinedFunction.FunctionName, funcName)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckGlueUserDefinedFunctionDisappears(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		catalogId, dbName, funcName, err := readAwsGlueUDFID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).glueconn
-		_, err = conn.DeleteUserDefinedFunction(&glue.DeleteUserDefinedFunctionInput{
-			CatalogId:    aws.String(catalogId),
-			DatabaseName: aws.String(dbName),
-			FunctionName: aws.String(funcName),
-		})
-
-		return err
-	}
 }
