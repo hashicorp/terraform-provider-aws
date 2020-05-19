@@ -150,9 +150,9 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Amazon Resource Name (ARN) of the EKS Node Group.
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `resources` - List of objects containing information about underlying resources.
-  * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
-    * `name` - Name of the AutoScaling Group.
-  * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
+    * `autoscaling_groups` - List of objects containing information about AutoScaling Groups.
+        * `name` - Name of the AutoScaling Group.
+    * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
 * `status` - Status of the EKS Node Group.
 
 ## Timeouts
