@@ -139,7 +139,7 @@ func resourceAwsEfsAccessPointCreate(d *schema.ResourceData, meta interface{}) e
 
 	ap, err := conn.CreateAccessPoint(&input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EFS Access Point for File System (%s): %w", fsId, err)
 	}
 
 	d.SetId(*ap.AccessPointId)
