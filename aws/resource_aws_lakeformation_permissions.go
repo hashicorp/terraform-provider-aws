@@ -12,15 +12,15 @@ import (
 
 func AwsLakeFormationPermissions() []string {
 	return []string{
-		"ALL",
-		"SELECT",
-		"ALTER",
-		"DROP",
-		"DELETE",
-		"INSERT",
-		"CREATE_DATABASE",
-		"CREATE_TABLE",
-		"DATA_LOCATION_ACCESS",
+		lakeformation.PermissionAll,
+		lakeformation.PermissionSelect,
+		lakeformation.PermissionAlter,
+		lakeformation.PermissionDrop,
+		lakeformation.PermissionDelete,
+		lakeformation.PermissionInsert,
+		lakeformation.PermissionCreateDatabase,
+		lakeformation.PermissionCreateTable,
+		lakeformation.PermissionDataLocationAccess,
 	}
 }
 
