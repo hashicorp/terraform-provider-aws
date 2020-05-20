@@ -248,14 +248,21 @@ func autoscalingTagFromMap(attr map[string]interface{}, resourceID string) (*aut
 	return t, nil
 }
 
-// autoscalingTagDescriptionsToSlice turns the list of tags into a slice.
-func autoscalingTagDescriptionsToSlice(ts []*autoscaling.TagDescription) []map[string]interface{} {
+// autoscalingTagDescriptionsToSlice turns the list of tags into a slice. If
+// forceStrings is true, all values are converted to strings
+func autoscalingTagDescriptionsToSlice(ts []*autoscaling.TagDescription, forceStrings bool) []map[string]interface{} {
 	tags := make([]map[string]interface{}, 0, len(ts))
 	for _, t := range ts {
+		var propagateAtLaunch interface{}
+		if forceStrings {
+			propagateAtLaunch = strconv.FormatBool(aws.BoolValue(t.PropagateAtLaunch))
+		} else {
+			propagateAtLaunch = aws.BoolValue(t.PropagateAtLaunch)
+		}
 		tags = append(tags, map[string]interface{}{
-			"key":                 *t.Key,
-			"value":               *t.Value,
-			"propagate_at_launch": *t.PropagateAtLaunch,
+			"key":                 aws.StringValue(t.Key),
+			"value":               aws.StringValue(t.Value),
+			"propagate_at_launch": propagateAtLaunch,
 		})
 	}
 

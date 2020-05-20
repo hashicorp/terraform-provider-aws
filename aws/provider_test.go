@@ -125,6 +125,20 @@ func testAccCheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, a
 	}
 }
 
+// testAccCheckResourceAttrRegionalARNAccountID ensures the Terraform state exactly matches a formatted ARN with region and specific account ID
+func testAccCheckResourceAttrRegionalARNAccountID(resourceName, attributeName, accountID, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			AccountID: accountID,
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
 // testAccMatchResourceAttrRegionalARN ensures the Terraform state regexp matches a formatted ARN with region
 func testAccMatchResourceAttrRegionalARN(resourceName, attributeName, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -678,6 +692,10 @@ func testSweepSkipSweepError(err error) bool {
 	if isAWSErr(err, "InvalidAction", "is not valid") {
 		return true
 	}
+	// For example from GovCloud SES.SetActiveReceiptRuleSet.
+	if isAWSErr(err, "InvalidAction", "Unavailable Operation") {
+		return true
+	}
 	return false
 }
 
@@ -920,6 +938,24 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 					testAccCheckAWSProviderPartition(&providers, "aws-us-gov"),
 				),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSProvider_AssumeRole_Empty(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
+				),
 			},
 		},
 	})
@@ -1446,6 +1482,15 @@ provider "aws" {
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }
+
+const testAccCheckAWSProviderConfigAssumeRoleEmpty = `
+provider "aws" {
+  assume_role {
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`
 
 // composeConfig can be called to concatenate multiple strings to build test configurations
 func composeConfig(config ...string) string {

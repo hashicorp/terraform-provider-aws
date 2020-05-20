@@ -386,11 +386,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.GetOk("inference_accelerator"); ok {
-		iAcc, err := expandEcsInferenceAccelerators(v.(*schema.Set).List())
-		if err != nil {
-			return err
-		}
-		input.InferenceAccelerators = iAcc
+		input.InferenceAccelerators = expandEcsInferenceAccelerators(v.(*schema.Set).List())
 	}
 
 	constraints := d.Get("placement_constraints").(*schema.Set).List()
@@ -618,7 +614,7 @@ func flattenEcsInferenceAccelerators(list []*ecs.InferenceAccelerator) []map[str
 	return result
 }
 
-func expandEcsInferenceAccelerators(configured []interface{}) ([]*ecs.InferenceAccelerator, error) {
+func expandEcsInferenceAccelerators(configured []interface{}) []*ecs.InferenceAccelerator {
 	iAccs := make([]*ecs.InferenceAccelerator, 0, len(configured))
 	for _, lRaw := range configured {
 		data := lRaw.(map[string]interface{})
@@ -629,5 +625,5 @@ func expandEcsInferenceAccelerators(configured []interface{}) ([]*ecs.InferenceA
 		iAccs = append(iAccs, l)
 	}
 
-	return iAccs, nil
+	return iAccs
 }

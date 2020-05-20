@@ -59,8 +59,9 @@ IAM
 Inspector
 IoT
 KMS
-Kinesis Firehose
 Kinesis
+Kinesis Data Analytics v2 (SQL and Java Applications)
+Kinesis Firehose
 Kinesis Video
 Lambda
 License Manager
@@ -101,10 +102,13 @@ Shield
 SimpleDB
 Step Function (SFN)
 Storage Gateway
+Synthetics
 Transfer
+Transit Gateway Network Manager
 VPC
 WAF Regional
 WAF
+WAFv2
 WorkLink
 WorkMail
 WorkSpaces

@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -988,6 +987,16 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
+// Takes the result of flatmap.Expand for an array of int64
+// and returns a []*int64
+func expandInt64List(configured []interface{}) []*int64 {
+	vs := make([]*int64, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, aws.Int64(int64(v.(int))))
+	}
+	return vs
+}
+
 // Expands a map of string to interface to a map of string to *float
 func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 	float64Map := make(map[string]*float64, len(m))
@@ -1000,6 +1009,11 @@ func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 // Takes the result of schema.Set of strings and returns a []*string
 func expandStringSet(configured *schema.Set) []*string {
 	return expandStringList(configured.List())
+}
+
+// Takes the result of schema.Set of strings and returns a []*int64
+func expandInt64Set(configured *schema.Set) []*int64 {
+	return expandInt64List(configured.List())
 }
 
 // Takes list of pointers to strings. Expand to an array
@@ -2786,234 +2800,6 @@ func flattenCognitoUserPoolUserPoolAddOns(s *cognitoidentityprovider.UserPoolAdd
 	}
 
 	return []map[string]interface{}{config}
-}
-
-func flattenIoTRuleCloudWatchAlarmActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.CloudwatchAlarm
-		if v != nil {
-			result["alarm_name"] = *v.AlarmName
-			result["role_arn"] = *v.RoleArn
-			result["state_reason"] = *v.StateReason
-			result["state_value"] = *v.StateValue
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleCloudWatchMetricActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.CloudwatchMetric
-		if v != nil {
-			result["metric_name"] = *v.MetricName
-			result["role_arn"] = *v.RoleArn
-			result["metric_namespace"] = *v.MetricNamespace
-			result["metric_unit"] = *v.MetricUnit
-			result["metric_value"] = *v.MetricValue
-
-			if v.MetricTimestamp != nil {
-				result["metric_timestamp"] = *v.MetricTimestamp
-			}
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface{} {
-	items := make([]map[string]interface{}, 0, len(actions))
-
-	for _, a := range actions {
-		m := make(map[string]interface{})
-		v := a.DynamoDB
-		if v != nil {
-			m["hash_key_field"] = aws.StringValue(v.HashKeyField)
-			m["hash_key_value"] = aws.StringValue(v.HashKeyValue)
-			m["role_arn"] = aws.StringValue(v.RoleArn)
-			m["table_name"] = aws.StringValue(v.TableName)
-
-			if v.HashKeyType != nil {
-				m["hash_key_type"] = aws.StringValue(v.HashKeyType)
-			}
-
-			if v.PayloadField != nil {
-				m["payload_field"] = aws.StringValue(v.PayloadField)
-			}
-
-			if v.RangeKeyField != nil {
-				m["range_key_field"] = aws.StringValue(v.RangeKeyField)
-			}
-
-			if v.RangeKeyType != nil {
-				m["range_key_type"] = aws.StringValue(v.RangeKeyType)
-			}
-
-			if v.RangeKeyValue != nil {
-				m["range_key_value"] = aws.StringValue(v.RangeKeyValue)
-			}
-
-			items = append(items, m)
-		}
-	}
-
-	return items
-}
-
-func flattenIoTRuleElasticSearchActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Elasticsearch
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["endpoint"] = *v.Endpoint
-			result["id"] = *v.Id
-			result["index"] = *v.Index
-			result["type"] = *v.Type
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleFirehoseActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Firehose
-		if v != nil {
-			result["role_arn"] = aws.StringValue(v.RoleArn)
-			result["delivery_stream_name"] = aws.StringValue(v.DeliveryStreamName)
-			result["separator"] = aws.StringValue(v.Separator)
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleKinesisActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Kinesis
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["stream_name"] = *v.StreamName
-
-			if v.PartitionKey != nil {
-				result["partition_key"] = *v.PartitionKey
-			}
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleLambdaActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Lambda
-		if v != nil {
-			result["function_arn"] = *v.FunctionArn
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleRepublishActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Republish
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["topic"] = *v.Topic
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleS3Actions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.S3
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["bucket_name"] = *v.BucketName
-			result["key"] = *v.Key
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleSnsActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Sns
-		if v != nil {
-			result["message_format"] = *v.MessageFormat
-			result["role_arn"] = *v.RoleArn
-			result["target_arn"] = *v.TargetArn
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Sqs
-		if v != nil {
-			result["role_arn"] = aws.StringValue(v.RoleArn)
-			result["use_base64"] = aws.BoolValue(v.UseBase64)
-			result["queue_url"] = aws.StringValue(v.QueueUrl)
-
-			results = append(results, result)
-		}
-	}
-
-	return results
 }
 
 func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
@@ -5601,22 +5387,6 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	}
 
 	return []interface{}{mSpec}
-}
-
-func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
-	if c == nil {
-		return nil
-	}
-
-	if len(c.Functions) == 0 {
-		return nil
-	}
-
-	m := map[string]interface{}{
-		"functions": flattenStringList(c.Functions),
-	}
-
-	return []interface{}{m}
 }
 
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {

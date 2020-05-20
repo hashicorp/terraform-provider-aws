@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -89,7 +90,7 @@ func TestAccAWSLaunchTemplate_basic(t *testing.T) {
 					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`launch-template/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", ""),
 					resource.TestCheckResourceAttr(resourceName, "elastic_inference_accelerator.#", "0"),
 				),
@@ -707,6 +708,39 @@ func TestAccAWSLaunchTemplate_associatePublicIPAddress(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "network_interfaces.0.network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.associate_public_ip_address", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.0.ipv4_address_count", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLaunchTemplate_placement_partitionNum(t *testing.T) {
+	var template ec2.LaunchTemplate
+	resourceName := "aws_launch_template.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLaunchTemplateConfigPartition(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.partition_number", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSLaunchTemplateConfigPartition(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "placement.0.partition_number", "2"),
 				),
 			},
 		},
@@ -1340,6 +1374,28 @@ resource "aws_launch_template" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSLaunchTemplateConfigPartition(rName string, partNum int) string {
+	return fmt.Sprintf(`
+resource "aws_placement_group" "test" {
+  name     = %[1]q
+  strategy = "partition"
+}
+
+resource "aws_launch_template" "test" {
+  name = %[1]q
+
+  placement {
+    group_name       = "${aws_placement_group.test.name}"
+    partition_number = %[2]d
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, partNum)
 }
 
 const testAccAWSLaunchTemplateConfig_networkInterfaceAddresses = `

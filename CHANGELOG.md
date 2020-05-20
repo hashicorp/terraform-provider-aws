@@ -1,20 +1,76 @@
-## 2.61.0 (Unreleased)
+## 2.63.0 (Unreleased)
 
 FEATURES:
 
-* **New Data Source:** `aws_ec2_coip_pool` [GH-12852]
-* **New Data Source:** `aws_ec2_coip_pools` [GH-12852]
-* **New Data Source:** `aws_ec2_local_gateway` [GH-12764]
-* **New Data Source:** `aws_ec2_local_gateways` [GH-12764]
-* **New Data Source:** `aws_ec2_local_gateway_route_table` [GH-13002]
-* **New Data Source:** `aws_ec2_local_gateway_route_tables` [GH-13002]
+* **New Data Source:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_wafv2_ip_set` [GH-12119]
 
 ENHANCEMENTS:
 
-* data-source/aws_eip: Add `customer_owned_ip` and `customer_owned_ipv4_pool` attributes [GH-12862]
-* resource/aws_api_gateway_deployment: Add triggers argument [GH-13054]
-* resource/aws_apigatewayv2_deployment: Add `triggers` argument [GH-13055]
-* resource/aws_eip: Add `customer_owned_ip` attribute and `customer_owned_ipv4_pool` argument [GH-12862]
+* data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
+* resource/aws_ecs_service: Add `force_new_deployment` argument [GH-13376]
+* resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` [GH-13376]
+* resource/aws_iot_topic_rule: Add `tags` argument [GH-13293]
+
+BUG FIXES:
+
+* data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
+* resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
+
+## 2.62.0 (May 15, 2020)
+
+FEATURES:
+
+* **New Resource:** `aws_workspaces_workspace` ([#11608](https://github.com/terraform-providers/terraform-provider-aws/issues/11608))
+
+ENHANCEMENTS:
+
+* resource/aws_appsync_resolver: Add `cache_config` configuration block ([#12747](https://github.com/terraform-providers/terraform-provider-aws/issues/12747))
+* resource/aws_codebuild_project: Support `git_submodules_config` with `GITHUB` and `GITHUB_ENTERPRISE` source types ([#13285](https://github.com/terraform-providers/terraform-provider-aws/issues/13285))
+* resource/aws_codebuild_project: Support `SECRETS_MANAGER` environment variable type ([#12572](https://github.com/terraform-providers/terraform-provider-aws/issues/12572))
+* resource/aws_datasync_task: Support `ONLY_FILES_TRANSFERRED` value in `verify_mode` argument ([#12897](https://github.com/terraform-providers/terraform-provider-aws/issues/12897))
+* resource/aws_iot_topic_rule: Add `dynamodbv2` configuration block ([#7469](https://github.com/terraform-providers/terraform-provider-aws/issues/7469))
+* resource/aws_iot_topic_rule: Add `iot_analytics` configuration block ([#9859](https://github.com/terraform-providers/terraform-provider-aws/issues/9859))
+* resource/aws_iot_topic_rule: Add `iot_events` configuration block ([#9890](https://github.com/terraform-providers/terraform-provider-aws/issues/9890))
+* resource/aws_iot_topic_rule: Add `operation` argument to `dynamodb` configuration block ([#12714](https://github.com/terraform-providers/terraform-provider-aws/issues/12714))
+* resource/aws_iot_topic_rule: Add `qos` argument `republish` configuration block ([#12869](https://github.com/terraform-providers/terraform-provider-aws/issues/12869))
+
+BUG FIXES:
+
+* resource/aws_codebuild_project: Allow empty value (`""`) environment variables ([#11572](https://github.com/terraform-providers/terraform-provider-aws/issues/11572))
+* resource/aws_security_group_rule: Prevent recreation when `source_security_group_id` refers to a security group across accounts ([#11809](https://github.com/terraform-providers/terraform-provider-aws/issues/11809))
+
+## 2.61.0 (May 08, 2020)
+
+FEATURES:
+
+* **New Data Source:** `aws_ec2_coip_pool` ([#12852](https://github.com/terraform-providers/terraform-provider-aws/issues/12852))
+* **New Data Source:** `aws_ec2_coip_pools` ([#12852](https://github.com/terraform-providers/terraform-provider-aws/issues/12852))
+* **New Data Source:** `aws_ec2_local_gateway` ([#12764](https://github.com/terraform-providers/terraform-provider-aws/issues/12764))
+* **New Data Source:** `aws_ec2_local_gateways` ([#12764](https://github.com/terraform-providers/terraform-provider-aws/issues/12764))
+* **New Data Source:** `aws_ec2_local_gateway_route_table` ([#13002](https://github.com/terraform-providers/terraform-provider-aws/issues/13002))
+* **New Data Source:** `aws_ec2_local_gateway_route_tables` ([#13002](https://github.com/terraform-providers/terraform-provider-aws/issues/13002))
+* **New Resource:** `aws_ec2_transit_gateway_peering_attachment_accepter` ([#11185](https://github.com/terraform-providers/terraform-provider-aws/issues/11185))
+
+ENHANCEMENTS:
+
+* data-source/aws_ebs_volume: Add `multi_attach_enabled` attribute ([#13108](https://github.com/terraform-providers/terraform-provider-aws/issues/13108))
+* data-source/aws_efs_file_system: Add `size_in_bytes` attribute ([#13125](https://github.com/terraform-providers/terraform-provider-aws/issues/13125))
+* data-source/aws_eip: Add `customer_owned_ip` and `customer_owned_ipv4_pool` attributes ([#12862](https://github.com/terraform-providers/terraform-provider-aws/issues/12862))
+* data-source/aws_launch_template: add `partition_number` attribute ([#11655](https://github.com/terraform-providers/terraform-provider-aws/issues/11655))
+* resource/aws_api_gateway_deployment: Add `triggers` argument ([#13054](https://github.com/terraform-providers/terraform-provider-aws/issues/13054))
+* resource/aws_apigatewayv2_deployment: Add `triggers` argument ([#13055](https://github.com/terraform-providers/terraform-provider-aws/issues/13055))
+* resource/aws_ebs_volume: Add `multi_attach_enabled` attribute ([#13108](https://github.com/terraform-providers/terraform-provider-aws/issues/13108))
+* resource/aws_eip: Add `customer_owned_ip` attribute and `customer_owned_ipv4_pool` argument ([#12862](https://github.com/terraform-providers/terraform-provider-aws/issues/12862))
+* resource/aws_glue_connection: Support `KAFKA` for `connection_type` argument ([#13141](https://github.com/terraform-providers/terraform-provider-aws/issues/13141))
+* resource/aws_launch_template: add `partition_number` attribute ([#11655](https://github.com/terraform-providers/terraform-provider-aws/issues/11655))
+* resource/aws_launch_template: add `plan time validation to `volume_type`, `spot_instance_type`, `ipv6_addresses`, `ipv4_addresses`, `private_ip_address` ([#11655](https://github.com/terraform-providers/terraform-provider-aws/issues/11655))
+* resource/aws_workspaces_directory: Add output attributes for `workspace_security_group_id`, `iam_role_id`, `registration_code`, `directory_name`, `directory_type`, `customer_user_name`, `alias`, `ip_group_ids` and `dns_ip_addresses` ([#13089](https://github.com/terraform-providers/terraform-provider-aws/issues/13089))
+
+BUG FIXES:
+
+* resource/aws_workspaces_directory: Fixes error when removing tags ([#13089](https://github.com/terraform-providers/terraform-provider-aws/issues/13089))
 
 ## 2.60.0 (May 01, 2020)
 

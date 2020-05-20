@@ -122,6 +122,37 @@ func TestAccAWSGlueConnection_MongoDB(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueConnection_Kafka(t *testing.T) {
+	var connection glue.Connection
+
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandString(5))
+	resourceName := "aws_glue_connection.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSGlueConnectionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSGlueConnectionConfig_Kafka(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSGlueConnectionExists(resourceName, &connection),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.KAFKA_BOOTSTRAP_SERVERS", "a.terraformtest.com:9094,b.terraformtest.com:9094"),
+					resource.TestCheckResourceAttr(resourceName, "connection_type", "KAFKA"),
+					resource.TestCheckResourceAttr(resourceName, "match_criteria.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "physical_connection_requirements.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSGlueConnection_Description(t *testing.T) {
 	var connection glue.Connection
 
@@ -483,6 +514,20 @@ resource "aws_glue_connection" "test" {
   }
   
   connection_type = "MONGODB"
+
+  name = "%s"
+}
+`, rName)
+}
+
+func testAccAWSGlueConnectionConfig_Kafka(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_glue_connection" "test" {
+  connection_properties = {
+	KAFKA_BOOTSTRAP_SERVERS = "a.terraformtest.com:9094,b.terraformtest.com:9094"
+  }
+  
+  connection_type = "KAFKA"
 
   name = "%s"
 }

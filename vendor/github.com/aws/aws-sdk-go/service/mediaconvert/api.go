@@ -5496,6 +5496,9 @@ type ContainerSettings struct {
 
 	// Settings for MP4 segments in DASH
 	MpdSettings *MpdSettings `locationName:"mpdSettings" type:"structure"`
+
+	// MXF settings
+	MxfSettings *MxfSettings `locationName:"mxfSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -5573,6 +5576,12 @@ func (s *ContainerSettings) SetMp4Settings(v *Mp4Settings) *ContainerSettings {
 // SetMpdSettings sets the MpdSettings field's value.
 func (s *ContainerSettings) SetMpdSettings(v *MpdSettings) *ContainerSettings {
 	s.MpdSettings = v
+	return s
+}
+
+// SetMxfSettings sets the MxfSettings field's value.
+func (s *ContainerSettings) SetMxfSettings(v *MxfSettings) *ContainerSettings {
+	s.MxfSettings = v
 	return s
 }
 
@@ -10822,8 +10831,8 @@ type ImscDestinationSettings struct {
 
 	// Keep this setting enabled to have MediaConvert use the font style and position
 	// information from the captions source in the output. This option is available
-	// only when your input captions are CFF-TT, IMSC, SMPTE-TT, or TTML. Disable
-	// this setting for simplified output captions.
+	// only when your input captions are IMSC, SMPTE-TT, or TTML. Disable this setting
+	// for simplified output captions.
 	StylePassthrough *string `locationName:"stylePassthrough" type:"string" enum:"ImscStylePassthrough"`
 }
 
@@ -14903,6 +14912,38 @@ func (s *MsSmoothGroupSettings) SetManifestEncoding(v string) *MsSmoothGroupSett
 	return s
 }
 
+// MXF settings
+type MxfSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. When you have AFD signaling set up in your output video stream,
+	// use this setting to choose whether to also include it in the MXF wrapper.
+	// Choose Don't copy (NO_COPY) to exclude AFD signaling from the MXF wrapper.
+	// Choose Copy from video stream (COPY_FROM_VIDEO) to copy the AFD values from
+	// the video stream for this output to the MXF wrapper. Regardless of which
+	// option you choose, the AFD values remain in the video stream. Related settings:
+	// To set up your output to include or exclude AFD values, see AfdSignaling,
+	// under VideoDescription. On the console, find AFD signaling under the output's
+	// video encoding settings.
+	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"MxfAfdSignaling"`
+}
+
+// String returns the string representation
+func (s MxfSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MxfSettings) GoString() string {
+	return s.String()
+}
+
+// SetAfdSignaling sets the AfdSignaling field's value.
+func (s *MxfSettings) SetAfdSignaling(v string) *MxfSettings {
+	s.AfdSignaling = &v
+	return s
+}
+
 // Settings for your Nielsen configuration. If you don't do Nielsen measurement
 // and analytics, ignore these settings. When you enable Nielsen configuration
 // (nielsenConfiguration), MediaConvert enables PCM to ID3 tagging for all outputs
@@ -17331,7 +17372,7 @@ type TtmlDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Pass through style and position information from a TTML-like input source
-	// (TTML, SMPTE-TT, CFF-TT) to the CFF-TT output or TTML output.
+	// (TTML, SMPTE-TT) to the TTML output.
 	StylePassthrough *string `locationName:"stylePassthrough" type:"string" enum:"TtmlStylePassthrough"`
 }
 
@@ -21075,8 +21116,8 @@ const (
 
 // Keep this setting enabled to have MediaConvert use the font style and position
 // information from the captions source in the output. This option is available
-// only when your input captions are CFF-TT, IMSC, SMPTE-TT, or TTML. Disable
-// this setting for simplified output captions.
+// only when your input captions are IMSC, SMPTE-TT, or TTML. Disable this setting
+// for simplified output captions.
 const (
 	// ImscStylePassthroughEnabled is a ImscStylePassthrough enum value
 	ImscStylePassthroughEnabled = "ENABLED"
@@ -22408,6 +22449,23 @@ const (
 	MsSmoothManifestEncodingUtf16 = "UTF16"
 )
 
+// Optional. When you have AFD signaling set up in your output video stream,
+// use this setting to choose whether to also include it in the MXF wrapper.
+// Choose Don't copy (NO_COPY) to exclude AFD signaling from the MXF wrapper.
+// Choose Copy from video stream (COPY_FROM_VIDEO) to copy the AFD values from
+// the video stream for this output to the MXF wrapper. Regardless of which
+// option you choose, the AFD values remain in the video stream. Related settings:
+// To set up your output to include or exclude AFD values, see AfdSignaling,
+// under VideoDescription. On the console, find AFD signaling under the output's
+// video encoding settings.
+const (
+	// MxfAfdSignalingNoCopy is a MxfAfdSignaling enum value
+	MxfAfdSignalingNoCopy = "NO_COPY"
+
+	// MxfAfdSignalingCopyFromVideo is a MxfAfdSignaling enum value
+	MxfAfdSignalingCopyFromVideo = "COPY_FROM_VIDEO"
+)
+
 // Use Noise reducer filter (NoiseReducerFilter) to select one of the following
 // spatial image filtering functions. To use this setting, you must also enable
 // Noise reducer (NoiseReducer). * Bilateral preserves edges while reducing
@@ -22900,7 +22958,7 @@ const (
 )
 
 // Pass through style and position information from a TTML-like input source
-// (TTML, SMPTE-TT, CFF-TT) to the CFF-TT output or TTML output.
+// (TTML, SMPTE-TT) to the TTML output.
 const (
 	// TtmlStylePassthroughEnabled is a TtmlStylePassthrough enum value
 	TtmlStylePassthroughEnabled = "ENABLED"

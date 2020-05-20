@@ -71,6 +71,15 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The WorkSpaces directory identifier.
+* `workspace_security_group_id` - The identifier of the security group that is assigned to new WorkSpaces.
+* `iam_role_id` - The identifier of the IAM role. This is the role that allows Amazon WorkSpaces to make calls to other services, such as Amazon EC2, on your behalf.
+* `registration_code` - The registration code for the directory. This is the code that users enter in their Amazon WorkSpaces client application to connect to the directory.
+* `directory_name` - The name of the directory.
+* `directory_type` - The directory type.
+* `customer_user_name` - The user name for the service account.
+* `alias` - The directory alias.
+* `ip_group_ids` - The identifiers of the IP access control groups associated with the directory.
+* `dns_ip_addresses` - The IP addresses of the DNS servers for the directory.
 
 ## Import
 
