@@ -2137,7 +2137,7 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 
 	lifecycleRules := d.Get("lifecycle_rule").([]interface{})
 
-	if len(lifecycleRules) == 0 {
+	if len(lifecycleRules) == 0 || lifecycleRules[0] == nil {
 		i := &s3.DeleteBucketLifecycleInput{
 			Bucket: aws.String(bucket),
 		}
@@ -2192,7 +2192,7 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 
 		// Expiration
 		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).([]interface{})
-		if len(expiration) > 0 && expiration[0] == nil {
+		if len(expiration) > 0 && expiration[0] != nil {
 			e := expiration[0].(map[string]interface{})
 			i := &s3.LifecycleExpiration{}
 			if val, ok := e["date"].(string); ok && val != "" {
