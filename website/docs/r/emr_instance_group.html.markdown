@@ -71,6 +71,7 @@ EOF
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The EMR Instance ID
+* `instance_role` - The type of the instance group.
 * `running_instance_count` The number of instances currently running in this instance group.
 * `status` The current status of the instance group.
 
