@@ -1986,14 +1986,14 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	mts := make([]interface{}, 0)
 	m := make(map[string]interface{})
 
-	m["name"] = *ts[0].MetricName
-	m["namespace"] = *ts[0].MetricNamespace
-	m["value"] = *ts[0].MetricValue
+	m["name"] = aws.StringValue(ts[0].MetricName)
+	m["namespace"] = aws.StringValue(ts[0].MetricNamespace)
+	m["value"] = aws.StringValue(ts[0].MetricValue)
 
 	if ts[0].DefaultValue == nil {
 		m["default_value"] = ""
 	} else {
-		m["default_value"] = *ts[0].DefaultValue
+		m["default_value"] = strconv.FormatFloat(aws.FloatValue(ts[0].DefaultValue), 'f', -1, 64)
 	}
 
 	mts = append(mts, m)
