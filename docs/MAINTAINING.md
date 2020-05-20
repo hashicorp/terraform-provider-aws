@@ -5,6 +5,7 @@
 - [Pull Requests](#pull-requests)
     - [Pull Request Review Process](#pull-request-review-process)
         - [Dependency Updates](#dependency-updates)
+            - [Go Default Version Update](#go-default-version-update)        
             - [AWS Go SDK Updates](#aws-go-sdk-updates)
             - [golangci-lint Updates](#golangci-lint-updates)
             - [Terraform Plugin SDK Updates](#terraform-plugin-sdk-updates)
@@ -66,6 +67,24 @@ Output from acceptance testing in AWS GovCloud (US):
 ``````
 
 #### Dependency Updates
+
+##### Go Default Version Update
+
+This project typically upgrades its Go version for development and testing shortly after release to get the latest and greatest Go functionality. Before beginning the update process, ensure that you review the new version release notes to look for any areas of possible friction when updating.
+
+Create an issue to cover the update noting down any areas of particular interest or friction.
+
+Ensure that the following steps are tracked within the issue and completed within the resulting pull request.
+
+- Update go version in `go.mod`
+- Verify all formatting, linting, and testing works as expected
+- Verify `gox` builds for all currently supported architectures
+- Verify `goenv` support for the new version
+- Update `docs/DEVELOPMENT.md`
+- Update `.travis.yml`
+- Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
+
+See [#9992](https://github.com/terraform-providers/terraform-provider-aws/issues/9992) / [#10206](https://github.com/terraform-providers/terraform-provider-aws/pull/10206)  for a recent example.
 
 ##### AWS Go SDK Updates
 
