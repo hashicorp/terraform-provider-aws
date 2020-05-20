@@ -19,6 +19,7 @@ BUG FIXES:
 
 * data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
 * resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
+* resource/aws_network_acl: Fix issue with updating subnet associations returning `InvalidAssociationID.NotFound` [GH-13382]
 
 ## 2.62.0 (May 15, 2020)
 
