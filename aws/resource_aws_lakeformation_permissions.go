@@ -138,12 +138,6 @@ func resourceAwsLakeFormationPermissionsGrant(d *schema.ResourceData, meta inter
 		input.PermissionsWithGrantOption = expandStringList(vs.([]interface{}))
 	}
 
-	// Catalog: CREATE_DATABASE
-	// Location: DATA_LOCATION_ACCESS
-	// Database: ALTER, CREATE_TABLE, DROP, (ALL ~ Super)
-	// Table: ALTER, INSERT, DELETE, DROP, SELECT, (ALL ~ Super)
-	// TableWithColumns: SELECT
-
 	_, err := conn.GrantPermissions(input)
 	if err != nil {
 		return fmt.Errorf("Error granting LakeFormation Permissions: %s", err)
