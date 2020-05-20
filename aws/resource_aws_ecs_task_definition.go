@@ -202,9 +202,30 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Optional: true,
 									},
 									"transit_encryption_port": {
-										Type:     schema.TypeInt,
-										ForceNew: true,
+										Type:         schema.TypeInt,
+										ForceNew:     true,
+										Optional:     true,
+										ValidateFunc: validation.IsPortNumber,
+									},
+									"authorization_config": {
+										Type:     schema.TypeList,
 										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"access_point_id": {
+													Type:     schema.TypeString,
+													ForceNew: true,
+													Required: true,
+												},
+												"iam_enabled": {
+													Type:     schema.TypeString,
+													ForceNew: true,
+													Required: true,
+												},
+											},
+										},
 									},
 								},
 							},

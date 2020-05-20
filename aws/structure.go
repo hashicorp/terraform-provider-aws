@@ -168,6 +168,16 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 			if v, ok := config["transit_encryption_port"].(int64); ok && v != 0 {
 				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(v)
 			}
+			if v, ok := config["authorization_config"].(map[string]interface{}); ok && len(v) > 0 {
+
+				if subV, ok := v["access_point_id"].(string); ok && subV != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.AccessPointId = aws.String(subV)
+				}
+
+				if subV, ok := v["iam_enabled"].(string); ok && subV != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String(subV)
+				}
+			}
 		}
 
 		volumes = append(volumes, l)
@@ -763,6 +773,25 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 
 		if v := config.TransitEncryptionPort; v != nil {
 			m["transit_encryption_port"] = aws.Int64Value(v)
+		}
+		if v := config.AuthorizationConfig; v != nil {
+			m["authorization_config"] = flattenEFSVolumeAuthorizationConfig(v)
+		}
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.AccessPointId; v != nil {
+			m["access_point_id"] = aws.StringValue(v)
+		}
+		if v := config.Iam; v != nil {
+			m["iam_enabled"] = aws.StringValue(v)
 		}
 	}
 
