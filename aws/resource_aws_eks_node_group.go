@@ -378,7 +378,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 			NodegroupName:      aws.String(nodeGroupName),
 		}
 
-		if v, ok := d.GetOk("release_version"); ok {
+		if v, ok := d.GetOk("release_version"); ok && d.HasChange("release_version") {
 			input.ReleaseVersion = aws.String(v.(string))
 		}
 
