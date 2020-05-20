@@ -26,7 +26,7 @@ func resourceAwsNetworkAcl() *schema.Resource {
 		Delete: resourceAwsNetworkAclDelete,
 		Update: resourceAwsNetworkAclUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsNetworkAclImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
