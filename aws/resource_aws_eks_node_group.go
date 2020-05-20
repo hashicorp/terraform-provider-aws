@@ -58,6 +58,10 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"force_update_version": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"instance_types": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -374,7 +378,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
 			ClusterName:        aws.String(clusterName),
-			Force:              aws.Bool(false),
+			Force:              aws.Bool(d.Get("force_update_version").(bool)),
 			NodegroupName:      aws.String(nodeGroupName),
 		}
 
