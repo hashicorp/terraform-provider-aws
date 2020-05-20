@@ -882,7 +882,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 					return err
 				}
 			} else {
-				policy, err := structure.NormalizeJsonString(*v)
+				policy, err := structure.NormalizeJsonString(aws.StringValue(v))
 				if err != nil {
 					return fmt.Errorf("policy contains an invalid JSON: %s", err)
 				}
@@ -935,7 +935,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				rule["expose_headers"] = flattenStringList(ruleObject.ExposeHeaders)
 			}
 			if ruleObject.MaxAgeSeconds != nil {
-				rule["max_age_seconds"] = int(*ruleObject.MaxAgeSeconds)
+				rule["max_age_seconds"] = int(aws.Int64Value(ruleObject.MaxAgeSeconds))
 			}
 			corsRules = append(corsRules, rule)
 		}
@@ -959,34 +959,34 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 		w := make(map[string]interface{})
 
 		if v := ws.IndexDocument; v != nil {
-			w["index_document"] = *v.Suffix
+			w["index_document"] = aws.StringValue(v.Suffix)
 		}
 
 		if v := ws.ErrorDocument; v != nil {
-			w["error_document"] = *v.Key
+			w["error_document"] = aws.StringValue(v.Key)
 		}
 
 		if v := ws.RedirectAllRequestsTo; v != nil {
 			if v.Protocol == nil {
-				w["redirect_all_requests_to"] = *v.HostName
+				w["redirect_all_requests_to"] = aws.StringValue(v.HostName)
 			} else {
 				var host string
 				var path string
 				var query string
-				parsedHostName, err := url.Parse(*v.HostName)
+				parsedHostName, err := url.Parse(aws.StringValue(v.HostName))
 				if err == nil {
 					host = parsedHostName.Host
 					path = parsedHostName.Path
 					query = parsedHostName.RawQuery
 				} else {
-					host = *v.HostName
+					host = aws.StringValue(v.HostName)
 					path = ""
 				}
 
 				w["redirect_all_requests_to"] = (&url.URL{
 					Host:     host,
 					Path:     path,
-					Scheme:   *v.Protocol,
+					Scheme:   aws.StringValue(v.Protocol),
 					RawQuery: query,
 				}).String()
 			}
@@ -1024,13 +1024,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	vcl := make([]map[string]interface{}, 0, 1)
 	if versioning, ok := versioningResponse.(*s3.GetBucketVersioningOutput); ok {
 		vc := make(map[string]interface{})
-		if versioning.Status != nil && *versioning.Status == s3.BucketVersioningStatusEnabled {
+		if versioning.Status != nil && aws.StringValue(versioning.Status) == s3.BucketVersioningStatusEnabled {
 			vc["enabled"] = true
 		} else {
 			vc["enabled"] = false
 		}
 
-		if versioning.MFADelete != nil && *versioning.MFADelete == s3.MFADeleteEnabled {
+		if versioning.MFADelete != nil && aws.StringValue(versioning.MFADelete) == s3.MFADeleteEnabled {
 			vc["mfa_delete"] = true
 		} else {
 			vc["mfa_delete"] = false
@@ -1088,11 +1088,11 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 	if logging, ok := loggingResponse.(*s3.GetBucketLoggingOutput); ok && logging.LoggingEnabled != nil {
 		v := logging.LoggingEnabled
 		lc := make(map[string]interface{})
-		if *v.TargetBucket != "" {
-			lc["target_bucket"] = *v.TargetBucket
+		if aws.StringValue(v.TargetBucket) != "" {
+			lc["target_bucket"] = aws.StringValue(v.TargetBucket)
 		}
-		if *v.TargetPrefix != "" {
-			lc["target_prefix"] = *v.TargetPrefix
+		if aws.StringValue(v.TargetPrefix) != "" {
+			lc["target_prefix"] = aws.StringValue(v.TargetPrefix)
 		}
 		lcl = append(lcl, lc)
 	}
@@ -1120,15 +1120,15 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			rule := make(map[string]interface{})
 
 			// ID
-			if lifecycleRule.ID != nil && *lifecycleRule.ID != "" {
-				rule["id"] = *lifecycleRule.ID
+			if lifecycleRule.ID != nil && aws.StringValue(lifecycleRule.ID) != "" {
+				rule["id"] = aws.StringValue(lifecycleRule.ID)
 			}
 			filter := lifecycleRule.Filter
 			if filter != nil {
 				if filter.And != nil {
 					// Prefix
-					if filter.And.Prefix != nil && *filter.And.Prefix != "" {
-						rule["prefix"] = *filter.And.Prefix
+					if filter.And.Prefix != nil && aws.StringValue(filter.And.Prefix) != "" {
+						rule["prefix"] = aws.StringValue(filter.And.Prefix)
 					}
 					// Tag
 					if len(filter.And.Tags) > 0 {
@@ -1136,8 +1136,8 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 					}
 				} else {
 					// Prefix
-					if filter.Prefix != nil && *filter.Prefix != "" {
-						rule["prefix"] = *filter.Prefix
+					if filter.Prefix != nil && aws.StringValue(filter.Prefix) != "" {
+						rule["prefix"] = aws.StringValue(filter.Prefix)
 					}
 					// Tag
 					if filter.Tag != nil {
@@ -1146,13 +1146,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				}
 			} else {
 				if lifecycleRule.Prefix != nil {
-					rule["prefix"] = *lifecycleRule.Prefix
+					rule["prefix"] = aws.StringValue(lifecycleRule.Prefix)
 				}
 			}
 
 			// Enabled
 			if lifecycleRule.Status != nil {
-				if *lifecycleRule.Status == s3.ExpirationStatusEnabled {
+				if aws.StringValue(lifecycleRule.Status) == s3.ExpirationStatusEnabled {
 					rule["enabled"] = true
 				} else {
 					rule["enabled"] = false
@@ -1162,7 +1162,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			// AbortIncompleteMultipartUploadDays
 			if lifecycleRule.AbortIncompleteMultipartUpload != nil {
 				if lifecycleRule.AbortIncompleteMultipartUpload.DaysAfterInitiation != nil {
-					rule["abort_incomplete_multipart_upload_days"] = int(*lifecycleRule.AbortIncompleteMultipartUpload.DaysAfterInitiation)
+					rule["abort_incomplete_multipart_upload_days"] = int(aws.Int64Value(lifecycleRule.AbortIncompleteMultipartUpload.DaysAfterInitiation))
 				}
 			}
 
@@ -1194,13 +1194,13 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				for _, v := range lifecycleRule.Transitions {
 					t := make(map[string]interface{})
 					if v.Date != nil {
-						t["date"] = (*v.Date).Format("2006-01-02")
+						t["date"] = (aws.TimeValue(v.Date)).Format("2006-01-02")
 					}
 					if v.Days != nil {
-						t["days"] = int(*v.Days)
+						t["days"] = int(aws.Int64Value(v.Days))
 					}
 					if v.StorageClass != nil {
-						t["storage_class"] = *v.StorageClass
+						t["storage_class"] = aws.StringValue(v.StorageClass)
 					}
 					transitions = append(transitions, t)
 				}
@@ -1212,10 +1212,10 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 				for _, v := range lifecycleRule.NoncurrentVersionTransitions {
 					t := make(map[string]interface{})
 					if v.NoncurrentDays != nil {
-						t["days"] = int(*v.NoncurrentDays)
+						t["days"] = int(aws.Int64Value(v.NoncurrentDays))
 					}
 					if v.StorageClass != nil {
-						t["storage_class"] = *v.StorageClass
+						t["storage_class"] = aws.StringValue(v.StorageClass)
 					}
 					transitions = append(transitions, t)
 				}
@@ -1291,7 +1291,7 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 
 	var region string
 	if location, ok := locationResponse.(*s3.GetBucketLocationOutput); ok && location.LocationConstraint != nil {
-		region = *location.LocationConstraint
+		region = aws.StringValue(location.LocationConstraint)
 	}
 	region = normalizeRegion(region)
 	if err := d.Set("region", region); err != nil {
@@ -1708,7 +1708,7 @@ func websiteEndpoint(client *AWSClient, d *schema.ResourceData) (*S3Website, err
 	location := locationResponse.(*s3.GetBucketLocationOutput)
 	var region string
 	if location.LocationConstraint != nil {
-		region = *location.LocationConstraint
+		region = aws.StringValue(location.LocationConstraint)
 	}
 
 	return WebsiteEndpoint(client, bucket, region), nil
@@ -2311,8 +2311,8 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 
 	m := make(map[string]interface{})
 
-	if r.Role != nil && *r.Role != "" {
-		m["role"] = *r.Role
+	if r.Role != nil && aws.StringValue(r.Role) != "" {
+		m["role"] = aws.StringValue(r.Role)
 	}
 
 	rules := make([]interface{}, 0, len(r.Rules))
@@ -2321,18 +2321,18 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 		if v.Destination != nil {
 			rd := make(map[string]interface{})
 			if v.Destination.Bucket != nil {
-				rd["bucket"] = *v.Destination.Bucket
+				rd["bucket"] = aws.StringValue(v.Destination.Bucket)
 			}
 			if v.Destination.StorageClass != nil {
-				rd["storage_class"] = *v.Destination.StorageClass
+				rd["storage_class"] = aws.StringValue(v.Destination.StorageClass)
 			}
 			if v.Destination.EncryptionConfiguration != nil {
 				if v.Destination.EncryptionConfiguration.ReplicaKmsKeyID != nil {
-					rd["replica_kms_key_id"] = *v.Destination.EncryptionConfiguration.ReplicaKmsKeyID
+					rd["replica_kms_key_id"] = aws.StringValue(v.Destination.EncryptionConfiguration.ReplicaKmsKeyID)
 				}
 			}
 			if v.Destination.Account != nil {
-				rd["account_id"] = *v.Destination.Account
+				rd["account_id"] = aws.StringValue(v.Destination.Account)
 			}
 			if v.Destination.AccessControlTranslation != nil {
 				rdt := map[string]interface{}{
@@ -2344,21 +2344,21 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 		}
 
 		if v.ID != nil {
-			t["id"] = *v.ID
+			t["id"] = aws.StringValue(v.ID)
 		}
 		if v.Prefix != nil {
-			t["prefix"] = *v.Prefix
+			t["prefix"] = aws.StringValue(v.Prefix)
 		}
 		if v.Status != nil {
-			t["status"] = *v.Status
+			t["status"] = aws.StringValue(v.Status)
 		}
 		if vssc := v.SourceSelectionCriteria; vssc != nil {
 			tssc := make(map[string]interface{})
 			if vssc.SseKmsEncryptedObjects != nil {
 				tSseKms := make(map[string]interface{})
-				if *vssc.SseKmsEncryptedObjects.Status == s3.SseKmsEncryptedObjectsStatusEnabled {
+				if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusEnabled {
 					tSseKms["enabled"] = true
-				} else if *vssc.SseKmsEncryptedObjects.Status == s3.SseKmsEncryptedObjectsStatusDisabled {
+				} else if aws.StringValue(vssc.SseKmsEncryptedObjects.Status) == s3.SseKmsEncryptedObjectsStatusDisabled {
 					tSseKms["enabled"] = false
 				}
 				tssc["sse_kms_encrypted_objects"] = []interface{}{tSseKms}
