@@ -234,7 +234,7 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
 		attrmap := attributeOutput.Attributes
 		for terraformAttrName, snsAttrName := range SNSAttributeMap {
-			v, err := strconv.ParseInt(aws.StringValue(attrmap[snsAttrName], 10, 64))
+			v, err := strconv.ParseInt(aws.StringValue(attrmap[snsAttrName]), 10, 64)
 			// if the attribute is an integer the schema is probably an integer
 			if err == nil {
 				d.Set(terraformAttrName, v)
