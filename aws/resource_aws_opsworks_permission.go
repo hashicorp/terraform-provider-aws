@@ -15,7 +15,7 @@ import (
 func resourceAwsOpsworksPermission() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsOpsworksSetPermission,
-		Update: resourceAwsOpsworksSetPermission,
+		Update: resourceAwsOpsworksPermissionUpdate,
 		Delete: resourceAwsOpsworksPermissionDelete,
 		Read:   resourceAwsOpsworksPermissionRead,
 
@@ -56,6 +56,26 @@ func resourceAwsOpsworksPermission() *schema.Resource {
 }
 
 func resourceAwsOpsworksPermissionDelete(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*AWSClient).opsworksconn
+
+	req := &opsworks.SetPermissionInput{
+		AllowSsh:   aws.Bool(false),
+		AllowSudo:  aws.Bool(false),
+		IamUserArn: aws.String(d.Get("user_arn").(string)),
+		StackId:    aws.String(d.Get("stack_id").(string)),
+	}
+
+	if d.Get("level").(string) != "iam_only" {
+		req.Level = aws.String("iam_only")
+	}
+
+	_, err := client.SetPermission(req)
+
+	if err != nil {
+		log.Printf("[INFO] client error")
+		return err
+	}
+
 	return nil
 }
 
@@ -116,7 +136,7 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 		StackId:    aws.String(d.Get("stack_id").(string)),
 	}
 
-	if d.HasChange("level") {
+	if d.HasChange("level") && d.Get("level").(string) != "iam_only" {
 		req.Level = aws.String(d.Get("level").(string))
 	}
 
@@ -137,6 +157,34 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 	}
 
 	if err != nil {
+		return err
+	}
+
+	return resourceAwsOpsworksPermissionRead(d, meta)
+}
+
+func resourceAwsOpsworksPermissionUpdate(d *schema.ResourceData, meta interface{}) error {
+	client := meta.(*AWSClient).opsworksconn
+
+	req := &opsworks.SetPermissionInput{
+		AllowSudo:  aws.Bool(d.Get("allow_sudo").(bool)),
+		AllowSsh:   aws.Bool(d.Get("allow_ssh").(bool)),
+		IamUserArn: aws.String(d.Get("user_arn").(string)),
+		StackId:    aws.String(d.Get("stack_id").(string)),
+	}
+
+	lo, ln := d.GetChange("level")
+	los := lo.(string)
+	lns := ln.(string)
+
+	if los != "iam_only" || lns != "iam_only" {
+		req.Level = aws.String(lns)
+	}
+
+	_, err := client.SetPermission(req)
+
+	if err != nil {
+		log.Printf("[INFO] client error")
 		return err
 	}
 
