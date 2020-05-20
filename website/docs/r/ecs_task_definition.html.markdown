@@ -168,6 +168,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 * `authorization_config` - (Optional) The authorization configuration details for the Amazon EFS file system. 
   * `access_point_id` - The access point ID to use. If an access point is specified, the root directory value will be relative to the directory set for the access point. If specified, transit encryption must be enabled in the EFSVolumeConfiguration. 
   * `iam_enabled` - Boolean for whether or not to use the Amazon ECS task IAM role defined in a task definition when mounting the Amazon EFS file system. If enabled, transit encryption must be enabled in the EFSVolumeConfiguration.
+
 ##### Example Usage
 
 ```hcl
@@ -185,7 +186,7 @@ resource "aws_ecs_task_definition" "service" {
       transit_encryption_port = 2999
       authorization_config {
         access_point_id = "${aws_efs_access_point.test.id}"
-        iam_enabled = true
+        iam_enabled     = true
       }
     }
   }

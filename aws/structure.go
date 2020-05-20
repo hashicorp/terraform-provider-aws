@@ -162,9 +162,9 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 			}
 
 			if v, ok := config["transit_encryption"].(bool); ok {
-				if v == true {
+				if v {
 					l.EfsVolumeConfiguration.TransitEncryption = aws.String("ENABLED")
-				} else if v == false {
+				} else if !v {
 					l.EfsVolumeConfiguration.TransitEncryption = aws.String("DISABLED")
 				}
 			}
@@ -179,9 +179,9 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 				}
 
 				if subV, ok := v["iam_enabled"].(bool); ok {
-					if subV == true {
+					if subV {
 						l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String("ENABLED")
-					} else if subV == false {
+					} else if !subV {
 						l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String("DISABLED")
 					}
 				}
