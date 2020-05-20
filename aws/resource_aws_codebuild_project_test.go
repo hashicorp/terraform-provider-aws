@@ -771,10 +771,10 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2336845252.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2336845252.git_submodules_config.0.fetch_submodules", "true"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2080741754.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2080741754.git_submodules_config.0.fetch_submodules", "true"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1861191586.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1861191586.git_submodules_config.0.fetch_submodules", "true"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.55827772.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.55827772.git_submodules_config.0.fetch_submodules", "true"),
 				),
 			},
 			{
@@ -786,10 +786,10 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3511868825.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3511868825.git_submodules_config.0.fetch_submodules", "false"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1651171204.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1651171204.git_submodules_config.0.fetch_submodules", "false"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1497918817.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1497918817.git_submodules_config.0.fetch_submodules", "false"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1887486300.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1887486300.git_submodules_config.0.fetch_submodules", "false"),
 				),
 			},
 		},
@@ -2052,8 +2052,8 @@ func TestAccAWSCodeBuildProject_SecondarySources_CodeCommit(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODECOMMIT"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.493771744.source_identifier", "secondarySource1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1385902896.source_identifier", "secondarySource2"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2212771807.source_identifier", "secondarySource1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3160583991.source_identifier", "secondarySource2"),
 				),
 			},
 			{
