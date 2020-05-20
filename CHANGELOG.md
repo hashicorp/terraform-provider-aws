@@ -6,6 +6,7 @@ FEATURES:
 * **New Data Source:** `aws_wafv2_ip_set` [GH-12788]
 * **New Resource:** `aws_efs_access_point` [GH-11965]
 * **New Resource:** `aws_wafv2_ip_set` [GH-12119]
+* **New Resource:** `aws_wafv2_regex_pattern_set` [GH-12284]
 
 ENHANCEMENTS:
 
