@@ -78,9 +78,14 @@ Ensure that the following steps are tracked within the issue and completed withi
 
 - Update go version in `go.mod`
 - Verify all formatting, linting, and testing works as expected
-- Verify `gox` builds for all currently supported architectures
+- Verify `gox` builds for all currently supported architectures:
+```
+gox -os='linux darwin windows freebsd openbsd solaris' -arch='386 amd64 arm' -osarch='!darwin/arm !darwin/386' -ldflags '-s -w -X aws/version.ProviderVersion=99.99.99 -X aws/version.ProtocolVersion=4' -output 'results/{{.OS}}_{{.Arch}}/terraform-provider-aws_v99.99.99_x4' .
+```
 - Verify `goenv` support for the new version
 - Update `docs/DEVELOPMENT.md`
+- Update `.github/workflows/*.yml`
+- Update `.go-version`
 - Update `.travis.yml`
 - Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
 
