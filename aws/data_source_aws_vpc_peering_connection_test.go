@@ -19,47 +19,42 @@ func TestAccDataSourceAwsVpcPeeringConnection_basic(t *testing.T) {
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block_set.1.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "peer_cidr_block_set.1.cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_requester_vpc_id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "cidr_block_set.1.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_vpc_id", "peer_cidr_block_set.1.cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_accepter_vpc_id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "cidr_block_set.1.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_vpc_id", "peer_cidr_block_set.1.cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_requester_cidr_block"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "cidr_block_set.1.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_requester_cidr_block", "peer_cidr_block_set.1.cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_accepter_cidr_block"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "cidr_block_set.1.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_accepter_cidr_block", "peer_cidr_block_set.1.cidr_block"),
 					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_owner_ids"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "id"),
 					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "cidr_block_set.1.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "cidr_block_set.0.cidr_block"),
-					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_owner_ids", "peer_cidr_block_set.1.cidr_block"),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcPeeringConnection_cidBlockSets(t *testing.T) {
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcPeeringConnectionCidrBlockSetConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccDataSourceAwsVpcPeeringConnectionCheck("data.aws_vpc_peering_connection.test_by_id"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block_set.0.cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "cidr_block_set.1.cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "peer_cidr_block_set.0.cidr_block"),
+					resource.TestCheckResourceAttrSet("data.aws_vpc_peering_connection.test_by_id", "peer_cidr_block_set.1.cidr_block"),
+				),
 			},
 		},
 	})
@@ -100,22 +95,12 @@ resource "aws_vpc" "foo" {
   }
 }
 
-resource "aws_vpc_ipv4_cidr_block_association" "foo_secondary_cidr" {
-  vpc_id     = "${aws_vpc.foo.id}"
-  cidr_block = "10.4.0.0/16"
-}
-
 resource "aws_vpc" "bar" {
   cidr_block = "10.2.0.0/16"
 
   tags = {
 	  Name = "terraform-testacc-vpc-peering-connection-data-source-bar"
   }
-}
-
-resource "aws_vpc_ipv4_cidr_block_association" "bar_secondary_cidr" {
-  vpc_id     = "${aws_vpc.bar.id}"
-  cidr_block = "10.8.0.0/16"
 }
 
 resource "aws_vpc_peering_connection" "test" {
@@ -125,9 +110,7 @@ resource "aws_vpc_peering_connection" "test" {
 
   tags = {
       Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar"
-  }
-
-    depends_on = ["aws_vpc_ipv4_cidr_block_association.foo_secondary_cidr", "aws_vpc_ipv4_cidr_block_association.bar_secondary_cidr"]
+    }
 }
 
 data "aws_caller_identity" "current" {}
@@ -168,5 +151,49 @@ data "aws_vpc_peering_connection" "test_by_owner_ids" {
 	status = "active"
 
 	depends_on = ["aws_vpc_peering_connection.test"]
+}
+`
+
+const testAccDataSourceAwsVpcPeeringConnectionCidrBlockSetConfig = `
+resource "aws_vpc" "foo" {
+  cidr_block = "10.4.0.0/16"
+
+  tags = {
+	  Name = "terraform-testacc-vpc-peering-connection-data-source-foo-cidr-block-set"
+  }
+}
+
+resource "aws_vpc_ipv4_cidr_block_association" "foo_secondary_cidr" {
+  vpc_id     = "${aws_vpc.foo.id}"
+  cidr_block = "10.5.0.0/16"
+}
+
+resource "aws_vpc" "bar" {
+  cidr_block = "10.6.0.0/16"
+
+  tags = {
+	  Name = "terraform-testacc-vpc-peering-connection-data-source-bar-cidr-block-set"
+  }
+}
+
+resource "aws_vpc_ipv4_cidr_block_association" "bar_secondary_cidr" {
+  vpc_id     = "${aws_vpc.bar.id}"
+  cidr_block = "10.7.0.0/16"
+}
+
+resource "aws_vpc_peering_connection" "test" {
+	vpc_id = "${aws_vpc.foo.id}"
+	peer_vpc_id = "${aws_vpc.bar.id}"
+	auto_accept = true
+
+  tags = {
+      Name = "terraform-testacc-vpc-peering-connection-data-source-foo-to-bar-cidr-block-set"
+  }
+
+    depends_on = ["aws_vpc_ipv4_cidr_block_association.foo_secondary_cidr", "aws_vpc_ipv4_cidr_block_association.bar_secondary_cidr"]
+}
+
+data "aws_vpc_peering_connection" "test_by_id" {
+	id = "${aws_vpc_peering_connection.test.id}"
 }
 `
