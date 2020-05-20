@@ -289,9 +289,8 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Optional: true,
 						},
 						"expiration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Optional: true,
-							Set:      expirationHash,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -313,10 +312,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 							},
 						},
 						"noncurrent_version_expiration": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
-							Set:      expirationHash,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"days": {
@@ -422,11 +420,10 @@ func resourceAwsS3Bucket() *schema.Resource {
 										ValidateFunc: validation.StringLenBetween(0, 255),
 									},
 									"destination": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										MaxItems: 1,
 										MinItems: 1,
 										Required: true,
-										Set:      destinationHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"account_id": {
@@ -477,19 +474,17 @@ func resourceAwsS3Bucket() *schema.Resource {
 										},
 									},
 									"source_selection_criteria": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MinItems: 1,
 										MaxItems: 1,
-										Set:      sourceSelectionCriteriaHash,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"sse_kms_encrypted_objects": {
-													Type:     schema.TypeSet,
+													Type:     schema.TypeList,
 													Optional: true,
 													MinItems: 1,
 													MaxItems: 1,
-													Set:      sourceSseKmsObjectsHash,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"enabled": {
@@ -1175,23 +1170,23 @@ func resourceAwsS3BucketRead(d *schema.ResourceData, meta interface{}) error {
 			if lifecycleRule.Expiration != nil {
 				e := make(map[string]interface{})
 				if lifecycleRule.Expiration.Date != nil {
-					e["date"] = (*lifecycleRule.Expiration.Date).Format("2006-01-02")
+					e["date"] = (aws.TimeValue(lifecycleRule.Expiration.Date)).Format("2006-01-02")
 				}
 				if lifecycleRule.Expiration.Days != nil {
-					e["days"] = int(*lifecycleRule.Expiration.Days)
+					e["days"] = int(aws.Int64Value(lifecycleRule.Expiration.Days))
 				}
 				if lifecycleRule.Expiration.ExpiredObjectDeleteMarker != nil {
-					e["expired_object_delete_marker"] = *lifecycleRule.Expiration.ExpiredObjectDeleteMarker
+					e["expired_object_delete_marker"] = aws.BoolValue(lifecycleRule.Expiration.ExpiredObjectDeleteMarker)
 				}
-				rule["expiration"] = schema.NewSet(expirationHash, []interface{}{e})
+				rule["expiration"] = []interface{}{e}
 			}
 			// noncurrent_version_expiration
 			if lifecycleRule.NoncurrentVersionExpiration != nil {
 				e := make(map[string]interface{})
 				if lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays != nil {
-					e["days"] = int(*lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays)
+					e["days"] = int(aws.Int64Value(lifecycleRule.NoncurrentVersionExpiration.NoncurrentDays))
 				}
-				rule["noncurrent_version_expiration"] = schema.NewSet(expirationHash, []interface{}{e})
+				rule["noncurrent_version_expiration"] = []interface{}{e}
 			}
 			//// transition
 			if len(lifecycleRule.Transitions) > 0 {
@@ -2036,48 +2031,53 @@ func resourceAwsS3BucketReplicationConfigurationUpdate(s3conn *s3.S3, d *schema.
 		}
 
 		ruleDestination := &s3.Destination{}
-		if dest, ok := rr["destination"].(*schema.Set); ok && dest.Len() > 0 {
-			bd := dest.List()[0].(map[string]interface{})
-			ruleDestination.Bucket = aws.String(bd["bucket"].(string))
+		if dest, ok := rr["destination"].([]interface{}); ok && len(dest) > 0 {
+			if dest[0] != nil {
+				bd := dest[0].(map[string]interface{})
+				ruleDestination.Bucket = aws.String(bd["bucket"].(string))
 
-			if storageClass, ok := bd["storage_class"]; ok && storageClass != "" {
-				ruleDestination.StorageClass = aws.String(storageClass.(string))
-			}
+				if storageClass, ok := bd["storage_class"]; ok && storageClass != "" {
+					ruleDestination.StorageClass = aws.String(storageClass.(string))
+				}
 
-			if replicaKmsKeyId, ok := bd["replica_kms_key_id"]; ok && replicaKmsKeyId != "" {
-				ruleDestination.EncryptionConfiguration = &s3.EncryptionConfiguration{
-					ReplicaKmsKeyID: aws.String(replicaKmsKeyId.(string)),
+				if replicaKmsKeyId, ok := bd["replica_kms_key_id"]; ok && replicaKmsKeyId != "" {
+					ruleDestination.EncryptionConfiguration = &s3.EncryptionConfiguration{
+						ReplicaKmsKeyID: aws.String(replicaKmsKeyId.(string)),
+					}
+				}
+
+				if account, ok := bd["account_id"]; ok && account != "" {
+					ruleDestination.Account = aws.String(account.(string))
+				}
+
+				if aclTranslation, ok := bd["access_control_translation"].([]interface{}); ok && len(aclTranslation) > 0 {
+					aclTranslationValues := aclTranslation[0].(map[string]interface{})
+					ruleAclTranslation := &s3.AccessControlTranslation{}
+					ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
+					ruleDestination.AccessControlTranslation = ruleAclTranslation
 				}
 			}
-
-			if account, ok := bd["account_id"]; ok && account != "" {
-				ruleDestination.Account = aws.String(account.(string))
-			}
-
-			if aclTranslation, ok := bd["access_control_translation"].([]interface{}); ok && len(aclTranslation) > 0 {
-				aclTranslationValues := aclTranslation[0].(map[string]interface{})
-				ruleAclTranslation := &s3.AccessControlTranslation{}
-				ruleAclTranslation.Owner = aws.String(aclTranslationValues["owner"].(string))
-				ruleDestination.AccessControlTranslation = ruleAclTranslation
-			}
-
 		}
 		rcRule.Destination = ruleDestination
 
-		if ssc, ok := rr["source_selection_criteria"].(*schema.Set); ok && ssc.Len() > 0 {
-			sscValues := ssc.List()[0].(map[string]interface{})
-			ruleSsc := &s3.SourceSelectionCriteria{}
-			if sseKms, ok := sscValues["sse_kms_encrypted_objects"].(*schema.Set); ok && sseKms.Len() > 0 {
-				sseKmsValues := sseKms.List()[0].(map[string]interface{})
-				sseKmsEncryptedObjects := &s3.SseKmsEncryptedObjects{}
-				if sseKmsValues["enabled"].(bool) {
-					sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusEnabled)
-				} else {
-					sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusDisabled)
+		if ssc, ok := rr["source_selection_criteria"].([]interface{}); ok && len(ssc) > 0 {
+			if ssc[0] != nil {
+				sscValues := ssc[0].(map[string]interface{})
+				ruleSsc := &s3.SourceSelectionCriteria{}
+				if sseKms, ok := sscValues["sse_kms_encrypted_objects"].([]interface{}); ok && len(sseKms) > 0 {
+					if sseKms[0] != nil {
+						sseKmsValues := sseKms[0].(map[string]interface{})
+						sseKmsEncryptedObjects := &s3.SseKmsEncryptedObjects{}
+						if sseKmsValues["enabled"].(bool) {
+							sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusEnabled)
+						} else {
+							sseKmsEncryptedObjects.Status = aws.String(s3.SseKmsEncryptedObjectsStatusDisabled)
+						}
+						ruleSsc.SseKmsEncryptedObjects = sseKmsEncryptedObjects
+					}
 				}
-				ruleSsc.SseKmsEncryptedObjects = sseKmsEncryptedObjects
+				rcRule.SourceSelectionCriteria = ruleSsc
 			}
-			rcRule.SourceSelectionCriteria = ruleSsc
 		}
 
 		if f, ok := rr["filter"].([]interface{}); ok && len(f) > 0 && f[0] != nil {
@@ -2191,8 +2191,8 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		}
 
 		// Expiration
-		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).(*schema.Set).List()
-		if len(expiration) > 0 {
+		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).([]interface{})
+		if len(expiration) > 0 && expiration[0] != nil {
 			e := expiration[0].(map[string]interface{})
 			i := &s3.LifecycleExpiration{}
 
@@ -2211,8 +2211,8 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 		}
 
 		// NoncurrentVersionExpiration
-		nc_expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.noncurrent_version_expiration", i)).(*schema.Set).List()
-		if len(nc_expiration) > 0 {
+		nc_expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.noncurrent_version_expiration", i)).([]interface{})
+		if len(nc_expiration) > 0 && nc_expiration[0] != nil {
 			e := nc_expiration[0].(map[string]interface{})
 
 			if val, ok := e["days"].(int); ok && val > 0 {
@@ -2340,7 +2340,7 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				}
 				rd["access_control_translation"] = []interface{}{rdt}
 			}
-			t["destination"] = schema.NewSet(destinationHash, []interface{}{rd})
+			t["destination"] = []interface{}{rd}
 		}
 
 		if v.ID != nil {
@@ -2361,9 +2361,9 @@ func flattenAwsS3BucketReplicationConfiguration(r *s3.ReplicationConfiguration) 
 				} else if *vssc.SseKmsEncryptedObjects.Status == s3.SseKmsEncryptedObjectsStatusDisabled {
 					tSseKms["enabled"] = false
 				}
-				tssc["sse_kms_encrypted_objects"] = schema.NewSet(sourceSseKmsObjectsHash, []interface{}{tSseKms})
+				tssc["sse_kms_encrypted_objects"] = []interface{}{tSseKms}
 			}
-			t["source_selection_criteria"] = schema.NewSet(sourceSelectionCriteriaHash, []interface{}{tssc})
+			t["source_selection_criteria"] = []interface{}{tssc}
 		}
 
 		if v.Priority != nil {
@@ -2504,26 +2504,6 @@ func grantHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func expirationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m, ok := v.(map[string]interface{})
-
-	if !ok {
-		return 0
-	}
-
-	if v, ok := m["date"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["days"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-	}
-	if v, ok := m["expired_object_delete_marker"]; ok {
-		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-	}
-	return hashcode.String(buf.String())
-}
-
 func transitionHash(v interface{}) int {
 	var buf bytes.Buffer
 	m, ok := v.(map[string]interface{})
@@ -2561,11 +2541,11 @@ func rulesHash(v interface{}) int {
 	if v, ok := m["status"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
-	if v, ok := m["destination"].(*schema.Set); ok && v.Len() > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", destinationHash(v.List()[0])))
+	if v, ok := m["destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", destinationHash(v[0])))
 	}
-	if v, ok := m["source_selection_criteria"].(*schema.Set); ok && v.Len() > 0 && v.List()[0] != nil {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSelectionCriteriaHash(v.List()[0])))
+	if v, ok := m["source_selection_criteria"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", sourceSelectionCriteriaHash(v[0])))
 	}
 	if v, ok := m["priority"]; ok {
 		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
@@ -2641,8 +2621,8 @@ func sourceSelectionCriteriaHash(v interface{}) int {
 		return 0
 	}
 
-	if v, ok := m["sse_kms_encrypted_objects"].(*schema.Set); ok && v.Len() > 0 {
-		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v.List()[0])))
+	if v, ok := m["sse_kms_encrypted_objects"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		buf.WriteString(fmt.Sprintf("%d-", sourceSseKmsObjectsHash(v[0])))
 	}
 	return hashcode.String(buf.String())
 }
