@@ -67,7 +67,7 @@ Lambda
 License Manager
 Lightsail
 MQ
-Macie
+Macie Classic
 Managed Streaming for Kafka (MSK)
 MediaConvert
 MediaPackage
