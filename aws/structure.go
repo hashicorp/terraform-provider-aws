@@ -161,8 +161,12 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
 			}
 
-			if v, ok := config["transit_encryption"].(string); ok && v != "" {
-				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
+			if v, ok := config["transit_encryption"].(bool); ok {
+				if v == true {
+					l.EfsVolumeConfiguration.TransitEncryption = aws.String("ENABLED")
+				} else if v == false {
+					l.EfsVolumeConfiguration.TransitEncryption = aws.String("DISABLED")
+				}
 			}
 
 			if v, ok := config["transit_encryption_port"].(int64); ok && v != 0 {
@@ -174,8 +178,12 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 					l.EfsVolumeConfiguration.AuthorizationConfig.AccessPointId = aws.String(subV)
 				}
 
-				if subV, ok := v["iam_enabled"].(string); ok && subV != "" {
-					l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String(subV)
+				if subV, ok := v["iam_enabled"].(bool); ok {
+					if subV == true {
+						l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String("ENABLED")
+					} else if subV == false {
+						l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String("DISABLED")
+					}
 				}
 			}
 		}
@@ -768,7 +776,11 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 		}
 
 		if v := config.TransitEncryption; v != nil {
-			m["transit_encryption"] = aws.StringValue(v)
+			if v == aws.String("ENABLED") {
+				m["transit_encryption"] = aws.Bool(true)
+			} else if v == aws.String("DISABLED") {
+				m["transit_encryption"] = aws.Bool(false)
+			}
 		}
 
 		if v := config.TransitEncryptionPort; v != nil {
@@ -791,7 +803,11 @@ func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []i
 			m["access_point_id"] = aws.StringValue(v)
 		}
 		if v := config.Iam; v != nil {
-			m["iam_enabled"] = aws.StringValue(v)
+			if v == aws.String("ENABLED") {
+				m["iam_enabled"] = aws.Bool(true)
+			} else if v == aws.String("DISABLED") {
+				m["iam_enabled"] = aws.Bool(false)
+			}
 		}
 	}
 

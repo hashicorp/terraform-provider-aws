@@ -275,10 +275,10 @@ func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, "ENABLED", 2999),
+				Config: testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, true, 2999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.transit_encryption", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.transit_encryption", "true"),
 					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.transit_encryption_port", "2999"),
 				),
 			},
@@ -303,11 +303,11 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWitEFSAccessPoint(tdName, "ENABLED", 2999),
+				Config: testAccAWSEcsTaskDefinitionWitEFSAccessPoint(tdName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttrSet(resourceName, "volume.584193650.efs_volume_configuration.0.authorization_config.0.access_point_id"),
-					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.authorization_config.0.iam_enabled", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.authorization_config.0.iam_enabled", "false"),
 				),
 			},
 			{
@@ -1584,7 +1584,7 @@ TASK_DEFINITION
 `, tdName, rDir)
 }
 
-func testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, tEnc string, tEncPort int) string {
+func testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName string, tEnc bool, tEncPort int) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
 	creation_token = %[1]q
@@ -1612,7 +1612,7 @@ TASK_DEFINITION
     efs_volume_configuration {
       file_system_id          = "${aws_efs_file_system.test.id}"
 	  root_directory          = "/home/test"
-	  transit_encryption      = %[2]q
+	  transit_encryption      = %[2]t
       transit_encryption_port = %[3]d
     }
   }
@@ -1620,7 +1620,7 @@ TASK_DEFINITION
 `, tdName, tEnc, tEncPort)
 }
 
-func testAccAWSEcsTaskDefinitionWitEFSAccessPoint(tdName, tEnc string, tEncPort int) string {
+func testAccAWSEcsTaskDefinitionWitEFSAccessPoint(tdName string, useIam bool) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
 	creation_token = %[1]q
@@ -1656,16 +1656,16 @@ TASK_DEFINITION
     efs_volume_configuration {
       file_system_id          = "${aws_efs_file_system.test.id}"
 	  root_directory          = "/home/test"
-	  transit_encryption      = %[2]q
-	  transit_encryption_port = %[3]d
+	  transit_encryption      = true
+	  transit_encryption_port = 2999
 	  authorization_config {
 		  access_point_id = "${aws_efs_access_point.test.id}"
-		  iam_enabled = "DISABLED"
+		  iam_enabled = %[2]t
 	  }
     }
   }
 }
-`, tdName, tEnc, tEncPort)
+`, tdName, useIam)
 }
 func testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
