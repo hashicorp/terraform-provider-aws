@@ -2221,7 +2221,6 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 			}
 		}
 
-
 		// Transitions
 		transitions := d.Get(fmt.Sprintf("lifecycle_rule.%d.transition", i)).(*schema.Set).List()
 		if len(transitions) > 0 {
@@ -2511,26 +2510,6 @@ func grantHash(v interface{}) int {
 	}
 	return hashcode.String(buf.String())
 }
-
-//func expirationHash(v interface{}) int {
-//	var buf bytes.Buffer
-//	m, ok := v.(map[string]interface{})
-//
-//	if !ok {
-//		return 0
-//	}
-//
-//	if v, ok := m["date"]; ok {
-//		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-//	}
-//	if v, ok := m["days"]; ok {
-//		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
-//	}
-//	if v, ok := m["expired_object_delete_marker"]; ok {
-//		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
-//	}
-//	return hashcode.String(buf.String())
-//}
 
 func transitionHash(v interface{}) int {
 	var buf bytes.Buffer
