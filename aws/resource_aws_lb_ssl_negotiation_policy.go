@@ -139,16 +139,14 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("Unable to find policy %#v", getResp.PolicyDescriptions)
 	}
 
-	// We can get away with this because there's only one policy returned
-	policyDesc := getResp.PolicyDescriptions[0]
-	attributes := flattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
-	d.Set("attribute", attributes)
-
 	d.Set("name", policyName)
 	d.Set("load_balancer", lbName)
 	d.Set("lb_port", lbPort)
 
-	return nil
+	// We can get away with this because there's only one policy returned
+	policyDesc := getResp.PolicyDescriptions[0]
+	attributes := flattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
+	return d.Set("attribute", attributes)
 }
 
 func resourceAwsLBSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
