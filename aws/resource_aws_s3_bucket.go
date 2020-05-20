@@ -2192,10 +2192,9 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 
 		// Expiration
 		expiration := d.Get(fmt.Sprintf("lifecycle_rule.%d.expiration", i)).([]interface{})
-		if len(expiration) > 0 && expiration[0] != nil {
+		if len(expiration) > 0 && expiration[0] == nil {
 			e := expiration[0].(map[string]interface{})
 			i := &s3.LifecycleExpiration{}
-
 			if val, ok := e["date"].(string); ok && val != "" {
 				t, err := time.Parse(time.RFC3339, fmt.Sprintf("%sT00:00:00Z", val))
 				if err != nil {
@@ -2221,6 +2220,7 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 				}
 			}
 		}
+
 
 		// Transitions
 		transitions := d.Get(fmt.Sprintf("lifecycle_rule.%d.transition", i)).(*schema.Set).List()
@@ -2261,6 +2261,14 @@ func resourceAwsS3BucketLifecycleUpdate(s3conn *s3.S3, d *schema.ResourceData) e
 
 				rule.NoncurrentVersionTransitions = append(rule.NoncurrentVersionTransitions, i)
 			}
+		}
+
+		// As a lifecycle rule requires 1 or more transition/expiration actions,
+		// we explicitly pass a default ExpiredObjectDeleteMarker value to be able to create
+		// the rule while keeping the policy unaffected if the conditions are not met.
+		if rule.Expiration == nil && rule.NoncurrentVersionExpiration == nil &&
+			rule.Transitions == nil && rule.NoncurrentVersionTransitions == nil {
+			rule.Expiration = &s3.LifecycleExpiration{ExpiredObjectDeleteMarker: aws.Bool(false)}
 		}
 
 		rules = append(rules, rule)
@@ -2503,6 +2511,26 @@ func grantHash(v interface{}) int {
 	}
 	return hashcode.String(buf.String())
 }
+
+//func expirationHash(v interface{}) int {
+//	var buf bytes.Buffer
+//	m, ok := v.(map[string]interface{})
+//
+//	if !ok {
+//		return 0
+//	}
+//
+//	if v, ok := m["date"]; ok {
+//		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+//	}
+//	if v, ok := m["days"]; ok {
+//		buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+//	}
+//	if v, ok := m["expired_object_delete_marker"]; ok {
+//		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+//	}
+//	return hashcode.String(buf.String())
+//}
 
 func transitionHash(v interface{}) int {
 	var buf bytes.Buffer
