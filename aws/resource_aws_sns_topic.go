@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -233,7 +234,13 @@ func resourceAwsSnsTopicRead(d *schema.ResourceData, meta interface{}) error {
 	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
 		attrmap := attributeOutput.Attributes
 		for terraformAttrName, snsAttrName := range SNSAttributeMap {
-			d.Set(terraformAttrName, attrmap[snsAttrName])
+			v, err := strconv.ParseInt(aws.StringValue(attrmap[snsAttrName], 10, 64))
+			// if the attribute is an integer the schema is probably an integer
+			if err == nil {
+				d.Set(terraformAttrName, v)
+			} else {
+				d.Set(terraformAttrName, aws.StringValue(attrmap[snsAttrName]))
+			}
 		}
 	} else {
 		for terraformAttrName := range SNSAttributeMap {
