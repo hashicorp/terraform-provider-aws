@@ -174,10 +174,8 @@ func resourceAwsLakeFormationPermissionsList(d *schema.ResourceData, meta interf
 		return fmt.Errorf("Error no LakeFormation Permissions found: %s", input)
 	}
 
-	permissionsHead := permissions[0] // XXX: assuming there is only one result in the list
+	permissionsHead := permissions[0]
 	d.Set("catalog_id", catalogId)
-	d.Set("permissions", permissionsHead.Permissions)
-	d.Set("permissions_with_grant_option", permissionsHead.PermissionsWithGrantOption)
 	d.Set("principal", permissionsHead.Principal.DataLakePrincipalIdentifier)
 	if dataLocation := permissionsHead.Resource.DataLocation; dataLocation != nil {
 		d.Set("location", dataLocation.ResourceArn)
@@ -191,6 +189,13 @@ func resourceAwsLakeFormationPermissionsList(d *schema.ResourceData, meta interf
 	if table := permissionsHead.Resource.TableWithColumns; table != nil {
 		d.Set("table", flattenAWSLakeFormationTableWithColumns(table))
 	}
+	var allPermissions, allPermissionsWithGrant []*string
+	for _, p := range permissions {
+		allPermissions = append(allPermissions, p.Permissions...)
+		allPermissionsWithGrant = append(allPermissionsWithGrant, p.PermissionsWithGrantOption...)
+	}
+	d.Set("permissions", allPermissions)
+	d.Set("permissions_with_grant_option", allPermissionsWithGrant)
 
 	return nil
 }
@@ -224,22 +229,23 @@ func expandAwsLakeFormationPrincipal(d *schema.ResourceData) *lakeformation.Data
 }
 
 func expandAwsLakeFormationResource(d *schema.ResourceData) *lakeformation.Resource {
-	resource := &lakeformation.Resource{
-		// Catalog: &lakeformation.CatalogResource{},
-	}
 	if v, ok := d.GetOk("database"); ok {
 		databaseName := v.(string)
 		if len(databaseName) > 0 {
-			resource.Database = &lakeformation.DatabaseResource{
-				Name: aws.String(databaseName),
+			return &lakeformation.Resource{
+				Database: &lakeformation.DatabaseResource{
+					Name: aws.String(databaseName),
+				},
 			}
 		}
 	}
 	if v, ok := d.GetOk("location"); ok {
 		location := v.(string)
 		if len(location) > 0 {
-			resource.DataLocation = &lakeformation.DataLocationResource{
-				ResourceArn: aws.String(v.(string)),
+			return &lakeformation.Resource{
+				DataLocation: &lakeformation.DataLocationResource{
+					ResourceArn: aws.String(v.(string)),
+				},
 			}
 		}
 	}
@@ -248,6 +254,7 @@ func expandAwsLakeFormationResource(d *schema.ResourceData) *lakeformation.Resou
 		if len(tables) > 0 {
 			table := tables[0].(map[string]interface{})
 
+			resource := &lakeformation.Resource{}
 			var databaseName, tableName string
 			var columnNames, excludedColumnNames []interface{}
 			if x, ok := table["database"]; ok {
@@ -283,10 +290,12 @@ func expandAwsLakeFormationResource(d *schema.ResourceData) *lakeformation.Resou
 					Name:         aws.String(tableName),
 				}
 			}
+			return resource
 		}
 	}
-
-	return resource
+	return &lakeformation.Resource{
+		Catalog: &lakeformation.CatalogResource{},
+	}
 }
 
 func flattenAWSLakeFormationTable(tb *lakeformation.TableResource) map[string]interface{} {

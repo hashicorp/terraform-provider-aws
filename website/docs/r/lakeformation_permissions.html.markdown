@@ -36,6 +36,19 @@ resource "aws_lakeformation_permissions" "example" {
 }
 ```
 
+### Granting permissions on Lake Formation catalog
+
+```hcl
+data "aws_iam_role" "example" {
+  name = "existing_lakeformation_role"
+}
+
+resource "aws_lakeformation_permissions" "example" {
+  permissions = ["CREATE_DATABASE"]
+  principal   = data.aws_iam_role.example.arn
+}
+```
+
 ### Granting permissions on Lake Formation database
 
 ```hcl
@@ -146,7 +159,7 @@ The following arguments are optional:
 
 * `table` – (Optional) A structure for the table object. A table is a metadata definition that represents your data.
 
-At least one of `database`, `location`, `table` must be specified.
+Only one of `database`, `location`, `table` can be specified at a time. If none of them is specified, permissions will be set at catalog level. See bellow for available permissions for each resource.
 
 The `table` object supports the following:
 
