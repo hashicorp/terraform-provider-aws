@@ -205,7 +205,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					// AWS will create the trail with logging turned off.
 					// Test that "enable_logging" default works.
-					testAccCheckCloudTrailLoggingEnabled(resourceName, true, &trail),
+					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
@@ -219,7 +219,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 				Config: testAccAWSCloudTrailConfigModified(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					testAccCheckCloudTrailLoggingEnabled(resourceName, false, &trail),
+					testAccCheckCloudTrailLoggingEnabled(resourceName, false),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
@@ -228,7 +228,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 				Config: testAccAWSCloudTrailConfig(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudTrailExists(resourceName, &trail),
-					testAccCheckCloudTrailLoggingEnabled(resourceName, true, &trail),
+					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
 					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
@@ -549,7 +549,7 @@ func testAccCheckCloudTrailExists(n string, trail *cloudtrail.Trail) resource.Te
 	}
 }
 
-func testAccCheckCloudTrailLoggingEnabled(n string, desired bool, trail *cloudtrail.Trail) resource.TestCheckFunc {
+func testAccCheckCloudTrailLoggingEnabled(n string, desired bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

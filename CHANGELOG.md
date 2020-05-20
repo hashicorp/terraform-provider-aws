@@ -1,4 +1,23 @@
 ## 2.63.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_wafv2_ip_set` [GH-12119]
+
+ENHANCEMENTS:
+
+* data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
+* resource/aws_ecs_service: Add `force_new_deployment` argument [GH-13376]
+* resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` [GH-13376]
+* resource/aws_iot_topic_rule: Add `tags` argument [GH-13293]
+
+BUG FIXES:
+
+* data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
+* resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
+
 ## 2.62.0 (May 15, 2020)
 
 FEATURES:

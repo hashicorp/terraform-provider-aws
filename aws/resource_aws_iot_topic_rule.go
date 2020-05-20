@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -399,6 +400,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -410,6 +412,7 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
+		Tags:             aws.String(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().UrlEncode()),
 		TopicRulePayload: expandIotTopicRulePayload(d),
 	}
 
@@ -426,6 +429,7 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &iot.GetTopicRuleInput{
 		RuleName: aws.String(d.Id()),
@@ -443,6 +447,16 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("enabled", !aws.BoolValue(out.Rule.RuleDisabled))
 	d.Set("sql", out.Rule.Sql)
 	d.Set("sql_version", out.Rule.AwsIotSqlVersion)
+
+	tags, err := keyvaluetags.IotListTags(conn, aws.StringValue(out.RuleArn))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	if err := d.Set("cloudwatch_alarm", flattenIotCloudWatchAlarmActions(out.Rule.Actions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_alarm: %w", err)
@@ -506,15 +520,44 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	input := &iot.ReplaceTopicRuleInput{
-		RuleName:         aws.String(d.Get("name").(string)),
-		TopicRulePayload: expandIotTopicRulePayload(d),
+	if d.HasChanges(
+		"cloudwatch_alarm",
+		"cloudwatch_metric",
+		"description",
+		"dynamodb",
+		"dynamodbv2",
+		"elasticsearch",
+		"enabled",
+		"firehose",
+		"iot_analytics",
+		"iot_events",
+		"kinesis",
+		"lambda",
+		"republish",
+		"s3",
+		"sns",
+		"sql",
+		"sql_version",
+		"sqs",
+	) {
+		input := &iot.ReplaceTopicRuleInput{
+			RuleName:         aws.String(d.Get("name").(string)),
+			TopicRulePayload: expandIotTopicRulePayload(d),
+		}
+
+		_, err := conn.ReplaceTopicRule(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating IoT Topic Rule (%s): %w", d.Id(), err)
+		}
 	}
 
-	_, err := conn.ReplaceTopicRule(input)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err != nil {
-		return fmt.Errorf("error updating IoT Topic Rule (%s): %w", d.Id(), err)
+		if err := keyvaluetags.IotUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsIotTopicRuleRead(d, meta)

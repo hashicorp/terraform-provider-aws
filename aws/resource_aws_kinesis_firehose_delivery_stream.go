@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/firehose"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -23,7 +21,7 @@ const (
 
 func cloudWatchLoggingOptionsSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		MaxItems: 1,
 		Optional: true,
 		Computed: true,
@@ -170,20 +168,9 @@ func processingConfigurationSchema() *schema.Schema {
 	}
 }
 
-func cloudwatchLoggingOptionsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%t-", m["enabled"].(bool)))
-	if m["enabled"].(bool) {
-		buf.WriteString(fmt.Sprintf("%s-", m["log_group_name"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", m["log_stream_name"].(string)))
-	}
-	return hashcode.String(buf.String())
-}
-
-func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) *schema.Set {
+func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) []interface{} {
 	if clo == nil {
-		return schema.NewSet(cloudwatchLoggingOptionsHash, []interface{}{})
+		return []interface{}{}
 	}
 
 	cloudwatchLoggingOptions := map[string]interface{}{
@@ -193,7 +180,7 @@ func flattenCloudwatchLoggingOptions(clo *firehose.CloudWatchLoggingOptions) *sc
 		cloudwatchLoggingOptions["log_group_name"] = aws.StringValue(clo.LogGroupName)
 		cloudwatchLoggingOptions["log_stream_name"] = aws.StringValue(clo.LogStreamName)
 	}
-	return schema.NewSet(cloudwatchLoggingOptionsHash, []interface{}{cloudwatchLoggingOptions})
+	return []interface{}{cloudwatchLoggingOptions}
 }
 
 func flattenFirehoseElasticsearchConfiguration(description *firehose.ElasticsearchDestinationDescription) []map[string]interface{} {
@@ -1804,7 +1791,7 @@ func extractEncryptionConfiguration(s3 map[string]interface{}) *firehose.Encrypt
 }
 
 func extractCloudWatchLoggingConfiguration(s3 map[string]interface{}) *firehose.CloudWatchLoggingOptions {
-	config := s3["cloudwatch_logging_options"].(*schema.Set).List()
+	config := s3["cloudwatch_logging_options"].([]interface{})
 	if len(config) == 0 {
 		return nil
 	}

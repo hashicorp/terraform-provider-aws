@@ -432,6 +432,16 @@ func SqsKeyValueTags(tags map[string]*string) KeyValueTags {
 	return New(tags)
 }
 
+// SyntheticsTags returns synthetics service tags.
+func (tags KeyValueTags) SyntheticsTags() map[string]*string {
+	return aws.StringMap(tags.Map())
+}
+
+// SyntheticsKeyValueTags creates KeyValueTags from synthetics service tags.
+func SyntheticsKeyValueTags(tags map[string]*string) KeyValueTags {
+	return New(tags)
+}
+
 // []*SERVICE.Tag handling
 
 // AcmTags returns acm service tags.

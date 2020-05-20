@@ -497,6 +497,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/swf" = [
       "aws_swf_",
     ],
+    "service/synthetics" = [
+      "aws_synthetics_",
+    ],
     "service/transfer" = [
       "aws_transfer_",
     ],
@@ -529,6 +532,7 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
+      "*.md",
       ".github/**/*",
       ".gitignore",
       ".go-version",
@@ -545,6 +549,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "docs/*.md",
+      "docs/contributing/**/*",
       "GNUmakefile",
       "infrastructure/**/*",
       "main.go",
@@ -555,7 +561,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/partition*",
       "website/**/region*"
     ]
-    # label test related changes
+    "documentation" = [
+      "docs/**/*",
+      "*.md",
+    ]
+    "examples" = [
+      "examples/**/*",
+    ]
     "tests" = [
       "**/*_test.go",
       "**/testdata/**/*",
@@ -1198,6 +1210,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/swf" = [
       "**/*_swf_*",
       "**/swf_*"
+    ]
+    "service/synthetics" = [
+      "**/*_synthetics_*",
+      "**/synthetics_*"
     ]
     "service/transfer" = [
       "**/*_transfer_*",

@@ -90,7 +90,7 @@ func resourceAwsSesEventDestination() *schema.Resource {
 			},
 
 			"kinesis_destination": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      true,
 				MaxItems:      1,
@@ -111,7 +111,7 @@ func resourceAwsSesEventDestination() *schema.Resource {
 			},
 
 			"sns_destination": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				MaxItems:      1,
 				Optional:      true,
 				ForceNew:      true,
@@ -155,7 +155,7 @@ func resourceAwsSesEventDestinationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("kinesis_destination"); ok {
-		destination := v.(*schema.Set).List()
+		destination := v.([]interface{})
 
 		kinesis := destination[0].(map[string]interface{})
 		createOpts.EventDestination.KinesisFirehoseDestination = &ses.KinesisFirehoseDestination{
@@ -166,7 +166,7 @@ func resourceAwsSesEventDestinationCreate(d *schema.ResourceData, meta interface
 	}
 
 	if v, ok := d.GetOk("sns_destination"); ok {
-		destination := v.(*schema.Set).List()
+		destination := v.([]interface{})
 		sns := destination[0].(map[string]interface{})
 		createOpts.EventDestination.SNSDestination = &ses.SNSDestination{
 			TopicARN: aws.String(sns["topic_arn"].(string)),
