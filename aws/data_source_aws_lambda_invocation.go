@@ -82,6 +82,9 @@ func dataSourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
+	// TODO: schema error: result_map seems to be a deeply nested map which
+	// cannot be set. May need to change type to string, and apply json diff
+	// suppression
 	if err = d.Set("result_map", result); err != nil {
 		log.Printf("[WARN] Cannot use the result invocation as a string map: %s", err)
 	}
