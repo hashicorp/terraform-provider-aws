@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
@@ -148,7 +149,7 @@ func resourceAwsLakeFormationPermissionsGrant(d *schema.ResourceData, meta inter
 		return fmt.Errorf("Error granting LakeFormation Permissions: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("lakeformation:resource:%s", catalogId)) // FIXME
+	d.SetId(fmt.Sprintf("lakeformation:resource:%s:%s", catalogId, time.Now().UTC().String()))
 	d.Set("catalog_id", catalogId)
 
 	return resourceAwsLakeFormationPermissionsList(d, meta)
