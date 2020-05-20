@@ -24,7 +24,7 @@ data "aws_wafv2_regex_pattern_set" "example" {
 The following arguments are supported:
 
 * `name` - (Required) The name of the WAFv2 Regex Pattern Set.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
+* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 
 ## Attributes Reference
 
