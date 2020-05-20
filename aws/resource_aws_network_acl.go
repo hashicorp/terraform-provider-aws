@@ -310,7 +310,7 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 				})
 				if err != nil {
 					if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
-						return nil
+						continue
 					}
 					return fmt.Errorf("Error Replacing Default Network Acl Association: %s", err)
 				}
