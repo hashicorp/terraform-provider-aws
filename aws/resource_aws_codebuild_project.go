@@ -160,7 +160,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Computed: true,
 			},
 			"environment": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -257,7 +257,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsCodeBuildProjectEnvironmentHash,
 			},
 			"logs_config": {
 				Type:     schema.TypeList,
@@ -475,7 +474,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Required: true,
 			},
 			"source": {
-				Type: schema.TypeSet,
+				Type: schema.TypeList,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth": {
@@ -550,7 +549,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				},
 				Required: true,
 				MaxItems: 1,
-				Set:      resourceAwsCodeBuildProjectSourceHash,
 			},
 			"source_version": {
 				Type:     schema.TypeString,
@@ -813,7 +811,7 @@ func expandProjectCache(s []interface{}) *codebuild.ProjectCache {
 }
 
 func expandProjectEnvironment(d *schema.ResourceData) *codebuild.ProjectEnvironment {
-	configs := d.Get("environment").(*schema.Set).List()
+	configs := d.Get("environment").([]interface{})
 
 	envConfig := configs[0].(map[string]interface{})
 
@@ -1007,7 +1005,7 @@ func expandProjectSecondarySources(d *schema.ResourceData) []*codebuild.ProjectS
 }
 
 func expandProjectSource(d *schema.ResourceData) codebuild.ProjectSource {
-	configs := d.Get("source").(*schema.Set).List()
+	configs := d.Get("source").([]interface{})
 
 	data := configs[0].(map[string]interface{})
 	return expandProjectSourceData(data)
@@ -1093,7 +1091,7 @@ func resourceAwsCodeBuildProjectRead(d *schema.ResourceData, meta interface{}) e
 		return fmt.Errorf("error setting artifacts: %s", err)
 	}
 
-	if err := d.Set("environment", schema.NewSet(resourceAwsCodeBuildProjectEnvironmentHash, flattenAwsCodeBuildProjectEnvironment(project.Environment))); err != nil {
+	if err := d.Set("environment", flattenAwsCodeBuildProjectEnvironment(project.Environment)); err != nil {
 		return fmt.Errorf("error setting environment: %s", err)
 	}
 
@@ -1383,12 +1381,12 @@ func flattenAwsCodebuildProjectCache(cache *codebuild.ProjectCache) []interface{
 func flattenAwsCodeBuildProjectEnvironment(environment *codebuild.ProjectEnvironment) []interface{} {
 	envConfig := map[string]interface{}{}
 
-	envConfig["type"] = *environment.Type
-	envConfig["compute_type"] = *environment.ComputeType
-	envConfig["image"] = *environment.Image
+	envConfig["type"] = aws.StringValue(environment.Type)
+	envConfig["compute_type"] = aws.StringValue(environment.ComputeType)
+	envConfig["image"] = aws.StringValue(environment.Image)
 	envConfig["certificate"] = aws.StringValue(environment.Certificate)
-	envConfig["privileged_mode"] = *environment.PrivilegedMode
-	envConfig["image_pull_credentials_type"] = *environment.ImagePullCredentialsType
+	envConfig["privileged_mode"] = aws.BoolValue(environment.PrivilegedMode)
+	envConfig["image_pull_credentials_type"] = aws.StringValue(environment.ImagePullCredentialsType)
 
 	envConfig["registry_credential"] = flattenAwsCodebuildRegistryCredential(environment.RegistryCredential)
 
