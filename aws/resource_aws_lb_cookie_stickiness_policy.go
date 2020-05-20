@@ -130,7 +130,7 @@ func resourceAwsLBCookieStickinessPolicyRead(d *schema.ResourceData, meta interf
 	if *cookieAttr.AttributeName != "CookieExpirationPeriod" {
 		return fmt.Errorf("Unable to find cookie expiration period.")
 	}
-	cookieVal, err := strconv.Atoi(aws.IntValue(cookieAttr.AttributeValue))
+	cookieVal, err := strconv.Atoi(aws.StringValue(cookieAttr.AttributeValue))
 	if err != nil {
 		return fmt.Errorf("Error parsing cookie expiration period: %s", err)
 	}
