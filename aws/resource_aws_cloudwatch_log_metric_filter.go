@@ -139,7 +139,11 @@ func resourceAwsCloudWatchLogMetricFilterRead(d *schema.ResourceData, meta inter
 
 	d.Set("name", mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
-	return d.Set("metric_transformation", flattenCloudWatchLogMetricTransformations(mf.MetricTransformations))
+	if err := d.Set("metric_transformation", flattenCloudWatchLogMetricTransformations(mf.MetricTransformations)); err != nil {
+		return fmt.Errorf("error setting metric_transformation: %s", err)
+	}
+
+	return nil
 }
 
 func lookupCloudWatchLogMetricFilter(conn *cloudwatchlogs.CloudWatchLogs,
