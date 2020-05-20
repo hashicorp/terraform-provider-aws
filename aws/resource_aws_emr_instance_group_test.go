@@ -30,7 +30,6 @@ func TestAccAWSEMRInstanceGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "autoscaling_policy", ""),
 					resource.TestCheckResourceAttr(resourceName, "bid_price", ""),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_role"),
 				),
 			},
 			{
