@@ -394,7 +394,9 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth": {
-							Type: schema.TypeSet,
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
@@ -411,8 +413,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 									},
 								},
 							},
-							Optional: true,
-							Set:      resourceAwsCodeBuildProjectSourceAuthHash,
 						},
 						"buildspec": {
 							Type:     schema.TypeString,
@@ -472,11 +472,15 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 				Required: true,
 			},
 			"source": {
-				Type: schema.TypeList,
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth": {
-							Type: schema.TypeSet,
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"resource": {
@@ -493,8 +497,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 									},
 								},
 							},
-							Optional: true,
-							Set:      resourceAwsCodeBuildProjectSourceAuthHash,
 						},
 						"buildspec": {
 							Type:     schema.TypeString,
@@ -545,8 +547,6 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 						},
 					},
 				},
-				Required: true,
-				MaxItems: 1,
 			},
 			"source_version": {
 				Type:     schema.TypeString,
@@ -712,7 +712,7 @@ func resourceAwsCodeBuildProjectCreate(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("Error creating CodeBuild project: %s", err)
 	}
 
-	d.SetId(*resp.Project.Arn)
+	d.SetId(aws.StringValue(resp.Project.Arn))
 
 	return resourceAwsCodeBuildProjectRead(d, meta)
 }
@@ -1033,10 +1033,10 @@ func expandProjectSourceData(data map[string]interface{}) codebuild.ProjectSourc
 		projectSource.ReportBuildStatus = aws.Bool(data["report_build_status"].(bool))
 	}
 
-	if v, ok := data["auth"]; ok {
-		if len(v.(*schema.Set).List()) > 0 {
-			auth := v.(*schema.Set).List()[0].(map[string]interface{})
-
+	// Probe data for auth details (max of 1 auth per ProjectSource object)
+	if v, ok := data["auth"]; ok && len(v.([]interface{})) > 0 {
+		if auths := v.([]interface{}); auths[0] != nil {
+			auth := auths[0].(map[string]interface{})
 			projectSource.Auth = &codebuild.SourceAuth{
 				Type:     aws.String(auth["type"].(string)),
 				Resource: aws.String(auth["resource"].(string)),
@@ -1326,38 +1326,38 @@ func flattenAwsCodeBuildProjectArtifacts(artifacts *codebuild.ProjectArtifacts) 
 func flattenAwsCodeBuildProjectArtifactsData(artifacts codebuild.ProjectArtifacts) map[string]interface{} {
 	values := map[string]interface{}{}
 
-	values["type"] = *artifacts.Type
+	values["type"] = aws.StringValue(artifacts.Type)
 
 	if artifacts.ArtifactIdentifier != nil {
-		values["artifact_identifier"] = *artifacts.ArtifactIdentifier
+		values["artifact_identifier"] = aws.StringValue(artifacts.ArtifactIdentifier)
 	}
 
 	if artifacts.EncryptionDisabled != nil {
-		values["encryption_disabled"] = *artifacts.EncryptionDisabled
+		values["encryption_disabled"] = aws.BoolValue(artifacts.EncryptionDisabled)
 	}
 
 	if artifacts.OverrideArtifactName != nil {
-		values["override_artifact_name"] = *artifacts.OverrideArtifactName
+		values["override_artifact_name"] = aws.BoolValue(artifacts.OverrideArtifactName)
 	}
 
 	if artifacts.Location != nil {
-		values["location"] = *artifacts.Location
+		values["location"] = aws.StringValue(artifacts.Location)
 	}
 
 	if artifacts.Name != nil {
-		values["name"] = *artifacts.Name
+		values["name"] = aws.StringValue(artifacts.Name)
 	}
 
 	if artifacts.NamespaceType != nil {
-		values["namespace_type"] = *artifacts.NamespaceType
+		values["namespace_type"] = aws.StringValue(artifacts.NamespaceType)
 	}
 
 	if artifacts.Packaging != nil {
-		values["packaging"] = *artifacts.Packaging
+		values["packaging"] = aws.StringValue(artifacts.Packaging)
 	}
 
 	if artifacts.Path != nil {
-		values["path"] = *artifacts.Path
+		values["path"] = aws.StringValue(artifacts.Path)
 	}
 	return values
 }
@@ -1439,7 +1439,7 @@ func flattenAwsCodeBuildProjectSourceData(source *codebuild.ProjectSource) inter
 	m["git_submodules_config"] = flattenAwsCodebuildProjectGitSubmodulesConfig(source.GitSubmodulesConfig)
 
 	if source.Auth != nil {
-		m["auth"] = schema.NewSet(resourceAwsCodeBuildProjectSourceAuthHash, []interface{}{sourceAuthToMap(source.Auth)})
+		m["auth"] = []interface{}{sourceAuthToMap(source.Auth)}
 	}
 	if source.SourceIdentifier != nil {
 		m["source_identifier"] = aws.StringValue(source.SourceIdentifier)
@@ -1464,7 +1464,7 @@ func flattenAwsCodeBuildVpcConfig(vpcConfig *codebuild.VpcConfig) []interface{} 
 	if vpcConfig != nil {
 		values := map[string]interface{}{}
 
-		values["vpc_id"] = *vpcConfig.VpcId
+		values["vpc_id"] = aws.StringValue(vpcConfig.VpcId)
 		values["subnets"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.Subnets))
 		values["security_group_ids"] = schema.NewSet(schema.HashString, flattenStringList(vpcConfig.SecurityGroupIds))
 
@@ -1512,29 +1512,16 @@ func resourceAwsCodeBuildProjectArtifactsHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourceAwsCodeBuildProjectSourceAuthHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-
-	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-
-	if m["resource"] != nil {
-		buf.WriteString(fmt.Sprintf("%s-", m["resource"].(string)))
-	}
-
-	return hashcode.String(buf.String())
-}
-
 func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVariable) []interface{} {
 
 	envVariables := []interface{}{}
 	if len(environmentVariables) > 0 {
 		for _, env := range environmentVariables {
 			item := map[string]interface{}{}
-			item["name"] = *env.Name
-			item["value"] = *env.Value
+			item["name"] = aws.StringValue(env.Name)
+			item["value"] = aws.StringValue(env.Value)
 			if env.Type != nil {
-				item["type"] = *env.Type
+				item["type"] = aws.StringValue(env.Type)
 			}
 			envVariables = append(envVariables, item)
 		}
@@ -1546,10 +1533,10 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 func sourceAuthToMap(sourceAuth *codebuild.SourceAuth) map[string]interface{} {
 
 	auth := map[string]interface{}{}
-	auth["type"] = *sourceAuth.Type
+	auth["type"] = aws.StringValue(sourceAuth.Type)
 
 	if sourceAuth.Resource != nil {
-		auth["resource"] = *sourceAuth.Resource
+		auth["resource"] = aws.StringValue(sourceAuth.Resource)
 	}
 
 	return auth
