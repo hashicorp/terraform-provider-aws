@@ -20,6 +20,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/cloudwatch_log_metric_filter: `metric_transformation` `default_value` now properly set [GH-13411]
 * data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
 * resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
 * resource/aws_eks_node_group: Only pass `release_version` value during `UpdateNodegroupVersion` if changed [GH-13407]
