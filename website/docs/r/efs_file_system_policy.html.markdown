@@ -53,7 +53,7 @@ POLICY
 The following arguments are supported:
 
 * `file_system_id` - (Required) The ID of the EFS file system.
-* `policy` - (Required) The JSON formatted file system policy for the EFS file system.
+* `policy` - (Required) The JSON formatted file system policy for the EFS file system. see [Docs](https://docs.aws.amazon.com/efs/latest/ug/access-control-overview.html#access-control-manage-access-intro-resource-policies) for more info.
 
 ## Attributes Reference
 
