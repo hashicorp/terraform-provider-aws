@@ -4,8 +4,12 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/lakeformation"
+
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
@@ -21,9 +25,9 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		// TODO: CheckDestroy
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLakeFormationPermissionsRevoked,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLakeFormationPermissionsConfig_catalog(),
@@ -288,3 +292,31 @@ resource "aws_lakeformation_permissions" "test" {
 }
 `, rName, dName, tName)
 } */
+
+func testAccCheckAWSLakeFormationPermissionsRevoked(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_lakeformation_permissions" {
+			continue
+		}
+
+		principal := rs.Primary.Attributes["principal"]
+		catalogId := rs.Primary.Attributes["catalog_id"]
+
+		input := &lakeformation.ListPermissionsInput{
+			CatalogId: aws.String(catalogId),
+			Principal: &lakeformation.DataLakePrincipal{
+				DataLakePrincipalIdentifier: aws.String(principal),
+			},
+		}
+
+		out, err := conn.ListPermissions(input)
+		if err == nil {
+			fmt.Print(out)
+			return fmt.Errorf("Resource still registered: %s %s", catalogId, principal)
+		}
+	}
+
+	return nil
+}
