@@ -91,10 +91,9 @@ automated backups are created if they are enabled. Example: "09:46-10:16". Must
 not overlap with `maintenance_window`.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
-encoding in Oracle instances. This can't be changed. See [Oracle Character Sets
-Supported in Amazon
-RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
-for more information.
+encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
+Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
+or [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
@@ -276,9 +275,9 @@ in a Route 53 Alias record).
 * `storage_encrypted` - Specifies whether the DB instance is encrypted.
 * `username` - The master username for the database.
 
-On Oracle instances the following is exported additionally:
+On Oracle and Microsoft SQL instances the following is exported additionally:
 
-* `character_set_name` - The character set used on Oracle instances.
+* `character_set_name` - The character set (collation) used on Oracle and Microsoft SQL instances.
 
 ## Import
 
