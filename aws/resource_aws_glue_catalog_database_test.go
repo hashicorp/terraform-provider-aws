@@ -99,6 +99,27 @@ func TestAccAWSGlueCatalogDatabase_recreates(t *testing.T) {
 	})
 }
 
+func TestAccAWSGlueCatalogDatabase_disappears(t *testing.T) {
+	resourceName := "aws_glue_catalog_database.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckGlueDatabaseDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGlueCatalogDatabase_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlueCatalogDatabaseExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsGlueCatalogDatabase(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckGlueDatabaseDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).glueconn
 
