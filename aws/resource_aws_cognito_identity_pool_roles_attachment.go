@@ -154,7 +154,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 		return err
 	}
 
-	d.Set("identity_pool_id", d.Id())
+	d.Set("identity_pool_id", ip.IdentityPoolId)
 
 	if err := d.Set("roles", flattenCognitoIdentityPoolRoles(ip.Roles)); err != nil {
 		return fmt.Errorf("Error setting roles error: %#v", err)
