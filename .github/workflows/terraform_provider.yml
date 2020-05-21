@@ -249,9 +249,8 @@ jobs:
       run: |
         tfproviderdocs check \
           -allowed-resource-subcategories-file website/allowed-subcategories.txt \
-          -ignore-file-mismatch-resources aws_s3_bucket_analysis_configuration \
           -ignore-file-missing-data-sources aws_alb,aws_alb_listener,aws_alb_target_group \
-          -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment,aws_s3_bucket_analytics_configuration \
+          -ignore-file-missing-resources aws_alb,aws_alb_listener,aws_alb_listener_certificate,aws_alb_listener_rule,aws_alb_target_group,aws_alb_target_group_attachment \
           -ignore-side-navigation-data-sources aws_alb,aws_alb_listener,aws_alb_target_group,aws_kms_secret \
           -provider-name aws \
           -providers-schema-json terraform-providers-schema/schema.json \
