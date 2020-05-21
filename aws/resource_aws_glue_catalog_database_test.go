@@ -26,26 +26,10 @@ func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"name",
-						rName,
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"description",
-						"",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"location_uri",
-						"",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"parameters.%",
-						"0",
-					),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("database/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""), resource.TestCheckResourceAttr(resourceName, "location_uri", ""),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "0"),
 				),
 			},
 			{
@@ -58,62 +42,22 @@ func TestAccAWSGlueCatalogDatabase_full(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"description",
-						"A test catalog from terraform",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"location_uri",
-						"my-location",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"parameters.param1",
-						"value1",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"parameters.param2",
-						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"parameters.param3",
-						"50",
-					),
+					resource.TestCheckResourceAttr(resourceName, "description", "A test catalog from terraform"),
+					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
 				),
 			},
 			{
 				Config: testAccGlueCatalogDatabase_full(rName, "An updated test catalog from terraform"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogDatabaseExists(resourceName),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"description",
-						"An updated test catalog from terraform",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"location_uri",
-						"my-location",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"parameters.param1",
-						"value1",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"parameters.param2",
-						"true",
-					),
-					resource.TestCheckResourceAttr(
-						resourceName,
-						"parameters.param3",
-						"50",
-					),
+					resource.TestCheckResourceAttr(resourceName, "description", "An updated test catalog from terraform"),
+					resource.TestCheckResourceAttr(resourceName, "location_uri", "my-location"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param2", "true"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.param3", "50"),
 				),
 			},
 		},
