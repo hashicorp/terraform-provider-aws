@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * data-source/aws_lb_target_group: Add `load_balancing_algorithm_type` attribute [GH-13400]
 * data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
 * resource/aws_codebuild_webhook: Support `COMMIT_MESSAGE` value in filter types [GH-13436]
+* resource/aws_cognito_identity_pool_roles_attachment: Add import support [GH-13440]
 * resource/aws_ecs_service: Add `force_new_deployment` argument [GH-13376]
 * resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` [GH-13376]
 * resource/aws_eks_node_group: Add `force_update_version` argument [GH-13414]
