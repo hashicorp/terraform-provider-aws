@@ -11239,8 +11239,12 @@ func (c *EC2) DeleteVpnConnectionRequest(input *DeleteVpnConnectionInput) (req *
 // your VPN connection have been compromised, you can delete the VPN connection
 // and create a new one that has new keys, without needing to delete the VPC
 // or virtual private gateway. If you create a new VPN connection, you must
-// reconfigure the customer gateway using the new configuration information
+// reconfigure the customer gateway device using the new configuration information
 // returned with the new VPN connection ID.
+//
+// For certificate-based authentication, delete all AWS Certificate Manager
+// (ACM) private certificates used for the AWS-side tunnel endpoints for the
+// VPN connection before deleting the VPN connection.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -32603,8 +32607,9 @@ func (c *EC2) ModifyVpnConnectionRequest(input *ModifyVpnConnectionInput) (req *
 
 // ModifyVpnConnection API operation for Amazon Elastic Compute Cloud.
 //
-// Modifies the target gateway of an AWS Site-to-Site VPN connection. The following
-// migration options are available:
+// Modifies the customer gateway or the target gateway of an AWS Site-to-Site
+// VPN connection. To modify the target gateway, the following migration options
+// are available:
 //
 //    * An existing virtual private gateway to a new virtual private gateway
 //
@@ -40234,7 +40239,8 @@ func (s *AuthorizationRule) SetStatus(v *ClientVpnAuthorizationRuleStatus) *Auth
 type AuthorizeClientVpnIngressInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the Active Directory group to grant access.
+	// The ID of the group to grant access to, for example, the Active Directory
+	// group or identity provider (IdP) group.
 	AccessGroupId *string `type:"string"`
 
 	// Indicates whether to grant access to all clients. Use true to grant all clients
@@ -42717,15 +42723,17 @@ func (s *ClientData) SetUploadStart(v time.Time) *ClientData {
 	return s
 }
 
-// Describes the authentication methods used by a Client VPN endpoint. Client
-// VPN supports Active Directory and mutual authentication. For more information,
-// see Authentication (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
+// Describes the authentication methods used by a Client VPN endpoint. For more
+// information, see Authentication (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
 // in the AWS Client VPN Administrator Guide.
 type ClientVpnAuthentication struct {
 	_ struct{} `type:"structure"`
 
 	// Information about the Active Directory, if applicable.
 	ActiveDirectory *DirectoryServiceAuthentication `locationName:"activeDirectory" type:"structure"`
+
+	// Information about the IAM SAML identity provider, if applicable.
+	FederatedAuthentication *FederatedAuthentication `locationName:"federatedAuthentication" type:"structure"`
 
 	// Information about the authentication certificates, if applicable.
 	MutualAuthentication *CertificateAuthentication `locationName:"mutualAuthentication" type:"structure"`
@@ -42750,6 +42758,12 @@ func (s *ClientVpnAuthentication) SetActiveDirectory(v *DirectoryServiceAuthenti
 	return s
 }
 
+// SetFederatedAuthentication sets the FederatedAuthentication field's value.
+func (s *ClientVpnAuthentication) SetFederatedAuthentication(v *FederatedAuthentication) *ClientVpnAuthentication {
+	s.FederatedAuthentication = v
+	return s
+}
+
 // SetMutualAuthentication sets the MutualAuthentication field's value.
 func (s *ClientVpnAuthentication) SetMutualAuthentication(v *CertificateAuthentication) *ClientVpnAuthentication {
 	s.MutualAuthentication = v
@@ -42763,8 +42777,7 @@ func (s *ClientVpnAuthentication) SetType(v string) *ClientVpnAuthentication {
 }
 
 // Describes the authentication method to be used by a Client VPN endpoint.
-// Client VPN supports Active Directory and mutual authentication. For more
-// information, see Authentication (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
+// For more information, see Authentication (https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/authentication-authrization.html#client-authentication)
 // in the AWS Client VPN Administrator Guide.
 type ClientVpnAuthenticationRequest struct {
 	_ struct{} `type:"structure"`
@@ -42773,13 +42786,15 @@ type ClientVpnAuthenticationRequest struct {
 	// provide this information if Type is directory-service-authentication.
 	ActiveDirectory *DirectoryServiceAuthenticationRequest `type:"structure"`
 
+	// Information about the IAM SAML identity provider to be used, if applicable.
+	// You must provide this information if Type is federated-authentication.
+	FederatedAuthentication *FederatedAuthenticationRequest `type:"structure"`
+
 	// Information about the authentication certificates to be used, if applicable.
 	// You must provide this information if Type is certificate-authentication.
 	MutualAuthentication *CertificateAuthenticationRequest `type:"structure"`
 
-	// The type of client authentication to be used. Specify certificate-authentication
-	// to use certificate-based authentication, or directory-service-authentication
-	// to use Active Directory authentication.
+	// The type of client authentication to be used.
 	Type *string `type:"string" enum:"ClientVpnAuthenticationType"`
 }
 
@@ -42796,6 +42811,12 @@ func (s ClientVpnAuthenticationRequest) GoString() string {
 // SetActiveDirectory sets the ActiveDirectory field's value.
 func (s *ClientVpnAuthenticationRequest) SetActiveDirectory(v *DirectoryServiceAuthenticationRequest) *ClientVpnAuthenticationRequest {
 	s.ActiveDirectory = v
+	return s
+}
+
+// SetFederatedAuthentication sets the FederatedAuthentication field's value.
+func (s *ClientVpnAuthenticationRequest) SetFederatedAuthentication(v *FederatedAuthenticationRequest) *ClientVpnAuthenticationRequest {
+	s.FederatedAuthentication = v
 	return s
 }
 
@@ -73768,6 +73789,54 @@ func (s *FailedQueuedPurchaseDeletion) SetError(v *DeleteQueuedReservedInstances
 // SetReservedInstancesId sets the ReservedInstancesId field's value.
 func (s *FailedQueuedPurchaseDeletion) SetReservedInstancesId(v string) *FailedQueuedPurchaseDeletion {
 	s.ReservedInstancesId = &v
+	return s
+}
+
+// Describes the IAM SAML identity provider used for federated authentication.
+type FederatedAuthentication struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the IAM SAML identity provider.
+	SamlProviderArn *string `locationName:"samlProviderArn" type:"string"`
+}
+
+// String returns the string representation
+func (s FederatedAuthentication) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FederatedAuthentication) GoString() string {
+	return s.String()
+}
+
+// SetSamlProviderArn sets the SamlProviderArn field's value.
+func (s *FederatedAuthentication) SetSamlProviderArn(v string) *FederatedAuthentication {
+	s.SamlProviderArn = &v
+	return s
+}
+
+// The IAM SAML identity provider used for federated authentication.
+type FederatedAuthenticationRequest struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the IAM SAML identity provider.
+	SAMLProviderArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s FederatedAuthenticationRequest) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FederatedAuthenticationRequest) GoString() string {
+	return s.String()
+}
+
+// SetSAMLProviderArn sets the SAMLProviderArn field's value.
+func (s *FederatedAuthenticationRequest) SetSAMLProviderArn(v string) *FederatedAuthenticationRequest {
+	s.SAMLProviderArn = &v
 	return s
 }
 
@@ -109975,6 +110044,9 @@ const (
 
 	// ClientVpnAuthenticationTypeDirectoryServiceAuthentication is a ClientVpnAuthenticationType enum value
 	ClientVpnAuthenticationTypeDirectoryServiceAuthentication = "directory-service-authentication"
+
+	// ClientVpnAuthenticationTypeFederatedAuthentication is a ClientVpnAuthenticationType enum value
+	ClientVpnAuthenticationTypeFederatedAuthentication = "federated-authentication"
 )
 
 const (
