@@ -12,6 +12,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_ssm_document: Add `document_version` attribute [GH-13438]
 * data-source/aws_ram_resource_share: Add `owning_account_id` attribute [GH-13402]
 * data-source/aws_lb: Add `ip_address_type` attribute [GH-13400]
 * data-source/aws_lb_target_group: Add `load_balancing_algorithm_type` attribute [GH-13400]
@@ -26,6 +27,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_ssm_activation: `expired` now properly set [GH-13438]
 * resource/aws_redshift_security_group: The resource is now importable [GH-13431]
 * resource/cloudwatch_log_metric_filter: `metric_transformation` `default_value` now properly set [GH-13411]
 * data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
