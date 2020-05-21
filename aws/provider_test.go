@@ -74,21 +74,6 @@ func testAccPreCheck(t *testing.T) {
 	}
 }
 
-// testAccAlternateAccountProvider returns the schema.Provider for the alternate account
-// Must be used within a resource.TestCheckFunc
-func testAccAlternateAccountProvider(providers *[]*schema.Provider) (result *schema.Provider) {
-	primaryAccountID := testAccGetAccountID()
-
-	for _, provider := range *providers {
-		accountID := testAccAwsProviderAccountID(provider)
-		if accountID != "" && accountID != primaryAccountID {
-			result = provider
-		}
-	}
-
-	return
-}
-
 // testAccAwsProviderAccountID returns the account ID of an AWS provider
 func testAccAwsProviderAccountID(provider *schema.Provider) string {
 	if provider == nil {
@@ -111,15 +96,6 @@ func testAccAwsProviderAccountID(provider *schema.Provider) string {
 func testAccCheckResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return resource.TestCheckResourceAttr(resourceName, attributeName, testAccGetAccountID())(s)
-	}
-}
-
-// testAccCheckResourceAttrAlternateAccountID ensures the Terraform state exactly matches the alternate account ID
-func testAccCheckResourceAttrAlternateAccountID(resourceName, attributeName string, providers *[]*schema.Provider) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		provider := testAccAlternateAccountProvider(providers)
-
-		return resource.TestCheckResourceAttr(resourceName, attributeName, testAccAwsProviderAccountID(provider))(s)
 	}
 }
 
@@ -223,16 +199,6 @@ func testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, a
 		}
 
 		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
-	}
-}
-
-// testAccMatchResourceAttrRegionalARNAlternateAccount ensures the Terraform state regexp matches a formatted ARN with region in the alternate account
-// assumes the regions for the primary and alternate accounts are the same
-func testAccMatchResourceAttrRegionalARNAlternateAccount(resourceName, attributeName string, providers *[]*schema.Provider, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		provider := testAccAlternateAccountProvider(providers)
-
-		return testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, testAccAwsProviderAccountID(provider), "ram", arnResourceRegexp)(s)
 	}
 }
 
