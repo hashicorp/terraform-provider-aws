@@ -4721,10 +4721,10 @@ func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterS
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
-	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
+	if vListeners, ok := mSpec["listener"].([]interface{}); ok && len(vListeners) > 0 && vListeners[0] != nil {
 		listeners := []*appmesh.VirtualRouterListener{}
 
-		for _, vListener := range vListeners.List() {
+		for _, vListener := range vListeners {
 			listener := &appmesh.VirtualRouterListener{}
 
 			mListener := vListener.(map[string]interface{})
@@ -4741,10 +4741,8 @@ func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterS
 					listener.PortMapping.Protocol = aws.String(vProtocol)
 				}
 			}
-
 			listeners = append(listeners, listener)
 		}
-
 		spec.Listeners = listeners
 	}
 
@@ -4755,27 +4753,19 @@ func flattenAppmeshVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interfac
 	if spec == nil {
 		return []interface{}{}
 	}
-
-	mSpec := map[string]interface{}{}
-
-	if spec.Listeners != nil {
-		vListeners := []interface{}{}
-
-		for _, listener := range spec.Listeners {
-			mListener := map[string]interface{}{}
-
-			if listener.PortMapping != nil {
-				mPortMapping := map[string]interface{}{
-					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
-					"protocol": aws.StringValue(listener.PortMapping.Protocol),
-				}
-				mListener["port_mapping"] = []interface{}{mPortMapping}
+	mSpec := make(map[string]interface{})
+	if spec.Listeners != nil && spec.Listeners[0] != nil {
+		// Per schema definition, set at most 1 Listener
+		listener := spec.Listeners[0]
+		mListener := make(map[string]interface{})
+		if listener.PortMapping != nil {
+			mPortMapping := map[string]interface{}{
+				"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+				"protocol": aws.StringValue(listener.PortMapping.Protocol),
 			}
-
-			vListeners = append(vListeners, mListener)
+			mListener["port_mapping"] = []interface{}{mPortMapping}
 		}
-
-		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
+		mSpec["listener"] = []interface{}{mListener}
 	}
 
 	return []interface{}{mSpec}
@@ -4813,10 +4803,10 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 		spec.Backends = backends
 	}
 
-	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
+	if vListeners, ok := mSpec["listener"].([]interface{}); ok && len(vListeners) > 0 && vListeners[0] != nil {
 		listeners := []*appmesh.Listener{}
 
-		for _, vListener := range vListeners.List() {
+		for _, vListener := range vListeners {
 			listener := &appmesh.Listener{}
 
 			mListener := vListener.(map[string]interface{})
@@ -4960,37 +4950,33 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		mSpec["backend"] = schema.NewSet(appmeshVirtualNodeBackendHash, vBackends)
 	}
 
-	if spec.Listeners != nil {
-		vListeners := []interface{}{}
+	if spec.Listeners != nil && spec.Listeners[0] != nil {
+		// Per schema definition, set at most 1 Listener
+		listener := spec.Listeners[0]
+		mListener := map[string]interface{}{}
 
-		for _, listener := range spec.Listeners {
-			mListener := map[string]interface{}{}
-
-			if listener.HealthCheck != nil {
-				mHealthCheck := map[string]interface{}{
-					"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
-					"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
-					"path":                aws.StringValue(listener.HealthCheck.Path),
-					"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
-					"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
-					"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
-					"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
-				}
-				mListener["health_check"] = []interface{}{mHealthCheck}
+		if listener.HealthCheck != nil {
+			mHealthCheck := map[string]interface{}{
+				"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
+				"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
+				"path":                aws.StringValue(listener.HealthCheck.Path),
+				"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
+				"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
+				"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
+				"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
 			}
-
-			if listener.PortMapping != nil {
-				mPortMapping := map[string]interface{}{
-					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
-					"protocol": aws.StringValue(listener.PortMapping.Protocol),
-				}
-				mListener["port_mapping"] = []interface{}{mPortMapping}
-			}
-
-			vListeners = append(vListeners, mListener)
+			mListener["health_check"] = []interface{}{mHealthCheck}
 		}
 
-		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
+		if listener.PortMapping != nil {
+			mPortMapping := map[string]interface{}{
+				"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+				"protocol": aws.StringValue(listener.PortMapping.Protocol),
+			}
+			mListener["port_mapping"] = []interface{}{mPortMapping}
+		}
+
+		mSpec["listener"] = []interface{}{mListener}
 	}
 
 	if spec.Logging != nil && spec.Logging.AccessLog != nil && spec.Logging.AccessLog.File != nil {
