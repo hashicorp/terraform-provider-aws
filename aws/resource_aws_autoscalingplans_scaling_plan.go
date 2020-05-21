@@ -1,15 +1,12 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"regexp"
-	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscalingplans"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/autoscalingplans/waiter"
@@ -73,7 +70,6 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 									},
 								},
 							},
-							Set:           autoScalingPlansTagFilterHash,
 							ConflictsWith: []string{"application_source.0.cloudformation_stack_arn"},
 						},
 					},
@@ -356,11 +352,9 @@ func resourceAwsAutoScalingPlansScalingPlan() *schema.Resource {
 									},
 								},
 							},
-							Set: autoScalingPlansTargetTrackingConfigurationHash,
 						},
 					},
 				},
-				Set: autoScalingPlansScalingInstructionHash,
 			},
 
 			"scaling_plan_version": {
@@ -565,27 +559,10 @@ func flattenAutoScalingPlansApplicationSource(applicationSource *autoscalingplan
 			vTagFilters = append(vTagFilters, mTagFilter)
 		}
 
-		mApplicationSource["tag_filter"] = schema.NewSet(autoScalingPlansTagFilterHash, vTagFilters)
+		mApplicationSource["tag_filter"] = vTagFilters
 	}
 
 	return []interface{}{mApplicationSource}
-}
-
-func autoScalingPlansTagFilterHash(vTagFilter interface{}) int {
-	var buf bytes.Buffer
-
-	mTagFilter := vTagFilter.(map[string]interface{})
-	if v, ok := mTagFilter["key"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if vValues, ok := mTagFilter["values"].(*schema.Set); ok {
-		// The order of the returned elements is deterministic.
-		for _, v := range vValues.List() {
-			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-		}
-	}
-
-	return hashcode.String(buf.String())
 }
 
 //
@@ -770,7 +747,7 @@ func expandAutoScalingPlansScalingInstructions(vScalingInstructions *schema.Set)
 	return scalingInstructions
 }
 
-func flattenAutoScalingPlansScalingInstructions(scalingInstructions []*autoscalingplans.ScalingInstruction) *schema.Set {
+func flattenAutoScalingPlansScalingInstructions(scalingInstructions []*autoscalingplans.ScalingInstruction) []interface{} {
 	vScalingInstructions := []interface{}{}
 
 	for _, scalingInstruction := range scalingInstructions {
@@ -855,152 +832,11 @@ func flattenAutoScalingPlansScalingInstructions(scalingInstructions []*autoscali
 				vTargetTrackingConfigurations = append(vTargetTrackingConfigurations, mTargetTrackingConfiguration)
 			}
 
-			mScalingInstruction["target_tracking_configuration"] = schema.NewSet(autoScalingPlansTargetTrackingConfigurationHash, vTargetTrackingConfigurations)
+			mScalingInstruction["target_tracking_configuration"] = vTargetTrackingConfigurations
 		}
 
 		vScalingInstructions = append(vScalingInstructions, mScalingInstruction)
 	}
 
-	return schema.NewSet(autoScalingPlansScalingInstructionHash, vScalingInstructions)
-}
-
-func autoScalingPlansScalingInstructionHash(vScalingInstruction interface{}) int {
-	var buf bytes.Buffer
-
-	mScalingInstruction := vScalingInstruction.(map[string]interface{})
-	if vCustomizedLoadMetricSpecification, ok := mScalingInstruction["customized_load_metric_specification"].([]interface{}); ok && len(vCustomizedLoadMetricSpecification) > 0 && vCustomizedLoadMetricSpecification[0] != nil {
-		mCustomizedLoadMetricSpecification := vCustomizedLoadMetricSpecification[0].(map[string]interface{})
-		if v, ok := mCustomizedLoadMetricSpecification["dimensions"].(map[string]interface{}); ok {
-			buf.WriteString(fmt.Sprintf("%d-", stableMapHash(v)))
-		}
-		if v, ok := mCustomizedLoadMetricSpecification["metric_name"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mCustomizedLoadMetricSpecification["namespace"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mCustomizedLoadMetricSpecification["statistic"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mCustomizedLoadMetricSpecification["unit"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := mScalingInstruction["disable_dynamic_scaling"].(bool); ok {
-		buf.WriteString(fmt.Sprintf("%t-", v))
-	}
-	if v, ok := mScalingInstruction["max_capacity"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if v, ok := mScalingInstruction["min_capacity"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if vPredefinedLoadMetricSpecification, ok := mScalingInstruction["predefined_load_metric_specification"].([]interface{}); ok && len(vPredefinedLoadMetricSpecification) > 0 && vPredefinedLoadMetricSpecification[0] != nil {
-		mPredefinedLoadMetricSpecification := vPredefinedLoadMetricSpecification[0].(map[string]interface{})
-		if v, ok := mPredefinedLoadMetricSpecification["predefined_load_metric_type"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mPredefinedLoadMetricSpecification["resource_label"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := mScalingInstruction["predictive_scaling_max_capacity_behavior"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mScalingInstruction["predictive_scaling_max_capacity_buffer"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if v, ok := mScalingInstruction["predictive_scaling_mode"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mScalingInstruction["resource_id"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mScalingInstruction["scalable_dimension"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mScalingInstruction["scaling_policy_update_behavior"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := mScalingInstruction["scheduled_action_buffer_time"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if v, ok := mScalingInstruction["service_namespace"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if vTargetTrackingConfigurations, ok := mScalingInstruction["target_tracking_configuration"].(*schema.Set); ok {
-		// The order of the returned elements is deterministic.
-		for _, v := range vTargetTrackingConfigurations.List() {
-			buf.WriteString(fmt.Sprintf("%d-", autoScalingPlansTargetTrackingConfigurationHash(v)))
-		}
-	}
-
-	return hashcode.String(buf.String())
-}
-
-func autoScalingPlansTargetTrackingConfigurationHash(vTargetTrackingConfiguration interface{}) int {
-	var buf bytes.Buffer
-
-	mTargetTrackingConfiguration := vTargetTrackingConfiguration.(map[string]interface{})
-	if vCustomizedScalingMetricSpecification, ok := mTargetTrackingConfiguration["customized_scaling_metric_specification"].([]interface{}); ok && len(vCustomizedScalingMetricSpecification) > 0 && vCustomizedScalingMetricSpecification[0] != nil {
-		mCustomizedScalingMetricSpecification := vCustomizedScalingMetricSpecification[0].(map[string]interface{})
-		if v, ok := mCustomizedScalingMetricSpecification["dimensions"].(map[string]interface{}); ok {
-			buf.WriteString(fmt.Sprintf("%d-", stableMapHash(v)))
-		}
-		if v, ok := mCustomizedScalingMetricSpecification["metric_name"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mCustomizedScalingMetricSpecification["namespace"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mCustomizedScalingMetricSpecification["statistic"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mCustomizedScalingMetricSpecification["unit"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := mTargetTrackingConfiguration["disable_scale_in"].(bool); ok {
-		buf.WriteString(fmt.Sprintf("%t-", v))
-	}
-	if v, ok := mTargetTrackingConfiguration["estimated_instance_warmup"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if vPredefinedScalingMetricSpecification, ok := mTargetTrackingConfiguration["predefined_scaling_metric_specification"].([]interface{}); ok && len(vPredefinedScalingMetricSpecification) > 0 && vPredefinedScalingMetricSpecification[0] != nil {
-		mPredefinedScalingMetricSpecification := vPredefinedScalingMetricSpecification[0].(map[string]interface{})
-		if v, ok := mPredefinedScalingMetricSpecification["predefined_scaling_metric_type"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mPredefinedScalingMetricSpecification["resource_label"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := mTargetTrackingConfiguration["scale_in_cooldown"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if v, ok := mTargetTrackingConfiguration["scale_out_cooldown"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	if v, ok := mTargetTrackingConfiguration["target_value"].(float64); ok {
-		buf.WriteString(fmt.Sprintf("%g-", v))
-	}
-
-	return hashcode.String(buf.String())
-}
-
-// stableMapHash returns a stable hash value for a map.
-func stableMapHash(m map[string]interface{}) int {
-	// Go map iterator is random.
-	keys := make([]string, 0, len(m))
-	for k := range m {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	hash := 0
-	for _, k := range keys {
-		hash = hash ^ hashcode.String(fmt.Sprintf("%s-%s", k, m[k]))
-	}
-
-	return hash
+	return vScalingInstructions
 }
