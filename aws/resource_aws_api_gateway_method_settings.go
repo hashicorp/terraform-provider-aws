@@ -42,42 +42,52 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 						"metrics_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"logging_level": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 						"data_trace_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"throttling_burst_limit": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"throttling_rate_limit": {
 							Type:     schema.TypeFloat,
 							Optional: true,
+							Computed: true,
 						},
 						"caching_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"cache_ttl_in_seconds": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"cache_data_encrypted": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"require_authorization_for_cache_control": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 						},
 						"unauthorized_cache_control_header_strategy": {
 							Type:     schema.TypeString,
 							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -113,7 +123,7 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	return d.Set("settings", []interface{}{map[string]interface{}{
+	if err := d.Set("settings", []interface{}{map[string]interface{}{
 		"metrics_enabled":                            settings.MetricsEnabled,
 		"logging_level":                              settings.LoggingLevel,
 		"data_trace_enabled":                         settings.DataTraceEnabled,
@@ -124,7 +134,11 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 		"cache_data_encrypted":                       settings.CacheDataEncrypted,
 		"require_authorization_for_cache_control":    settings.RequireAuthorizationForCacheControl,
 		"unauthorized_cache_control_header_strategy": settings.UnauthorizedCacheControlHeaderStrategy,
-	}})
+	}}); err != nil {
+		return fmt.Errorf("error setting settings: %s", err)
+	}
+
+	return nil
 }
 
 func resourceAwsApiGatewayMethodSettingsUpdate(d *schema.ResourceData, meta interface{}) error {
