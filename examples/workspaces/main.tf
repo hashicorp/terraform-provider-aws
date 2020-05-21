@@ -6,9 +6,10 @@ resource "aws_workspaces_directory" "example" {
   directory_id = "${aws_directory_service_directory.example.id}"
   subnet_ids   = ["${aws_subnet.private-a.id}", "${aws_subnet.private-b.id}"]
 
-  depends_on = [
-    aws_iam_role.workspaces-default
-  ]
+  # Uncomment this meta-argument if you are creating the IAM resources required by the AWS WorkSpaces service.
+  # depends_on = [
+  #   "aws_iam_role.workspaces-default"
+  # ]
 }
 
 data "aws_workspaces_bundle" "value_windows" {
@@ -38,11 +39,12 @@ resource "aws_workspaces_workspace" "example" {
     Department = "IT"
   }
 
-  depends_on = [
-    # The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
-    # to create and delete the ENI that the Workspaces service creates for the Workspace
-    aws_iam_role_policy_attachment.workspaces-default-service-access,
-  ]
+  # Uncomment this meta-argument if you are creating the IAM resources required by the AWS WorkSpaces service.
+  # depends_on = [
+  #   # The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+  #   # to create and delete the ENI that the Workspaces service creates for the Workspace
+  #   "aws_iam_role_policy_attachment.workspaces-default-service-access",
+  # ]
 }
 
 resource "aws_workspaces_ip_group" "main" {
@@ -72,11 +74,13 @@ data "aws_availability_zones" "available" {
 
 locals {
   # Workspace instances are not supported in all AZs in some regions
-  region_workspaces_az_ids = {
-    "us-east-1" = "${formatlist("use1-az%d", [2, 4, 6])}"
+  # We use joined and split string values here instead of lists for Terraform 0.11 compatibility
+  region_workspaces_az_id_strings = {
+    "us-east-1" = "${join(",",formatlist("use1-az%d", list("2", "4", "6")))}"
   }
 
-  workspaces_az_ids = "${lookup(local.region_workspaces_az_ids, data.aws_region.current.name, data.aws_availability_zones.available.zone_ids)}"
+  workspaces_az_id_strings = "${lookup(local.region_workspaces_az_id_strings, data.aws_region.current.name, join(",",data.aws_availability_zones.available.zone_ids))}"
+  workspaces_az_ids = "${split(",",local.workspaces_az_id_strings)}"
 }
 
 resource "aws_vpc" "main" {
