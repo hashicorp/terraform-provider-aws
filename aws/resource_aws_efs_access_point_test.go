@@ -45,12 +45,12 @@ func testSweepEfsAccessPoints(region string) error {
 				out, err := conn.DescribeAccessPoints(input)
 				if err != nil {
 					errors = multierror.Append(errors, fmt.Errorf("error retrieving EFS access points on File System %q: %w", id, err))
-					continue
+					break
 				}
 
 				if out == nil || len(out.AccessPoints) == 0 {
 					log.Printf("[INFO] No EFS access points to sweep on File System %q", id)
-					continue
+					break
 				}
 
 				for _, AccessPoint := range out.AccessPoints {
