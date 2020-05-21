@@ -31,8 +31,8 @@ func TestAccAWSGlueCatalogTable_recreates(t *testing.T) {
 				PreConfig: func() {
 					conn := testAccProvider.Meta().(*AWSClient).glueconn
 					input := &glue.DeleteTableInput{
-						Name:         aws.String(fmt.Sprintf("my_test_catalog_table_%d", rName)),
-						DatabaseName: aws.String(fmt.Sprintf("my_test_catalog_database_%d", rName)),
+						Name:         aws.String(rName),
+						DatabaseName: aws.String(rName),
 					}
 					_, err := conn.DeleteTable(input)
 					if err != nil {
@@ -61,7 +61,7 @@ func TestAccAWSGlueCatalogTable_basic(t *testing.T) {
 				Destroy: false,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckGlueCatalogTableExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s", rName)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("table/%s/%s", rName, rName)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 				),
