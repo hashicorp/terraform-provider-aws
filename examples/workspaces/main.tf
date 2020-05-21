@@ -76,11 +76,11 @@ locals {
   # Workspace instances are not supported in all AZs in some regions
   # We use joined and split string values here instead of lists for Terraform 0.11 compatibility
   region_workspaces_az_id_strings = {
-    "us-east-1" = "${join(",",formatlist("use1-az%d", list("2", "4", "6")))}"
+    "us-east-1" = "${join(",", formatlist("use1-az%d", list("2", "4", "6")))}"
   }
 
-  workspaces_az_id_strings = "${lookup(local.region_workspaces_az_id_strings, data.aws_region.current.name, join(",",data.aws_availability_zones.available.zone_ids))}"
-  workspaces_az_ids = "${split(",",local.workspaces_az_id_strings)}"
+  workspaces_az_id_strings = "${lookup(local.region_workspaces_az_id_strings, data.aws_region.current.name, join(",", data.aws_availability_zones.available.zone_ids))}"
+  workspaces_az_ids        = "${split(",", local.workspaces_az_id_strings)}"
 }
 
 resource "aws_vpc" "main" {
