@@ -338,7 +338,8 @@ type TestCase struct {
 
 	// DisableBinaryDriver forces this test case to run using the legacy test
 	// driver, even if the binary test driver has been enabled.
-	// This property will be removed in version 2.0.0 of the SDK.
+	//
+	// Deprecated: This property will be removed in version 2.0.0 of the SDK.
 	DisableBinaryDriver bool
 }
 

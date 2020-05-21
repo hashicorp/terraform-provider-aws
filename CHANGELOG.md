@@ -2,7 +2,33 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_efs_access_point` [GH-11965]
+* **New Data Source:** `aws_wafv2_ip_set` [GH-12788]
+* **New Data Source:** `aws_wafv2_regex_pattern_set` [GH-12789]
+* **New Resource:** `aws_efs_access_point` [GH-11965]
+* **New Resource:** `aws_efs_file_system_policy` [GH-11960]
 * **New Resource:** `aws_wafv2_ip_set` [GH-12119]
+* **New Resource:** `aws_wafv2_regex_pattern_set` [GH-12284]
+
+ENHANCEMENTS:
+
+* data-source/aws_ram_resource_share: Add `owning_account_id` attribute [GH-13402]
+* data-source/aws_lb: Add `ip_address_type` attribute [GH-13400]
+* data-source/aws_lb_target_group: Add `load_balancing_algorithm_type` attribute [GH-13400]
+* data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
+* resource/aws_ecs_service: Add `force_new_deployment` argument [GH-13376]
+* resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` [GH-13376]
+* resource/aws_glue_connection: Add `arn` argument [GH-13404]
+* resource/aws_iot_topic_rule: Add `tags` argument [GH-13293]
+
+BUG FIXES:
+
+* resource/aws_redshift_security_group: The resource is now importable [GH-13431]
+* resource/cloudwatch_log_metric_filter: `metric_transformation` `default_value` now properly set [GH-13411]
+* data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
+* resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
+* resource/aws_eks_node_group: Only pass `release_version` value during `UpdateNodegroupVersion` if changed [GH-13407]
+* resource/aws_network_acl: Fix issue with updating subnet associations returning `InvalidAssociationID.NotFound` [GH-13382]
 
 ## 2.62.0 (May 15, 2020)
 

@@ -11,11 +11,12 @@ each type of contribution.
     - [Resource Name Generation Code Implementation](#resource-name-generation-code-implementation)
     - [Resource Name Generation Testing Implementation](#resource-name-generation-testing-implementation)
     - [Resource Code Generation Documentation Implementation](#resource-code-generation-documentation-implementation)
+- [Adding Resource Policy Support](#adding-resource-policy-support)
 - [Adding Resource Tagging Support](#adding-resource-tagging-support)
     - [Adding Service to Tag Generating Code](#adding-service-to-tag-generating-code)
     - [Resource Tagging Code Implementation](#resource-tagging-code-implementation)
     - [Resource Tagging Acceptance Testing Implementation](#resource-tagging-acceptance-testing-implementation)
-- [Resource Tagging Documentation Implementation](#resource-tagging-documentation-implementation)
+    - [Resource Tagging Documentation Implementation](#resource-tagging-documentation-implementation)
 - [New Resource](#new-resource)
 - [New Service](#new-service)
 - [New Region](#new-region)
@@ -206,6 +207,17 @@ resource "aws_service_thing" "test" {
 ```markdown
 * `name` - (Optional) Name of the thing. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
 ```
+
+## Adding Resource Policy Support
+
+Some AWS components support [resource-based IAM policies](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_policies_identity-vs-resource.html) to control permissions. When implementing this support in the Terraform AWS Provider, we typically prefer creating a separate resource, `aws_{SERVICE}_{THING}_policy` (e.g. `aws_s3_bucket_policy`) for a few reasons:
+
+- Many of these policies require the Amazon Resource Name (ARN) of the resource in the policy itself. It is difficult to workaround this requirement with custom difference handling within a self-contained resource.
+- Sometimes policies between two resources need to be written where they cross-reference each other resource's ARN within each policy. Without a separate resource, this introduces a configuration cycle.
+- Splitting the resources allows operators to logically split their infrastructure on purely operational and security boundaries with separate configurations/modules.
+- Splitting the resources prevents any separate policy API calls from needing to be whitelisted in the main resource in environments with restrictive IAM permissions, which can be undesirable.
+
+Follow the [New Resource section][#new-resource] for more information about implementing the separate resource.
 
 ## Adding Resource Tagging Support
 
@@ -419,7 +431,7 @@ More details about this code generation, including fixes for potential error mes
 
 - Verify all acceptance testing passes for the resource (e.g. `make testacc TESTARGS='-run=TestAccAWSEksCluster_'`)
 
-## Resource Tagging Documentation Implementation
+### Resource Tagging Documentation Implementation
 
 - In the resource documentation (e.g. `website/docs/r/eks_cluster.html.markdown`), add the following to the arguments reference:
 
