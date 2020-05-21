@@ -5263,7 +5263,7 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 
 				mHttpRoute["action"] = []interface{}{
 					map[string]interface{}{
-						"weighted_target": schema.NewSet(appmeshWeightedTargetHash, vWeightedTargets),
+						"weighted_target": vWeightedTargets,
 					},
 				}
 			}
@@ -5303,7 +5303,7 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 
 			mHttpRoute["match"] = []interface{}{
 				map[string]interface{}{
-					"header": schema.NewSet(appmeshHttpRouteHeaderHash, vHttpRouteHeaders),
+					"header": vHttpRouteHeaders,
 					"method": aws.StringValue(httpRouteMatch.Method),
 					"prefix": aws.StringValue(httpRouteMatch.Prefix),
 					"scheme": aws.StringValue(httpRouteMatch.Scheme),
@@ -5351,7 +5351,7 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 
 				mTcpRoute["action"] = []interface{}{
 					map[string]interface{}{
-						"weighted_target": schema.NewSet(appmeshWeightedTargetHash, vWeightedTargets),
+						"weighted_target": vWeightedTargets,
 					},
 				}
 			}

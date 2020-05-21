@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"regexp"
@@ -12,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/appmesh"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -98,7 +96,6 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 															},
 														},
 													},
-													Set: appmeshWeightedTargetHash,
 												},
 											},
 										},
@@ -185,7 +182,6 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 															},
 														},
 													},
-													Set: appmeshHttpRouteHeaderHash,
 												},
 
 												"method": {
@@ -321,7 +317,6 @@ func resourceAwsAppmeshRoute() *schema.Resource {
 															},
 														},
 													},
-													Set: appmeshWeightedTargetHash,
 												},
 											},
 										},
@@ -519,52 +514,4 @@ func resourceAwsAppmeshRouteImport(d *schema.ResourceData, meta interface{}) ([]
 	d.Set("virtual_router_name", resp.Route.VirtualRouterName)
 
 	return []*schema.ResourceData{d}, nil
-}
-
-func appmeshHttpRouteHeaderHash(vHttpRouteHeader interface{}) int {
-	var buf bytes.Buffer
-	mHttpRouteHeader := vHttpRouteHeader.(map[string]interface{})
-	if v, ok := mHttpRouteHeader["invert"].(bool); ok {
-		buf.WriteString(fmt.Sprintf("%t-", v))
-	}
-	if vMatch, ok := mHttpRouteHeader["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
-		mMatch := vMatch[0].(map[string]interface{})
-		if v, ok := mMatch["exact"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mMatch["prefix"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
-			mRange := vRange[0].(map[string]interface{})
-			if v, ok := mRange["end"].(int); ok {
-				buf.WriteString(fmt.Sprintf("%d-", v))
-			}
-			if v, ok := mRange["start"].(int); ok {
-				buf.WriteString(fmt.Sprintf("%d-", v))
-			}
-		}
-		if v, ok := mMatch["regex"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-		if v, ok := mMatch["suffix"].(string); ok {
-			buf.WriteString(fmt.Sprintf("%s-", v))
-		}
-	}
-	if v, ok := mHttpRouteHeader["name"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	return hashcode.String(buf.String())
-}
-
-func appmeshWeightedTargetHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["virtual_node"].(string); ok {
-		buf.WriteString(fmt.Sprintf("%s-", v))
-	}
-	if v, ok := m["weight"].(int); ok {
-		buf.WriteString(fmt.Sprintf("%d-", v))
-	}
-	return hashcode.String(buf.String())
 }
