@@ -11,6 +11,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_ram_resource_share: Add `owning_account_id` attribute [GH-13402]
 * data-source/aws_lb: Add `ip_address_type` attribute [GH-13400]
 * data-source/aws_lb_target_group: Add `load_balancing_algorithm_type` attribute [GH-13400]
 * data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
