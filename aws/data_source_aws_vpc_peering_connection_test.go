@@ -41,7 +41,7 @@ func TestAccDataSourceAwsVpcPeeringConnection_basic(t *testing.T) {
 	})
 }
 
-func TestAccDataSourceAwsVpcPeeringConnection_cidBlockSets(t *testing.T) {
+func TestAccDataSourceAwsVpcPeeringConnection_cidrBlockSets(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
