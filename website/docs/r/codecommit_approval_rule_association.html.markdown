@@ -18,8 +18,8 @@ in all regions - available regions are listed
 
 ```hcl
 resource "aws_codecommit_approval_rule_association" "example" {
-    template_name = "my-approval-rule"
-    repository_names = ["repo1", "repo2"]
+  template_name    = "my-approval-rule"
+  repository_names = ["repo1", "repo2"]
 }
 ```
 
