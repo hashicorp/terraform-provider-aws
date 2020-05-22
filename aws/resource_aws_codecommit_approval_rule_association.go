@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	//"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCodeCommitApprovalRuleAssociation() *schema.Resource {
