@@ -461,6 +461,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_codedeploy_deployment_group":                         resourceAwsCodeDeployDeploymentGroup(),
 			"aws_codecommit_repository":                               resourceAwsCodeCommitRepository(),
 			"aws_codecommit_trigger":                                  resourceAwsCodeCommitTrigger(),
+			"aws_codecommit_approval_rule_association":                resourceAwsCodeCommitApprovalRuleAssociation(),
 			"aws_codebuild_project":                                   resourceAwsCodeBuildProject(),
 			"aws_codebuild_source_credential":                         resourceAwsCodeBuildSourceCredential(),
 			"aws_codebuild_webhook":                                   resourceAwsCodeBuildWebhook(),
