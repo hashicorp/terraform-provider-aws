@@ -1,39 +1,39 @@
-## 2.63.0 (Unreleased)
+## 2.63.0 (May 22, 2020)
 
 FEATURES:
 
-* **New Data Source:** `aws_efs_access_point` [GH-11965]
-* **New Data Source:** `aws_wafv2_ip_set` [GH-12788]
-* **New Data Source:** `aws_wafv2_regex_pattern_set` [GH-12789]
-* **New Resource:** `aws_efs_access_point` [GH-11965]
-* **New Resource:** `aws_efs_file_system_policy` [GH-11960]
-* **New Resource:** `aws_wafv2_ip_set` [GH-12119]
-* **New Resource:** `aws_wafv2_regex_pattern_set` [GH-12284]
+* **New Data Source:** `aws_efs_access_point` ([#11965](https://github.com/terraform-providers/terraform-provider-aws/issues/11965))
+* **New Data Source:** `aws_wafv2_ip_set` ([#12788](https://github.com/terraform-providers/terraform-provider-aws/issues/12788))
+* **New Data Source:** `aws_wafv2_regex_pattern_set` ([#12789](https://github.com/terraform-providers/terraform-provider-aws/issues/12789))
+* **New Resource:** `aws_efs_access_point` ([#11965](https://github.com/terraform-providers/terraform-provider-aws/issues/11965))
+* **New Resource:** `aws_efs_file_system_policy` ([#11960](https://github.com/terraform-providers/terraform-provider-aws/issues/11960))
+* **New Resource:** `aws_wafv2_ip_set` ([#12119](https://github.com/terraform-providers/terraform-provider-aws/issues/12119))
+* **New Resource:** `aws_wafv2_regex_pattern_set` ([#12284](https://github.com/terraform-providers/terraform-provider-aws/issues/12284))
 
 ENHANCEMENTS:
 
-* resource/aws_ssm_document: Add `document_version` attribute [GH-13438]
-* data-source/aws_ram_resource_share: Add `owning_account_id` attribute [GH-13402]
-* data-source/aws_lb: Add `ip_address_type` attribute [GH-13400]
-* data-source/aws_lb_target_group: Add `load_balancing_algorithm_type` attribute [GH-13400]
-* data-source/aws_rds_cluster: `backtrack_window` attribute now available [GH-13362]
-* resource/aws_codebuild_webhook: Support `COMMIT_MESSAGE` value in filter types [GH-13436]
-* resource/aws_cognito_identity_pool_roles_attachment: Add import support [GH-13440]
-* resource/aws_ecs_service: Add `force_new_deployment` argument [GH-13376]
-* resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` [GH-13376]
-* resource/aws_eks_node_group: Add `force_update_version` argument [GH-13414]
-* resource/aws_glue_connection: Add `arn` argument [GH-13404]
-* resource/aws_iot_topic_rule: Add `tags` argument [GH-13293]
+* resource/aws_ssm_document: Add `document_version` attribute ([#13438](https://github.com/terraform-providers/terraform-provider-aws/issues/13438))
+* data-source/aws_ram_resource_share: Add `owning_account_id` attribute ([#13402](https://github.com/terraform-providers/terraform-provider-aws/issues/13402))
+* data-source/aws_lb: Add `ip_address_type` attribute ([#13400](https://github.com/terraform-providers/terraform-provider-aws/issues/13400))
+* data-source/aws_lb_target_group: Add `load_balancing_algorithm_type` attribute ([#13400](https://github.com/terraform-providers/terraform-provider-aws/issues/13400))
+* data-source/aws_rds_cluster: `backtrack_window` attribute now available ([#13362](https://github.com/terraform-providers/terraform-provider-aws/issues/13362))
+* resource/aws_codebuild_webhook: Support `COMMIT_MESSAGE` value in filter types ([#13436](https://github.com/terraform-providers/terraform-provider-aws/issues/13436))
+* resource/aws_cognito_identity_pool_roles_attachment: Add import support ([#13440](https://github.com/terraform-providers/terraform-provider-aws/issues/13440))
+* resource/aws_ecs_service: Add `force_new_deployment` argument ([#13376](https://github.com/terraform-providers/terraform-provider-aws/issues/13376))
+* resource/aws_ecs_service: Support in-place updates for `ordered_placement_strategy` and `placement_constraints` ([#13376](https://github.com/terraform-providers/terraform-provider-aws/issues/13376))
+* resource/aws_eks_node_group: Add `force_update_version` argument ([#13414](https://github.com/terraform-providers/terraform-provider-aws/issues/13414))
+* resource/aws_glue_connection: Add `arn` argument ([#13404](https://github.com/terraform-providers/terraform-provider-aws/issues/13404))
+* resource/aws_iot_topic_rule: Add `tags` argument ([#13293](https://github.com/terraform-providers/terraform-provider-aws/issues/13293))
 
 BUG FIXES:
 
-* resource/aws_ssm_activation: `expired` now properly set [GH-13438]
-* resource/aws_redshift_security_group: The resource is now importable [GH-13431]
-* resource/cloudwatch_log_metric_filter: `metric_transformation` `default_value` now properly set [GH-13411]
-* data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set [GH-13362]
-* resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set [GH-13360]
-* resource/aws_eks_node_group: Only pass `release_version` value during `UpdateNodegroupVersion` if changed [GH-13407]
-* resource/aws_network_acl: Fix issue with updating subnet associations returning `InvalidAssociationID.NotFound` [GH-13382]
+* resource/aws_ssm_activation: `expired` now properly set ([#13438](https://github.com/terraform-providers/terraform-provider-aws/issues/13438))
+* resource/aws_redshift_security_group: The resource is now importable ([#13431](https://github.com/terraform-providers/terraform-provider-aws/issues/13431))
+* resource/cloudwatch_log_metric_filter: `metric_transformation` `default_value` now properly set ([#13411](https://github.com/terraform-providers/terraform-provider-aws/issues/13411))
+* data-source/aws_db_instance: `auto_minor_version_upgrade` attribute now properly set ([#13362](https://github.com/terraform-providers/terraform-provider-aws/issues/13362))
+* resource/aws_autoscaling_group: `tags` `propagate_at_launch` attribute now properly set ([#13360](https://github.com/terraform-providers/terraform-provider-aws/issues/13360))
+* resource/aws_eks_node_group: Only pass `release_version` value during `UpdateNodegroupVersion` if changed ([#13407](https://github.com/terraform-providers/terraform-provider-aws/issues/13407))
+* resource/aws_network_acl: Fix issue with updating subnet associations returning `InvalidAssociationID.NotFound` ([#13382](https://github.com/terraform-providers/terraform-provider-aws/issues/13382))
 
 ## 2.62.0 (May 15, 2020)
 
