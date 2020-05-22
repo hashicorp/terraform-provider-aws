@@ -179,7 +179,7 @@ func TestAccAWSFsxWindowsFileSystem_disappears(t *testing.T) {
 				Config: testAccAwsFsxWindowsFileSystemConfigSubnetIds1(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFsxWindowsFileSystemExists(resourceName, &filesystem),
-					testAccCheckFsxWindowsFileSystemDisappears(&filesystem),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsFsxWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -657,24 +657,6 @@ func testAccCheckFsxWindowsFileSystemDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
-}
-
-func testAccCheckFsxWindowsFileSystemDisappears(filesystem *fsx.FileSystem) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).fsxconn
-
-		input := &fsx.DeleteFileSystemInput{
-			FileSystemId: filesystem.FileSystemId,
-		}
-
-		_, err := conn.DeleteFileSystem(input)
-
-		if err != nil {
-			return err
-		}
-
-		return waitForFsxFileSystemDeletion(conn, aws.StringValue(filesystem.FileSystemId), 30*time.Minute)
-	}
 }
 
 func testAccCheckFsxWindowsFileSystemNotRecreated(i, j *fsx.FileSystem) resource.TestCheckFunc {
