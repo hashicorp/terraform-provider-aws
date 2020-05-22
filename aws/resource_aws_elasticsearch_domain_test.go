@@ -1109,7 +1109,7 @@ resource "aws_elasticsearch_domain" "test" {
 
   cluster_config {
     zone_awareness_enabled   = true
-    instance_type            = "r5.large.elasticsearch"
+    instance_type            = "c5.large.elasticsearch"
     instance_count           = "3"
     dedicated_master_enabled = true
     dedicated_master_count   = "3"
