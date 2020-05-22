@@ -115,15 +115,16 @@ func testAccCheckCodeCommitApprovalRuleAssociationDestroy(s *terraform.State) er
 			ApprovalRuleTemplateName: aws.String(rs.Primary.ID),
 		})
 
+		if err != nil {
+			return err
+		}
+
 		if len(out.RepositoryNames) == 0 {
 			return nil
 		} else {
 			return fmt.Errorf("Approval rule template associations still exist: %s", rs.Primary.ID)
 		}
 
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
