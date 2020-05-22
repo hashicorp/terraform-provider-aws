@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -138,7 +137,7 @@ func TestAccAWSAPIGatewayBasePathMapping_disappears(t *testing.T) {
 			{
 				Config: testAccAWSAPIGatewayBasePathConfigBasePath(name, key, certificate, "tf-acc-test"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAPIGatewayBasePathExists(resourceName, name, &conf),
+					testAccCheckAWSAPIGatewayBasePathExists(resourceName, &conf),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayBasePathMapping(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -201,7 +200,7 @@ func testAccCheckAWSAPIGatewayBasePathDestroy(name string) resource.TestCheckFun
 			_, err = conn.GetBasePathMapping(req)
 
 			if err != nil {
-				if err, ok := err.(awserr.Error); ok && err.Code() == "NotFoundException" {
+				if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
 					return nil
 				}
 				return err
