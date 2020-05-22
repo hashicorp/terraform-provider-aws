@@ -92,7 +92,6 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	var target events.Target
-	resourceName := "aws_cloudwatch_event_target.test"
 	topicResourceName := "aws_sns_topic.test"
 	ruleName := acctest.RandomWithPrefix("tf-acc-cw-event-rule-basic")
 	snsTopicName1 := acctest.RandomWithPrefix("tf-acc-topic")
@@ -137,7 +136,6 @@ func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 
 	var target events.Target
-	resourceName := "aws_cloudwatch_event_target.test"
 	topicResourceName := "aws_sns_topic.test"
 	ruleName := acctest.RandomWithPrefix("tf-acc-cw-event-rule-missing-target-id")
 	snsTopicName := acctest.RandomWithPrefix("tf-acc")
@@ -168,7 +166,6 @@ func TestAccAWSCloudWatchEventTarget_missingTargetId(t *testing.T) {
 func TestAccAWSCloudWatchEventTarget_full(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_target.test"
 	var target events.Target
-	resourceName := "aws_cloudwatch_event_target.test"
 	streamResourceName := "aws_kinesis_stream.test"
 	ruleName := acctest.RandomWithPrefix("tf-acc-cw-event-rule-full")
 	ssmDocumentName := acctest.RandomWithPrefix("tf_ssm_Document")
