@@ -37,9 +37,8 @@ func resourceAwsCodeCommitApprovalRuleAssociationCreate(d *schema.ResourceData, 
 	templateName := d.Get("template_name").(string)
 	repositoryNames := d.Get("repository_names")
 
-	input := &codecommit.AssociateApprovalRuleTemplateWithRepositoryInput{}
 	for _, repositoryName := range repositoryNames.(*schema.Set).List() {
-		input = &codecommit.AssociateApprovalRuleTemplateWithRepositoryInput{
+		input := &codecommit.AssociateApprovalRuleTemplateWithRepositoryInput{
 			ApprovalRuleTemplateName: aws.String(templateName),
 			RepositoryName:           aws.String(repositoryName.(string)),
 		}
@@ -52,7 +51,7 @@ func resourceAwsCodeCommitApprovalRuleAssociationCreate(d *schema.ResourceData, 
 		}
 	}
 
-	d.SetId(fmt.Sprintf("%s", templateName))
+	d.SetId(templateName)
 
 	return resourceAwsCodeCommitApprovalRuleAssociationRead(d, meta)
 }
@@ -133,10 +132,8 @@ func resourceAwsCodeCommitApprovalRuleAssociationDelete(d *schema.ResourceData, 
 	templateName := d.Get("template_name")
 	repositoryNames := d.Get("repository_names")
 
-	input := &codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{}
-
 	for _, repositoryName := range repositoryNames.(*schema.Set).List() {
-		input = &codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{
+		input := &codecommit.DisassociateApprovalRuleTemplateFromRepositoryInput{
 			ApprovalRuleTemplateName: aws.String(templateName.(string)),
 			RepositoryName:           aws.String(repositoryName.(string)),
 		}
