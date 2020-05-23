@@ -362,7 +362,6 @@ func flattenFirehoseS3Configuration(description *firehose.S3DestinationDescripti
 		"prefix":                     aws.StringValue(description.Prefix),
 		"role_arn":                   aws.StringValue(description.RoleARN),
 	}
-
 	if description.BufferingHints != nil {
 		m["buffer_interval"] = int(aws.Int64Value(description.BufferingHints.IntervalInSeconds))
 		m["buffer_size"] = int(aws.Int64Value(description.BufferingHints.SizeInMBs))
@@ -1574,7 +1573,6 @@ func createS3Config(d *schema.ResourceData) *firehose.S3DestinationConfiguration
 		CompressionFormat:       aws.String(s3["compression_format"].(string)),
 		EncryptionConfiguration: extractEncryptionConfiguration(s3),
 	}
-
 	if _, ok := s3["cloudwatch_logging_options"]; ok {
 		configuration.CloudWatchLoggingOptions = extractCloudWatchLoggingConfiguration(s3)
 	}
@@ -2064,8 +2062,17 @@ func createRedshiftConfig(d *schema.ResourceData, s3Config *firehose.S3Destinati
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupConfiguration = expandS3BackupConfig(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
+		// An Amazon Redshift destination requires an S3 bucket as intermediate location.
+		// https://docs.aws.amazon.com/cli/latest/reference/firehose/create-delivery-stream.html
+		// So, this destination doesn't have ErrorOutputPrefix parameter.
+		if configuration.S3BackupConfiguration != nil {
+			configuration.S3BackupConfiguration.ErrorOutputPrefix = nil
+		}
 	}
-
+	// An Amazon Redshift destination requires an S3 bucket as intermediate location.
+	// https://docs.aws.amazon.com/cli/latest/reference/firehose/create-delivery-stream.html
+	// So, this destination doesn't have ErrorOutputPrefix parameter.
+	configuration.S3Configuration.ErrorOutputPrefix = nil
 	return configuration, nil
 }
 
@@ -2097,8 +2104,17 @@ func updateRedshiftConfig(d *schema.ResourceData, s3Update *firehose.S3Destinati
 	if s3BackupMode, ok := redshift["s3_backup_mode"]; ok {
 		configuration.S3BackupMode = aws.String(s3BackupMode.(string))
 		configuration.S3BackupUpdate = updateS3BackupConfig(d.Get("redshift_configuration").([]interface{})[0].(map[string]interface{}))
+		// An Amazon Redshift destination requires an S3 bucket as intermediate location.
+		// https://docs.aws.amazon.com/cli/latest/reference/firehose/create-delivery-stream.html
+		// So, this destination doesn't have ErrorOutputPrefix parameter.
+		if configuration.S3BackupUpdate != nil {
+			configuration.S3BackupUpdate.ErrorOutputPrefix = nil
+		}
 	}
-
+	// An Amazon Redshift destination requires an S3 bucket as intermediate location.
+	// https://docs.aws.amazon.com/cli/latest/reference/firehose/create-delivery-stream.html
+	// So, this destination doesn't have ErrorOutputPrefix parameter.
+	configuration.S3Update.ErrorOutputPrefix = nil
 	return configuration, nil
 }
 
@@ -2789,7 +2805,6 @@ func resourceAwsKinesisFirehoseDeliveryStreamRead(d *schema.ResourceData, meta i
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
-
 	return nil
 }
 
