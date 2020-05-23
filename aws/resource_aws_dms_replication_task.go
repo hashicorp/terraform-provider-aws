@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -61,7 +62,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressDmsReplicationTaskSettingsDiffs,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 			"source_endpoint_arn": {
 				Type:         schema.TypeString,
@@ -283,15 +284,19 @@ func resourceAwsDmsReplicationTaskDelete(d *schema.ResourceData, meta interface{
 
 func resourceAwsDmsReplicationTaskSetState(d *schema.ResourceData, task *dms.ReplicationTask) error {
 	d.SetId(aws.StringValue(task.ReplicationTaskIdentifier))
-
 	d.Set("migration_type", task.MigrationType)
 	d.Set("replication_instance_arn", task.ReplicationInstanceArn)
 	d.Set("replication_task_arn", task.ReplicationTaskArn)
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
-	d.Set("replication_task_settings", task.ReplicationTaskSettings)
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
 	d.Set("table_mappings", task.TableMappings)
 	d.Set("target_endpoint_arn", task.TargetEndpointArn)
+
+	cleanedReplicationTaskSettings, err := cleanReadOnlyReplicationTaskSettings(*task.ReplicationTaskSettings)
+	if err != nil {
+		return err
+	}
+	d.Set("replication_task_settings", cleanedReplicationTaskSettings)
 
 	return nil
 }
@@ -327,4 +332,30 @@ func resourceAwsDmsReplicationTaskStateRefreshFunc(
 
 		return v, *v.ReplicationTasks[0].Status, nil
 	}
+}
+
+func cleanReadOnlyReplicationTaskSettings(settings string) (*string, error) {
+	var settingsData map[string]interface{}
+	if err := json.Unmarshal([]byte(settings), &settingsData); err != nil {
+		return nil, err
+	}
+
+	controlTablesSettings, ok := settingsData["ControlTablesSettings"].(map[string]interface{})
+	if ok {
+		delete(controlTablesSettings, "historyTimeslotInMinutes")
+	}
+
+	logging, ok := settingsData["Logging"].(map[string]interface{})
+	if ok {
+		delete(logging, "CloudWatchLogGroup")
+		delete(logging, "CloudWatchLogStream")
+	}
+
+	cleanedSettings, err := json.Marshal(settingsData)
+	if err != nil {
+		return nil, err
+	}
+
+	cleanedSettingsString := string(cleanedSettings)
+	return &cleanedSettingsString, nil
 }
