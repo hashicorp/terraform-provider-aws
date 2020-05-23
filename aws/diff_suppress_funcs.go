@@ -137,3 +137,28 @@ func suppressEquivalentTime(k, old, new string, d *schema.ResourceData) bool {
 
 	return oldTime.Equal(newTime)
 }
+
+func suppressDmsReplicationTaskSettingsDiffs(k, old, new string, d *schema.ResourceData) bool {
+	var oldData map[string]interface{}
+	if err := json.Unmarshal([]byte(old), &oldData); err != nil {
+		return false
+	}
+
+	controlTablesSettings, ok := oldData["ControlTablesSettings"].(map[string]interface{})
+	if ok {
+		delete(controlTablesSettings, "historyTimeslotInMinutes")
+	}
+
+	logging, ok := oldData["Logging"].(map[string]interface{})
+	if ok {
+		delete(logging, "CloudWatchLogGroup")
+		delete(logging, "CloudWatchLogStream")
+	}
+
+	cleanedOld, err := json.Marshal(oldData)
+	if err != nil {
+		return false
+	}
+
+	return suppressEquivalentJsonDiffs(k, string(cleanedOld), new, d)
+}

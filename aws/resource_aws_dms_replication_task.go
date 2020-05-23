@@ -61,7 +61,7 @@ func resourceAwsDmsReplicationTask() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentJsonDiffs,
+				DiffSuppressFunc: suppressDmsReplicationTaskSettingsDiffs,
 			},
 			"source_endpoint_arn": {
 				Type:         schema.TypeString,
