@@ -123,7 +123,7 @@ func TestAccAWSDataSyncLocationFsxWindows_disappears(t *testing.T) {
 				Config: testAccAWSDataSyncLocationFsxWindowsConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName, &locationFsxWindows1),
-					testAccCheckAWSDataSyncLocationFsxWindowsDisappears(&locationFsxWindows1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDataSyncLocationFsxWindowsFileSystem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -264,20 +264,6 @@ func testAccCheckAWSDataSyncLocationFsxWindowsExists(resourceName string, locati
 		*locationFsxWindows = *output
 
 		return nil
-	}
-}
-
-func testAccCheckAWSDataSyncLocationFsxWindowsDisappears(location *datasync.DescribeLocationFsxWindowsOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).datasyncconn
-
-		input := &datasync.DeleteLocationInput{
-			LocationArn: location.LocationArn,
-		}
-
-		_, err := conn.DeleteLocation(input)
-
-		return err
 	}
 }
 

@@ -117,6 +117,8 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemCreate(d *schema.ResourceDat
 
 func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	locationArn, fsxArn, err := decodeAwsDataSyncLocationFsxWindowsFileSystemID(d.Id())
 	if err != nil {
 		return err
@@ -163,7 +165,7 @@ func resourceAwsDataSyncLocationFsxWindowsFileSystemRead(d *schema.ResourceData,
 		return fmt.Errorf("error listing tags for DataSync Location Fsx Windows (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
