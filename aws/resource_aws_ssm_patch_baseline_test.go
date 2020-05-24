@@ -118,7 +118,7 @@ func TestAccAWSSSMPatchBaseline_disappears(t *testing.T) {
 				Config: testAccAWSSSMPatchBaselineBasicConfig(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMPatchBaselineExists(resourceName, &identity),
-					testAccCheckAWSSSMPatchBaselineDisappears(&identity),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmPatchBaseline(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -261,24 +261,6 @@ func testAccCheckAWSSSMPatchBaselineExists(n string, patch *ssm.PatchBaselineIde
 		}
 
 		return fmt.Errorf("No AWS SSM Patch Baseline found")
-	}
-}
-
-func testAccCheckAWSSSMPatchBaselineDisappears(patch *ssm.PatchBaselineIdentity) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ssmconn
-
-		id := aws.StringValue(patch.BaselineId)
-		params := &ssm.DeletePatchBaselineInput{
-			BaselineId: aws.String(id),
-		}
-
-		_, err := conn.DeletePatchBaseline(params)
-		if err != nil {
-			return fmt.Errorf("error deleting Patch Baseline %s: %s", id, err)
-		}
-
-		return nil
 	}
 }
 
