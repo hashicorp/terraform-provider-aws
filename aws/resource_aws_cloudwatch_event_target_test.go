@@ -97,7 +97,7 @@ func TestAccAWSCloudWatchEventTarget_basic(t *testing.T) {
 	snsTopicName1 := acctest.RandomWithPrefix("tf-acc-topic")
 	snsTopicName2 := acctest.RandomWithPrefix("tf-acc-topic-second")
 	targetID1 := acctest.RandomWithPrefix("tf-acc-cw-target")
-	targetID2 := acctest.RandomWithPrefix("tf-acc-cw-target")
+	targetID2 := acctest.RandomWithPrefix("tf-acc-cw-target-second")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -375,6 +375,31 @@ func TestAccAWSCloudWatchEventTarget_input_transformer(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSCloudWatchEventTargetImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudWatchEventTarget_disappears(t *testing.T) {
+	resourceName := "aws_cloudwatch_event_target.test"
+
+	var target events.Target
+	ruleName := acctest.RandomWithPrefix("tf-acc-cw-event-rule-basic")
+	snsTopicName1 := acctest.RandomWithPrefix("tf-acc-topic")
+	targetID1 := acctest.RandomWithPrefix("tf-acc-cw-target")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudWatchEventTargetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudWatchEventTargetConfig(ruleName, snsTopicName1, targetID1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudWatchEventTargetExists(resourceName, &target),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCloudWatchEventTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
