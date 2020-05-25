@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudSearch Domain"
 layout: "aws"
 page_title: "AWS: aws_cloudsearch_domain"
-sidebar_current: "docs-aws-resource-cloudsearch"
 description: |-
   Provides an CloudSearch domain resource. 
 ---
