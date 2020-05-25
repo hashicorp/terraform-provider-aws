@@ -21,7 +21,6 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 			"block_device_mappings": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"device_name": {
@@ -32,48 +31,40 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 						"ebs": {
 							Type:     schema.TypeList,
 							Required: true,
-							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"delete_on_termination": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										ForceNew: true,
 										Default:  true,
 									},
 									"encrypted": {
 										Type:     schema.TypeBool,
 										Optional: true,
-										ForceNew: true,
 										Default:  false,
 									},
 									"iops": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(100, 10000),
 									},
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ForceNew:     true,
 										ValidateFunc: validateArn,
 									},
 									"snapshot_id": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 									},
 									"volume_size": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 16000),
 									},
 									"volume_type": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.StringInSlice([]string{
 											imagebuilder.EbsVolumeTypeStandard,
 											imagebuilder.EbsVolumeTypeIo1,
@@ -88,12 +79,10 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 						"no_device": {
 							Type:     schema.TypeString,
 							Optional: true,
-							ForceNew: true,
 						},
 						"virtual_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(1, 1024),
 						},
 					},
@@ -103,7 +92,6 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 				Type:     schema.TypeList,
 				Required: true,
 				MinItems: 1,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"datecreated": {
@@ -113,13 +101,11 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
 			"owner": {
@@ -129,7 +115,6 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 			"parent_image": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 126),
 			},
 			"platform": {
@@ -139,7 +124,6 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 			"semantic_version": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"tags": tagsSchema(),
