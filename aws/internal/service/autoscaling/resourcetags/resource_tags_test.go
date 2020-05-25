@@ -304,6 +304,272 @@ func TestResourceTagsIgnoreAws(t *testing.T) {
 	}
 }
 
+func TestResourceTagsRemoved(t *testing.T) {
+	testCases := []struct {
+		name    string
+		oldTags ResourceTags
+		newTags ResourceTags
+		want    []string
+	}{
+		{
+			name:    "empty",
+			oldTags: testResourceTagsNew(t, []interface{}{}),
+			newTags: testResourceTagsNew(t, []interface{}{}),
+			want:    []string{},
+		},
+		{
+			name: "all_new",
+			oldTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			newTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key4",
+					"value":               "value4",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key5",
+					"value":               "value5",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key6",
+					"value":               "value6",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{"key1", "key2", "key3"},
+		},
+		{
+			name: "mixed",
+			oldTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			newTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{"key2", "key3"},
+		},
+		{
+			name: "no_changes",
+			oldTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			newTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.oldTags.Removed(testCase.newTags)
+
+			testResourceTagsVerifyKeys(t, got.Keys(), testCase.want)
+		})
+	}
+}
+
+func TestResourceTagsUpdated(t *testing.T) {
+	testCases := []struct {
+		name    string
+		oldTags ResourceTags
+		newTags ResourceTags
+		want    []string
+	}{
+		{
+			name:    "empty",
+			oldTags: testResourceTagsNew(t, []interface{}{}),
+			newTags: testResourceTagsNew(t, []interface{}{}),
+			want:    []string{},
+		},
+		{
+			name: "all_new",
+			oldTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			newTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key4",
+					"value":               "value4",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key5",
+					"value":               "value5",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key6",
+					"value":               "value6",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{"key4", "key5", "key6"},
+		},
+		{
+			name: "mixed",
+			oldTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			newTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1updated",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key4",
+					"value":               "value4",
+					"propagate_at_launch": false,
+				},
+			}),
+			want: []string{"key1", "key3", "key4"},
+		},
+		{
+			name: "no_changes",
+			oldTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			newTags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.oldTags.Updated(testCase.newTags)
+
+			testResourceTagsVerifyKeys(t, got.Keys(), testCase.want)
+		})
+	}
+}
+
 func testResourceTagsNew(t *testing.T, i interface{}) ResourceTags {
 	tags, err := New(i)
 	if err != nil {

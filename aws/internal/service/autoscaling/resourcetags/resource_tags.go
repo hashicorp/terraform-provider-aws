@@ -52,6 +52,44 @@ func AutoscalingResourceTags(tags []*autoscaling.TagDescription) (ResourceTags, 
 	return New(m)
 }
 
+// AutoscalingUpdateTags updates autoscaling service tags.
+func AutoscalingUpdateTags(conn *autoscaling.AutoScaling, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
+	oldTags, err := New(oldTagsMap)
+	if err != nil {
+		return err
+	}
+	newTags, err := New(newTagsMap)
+	if err != nil {
+		return err
+	}
+
+	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+		input := &autoscaling.DeleteTagsInput{
+			Tags: removedTags.IgnoreAws().AutoscalingTags(identifier),
+		}
+
+		_, err := conn.DeleteTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error untagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+		input := &autoscaling.CreateOrUpdateTagsInput{
+			Tags: updatedTags.IgnoreAws().AutoscalingTags(identifier),
+		}
+
+		_, err := conn.CreateOrUpdateTags(input)
+
+		if err != nil {
+			return fmt.Errorf("error tagging resource (%s): %w", identifier, err)
+		}
+	}
+
+	return nil
+}
+
 // IgnoreAws returns non-AWS tag keys.
 func (tags ResourceTags) IgnoreAws() ResourceTags {
 	result := make(ResourceTags, len(tags))
@@ -71,6 +109,32 @@ func (tags ResourceTags) Keys() []string {
 
 	for k := range tags {
 		result = append(result, k)
+	}
+
+	return result
+}
+
+// Removed returns tags removed.
+func (tags ResourceTags) Removed(newTags ResourceTags) ResourceTags {
+	result := make(ResourceTags)
+
+	for k, v := range tags {
+		if _, ok := newTags[k]; !ok {
+			result[k] = v
+		}
+	}
+
+	return result
+}
+
+// Updated returns tags added and updated.
+func (tags ResourceTags) Updated(newTags ResourceTags) ResourceTags {
+	result := make(ResourceTags)
+
+	for k, newV := range newTags {
+		if oldV, ok := tags[k]; !ok || oldV.PropagateAtLaunch != newV.PropagateAtLaunch || oldV.Value != newV.Value {
+			result[k] = newV
+		}
 	}
 
 	return result
