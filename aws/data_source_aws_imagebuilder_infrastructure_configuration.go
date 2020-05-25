@@ -96,6 +96,7 @@ func dataSourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 
 func dataSourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	componentArn := d.Get("arn").(string)
 
@@ -109,27 +110,22 @@ func dataSourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.Resource
 		return fmt.Errorf("Error retrieving Component: %s", err)
 	}
 
-	return infraconfigDescriptionAttributes(d, resp.InfrastructureConfiguration)
-}
-
-func infraconfigDescriptionAttributes(d *schema.ResourceData, component *imagebuilder.InfrastructureConfiguration) error {
-	d.SetId(*component.Arn)
-	d.Set("datecreated", component.DateCreated)
-	d.Set("dateupdated", component.DateUpdated)
-	d.Set("date_created", component.DateCreated)
-	d.Set("description", component.Description)
-	d.Set("instance_profile_name", component.InstanceProfileName)
-	d.Set("instance_types", component.InstanceTypes)
-	d.Set("key_pair", component.KeyPair)
-	d.Set("logging", component.Logging)
-	d.Set("name", component.Name)
-	d.Set("security_group_ids", component.SecurityGroupIds)
-	d.Set("sns_topic_arn", component.SnsTopicArn)
-	d.Set("subnet_id", component.SubnetId)
-	d.Set("terminate_instance_on_failure", component.TerminateInstanceOnFailure)
-	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(component.Tags).IgnoreAws().Map()); err != nil {
+	d.SetId(*resp.InfrastructureConfiguration.Arn)
+	d.Set("datecreated", resp.InfrastructureConfiguration.DateCreated)
+	d.Set("dateupdated", resp.InfrastructureConfiguration.DateUpdated)
+	d.Set("date_created", resp.InfrastructureConfiguration.DateCreated)
+	d.Set("description", resp.InfrastructureConfiguration.Description)
+	d.Set("instance_profile_name", resp.InfrastructureConfiguration.InstanceProfileName)
+	d.Set("instance_types", resp.InfrastructureConfiguration.InstanceTypes)
+	d.Set("key_pair", resp.InfrastructureConfiguration.KeyPair)
+	d.Set("logging", resp.InfrastructureConfiguration.Logging)
+	d.Set("name", resp.InfrastructureConfiguration.Name)
+	d.Set("security_group_ids", resp.InfrastructureConfiguration.SecurityGroupIds)
+	d.Set("sns_topic_arn", resp.InfrastructureConfiguration.SnsTopicArn)
+	d.Set("subnet_id", resp.InfrastructureConfiguration.SubnetId)
+	d.Set("terminate_instance_on_failure", resp.InfrastructureConfiguration.TerminateInstanceOnFailure)
+	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(resp.InfrastructureConfiguration.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
-
 	return nil
 }

@@ -70,6 +70,7 @@ func dataSourceAwsImageBuilderComponent() *schema.Resource {
 
 func dataSourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	componentArn := d.Get("arn").(string)
 
@@ -83,25 +84,23 @@ func dataSourceAwsImageBuilderComponentRead(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("Error retrieving Component: %s", err)
 	}
 
-	return componentDescriptionAttributes(d, resp.Component)
-}
+	d.SetId(*resp.Component.Arn)
 
-func componentDescriptionAttributes(d *schema.ResourceData, component *imagebuilder.Component) error {
-	d.SetId(*component.Arn)
-	d.Set("change_description", component.ChangeDescription)
-	d.Set("data", component.Data)
-	d.Set("date_created", component.DateCreated)
-	d.Set("description", component.Description)
-	d.Set("encrypted", component.Encrypted)
-	d.Set("kms_key_id", component.KmsKeyId)
-	d.Set("name", component.Name)
-	d.Set("owner", component.Owner)
-	d.Set("platform", component.Platform)
-	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(component.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(resp.Component.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
-	d.Set("type", component.Type)
-	d.Set("semantic_version", component.Version)
+
+	d.Set("change_description", resp.Component.ChangeDescription)
+	d.Set("data", resp.Component.Data)
+	d.Set("date_created", resp.Component.DateCreated)
+	d.Set("description", resp.Component.Description)
+	d.Set("encrypted", resp.Component.Encrypted)
+	d.Set("kms_key_id", resp.Component.KmsKeyId)
+	d.Set("name", resp.Component.Name)
+	d.Set("owner", resp.Component.Owner)
+	d.Set("platform", resp.Component.Platform)
+	d.Set("type", resp.Component.Type)
+	d.Set("semantic_version", resp.Component.Version)
 
 	return nil
 }

@@ -134,6 +134,7 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 
 func dataSourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).imagebuilderconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.GetImageRecipe(&imagebuilder.GetImageRecipeInput{
 		ImageRecipeArn: aws.String(d.Id()),
@@ -143,23 +144,19 @@ func dataSourceAwsImageBuilderRecipeRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error reading Recipe (%s): %s", d.Id(), err)
 	}
 
-	return recipeDescriptionAttributes(d, resp.ImageRecipe)
-}
+	d.SetId(*resp.ImageRecipe.Arn)
+	d.Set("arn", resp.ImageRecipe.Arn)
+	d.Set("block_device_mappings", resp.ImageRecipe.BlockDeviceMappings)
+	d.Set("components", resp.ImageRecipe.Components)
+	d.Set("datecreated", resp.ImageRecipe.DateCreated)
+	d.Set("description", resp.ImageRecipe.Description)
+	d.Set("name", resp.ImageRecipe.Name)
+	d.Set("owner", resp.ImageRecipe.Owner)
+	d.Set("parent_image", resp.ImageRecipe.ParentImage)
+	d.Set("platform", resp.ImageRecipe.Platform)
+	d.Set("semantic_version", resp.ImageRecipe.Version)
 
-func recipeDescriptionAttributes(d *schema.ResourceData, imageRecipe *imagebuilder.ImageRecipe) error {
-	d.SetId(*imageRecipe.Arn)
-	d.Set("arn", imageRecipe.Arn)
-	d.Set("block_device_mappings", imageRecipe.BlockDeviceMappings)
-	d.Set("components", imageRecipe.Components)
-	d.Set("datecreated", imageRecipe.DateCreated)
-	d.Set("description", imageRecipe.Description)
-	d.Set("name", imageRecipe.Name)
-	d.Set("owner", imageRecipe.Owner)
-	d.Set("parent_image", imageRecipe.ParentImage)
-	d.Set("platform", imageRecipe.Platform)
-	d.Set("semantic_version", imageRecipe.Version)
-
-	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(imageRecipe.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.ImagebuilderKeyValueTags(resp.ImageRecipe.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
