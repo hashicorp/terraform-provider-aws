@@ -1,5 +1,5 @@
 ---
-subcategory: "CloudSearch Domain"
+subcategory: "CloudSearch"
 layout: "aws"
 page_title: "AWS: aws_cloudsearch_domain"
 description: |-
