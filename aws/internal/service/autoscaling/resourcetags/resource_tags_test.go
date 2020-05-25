@@ -7,7 +7,7 @@ import (
 func TestResourceTagsIgnoreAws(t *testing.T) {
 	testCases := []struct {
 		name string
-		tags *ResourceTags
+		tags ResourceTags
 		want []string
 	}{
 		{
@@ -26,8 +26,8 @@ func TestResourceTagsIgnoreAws(t *testing.T) {
 	}
 }
 
-func testResourceTagsNew(t *testing.T, i interface{}) *ResourceTags {
-	tags, err := New("resource-id", i)
+func testResourceTagsNew(t *testing.T, i interface{}) ResourceTags {
+	tags, err := New(i)
 	if err != nil {
 		t.Errorf("%w", err)
 	}

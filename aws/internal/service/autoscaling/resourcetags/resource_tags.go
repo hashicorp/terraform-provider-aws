@@ -17,19 +17,17 @@ type TagValue struct {
 }
 
 // ResourceTags is a standard implementation for AWS Auto Scaling resource tags.
-type ResourceTags struct {
-	ResourceID string
-	Tags       map[string]*TagValue
-}
+type ResourceTags map[string]TagValue
 
-func (tags *ResourceTags) AutoscalingTags() []*autoscaling.Tag {
-	result := make([]*autoscaling.Tag, 0, len(tags.Tags))
+// AutoscalingTags returns autoscaling service tags.
+func (tags ResourceTags) AutoscalingTags(resourceID string) []*autoscaling.Tag {
+	result := make([]*autoscaling.Tag, 0, len(tags))
 
-	for k, v := range tags.Tags {
+	for k, v := range tags {
 		tag := &autoscaling.Tag{
 			Key:               aws.String(k),
 			PropagateAtLaunch: aws.Bool(v.PropagateAtLaunch),
-			ResourceId:        aws.String(tags.ResourceID),
+			ResourceId:        aws.String(resourceID),
 			ResourceType:      aws.String("auto-scaling-group"),
 			Value:             aws.String(v.Value),
 		}
@@ -41,14 +39,12 @@ func (tags *ResourceTags) AutoscalingTags() []*autoscaling.Tag {
 }
 
 // IgnoreAws returns non-AWS tag keys.
-func (tags *ResourceTags) IgnoreAws() *ResourceTags {
-	result := &ResourceTags{
-		Tags: make(map[string]*TagValue, len(tags.Tags)),
-	}
+func (tags ResourceTags) IgnoreAws() ResourceTags {
+	result := make(ResourceTags, len(tags))
 
-	for k, v := range tags.Tags {
+	for k, v := range tags {
 		if !strings.HasPrefix(k, keyvaluetags.AwsTagKeyPrefix) {
-			result.Tags[k] = v
+			result[k] = v
 		}
 	}
 
@@ -56,10 +52,10 @@ func (tags *ResourceTags) IgnoreAws() *ResourceTags {
 }
 
 // Keys returns tag keys.
-func (tags *ResourceTags) Keys() []string {
-	result := make([]string, 0, len(tags.Tags))
+func (tags ResourceTags) Keys() []string {
+	result := make([]string, 0, len(tags))
 
-	for k := range tags.Tags {
+	for k := range tags {
 		result = append(result, k)
 	}
 
@@ -67,14 +63,11 @@ func (tags *ResourceTags) Keys() []string {
 }
 
 // New creates ResourceTags from common Terraform Provider SDK types.
-func New(resourceID string, i interface{}) (*ResourceTags, error) {
+func New(i interface{}) (ResourceTags, error) {
 	switch values := i.(type) {
 	case []interface{}:
 		// The list of tags described by ListSchema().
-		tags := &ResourceTags{
-			ResourceID: resourceID,
-			Tags:       make(map[string]*TagValue, len(values)),
-		}
+		tags := make(ResourceTags, len(values))
 
 		for _, value := range values {
 			m := value.(map[string]interface{})
@@ -100,7 +93,7 @@ func New(resourceID string, i interface{}) (*ResourceTags, error) {
 				}
 			}
 
-			tags.Tags[key] = &TagValue{
+			tags[key] = TagValue{
 				Value:             value,
 				PropagateAtLaunch: propagateAtLaunch,
 			}
@@ -109,7 +102,7 @@ func New(resourceID string, i interface{}) (*ResourceTags, error) {
 		return tags, nil
 	case *schema.Set:
 		// The set of tags described by SetSchema().
-		return New(resourceID, values.List())
+		return New(values.List())
 	default:
 		return nil, fmt.Errorf("invalid Auto Scaling tags type: %T", values)
 	}
