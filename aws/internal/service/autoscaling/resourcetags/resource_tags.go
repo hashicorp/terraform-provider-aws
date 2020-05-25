@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -18,6 +20,24 @@ type TagValue struct {
 type ResourceTags struct {
 	ResourceID string
 	Tags       map[string]*TagValue
+}
+
+func (tags *ResourceTags) AutoscalingTags() []*autoscaling.Tag {
+	result := make([]*autoscaling.Tag, 0, len(tags.Tags))
+
+	for k, v := range tags.Tags {
+		tag := &autoscaling.Tag{
+			Key:               aws.String(k),
+			PropagateAtLaunch: aws.Bool(v.PropagateAtLaunch),
+			ResourceId:        aws.String(tags.ResourceID),
+			ResourceType:      aws.String("auto-scaling-group"),
+			Value:             aws.String(v.Value),
+		}
+
+		result = append(result, tag)
+	}
+
+	return result
 }
 
 // IgnoreAws returns non-AWS tag keys.
