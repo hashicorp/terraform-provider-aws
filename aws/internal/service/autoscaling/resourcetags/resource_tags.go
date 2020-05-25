@@ -12,8 +12,8 @@ import (
 )
 
 type TagValue struct {
-	Value             string
 	PropagateAtLaunch bool
+	Value             string
 }
 
 // ResourceTags is a standard implementation for AWS Auto Scaling resource tags.
@@ -36,6 +36,20 @@ func (tags ResourceTags) AutoscalingTags(resourceID string) []*autoscaling.Tag {
 	}
 
 	return result
+}
+
+// AutoscalingResourceTags creates ResourceTags from autoscaling service tags.
+func AutoscalingResourceTags(tags []*autoscaling.TagDescription) (ResourceTags, error) {
+	m := make(map[string]TagValue, len(tags))
+
+	for _, tag := range tags {
+		m[aws.StringValue(tag.Key)] = TagValue{
+			PropagateAtLaunch: aws.BoolValue(tag.PropagateAtLaunch),
+			Value:             aws.StringValue(tag.Value),
+		}
+	}
+
+	return New(m)
 }
 
 // IgnoreAws returns non-AWS tag keys.
@@ -65,6 +79,8 @@ func (tags ResourceTags) Keys() []string {
 // New creates ResourceTags from common Terraform Provider SDK types.
 func New(i interface{}) (ResourceTags, error) {
 	switch values := i.(type) {
+	case map[string]TagValue:
+		return ResourceTags(values), nil
 	case []interface{}:
 		// The list of tags described by ListSchema().
 		tags := make(ResourceTags, len(values))
@@ -102,8 +118,8 @@ func New(i interface{}) (ResourceTags, error) {
 			}
 
 			tags[key] = TagValue{
-				Value:             value,
 				PropagateAtLaunch: propagateAtLaunch,
+				Value:             value,
 			}
 		}
 
