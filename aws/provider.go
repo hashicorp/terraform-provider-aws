@@ -799,6 +799,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_securityhub_standards_subscription":                  resourceAwsSecurityHubStandardsSubscription(),
 			"aws_servicecatalog_portfolio":                            resourceAwsServiceCatalogPortfolio(),
 			"aws_servicecatalog_product":                              resourceAwsServiceCatalogProduct(),
+			"aws_servicecatalog_provisioned_product":                  resourceAwsServiceCatalogProvisionedProduct(),
 			"aws_service_discovery_http_namespace":                    resourceAwsServiceDiscoveryHttpNamespace(),
 			"aws_service_discovery_private_dns_namespace":             resourceAwsServiceDiscoveryPrivateDnsNamespace(),
 			"aws_service_discovery_public_dns_namespace":              resourceAwsServiceDiscoveryPublicDnsNamespace(),
