@@ -43,6 +43,11 @@ var (
 		kinesisanalyticsv2.ConfigurationTypeCustom,
 		kinesisanalyticsv2.ConfigurationTypeDefault,
 	}, false)
+
+	validateKinesisAnalyticsV2CodeContentType = validation.StringInSlice([]string{
+		kinesisanalyticsv2.CodeContentTypePlaintext,
+		kinesisanalyticsv2.CodeContentTypeZipfile,
+	}, false)
 )
 
 func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
@@ -82,26 +87,6 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validateKinesisAnalyticsV2Runtime,
-			},
-
-			"s3_bucket": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"s3_object": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"code": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"code_content_type": {
-				Type:     schema.TypeString,
-				Required: true,
 			},
 
 			"create_timestamp": {
@@ -149,197 +134,204 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 				},
 			},
 
-			// Flink only
-			"property_groups": {
+			"application_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"property_group_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"property_map": {
-							Type:     schema.TypeMap,
-							Required: true,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-					},
-				},
-			},
-			"snapshots_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
-					return snapshotsEnabled == old
-				},
-			},
-			"flink_application_configuration": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"sql_application_configuration"},
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"checkpoint_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"checkpoint_interval": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"checkpointing_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"configuration_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
-									},
-									"min_pause_between_checkpoints": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-								},
-							},
-						},
-						"monitoring_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"configuration_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
-									},
-									"log_level": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateKinesisAnalyticsV2LogLevel,
-									},
-									"metrics_level": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validateKinesisAnalyticsV2MetricsLevel,
-									},
-								},
-							},
-						},
-						"parallelism_configuration": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"autoscaling_enabled": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
-									"configuration_type": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
-									},
-									"parallelism": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-									"parallelism_per_kpu": {
-										Type:     schema.TypeInt,
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
+				MaxItems: 1,
 
-			"sql_application_configuration": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"flink_application_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"inputs": {
+						"application_code_configuration": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
+									"code_content_type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validateKinesisAnalyticsV2CodeContentType,
+									},
+									"code_content": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"text_content": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"s3_content_location": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_arn": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"file_key": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"object_version": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+
+						"environment_properties": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									// Flink only
+									"property_group": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"property_group_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"property_map": {
+													Type:     schema.TypeMap,
+													Required: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"snapshots_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
+								return snapshotsEnabled == old
+							},
+						},
+						"flink_application_configuration": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"sql_application_configuration"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"checkpoint_configuration": {
+										Type:     schema.TypeSet,
+										Optional: true,
 										Computed: true,
-									},
-
-									"kinesis_firehose": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"resource_arn": {
+												"checkpoint_interval": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"checkpointing_enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"configuration_type": {
 													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateArn,
+													Optional:     true,
+													ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
+												},
+												"min_pause_between_checkpoints": {
+													Type:     schema.TypeInt,
+													Optional: true,
 												},
 											},
 										},
 									},
-
-									"kinesis_stream": {
-										Type:     schema.TypeList,
+									"monitoring_configuration": {
+										Type:     schema.TypeSet,
 										Optional: true,
-										MaxItems: 1,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"resource_arn": {
+												"configuration_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
+												},
+												"log_level": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validateArn,
+													ValidateFunc: validateKinesisAnalyticsV2LogLevel,
+												},
+												"metrics_level": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validateKinesisAnalyticsV2MetricsLevel,
 												},
 											},
 										},
 									},
-
-									"name_prefix": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"parallelism": {
-										Type:     schema.TypeList,
+									"parallelism_configuration": {
+										Type:     schema.TypeSet,
 										Optional: true,
-										MaxItems: 1,
+										Computed: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"count": {
+												"autoscaling_enabled": {
+													Type:     schema.TypeBool,
+													Optional: true,
+												},
+												"configuration_type": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validateKinesisAnalyticsV2ConfigurationType,
+												},
+												"parallelism": {
+													Type:     schema.TypeInt,
+													Required: true,
+												},
+												"parallelism_per_kpu": {
 													Type:     schema.TypeInt,
 													Required: true,
 												},
 											},
 										},
 									},
+								},
+							},
+						},
 
-									"processing_configuration": {
+						"sql_application_configuration": {
+							Type:          schema.TypeList,
+							Optional:      true,
+							MaxItems:      1,
+							ConflictsWith: []string{"flink_application_configuration"},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"inputs": {
 										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"lambda": {
+												"id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+
+												"kinesis_firehose": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -351,327 +343,254 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 														},
 													},
 												},
-											},
-										},
-									},
 
-									"schema": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"record_columns": {
+												"kinesis_stream": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"mapping": {
-																Type:     schema.TypeString,
-																Optional: true,
+															"resource_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
 															},
+														},
+													},
+												},
 
-															"name": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
+												"name_prefix": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
 
-															"sql_type": {
-																Type:     schema.TypeString,
+												"parallelism": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"count": {
+																Type:     schema.TypeInt,
 																Required: true,
 															},
 														},
 													},
 												},
 
-												"record_encoding": {
-													Type:     schema.TypeString,
+												"processing_configuration": {
+													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"lambda": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"resource_arn": {
+																			Type:         schema.TypeString,
+																			Required:     true,
+																			ValidateFunc: validateArn,
+																		},
+																	},
+																},
+															},
+														},
+													},
 												},
 
-												"record_format": {
+												"schema": {
 													Type:     schema.TypeList,
 													Required: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"mapping_parameters": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
+															"record_column": {
+																Type:     schema.TypeSet,
+																Required: true,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
-																		"csv": {
-																			Type:     schema.TypeList,
+																		"mapping": {
+																			Type:     schema.TypeString,
 																			Optional: true,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"record_column_delimiter": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-
-																					"record_row_delimiter": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																				},
-																			},
 																		},
 
-																		"json": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"record_row_path": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																				},
-																			},
+																		"name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+
+																		"sql_type": {
+																			Type:     schema.TypeString,
+																			Required: true,
 																		},
 																	},
 																},
 															},
 
-															"record_format_type": {
+															"record_encoding": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"record_format": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"mapping_parameters": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"csv": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						MaxItems: 1,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"record_column_delimiter": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+
+																								"record_row_delimiter": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+																							},
+																						},
+																					},
+
+																					"json": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						MaxItems: 1,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"record_row_path": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+
+																		"record_format_type": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"starting_position_configuration": {
+													Type:     schema.TypeList,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"starting_position": {
 																Type:     schema.TypeString,
 																Computed: true,
 															},
 														},
 													},
 												},
+
+												"stream_names": {
+													Type:     schema.TypeSet,
+													Computed: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
 											},
 										},
 									},
 
-									"starting_position_configuration": {
-										Type:     schema.TypeList,
-										Computed: true,
+									"output": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										MaxItems: 3,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												"starting_position": {
+												"id": {
 													Type:     schema.TypeString,
 													Computed: true,
 												},
-											},
-										},
-									},
 
-									"stream_names": {
-										Type:     schema.TypeSet,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-
-						"outputs": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 3,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"kinesis_firehose": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"resource_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateArn,
-												},
-											},
-										},
-									},
-
-									"kinesis_stream": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"resource_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateArn,
-												},
-											},
-										},
-									},
-
-									"lambda": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"resource_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateArn,
-												},
-											},
-										},
-									},
-
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-
-									"schema": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"record_format_type": {
-													Type:     schema.TypeString,
-													Optional: true,
-													ValidateFunc: validation.StringInSlice([]string{
-														kinesisanalyticsv2.RecordFormatTypeCsv,
-														kinesisanalyticsv2.RecordFormatTypeJson,
-													}, false),
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-
-						"reference_data_sources": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-
-									"s3": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"bucket_arn": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validateArn,
-												},
-
-												"file_key": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"object_version": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
-										},
-									},
-
-									"schema": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"record_columns": {
+												"kinesis_firehose": {
 													Type:     schema.TypeList,
-													Required: true,
+													Optional: true,
+													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"mapping": {
-																Type:     schema.TypeString,
-																Optional: true,
-															},
-
-															"name": {
-																Type:     schema.TypeString,
-																Required: true,
-															},
-
-															"sql_type": {
-																Type:     schema.TypeString,
-																Required: true,
+															"resource_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
 															},
 														},
 													},
 												},
 
-												"record_encoding": {
-													Type:     schema.TypeString,
+												"kinesis_stream": {
+													Type:     schema.TypeList,
 													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"resource_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
+															},
+														},
+													},
 												},
 
-												"record_format": {
+												"lambda": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"resource_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
+															},
+														},
+													},
+												},
+
+												"name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+
+												"schema": {
 													Type:     schema.TypeList,
 													Required: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
-															"mapping_parameters": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"csv": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"record_column_delimiter": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-
-																					"record_row_delimiter": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																				},
-																			},
-																		},
-
-																		"json": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"record_row_path": {
-																						Type:     schema.TypeString,
-																						Required: true,
-																					},
-																				},
-																			},
-																		},
-																	},
-																},
-															},
-
 															"record_format_type": {
 																Type:     schema.TypeString,
-																Computed: true,
+																Optional: true,
+																ValidateFunc: validation.StringInSlice([]string{
+																	kinesisanalyticsv2.RecordFormatTypeCsv,
+																	kinesisanalyticsv2.RecordFormatTypeJson,
+																}, false),
 															},
 														},
 													},
@@ -680,9 +599,140 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 										},
 									},
 
-									"table_name": {
-										Type:     schema.TypeString,
-										Required: true,
+									"reference_data_sources": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"id": {
+													Type:     schema.TypeString,
+													Computed: true,
+												},
+
+												"s3": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: validateArn,
+															},
+
+															"file_key": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+															"object_version": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+														},
+													},
+												},
+
+												"schema": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"record_columns": {
+																Type:     schema.TypeList,
+																Required: true,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"mapping": {
+																			Type:     schema.TypeString,
+																			Optional: true,
+																		},
+
+																		"name": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+
+																		"sql_type": {
+																			Type:     schema.TypeString,
+																			Required: true,
+																		},
+																	},
+																},
+															},
+
+															"record_encoding": {
+																Type:     schema.TypeString,
+																Optional: true,
+															},
+
+															"record_format": {
+																Type:     schema.TypeList,
+																Required: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"mapping_parameters": {
+																			Type:     schema.TypeList,
+																			Optional: true,
+																			MaxItems: 1,
+																			Elem: &schema.Resource{
+																				Schema: map[string]*schema.Schema{
+																					"csv": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						MaxItems: 1,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"record_column_delimiter": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+
+																								"record_row_delimiter": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+																							},
+																						},
+																					},
+
+																					"json": {
+																						Type:     schema.TypeList,
+																						Optional: true,
+																						MaxItems: 1,
+																						Elem: &schema.Resource{
+																							Schema: map[string]*schema.Schema{
+																								"record_row_path": {
+																									Type:     schema.TypeString,
+																									Required: true,
+																								},
+																							},
+																						},
+																					},
+																				},
+																			},
+																		},
+
+																		"record_format_type": {
+																			Type:     schema.TypeString,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+														},
+													},
+												},
+
+												"table_name": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
 									},
 								},
 							},
@@ -700,91 +750,14 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 	name := d.Get("name").(string)
 	serviceExecutionRole := d.Get("service_execution_role").(string)
 	runtime := d.Get("runtime").(string)
-	s3Bucket := d.Get("s3_bucket").(string)
-	s3Object := d.Get("s3_object").(string)
-	textCode := d.Get("code").(string)
-	codeContentType := d.Get("code_content_type").(string)
 
-	var sqlApplicationConfiguration *kinesisanalyticsv2.SqlApplicationConfiguration
-	var flinkApplicationConfiguration *kinesisanalyticsv2.FlinkApplicationConfiguration
-	switch {
-	case strings.HasPrefix(runtime, "SQL"):
-		sqlConfig, ok := d.GetOk("sql_application_configuration")
-		if !ok {
-			break
-		}
-		sc := sqlConfig.([]interface{})[0]
-		if sc != nil {
-			sqlApplicationConfiguration = expandKinesisAnalayticsSqlApplicationConfiguration(sc.(map[string]interface{}))
-		}
-
-	case strings.HasPrefix(runtime, "FLINK"):
-		flinkConfig, ok := d.GetOk("flink_application_configuration")
-		if !ok {
-			break
-		}
-		fc := flinkConfig.([]interface{})[0]
-		if fc != nil {
-			flinkApplicationConfiguration = expandKinesisAnalyticsFlinkApplicationConfiguration(fc.(map[string]interface{}))
-		}
-	}
-
-	var contentType *string
-	switch codeContentType {
-	case "zip":
-		contentType = aws.String(kinesisanalyticsv2.CodeContentTypeZipfile)
-	case "plain_text":
-		contentType = aws.String(kinesisanalyticsv2.CodeContentTypePlaintext)
-	}
-
-	var s3ContentLocation *kinesisanalyticsv2.S3ContentLocation
-	if s3Bucket != "" && s3Object != "" {
-		s3ContentLocation = &kinesisanalyticsv2.S3ContentLocation{
-			BucketARN: aws.String(s3Bucket),
-			FileKey:   aws.String(s3Object),
-		}
-		if version, ok := d.GetOk("object_version"); ok {
-			s3ContentLocation.ObjectVersion = aws.String(version.(string))
-		}
-	}
-
-	var environmentProperties *kinesisanalyticsv2.EnvironmentProperties
-	if v, ok := d.GetOk("property_groups"); ok {
-		m := v.([]interface{})
-		environmentProperties = &kinesisanalyticsv2.EnvironmentProperties{
-			PropertyGroups: expandPropertyGroups(m),
-		}
-	}
-	var snapshotConfig *kinesisanalyticsv2.ApplicationSnapshotConfiguration
-	if v, ok := d.GetOk("snapshots_enabled"); ok {
-		snapshotsEnabled, _ := v.(bool)
-		snapshotConfig = &kinesisanalyticsv2.ApplicationSnapshotConfiguration{
-			SnapshotsEnabled: aws.Bool(snapshotsEnabled),
-		}
-	}
-
-	var textContent *string
-	if textCode != "" {
-		textContent = aws.String(textCode)
-	}
+	appConfig := expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{}))
 
 	createOpts := &kinesisanalyticsv2.CreateApplicationInput{
-		RuntimeEnvironment:   aws.String(runtime),
-		ApplicationName:      aws.String(name),
-		ServiceExecutionRole: aws.String(serviceExecutionRole),
-		ApplicationConfiguration: &kinesisanalyticsv2.ApplicationConfiguration{
-			SqlApplicationConfiguration:      sqlApplicationConfiguration,
-			FlinkApplicationConfiguration:    flinkApplicationConfiguration,
-			EnvironmentProperties:            environmentProperties,
-			ApplicationSnapshotConfiguration: snapshotConfig,
-			ApplicationCodeConfiguration: &kinesisanalyticsv2.ApplicationCodeConfiguration{
-				CodeContent: &kinesisanalyticsv2.CodeContent{
-					S3ContentLocation: s3ContentLocation,
-					TextContent:       textContent,
-				},
-				CodeContentType: contentType,
-			},
-		},
+		RuntimeEnvironment:       aws.String(runtime),
+		ApplicationName:          aws.String(name),
+		ServiceExecutionRole:     aws.String(serviceExecutionRole),
+		ApplicationConfiguration: appConfig,
 	}
 
 	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
@@ -860,34 +833,26 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("arn", arn)
 	d.Set("service_execution_role", aws.StringValue(resp.ApplicationDetail.ServiceExecutionRole))
 	d.Set("runtime", aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment))
-	d.Set("code", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.TextContent))
-	var tfContentType string
-	contentType := aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentType)
-	if contentType == kinesisanalyticsv2.CodeContentTypePlaintext {
-		tfContentType = "plain_text"
-	} else if contentType == kinesisanalyticsv2.CodeContentTypeZipfile {
-		tfContentType = "zip"
+
+	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(resp.ApplicationDetail.ApplicationConfigurationDescription)); err != nil {
+		return fmt.Errorf("error setting application_code_configuration: %s", err)
 	}
-	d.Set("code_content_type", tfContentType)
+
+	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
+		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
+	}
 	d.Set("create_timestamp", aws.TimeValue(resp.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
 	d.Set("description", aws.StringValue(resp.ApplicationDetail.ApplicationDescription))
 	d.Set("last_update_timestamp", aws.TimeValue(resp.ApplicationDetail.LastUpdateTimestamp).Format(time.RFC3339))
 	d.Set("status", aws.StringValue(resp.ApplicationDetail.ApplicationStatus))
-	d.Set("version", int(aws.Int64Value(resp.ApplicationDetail.ApplicationVersionId)))
-	if resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription != nil {
-		d.Set("s3_bucket", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.BucketARN))
-		d.Set("s3_object", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.FileKey))
-		if resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.ObjectVersion != nil {
-			d.Set("object_version", aws.StringValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationCodeConfigurationDescription.CodeContentDescription.S3ApplicationCodeLocationDescription.ObjectVersion))
-		}
-	}
 
 	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
 	}
 
 	if resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions != nil {
-		if err := d.Set("property_groups", flattenKinesisAnalyticsPropertyGroups(resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions.PropertyGroupDescriptions)); err != nil {
+		if err := d.Set("property_group", flattenKinesisAnalyticsPropertyGroups(
+			resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions.PropertyGroupDescriptions)); err != nil {
 			return fmt.Errorf("error setting property_groups: %s", err)
 		}
 	}
@@ -1093,6 +1058,67 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Kinesis Analytics Application deleted: %v", d.Id())
 	return nil
+}
+
+func expandKinesisAnalyticsV2ApplicationConfiguration(conf []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
+	if len(conf) == 0 {
+		return nil
+	}
+	c := conf[0].(map[string]interface{})
+
+	runtime := c["runtime"].(string)
+
+	var sqlApplicationConfiguration *kinesisanalyticsv2.SqlApplicationConfiguration
+	var flinkApplicationConfiguration *kinesisanalyticsv2.FlinkApplicationConfiguration
+	switch {
+	case strings.HasPrefix(runtime, "SQL"):
+		sqlConfig, ok := c["sql_application_configuration"]
+		if !ok {
+			break
+		}
+		sc := sqlConfig.([]interface{})[0]
+		if sc != nil {
+			sqlApplicationConfiguration = expandKinesisAnalayticsSqlApplicationConfiguration(sc.(map[string]interface{}))
+		}
+
+	case strings.HasPrefix(runtime, "FLINK"):
+		flinkConfig, ok := c["flink_application_configuration"]
+		if !ok {
+			break
+		}
+		fc := flinkConfig.([]interface{})[0]
+		if fc != nil {
+			flinkApplicationConfiguration = expandKinesisAnalyticsFlinkApplicationConfiguration(fc.(map[string]interface{}))
+		}
+	}
+	var snapshotConfig *kinesisanalyticsv2.ApplicationSnapshotConfiguration
+	if v, ok := c["snapshots_enabled"]; ok {
+		snapshotsEnabled, _ := v.(bool)
+		snapshotConfig = &kinesisanalyticsv2.ApplicationSnapshotConfiguration{
+			SnapshotsEnabled: aws.Bool(snapshotsEnabled),
+		}
+	}
+
+	var codeConfig *kinesisanalyticsv2.ApplicationCodeConfiguration
+	if v, ok := c["application_code_configuration"]; ok {
+		codeConfig = expandKinesisAnalyticsV2ApplicationCodeConfiguration(v.([]interface{}))
+	}
+
+	var environmentProperties *kinesisanalyticsv2.EnvironmentProperties
+	if v, ok := c["environment_properties"]; ok {
+		m := v.(map[string]interface{})
+		propertyGroups := m["property_group"].(*schema.Set).List()
+		environmentProperties = &kinesisanalyticsv2.EnvironmentProperties{
+			PropertyGroups: expandPropertyGroups(propertyGroups),
+		}
+	}
+	return &kinesisanalyticsv2.ApplicationConfiguration{
+		SqlApplicationConfiguration:      sqlApplicationConfiguration,
+		FlinkApplicationConfiguration:    flinkApplicationConfiguration,
+		EnvironmentProperties:            environmentProperties,
+		ApplicationSnapshotConfiguration: snapshotConfig,
+		ApplicationCodeConfiguration:     codeConfig,
+	}
 }
 
 func expandKinesisAnalyticsV2CloudwatchLoggingOption(clo map[string]interface{}) *kinesisanalyticsv2.CloudWatchLoggingOption {
@@ -1738,6 +1764,104 @@ func expandKinesisAnalyticsFlinkApplicationConfiguration(appConfig map[string]in
 	flinkApplicationConfiguration.ParallelismConfiguration = expandParallelismConfiguration(appConfig["parallelism_configuration"].(*schema.Set))
 
 	return flinkApplicationConfiguration
+}
+
+func flattenKinesisAnalyticsV2ApplicationConfiguration(appConfig *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
+
+	ret := map[string]interface{}{}
+	if appConfig == nil {
+		return []interface{}{ret}
+	}
+
+	ret["application_code_configuration"] = flattenKinesisAnalyticsV2ApplicationCodeConfiguration(appConfig.ApplicationCodeConfigurationDescription)
+	ret["sql_application_configuration"] = flattenSqlApplicationConfigurationDescription(appConfig.SqlApplicationConfigurationDescription)
+	ret["flink_application_configuration"] = flattenFlinkApplicationConfigurationDescription(appConfig.FlinkApplicationConfigurationDescription)
+	ret["environment_properties"] = flattenKinesisAnalyticsV2EnvironmentProperties(appConfig.EnvironmentPropertyDescriptions)
+
+	return []interface{}{ret}
+}
+
+func flattenKinesisAnalyticsV2EnvironmentProperties(envProps *kinesisanalyticsv2.EnvironmentPropertyDescriptions) []interface{} {
+
+	ret := []interface{}{}
+	for _, group := range envProps.PropertyGroupDescriptions {
+		ret = append(ret, schema.NewSet(resourceCheckpointConfigurationHash,
+			[]interface{}{map[string]interface{}{
+				"property_group_id": aws.StringValue(group.PropertyGroupId),
+				"property_map":      flattenPropertyMap(group.PropertyMap),
+			}},
+		))
+	}
+	return ret
+}
+
+func flattenPropertyMap(m map[string]*string) map[string]string {
+	flattened := make(map[string]string, len(m))
+	for k, v := range m {
+		flattened[k] = aws.StringValue(v)
+	}
+	return flattened
+}
+
+func flattenKinesisAnalyticsV2ApplicationCodeConfiguration(codeConfig *kinesisanalyticsv2.ApplicationCodeConfigurationDescription) map[string]interface{} {
+
+	appCodeConfig := make(map[string]interface{})
+	if codeConfig != nil {
+		return appCodeConfig
+	}
+	codeContent := make(map[string]interface{})
+	appCodeConfig["code_content_type"] = *codeConfig.CodeContentType
+	if contentDesc := codeConfig.CodeContentDescription; contentDesc != nil {
+		if contentDesc.TextContent != nil {
+			codeContent["text_content"] = *contentDesc.TextContent
+		}
+		if locDesc := contentDesc.S3ApplicationCodeLocationDescription; locDesc != nil {
+
+			locationDescription := make(map[string]interface{})
+			locationDescription["bucket_arn"] = *locDesc.BucketARN
+			locationDescription["file_key"] = *locDesc.FileKey
+			locationDescription["object_version"] = *locDesc.ObjectVersion
+			codeContent["s3_content_location"] = locationDescription
+		}
+		appCodeConfig["code_content"] = codeContent
+	}
+
+	return appCodeConfig
+}
+
+func expandKinesisAnalyticsV2ApplicationCodeConfiguration(conf []interface{}) *kinesisanalyticsv2.ApplicationCodeConfiguration {
+	if len(conf) < 1 {
+		return nil
+	}
+	codeConfig := conf[0].(map[string]interface{})
+
+	var contentType *string
+	switch codeConfig["code_content_type"].(string) {
+	case "zip":
+		contentType = aws.String(kinesisanalyticsv2.CodeContentTypeZipfile)
+	case "plain_text":
+		contentType = aws.String(kinesisanalyticsv2.CodeContentTypePlaintext)
+	}
+
+	codeContentMap := codeConfig["code_content"].(map[string]interface{})
+
+	var s3ContentLocation *kinesisanalyticsv2.S3ContentLocation
+	var textContent *string
+	if v, ok := codeContentMap["text_content"]; ok {
+		textContent = aws.String(v.(string))
+	}
+	s3ContentLocation = &kinesisanalyticsv2.S3ContentLocation{
+		BucketARN:     aws.String(codeContentMap["bucket_arn"].(string)),
+		FileKey:       aws.String(codeContentMap["file_key"].(string)),
+		ObjectVersion: aws.String(codeContentMap["object_version"].(string)),
+	}
+	return &kinesisanalyticsv2.ApplicationCodeConfiguration{
+		CodeContentType: contentType,
+		CodeContent: &kinesisanalyticsv2.CodeContent{
+			S3ContentLocation: s3ContentLocation,
+			TextContent:       textContent,
+		},
+	}
 }
 
 func flattenSqlApplicationConfigurationDescription(sqlApplicationConfig *kinesisanalyticsv2.SqlApplicationConfigurationDescription) []interface{} {
