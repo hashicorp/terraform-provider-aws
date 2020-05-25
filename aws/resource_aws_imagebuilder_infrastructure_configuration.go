@@ -129,6 +129,7 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 		InstanceProfileName: aws.String(d.Get("instance_profile_name").(string)),
 		SecurityGroupIds:    securityIds,
 		InstanceTypes:       instanceIds,
+		Logging:             expandAwsImageBuilderLogsConfig(d),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -136,9 +137,6 @@ func resourceAwsImageBuilderInfrastructureConfigurationCreate(d *schema.Resource
 	}
 	if v, ok := d.GetOk("key_pair"); ok {
 		input.SetKeyPair(v.(string))
-	}
-	if v, ok := d.GetOk("logging"); ok {
-		input.SetLogging(v.(*imagebuilder.Logging))
 	}
 	if v, ok := d.GetOk("sns_topic_arn"); ok {
 		input.SetSnsTopicArn(v.(string))
