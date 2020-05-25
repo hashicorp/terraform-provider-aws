@@ -77,20 +77,28 @@ func New(i interface{}) (ResourceTags, error) {
 				return nil, fmt.Errorf("missing Auto Scaling tag key")
 			}
 
-			value, ok := m["key"].(string)
+			value, ok := m["value"].(string)
 			if !ok {
-				return nil, fmt.Errorf("invalid Auto Scaling value for tag key (%s)", key)
+				return nil, fmt.Errorf("invalid tag value for Auto Scaling tag key (%s)", key)
+			}
+
+			v, ok := m["propagate_at_launch"]
+			if !ok {
+				return nil, fmt.Errorf("missing propagate_at_launch value for Auto Scaling tag key (%s)", key)
 			}
 
 			var propagateAtLaunch bool
 			var err error
 
-			if v, ok := m["propagate_at_launch"].(bool); ok {
+			switch v := v.(type) {
+			case bool:
 				propagateAtLaunch = v
-			} else if v, ok := m["propagate_at_launch"].(string); ok {
+			case string:
 				if propagateAtLaunch, err = strconv.ParseBool(v); err != nil {
-					return nil, fmt.Errorf("invalid Auto Scaling propagate_at_launch value for tag key (%s): %w", key, err)
+					return nil, fmt.Errorf("invalid propagate_at_launch value for Auto Scaling tag key (%s): %w", key, err)
 				}
+			default:
+				return nil, fmt.Errorf("invalid propagate_at_launch type (%T) for Auto Scaling tag key (%s)", v, key)
 			}
 
 			tags[key] = TagValue{
