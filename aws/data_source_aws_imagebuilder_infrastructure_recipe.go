@@ -128,7 +128,6 @@ func dataSourceAwsImageBuilderRecipe() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 		},
-
 	}
 }
 
