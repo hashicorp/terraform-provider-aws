@@ -46,7 +46,6 @@ func dataSourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 			"logging": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"s3_logs": {
