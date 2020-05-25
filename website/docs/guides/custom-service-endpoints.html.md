@@ -157,7 +157,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>pricing</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
-  <li><code>r53</code></li> (<b>DEPRECATED</b> Use <code>route53</code> instead)</li>
+  <li><code>r53</code></li> (<b>DEPRECATED</b> Use <code>route53</code> instead)
   <li><code>ram</code></li>
   <li><code>rds</code></li>
   <li><code>redshift</code></li>
