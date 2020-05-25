@@ -230,6 +230,69 @@ func TestResourceTagsIgnoreAws(t *testing.T) {
 			tags: testResourceTagsNew(t, []interface{}{}),
 			want: []string{},
 		},
+		{
+			name: "all",
+			tags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "aws:cloudformation:key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "aws:cloudformation:key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "aws:cloudformation:key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{},
+		},
+		{
+			name: "mixed",
+			tags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "aws:cloudformation:key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{"key2", "key3"},
+		},
+		{
+			name: "all",
+			tags: testResourceTagsNew(t, []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key3",
+					"value":               "value3",
+					"propagate_at_launch": true,
+				},
+			}),
+			want: []string{"key1", "key2", "key3"},
+		},
 	}
 
 	for _, testCase := range testCases {
