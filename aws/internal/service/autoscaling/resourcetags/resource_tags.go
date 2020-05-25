@@ -114,6 +114,37 @@ func (tags ResourceTags) Keys() []string {
 	return result
 }
 
+// List returns tags as described by ListSchema().
+func (tags ResourceTags) List() []interface{} {
+	result := make([]interface{}, 0, len(tags))
+
+	for k, v := range tags {
+		result = append(result, map[string]interface{}{
+			"key":   k,
+			"value": v.Value,
+			// For the list representation, all map values are strings.
+			"propagate_at_launch": strconv.FormatBool(v.PropagateAtLaunch),
+		})
+	}
+
+	return result
+}
+
+// Set returns tags as described by SetSchema().
+func (tags ResourceTags) Set() []interface{} {
+	result := make([]interface{}, 0, len(tags))
+
+	for k, v := range tags {
+		result = append(result, map[string]interface{}{
+			"key":                 k,
+			"value":               v.Value,
+			"propagate_at_launch": v.PropagateAtLaunch,
+		})
+	}
+
+	return result
+}
+
 // Removed returns tags removed.
 func (tags ResourceTags) Removed(newTags ResourceTags) ResourceTags {
 	result := make(ResourceTags)
