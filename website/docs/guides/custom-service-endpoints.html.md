@@ -261,3 +261,24 @@ provider "aws" {
   }
 }
 ```
+
+#### S3 Backend
+
+An example S3 backend configuration:
+
+```hcl
+terraform {
+  backend "s3" {
+    bucket = "state_bucket"
+    key = "state.key"
+
+    access_key = "mock_access_key"
+    region = "us-east-1"
+    force_path_style = true
+    secret_key = "mock_secret_key"
+    skip_credentials_validation = true
+    
+    endpoint = "http://localhost:4566"
+  }
+}
+```
