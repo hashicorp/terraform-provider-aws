@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func TestAccAWSEcrDataSource_ecrAuthorizationToken(t *testing.T) {
+func TestAccAWSEcrAuthorizationTokenDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "data.aws_ecr_authorization_token.repo"
 

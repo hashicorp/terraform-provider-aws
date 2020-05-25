@@ -4,8 +4,8 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -22,8 +22,9 @@ func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
 				Optional: true,
 			},
 			"authorization_token": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 			"proxy_endpoint": {
 				Type:     schema.TypeString,
@@ -38,8 +39,9 @@ func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
 				Computed: true,
 			},
 			"password": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -48,21 +50,19 @@ func dataSourceAwsEcrAuthorizationToken() *schema.Resource {
 func dataSourceAwsEcrAuthorizationTokenRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrconn
 	params := &ecr.GetAuthorizationTokenInput{}
-	registryId := d.Get("registry_id")
-	if registryId != nil && len(registryId.(string)) > 0 {
-		params.RegistryIds = []*string{aws.String(registryId.(string))}
+	if v, ok := d.GetOk("registry_id"); ok && len(v.(string)) > 0 {
+		params.RegistryIds = []*string{aws.String(v.(string))}
 	}
 	log.Printf("[DEBUG] Getting ECR authorization token")
 	out, err := conn.GetAuthorizationToken(params)
 	if err != nil {
-		d.SetId("")
 		return fmt.Errorf("error getting ECR authorization token: %s", err)
 	}
 	log.Printf("[DEBUG] Received ECR AuthorizationData %v", out.AuthorizationData)
 	authorizationData := out.AuthorizationData[0]
-	authorizationToken := *authorizationData.AuthorizationToken
-	expiresAt := strconv.FormatInt(authorizationData.ExpiresAt.Unix(), 10)
-	proxyEndpoint := *authorizationData.ProxyEndpoint
+	authorizationToken := aws.StringValue(authorizationData.AuthorizationToken)
+	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
+	proxyEndpoint := aws.StringValue(authorizationData.ProxyEndpoint)
 	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
 	if err != nil {
 		d.SetId("")
