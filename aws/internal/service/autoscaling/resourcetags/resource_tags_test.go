@@ -1,4 +1,4 @@
-package tags
+package resourcetags
 
 import (
 	"testing"
