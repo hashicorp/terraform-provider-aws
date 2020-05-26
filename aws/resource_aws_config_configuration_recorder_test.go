@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -151,22 +150,6 @@ func testAccCheckConfigConfigurationRecorderName(n string, desired string, obj *
 		if *obj.Name != desired {
 			return fmt.Errorf("Expected configuration recorder %q name to be %q, given: %q",
 				n, desired, *obj.Name)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckConfigConfigurationRecorderRoleArn(n string, desired *regexp.Regexp, obj *configservice.ConfigurationRecorder) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if !desired.MatchString(*obj.RoleARN) {
-			return fmt.Errorf("Expected configuration recorder %q role ARN to match %q, given: %q",
-				n, desired.String(), *obj.RoleARN)
 		}
 
 		return nil
