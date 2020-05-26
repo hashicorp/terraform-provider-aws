@@ -34,7 +34,7 @@ func TestAccAwsRamResourceShareAccepter_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsRamResourceShareAccepterExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "share_arn", principalAssociationResourceName, "resource_share_arn"),
-					testAccMatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", `\d{12}`, "ram", regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
+					testAccMatchResourceAttrRegionalARNAccountID(resourceName, "invitation_arn", "ram", `\d{12}`, regexp.MustCompile(fmt.Sprintf("resource-share-invitation/%s$", uuidRegexPattern))),
 					resource.TestMatchResourceAttr(resourceName, "share_id", regexp.MustCompile(fmt.Sprintf(`^rs-%s$`, uuidRegexPattern))),
 					resource.TestCheckResourceAttr(resourceName, "status", ram.ResourceShareStatusActive),
 					testAccCheckResourceAttrAccountID(resourceName, "receiver_account_id"),

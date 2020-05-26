@@ -127,7 +127,7 @@ func testAccCheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, a
 }
 
 // testAccCheckResourceAttrRegionalARNAccountID ensures the Terraform state exactly matches a formatted ARN with region and specific account ID
-func testAccCheckResourceAttrRegionalARNAccountID(resourceName, attributeName, accountID, arnService, arnResource string) resource.TestCheckFunc {
+func testAccCheckResourceAttrRegionalARNAccountID(resourceName, attributeName, arnService, accountID, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
 			AccountID: accountID,
@@ -182,7 +182,7 @@ func testAccMatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, a
 }
 
 // testAccMatchResourceAttrRegionalARNAccountID ensures the Terraform state regexp matches a formatted ARN with region and specific account ID
-func testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, accountID, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+func testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, arnService, accountID string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arnRegexp := arn.ARN{
 			AccountID: accountID,
