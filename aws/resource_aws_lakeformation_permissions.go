@@ -153,10 +153,36 @@ func resourceAwsLakeFormationPermissionsList(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).lakeformationconn
 	catalogId := d.Get("catalog_id").(string)
 
+	// This operation does not support getting privileges on a table with columns.
+	// Instead, call this operation on the table, and the operation returns the
+	// table and the table w columns.
+	resource := expandAwsLakeFormationResource(d)
+	isTableWithColumnsResource := false
+	if table := resource.TableWithColumns; table != nil {
+		resource.Table = &lakeformation.TableResource{
+			DatabaseName: resource.TableWithColumns.DatabaseName,
+			Name:         resource.TableWithColumns.Name,
+		}
+		resource.TableWithColumns = nil
+		isTableWithColumnsResource = true
+	}
+
+	var resourceType string
+	if table := resource.Catalog; table != nil {
+		resourceType = lakeformation.DataLakeResourceTypeCatalog
+	} else if location := resource.DataLocation; location != nil {
+		resourceType = lakeformation.DataLakeResourceTypeDataLocation
+	} else if DB := resource.Database; DB != nil {
+		resourceType = lakeformation.DataLakeResourceTypeDatabase
+	} else {
+		resourceType = lakeformation.DataLakeResourceTypeTable
+	}
+
 	input := &lakeformation.ListPermissionsInput{
-		CatalogId: aws.String(catalogId),
-		Principal: expandAwsLakeFormationPrincipal(d),
-		Resource:  expandAwsLakeFormationResource(d),
+		CatalogId:    aws.String(catalogId),
+		Principal:    expandAwsLakeFormationPrincipal(d),
+		Resource:     resource,
+		ResourceType: &resourceType,
 	}
 
 	out, err := conn.ListPermissions(input)
@@ -167,6 +193,19 @@ func resourceAwsLakeFormationPermissionsList(d *schema.ResourceData, meta interf
 	permissions := out.PrincipalResourcePermissions
 	if len(permissions) == 0 {
 		return fmt.Errorf("Error no LakeFormation Permissions found: %s", input)
+	}
+
+	// This operation does not support getting privileges on a table with columns.
+	// Instead, call this operation on the table, and the operation returns the
+	// table and the table w columns.
+	if isTableWithColumnsResource {
+		filtered := make([]*lakeformation.PrincipalResourcePermissions, 0)
+		for _, p := range permissions {
+			if table := p.Resource.TableWithColumns; table != nil {
+				filtered = append(filtered, p)
+			}
+		}
+		permissions = filtered
 	}
 
 	permissionsHead := permissions[0]

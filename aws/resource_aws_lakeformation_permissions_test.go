@@ -78,24 +78,8 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
 				),
 			},
-			// FIXME: more than one permission in API read result (in acceptance tests setup)
-			{
-				Config: testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, "\"ALL\", \"SELECT\""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
-					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
-					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
-					resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", "SELECT"),
-				),
-			},
-			// FIXME: WIP
 			// {
-			// 	Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, dName, tName),
+			// 	Config: testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, "\"ALL\", \"SELECT\""),
 			// 	Check: resource.ComposeTestCheckFunc(
 			// 		testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
 			// 		resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
@@ -103,13 +87,27 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 			// 		resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 			// 		resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
 			// 		resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
-			// 		resource.TestCheckResourceAttr(resourceName, "table.0.column_names.#", "2"),
-			// 		resource.TestCheckResourceAttr(resourceName, "table.0.column_names.0", "event"),
-			// 		resource.TestCheckResourceAttr(resourceName, "table.0.column_names.1", "timestamp"),
-			// 		resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-			// 		resource.TestCheckResourceAttr(resourceName, "permissions.0", "SELECT"),
+			// 		resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+			// 		resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
+			// 		resource.TestCheckResourceAttr(resourceName, "permissions.1", "SELECT"),
 			// 	),
 			// },
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, dName, tName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
+					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
+					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
+					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
+					resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
+					resource.TestCheckResourceAttr(resourceName, "table.0.column_names.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "table.0.column_names.0", "event"),
+					resource.TestCheckResourceAttr(resourceName, "table.0.column_names.1", "timestamp"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", "SELECT"),
+				),
+			},
 		},
 	})
 }
@@ -131,6 +129,8 @@ resource "aws_lakeformation_datalake_settings" "test" {
 resource "aws_lakeformation_permissions" "test" {
   permissions = ["CREATE_DATABASE"]
   principal   = data.aws_iam_role.test.arn
+
+  depends_on = ["aws_lakeformation_datalake_settings.test"]
 }
 `
 }
@@ -238,7 +238,7 @@ resource "aws_lakeformation_permissions" "test" {
 `, rName, dName, tName, permissions)
 }
 
-/* func testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, dName, tName string) string {
+func testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, dName, tName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -291,7 +291,7 @@ resource "aws_lakeformation_permissions" "test" {
   }
 }
 `, rName, dName, tName)
-} */
+}
 
 func testAccCheckAWSLakeFormationPermissionsRevoked(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).lakeformationconn
