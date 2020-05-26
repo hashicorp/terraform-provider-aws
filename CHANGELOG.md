@@ -1,5 +1,7 @@
 ## 2.64.0 (Unreleased)
 
+ENHANCMENTS:
+
 * resource/aws_ses_event_destination: Support resource import [GH-13464]
 
 BUG FIXES:
