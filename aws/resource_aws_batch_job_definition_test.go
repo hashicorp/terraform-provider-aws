@@ -30,9 +30,12 @@ func testSweepBatchJobDefinitions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).batchconn
+	input := &batch.DescribeJobDefinitionsInput{
+		Status: aws.String("ACTIVE"),
+	}
 	var sweeperErrs *multierror.Error
 
-	err = conn.DescribeJobDefinitionsPages(&batch.DescribeJobDefinitionsInput{}, func(page *batch.DescribeJobDefinitionsOutput, isLast bool) bool {
+	err = conn.DescribeJobDefinitionsPages(input, func(page *batch.DescribeJobDefinitionsOutput, isLast bool) bool {
 		if page == nil {
 			return !isLast
 		}
