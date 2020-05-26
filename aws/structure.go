@@ -700,7 +700,7 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
 
-		if volume.DockerVolumeConfiguration != nil {
+		if volume.EfsVolumeConfiguration != nil {
 			l["efs_volume_configuration"] = flattenEFSVolumeConfiguration(volume.EfsVolumeConfiguration)
 		}
 
