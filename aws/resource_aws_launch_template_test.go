@@ -891,6 +891,13 @@ func TestAccAWSLaunchTemplate_metadataOptions(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSLaunchTemplateConfig_metadataOptions_remove(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSLaunchTemplateExists(resourceName, &template),
+					resource.TestCheckResourceAttr(resourceName, "metadata_options.#", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -1643,6 +1650,14 @@ resource "aws_launch_template" "test" {
     http_tokens                 = "required"
     http_put_response_hop_limit = 2
   }
+}
+`, rName)
+}
+
+func testAccAWSLaunchTemplateConfig_metadataOptions_remove(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_launch_template" "test" {
+  name = %[1]q
 }
 `, rName)
 }
