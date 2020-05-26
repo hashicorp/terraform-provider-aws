@@ -61,7 +61,6 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 				Config: testAccAWSIotRoleAliasConfigUpdate5(alias2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIotRoleAliasExists(resourceName2),
-					resource.TestMatchResourceAttr(resourceName2, "role_arn", regexp.MustCompile(".+?bogus")),
 					testAccMatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
 				),
 			},
