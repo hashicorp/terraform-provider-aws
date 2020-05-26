@@ -39,6 +39,24 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
 				),
 			},
+			{
+				ResourceName:      cloudwatchDestinationResourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName1, rName1),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      kinesisDestinationResourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName1, rName2),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      snsDestinationResourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName1, rName3),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }

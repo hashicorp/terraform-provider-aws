@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -16,7 +17,7 @@ func resourceAwsSesEventDestination() *schema.Resource {
 		Read:   resourceAwsSesEventDestinationRead,
 		Delete: resourceAwsSesEventDestinationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: resourceAwsSesEventDestinationImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -246,6 +247,22 @@ func resourceAwsSesEventDestinationDelete(d *schema.ResourceData, meta interface
 	})
 
 	return err
+}
+
+func resourceAwsSesEventDestinationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), "/")
+	if len(parts) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'configuration-set-name/event-destination-name'", d.Id())
+	}
+
+	configurationSetName := parts[0]
+	eventDestinationName := parts[1]
+	log.Printf("[DEBUG] Importing SES event destination %s from configuration set %s", eventDestinationName, configurationSetName)
+
+	d.SetId(eventDestinationName)
+	d.Set("configuration_set_name", configurationSetName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {
