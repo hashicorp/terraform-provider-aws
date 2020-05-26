@@ -188,6 +188,11 @@ func New(i interface{}) (ResourceTags, error) {
 				return nil, fmt.Errorf("missing Auto Scaling tag key")
 			}
 
+			if _, ok := tags[key]; ok {
+				// https://github.com/terraform-providers/terraform-provider-aws/issues/6375.
+				return nil, fmt.Errorf("duplicate Auto Scaling tag key (%s)", key)
+			}
+
 			value, ok := m["value"].(string)
 			if !ok {
 				return nil, fmt.Errorf("invalid tag value for Auto Scaling tag key (%s)", key)

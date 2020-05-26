@@ -199,6 +199,27 @@ func TestResourceTagsNew(t *testing.T) {
 			},
 			fail: true,
 		},
+		{
+			name: "duplicate_key",
+			data: []interface{}{
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1a",
+					"propagate_at_launch": true,
+				},
+				map[string]interface{}{
+					"key":                 "key2",
+					"value":               "value2",
+					"propagate_at_launch": false,
+				},
+				map[string]interface{}{
+					"key":                 "key1",
+					"value":               "value1b",
+					"propagate_at_launch": true,
+				},
+			},
+			fail: true,
+		},
 	}
 
 	for _, testCase := range testCases {
