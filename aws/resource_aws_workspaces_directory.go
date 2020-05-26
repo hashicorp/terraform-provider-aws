@@ -163,7 +163,7 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).workspacesconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	rawOutput, state, err := waiter.DirectoryRefreshStateFunc(conn, d.Id())()
+	rawOutput, state, err := waiter.DirectoryState(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error getting WorkSpaces Directory (%s): %s", d.Id(), err)
 	}

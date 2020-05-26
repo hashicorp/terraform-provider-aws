@@ -33,7 +33,7 @@ func DirectoryRegistered(conn *workspaces.WorkSpaces, directoryID string) (*work
 			workspaces.WorkspaceDirectoryStateRegistering,
 		},
 		Target:  []string{workspaces.WorkspaceDirectoryStateRegistered},
-		Refresh: DirectoryRefreshStateFunc(conn, directoryID),
+		Refresh: DirectoryState(conn, directoryID),
 		Timeout: DirectoryRegisteredTimeout,
 	}
 
@@ -56,7 +56,7 @@ func DirectoryDeregistered(conn *workspaces.WorkSpaces, directoryID string) (*wo
 		Target: []string{
 			workspaces.WorkspaceDirectoryStateDeregistered,
 		},
-		Refresh: DirectoryRefreshStateFunc(conn, directoryID),
+		Refresh: DirectoryState(conn, directoryID),
 		Timeout: DirectoryDeregisteredTimeout,
 	}
 
@@ -76,7 +76,7 @@ func WorkspaceAvailable(conn *workspaces.WorkSpaces, workspaceID string) (*works
 			workspaces.WorkspaceStateStarting,
 		},
 		Target:  []string{workspaces.WorkspaceStateAvailable},
-		Refresh: WorkspaceRefreshStateFunc(conn, workspaceID),
+		Refresh: WorkspaceState(conn, workspaceID),
 		Timeout: WorkspaceAvailableTimeout,
 	}
 
@@ -112,7 +112,7 @@ func WorkspaceTerminated(conn *workspaces.WorkSpaces, workspaceID string) (*work
 		Target: []string{
 			workspaces.WorkspaceStateTerminated,
 		},
-		Refresh: WorkspaceRefreshStateFunc(conn, workspaceID),
+		Refresh: WorkspaceState(conn, workspaceID),
 		Timeout: WorkspaceTerminatedTimeout,
 	}
 
@@ -136,7 +136,7 @@ func WorkspaceUpdated(conn *workspaces.WorkSpaces, workspaceID string) (*workspa
 			workspaces.WorkspaceStateAvailable,
 			workspaces.WorkspaceStateStopped,
 		},
-		Refresh: WorkspaceRefreshStateFunc(conn, workspaceID),
+		Refresh: WorkspaceState(conn, workspaceID),
 		Delay:   WorkspaceUpdatingDelay,
 		Timeout: WorkspaceUpdatingTimeout,
 	}

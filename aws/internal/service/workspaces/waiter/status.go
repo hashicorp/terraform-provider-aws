@@ -6,7 +6,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
-func DirectoryRefreshStateFunc(conn *workspaces.WorkSpaces, directoryID string) resource.StateRefreshFunc {
+func DirectoryState(conn *workspaces.WorkSpaces, directoryID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.DescribeWorkspaceDirectories(&workspaces.DescribeWorkspaceDirectoriesInput{
 			DirectoryIds: aws.StringSlice([]string{directoryID}),
@@ -24,7 +24,7 @@ func DirectoryRefreshStateFunc(conn *workspaces.WorkSpaces, directoryID string) 
 	}
 }
 
-func WorkspaceRefreshStateFunc(conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
+func WorkspaceState(conn *workspaces.WorkSpaces, workspaceID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: aws.StringSlice([]string{workspaceID}),

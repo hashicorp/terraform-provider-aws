@@ -187,7 +187,7 @@ func resourceAwsWorkspacesWorkspaceRead(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).workspacesconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	rawOutput, state, err := waiter.WorkspaceRefreshStateFunc(conn, d.Id())()
+	rawOutput, state, err := waiter.WorkspaceState(conn, d.Id())()
 	if err != nil {
 		return fmt.Errorf("error reading workspace (%s): %s", d.Id(), err)
 	}
