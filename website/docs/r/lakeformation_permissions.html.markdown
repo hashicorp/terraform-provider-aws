@@ -128,7 +128,7 @@ resource "aws_glue_catalog_table" "example" {
 }
 
 resource "aws_lakeformation_permissions" "example" {
-  permissions = [""SELECT"]
+  permissions = ["SELECT"]
   principal   = data.aws_iam_role.example.arn
 
   table {
