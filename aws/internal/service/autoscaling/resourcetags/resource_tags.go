@@ -20,14 +20,14 @@ type TagValue struct {
 type ResourceTags map[string]TagValue
 
 // AutoscalingTags returns autoscaling service tags.
-func (tags ResourceTags) AutoscalingTags(resourceID string) []*autoscaling.Tag {
+func (tags ResourceTags) AutoscalingTags(identifier string) []*autoscaling.Tag {
 	result := make([]*autoscaling.Tag, 0, len(tags))
 
 	for k, v := range tags {
 		tag := &autoscaling.Tag{
 			Key:               aws.String(k),
 			PropagateAtLaunch: aws.Bool(v.PropagateAtLaunch),
-			ResourceId:        aws.String(resourceID),
+			ResourceId:        aws.String(identifier),
 			ResourceType:      aws.String("auto-scaling-group"),
 			Value:             aws.String(v.Value),
 		}
