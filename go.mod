@@ -3,7 +3,7 @@ module github.com/terraform-providers/terraform-provider-aws
 go 1.13
 
 require (
-	github.com/aws/aws-sdk-go v1.31.2
+	github.com/aws/aws-sdk-go v1.31.4
 	github.com/beevik/etree v1.1.0
 	github.com/bflad/tfproviderdocs v0.6.0
 	github.com/bflad/tfproviderlint v0.14.0
@@ -21,6 +21,7 @@ require (
 	github.com/mitchellh/copystructure v1.0.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/pquerna/otp v1.2.0
+	golang.org/x/net v0.0.0-20200520182314-0ba52f642ac2 // indirect
 	golang.org/x/tools v0.0.0-20200422022333-3d57cf2e726e
 	gopkg.in/yaml.v2 v2.2.8
 )

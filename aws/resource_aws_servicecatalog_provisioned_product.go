@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/session"
 	"log"
 	"time"
 
@@ -13,6 +14,92 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
+
+func GetLaunchPathByName(ProductName string) string {
+
+	productId := GetProductIdByName(ProductName)
+
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	svc := servicecatalog.New(sess)
+
+	params :=&servicecatalog.ListLaunchPathsInput{
+		ProductId: &productId,
+	}
+
+	resp, err := svc.ListLaunchPaths(params)
+
+	if err != nil {
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		fmt.Println(err.Error())
+	}
+
+	var LaunchPathId interface{}
+
+	for i := range resp.LaunchPathSummaries {
+		if *resp.LaunchPathSummaries[i].Name == ProductName {
+			LaunchPathId = *resp.LaunchPathSummaries[i].Id
+		}
+	}
+	return LaunchPathId.(string)
+}
+
+func GetProductIdByName(ProductName string) string {
+	sess := session.Must(session.NewSessionWithOptions(session.Options{
+		SharedConfigState: session.SharedConfigEnable,
+	}))
+
+	svc := servicecatalog.New(sess)
+
+	params :=&servicecatalog.SearchProductsInput{
+		AcceptLanguage: aws.String("en"),
+	}
+
+	resp, err := svc.SearchProducts(params)
+
+	if err != nil {
+		// Print the error, cast err to awserr.Error to get the Code and
+		// Message from an error.
+		fmt.Println(err.Error())
+	}
+
+	var ProductId interface{}
+
+	for i := range resp.ProductViewSummaries {
+		if *resp.ProductViewSummaries[i].Name == ProductName {
+			ProductId = *resp.ProductViewSummaries[i].ProductId
+		}
+	}
+	return ProductId.(string)
+}
+
+func GetProductArtifactIdByName(ProductId string, ProductArtifactName string, meta interface{}) string {
+	conn := meta.(*AWSClient).scconn
+
+	params :=&servicecatalog.DescribeProductInput{
+		AcceptLanguage: aws.String("en"),
+		Id:             aws.String(ProductId),
+	}
+
+	resp, err := conn.DescribeProduct(params)
+
+	if err != nil {
+		return fmt.Errorf("retrieving product artificate id by name failed: %s", err.Error())
+	}
+
+	var ArtifactId interface{}
+
+	for i := range resp.ProvisioningArtifacts {
+		if *resp.ProvisioningArtifacts[i].Name == ProductArtifactName {
+			ArtifactId = *resp.ProvisioningArtifacts[i].Id
+		}
+	}
+
+	return ArtifactId.(string)
+}
 
 func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
