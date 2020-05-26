@@ -1,4 +1,9 @@
 ## 2.64.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_lightsail_instance: `ram_size` now properly set [GH-13430]
+
 ## 2.63.0 (May 22, 2020)
 
 FEATURES:
