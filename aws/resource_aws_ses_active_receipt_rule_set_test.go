@@ -98,7 +98,7 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 		}
 
 		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) != rs.Primary.ID) {
-			return fmt.Errorf("The active receipt rule set (%s) was not set to test-receipt-rule", aws.StringValue(response.Metadata.Name))
+			return fmt.Errorf("The active receipt rule set (%s) was not set to %s", aws.StringValue(response.Metadata.Name), rs.Primary.ID)
 		}
 
 		return nil
