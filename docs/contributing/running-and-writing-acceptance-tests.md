@@ -14,6 +14,7 @@
     - [Randomized Naming](#randomized-naming)
     - [Other Recommended Variables](#other-recommended-variables)
     - [Basic Acceptance Tests](#basic-acceptance-tests)
+    - [Service Availability PreCheck](#service-availability-precheck)
     - [Disappears Acceptance Tests](#disappears-acceptance-tests)
     - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
     - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
@@ -493,6 +494,36 @@ resource "aws_example_thing" "test" {
   name = %[1]q
 }
 `, rName)
+}
+```
+
+#### Service Availability PreCheck
+
+When new AWS services are added to the provider, a simple read-only request (e.g. list all X service things) should be implemented in an acceptance test PreCheck function that helps the acceptance testing determine if the service exists for the particular environment it runs in. Note: This was not common practice in the past so many existing tests will not include this step.
+
+For example:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t), testAccPreCheckAwsExample(t) },
+    // ... additional checks follow ...
+  })
+}
+
+func testAccPreCheckAwsExample(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).exampleconn
+	input := &example.ListThingsInput{}
+	_, err := conn.ListThings(input)
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
 ```
 
