@@ -260,17 +260,6 @@ func resourceAwsCloudFormationStackSetInstanceParseId(id string) (string, string
 	return parts[0], parts[1], parts[2], nil
 }
 
-func listCloudFormationStackSetInstances(conn *cloudformation.CloudFormation, stackSetName string) ([]*cloudformation.StackInstanceSummary, error) {
-	result := make([]*cloudformation.StackInstanceSummary, 0)
-
-	listAllCloudFormationStackSetInstancesPages(conn, stackSetName, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
-		result = append(result, page.Summaries...)
-		return !lastPage
-	})
-
-	return result, nil
-}
-
 // generate
 func listAllCloudFormationStackSetInstancesPages(conn *cloudformation.CloudFormation, stackSetName string, fn func(*cloudformation.ListStackInstancesOutput, bool) bool) error {
 	input := &cloudformation.ListStackInstancesInput{

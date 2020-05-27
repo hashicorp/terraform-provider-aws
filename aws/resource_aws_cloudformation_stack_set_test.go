@@ -66,7 +66,7 @@ func testSweepCloudformationStackSets(region string) error {
 	})
 
 	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFormation StackSet sweeper for %q: %w", region, err)
+		log.Printf("[WARN] Skipping CloudFormation StackSet sweeper for %q: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
@@ -76,51 +76,6 @@ func testSweepCloudformationStackSets(region string) error {
 
 	return sweeperErrs.ErrorOrNil()
 }
-
-// func testSweepCloudformationStackSets(region string) error {
-// 	client, err := sharedClientForRegion(region)
-
-// 	if err != nil {
-// 		return fmt.Errorf("error getting client: %w", err)
-// 	}
-
-// 	conn := client.(*AWSClient).cfconn
-// 	stackSets, err := listCloudFormationStackSets(conn)
-
-// 	if testSweepSkipSweepError(err) || isAWSErr(err, "ValidationError", "AWS CloudFormation StackSets is not supported") {
-// 		log.Printf("[WARN] Skipping CloudFormation StackSet sweep for %s: %s", region, err)
-// 		return nil
-// 	}
-
-// 	if err != nil {
-// 		return fmt.Errorf("error listing CloudFormation StackSets: %w", err)
-// 	}
-
-// 	var sweeperErrs *multierror.Error
-
-// 	for _, stackSet := range stackSets {
-// 		input := &cloudformation.DeleteStackSetInput{
-// 			StackSetName: stackSet.StackSetName,
-// 		}
-// 		name := aws.StringValue(stackSet.StackSetName)
-
-// 		log.Printf("[INFO] Deleting CloudFormation StackSet: %s", name)
-// 		_, err := conn.DeleteStackSet(input)
-
-// 		if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
-// 			continue
-// 		}
-
-// 		if err != nil {
-// 			sweeperErr := fmt.Errorf("error deleting CloudFormation StackSet (%s): %w", name, err)
-// 			log.Printf("[ERROR] %s", sweeperErr)
-// 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-// 			continue
-// 		}
-// 	}
-
-// 	return sweeperErrs.ErrorOrNil()
-// }
 
 func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
 	var stackSet1 cloudformation.StackSet

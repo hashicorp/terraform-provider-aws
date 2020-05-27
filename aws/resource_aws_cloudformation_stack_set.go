@@ -269,17 +269,6 @@ func deleteCloudFormationStackSet(conn *cloudformation.CloudFormation, name stri
 	return err
 }
 
-func listCloudFormationStackSets(conn *cloudformation.CloudFormation) ([]*cloudformation.StackSetSummary, error) {
-	result := make([]*cloudformation.StackSetSummary, 0)
-
-	listAllCloudFormationStackSetsPages(conn, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
-		result = append(result, page.Summaries...)
-		return !lastPage
-	})
-
-	return result, nil
-}
-
 // generate
 func listAllCloudFormationStackSetsPages(conn *cloudformation.CloudFormation, fn func(*cloudformation.ListStackSetsOutput, bool) bool) error {
 	input := &cloudformation.ListStackSetsInput{
