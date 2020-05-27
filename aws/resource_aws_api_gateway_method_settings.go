@@ -96,6 +96,23 @@ func resourceAwsApiGatewayMethodSettings() *schema.Resource {
 	}
 }
 
+func flattenAwsApiGatewayMethodSettings(settings *apigateway.MethodSetting) []interface{} {
+	return []interface{}{
+		map[string]interface{}{
+			"metrics_enabled":                            settings.MetricsEnabled,
+			"logging_level":                              settings.LoggingLevel,
+			"data_trace_enabled":                         settings.DataTraceEnabled,
+			"throttling_burst_limit":                     settings.ThrottlingBurstLimit,
+			"throttling_rate_limit":                      settings.ThrottlingRateLimit,
+			"caching_enabled":                            settings.CachingEnabled,
+			"cache_ttl_in_seconds":                       settings.CacheTtlInSeconds,
+			"cache_data_encrypted":                       settings.CacheDataEncrypted,
+			"require_authorization_for_cache_control":    settings.RequireAuthorizationForCacheControl,
+			"unauthorized_cache_control_header_strategy": settings.UnauthorizedCacheControlHeaderStrategy,
+		},
+	}
+}
+
 func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
 
@@ -123,18 +140,7 @@ func resourceAwsApiGatewayMethodSettingsRead(d *schema.ResourceData, meta interf
 		return nil
 	}
 
-	if err := d.Set("settings", []interface{}{map[string]interface{}{
-		"metrics_enabled":                            settings.MetricsEnabled,
-		"logging_level":                              settings.LoggingLevel,
-		"data_trace_enabled":                         settings.DataTraceEnabled,
-		"throttling_burst_limit":                     settings.ThrottlingBurstLimit,
-		"throttling_rate_limit":                      settings.ThrottlingRateLimit,
-		"caching_enabled":                            settings.CachingEnabled,
-		"cache_ttl_in_seconds":                       settings.CacheTtlInSeconds,
-		"cache_data_encrypted":                       settings.CacheDataEncrypted,
-		"require_authorization_for_cache_control":    settings.RequireAuthorizationForCacheControl,
-		"unauthorized_cache_control_header_strategy": settings.UnauthorizedCacheControlHeaderStrategy,
-	}}); err != nil {
+	if err := d.Set("settings", flattenAwsApiGatewayMethodSettings(settings)); err != nil {
 		return fmt.Errorf("error setting settings: %s", err)
 	}
 
