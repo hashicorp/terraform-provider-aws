@@ -116,6 +116,7 @@ func TestAccAWSSESReceiptRule_actions(t *testing.T) {
 func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_ses_receipt_rule.basic"
+	ruleSetResourceName := "aws_ses_receipt_rule_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -129,7 +130,7 @@ func TestAccAWSSESReceiptRule_disappears(t *testing.T) {
 				Config: testAccAWSSESReceiptRuleBasicConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESReceiptRuleExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), ruleSetResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

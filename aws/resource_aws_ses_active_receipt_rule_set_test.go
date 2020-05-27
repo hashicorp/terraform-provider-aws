@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -10,6 +11,8 @@ import (
 )
 
 func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -19,7 +22,7 @@ func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESActiveReceiptRuleSetConfig,
+				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESActiveReceiptRuleSetExists("aws_ses_active_receipt_rule_set.test"),
 				),
@@ -29,8 +32,8 @@ func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 }
 
 func TestAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ses_active_receipt_rule_set.test"
-	receiptRuleSetResourceName := "aws_ses_receipt_rule_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -41,15 +44,7 @@ func TestAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESActiveReceiptRuleSetConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), receiptRuleSetResourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccAWSSESActiveReceiptRuleSetConfig,
+				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesActiveReceiptRuleSet(), resourceName),
@@ -109,12 +104,14 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 	}
 }
 
-const testAccAWSSESActiveReceiptRuleSetConfig = `
+func testAccAWSSESActiveReceiptRuleSetConfig(name string) string {
+	return fmt.Sprintf(`
 resource "aws_ses_receipt_rule_set" "test" {
-    rule_set_name = "test-receipt-rule"
+	rule_set_name = "%s"
 }
 
 resource "aws_ses_active_receipt_rule_set" "test" {
-    rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
+	rule_set_name = "${aws_ses_receipt_rule_set.test.rule_set_name}"
 }
-`
+`, name)
+}
