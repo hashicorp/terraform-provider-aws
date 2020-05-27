@@ -837,6 +837,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("service_execution_role", aws.StringValue(resp.ApplicationDetail.ServiceExecutionRole))
 	d.Set("runtime", aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment))
 
+	// FIXME: this is currently broken
 	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(resp.ApplicationDetail.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_code_configuration: %s", err)
 	}
@@ -1754,17 +1755,15 @@ func flattenKinesisAnalyticsV2SnapshotConfiguration(snapshotConfig *kinesisanaly
 }
 
 func flattenKinesisAnalyticsV2EnvironmentProperties(envProps *kinesisanalyticsv2.EnvironmentPropertyDescriptions) []interface{} {
-
-	ret := []interface{}{}
+	items := []interface{}{}
 	for _, group := range envProps.PropertyGroupDescriptions {
-		ret = append(ret, schema.NewSet(resourcePropertyGroupHash,
-			[]interface{}{map[string]interface{}{
-				"property_group_id": aws.StringValue(group.PropertyGroupId),
-				"property_map":      flattenPropertyMap(group.PropertyMap),
-			}},
-		))
+		items = append(items, map[string]interface{}{
+			"property_group_id": aws.StringValue(group.PropertyGroupId),
+			"property_map":      flattenPropertyMap(group.PropertyMap),
+		})
 	}
-	return ret
+	set := schema.NewSet(resourcePropertyGroupHash, items)
+	return []interface{}{set}
 }
 
 func flattenPropertyMap(m map[string]*string) map[string]string {
