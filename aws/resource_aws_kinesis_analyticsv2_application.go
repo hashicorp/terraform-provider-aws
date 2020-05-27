@@ -1073,11 +1073,8 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(conf []interface{}) *kines
 		}
 	}
 	var snapshotConfig *kinesisanalyticsv2.ApplicationSnapshotConfiguration
-	if v, ok := c["snapshots_enabled"]; ok {
-		snapshotsEnabled, _ := v.(bool)
-		snapshotConfig = &kinesisanalyticsv2.ApplicationSnapshotConfiguration{
-			SnapshotsEnabled: aws.Bool(snapshotsEnabled),
-		}
+	if v, ok := c["application_snapshot_configuration"]; ok {
+		snapshotConfig = expandKinesisAnalyticsV2ApplicationSnapshotConfiguration(v.(*schema.Set))
 	}
 
 	var codeConfig *kinesisanalyticsv2.ApplicationCodeConfiguration
@@ -1837,6 +1834,19 @@ func expandKinesisAnalyticsV2ApplicationCodeConfiguration(conf []interface{}) *k
 			S3ContentLocation: s3ContentLocation,
 			TextContent:       textContent,
 		},
+	}
+}
+
+func expandKinesisAnalyticsV2ApplicationSnapshotConfiguration(s *schema.Set) *kinesisanalyticsv2.ApplicationSnapshotConfiguration {
+	var snapshotsEnabled *bool
+	for _, v := range s.List() {
+		m := v.(map[string]interface{})
+		if enabled, ok := m["snapshots_enabled"]; ok {
+			snapshotsEnabled = aws.Bool(enabled.(bool))
+		}
+	}
+	return &kinesisanalyticsv2.ApplicationSnapshotConfiguration{
+		SnapshotsEnabled: snapshotsEnabled,
 	}
 }
 
