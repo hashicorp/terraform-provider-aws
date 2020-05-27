@@ -28,6 +28,38 @@ func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSESActiveReceiptRuleSet_disappears(t *testing.T) {
+	resourceName := "aws_ses_active_receipt_rule_set.test"
+	receiptRuleSetResourceName := "aws_ses_receipt_rule_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESActiveReceiptRuleSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESActiveReceiptRuleSetConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesReceiptRuleSet(), receiptRuleSetResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSSESActiveReceiptRuleSetConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesActiveReceiptRuleSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
