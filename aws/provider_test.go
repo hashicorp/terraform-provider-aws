@@ -428,6 +428,7 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 	}
 }
 
+// Deprecated: Use testAccMultipleRegionPreCheck instead
 func testAccAlternateRegionPreCheck(t *testing.T) {
 	if testAccGetRegion() == testAccGetAlternateRegion() {
 		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
@@ -435,18 +436,6 @@ func testAccAlternateRegionPreCheck(t *testing.T) {
 
 	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
 		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
-	}
-}
-
-func testAccThirdRegionPreCheck(t *testing.T) {
-	testAccAlternateRegionPreCheck(t)
-
-	if testAccGetRegion() == testAccGetThirdRegion() {
-		t.Fatal("AWS_DEFAULT_REGION and AWS_THIRD_REGION must be set to different values for acceptance tests")
-	}
-
-	if testAccGetPartition() != testAccGetThirdRegionPartition() {
-		t.Fatalf("AWS_THIRD_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetThirdRegionPartition(), testAccGetPartition())
 	}
 }
 
@@ -478,19 +467,32 @@ func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
 	}
 }
 
-func testAccMultipleRegionPreCheck(t *testing.T, expected int) {
-	switch expected {
-	case 2:
-		testAccAlternateRegionPreCheck(t)
-	case 3:
-		testAccThirdRegionPreCheck(t)
-	default:
-		t.Fatalf("unknown expected region: %d", expected)
+func testAccMultipleRegionPreCheck(t *testing.T, regions int) {
+	if testAccGetRegion() == testAccGetAlternateRegion() {
+		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
+	}
+
+	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
+		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
+	}
+
+	if regions >= 3 {
+		if testAccGetRegion() == testAccGetThirdRegion() {
+			t.Fatal("AWS_DEFAULT_REGION and AWS_THIRD_REGION must be set to different values for acceptance tests")
+		}
+
+		if testAccGetAlternateRegion() == testAccGetThirdRegion() {
+			t.Fatal("AWS_ALTERNATE_REGION and AWS_THIRD_REGION must be set to different values for acceptance tests")
+		}
+
+		if testAccGetPartition() != testAccGetThirdRegionPartition() {
+			t.Fatalf("AWS_THIRD_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetThirdRegionPartition(), testAccGetPartition())
+		}
 	}
 
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
-		if len(partition.Regions()) < expected {
-			t.Skipf("skipping tests; partition includes %d regions, %d expected", len(partition.Regions()), expected)
+		if len(partition.Regions()) < regions {
+			t.Skipf("skipping tests; partition includes %d regions, %d expected", len(partition.Regions()), regions)
 		}
 	}
 }
