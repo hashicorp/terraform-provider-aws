@@ -387,27 +387,6 @@ func testAccCheckAWSCloudFormationStackSetInstanceDestroy(s *terraform.State) er
 	return nil
 }
 
-// func testAccCheckCloudFormationStackSetInstanceDisappears(stackInstance *cloudformation.StackInstance) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := testAccProvider.Meta().(*AWSClient).cfconn
-
-// 		input := &cloudformation.DeleteStackInstancesInput{
-// 			Accounts:     []*string{stackInstance.Account},
-// 			Regions:      []*string{stackInstance.Region},
-// 			RetainStacks: aws.Bool(false),
-// 			StackSetName: stackInstance.StackSetId,
-// 		}
-
-// 		output, err := conn.DeleteStackInstances(input)
-
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		return waitForCloudFormationStackSetOperation(conn, aws.StringValue(stackInstance.StackSetId), aws.StringValue(output.OperationId), 10*time.Minute)
-// 	}
-// }
-
 func testAccCheckCloudFormationStackSetInstanceNotRecreated(i, j *cloudformation.StackInstance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.StackId) != aws.StringValue(j.StackId) {
