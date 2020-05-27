@@ -143,10 +143,7 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 	d.Set("load_balancer", lbName)
 	d.Set("lb_port", lbPort)
 
-	// We can get away with this because there's only one policy returned
-	policyDesc := getResp.PolicyDescriptions[0]
-	attributes := flattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
-
+	// TODO: fix attribute
 	// This was previously erroneously setting "attributes", however this cannot
 	// be changed without introducing problematic side effects. The ELB service
 	// automatically expands the results to include all SSL attributes
@@ -154,7 +151,9 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 	// quite impractical to force practitioners to write out and potentially
 	// update each time the API updates since there is nearly 100 attributes.
 
-	// TODO: fix attribute
+	// We can get away with this because there's only one policy returned
+	// policyDesc := getResp.PolicyDescriptions[0]
+	// attributes := flattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
 	// if err := d.Set("attribute", attributes); err != nil {
 	// 	return fmt.Errorf("error setting attribute: %s", err)
 	// }
