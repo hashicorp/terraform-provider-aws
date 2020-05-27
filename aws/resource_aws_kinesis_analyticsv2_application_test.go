@@ -1009,12 +1009,21 @@ resource "aws_kinesis_analyticsv2_application" "test" {
   name    = "testAccFlink-%d"
 
   runtime           = "FLINK-1_8"
-  s3_bucket         = "${aws_s3_bucket.test.arn}"
-  s3_object         = "${aws_s3_bucket_object.object.key}"
-  code_content_type = "zip"
-  snapshots_enabled = true
 
   application_configuration {
+    application_snapshot_configuration {
+      snapshots_enabled = true
+    }
+    application_code_configuration {
+      code_content_type = "ZIPFILE"
+      code_content {
+        s3_content_location = {
+	  bucket_arn = "${aws_s3_bucket.test.arn}"
+	  file_key = "${aws_s3_bucket_object.object.key}"
+	}
+      }
+    }
+
     flink_application_configuration {
       checkpoint_configuration {
         checkpointing_enabled         = true
@@ -1063,30 +1072,41 @@ resource "aws_kinesis_analyticsv2_application" "test" {
   name    = "testAccFlink-%d"
 
   runtime           = "FLINK-1_8"
-  s3_bucket         = "${aws_s3_bucket.test.arn}"
-  s3_object         = "${aws_s3_bucket_object.object.key}"
-  code_content_type = "zip"
-  snapshots_enabled = true
 
-  flink_application_configuration {
-    checkpoint_configuration {
-      checkpointing_enabled         = true
-      checkpoint_interval           = 30000
-      configuration_type            = "CUSTOM"
-      min_pause_between_checkpoints = 10000
+  application_configuration {
+    application_snapshot_configuration {
+      snapshots_enabled = true
+    }
+    application_code_configuration {
+      code_content_type = "ZIPFILE"
+      code_content {
+        s3_content_location = {
+	  bucket_arn = "${aws_s3_bucket.test.arn}"
+	  file_key = "${aws_s3_bucket_object.object.key}"
+	}
+      }
     }
 
-    parallelism_configuration {
-      configuration_type  = "CUSTOM"
-      autoscaling_enabled = false
-      parallelism         = 1
-      parallelism_per_kpu = 1
-    }
+    flink_application_configuration {
+      checkpoint_configuration {
+        checkpointing_enabled         = true
+        checkpoint_interval           = 30000
+        configuration_type            = "CUSTOM"
+        min_pause_between_checkpoints = 10000
+      }
 
-    monitoring_configuration {
-      configuration_type = "CUSTOM"
-      log_level          = "WARN"
-      metrics_level      = "APPLICATION"
+      parallelism_configuration {
+        configuration_type  = "CUSTOM"
+        autoscaling_enabled = false
+        parallelism         = 1
+        parallelism_per_kpu = 1
+      }
+
+      monitoring_configuration {
+        configuration_type = "CUSTOM"
+        log_level          = "WARN"
+        metrics_level      = "APPLICATION"
+      }
     }
   }
 

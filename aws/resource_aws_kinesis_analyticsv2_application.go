@@ -162,7 +162,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 													Optional: true,
 												},
 												"s3_content_location": {
-													Type:     schema.TypeSet,
+													Type:     schema.TypeMap,
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -233,10 +233,9 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							},
 						},
 						"flink_application_configuration": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"sql_application_configuration"},
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"checkpoint_configuration": {
@@ -320,10 +319,9 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 						},
 
 						"sql_application_configuration": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"flink_application_configuration"},
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"inputs": {
@@ -759,7 +757,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 	serviceExecutionRole := d.Get("service_execution_role").(string)
 	runtime := d.Get("runtime").(string)
 
-	appConfig := expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{}))
+	appConfig := expandKinesisAnalyticsV2ApplicationConfiguration(runtime, d.Get("application_configuration").([]interface{}))
 
 	var cloudwatchLoggingOptions []*kinesisanalyticsv2.CloudWatchLoggingOption
 	if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
@@ -1041,13 +1039,11 @@ func resourceAwsKinesisAnalyticsV2ApplicationDelete(d *schema.ResourceData, meta
 	return nil
 }
 
-func expandKinesisAnalyticsV2ApplicationConfiguration(conf []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
+func expandKinesisAnalyticsV2ApplicationConfiguration(runtime string, conf []interface{}) *kinesisanalyticsv2.ApplicationConfiguration {
 	if len(conf) == 0 {
 		return nil
 	}
 	c := conf[0].(map[string]interface{})
-
-	runtime := c["runtime"].(string)
 
 	var sqlApplicationConfiguration *kinesisanalyticsv2.SqlApplicationConfiguration
 	var flinkApplicationConfiguration *kinesisanalyticsv2.FlinkApplicationConfiguration
@@ -1084,10 +1080,13 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(conf []interface{}) *kines
 
 	var environmentProperties *kinesisanalyticsv2.EnvironmentProperties
 	if v, ok := c["environment_properties"]; ok {
-		m := v.(map[string]interface{})
-		propertyGroups := m["property_group"].(*schema.Set).List()
-		environmentProperties = &kinesisanalyticsv2.EnvironmentProperties{
-			PropertyGroups: expandPropertyGroups(propertyGroups),
+		lst := v.([]interface{})
+		if len(lst) > 0 {
+			m := lst[0].(map[string]interface{})
+			propertyGroups := m["property_group"].(*schema.Set).List()
+			environmentProperties = &kinesisanalyticsv2.EnvironmentProperties{
+				PropertyGroups: expandPropertyGroups(propertyGroups),
+			}
 		}
 	}
 	return &kinesisanalyticsv2.ApplicationConfiguration{
@@ -1758,7 +1757,7 @@ func flattenKinesisAnalyticsV2EnvironmentProperties(envProps *kinesisanalyticsv2
 
 	ret := []interface{}{}
 	for _, group := range envProps.PropertyGroupDescriptions {
-		ret = append(ret, schema.NewSet(resourceCheckpointConfigurationHash,
+		ret = append(ret, schema.NewSet(resourcePropertyGroupHash,
 			[]interface{}{map[string]interface{}{
 				"property_group_id": aws.StringValue(group.PropertyGroupId),
 				"property_map":      flattenPropertyMap(group.PropertyMap),
@@ -1776,11 +1775,11 @@ func flattenPropertyMap(m map[string]*string) map[string]string {
 	return flattened
 }
 
-func flattenKinesisAnalyticsV2ApplicationCodeConfiguration(codeConfig *kinesisanalyticsv2.ApplicationCodeConfigurationDescription) map[string]interface{} {
+func flattenKinesisAnalyticsV2ApplicationCodeConfiguration(codeConfig *kinesisanalyticsv2.ApplicationCodeConfigurationDescription) []interface{} {
 
 	appCodeConfig := make(map[string]interface{})
 	if codeConfig != nil {
-		return appCodeConfig
+		return []interface{}{appCodeConfig}
 	}
 	codeContent := make(map[string]interface{})
 	appCodeConfig["code_content_type"] = *codeConfig.CodeContentType
@@ -1799,7 +1798,7 @@ func flattenKinesisAnalyticsV2ApplicationCodeConfiguration(codeConfig *kinesisan
 		appCodeConfig["code_content"] = codeContent
 	}
 
-	return appCodeConfig
+	return []interface{}{appCodeConfig}
 }
 
 func expandKinesisAnalyticsV2ApplicationCodeConfiguration(conf []interface{}) *kinesisanalyticsv2.ApplicationCodeConfiguration {
@@ -1807,33 +1806,44 @@ func expandKinesisAnalyticsV2ApplicationCodeConfiguration(conf []interface{}) *k
 		return nil
 	}
 	codeConfig := conf[0].(map[string]interface{})
+	contentType := aws.String(codeConfig["code_content_type"].(string))
 
-	var contentType *string
-	switch codeConfig["code_content_type"].(string) {
-	case "zip":
-		contentType = aws.String(kinesisanalyticsv2.CodeContentTypeZipfile)
-	case "plain_text":
-		contentType = aws.String(kinesisanalyticsv2.CodeContentTypePlaintext)
+	var codeContent *kinesisanalyticsv2.CodeContent
+	if v, ok := codeConfig["code_content"]; ok && v != nil {
+		codeContent = expandKinesisAnalyticsV2CodeContent(v.(*schema.Set))
 	}
 
-	codeContentMap := codeConfig["code_content"].(map[string]interface{})
-
-	var s3ContentLocation *kinesisanalyticsv2.S3ContentLocation
-	var textContent *string
-	if v, ok := codeContentMap["text_content"]; ok {
-		textContent = aws.String(v.(string))
-	}
-	s3ContentLocation = &kinesisanalyticsv2.S3ContentLocation{
-		BucketARN:     aws.String(codeContentMap["bucket_arn"].(string)),
-		FileKey:       aws.String(codeContentMap["file_key"].(string)),
-		ObjectVersion: aws.String(codeContentMap["object_version"].(string)),
-	}
 	return &kinesisanalyticsv2.ApplicationCodeConfiguration{
 		CodeContentType: contentType,
-		CodeContent: &kinesisanalyticsv2.CodeContent{
-			S3ContentLocation: s3ContentLocation,
-			TextContent:       textContent,
-		},
+		CodeContent:     codeContent,
+	}
+}
+
+func expandKinesisAnalyticsV2CodeContent(s *schema.Set) *kinesisanalyticsv2.CodeContent {
+	var s3ContentLocation *kinesisanalyticsv2.S3ContentLocation
+	var textContent *string
+	for _, v := range s.List() {
+		m := v.(map[string]interface{})
+		if tc, ok := m["text_content"]; ok && tc != "" {
+			textContent = aws.String(tc.(string))
+		}
+		if loc, ok := m["s3_content_location"]; ok {
+			locMap := loc.(map[string]interface{})
+			var objectVersion *string
+			// Object version is optional
+			if v, ok := locMap["object_version"]; ok {
+				objectVersion = aws.String(v.(string))
+			}
+			s3ContentLocation = &kinesisanalyticsv2.S3ContentLocation{
+				BucketARN:     aws.String(locMap["bucket_arn"].(string)),
+				FileKey:       aws.String(locMap["file_key"].(string)),
+				ObjectVersion: objectVersion,
+			}
+		}
+	}
+	return &kinesisanalyticsv2.CodeContent{
+		TextContent:       textContent,
+		S3ContentLocation: s3ContentLocation,
 	}
 }
 
@@ -2233,8 +2243,24 @@ func resourceSnapshotConfigurationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["snapshots_enabled"]; ok {
-		buf.WriteString(fmt.Sprintf("%d-", v.(int64)))
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
 	}
+	return hashcode.String(buf.String())
+}
+
+func resourcePropertyGroupHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+
+	if v, ok := m["property_group_id"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+	if v, ok := m["property_map"]; ok {
+		for k, pmv := range v.(map[string]string) {
+			buf.WriteString(fmt.Sprintf("%s-%s-", k, pmv))
+		}
+	}
+
 	return hashcode.String(buf.String())
 }
 
