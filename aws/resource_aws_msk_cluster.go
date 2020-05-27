@@ -996,20 +996,7 @@ func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error
 	conn := meta.(*AWSClient).kafkaconn
 
 	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
-	err := deleteMskCluster(conn, d.Id())
-	if err != nil {
-		return fmt.Errorf("failed deleting MSK cluster %q: %s", d.Id(), err)
-	}
-
-	log.Printf("[DEBUG] Waiting for MSK cluster %q to be deleted", d.Id())
-	_, err = waiter.ClusterDeleted(conn, d.Id())
-	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("error waiting to delete Msk cluster (%s): %w", d.Id(), err)
-	}
-	return nil
+	return deleteMskCluster(conn, d.Id())
 }
 
 func deleteMskCluster(conn *kafka.Kafka, arn string) error {
@@ -1019,7 +1006,18 @@ func deleteMskCluster(conn *kafka.Kafka, arn string) error {
 	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
 		return nil
 	}
-	return err
+	if err != nil {
+		return fmt.Errorf("error deleting Msk cluster (%s): %w", arn, err)
+	}
+
+	_, err = waiter.ClusterDeleted(conn, arn)
+	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("error waiting to delete Msk cluster (%s): %w", arn, err)
+	}
+	return nil
 }
 
 func mskClusterOperationRefreshFunc(conn *kafka.Kafka, clusterOperationARN string) resource.StateRefreshFunc {

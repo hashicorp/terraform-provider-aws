@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
 )
 
 func init() {
@@ -41,16 +40,8 @@ func testSweepMskClusters(region string) error {
 			log.Printf("[INFO] Deleting Msk cluster: %s", aws.StringValue(cluster.ClusterName))
 			err := deleteMskCluster(conn, aws.StringValue(cluster.ClusterArn))
 			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting Msk cluster (%s): %w", aws.StringValue(cluster.ClusterName), err))
-				continue
-			}
-
-			_, err = waiter.ClusterDeleted(conn, aws.StringValue(cluster.ClusterArn))
-			if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
-				continue
-			}
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error waiting to delete Msk cluster (%s): %w", aws.StringValue(cluster.ClusterName), err))
+				log.Printf("[ERROR] %s", err)
+				sweeperErrs = multierror.Append(sweeperErrs, err)
 				continue
 			}
 		}
