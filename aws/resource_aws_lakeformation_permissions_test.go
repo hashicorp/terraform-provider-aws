@@ -17,7 +17,6 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 	dName := acctest.RandomWithPrefix("lakeformation-test-db")
 	tName := acctest.RandomWithPrefix("lakeformation-test-table")
 
-	callerIdentityName := "data.aws_caller_identity.current"
 	roleName := "data.aws_iam_role.test"
 	resourceName := "aws_lakeformation_permissions.test"
 	bucketName := "aws_s3_bucket.test"
@@ -33,7 +32,6 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 				Config: testAccAWSLakeFormationPermissionsConfig_catalog(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "CREATE_DATABASE"),
@@ -43,7 +41,6 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 				Config: testAccAWSLakeFormationPermissionsConfig_location(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
 					resource.TestCheckResourceAttrPair(bucketName, "arn", resourceName, "location"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
@@ -54,7 +51,6 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 				Config: testAccAWSLakeFormationPermissionsConfig_database(rName, dName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
 					resource.TestCheckResourceAttrPair(dbName, "name", resourceName, "database"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
@@ -69,7 +65,6 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 				Config: testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, "\"ALL\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
@@ -78,25 +73,23 @@ func TestAccAWSLakeFormationPermissions_full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
 				),
 			},
-			// {
-			// 	Config: testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, "\"ALL\", \"SELECT\""),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-			// 		resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
-			// 		resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
-			// 		resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
-			// 		resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
-			// 		resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
-			// 		resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
-			// 		resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
-			// 		resource.TestCheckResourceAttr(resourceName, "permissions.1", "SELECT"),
-			// 	),
-			// },
+			{
+				Config: testAccAWSLakeFormationPermissionsConfig_table(rName, dName, tName, "\"ALL\", \"SELECT\""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
+					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
+					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
+					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
+					resource.TestCheckResourceAttrPair(tableName, "name", resourceName, "table.0.name"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", "SELECT"),
+				),
+			},
 			{
 				Config: testAccAWSLakeFormationPermissionsConfig_tableWithColumns(rName, dName, tName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceAttrAccountID(resourceName, "catalog_id"),
-					resource.TestCheckResourceAttrPair(callerIdentityName, "account_id", resourceName, "catalog_id"),
 					resource.TestCheckResourceAttrPair(roleName, "arn", resourceName, "principal"),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(tableName, "database_name", resourceName, "table.0.database"),
@@ -156,6 +149,8 @@ resource "aws_lakeformation_datalake_settings" "test" {
 resource "aws_lakeformation_resource" "test" {
   resource_arn            = aws_s3_bucket.test.arn
   use_service_linked_role = true
+
+  depends_on = ["aws_lakeformation_datalake_settings.test"]
 }
 
 resource "aws_lakeformation_permissions" "test" {
@@ -163,6 +158,8 @@ resource "aws_lakeformation_permissions" "test" {
   principal   = data.aws_iam_role.test.arn
 
   location = aws_lakeformation_resource.test.resource_arn
+
+  depends_on = ["aws_lakeformation_datalake_settings.test"]
 }
 `, rName)
 }
@@ -195,6 +192,8 @@ resource "aws_lakeformation_permissions" "test" {
   principal   = data.aws_iam_role.test.arn
 
   database = aws_glue_catalog_database.test.name
+
+  depends_on = ["aws_lakeformation_datalake_settings.test"]
 }
 `, rName, dName)
 }
@@ -234,6 +233,8 @@ resource "aws_lakeformation_permissions" "test" {
   	database = aws_glue_catalog_table.test.database_name
   	name = aws_glue_catalog_table.test.name
   }
+
+  depends_on = ["aws_lakeformation_datalake_settings.test"]
 }
 `, rName, dName, tName, permissions)
 }
@@ -289,6 +290,8 @@ resource "aws_lakeformation_permissions" "test" {
   	name = aws_glue_catalog_table.test.name
   	column_names = ["event", "timestamp"]
   }
+
+  depends_on = ["aws_lakeformation_datalake_settings.test"]
 }
 `, rName, dName, tName)
 }
