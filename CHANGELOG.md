@@ -6,6 +6,7 @@ ENHANCMENTS:
 
 BUG FIXES:
 
+* data-source/aws_elasticsearch_domain: `processing` is now correctly set [GH-13397]
 * resource/aws_acm_certificate: Update pending DNS validation record creation time from 1 minute to 5 minutes (better support for certificates with high amount of Subject Alternative Names) [GH-12371]
 * resource/aws_ecs_task_definition: Ensure `efs_volume_configuration` changes are properly detected [GH-12571] / [GH-12751]
 * resource/aws_lightsail_instance: `ram_size` now properly set [GH-13430]
