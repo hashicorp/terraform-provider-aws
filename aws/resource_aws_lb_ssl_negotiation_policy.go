@@ -146,7 +146,20 @@ func resourceAwsLBSSLNegotiationPolicyRead(d *schema.ResourceData, meta interfac
 	// We can get away with this because there's only one policy returned
 	policyDesc := getResp.PolicyDescriptions[0]
 	attributes := flattenPolicyAttributes(policyDesc.PolicyAttributeDescriptions)
-	return d.Set("attribute", attributes)
+
+	// This was previously erroneously setting "attributes", however this cannot
+	// be changed without introducing problematic side effects. The ELB service
+	// automatically expands the results to include all SSL attributes
+	// (unordered, so we'd need to switch to TypeSet anyways), which we would be
+	// quite impractical to force practitioners to write out and potentially
+	// update each time the API updates since there is nearly 100 attributes.
+
+	// TODO: fix attribute
+	// if err := d.Set("attribute", attributes); err != nil {
+	// 	return fmt.Errorf("error setting attribute: %s", err)
+	// }
+
+	return nil
 }
 
 func resourceAwsLBSSLNegotiationPolicyDelete(d *schema.ResourceData, meta interface{}) error {
