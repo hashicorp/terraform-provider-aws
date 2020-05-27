@@ -216,12 +216,20 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 								},
 							},
 						},
-						"snapshots_enabled": {
-							Type:     schema.TypeBool,
+						"application_snapshot_configuration": {
+							Type:     schema.TypeSet,
 							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
-								return snapshotsEnabled == old
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"snapshots_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+											snapshotsEnabled := strconv.FormatBool(d.Get(k).(bool))
+											return snapshotsEnabled == old
+										},
+									},
+								},
 							},
 						},
 						"flink_application_configuration": {
@@ -753,21 +761,18 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 
 	appConfig := expandKinesisAnalyticsV2ApplicationConfiguration(d.Get("application_configuration").([]interface{}))
 
+	var cloudwatchLoggingOptions []*kinesisanalyticsv2.CloudWatchLoggingOption
+	if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
+		clo := v.([]interface{})[0].(map[string]interface{})
+		cloudwatchLoggingOptions = []*kinesisanalyticsv2.CloudWatchLoggingOption{expandKinesisAnalyticsV2CloudwatchLoggingOption(clo)}
+	}
+
 	createOpts := &kinesisanalyticsv2.CreateApplicationInput{
 		RuntimeEnvironment:       aws.String(runtime),
 		ApplicationName:          aws.String(name),
 		ServiceExecutionRole:     aws.String(serviceExecutionRole),
 		ApplicationConfiguration: appConfig,
-	}
-
-	if v, ok := d.GetOk("code"); ok && v.(string) != "" {
-		createOpts.ApplicationConfiguration.ApplicationCodeConfiguration.CodeContent.TextContent = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
-		clo := v.([]interface{})[0].(map[string]interface{})
-		cloudwatchLoggingOption := expandKinesisAnalyticsV2CloudwatchLoggingOption(clo)
-		createOpts.CloudWatchLoggingOptions = []*kinesisanalyticsv2.CloudWatchLoggingOption{cloudwatchLoggingOption}
+		CloudWatchLoggingOptions: cloudwatchLoggingOptions,
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -848,30 +853,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 
 	if err := d.Set("cloudwatch_logging_options", flattenKinesisAnalyticsV2CloudwatchLoggingOptions(resp.ApplicationDetail.CloudWatchLoggingOptionDescriptions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_logging_options: %s", err)
-	}
-
-	if resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions != nil {
-		if err := d.Set("property_group", flattenKinesisAnalyticsPropertyGroups(
-			resp.ApplicationDetail.ApplicationConfigurationDescription.EnvironmentPropertyDescriptions.PropertyGroupDescriptions)); err != nil {
-			return fmt.Errorf("error setting property_groups: %s", err)
-		}
-	}
-
-	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
-	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
-		if err := d.Set("sql_application_configuration", flattenSqlApplicationConfigurationDescription(resp.ApplicationDetail.ApplicationConfigurationDescription.SqlApplicationConfigurationDescription)); err != nil {
-			return fmt.Errorf("error setting sql_application_configuration: %s", err)
-		}
-	}
-	if runtimeIsFlink(runtime) {
-		if err := d.Set("flink_application_configuration", flattenFlinkApplicationConfigurationDescription(resp.ApplicationDetail.ApplicationConfigurationDescription.FlinkApplicationConfigurationDescription)); err != nil {
-			return fmt.Errorf("error setting flink_application_configuration: %s", err)
-		}
-	}
-	if resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationSnapshotConfigurationDescription != nil {
-		if err := d.Set("snapshots_enabled", aws.BoolValue(resp.ApplicationDetail.ApplicationConfigurationDescription.ApplicationSnapshotConfigurationDescription.SnapshotsEnabled)); err != nil {
-			return fmt.Errorf("error setting snapshots_enabled: %s", err)
-		}
 	}
 
 	tags, err := keyvaluetags.Kinesisanalyticsv2ListTags(conn, arn)
@@ -1328,18 +1309,6 @@ func expandKinesisAnalyticsV2ReferenceData(rd map[string]interface{}) *kinesisan
 func createApplicationV2UpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.UpdateApplicationInput, error) {
 	applicationUpdate := &kinesisanalyticsv2.UpdateApplicationInput{}
 
-	if d.HasChange("code") {
-		if v, ok := d.GetOk("code"); ok && v.(string) != "" {
-			applicationUpdate.ApplicationConfigurationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{
-				ApplicationCodeConfigurationUpdate: &kinesisanalyticsv2.ApplicationCodeConfigurationUpdate{
-					CodeContentUpdate: &kinesisanalyticsv2.CodeContentUpdate{
-						TextContentUpdate: aws.String(v.(string)),
-					},
-				},
-			}
-		}
-	}
-
 	oldLoggingOptions, newLoggingOptions := d.GetChange("cloudwatch_logging_options")
 	if len(oldLoggingOptions.([]interface{})) > 0 && len(newLoggingOptions.([]interface{})) > 0 {
 		if v, ok := d.GetOk("cloudwatch_logging_options"); ok {
@@ -1777,8 +1746,15 @@ func flattenKinesisAnalyticsV2ApplicationConfiguration(appConfig *kinesisanalyti
 	ret["sql_application_configuration"] = flattenSqlApplicationConfigurationDescription(appConfig.SqlApplicationConfigurationDescription)
 	ret["flink_application_configuration"] = flattenFlinkApplicationConfigurationDescription(appConfig.FlinkApplicationConfigurationDescription)
 	ret["environment_properties"] = flattenKinesisAnalyticsV2EnvironmentProperties(appConfig.EnvironmentPropertyDescriptions)
+	ret["application_snapshot_configuration"] = flattenKinesisAnalyticsV2SnapshotConfiguration(appConfig.ApplicationSnapshotConfigurationDescription)
 
 	return []interface{}{ret}
+}
+
+func flattenKinesisAnalyticsV2SnapshotConfiguration(snapshotConfig *kinesisanalyticsv2.ApplicationSnapshotConfigurationDescription) *schema.Set {
+	return schema.NewSet(resourceSnapshotConfigurationHash, []interface{}{map[string]interface{}{
+		"snapshots_enabled": aws.BoolValue(snapshotConfig.SnapshotsEnabled),
+	}})
 }
 
 func flattenKinesisAnalyticsV2EnvironmentProperties(envProps *kinesisanalyticsv2.EnvironmentPropertyDescriptions) []interface{} {
@@ -2241,6 +2217,15 @@ func refreshKinesisAnalyticsApplicationStatusV2(conn *kinesisanalyticsv2.Kinesis
 func runtimeIsFlink(runtime string) bool {
 	return runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink16 ||
 		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18
+}
+
+func resourceSnapshotConfigurationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	if v, ok := m["snapshots_enabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%d-", v.(int64)))
+	}
+	return hashcode.String(buf.String())
 }
 
 func resourceCheckpointConfigurationHash(v interface{}) int {
