@@ -440,7 +440,8 @@ func resourceAwsSesReceiptRuleRead(d *schema.ResourceData, meta interface{}) err
 			log.Printf("[WARN] SES Receipt Rule (%s) not found", d.Id())
 			d.SetId("")
 			return nil
-		} else if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		}
+		if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
 			log.Printf("[WARN] SES Receipt Rule Set (%s) belonging to SES Receipt Rule (%s) not found, removing from state", aws.StringValue(describeOpts.RuleSetName), d.Id())
 			d.SetId("")
 			return nil
