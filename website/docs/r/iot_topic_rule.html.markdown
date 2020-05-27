@@ -163,7 +163,7 @@ The `sqs` object takes the following arguments:
 
 The `step_functions` object takes the following arguments:
 
-* `execution_name_prefix` - (Optional) The prefix used to generate, along with a UUID, the unique state machine name.
+* `execution_name_prefix` - (Optional) The prefix used to generate, along with a UUID, the unique state machine execution name.
 * `state_machine_name` - (Required) The name of the Step Functions state machine whose execution will be started.
 * `role_arn` - (Required) The ARN of the IAM role that grants access to start execution of the state machine.
 
