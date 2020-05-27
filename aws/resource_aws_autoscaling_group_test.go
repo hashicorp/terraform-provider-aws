@@ -2276,13 +2276,13 @@ resource "aws_autoscaling_group" "bar" {
       propagate_at_launch = true
     },
     {
-      key                 = "FromTags2"
-      value               = "value2"
+      key                 = "FromTags3"
+      value               = "value3"
       propagate_at_launch = true
     },
     {
-      key                 = "FromTags3"
-      value               = "value3"
+      key                 = "FromTags2"
+      value               = "value2"
       propagate_at_launch = true
     },
   ]
