@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"testing"
 
@@ -68,7 +69,7 @@ func testAccCheckSESActiveReceiptRuleSetDestroy(s *terraform.State) error {
 			return err
 		}
 
-		if response.Metadata != nil && *response.Metadata.Name == "test-receipt-rule" {
+		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) == rs.Primary.ID) {
 			return fmt.Errorf("Active receipt rule set still exists")
 		}
 
@@ -96,8 +97,8 @@ func testAccCheckAwsSESActiveReceiptRuleSetExists(n string) resource.TestCheckFu
 			return err
 		}
 
-		if *response.Metadata.Name != "test-receipt-rule" {
-			return fmt.Errorf("The active receipt rule set (%s) was not set to test-receipt-rule", *response.Metadata.Name)
+		if response.Metadata != nil && (aws.StringValue(response.Metadata.Name) != rs.Primary.ID) {
+			return fmt.Errorf("The active receipt rule set (%s) was not set to test-receipt-rule", aws.StringValue(response.Metadata.Name))
 		}
 
 		return nil
