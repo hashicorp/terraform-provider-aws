@@ -13,6 +13,7 @@ import (
 
 func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ses_active_receipt_rule_set.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -25,7 +26,7 @@ func TestAccAWSSESActiveReceiptRuleSet_basic(t *testing.T) {
 			{
 				Config: testAccAWSSESActiveReceiptRuleSetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESActiveReceiptRuleSetExists("aws_ses_active_receipt_rule_set.test"),
+					testAccCheckAwsSESActiveReceiptRuleSetExists(resourceName),
 				),
 			},
 		},
