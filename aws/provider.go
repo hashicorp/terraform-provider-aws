@@ -353,6 +353,7 @@ func Provider() *schema.Provider {
 			"aws_wafv2_web_acl":                              dataSourceAwsWafv2WebACL(),
 			"aws_workspaces_bundle":                          dataSourceAwsWorkspacesBundle(),
 			"aws_workspaces_directory":                       dataSourceAwsWorkspacesDirectory(),
+			"aws_workspaces_image":                           dataSourceAwsWorkspacesImage(),
 
 			// Adding the Aliases for the ALB -> LB Rename
 			"aws_lb":               dataSourceAwsLb(),
