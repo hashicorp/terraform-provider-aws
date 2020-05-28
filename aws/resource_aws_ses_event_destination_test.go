@@ -69,6 +69,61 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSSESEventDestination_disappears(t *testing.T) {
+	rString := acctest.RandString(8)
+	resourceNameKinesis := "aws_ses_event_destination.kinesis"
+	resourceNameCloudwatch := "aws_ses_event_destination.cloudwatch"
+	resourceNameSns := "aws_ses_event_destination.sns"
+
+	bucketName := fmt.Sprintf("tf-acc-bucket-ses-event-dst-%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_ses_event_dst_%s", rString)
+	streamName := fmt.Sprintf("tf_acc_stream_ses_event_dst_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_ses_event_dst_%s", rString)
+	topicName := fmt.Sprintf("tf_acc_topic_ses_event_dst_%s", rString)
+	sesCfgSetName := fmt.Sprintf("tf_acc_cfg_ses_event_dst_%s", rString)
+	sesEventDstNameKinesis := fmt.Sprintf("tf_acc_event_dst_kinesis_%s", rString)
+	sesEventDstNameCw := fmt.Sprintf("tf_acc_event_dst_cloudwatch_%s", rString)
+	sesEventDstNameSns := fmt.Sprintf("tf_acc_event_dst_sns_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckAWSSES(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckSESEventDestinationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSESEventDestinationConfig(bucketName, roleName, streamName, policyName, topicName,
+					sesCfgSetName, sesEventDstNameKinesis, sesEventDstNameCw, sesEventDstNameSns),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESEventDestinationExists("aws_ses_configuration_set.test"),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), resourceNameKinesis),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSSESEventDestinationConfig(bucketName, roleName, streamName, policyName, topicName,
+					sesCfgSetName, sesEventDstNameKinesis, sesEventDstNameCw, sesEventDstNameSns),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESEventDestinationExists("aws_ses_configuration_set.test"),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), resourceNameCloudwatch),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccAWSSESEventDestinationConfig(bucketName, roleName, streamName, policyName, topicName,
+					sesCfgSetName, sesEventDstNameKinesis, sesEventDstNameCw, sesEventDstNameSns),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSESEventDestinationExists("aws_ses_configuration_set.test"),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSesEventDestination(), resourceNameSns),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
@@ -129,6 +184,17 @@ func testAccCheckAwsSESEventDestinationExists(n string) resource.TestCheckFunc {
 		}
 
 		return nil
+	}
+}
+
+func testAccAWSSesEventDestinationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.ID, rs.Primary.Attributes["configuration_set_name"]), nil
 	}
 }
 
@@ -249,15 +315,4 @@ resource "aws_ses_event_destination" "sns" {
 }
 `, bucketName, roleName, streamName, policyName, topicName,
 		sesCfgSetName, sesEventDstNameKinesis, sesEventDstNameCw, sesEventDstNameSns)
-}
-
-func testAccAWSSesEventDestinationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
-	return func(s *terraform.State) (string, error) {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return "", fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		return fmt.Sprintf("%s/%s", rs.Primary.ID, rs.Primary.Attributes["configuration_set_name"]), nil
-	}
 }

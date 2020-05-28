@@ -25,7 +25,6 @@ func resourceAwsSesEventDestination() *schema.Resource {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAME/CONFIGURATION_SET_NAME", d.Id())
 				}
 				d.SetId(idParts[0])
-				d.Set("name", idParts[0])
 				d.Set("configuration_set_name", idParts[1])
 				return []*schema.ResourceData{d}, nil
 			},
@@ -203,31 +202,28 @@ func resourceAwsSesEventDestinationRead(d *schema.ResourceData, meta interface{}
 	log.Printf("[DEBUG] SES Read Configuration Set Destination: %s", d.Id())
 	configurationSetName := d.Get("configuration_set_name").(string)
 	input := &ses.DescribeConfigurationSetInput{
-		ConfigurationSetName: aws.String(configurationSetName),
+		ConfigurationSetName:           aws.String(configurationSetName),
+		ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),
 	}
 	resp, err := conn.DescribeConfigurationSet(input)
 	if err != nil {
-		if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
-			log.Printf("[WARN] ")
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
 
 	var eventDestination *ses.EventDestination
 	for _, e := range resp.EventDestinations {
 		if aws.StringValue(e.Name) == d.Id() {
-			*eventDestination = *e
+			eventDestination = e
 			break
 		}
 	}
 
 	if eventDestination == nil {
-		log.Printf("[WARN] ")
+		log.Printf("[WARN] SES Event Destination (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
+
 	d.Set("name", aws.StringValue(eventDestination.Name))
 	d.Set("enabled", aws.BoolValue(eventDestination.Enabled))
 	if err := d.Set("matching_types", flattenStringSet(eventDestination.MatchingEventTypes)); err != nil {
@@ -258,19 +254,46 @@ func resourceAwsSesEventDestinationDelete(d *schema.ResourceData, meta interface
 	return err
 }
 
+func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {
+
+	b := make([]*ses.CloudWatchDimensionConfiguration, len(v))
+
+	for i, vI := range v {
+		cloudwatch := vI.(map[string]interface{})
+		b[i] = &ses.CloudWatchDimensionConfiguration{
+			DefaultDimensionValue: aws.String(cloudwatch["default_value"].(string)),
+			DimensionName:         aws.String(cloudwatch["dimension_name"].(string)),
+			DimensionValueSource:  aws.String(cloudwatch["value_source"].(string)),
+		}
+	}
+
+	return b
+}
+
 func flattenCloudWatchDimensionConfigurations(cwd *ses.CloudWatchDestination) *schema.Set {
-	if cwd == nil || len(cwd.DimensionConfigurations) == 0 {
+	if cwd == nil {
 		return nil
 	}
-	out := make([]interface{}, len(cwd.DimensionConfigurations))
+	destinations := []interface{}{}
+
 	for _, config := range cwd.DimensionConfigurations {
 		c := make(map[string]interface{})
 		c["default_value"] = aws.StringValue(config.DefaultDimensionValue)
 		c["dimension_name"] = aws.StringValue(config.DimensionName)
 		c["value_source"] = aws.StringValue(config.DimensionValueSource)
-		out = append(out, c)
+		destinations = append(destinations, c)
 	}
-	return schema.NewSet(cloudWatchDimensionConfigurationHash, out)
+	return schema.NewSet(cloudWatchDimensionConfigurationHash, destinations)
+}
+
+func cloudWatchDimensionConfigurationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["default_value"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["dimension_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["value_source"].(string)))
+
+	return hashcode.String(buf.String())
 }
 
 func flattenKinesisFirehoseDestination(kfd *ses.KinesisFirehoseDestination) []interface{} {
@@ -292,30 +315,4 @@ func flattenSnsDestination(s *ses.SNSDestination) []interface{} {
 		"topic_arn": aws.StringValue(s.TopicARN),
 	}
 	return []interface{}{destination}
-}
-
-func cloudWatchDimensionConfigurationHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["default_value"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["dimension_name"].(string)))
-	buf.WriteString(fmt.Sprintf("%s-", m["value_source"].(string)))
-
-	return hashcode.String(buf.String())
-}
-
-func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {
-
-	b := make([]*ses.CloudWatchDimensionConfiguration, len(v))
-
-	for i, vI := range v {
-		cloudwatch := vI.(map[string]interface{})
-		b[i] = &ses.CloudWatchDimensionConfiguration{
-			DefaultDimensionValue: aws.String(cloudwatch["default_value"].(string)),
-			DimensionName:         aws.String(cloudwatch["dimension_name"].(string)),
-			DimensionValueSource:  aws.String(cloudwatch["value_source"].(string)),
-		}
-	}
-
-	return b
 }
