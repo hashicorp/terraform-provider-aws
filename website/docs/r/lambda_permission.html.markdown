@@ -140,8 +140,8 @@ resource "aws_lambda_permission" "lambda_permission" {
  	The permission will then apply to the specific qualified ARN.
  	e.g. `arn:aws:lambda:aws-region:acct-id:function:function-name:2`
  * `source_account` - (Optional) This parameter is used for S3 and SES. The AWS account ID (without a hyphen) of the source owner.
- * `source_arn` - (Optional) When the principle is an AWS service, the ARN of the specific resource within that service to grant permission to.
-  Without this, any resource from `principle` will be granted permission – even if that resource is from another account.
+ * `source_arn` - (Optional) When the principal is an AWS service, the ARN of the specific resource within that service to grant permission to.
+  Without this, any resource from `principal` will be granted permission – even if that resource is from another account.
   For S3, this should be the ARN of the S3 Bucket.
   For CloudWatch Events, this should be the ARN of the CloudWatch Events Rule.
   For API Gateway, this should be the ARN of the API, as described [here][2].
