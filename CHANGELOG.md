@@ -19,6 +19,7 @@ BUG FIXES:
 * resource/aws_load_balancer_backend_server_policy: `instance_port` now properly set [GH-13418]
 * resource/aws_load_balancer_listener_policy: `load_balancer_port` now properly set [GH-13418]
 * resource/aws_opsworks_application: `environment` `secure` now properly set [GH-13435]
+* resource/aws_security_group_rule: Correctly set `description` after state refresh when `source_security_group_id` refers to a security group across accounts [GH-13364]
 * resource/aws_ses_active_receipt_rule_set: Recreate resource when destroyed outside of Terraform [GH-9086]
 * resource/aws_ses_event_destination: Correctly refresh entire resource state (prevent unexpected differences from version 2.63.0 and properly perform drift detection) [GH-13464]
 * resource/aws_ses_receipt_rule: Recreate resource when destroyed outside of Terraform [GH-9086]
