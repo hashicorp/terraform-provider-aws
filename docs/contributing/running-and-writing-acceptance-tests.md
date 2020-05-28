@@ -20,6 +20,7 @@
     - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
     - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
   - [Data Source Acceptance Testing](#data-source-acceptance-testing)
+- [Acceptance Test Sweepers](#acceptance-test-sweepers)
 - [Acceptance Test Checklist](#acceptance-test-checklist)
 
 Terraform includes an acceptance test harness that does most of the repetitive
@@ -804,6 +805,150 @@ data "aws_example_thing" "test" {
   name = aws_example_thing.test.name
 }
 `, rName)
+}
+```
+
+## Acceptance Test Sweepers
+
+When running the acceptance tests, especially when developing or troubleshooting Terraform resources, its possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent these danging resources from consuming quota or potentially cause unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [Extending Terraform documentation on test sweepers](https://www.terraform.io/docs/extend/testing/acceptance-tests/sweepers.html) with Terraform AWS Provider specific details.
+
+### Running Test Sweepers
+
+**WARNING: Test Sweepers will destroy AWS infrastructure and backups in the target AWS account and region! These are designed to override any API deletion protection. Never run these outside a development AWS account that should be completely empty of resources.**
+
+To run the sweepers for all resources in `us-west-2` and `us-east-1` (default testing regions):
+
+```console
+$ make sweep
+```
+
+To run a specific resource sweeper:
+
+```console
+$ SWEEPARGS=-sweep-run=aws_example_thing make sweep 
+```
+
+### Writing Test Sweepers
+
+The first step is to initialize the resource into the test sweeper framework:
+
+```go
+func init() {
+  resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
+    Name: "aws_example_thing",
+    F:    testSweepExampleThings,
+    // Optionally
+    Dependencies: []string{
+      "aws_other_thing",
+    },
+  })
+}
+```
+
+Then add the actual implementation. Preferably, if a paginated SDK call is available:
+
+```go
+func testSweepExampleThings(region string) error {
+  client, err := sharedClientForRegion(region)
+
+  if err != nil {
+    return fmt.Errorf("error getting client: %w", err)
+  }
+
+  conn := client.(*AWSClient).exampleconn
+  input := &example.ListThingsInput{}
+  var sweeperErrs *multierror.Error
+
+  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, isLast bool) bool {
+    if page == nil {
+      return !isLast
+    }
+
+    for _, thing := range page.Things {
+      id := aws.StringValue(thing.Id)
+      input := &example.DeleteThingInput{
+        Id: thing.Id,
+      }
+
+      log.Printf("[INFO] Deleting Example Thing: %s", id)
+      _, err := conn.DeleteThing(input)
+
+      if err != nil {
+        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", sweeperErr)
+        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        continue
+      }
+    }
+
+    return !isLast
+  })
+
+  if testSweepSkipSweepError(err) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
+    return sweeperErrs.ErrorOrNil()
+  }
+
+  if err != nil {
+    sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Things: %w", err))
+  }
+
+  return sweeperErrs.ErrorOrNil()
+}
+```
+
+Otherwise, if no paginated SDK call is available:
+
+```go
+func testSweepExampleThings(region string) error {
+  client, err := sharedClientForRegion(region)
+
+  if err != nil {
+    return fmt.Errorf("error getting client: %w", err)
+  }
+
+  conn := client.(*AWSClient).exampleconn
+  input := &example.ListThingsInput{}
+  var sweeperErrs *multierror.Error
+
+  for {
+    output, err := conn.ListThings(input)
+
+    if testSweepSkipSweepError(err) {
+      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
+      return sweeperErrs.ErrorOrNil()
+    }
+
+    if err != nil {
+      sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
+      return sweeperErrs
+    }
+
+    for _, thing := range output.Things {
+      id := aws.StringValue(thing.Id)
+      input := &example.DeleteThingInput{
+        Id: thing.Id,
+      }
+
+      log.Printf("[INFO] Deleting Example Thing: %s", id)
+      _, err := conn.DeleteThing(input)
+
+      if err != nil {
+        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", sweeperErr)
+        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        continue
+      }
+    }
+
+    if aws.StringValue(output.NextToken) == "" {
+      break
+    }
+
+    input.NextToken = output.NextToken
+  }
+
+  return sweeperErrs.ErrorOrNil()
 }
 ```
 
