@@ -11,7 +11,7 @@ import (
 
 func TestAccAWSEcrAuthorizationTokenDataSource_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "data.aws_ecr_authorization_token.repo"
+	dataSourceName := "data.aws_ecr_authorization_token.repo"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -20,24 +20,24 @@ func TestAccAWSEcrAuthorizationTokenDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsEcrAuthorizationTokenDataSourceBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(resourceName, "authorization_token"),
-					resource.TestCheckResourceAttrSet(resourceName, "proxy_endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
-					resource.TestMatchResourceAttr(resourceName, "user_name", regexp.MustCompile(`AWS`)),
-					resource.TestCheckResourceAttrSet(resourceName, "password"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
+					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexp.MustCompile(`AWS`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
 				),
 			},
 			{
 				Config: testAccCheckAwsEcrAuthorizationTokenDataSourceRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "registry_id", "aws_ecr_repository.repo", "registry_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "authorization_token"),
-					resource.TestCheckResourceAttrSet(resourceName, "proxy_endpoint"),
-					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
-					resource.TestMatchResourceAttr(resourceName, "user_name", regexp.MustCompile(`AWS`)),
-					resource.TestCheckResourceAttrSet(resourceName, "password"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "registry_id", "aws_ecr_repository.repo", "registry_id"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "authorization_token"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "proxy_endpoint"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "expires_at"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "user_name"),
+					resource.TestMatchResourceAttr(dataSourceName, "user_name", regexp.MustCompile(`AWS`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "password"),
 				),
 			},
 		},
