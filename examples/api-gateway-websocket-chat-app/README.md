@@ -8,10 +8,7 @@ It's based on the [AWS Serverless Application Model](https://docs.aws.amazon.com
 Either `cp terraform.template.tfvars terraform.tfvars` and modify that new file accordingly or provide variables via CLI:
 
 ```
-terraform apply \
-    -var="aws_access_key=yourawsaccesskey" \
-    -var="aws_secret_key=yourawssecretkey" \
-    -var="aws_region=us-east-1"
+terraform apply -var="aws_region=us-east-1"
 ```
 
 The `WebSocketURI` output contains the URL of the API endpoint to be used when following the [instructions](https://github.com/aws-samples/simple-websockets-chat-app#testing-the-chat-api) for testing.
