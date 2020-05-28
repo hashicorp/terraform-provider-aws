@@ -571,6 +571,19 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 	return processingConfiguration
 }
 
+func flattenFirehoseKinesisSourceConfiguration(desc *firehose.KinesisStreamSourceDescription) []interface{} {
+	if desc == nil {
+		return []interface{}{}
+	}
+
+	mDesc := map[string]interface{}{
+		"kinesis_stream_arn": aws.StringValue(desc.KinesisStreamARN),
+		"role_arn":           aws.StringValue(desc.RoleARN),
+	}
+
+	return []interface{}{mDesc}
+}
+
 func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDescription) error {
 	d.Set("version_id", s.VersionId)
 	d.Set("arn", s.DeliveryStreamARN)
@@ -584,6 +597,12 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	}
 	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
 		return fmt.Errorf("error setting server_side_encryption: %s", err)
+	}
+
+	if s.Source != nil {
+		if err := d.Set("kinesis_source_configuration", flattenFirehoseKinesisSourceConfiguration(s.Source.KinesisStreamSourceDescription)); err != nil {
+			return fmt.Errorf("error setting kinesis_source_configuration: %s", err)
+		}
 	}
 
 	if len(s.Destinations) > 0 {
