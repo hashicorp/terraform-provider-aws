@@ -340,7 +340,7 @@ func TestAccAWSDirectoryServiceDirectory_disappears(t *testing.T) {
 				Config: testAccDirectoryServiceDirectoryConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists(resourceName, &ds),
-					testAccCheckServiceDirectoryDisappears(&ds),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsDirectoryServiceDirectory(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -378,27 +378,6 @@ func testAccCheckServiceDirectoryExists(name string, ds *directoryservice.Direct
 		}
 
 		*ds = *out.DirectoryDescriptions[0]
-
-		return nil
-	}
-}
-
-func testAccCheckServiceDirectoryDisappears(ds *directoryservice.DirectoryDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
-		_, err := dsconn.DeleteDirectory(&directoryservice.DeleteDirectoryInput{
-			DirectoryId: ds.DirectoryId,
-		})
-		if err != nil {
-			return err
-		}
-
-		dsId := aws.StringValue(ds.DirectoryId)
-		log.Printf("[DEBUG] Waiting for Directory Service Directory (%q) to be deleted", dsId)
-		err = waitForDirectoryServiceDirectoryDeletion(dsconn, dsId)
-		if err != nil {
-			return fmt.Errorf("error waiting for Directory Service (%s) to be deleted: %s", dsId, err)
-		}
 
 		return nil
 	}
