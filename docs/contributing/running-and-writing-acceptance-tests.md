@@ -812,7 +812,7 @@ data "aws_example_thing" "test" {
 
 ## Acceptance Test Sweepers
 
-When running the acceptance tests, especially when developing or troubleshooting Terraform resources, its possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent these danging resources from consuming quota or potentially cause unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [Extending Terraform documentation on test sweepers](https://www.terraform.io/docs/extend/testing/acceptance-tests/sweepers.html) with Terraform AWS Provider specific details.
+When running the acceptance tests, especially when developing or troubleshooting Terraform resources, its possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [Extending Terraform documentation on test sweepers](https://www.terraform.io/docs/extend/testing/acceptance-tests/sweepers.html) with Terraform AWS Provider specific details.
 
 ### Running Test Sweepers
 
