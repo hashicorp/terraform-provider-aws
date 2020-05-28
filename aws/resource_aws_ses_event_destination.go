@@ -1,8 +1,11 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -16,7 +19,16 @@ func resourceAwsSesEventDestination() *schema.Resource {
 		Read:   resourceAwsSesEventDestinationRead,
 		Delete: resourceAwsSesEventDestinationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), "/")
+				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+					return nil, fmt.Errorf("Unexpected format of ID (%q), expected NAME/CONFIGURATION_SET_NAME", d.Id())
+				}
+				d.SetId(idParts[0])
+				d.Set("name", idParts[0])
+				d.Set("configuration_set_name", idParts[1])
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -186,6 +198,50 @@ func resourceAwsSesEventDestinationCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesEventDestinationRead(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).sesconn
+
+	log.Printf("[DEBUG] SES Read Configuration Set Destination: %s", d.Id())
+	configurationSetName := d.Get("configuration_set_name").(string)
+	input := &ses.DescribeConfigurationSetInput{
+		ConfigurationSetName: aws.String(configurationSetName),
+	}
+	resp, err := conn.DescribeConfigurationSet(input)
+	if err != nil {
+		if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			log.Printf("[WARN] ")
+			d.SetId("")
+			return nil
+		}
+		return err
+	}
+
+	var eventDestination *ses.EventDestination
+	for _, e := range resp.EventDestinations {
+		if aws.StringValue(e.Name) == d.Id() {
+			*eventDestination = *e
+			break
+		}
+	}
+
+	if eventDestination == nil {
+		log.Printf("[WARN] ")
+		d.SetId("")
+		return nil
+	}
+	d.Set("name", aws.StringValue(eventDestination.Name))
+	d.Set("enabled", aws.BoolValue(eventDestination.Enabled))
+	if err := d.Set("matching_types", flattenStringSet(eventDestination.MatchingEventTypes)); err != nil {
+		return fmt.Errorf("error setting matching_types: %s", err)
+	}
+	if err := d.Set("cloudwatch_destination", flattenCloudWatchDimensionConfigurations(eventDestination.CloudWatchDestination)); err != nil {
+		return fmt.Errorf("error setting cloudwatch_destination: %s", err)
+	}
+	if err := d.Set("kinesis_destination", flattenKinesisFirehoseDestination(eventDestination.KinesisFirehoseDestination)); err != nil {
+		return fmt.Errorf("error setting kinesis_destination: %s", err)
+	}
+	if err := d.Set("sns_destination", flattenSnsDestination(eventDestination.SNSDestination)); err != nil {
+		return fmt.Errorf("error setting sns_destination: %s", err)
+	}
 
 	return nil
 }
@@ -200,6 +256,52 @@ func resourceAwsSesEventDestinationDelete(d *schema.ResourceData, meta interface
 	})
 
 	return err
+}
+
+func flattenCloudWatchDimensionConfigurations(cwd *ses.CloudWatchDestination) *schema.Set {
+	if cwd == nil || len(cwd.DimensionConfigurations) == 0 {
+		return nil
+	}
+	out := make([]interface{}, len(cwd.DimensionConfigurations))
+	for _, config := range cwd.DimensionConfigurations {
+		c := make(map[string]interface{})
+		c["default_value"] = aws.StringValue(config.DefaultDimensionValue)
+		c["dimension_name"] = aws.StringValue(config.DimensionName)
+		c["value_source"] = aws.StringValue(config.DimensionValueSource)
+		out = append(out, c)
+	}
+	return schema.NewSet(cloudWatchDimensionConfigurationHash, out)
+}
+
+func flattenKinesisFirehoseDestination(kfd *ses.KinesisFirehoseDestination) []interface{} {
+	if kfd == nil {
+		return []interface{}{}
+	}
+	destination := map[string]interface{}{
+		"stream_arn": aws.StringValue(kfd.DeliveryStreamARN),
+		"role_arn":   aws.StringValue(kfd.IAMRoleARN),
+	}
+	return []interface{}{destination}
+}
+
+func flattenSnsDestination(s *ses.SNSDestination) []interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+	destination := map[string]interface{}{
+		"topic_arn": aws.StringValue(s.TopicARN),
+	}
+	return []interface{}{destination}
+}
+
+func cloudWatchDimensionConfigurationHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["default_value"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["dimension_name"].(string)))
+	buf.WriteString(fmt.Sprintf("%s-", m["value_source"].(string)))
+
+	return hashcode.String(buf.String())
 }
 
 func generateCloudWatchDestination(v []interface{}) []*ses.CloudWatchDimensionConfiguration {

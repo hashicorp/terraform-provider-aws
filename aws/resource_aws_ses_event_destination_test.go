@@ -12,6 +12,9 @@ import (
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
 	rString := acctest.RandString(8)
+	resourceNameKinesis := "aws_ses_event_destination.kinesis"
+	resourceNameCloudwatch := "aws_ses_event_destination.cloudwatch"
+	resourceNameSns := "aws_ses_event_destination.sns"
 
 	bucketName := fmt.Sprintf("tf-acc-bucket-ses-event-dst-%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_ses_event_dst_%s", rString)
@@ -37,12 +40,30 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESEventDestinationExists("aws_ses_configuration_set.test"),
 					resource.TestCheckResourceAttr(
-						"aws_ses_event_destination.kinesis", "name", sesEventDstNameKinesis),
+						resourceNameKinesis, "name", sesEventDstNameKinesis),
 					resource.TestCheckResourceAttr(
-						"aws_ses_event_destination.cloudwatch", "name", sesEventDstNameCw),
+						resourceNameCloudwatch, "name", sesEventDstNameCw),
 					resource.TestCheckResourceAttr(
-						"aws_ses_event_destination.sns", "name", sesEventDstNameSns),
+						resourceNameSns, "name", sesEventDstNameSns),
 				),
+			},
+			{
+				ResourceName:      resourceNameKinesis,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSesEventDestinationImportStateIdFunc(resourceNameKinesis),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceNameCloudwatch,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSesEventDestinationImportStateIdFunc(resourceNameCloudwatch),
+				ImportStateVerify: true,
+			},
+			{
+				ResourceName:      resourceNameSns,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSSesEventDestinationImportStateIdFunc(resourceNameSns),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -228,4 +249,15 @@ resource "aws_ses_event_destination" "sns" {
 }
 `, bucketName, roleName, streamName, policyName, topicName,
 		sesCfgSetName, sesEventDstNameKinesis, sesEventDstNameCw, sesEventDstNameSns)
+}
+
+func testAccAWSSesEventDestinationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return fmt.Sprintf("%s/%s", rs.Primary.ID, rs.Primary.Attributes["configuration_set_name"]), nil
+	}
 }
