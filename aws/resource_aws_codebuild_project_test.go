@@ -45,10 +45,9 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_basic(rName),
@@ -64,22 +63,22 @@ func TestAccAWSCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestMatchResourceAttr(resourceName, "encryption_key", regexp.MustCompile(`^arn:[^:]+:kms:[^:]+:[^:]+:alias/aws/s3$`)),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2300252877.compute_type", "BUILD_GENERAL1_SMALL"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2300252877.environment_variable.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2300252877.image", "2"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2300252877.privileged_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2300252877.type", "LINUX_CONTAINER"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2300252877.image_pull_credentials_type", "CODEBUILD"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", "BUILD_GENERAL1_SMALL"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.image", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.type", "LINUX_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", "CODEBUILD"),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", "DISABLED"),
 					resource.TestMatchResourceAttr(resourceName, "service_role", regexp.MustCompile(`^arn:[^:]+:iam::[^:]+:role/tf-acc-test-[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.1441597390.auth.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "source.1441597390.git_clone_depth", "0"),
-					resource.TestCheckResourceAttr(resourceName, "source.1441597390.insecure_ssl", "false"),
-					resource.TestCheckResourceAttr(resourceName, "source.1441597390.location", "https://github.com/hashibot-test/aws-test.git"),
-					resource.TestCheckResourceAttr(resourceName, "source.1441597390.report_build_status", "false"),
-					resource.TestCheckResourceAttr(resourceName, "source.1441597390.type", "GITHUB"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.location", "https://github.com/hashibot-test/aws-test.git"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -376,7 +375,7 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Zero(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project3),
-					resource.TestCheckResourceAttr(resourceName, "environment.2300252877.environment_variable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
 				),
 			},
 			{
@@ -394,17 +393,16 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Type(rName, "PLAINTEXT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "environment.4178155002.environment_variable.0.type", "PLAINTEXT"),
-					resource.TestCheckResourceAttr(resourceName, "environment.4178155002.environment_variable.1.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.0.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.1.type", "PLAINTEXT"),
 				),
 			},
 			{
@@ -416,16 +414,16 @@ func TestAccAWSCodeBuildProject_Environment_EnvironmentVariable_Type(t *testing.
 				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Type(rName, "PARAMETER_STORE"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "environment.1701234421.environment_variable.0.type", "PLAINTEXT"),
-					resource.TestCheckResourceAttr(resourceName, "environment.1701234421.environment_variable.1.type", "PARAMETER_STORE"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.0.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.1.type", "PARAMETER_STORE"),
 				),
 			},
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Environment_EnvironmentVariable_Type(rName, "SECRETS_MANAGER"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "environment.198523880.environment_variable.0.type", "PLAINTEXT"),
-					resource.TestCheckResourceAttr(resourceName, "environment.198523880.environment_variable.1.type", "SECRETS_MANAGER"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.0.type", "PLAINTEXT"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.1.type", "SECRETS_MANAGER"),
 				),
 			},
 		},
@@ -602,10 +600,9 @@ func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccAWSCodeBuildProjectConfig_Source_Auth(rName, "FAKERESOURCE1", "INVALID"),
@@ -615,9 +612,9 @@ func TestAccAWSCodeBuildProject_Source_Auth(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_Auth(rName, "FAKERESOURCE1", "OAUTH"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3680505372.auth.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680505372.auth.2706882902.resource", "FAKERESOURCE1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3680505372.auth.2706882902.type", "OAUTH"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.auth.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.auth.0.resource", "FAKERESOURCE1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.auth.0.type", "OAUTH"),
 				),
 			},
 			{
@@ -635,16 +632,15 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.1181740906.git_clone_depth", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "1"),
 				),
 			},
 			{
@@ -656,7 +652,7 @@ func TestAccAWSCodeBuildProject_Source_GitCloneDepth(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_GitCloneDepth(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.974047921.git_clone_depth", "2"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "2"),
 				),
 			},
 		},
@@ -669,17 +665,16 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_CodeCommit(t *testing
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig_CodeCommit(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3389748318.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3389748318.git_submodules_config.0.fetch_submodules", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", "true"),
 				),
 			},
 			{
@@ -691,8 +686,8 @@ func TestAccAWSCodeBuildProject_Source_GitSubmodulesConfig_CodeCommit(t *testing
 				Config: testAccAWSCodeBuildProjectConfig_Source_GitSubmodulesConfig_CodeCommit(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3338377709.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.3338377709.git_submodules_config.0.fetch_submodules", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.git_submodules_config.0.fetch_submodules", "false"),
 				),
 			},
 		},
@@ -776,10 +771,10 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2336845252.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2336845252.git_submodules_config.0.fetch_submodules", "true"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2080741754.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2080741754.git_submodules_config.0.fetch_submodules", "true"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1861191586.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1861191586.git_submodules_config.0.fetch_submodules", "true"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.55827772.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.55827772.git_submodules_config.0.fetch_submodules", "true"),
 				),
 			},
 			{
@@ -791,10 +786,10 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3511868825.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3511868825.git_submodules_config.0.fetch_submodules", "false"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1651171204.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1651171204.git_submodules_config.0.fetch_submodules", "false"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1497918817.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1497918817.git_submodules_config.0.fetch_submodules", "false"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1887486300.git_submodules_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1887486300.git_submodules_config.0.fetch_submodules", "false"),
 				),
 			},
 		},
@@ -869,16 +864,15 @@ func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.1976396802.insecure_ssl", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "true"),
 				),
 			},
 			{
@@ -890,7 +884,7 @@ func TestAccAWSCodeBuildProject_Source_InsecureSSL(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_InsecureSSL(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3680505372.insecure_ssl", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
 				),
 			},
 		},
@@ -903,16 +897,15 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T)
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_Bitbucket(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.2876219937.report_build_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
 				),
 			},
 			{
@@ -924,7 +917,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_Bitbucket(t *testing.T)
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_Bitbucket(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3210444828.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 				),
 			},
 		},
@@ -937,16 +930,15 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHub(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.4215890488.report_build_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
 				),
 			},
 			{
@@ -958,7 +950,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHub(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHub(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3680505372.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 				),
 			},
 		},
@@ -971,16 +963,15 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *tes
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.2964899175.report_build_status", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "true"),
 				),
 			},
 			{
@@ -992,7 +983,7 @@ func TestAccAWSCodeBuildProject_Source_ReportBuildStatus_GitHubEnterprise(t *tes
 				Config: testAccAWSCodeBuildProjectConfig_Source_ReportBuildStatus_GitHubEnterprise(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.553628638.report_build_status", "false"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 				),
 			},
 		},
@@ -1005,16 +996,15 @@ func TestAccAWSCodeBuildProject_Source_Type_Bitbucket(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3210444828.type", "BITBUCKET"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "BITBUCKET"),
 				),
 			},
 			{
@@ -1032,16 +1022,15 @@ func TestAccAWSCodeBuildProject_Source_Type_CodeCommit(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_Type_CodeCommit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3715340088.type", "CODECOMMIT"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODECOMMIT"),
 				),
 			},
 			{
@@ -1059,16 +1048,15 @@ func TestAccAWSCodeBuildProject_Source_Type_CodePipeline(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_Type_CodePipeline(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.2280907000.type", "CODEPIPELINE"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODEPIPELINE"),
 				),
 			},
 			{
@@ -1086,16 +1074,15 @@ func TestAccAWSCodeBuildProject_Source_Type_GitHubEnterprise(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_Type_GitHubEnterprise(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.553628638.type", "GITHUB_ENTERPRISE"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB_ENTERPRISE"),
 				),
 			},
 			{
@@ -1144,16 +1131,15 @@ phases:
       - rspec hello_world_spec.rb`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_Source_Type_NoSource(rName, "", rBuildspec),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.2726343112.type", "NO_SOURCE"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "NO_SOURCE"),
 				),
 			},
 			{
@@ -1280,22 +1266,21 @@ func TestAccAWSCodeBuildProject_WindowsContainer(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_WindowsContainer(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "environment.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.compute_type", "BUILD_GENERAL1_MEDIUM"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.environment_variable.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.image", "2"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.privileged_mode", "false"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.image_pull_credentials_type", "CODEBUILD"),
-					resource.TestCheckResourceAttr(resourceName, "environment.2306861956.type", "WINDOWS_CONTAINER"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.compute_type", "BUILD_GENERAL1_MEDIUM"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.environment_variable.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.image", "2"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.privileged_mode", "false"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.image_pull_credentials_type", "CODEBUILD"),
+					resource.TestCheckResourceAttr(resourceName, "environment.0.type", "WINDOWS_CONTAINER"),
 				),
 			},
 			{
@@ -2066,9 +2051,9 @@ func TestAccAWSCodeBuildProject_SecondarySources_CodeCommit(t *testing.T) {
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_CodeCommit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "source.3715340088.type", "CODECOMMIT"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.493771744.source_identifier", "secondarySource1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1385902896.source_identifier", "secondarySource2"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODECOMMIT"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2212771807.source_identifier", "secondarySource1"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3160583991.source_identifier", "secondarySource2"),
 				),
 			},
 			{
