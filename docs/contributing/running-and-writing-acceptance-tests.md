@@ -21,6 +21,8 @@
     - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
   - [Data Source Acceptance Testing](#data-source-acceptance-testing)
 - [Acceptance Test Sweepers](#acceptance-test-sweepers)
+  - [Running Test Sweepers](#running-test-sweepers)
+  - [Writing Test Sweepers](#writing-test-sweepers)
 - [Acceptance Test Checklist](#acceptance-test-checklist)
 
 Terraform includes an acceptance test harness that does most of the repetitive
