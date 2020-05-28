@@ -13,6 +13,7 @@ BUG FIXES:
 * resource/aws_ecs_task_definition: Ensure `efs_volume_configuration` changes are properly detected [GH-12571] / [GH-12751]
 * resource/aws_lightsail_instance: `ram_size` now properly set [GH-13430]
 * resource/aws_ses_event_destination: Correctly refresh entire resource state (prevent unexpected differences from version 2.63.0 and properly perform drift detection) [GH-13464]
+* resource/aws_sns_topic: Attributes of type `schema.TypeInt` are now correctly set [GH-13437]
 
 ## 2.63.0 (May 22, 2020)
 
