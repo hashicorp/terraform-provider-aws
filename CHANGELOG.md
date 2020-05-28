@@ -13,6 +13,8 @@ BUG FIXES:
 * resource/aws_acm_certificate: Update pending DNS validation record creation time from 1 minute to 5 minutes (better support for certificates with high amount of Subject Alternative Names) [GH-12371]
 * resource/aws_api_gateway_method_settings: `settings` now properly set [GH-13403]
 * resource/aws_autoscaling_group: Ignore ordering differences for `tags` argument (prevent unexpected differences from version 2.63.0) [GH-13515]
+* resource/aws_codebuild_project: Enable drift detection for `environment_variable` argument [GH-6427]
+* resource/aws_codebuild_project: Prevent `inconsistent final plan` errors with `source` configuration block [GH-10615]
 * resource/aws_ecs_task_definition: Ensure `efs_volume_configuration` changes are properly detected [GH-12571] / [GH-12751]
 * resource/aws_lb_cookie_stickiness_policy: `cookie_expiration_policy` now properly set [GH-13418]
 * resource/aws_lightsail_instance: `ram_size` now properly set [GH-13430]
