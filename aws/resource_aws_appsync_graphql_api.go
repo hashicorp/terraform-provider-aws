@@ -260,6 +260,7 @@ func resourceAwsAppsyncGraphqlApiCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).appsyncconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &appsync.GetGraphqlApiInput{
 		ApiId: aws.String(d.Id()),
@@ -301,7 +302,7 @@ func resourceAwsAppsyncGraphqlApiRead(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("error setting uris: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.GraphqlApi.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.AppsyncKeyValueTags(resp.GraphqlApi.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

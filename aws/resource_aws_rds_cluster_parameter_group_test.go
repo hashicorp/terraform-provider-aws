@@ -98,27 +98,17 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, parameterGroupName),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster-pg:.+`)),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", parameterGroupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Test cluster parameter group for terraform"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1708034931.name", "character_set_results"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1708034931.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2421266705.name", "character_set_server"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2421266705.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2478663599.name", "character_set_client"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2478663599.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "1"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
+					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
+					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.name", "character_set_results"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.name", "character_set_server"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.name", "character_set_client"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 				),
 			},
 			{
@@ -131,34 +121,20 @@ func TestAccAWSDBClusterParameterGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, parameterGroupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", parameterGroupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Test cluster parameter group for terraform"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1706463059.name", "collation_connection"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1706463059.value", "utf8_unicode_ci"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1708034931.name", "character_set_results"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.1708034931.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2421266705.name", "character_set_server"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2421266705.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2475805061.name", "collation_server"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2475805061.value", "utf8_unicode_ci"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2478663599.name", "character_set_client"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2478663599.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
+					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1706463059.name", "collation_connection"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1706463059.value", "utf8_unicode_ci"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.name", "character_set_results"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.name", "character_set_server"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2475805061.name", "collation_server"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2475805061.value", "utf8_unicode_ci"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.name", "character_set_client"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 				),
 			},
 			{
@@ -191,26 +167,16 @@ func TestAccAWSDBClusterParameterGroup_withApplyMethod(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSDBClusterParameterGroupExists(resourceName, &v),
 					testAccCheckAWSDBClusterParameterGroupAttributes(&v, parameterGroupName),
-					resource.TestMatchResourceAttr(
-						resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:rds:[^:]+:\d{12}:cluster-pg:.+`)),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", parameterGroupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "family", "aurora5.6"),
-					resource.TestCheckResourceAttr(
-						resourceName, "description", "Test cluster parameter group for terraform"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2421266705.name", "character_set_server"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2421266705.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2421266705.apply_method", "immediate"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2478663599.name", "character_set_client"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2478663599.value", "utf8"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2478663599.apply_method", "pending-reboot"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster-pg:%s", parameterGroupName)),
+					resource.TestCheckResourceAttr(resourceName, "name", parameterGroupName),
+					resource.TestCheckResourceAttr(resourceName, "family", "aurora5.6"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test cluster parameter group for terraform"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.name", "character_set_server"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.apply_method", "immediate"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.name", "character_set_client"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.value", "utf8"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.apply_method", "pending-reboot"),
 				),
 			},
 			{

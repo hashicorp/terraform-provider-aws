@@ -135,6 +135,7 @@ func resourceAwsWorkspacesDirectoryCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).workspacesconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	raw, state, err := workspacesDirectoryRefreshStateFunc(conn, d.Id())()
 	if err != nil {
@@ -158,7 +159,7 @@ func resourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("error listing tags: %s", err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

@@ -5498,15 +5498,15 @@ type CreateEndpointInput struct {
 	// in the AWS Database Migration Service User Guide.
 	ExtraConnectionAttributes *string `type:"string"`
 
-	// Settings in JSON format for the target Apache Kafka endpoint. For information
-	// about other available settings, see Using Object Mapping to Migrate Data
-	// to Apache Kafka (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html#CHAP_Target.Kafka.ObjectMapping)
+	// Settings in JSON format for the target Apache Kafka endpoint. For more information
+	// about the available settings, see Using Apache Kafka as a Target for AWS
+	// Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html)
 	// in the AWS Database Migration User Guide.
 	KafkaSettings *KafkaSettings `type:"structure"`
 
 	// Settings in JSON format for the target endpoint for Amazon Kinesis Data Streams.
-	// For information about other available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
+	// For more information about the available settings, see Using Amazon Kinesis
+	// Data Streams as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html)
 	// in the AWS Database Migration User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
@@ -5521,10 +5521,16 @@ type CreateEndpointInput struct {
 	KmsKeyId *string `type:"string"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
-	// about the available settings, see the configuration properties section in
-	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
+	// about the available settings, see Using MongoDB as a Target for AWS Database
+	// Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html#CHAP_Source.MongoDB.Configuration)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the target Amazon Neptune endpoint. For more
+	// information about the available settings, see https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings)
+	// in the AWS Database Migration Service User Guide.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The password to be used to log in to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
@@ -5589,6 +5595,11 @@ func (s *CreateEndpointInput) Validate() error {
 	if s.ElasticsearchSettings != nil {
 		if err := s.ElasticsearchSettings.Validate(); err != nil {
 			invalidParams.AddNested("ElasticsearchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NeptuneSettings != nil {
+		if err := s.NeptuneSettings.Validate(); err != nil {
+			invalidParams.AddNested("NeptuneSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -5679,6 +5690,12 @@ func (s *CreateEndpointInput) SetKmsKeyId(v string) *CreateEndpointInput {
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *CreateEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *CreateEndpointInput {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *CreateEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *CreateEndpointInput {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -6290,7 +6307,7 @@ type CreateReplicationTaskInput struct {
 	ReplicationTaskIdentifier *string `type:"string" required:"true"`
 
 	// Overall settings for the task, in JSON format. For more information, see
-	// Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
+	// Specifying Task Settings for AWS Database Migration Service Tasks (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
 	// in the AWS Database Migration User Guide.
 	ReplicationTaskSettings *string `type:"string"`
 
@@ -6300,7 +6317,7 @@ type CreateReplicationTaskInput struct {
 	SourceEndpointArn *string `type:"string" required:"true"`
 
 	// The table mappings for the task, in JSON format. For more information, see
-	// Table Mapping (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
+	// Using Table Mapping to Specify Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
 	// in the AWS Database Migration User Guide.
 	//
 	// TableMappings is a required field
@@ -6313,6 +6330,12 @@ type CreateReplicationTaskInput struct {
 	//
 	// TargetEndpointArn is a required field
 	TargetEndpointArn *string `type:"string" required:"true"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6416,6 +6439,12 @@ func (s *CreateReplicationTaskInput) SetTags(v []*Tag) *CreateReplicationTaskInp
 // SetTargetEndpointArn sets the TargetEndpointArn field's value.
 func (s *CreateReplicationTaskInput) SetTargetEndpointArn(v string) *CreateReplicationTaskInput {
 	s.TargetEndpointArn = &v
+	return s
+}
+
+// SetTaskData sets the TaskData field's value.
+func (s *CreateReplicationTaskInput) SetTaskData(v string) *CreateReplicationTaskInput {
+	s.TaskData = &v
 	return s
 }
 
@@ -8156,6 +8185,8 @@ type DescribeReplicationSubnetGroupsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Filters applied to the describe action.
+	//
+	// Valid filter names: replication-subnet-group-id
 	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -8941,6 +8972,10 @@ type Endpoint struct {
 	// MongoDbSettings structure.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
 
+	// The settings for the MongoDB source endpoint. For more information, see the
+	// NeptuneSettings structure.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
+
 	// The port value used to access the endpoint.
 	Port *int64 `type:"integer"`
 
@@ -9076,6 +9111,12 @@ func (s *Endpoint) SetKmsKeyId(v string) *Endpoint {
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *Endpoint) SetMongoDbSettings(v *MongoDbSettings) *Endpoint {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *Endpoint) SetNeptuneSettings(v *NeptuneSettings) *Endpoint {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -10316,15 +10357,15 @@ type ModifyEndpointInput struct {
 	// pass the empty string ("") as an argument.
 	ExtraConnectionAttributes *string `type:"string"`
 
-	// Settings in JSON format for the target Apache Kafka endpoint. For information
-	// about other available settings, see Using Object Mapping to Migrate Data
-	// to Apache Kafka (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html#CHAP_Target.Kafka.ObjectMapping)
+	// Settings in JSON format for the target Apache Kafka endpoint. For more information
+	// about the available settings, see Using Apache Kafka as a Target for AWS
+	// Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html)
 	// in the AWS Database Migration User Guide.
 	KafkaSettings *KafkaSettings `type:"structure"`
 
 	// Settings in JSON format for the target endpoint for Amazon Kinesis Data Streams.
-	// For information about other available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
+	// For more information about the available settings, see Using Amazon Kinesis
+	// Data Streams as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html)
 	// in the AWS Database Migration User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
@@ -10333,6 +10374,12 @@ type ModifyEndpointInput struct {
 	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the target Amazon Neptune endpoint. For more
+	// information about the available settings, see https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings)
+	// in the AWS Database Migration Service User Guide.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The password to be used to login to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
@@ -10387,6 +10434,11 @@ func (s *ModifyEndpointInput) Validate() error {
 	if s.ElasticsearchSettings != nil {
 		if err := s.ElasticsearchSettings.Validate(); err != nil {
 			invalidParams.AddNested("ElasticsearchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NeptuneSettings != nil {
+		if err := s.NeptuneSettings.Validate(); err != nil {
+			invalidParams.AddNested("NeptuneSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -10477,6 +10529,12 @@ func (s *ModifyEndpointInput) SetKinesisSettings(v *KinesisSettings) *ModifyEndp
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *ModifyEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *ModifyEndpointInput {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *ModifyEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *ModifyEndpointInput {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -10986,7 +11044,7 @@ type ModifyReplicationTaskInput struct {
 	//    * Cannot end with a hyphen or contain two consecutive hyphens.
 	ReplicationTaskIdentifier *string `type:"string"`
 
-	// JSON file that contains settings for the task, such as target metadata settings.
+	// JSON file that contains settings for the task, such as task metadata settings.
 	ReplicationTaskSettings *string `type:"string"`
 
 	// When using the AWS CLI or boto3, provide the path of the JSON file that contains
@@ -10994,6 +11052,12 @@ type ModifyReplicationTaskInput struct {
 	// DMS API, provide the JSON as the parameter value, for example: --table-mappings
 	// file://mappingfile.json
 	TableMappings *string `type:"string"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -11064,6 +11128,12 @@ func (s *ModifyReplicationTaskInput) SetReplicationTaskSettings(v string) *Modif
 // SetTableMappings sets the TableMappings field's value.
 func (s *ModifyReplicationTaskInput) SetTableMappings(v string) *ModifyReplicationTaskInput {
 	s.TableMappings = &v
+	return s
+}
+
+// SetTaskData sets the TaskData field's value.
+func (s *ModifyReplicationTaskInput) SetTaskData(v string) *ModifyReplicationTaskInput {
+	s.TaskData = &v
 	return s
 }
 
@@ -11236,6 +11306,119 @@ func (s *MongoDbSettings) SetServerName(v string) *MongoDbSettings {
 // SetUsername sets the Username field's value.
 func (s *MongoDbSettings) SetUsername(v string) *MongoDbSettings {
 	s.Username = &v
+	return s
+}
+
+// Provides information that defines an Amazon Neptune endpoint.
+type NeptuneSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The number of milliseconds for AWS DMS to wait to retry a bulk-load of migrated
+	// graph data to the Neptune target database before raising an error. The default
+	// is 250.
+	ErrorRetryDuration *int64 `type:"integer"`
+
+	// If you want IAM authorization enabled for this endpoint, set this parameter
+	// to true and attach the appropriate role policy document to your service role
+	// specified by ServiceAccessRoleArn. The default is false.
+	IamAuthEnabled *bool `type:"boolean"`
+
+	// The maximum size in KB of migrated graph data stored in a CSV file before
+	// AWS DMS bulk-loads the data to the Neptune target database. The default is
+	// 1048576 KB. If successful, AWS DMS clears the bucket, ready to store the
+	// next batch of migrated graph data.
+	MaxFileSize *int64 `type:"integer"`
+
+	// The number of times for AWS DMS to retry a bulk-load of migrated graph data
+	// to the Neptune target database before raising an error. The default is 5.
+	MaxRetryCount *int64 `type:"integer"`
+
+	// A folder path where you where you want AWS DMS to store migrated graph data
+	// in the S3 bucket specified by S3BucketName
+	//
+	// S3BucketFolder is a required field
+	S3BucketFolder *string `type:"string" required:"true"`
+
+	// The name of the S3 bucket for AWS DMS to temporarily store migrated graph
+	// data in CSV files before bulk-loading it to the Neptune target database.
+	// AWS DMS maps the SQL source data to graph data before storing it in these
+	// CSV files.
+	//
+	// S3BucketName is a required field
+	S3BucketName *string `type:"string" required:"true"`
+
+	// The ARN of the service role you have created for the Neptune target endpoint.
+	// For more information, see https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.ServiceRole
+	// (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.ServiceRole)
+	// in the AWS Database Migration Service User Guide.
+	ServiceAccessRoleArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NeptuneSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NeptuneSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NeptuneSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NeptuneSettings"}
+	if s.S3BucketFolder == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketFolder"))
+	}
+	if s.S3BucketName == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetErrorRetryDuration sets the ErrorRetryDuration field's value.
+func (s *NeptuneSettings) SetErrorRetryDuration(v int64) *NeptuneSettings {
+	s.ErrorRetryDuration = &v
+	return s
+}
+
+// SetIamAuthEnabled sets the IamAuthEnabled field's value.
+func (s *NeptuneSettings) SetIamAuthEnabled(v bool) *NeptuneSettings {
+	s.IamAuthEnabled = &v
+	return s
+}
+
+// SetMaxFileSize sets the MaxFileSize field's value.
+func (s *NeptuneSettings) SetMaxFileSize(v int64) *NeptuneSettings {
+	s.MaxFileSize = &v
+	return s
+}
+
+// SetMaxRetryCount sets the MaxRetryCount field's value.
+func (s *NeptuneSettings) SetMaxRetryCount(v int64) *NeptuneSettings {
+	s.MaxRetryCount = &v
+	return s
+}
+
+// SetS3BucketFolder sets the S3BucketFolder field's value.
+func (s *NeptuneSettings) SetS3BucketFolder(v string) *NeptuneSettings {
+	s.S3BucketFolder = &v
+	return s
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *NeptuneSettings) SetS3BucketName(v string) *NeptuneSettings {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
+func (s *NeptuneSettings) SetServiceAccessRoleArn(v string) *NeptuneSettings {
+	s.ServiceAccessRoleArn = &v
 	return s
 }
 
@@ -12637,6 +12820,12 @@ type ReplicationTask struct {
 
 	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
 	TargetEndpointArn *string `type:"string"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12748,6 +12937,12 @@ func (s *ReplicationTask) SetTableMappings(v string) *ReplicationTask {
 // SetTargetEndpointArn sets the TargetEndpointArn field's value.
 func (s *ReplicationTask) SetTargetEndpointArn(v string) *ReplicationTask {
 	s.TargetEndpointArn = &v
+	return s
+}
+
+// SetTaskData sets the TaskData field's value.
+func (s *ReplicationTask) SetTaskData(v string) *ReplicationTask {
+	s.TaskData = &v
 	return s
 }
 
@@ -14065,6 +14260,11 @@ type SupportedEndpointType struct {
 	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
 	EngineName *string `type:"string"`
 
+	// The earliest AWS DMS engine version that supports this endpoint engine. Note
+	// that endpoint engines released with AWS DMS versions earlier than 3.1.1 do
+	// not return a value for this parameter.
+	ReplicationInstanceEngineMinimumVersion *string `type:"string"`
+
 	// Indicates if Change Data Capture (CDC) is supported.
 	SupportsCDC *bool `type:"boolean"`
 }
@@ -14094,6 +14294,12 @@ func (s *SupportedEndpointType) SetEngineDisplayName(v string) *SupportedEndpoin
 // SetEngineName sets the EngineName field's value.
 func (s *SupportedEndpointType) SetEngineName(v string) *SupportedEndpointType {
 	s.EngineName = &v
+	return s
+}
+
+// SetReplicationInstanceEngineMinimumVersion sets the ReplicationInstanceEngineMinimumVersion field's value.
+func (s *SupportedEndpointType) SetReplicationInstanceEngineMinimumVersion(v string) *SupportedEndpointType {
+	s.ReplicationInstanceEngineMinimumVersion = &v
 	return s
 }
 

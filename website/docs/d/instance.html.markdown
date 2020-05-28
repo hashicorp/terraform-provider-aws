@@ -106,6 +106,7 @@ interpolation.
 * `security_groups` - The associated security groups.
 * `source_dest_check` - Whether the network interface performs source/destination checking (Boolean).
 * `subnet_id` - The VPC subnet ID.
+* `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
 * `user_data` - SHA-1 hash of User Data supplied to the Instance.
 * `user_data_base64` - Base64 encoded contents of User Data supplied to the Instance. Valid UTF-8 contents can be decoded with the [`base64decode` function](/docs/configuration/functions/base64decode.html). This attribute is only exported if `get_user_data` is true.
 * `tags` - A map of tags assigned to the Instance.

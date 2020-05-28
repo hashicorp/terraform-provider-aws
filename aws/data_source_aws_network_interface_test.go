@@ -25,6 +25,7 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_network_interface.test", "interface_type"),
 					resource.TestCheckResourceAttrPair("data.aws_network_interface.test", "private_dns_name", "aws_network_interface.test", "private_dns_name"),
 					resource.TestCheckResourceAttrPair("data.aws_network_interface.test", "subnet_id", "aws_network_interface.test", "subnet_id"),
+					resource.TestCheckResourceAttr("data.aws_network_interface.test", "outpost_arn", ""),
 					resource.TestCheckResourceAttrSet("data.aws_network_interface.test", "vpc_id"),
 				),
 			},

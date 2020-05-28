@@ -27,7 +27,6 @@ func resourceAwsRoute() *schema.Resource {
 		Read:   resourceAwsRouteRead,
 		Update: resourceAwsRouteUpdate,
 		Delete: resourceAwsRouteDelete,
-		Exists: resourceAwsRouteExists,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				idParts := strings.Split(d.Id(), "_")
@@ -286,6 +285,10 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("destination_cidr_block"); ok {
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), v.(string), "")
+			if err == nil && route != nil {
+				return nil
+			}
+
 			return resource.RetryableError(err)
 		})
 		if isResourceTimeoutError(err) {
@@ -294,11 +297,18 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error finding route after creating it: %s", err)
 		}
+		if route == nil {
+			return fmt.Errorf("Unable to find matching route for Route Table (%s) and destination CIDR block (%s).", d.Get("route_table_id").(string), v)
+		}
 	}
 
 	if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), "", v.(string))
+			if err == nil && route != nil {
+				return nil
+			}
+
 			return resource.RetryableError(err)
 		})
 		if isResourceTimeoutError(err) {
@@ -307,10 +317,14 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error finding route after creating it: %s", err)
 		}
+		if route == nil {
+			return fmt.Errorf("Unable to find matching route for Route Table (%s) and destination IPv6 CIDR block (%s).", d.Get("route_table_id").(string), v)
+		}
 	}
 
 	d.SetId(resourceAwsRouteID(d, route))
 	resourceAwsRouteSetResourceData(d, route)
+
 	return nil
 }
 
@@ -322,16 +336,23 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	destinationIpv6CidrBlock := d.Get("destination_ipv6_cidr_block").(string)
 
 	route, err := resourceAwsRouteFindRoute(conn, routeTableId, destinationCidrBlock, destinationIpv6CidrBlock)
+	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableId)
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
-			log.Printf("[WARN] Route Table %q could not be found. Removing Route from state.",
-				routeTableId)
-			d.SetId("")
-			return nil
-		}
 		return err
 	}
+
+	if route == nil {
+		log.Printf("[WARN] Matching route not found, removing from state")
+		d.SetId("")
+		return nil
+	}
+
 	resourceAwsRouteSetResourceData(d, route)
+
 	return nil
 }
 
@@ -454,14 +475,15 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 	log.Printf("[DEBUG] Route delete opts: %s", deleteOpts)
 
-	var resp *ec2.DeleteRouteOutput
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to delete route with opts %s", deleteOpts)
 		var err error
-		resp, err = conn.DeleteRoute(deleteOpts)
-		log.Printf("[DEBUG] Route delete result: %s", resp)
-
+		_, err = conn.DeleteRoute(deleteOpts)
 		if err == nil {
+			return nil
+		}
+
+		if isAWSErr(err, "InvalidRoute.NotFound", "") {
 			return nil
 		}
 
@@ -472,54 +494,15 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		return resource.NonRetryableError(err)
 	})
 	if isResourceTimeoutError(err) {
-		resp, err = conn.DeleteRoute(deleteOpts)
+		_, err = conn.DeleteRoute(deleteOpts)
+	}
+	if isAWSErr(err, "InvalidRoute.NotFound", "") {
+		return nil
 	}
 	if err != nil {
 		return fmt.Errorf("Error deleting route: %s", err)
 	}
 	return nil
-}
-
-func resourceAwsRouteExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).ec2conn
-	routeTableId := d.Get("route_table_id").(string)
-
-	findOpts := &ec2.DescribeRouteTablesInput{
-		RouteTableIds: []*string{&routeTableId},
-	}
-
-	res, err := conn.DescribeRouteTables(findOpts)
-	if err != nil {
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
-			log.Printf("[WARN] Route Table %q could not be found.", routeTableId)
-			return false, nil
-		}
-		return false, fmt.Errorf("Error while checking if route exists: %s", err)
-	}
-
-	if len(res.RouteTables) < 1 || res.RouteTables[0] == nil {
-		log.Printf("[WARN] Route Table %q is gone, or route does not exist.",
-			routeTableId)
-		return false, nil
-	}
-
-	if v, ok := d.GetOk("destination_cidr_block"); ok {
-		for _, route := range (*res.RouteTables[0]).Routes {
-			if route.DestinationCidrBlock != nil && *route.DestinationCidrBlock == v.(string) {
-				return true, nil
-			}
-		}
-	}
-
-	if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-		for _, route := range (*res.RouteTables[0]).Routes {
-			if route.DestinationIpv6CidrBlock != nil && *route.DestinationIpv6CidrBlock == v.(string) {
-				return true, nil
-			}
-		}
-	}
-
-	return false, nil
 }
 
 // Helper: Create an ID for a route
@@ -532,7 +515,8 @@ func resourceAwsRouteID(d *schema.ResourceData, r *ec2.Route) string {
 	return fmt.Sprintf("r-%s%d", d.Get("route_table_id").(string), hashcode.String(*r.DestinationCidrBlock))
 }
 
-// Helper: retrieve a route
+// resourceAwsRouteFindRoute returns any route whose destination is the specified IPv4 or IPv6 CIDR block.
+// Returns nil if the route table exists but no matching destination is found.
 func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cidr string) (*ec2.Route, error) {
 	routeTableID := rtbid
 
@@ -546,8 +530,7 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 	}
 
 	if len(resp.RouteTables) < 1 || resp.RouteTables[0] == nil {
-		return nil, fmt.Errorf("Route Table %q is gone, or route does not exist.",
-			routeTableID)
+		return nil, nil
 	}
 
 	if cidr != "" {
@@ -557,8 +540,7 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 			}
 		}
 
-		return nil, fmt.Errorf("Unable to find matching route for Route Table (%s) "+
-			"and destination CIDR block (%s).", rtbid, cidr)
+		return nil, nil
 	}
 
 	if ipv6cidr != "" {
@@ -568,11 +550,8 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 			}
 		}
 
-		return nil, fmt.Errorf("Unable to find matching route for Route Table (%s) "+
-			"and destination IPv6 CIDR block (%s).", rtbid, ipv6cidr)
+		return nil, nil
 	}
 
-	return nil, fmt.Errorf("When trying to find a matching route for Route Table %q "+
-		"you need to specify a CIDR block of IPv6 CIDR Block", rtbid)
-
+	return nil, nil
 }

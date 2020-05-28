@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -162,6 +163,8 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 						resourceName, "availability_zone"),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttr(
+						resourceName, "outpost_arn", ""),
 				),
 			},
 			{
@@ -299,6 +302,42 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 						resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(
 						resourceName, "availability_zone_id", "usw2-az3"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSubnet_outpost(t *testing.T) {
+	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
+	if outpostArn == "" {
+		t.Skip(
+			"Environment variable AWS_OUTPOST_ARN is not set. " +
+				"This environment variable must be set to the ARN of " +
+				"a deployed Outpost to enable this test.")
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigOutpost(outpostArn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(
+						resourceName, &v),
+					resource.TestCheckResourceAttr(
+						resourceName, "outpost_arn", outpostArn),
 				),
 			},
 			{
@@ -530,3 +569,29 @@ resource "aws_subnet" "test" {
   }
 }
 `
+
+func testAccSubnetConfigOutpost(outpostArn string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = "terraform-testacc-subnet-outpost"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id = "${aws_vpc.test.id}"
+  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
+  outpost_arn = "%s"
+  tags = {
+    Name = "tf-acc-subnet-outpost"
+  }
+}
+`, outpostArn)
+}
