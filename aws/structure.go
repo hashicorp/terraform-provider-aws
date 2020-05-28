@@ -5130,7 +5130,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 						weightedTarget.VirtualNode = aws.String(vVirtualNode)
 					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok && vWeight > 0 {
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 						weightedTarget.Weight = aws.Int64(int64(vWeight))
 					}
 
@@ -5234,7 +5234,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 						weightedTarget.VirtualNode = aws.String(vVirtualNode)
 					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok && vWeight > 0 {
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 						weightedTarget.Weight = aws.Int64(int64(vWeight))
 					}
 
