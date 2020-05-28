@@ -31,7 +31,7 @@ func TestAccAWSEcrAuthorizationTokenDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsEcrAuthorizationTokenDataSourceRepositoryConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("aws_ecr_repository.repo", "registry_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "registry_id", "aws_ecr_repository.repo", "registry_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "authorization_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "proxy_endpoint"),
 					resource.TestCheckResourceAttrSet(resourceName, "expires_at"),
