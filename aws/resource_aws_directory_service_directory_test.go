@@ -295,7 +295,7 @@ func TestAccAWSDirectoryServiceDirectory_withAliasAndSso(t *testing.T) {
 }
 
 func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
-	dsconn := testAccProvider.Meta().(*AWSClient).dsconn
+	conn := testAccProvider.Meta().(*AWSClient).dsconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_directory_service_directory" {
@@ -305,7 +305,7 @@ func testAccCheckDirectoryServiceDirectoryDestroy(s *terraform.State) error {
 		input := directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		}
-		out, err := dsconn.DescribeDirectories(&input)
+		out, err := conn.DescribeDirectories(&input)
 
 		if isAWSErr(err, directoryservice.ErrCodeEntityDoesNotExistException, "") {
 			continue
@@ -359,8 +359,8 @@ func testAccCheckServiceDirectoryExists(name string, ds *directoryservice.Direct
 			return fmt.Errorf("No ID is set")
 		}
 
-		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
-		out, err := dsconn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
+		conn := testAccProvider.Meta().(*AWSClient).dsconn
+		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
@@ -394,8 +394,8 @@ func testAccCheckServiceDirectoryAlias(name, alias string) resource.TestCheckFun
 			return fmt.Errorf("No ID is set")
 		}
 
-		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
-		out, err := dsconn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
+		conn := testAccProvider.Meta().(*AWSClient).dsconn
+		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
@@ -423,8 +423,8 @@ func testAccCheckServiceDirectorySso(name string, ssoEnabled bool) resource.Test
 			return fmt.Errorf("No ID is set")
 		}
 
-		dsconn := testAccProvider.Meta().(*AWSClient).dsconn
-		out, err := dsconn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
+		conn := testAccProvider.Meta().(*AWSClient).dsconn
+		out, err := conn.DescribeDirectories(&directoryservice.DescribeDirectoriesInput{
 			DirectoryIds: []*string{aws.String(rs.Primary.ID)},
 		})
 
