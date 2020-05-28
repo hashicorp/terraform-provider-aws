@@ -1111,6 +1111,16 @@ resource "aws_kinesis_analyticsv2_application" "test" {
         metrics_level      = "APPLICATION"
       }
     }
+
+    environment_properties {
+      property_group {
+        property_group_id  = "abcdef"
+        property_map       = {
+            key1 = "val1"
+            key2 = "val2"
+        }
+      }
+    }
   }
 
   service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
