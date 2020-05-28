@@ -2,6 +2,7 @@
 
 ENHANCMENTS:
 
+* resource/aws_iot_topic_rule: Add `step_functions` configuration block [GH-13520]
 * resource/aws_ses_event_destination: Support resource import [GH-13464]
 
 BUG FIXES:
