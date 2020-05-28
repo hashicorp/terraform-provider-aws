@@ -2,6 +2,8 @@
 
 ENHANCMENTS:
 
+* data-source/aws_directory_service_directory: `connect_settings` `connect_ips` attribute now set [GH-13395]
+* resource/aws_directory_service_directory: `connect_settings` `connect_ips` attribute now set [GH-13395]
 * resource/aws_iot_topic_rule: Add `step_functions` configuration block [GH-13520]
 * resource/aws_ses_event_destination: Support resource import [GH-13464]
 
