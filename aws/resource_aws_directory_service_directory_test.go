@@ -224,6 +224,7 @@ func TestAccAWSDirectoryServiceDirectory_connector(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceDirectoryExists("aws_directory_service_directory.connector"),
 					resource.TestCheckResourceAttrSet("aws_directory_service_directory.connector", "security_group_id"),
+					resource.TestCheckResourceAttrSet("aws_directory_service_directory.connector", "connect_settings.0.connect_ips.#"),
 				),
 			},
 			{
