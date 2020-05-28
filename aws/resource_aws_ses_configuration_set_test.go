@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -115,17 +114,11 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 			return err
 		}
 
-		found := false
-
-		if *response.ConfigurationSet.Name == rs.Primary.ID {
-			found = true
-		}
-
-		if !found {
+		if aws.StringValue(response.ConfigurationSet.Name) != rs.Primary.ID {
 			return fmt.Errorf("The configuration set was not created")
 		}
-
 		return nil
+
 	}
 }
 
@@ -141,16 +134,14 @@ func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
 			ConfigurationSetName: aws.String(rs.Primary.ID),
 		})
 
-		if err == nil {
-			if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "ConfigurationSetDoesNotExist" {
-				return fmt.Errorf("The configuration set still exists")
+		if err != nil {
+			if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+				return nil
 			}
-			return fmt.Errorf("An error occurred: %s", err)
+			return err
 		}
 	}
-
 	return nil
-
 }
 
 func testAccAWSSESConfigurationSetConfig(escRandomInteger int) string {

@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -91,13 +90,13 @@ func findConfigurationSet(name string, meta interface{}) (bool, error) {
 	response, err := conn.DescribeConfigurationSet(configSetInput)
 
 	if err != nil {
-		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == "ConfigurationSetDoesNotExist" {
+		if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
 			return configurationSetExists, nil
 		}
 		return false, err
 	}
 
-	if *response.ConfigurationSet.Name == name {
+	if aws.StringValue(response.ConfigurationSet.Name) == name {
 		configurationSetExists = true
 	}
 
