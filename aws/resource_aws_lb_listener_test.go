@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -59,8 +60,8 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 				Config: testAccAWSLBListenerConfig_forwardWeighted(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.weighted", &conf),
-					resource.TestCheckResourceAttrSet("aws_lb_listener.weighted", "load_balancer_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener.weighted", "arn"),
+					testAccMatchResourceAttrRegionalARN("aws_lb_listener.weighted", "load_balancer_arn", "elasticloadbalancing", regexp.MustCompile("loadbalancer/.+$")),
+					testAccMatchResourceAttrRegionalARN("aws_lb_listener.weighted", "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "protocol", "HTTP"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "port", "80"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "default_action.#", "1"),
@@ -78,8 +79,8 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 				Config: testAccAWSLBListenerConfig_changeForwardWeightedStickiness(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.weighted", &conf),
-					resource.TestCheckResourceAttrSet("aws_lb_listener.weighted", "load_balancer_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener.weighted", "arn"),
+					testAccMatchResourceAttrRegionalARN("aws_lb_listener.weighted", "load_balancer_arn", "elasticloadbalancing", regexp.MustCompile("loadbalancer/.+$")),
+					testAccMatchResourceAttrRegionalARN("aws_lb_listener.weighted", "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "protocol", "HTTP"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "port", "80"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "default_action.#", "1"),
@@ -97,14 +98,16 @@ func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
 				Config: testAccAWSLBListenerConfig_changeForwardWeightedToBasic(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.weighted", &conf),
-					resource.TestCheckResourceAttrSet("aws_lb_listener.weighted", "load_balancer_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener.weighted", "arn"),
+					testAccMatchResourceAttrRegionalARN("aws_lb_listener.weighted", "load_balancer_arn", "elasticloadbalancing", regexp.MustCompile("loadbalancer/.+$")),
+					testAccMatchResourceAttrRegionalARN("aws_lb_listener.weighted", "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "protocol", "HTTP"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "port", "80"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "default_action.#", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.weighted", "default_action.0.target_group_arn"),
+					testAccMatchResourceAttrRegionalARN("aws_lb_listener.weighted", "default_action.0.target_group_arn", "elasticloadbalancing", regexp.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttrPair("aws_lb_listener.weighted", "default_action.0.target_group_arn", "aws_lb_target_group.test1", "arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener.weighted", "default_action.0.fixed_response.#", "0"),
 				),
