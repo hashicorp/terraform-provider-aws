@@ -62,6 +62,7 @@ func resourceAwsAcmCertificate() *schema.Resource {
 			"subject_alternative_names": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
