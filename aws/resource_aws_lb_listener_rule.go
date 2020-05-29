@@ -71,14 +71,14 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 						"target_group_arn": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot("forward"),
+							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
 							ConflictsWith:    []string{"action.0.forward"},
 						},
 
 						"forward": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot("forward"),
+							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -129,7 +129,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 						"redirect": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot("redirect"),
+							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumRedirect),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -183,7 +183,7 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 						"fixed_response": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot("fixed-response"),
+							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumFixedResponse),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -611,12 +611,12 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 		}
 
 		switch actionMap["type"].(string) {
-		case "forward":
+		case elbv2.ActionTypeEnumForward:
 			if err := lbListenerRuleActionForward(actionMap, action); err != nil {
 				return err
 			}
 
-		case "redirect":
+		case elbv2.ActionTypeEnumRedirect:
 			redirectList := actionMap["redirect"].([]interface{})
 
 			if len(redirectList) == 1 {
@@ -634,7 +634,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 				return errors.New("for actions of type 'redirect', you must specify a 'redirect' block")
 			}
 
-		case "fixed-response":
+		case elbv2.ActionTypeEnumFixedResponse:
 			fixedResponseList := actionMap["fixed_response"].([]interface{})
 
 			if len(fixedResponseList) == 1 {
@@ -649,7 +649,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 				return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response' block")
 			}
 
-		case "authenticate-cognito":
+		case elbv2.ActionTypeEnumAuthenticateCognito:
 			authenticateCognitoList := actionMap["authenticate_cognito"].([]interface{})
 
 			if len(authenticateCognitoList) == 1 {
@@ -683,7 +683,7 @@ func resourceAwsLbListenerRuleCreate(d *schema.ResourceData, meta interface{}) e
 				return errors.New("for actions of type 'authenticate-cognito', you must specify a 'authenticate_cognito' block")
 			}
 
-		case "authenticate-oidc":
+		case elbv2.ActionTypeEnumAuthenticateOidc:
 			authenticateOidcList := actionMap["authenticate_oidc"].([]interface{})
 
 			if len(authenticateOidcList) == 1 {
@@ -842,7 +842,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 		actionMap["order"] = aws.Int64Value(action.Order)
 
 		switch actionMap["type"] {
-		case "forward":
+		case elbv2.ActionTypeEnumForward:
 			if aws.StringValue(action.TargetGroupArn) != "" {
 				actionMap["target_group_arn"] = aws.StringValue(action.TargetGroupArn)
 			} else {
@@ -868,7 +868,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 				}
 			}
 
-		case "redirect":
+		case elbv2.ActionTypeEnumRedirect:
 			actionMap["redirect"] = []map[string]interface{}{
 				{
 					"host":        aws.StringValue(action.RedirectConfig.Host),
@@ -880,7 +880,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 				},
 			}
 
-		case "fixed-response":
+		case elbv2.ActionTypeEnumFixedResponse:
 			actionMap["fixed_response"] = []map[string]interface{}{
 				{
 					"content_type": aws.StringValue(action.FixedResponseConfig.ContentType),
@@ -889,7 +889,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 				},
 			}
 
-		case "authenticate-cognito":
+		case elbv2.ActionTypeEnumAuthenticateCognito:
 			authenticationRequestExtraParams := make(map[string]interface{})
 			for key, value := range action.AuthenticateCognitoConfig.AuthenticationRequestExtraParams {
 				authenticationRequestExtraParams[key] = aws.StringValue(value)
@@ -908,7 +908,7 @@ func resourceAwsLbListenerRuleRead(d *schema.ResourceData, meta interface{}) err
 				},
 			}
 
-		case "authenticate-oidc":
+		case elbv2.ActionTypeEnumAuthenticateOidc:
 			authenticationRequestExtraParams := make(map[string]interface{})
 			for key, value := range action.AuthenticateOidcConfig.AuthenticationRequestExtraParams {
 				authenticationRequestExtraParams[key] = aws.StringValue(value)
@@ -1044,12 +1044,12 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 			}
 
 			switch actionMap["type"].(string) {
-			case "forward":
+			case elbv2.ActionTypeEnumForward:
 				if err := lbListenerRuleActionForward(actionMap, action); err != nil {
 					return err
 				}
 
-			case "redirect":
+			case elbv2.ActionTypeEnumRedirect:
 				redirectList := actionMap["redirect"].([]interface{})
 
 				if len(redirectList) == 1 {
@@ -1067,7 +1067,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 					return errors.New("for actions of type 'redirect', you must specify a 'redirect' block")
 				}
 
-			case "fixed-response":
+			case elbv2.ActionTypeEnumFixedResponse:
 				fixedResponseList := actionMap["fixed_response"].([]interface{})
 
 				if len(fixedResponseList) == 1 {
@@ -1082,7 +1082,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 					return errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response' block")
 				}
 
-			case "authenticate-cognito":
+			case elbv2.ActionTypeEnumAuthenticateCognito:
 				authenticateCognitoList := actionMap["authenticate_cognito"].([]interface{})
 
 				if len(authenticateCognitoList) == 1 {
@@ -1116,7 +1116,7 @@ func resourceAwsLbListenerRuleUpdate(d *schema.ResourceData, meta interface{}) e
 					return errors.New("for actions of type 'authenticate-cognito', you must specify a 'authenticate_cognito' block")
 				}
 
-			case "authenticate-oidc":
+			case elbv2.ActionTypeEnumAuthenticateOidc:
 				authenticateOidcList := actionMap["authenticate_oidc"].([]interface{})
 
 				if len(authenticateOidcList) == 1 {
