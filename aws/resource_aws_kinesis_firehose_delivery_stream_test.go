@@ -922,18 +922,9 @@ func TestAccAWSKinesisFirehoseDeliveryStream_ExtendedS3_KinesisStreamSource(t *t
 
 func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T) {
 	var stream firehose.DeliveryStreamDescription
-
+	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_kinesis_firehose_delivery_stream.test"
-	ri := acctest.RandInt()
-	rString := acctest.RandString(8)
-	funcName := fmt.Sprintf("aws_kinesis_firehose_delivery_stream_test_%s", rString)
-	policyName := fmt.Sprintf("tf_acc_policy_%s", rString)
-	roleName := fmt.Sprintf("tf_acc_role_%s", rString)
-	preConfig := fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_RedshiftBasic,
-		ri, ri, ri, ri, ri)
-	postConfig := testAccFirehoseAWSLambdaConfigBasic(funcName, policyName, roleName) +
-		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamConfig_RedshiftUpdates,
-			ri, ri, ri, ri, ri)
 
 	updatedRedshiftConfig := &firehose.RedshiftDestinationDescription{
 		CopyCommand: &firehose.CopyCommand{
@@ -962,7 +953,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 		CheckDestroy: testAccCheckKinesisFirehoseDeliveryStreamDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: preConfig,
+				Config: testAccKinesisFirehoseDeliveryStreamRedshiftConfig(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil),
@@ -975,7 +966,7 @@ func TestAccAWSKinesisFirehoseDeliveryStream_RedshiftConfigUpdates(t *testing.T)
 				ImportStateVerifyIgnore: []string{"redshift_configuration.0.password"},
 			},
 			{
-				Config: postConfig,
+				Config: testAccKinesisFirehoseDeliveryStreamRedshiftConfigUpdates(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisFirehoseDeliveryStreamExists(resourceName, &stream),
 					testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(&stream, nil, nil, updatedRedshiftConfig, nil, nil),
@@ -1168,7 +1159,7 @@ func testAccCheckKinesisFirehoseDeliveryStreamExists(n string, stream *firehose.
 
 func testAccCheckAWSKinesisFirehoseDeliveryStreamAttributes(stream *firehose.DeliveryStreamDescription, s3config interface{}, extendedS3config interface{}, redshiftConfig interface{}, elasticsearchConfig interface{}, splunkConfig interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") {
+		if !strings.HasPrefix(*stream.DeliveryStreamName, "terraform-kinesis-firehose") && !strings.HasPrefix(*stream.DeliveryStreamName, "tf-acc-test") {
 			return fmt.Errorf("Bad Stream name: %s", *stream.DeliveryStreamName)
 		}
 		for _, rs := range s.RootModule().Resources {
@@ -2192,72 +2183,131 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 }
 `
 
-var testAccKinesisFirehoseDeliveryStreamBaseRedshiftConfig = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
-resource "aws_redshift_cluster" "test_cluster" {
-  cluster_identifier = "tf-redshift-cluster-%d"
-  database_name = "test"
-  master_username = "testuser"
-  master_password = "T3stPass"
-  node_type = "dc1.large"
-  cluster_type = "single-node"
-	skip_final_snapshot = true
-}`
+func testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName string, rInt int) string {
+	return composeConfig(
+		fmt.Sprintf(testAccKinesisFirehoseDeliveryStreamBaseConfig, rInt, rInt, rInt),
+		fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  state = "available"
 
-var testAccKinesisFirehoseDeliveryStreamConfig_RedshiftBasic = testAccKinesisFirehoseDeliveryStreamBaseRedshiftConfig + `
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.current.names[0]}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_redshift_subnet_group" "test" {
+  name        = %[1]q
+  description = "test"
+  subnet_ids  = ["${aws_subnet.test.id}"]
+  }
+
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier        = %[1]q
+  availability_zone         = "${data.aws_availability_zones.current.names[0]}"
+  database_name             = "test"
+  master_username           = "testuser"
+  master_password           = "T3stPass"
+  node_type                 = "dc1.large"
+  cluster_type              = "single-node"
+  skip_final_snapshot       = true
+  cluster_subnet_group_name = "${aws_redshift_subnet_group.test.id}"
+  publicly_accessible       = false
+}
+`, rName))
+}
+
+func testAccKinesisFirehoseDeliveryStreamRedshiftConfig(rName string, rInt int) string {
+	return composeConfig(
+		testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName, rInt),
+		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_redshift_cluster.test_cluster"]
-  name = "terraform-kinesis-firehose-basicredshifttest-%d"
+  name        = %[1]q
   destination = "redshift"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
+    role_arn   = "${aws_iam_role.firehose.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
   }
+
   redshift_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test_cluster.endpoint}/${aws_redshift_cluster.test_cluster.database_name}"
-    username = "testuser"
-    password = "T3stPass"
+    role_arn        = "${aws_iam_role.firehose.arn}"
+    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
+    username        = "testuser"
+    password        = "T3stPass"
     data_table_name = "test-table"
   }
-}`
+}
+`, rName))
+}
 
-var testAccKinesisFirehoseDeliveryStreamConfig_RedshiftUpdates = testAccKinesisFirehoseDeliveryStreamBaseRedshiftConfig + `
+func testAccKinesisFirehoseDeliveryStreamRedshiftConfigUpdates(rName string, rInt int) string {
+	return composeConfig(
+		testAccFirehoseAWSLambdaConfigBasic(rName, rName, rName),
+		testAccKinesisFirehoseDeliveryStreamRedshiftConfigBase(rName, rInt),
+		fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "test" {
-  depends_on = ["aws_iam_role_policy.firehose", "aws_redshift_cluster.test_cluster"]
-  name = "terraform-kinesis-firehose-basicredshifttest-%d"
+  name        = %[1]q
   destination = "redshift"
+
   s3_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    buffer_size = 10
-    buffer_interval = 400
+    role_arn           = "${aws_iam_role.firehose.arn}"
+    bucket_arn         = "${aws_s3_bucket.bucket.arn}"
+    buffer_size        = 10
+    buffer_interval    = 400
     compression_format = "GZIP"
   }
+
   redshift_configuration {
-    role_arn = "${aws_iam_role.firehose.arn}"
-    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test_cluster.endpoint}/${aws_redshift_cluster.test_cluster.database_name}"
-    username = "testuser"
-    password = "T3stPass"
-    s3_backup_mode = "Enabled"
+    role_arn        = "${aws_iam_role.firehose.arn}"
+    cluster_jdbcurl = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/${aws_redshift_cluster.test.database_name}"
+    username        = "testuser"
+    password        = "T3stPass"
+    s3_backup_mode  = "Enabled"
+
     s3_backup_configuration {
-      role_arn = "${aws_iam_role.firehose.arn}"
+      role_arn   = "${aws_iam_role.firehose.arn}"
       bucket_arn = "${aws_s3_bucket.bucket.arn}"
     }
-    data_table_name = "test-table"
-    copy_options = "GZIP"
+
+    data_table_name    = "test-table"
+    copy_options       = "GZIP"
     data_table_columns = "test-col"
+
     processing_configuration {
       enabled = false
+
       processors {
         type = "Lambda"
+
         parameters {
-          parameter_name = "LambdaArn"
+          parameter_name  = "LambdaArn"
           parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
         }
       }
     }
   }
-}`
+}
+`, rName))
+}
 
 var testAccKinesisFirehoseDeliveryStreamConfig_SplunkBasic = testAccKinesisFirehoseDeliveryStreamBaseConfig + `
 resource "aws_kinesis_firehose_delivery_stream" "test" {
