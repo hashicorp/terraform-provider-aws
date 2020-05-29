@@ -1,31 +1,31 @@
-## 2.64.0 (Unreleased)
+## 2.64.0 (May 28, 2020)
 
 ENHANCEMENTS:
 
-* data-source/aws_directory_service_directory: `connect_settings` `connect_ips` attribute now set [GH-13395]
-* resource/aws_directory_service_directory: `connect_settings` `connect_ips` attribute now set [GH-13395]
-* resource/aws_iot_topic_rule: Add `step_functions` configuration block [GH-13520]
-* resource/aws_ses_event_destination: Support resource import [GH-13464]
+* data-source/aws_directory_service_directory: `connect_settings` `connect_ips` attribute now set ([#13395](https://github.com/terraform-providers/terraform-provider-aws/issues/13395))
+* resource/aws_directory_service_directory: `connect_settings` `connect_ips` attribute now set ([#13395](https://github.com/terraform-providers/terraform-provider-aws/issues/13395))
+* resource/aws_iot_topic_rule: Add `step_functions` configuration block ([#13520](https://github.com/terraform-providers/terraform-provider-aws/issues/13520))
+* resource/aws_ses_event_destination: Support resource import ([#13464](https://github.com/terraform-providers/terraform-provider-aws/issues/13464))
 
 BUG FIXES:
 
-* data-source/aws_elasticsearch_domain: `processing` is now correctly set [GH-13397]
-* resource/aws_acm_certificate: Update pending DNS validation record creation time from 1 minute to 5 minutes (better support for certificates with high amount of Subject Alternative Names) [GH-12371]
-* resource/aws_api_gateway_method_settings: `settings` now properly set [GH-13403]
-* resource/aws_autoscaling_group: Ignore ordering differences for `tags` argument (prevent unexpected differences from version 2.63.0) [GH-13515]
-* resource/aws_codebuild_project: Enable drift detection for `environment_variable` argument [GH-6427]
-* resource/aws_codebuild_project: Prevent `inconsistent final plan` errors with `source` configuration block [GH-10615]
-* resource/aws_ecs_task_definition: Ensure `efs_volume_configuration` changes are properly detected [GH-12571] / [GH-12751]
-* resource/aws_lb_cookie_stickiness_policy: `cookie_expiration_policy` now properly set [GH-13418]
-* resource/aws_lightsail_instance: `ram_size` now properly set [GH-13430]
-* resource/aws_load_balancer_backend_server_policy: `instance_port` now properly set [GH-13418]
-* resource/aws_load_balancer_listener_policy: `load_balancer_port` now properly set [GH-13418]
-* resource/aws_opsworks_application: `environment` `secure` now properly set [GH-13435]
-* resource/aws_security_group_rule: Correctly set `description` after state refresh when `source_security_group_id` refers to a security group across accounts [GH-13364]
-* resource/aws_ses_active_receipt_rule_set: Recreate resource when destroyed outside of Terraform [GH-9086]
-* resource/aws_ses_event_destination: Correctly refresh entire resource state (prevent unexpected differences from version 2.63.0 and properly perform drift detection) [GH-13464]
-* resource/aws_ses_receipt_rule: Recreate resource when destroyed outside of Terraform [GH-9086]
-* resource/aws_sns_topic: Attributes of type `schema.TypeInt` are now correctly set [GH-13437]
+* data-source/aws_elasticsearch_domain: `processing` is now correctly set ([#13397](https://github.com/terraform-providers/terraform-provider-aws/issues/13397))
+* resource/aws_acm_certificate: Update pending DNS validation record creation time from 1 minute to 5 minutes (better support for certificates with high amount of Subject Alternative Names) ([#12371](https://github.com/terraform-providers/terraform-provider-aws/issues/12371))
+* resource/aws_api_gateway_method_settings: `settings` now properly set ([#13403](https://github.com/terraform-providers/terraform-provider-aws/issues/13403))
+* resource/aws_autoscaling_group: Ignore ordering differences for `tags` argument (prevent unexpected differences from version 2.63.0) ([#13515](https://github.com/terraform-providers/terraform-provider-aws/issues/13515))
+* resource/aws_codebuild_project: Enable drift detection for `environment_variable` argument ([#6427](https://github.com/terraform-providers/terraform-provider-aws/issues/6427))
+* resource/aws_codebuild_project: Prevent `inconsistent final plan` errors with `source` configuration block ([#10615](https://github.com/terraform-providers/terraform-provider-aws/issues/10615))
+* resource/aws_ecs_task_definition: Ensure `efs_volume_configuration` changes are properly detected ([#12571](https://github.com/terraform-providers/terraform-provider-aws/issues/12571)] / [[#12751](https://github.com/terraform-providers/terraform-provider-aws/issues/12751))
+* resource/aws_lb_cookie_stickiness_policy: `cookie_expiration_policy` now properly set ([#13418](https://github.com/terraform-providers/terraform-provider-aws/issues/13418))
+* resource/aws_lightsail_instance: `ram_size` now properly set ([#13430](https://github.com/terraform-providers/terraform-provider-aws/issues/13430))
+* resource/aws_load_balancer_backend_server_policy: `instance_port` now properly set ([#13418](https://github.com/terraform-providers/terraform-provider-aws/issues/13418))
+* resource/aws_load_balancer_listener_policy: `load_balancer_port` now properly set ([#13418](https://github.com/terraform-providers/terraform-provider-aws/issues/13418))
+* resource/aws_opsworks_application: `environment` `secure` now properly set ([#13435](https://github.com/terraform-providers/terraform-provider-aws/issues/13435))
+* resource/aws_security_group_rule: Correctly set `description` after state refresh when `source_security_group_id` refers to a security group across accounts ([#13364](https://github.com/terraform-providers/terraform-provider-aws/issues/13364))
+* resource/aws_ses_active_receipt_rule_set: Recreate resource when destroyed outside of Terraform ([#9086](https://github.com/terraform-providers/terraform-provider-aws/issues/9086))
+* resource/aws_ses_event_destination: Correctly refresh entire resource state (prevent unexpected differences from version 2.63.0 and properly perform drift detection) ([#13464](https://github.com/terraform-providers/terraform-provider-aws/issues/13464))
+* resource/aws_ses_receipt_rule: Recreate resource when destroyed outside of Terraform ([#9086](https://github.com/terraform-providers/terraform-provider-aws/issues/9086))
+* resource/aws_sns_topic: Attributes of type `schema.TypeInt` are now correctly set ([#13437](https://github.com/terraform-providers/terraform-provider-aws/issues/13437))
 
 ## 2.63.0 (May 22, 2020)
 
