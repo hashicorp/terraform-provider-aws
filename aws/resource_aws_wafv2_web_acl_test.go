@@ -469,7 +469,7 @@ func computeWafv2RuleGroupRefStatementIndex(r *wafv2.WebACL, idx *int, e []inter
 					"regex_pattern_set_reference_statement": []interface{}{},
 					"rule_group_reference_statement": []interface{}{
 						map[string]interface{}{
-							"arn":           *r.Rules[0].Statement.RuleGroupReferenceStatement.ARN,
+							"arn":           aws.StringValue(r.Rules[0].Statement.RuleGroupReferenceStatement.ARN),
 							"excluded_rule": e,
 						},
 					},

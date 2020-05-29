@@ -449,19 +449,19 @@ The `field_to_match` block supports the following arguments:
 
 ### Single Header
 
-Inspect a single header. Provide the name of the header to inspect, for example, `User-Agent` or `Referer`. This setting isn't case sensitive.
+Inspect a single header. Provide the name of the header to inspect, for example, `User-Agent` or `Referer` (provided as lowercase strings).
 
 The `single_header` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting isn't case sensitive, only use lower case characters.
+* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### Single Query Argument
 
-Inspect a single query argument. Provide the name of the query argument to inspect, such as `UserName` or `SalesRegion`. This setting isn't case sensitive.
+Inspect a single query argument. Provide the name of the query argument to inspect, such as `UserName` or `SalesRegion` (provided as lowercase strings).
 
 The `single_query_argument` block supports the following arguments:
 
-* `name` - (Optional) The name of the query header to inspect. This setting isn't case sensitive, only use lower case characters.
+* `name` - (Optional) The name of the query header to inspect. This setting must be provided as lower case characters.
 
 ### Text Transformation
 
