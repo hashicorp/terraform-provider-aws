@@ -106,6 +106,11 @@ func dataSourceAwsSubnet() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+
+			"available_ip_address_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -178,6 +183,7 @@ func dataSourceAwsSubnetRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(subnet.SubnetId))
 	d.Set("vpc_id", subnet.VpcId)
+	d.Set("available_ip_address_count", subnet.AvailableIpAddressCount)
 	d.Set("availability_zone", subnet.AvailabilityZone)
 	d.Set("availability_zone_id", subnet.AvailabilityZoneId)
 	d.Set("cidr_block", subnet.CidrBlock)

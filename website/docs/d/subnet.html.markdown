@@ -100,5 +100,6 @@ In addition the following attributes are exported:
 * `customer_owned_ipv4_pool` - Identifier of customer owned IPv4 address pool.
 * `map_customer_owned_ip_on_launch` - Whether customer owned IP addresses are assigned on network interface creation.
 * `map_public_ip_on_launch` - Whether public IP addresses are assigned on instance launch.
+* `available_ip_address_count` - The available IP addresses of the subnet.
 * `owner_id` - The ID of the AWS account that owns the subnet.
 * `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.
