@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,6 +11,58 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_backup_vault_notifications", &resource.Sweeper{
+		Name: "aws_backup_vault_notifications",
+		F:    testSweepBackupVaultNotifications,
+	})
+}
+
+func testSweepBackupVaultNotifications(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).backupconn
+
+	input := &backup.ListBackupVaultsInput{}
+
+	for {
+		output, err := conn.ListBackupVaults(input)
+		if err != nil {
+			if testSweepSkipSweepError(err) {
+				log.Printf("[WARN] Skipping Backup Vault Notifications sweep for %s: %s", region, err)
+				return nil
+			}
+			return fmt.Errorf("Error retrieving Backup Vault Notifications: %s", err)
+		}
+
+		if len(output.BackupVaultList) == 0 {
+			log.Print("[DEBUG] No Backup Vault Notifications to sweep")
+			return nil
+		}
+
+		for _, rule := range output.BackupVaultList {
+			name := aws.StringValue(rule.BackupVaultName)
+
+			log.Printf("[INFO] Deleting Backup Vault Notifications %s", name)
+			_, err := conn.DeleteBackupVaultNotifications(&backup.DeleteBackupVaultNotificationsInput{
+				BackupVaultName: aws.String(name),
+			})
+			if err != nil {
+				return fmt.Errorf("Error deleting Backup Vault Notifications %s: %s", name, err)
+			}
+		}
+
+		if output.NextToken == nil {
+			break
+		}
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
 
 func TestAccAwsBackupVaultNotification_basic(t *testing.T) {
 	var vault backup.GetBackupVaultNotificationsOutput
