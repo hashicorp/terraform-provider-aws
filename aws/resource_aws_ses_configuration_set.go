@@ -50,7 +50,7 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	configSetInput := &ses.DescribeConfigurationSetInput{
 		ConfigurationSetName: aws.String(d.Id()),

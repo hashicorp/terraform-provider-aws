@@ -123,7 +123,7 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 }
 
 func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_configuration_set" {
