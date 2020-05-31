@@ -69,9 +69,16 @@ func resourceAwsS3Bucket() *schema.Resource {
 			},
 
 			"acl": {
-				Type:          schema.TypeString,
-				Default:       "private",
-				Optional:      true,
+				Type:     schema.TypeString,
+				Default:  s3.BucketCannedACLPrivate,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					s3.BucketCannedACLPrivate,
+					s3.BucketCannedACLAuthenticatedRead,
+					s3.BucketCannedACLPublicRead,
+					s3.BucketCannedACLPublicReadWrite,
+					"log-delivery-write",
+				}, false),
 				ConflictsWith: []string{"grant"},
 			},
 
@@ -91,6 +98,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								s3.TypeCanonicalUser,
+								s3.TypeAmazonCustomerByEmail,
 								s3.TypeGroup,
 							}, false),
 						},
@@ -102,7 +110,6 @@ func resourceAwsS3Bucket() *schema.Resource {
 						"permissions": {
 							Type:     schema.TypeSet,
 							Required: true,
-							Set:      schema.HashString,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 								ValidateFunc: validation.StringInSlice([]string{
@@ -407,8 +414,9 @@ func resourceAwsS3Bucket() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
 						},
 						"rules": {
 							Type:     schema.TypeSet,
