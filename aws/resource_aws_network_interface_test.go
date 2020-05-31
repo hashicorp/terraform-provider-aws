@@ -924,6 +924,11 @@ func testAccAWSENIConfigWithAttachment() string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+ 
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
@@ -1003,6 +1008,7 @@ data "aws_availability_zones" "available" {
     values = ["opt-in-not-required"]
   }
 }
+
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
   enable_dns_hostnames = true
