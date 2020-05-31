@@ -50,19 +50,24 @@ func resourceAwsSesConfigurationSetCreate(d *schema.ResourceData, meta interface
 }
 
 func resourceAwsSesConfigurationSetRead(d *schema.ResourceData, meta interface{}) error {
-	configurationSetExists, err := findConfigurationSet(d.Id(), meta)
+	conn := meta.(*AWSClient).sesConn
+
+	configSetInput := &ses.DescribeConfigurationSetInput{
+		ConfigurationSetName: aws.String(d.Id()),
+	}
+
+	response, err := conn.DescribeConfigurationSet(configSetInput)
 
 	if err != nil {
+		if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
+			log.Printf("[WARN] SES Configuration Set (%s) not found, removing from state", d.Id())
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
-	if !configurationSetExists {
-		log.Printf("[WARN] SES Configuration Set (%s) not found", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	d.Set("name", d.Id())
+	d.Set("name", aws.StringValue(response.ConfigurationSet.Name))
 
 	return nil
 }
@@ -76,29 +81,4 @@ func resourceAwsSesConfigurationSetDelete(d *schema.ResourceData, meta interface
 	})
 
 	return err
-}
-
-func findConfigurationSet(name string, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).sesConn
-
-	configurationSetExists := false
-
-	configSetInput := &ses.DescribeConfigurationSetInput{
-		ConfigurationSetName: aws.String(name),
-	}
-
-	response, err := conn.DescribeConfigurationSet(configSetInput)
-
-	if err != nil {
-		if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
-			return configurationSetExists, nil
-		}
-		return false, err
-	}
-
-	if aws.StringValue(response.ConfigurationSet.Name) == name {
-		configurationSetExists = true
-	}
-
-	return configurationSetExists, nil
 }
