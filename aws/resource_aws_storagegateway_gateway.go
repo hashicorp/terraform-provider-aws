@@ -143,6 +143,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 			"smb_security_strategy": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					storagegateway.SMBSecurityStrategyClientSpecified,
 					storagegateway.SMBSecurityStrategyMandatoryEncryption,
