@@ -65,6 +65,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
+				ValidateFunc:  validation.IsIPv4Address,
 				ConflictsWith: []string{"activation_key"},
 			},
 			"gateway_name": {
@@ -138,6 +139,15 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validateArn,
+			},
+			"smb_security_strategy": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					storagegateway.SMBSecurityStrategyClientSpecified,
+					storagegateway.SMBSecurityStrategyMandatoryEncryption,
+					storagegateway.SMBSecurityStrategyMandatorySigning,
+				}, false),
 			},
 		},
 	}
@@ -294,6 +304,19 @@ func resourceAwsStorageGatewayGatewayCreate(d *schema.ResourceData, meta interfa
 		}
 	}
 
+	if v, ok := d.GetOk("smb_security_strategy"); ok && v.(string) != "" {
+		input := &storagegateway.UpdateSMBSecurityStrategyInput{
+			GatewayARN:          aws.String(d.Id()),
+			SMBSecurityStrategy: aws.String(v.(string)),
+		}
+
+		log.Printf("[DEBUG] Storage Gateway Gateway %q setting SMB Security Strategy", input)
+		_, err := conn.UpdateSMBSecurityStrategy(input)
+		if err != nil {
+			return fmt.Errorf("error setting SMB Security Strategy: %s", err)
+		}
+	}
+
 	return resourceAwsStorageGatewayGatewayRead(d, meta)
 }
 
@@ -398,6 +421,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 	// We allow Terraform to passthrough the configuration value into the state
 	d.Set("tape_drive_type", d.Get("tape_drive_type").(string))
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupARN)
+	d.Set("smb_security_strategy", smbSettingsOutput.SMBSecurityStrategy)
 
 	return nil
 }
@@ -455,6 +479,19 @@ func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interfa
 		_, err := conn.SetSMBGuestPassword(input)
 		if err != nil {
 			return fmt.Errorf("error setting SMB guest password: %s", err)
+		}
+	}
+
+	if d.HasChange("smb_security_strategy") {
+		input := &storagegateway.UpdateSMBSecurityStrategyInput{
+			GatewayARN:          aws.String(d.Id()),
+			SMBSecurityStrategy: aws.String(d.Get("smb_security_strategy").(string)),
+		}
+
+		log.Printf("[DEBUG] Storage Gateway Gateway %q updating SMB Security Strategy", input)
+		_, err := conn.UpdateSMBSecurityStrategy(input)
+		if err != nil {
+			return fmt.Errorf("error updating SMB Security Strategy: %s", err)
 		}
 	}
 
