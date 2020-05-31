@@ -118,6 +118,7 @@ func TestAccAWSENI_ipv6(t *testing.T) {
 					testAccCheckAWSENIAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 				),
 			},
 			{
