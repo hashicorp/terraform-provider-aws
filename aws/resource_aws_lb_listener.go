@@ -104,7 +104,6 @@ func resourceAwsLbListener() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
-							ConflictsWith:    []string{"default_action.0.forward"},
 						},
 
 						"forward": {

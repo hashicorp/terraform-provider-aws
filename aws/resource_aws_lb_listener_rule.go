@@ -72,7 +72,6 @@ func resourceAwsLbbListenerRule() *schema.Resource {
 							Type:             schema.TypeString,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
-							ConflictsWith:    []string{"action.0.forward"},
 						},
 
 						"forward": {
