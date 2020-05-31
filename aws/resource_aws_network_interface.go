@@ -60,7 +60,6 @@ func resourceAwsNetworkInterface() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPv4Address,
 				},
-				Set: schema.HashString,
 			},
 
 			"private_ips_count": {
@@ -74,7 +73,6 @@ func resourceAwsNetworkInterface() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 
 			"source_dest_check": {
@@ -131,7 +129,6 @@ func resourceAwsNetworkInterface() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPv6Address,
 				},
-				Set:           schema.HashString,
 				ConflictsWith: []string{"ipv6_address_count"},
 			},
 		},
@@ -147,11 +144,11 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeNetworkInterface),
 	}
 
-	if v, ok := d.GetOk("security_groups"); ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := d.GetOk("security_groups"); ok && v.(*schema.Set).Len() > 0 {
 		request.Groups = expandStringList(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("private_ips"); ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
 		request.PrivateIpAddresses = expandPrivateIPAddresses(v.(*schema.Set).List())
 	}
 
@@ -167,7 +164,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		request.Ipv6AddressCount = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("ipv6_addresses"); ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := d.GetOk("ipv6_addresses"); ok && v.(*schema.Set).Len() > 0 {
 		request.Ipv6Addresses = expandIP6Addresses(v.(*schema.Set).List())
 	}
 
@@ -196,7 +193,7 @@ func resourceAwsNetworkInterfaceCreate(d *schema.ResourceData, meta interface{})
 		}
 	}
 
-	if v, ok := d.GetOk("attachment"); ok && len(v.(*schema.Set).List()) > 0 {
+	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 		di := attachment["device_index"].(int)
 		attachReq := &ec2.AttachNetworkInterfaceInput{
@@ -225,6 +222,7 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	if err != nil {
 		if isAWSErr(err, "InvalidNetworkInterfaceID.NotFound", "") {
 			// The ENI is gone now, so just remove it from the state
+			log.Printf("[WARN] EC2 Network Interface (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -266,7 +264,10 @@ func resourceAwsNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
-	d.Set("ipv6_addresses", flattenEc2NetworkInterfaceIpv6Address(eni.Ipv6Addresses))
+
+	if err := d.Set("ipv6_addresses", flattenEc2NetworkInterfaceIpv6Address(eni.Ipv6Addresses)); err != nil {
+		return fmt.Errorf("error setting ipv6 addresses: %s", err)
+	}
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(eni.TagSet).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
@@ -521,7 +522,7 @@ func resourceAwsNetworkInterfaceUpdate(d *schema.ResourceData, meta interface{})
 	if d.HasChange("security_groups") {
 		request := &ec2.ModifyNetworkInterfaceAttributeInput{
 			NetworkInterfaceId: aws.String(d.Id()),
-			Groups:             expandStringList(d.Get("security_groups").(*schema.Set).List()),
+			Groups:             expandStringSet(d.Get("security_groups").(*schema.Set)),
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttribute(request)

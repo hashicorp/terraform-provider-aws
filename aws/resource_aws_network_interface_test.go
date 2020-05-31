@@ -234,7 +234,7 @@ func TestAccAWSENI_disappears(t *testing.T) {
 				Config: testAccAWSENIConfig(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSENIExists(resourceName, &networkInterface),
-					testAccCheckAWSENIDisappears(&networkInterface),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkInterface(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -629,19 +629,6 @@ func testAccCheckAWSENIDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSENIDisappears(networkInterface *ec2.NetworkInterface) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		input := &ec2.DeleteNetworkInterfaceInput{
-			NetworkInterfaceId: networkInterface.NetworkInterfaceId,
-		}
-		_, err := conn.DeleteNetworkInterface(input)
-
-		return err
-	}
-}
-
 func testAccCheckAWSENIMakeExternalAttachment(n string, conf *ec2.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -666,6 +653,11 @@ func testAccAWSENIConfig() string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+ 
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
@@ -723,6 +715,11 @@ resource "aws_network_interface" "test" {
 const testAccAWSENIIPV6ConfigBase = `
 data "aws_availability_zones" "available" {
   state = "available"
+ 
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -999,6 +996,11 @@ func testAccAWSENIConfigExternalAttachment() string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+ 
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 resource "aws_vpc" "test" {
   cidr_block           = "172.16.0.0/16"
