@@ -96,6 +96,63 @@ func TestAccDataSourceAwsLambdaInvocation_complex(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAwsLambdaInvocation_types_number(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	input := "1"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsLambdaInvocation_types(rName, input),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map"),
+					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", input),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsLambdaInvocation_types_string(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	input := `"1"`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsLambdaInvocation_types(rName, input),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map"),
+					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", input),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsLambdaInvocation_types_array(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	input := `["a", 1, null]`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsLambdaInvocation_types(rName, input),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckNoResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map"),
+					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", input),
+				),
+			},
+		},
+	})
+}
+
 func testAccDataSourceAwsLambdaInvocation_base_config(roleName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume_role_policy" {
@@ -216,4 +273,26 @@ data "aws_lambda_invocation" "invocation_test" {
 JSON
 }
 `, rName, testData)
+}
+
+func testAccDataSourceAwsLambdaInvocation_types(rName, input string) string {
+	return fmt.Sprintf(testAccDataSourceAwsLambdaInvocation_base_config(rName)+`
+resource "aws_lambda_function" "lambda" {
+  depends_on = ["aws_iam_role_policy_attachment.lambda_role_policy"]
+
+  filename      = "test-fixtures/lambda_invocation.zip"
+  function_name = "%s"
+  role          = "${aws_iam_role.lambda_role.arn}"
+  handler       = "lambda_invocation.handler"
+  runtime       = "nodejs12.x"
+}
+
+data "aws_lambda_invocation" "invocation_test" {
+  function_name = "${aws_lambda_function.lambda.function_name}"
+
+	input = <<JSON
+%s
+JSON
+}
+`, rName, input)
 }

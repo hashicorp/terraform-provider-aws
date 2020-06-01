@@ -80,11 +80,9 @@ func dataSourceAwsLambdaInvocationRead(d *schema.ResourceData, meta interface{})
 	var result map[string]interface{}
 
 	if err = json.Unmarshal(res.Payload, &result); err != nil {
-		return err
-	}
-
-	if err = d.Set("result_map", result); err != nil {
-		log.Printf("[WARN] Cannot use the result invocation as a string map: %s", err)
+		log.Printf("[WARN] Cannot unmarshal the result of invocation as a string map, result_map will be empty: %s", err)
+	} else if err = d.Set("result_map", result); err != nil {
+		log.Printf("[WARN] Cannot use the result of invocation as a string map, result_map will be empty: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s_%s_%x", functionName, qualifier, md5.Sum(input)))
