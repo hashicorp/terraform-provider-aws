@@ -482,7 +482,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudTrailDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudTrailConfig_eventSelector(cloudTrailRandInt), // FLAG
+				Config: testAccAWSCloudTrailConfig_eventSelector(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.data_resource.#", "1"),
