@@ -245,7 +245,7 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 	d.Set("read_only", fileshare.ReadOnly)
 	d.Set("requester_pays", fileshare.RequesterPays)
 	d.Set("role_arn", fileshare.Role)
-	d.Set("audit_destination_enabled", fileshare.AuditDestinationARN)
+	d.Set("audit_destination_arn", fileshare.AuditDestinationARN)
 	d.Set("smb_acl_enabled", fileshare.SMBACLEnabled)
 
 	if err := d.Set("valid_user_list", flattenStringSet(fileshare.ValidUserList)); err != nil {
