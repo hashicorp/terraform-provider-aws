@@ -1,4 +1,9 @@
 ## 2.65.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [GH-12024] 
+
 ## 2.64.0 (May 28, 2020)
 
 ENHANCEMENTS:
