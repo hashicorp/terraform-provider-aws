@@ -268,25 +268,3 @@ func deleteCloudFormationStackSet(conn *cloudformation.CloudFormation, name stri
 	}
 	return err
 }
-
-// generate
-func listAllCloudFormationStackSetsPages(conn *cloudformation.CloudFormation, fn func(*cloudformation.ListStackSetsOutput, bool) bool) error {
-	input := &cloudformation.ListStackSetsInput{
-		Status: aws.String(cloudformation.StackSetStatusActive),
-	}
-	for {
-		output, err := conn.ListStackSets(input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextToken) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}

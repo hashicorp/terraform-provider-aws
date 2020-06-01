@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/lister"
 )
 
 func init() {
@@ -28,7 +29,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 
 	var sweeperErrs *multierror.Error
 
-	err = listAllCloudFormationStackSetsPages(conn, func(setPage *cloudformation.ListStackSetsOutput, lastSetPage bool) bool {
+	err = lister.ListAllStackSetsPages(conn, func(setPage *cloudformation.ListStackSetsOutput, lastSetPage bool) bool {
 		if setPage == nil {
 			return !lastSetPage
 		}
@@ -36,7 +37,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 		for _, set := range setPage.Summaries {
 			stackSetName := aws.StringValue(set.StackSetName)
 
-			err := listAllCloudFormationStackSetInstancesPages(conn, stackSetName, func(instancePage *cloudformation.ListStackInstancesOutput, lastInstancePage bool) bool {
+			err := lister.ListAllStackSetInstancesPages(conn, stackSetName, func(instancePage *cloudformation.ListStackInstancesOutput, lastInstancePage bool) bool {
 				if instancePage == nil {
 					return !lastInstancePage
 				}

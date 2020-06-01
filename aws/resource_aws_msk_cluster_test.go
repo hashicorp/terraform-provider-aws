@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/lister"
 )
 
 func init() {
@@ -31,7 +32,7 @@ func testSweepMskClusters(region string) error {
 
 	var sweeperErrs *multierror.Error
 
-	err = listAllMskClusterPages(conn, func(page *kafka.ListClustersOutput, lastPage bool) bool {
+	err = lister.ListAllClusterPages(conn, func(page *kafka.ListClustersOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -73,11 +74,6 @@ func sharedKafkaClientForRegion(region string) (*kafka.Kafka, error) {
 // generate
 func serviceConnectionKafka(client interface{}) *kafka.Kafka {
 	return client.(*AWSClient).kafkaconn
-}
-
-// generate
-func listAllMskClusterPages(conn *kafka.Kafka, fn func(*kafka.ListClustersOutput, bool) bool) error {
-	return conn.ListClustersPages(&kafka.ListClustersInput{}, fn)
 }
 
 func TestAccAWSMskCluster_basic(t *testing.T) {

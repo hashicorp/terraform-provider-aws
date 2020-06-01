@@ -260,28 +260,6 @@ func resourceAwsCloudFormationStackSetInstanceParseId(id string) (string, string
 	return parts[0], parts[1], parts[2], nil
 }
 
-// generate
-func listAllCloudFormationStackSetInstancesPages(conn *cloudformation.CloudFormation, stackSetName string, fn func(*cloudformation.ListStackInstancesOutput, bool) bool) error {
-	input := &cloudformation.ListStackInstancesInput{
-		StackSetName: aws.String(stackSetName),
-	}
-	for {
-		output, err := conn.ListStackInstances(input)
-		if err != nil {
-			return err
-		}
-
-		lastPage := aws.StringValue(output.NextToken) == ""
-		if !fn(output, lastPage) || lastPage {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil
-}
-
 func refreshCloudformationStackSetOperation(conn *cloudformation.CloudFormation, stackSetName, operationID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &cloudformation.DescribeStackSetOperationInput{
