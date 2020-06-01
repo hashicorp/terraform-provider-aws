@@ -1620,8 +1620,9 @@ func flattenDSVpcSettings(
 		return nil
 	}
 
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
@@ -1736,11 +1737,12 @@ func flattenDSConnectSettings(
 
 	settings := make(map[string]interface{})
 
-	settings["customer_dns_ips"] = schema.NewSet(schema.HashString, flattenStringList(customerDnsIps))
-	settings["connect_ips"] = schema.NewSet(schema.HashString, flattenStringList(s.ConnectIps))
-	settings["customer_username"] = *s.CustomerUserName
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["customer_dns_ips"] = flattenStringSet(customerDnsIps)
+	settings["connect_ips"] = flattenStringSet(s.ConnectIps)
+	settings["customer_username"] = aws.StringValue(s.CustomerUserName)
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
