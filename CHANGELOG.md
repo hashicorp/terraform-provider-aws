@@ -1,5 +1,11 @@
 ## 2.65.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_directory_servicedirectory: add `availability_zones` attribute to `vpc_settings` block [GH-12654]
+* resource/aws_directory_servicedirectory: add `availability_zones` attribute to `connect_settings` block [GH-12654]
+* resource/aws_directory_servicedirectory: add plan time validation to `customer_dns_ips` in `connect_settings` block [GH-12654]
+
 BUG FIXES:
 
 * resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [GH-12024] 
