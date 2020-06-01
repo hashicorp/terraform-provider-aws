@@ -68,7 +68,7 @@ subnet whose data will be exported as attributes.
 
 * `vpc_id` - (Optional) The id of the VPC that the desired subnet belongs to.
 
-* `availabile_ip_address_count` - (Optional) The number of unused private IPv4 addresses
+* `available_ip_address_count` - (Optional) The number of unused private IPv4 addresses
   in the subnet. IPv4 addresses for stopped instances count as used.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
