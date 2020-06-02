@@ -36,7 +36,8 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 }
 
 behavior "opened_pull_request_labeler" "triage" {
-  labels = ["needs-triage"]
+  labels             = ["needs-triage"]
+  skip_collaborators = true
 }
 
 queued_behavior "release_commenter" "releases" {
@@ -231,6 +232,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_spot",
       "aws_route(\"|`|$)",
       "aws_vpn_",
+      "aws_volume_attachment",
     ],
     "service/ecr" = [
       "aws_ecr_",
@@ -330,6 +332,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/kinesisanalytics" = [
       "aws_kinesis_analytics_",
     ],
+    "service/kinesisanalyticsv2" = [
+      "aws_kinesisanalyticsv2_",
+    ],
     "service/kms" = [
       "aws_kms_",
     ],
@@ -380,6 +385,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/neptune" = [
       "aws_neptune_",
+    ],
+    "service/networkmanager" = [
+      "aws_networkmanager_",
     ],
     "service/opsworks" = [
       "aws_opsworks_",
@@ -489,6 +497,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/swf" = [
       "aws_swf_",
     ],
+    "service/synthetics" = [
+      "aws_synthetics_",
+    ],
     "service/transfer" = [
       "aws_transfer_",
     ],
@@ -521,7 +532,11 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
-      ".github/*.md",
+      "*.md",
+      ".github/**/*",
+      ".gitignore",
+      ".go-version",
+      ".hashibot.hcl",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -529,8 +544,16 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_ip_ranges*",
       "aws/*_aws_partition*",
       "aws/*_aws_region*",
+      "aws/internal/flatmap/*",
+      "aws/internal/keyvaluetags/*",
+      "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "docs/*.md",
+      "docs/contributing/**/*",
+      "GNUmakefile",
+      "infrastructure/**/*",
+      "main.go",
       "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
@@ -538,10 +561,20 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/partition*",
       "website/**/region*"
     ]
-    # label test related changes
+    "documentation" = [
+      "docs/**/*",
+      "*.md",
+    ]
+    "examples" = [
+      "examples/**/*",
+    ]
     "tests" = [
       "**/*_test.go",
+      "**/testdata/**/*",
+      "**/test-fixtures/**/*",
+      ".github/workflows/*",
       ".gometalinter.json",
+      ".markdownlinkcheck.json",
       ".markdownlint.yml",
       ".travis.yml",
       "staticcheck.conf"
@@ -789,6 +822,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_subnet*",
       "aws/*_aws_vpc*",
       "aws/*_aws_vpn*",
+      "aws/*_aws_volume_attachment*",
       "website/**/availability_zone*",
       "website/**/customer_gateway*",
       "website/**/default_network_acl*",
@@ -817,7 +851,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/spot_*",
       "website/**/subnet*",
       "website/**/vpc*",
-      "website/**/vpn*"
+      "website/**/vpn*",
+      "website/**/volume_attachment*"
     ]
     "service/ecr" = [
       "**/*_ecr_*",
@@ -952,6 +987,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_kinesis_analytics_*",
       "**/kinesis_analytics_*"
     ]
+    "service/kinesisanalyticsv2" = [
+      "**/*_kinesisanalyticsv2_*",
+      "**/kinesisanalyticsv2_*"
+    ]
     "service/kms" = [
       "**/*_kms_*",
       "**/kms_*"
@@ -1019,6 +1058,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/neptune" = [
       "**/*_neptune_*",
       "**/neptune_*"
+    ]
+    "service/networkmanager" = [
+      "**/*_networkmanager_*",
+      "**/networkmanager_*"
     ]
     "service/opsworks" = [
       "**/*_opsworks_*",
@@ -1167,6 +1210,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/swf" = [
       "**/*_swf_*",
       "**/swf_*"
+    ]
+    "service/synthetics" = [
+      "**/*_synthetics_*",
+      "**/synthetics_*"
     ]
     "service/transfer" = [
       "**/*_transfer_*",
