@@ -1798,6 +1798,42 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 	})
 }
 
+// Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
+func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.T) {
+	var instance ec2.Instance
+
+	resourceName := "aws_instance.test"
+	dataSourceName := "data.aws_ami.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.%", dataSourceName, "block_device_mappings.%"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2432380901.delete_on_termination", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2432380901.device_name", dataSourceName, "block_device_mappings.340275815.device_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2432380901.encrypted", dataSourceName, "block_device_mappings.340275815.ebs.encrypted"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2432380901.iops", "100"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2432380901.snapshot_id", dataSourceName, "block_device_mappings.340275815.ebs.snapshot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2432380901.volume_size", dataSourceName, "block_device_mappings.340275815.ebs.volume_size"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2432380901.volume_type", dataSourceName, "block_device_mappings.340275815.ebs.volume_type"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	var instance ec2.Instance
 	var eni ec2.NetworkInterface
@@ -4737,3 +4773,37 @@ data "aws_ec2_instance_type_offering" "available" {
 }
 `, strings.Join(preferredInstanceTypes, "\", \""))
 }
+
+const testAccAwsEc2InstanceConfigDynamicEBSBlockDevices = `
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_vpc" "test" {
+  default = true
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.test.id
+  instance_type = "t2.micro"
+
+  dynamic "ebs_block_device" {
+    # for verifying attributes of a predictable number of ebs_block_devices, set to only 1 mapping
+    for_each = [tolist(data.aws_ami.test.block_device_mappings)[0]]
+    iterator = device
+    content {
+      device_name = device.value["device_name"]
+      iops        = "100"
+      snapshot_id = device.value["ebs"]["snapshot_id"]
+      volume_size = device.value["ebs"]["volume_size"]
+      volume_type = device.value["ebs"]["volume_type"]
+    }
+  }
+}
+`

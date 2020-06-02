@@ -1544,12 +1544,18 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
-		} else {
-			if vol.SnapshotId != nil {
-				bd["snapshot_id"] = aws.StringValue(vol.SnapshotId)
-			}
+		}
 
-			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
+		// Represent the ebs block device as it's own object (cloned from bd)
+		if aws.StringValue(instance.RootDeviceType) == "ebs" {
+			ebs := make(map[string]interface{})
+			for k, v := range bd {
+				ebs[k] = v
+			}
+			if vol.SnapshotId != nil {
+				ebs["snapshot_id"] = aws.StringValue(vol.SnapshotId)
+			}
+			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), ebs)
 		}
 	}
 
@@ -1560,6 +1566,7 @@ func blockDeviceIsRoot(bd *ec2.InstanceBlockDeviceMapping, instance *ec2.Instanc
 	return bd.DeviceName != nil &&
 		instance.RootDeviceName != nil &&
 		*bd.DeviceName == *instance.RootDeviceName
+
 }
 
 func fetchRootDeviceName(ami string, conn *ec2.EC2) (*string, error) {
