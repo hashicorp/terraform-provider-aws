@@ -151,6 +151,38 @@ func TestFetchRootDevice(t *testing.T) {
 	}
 }
 
+func TestAccAWSInstance_basic(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets(t)
+		},
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`instance/i-[a-z0-9]+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// Required for EC2-Classic.
+				ImportStateVerifyIgnore: []string{"source_dest_check"},
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_inDefaultVpcBySgName(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -233,7 +265,7 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_basic(t *testing.T) {
+func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
 	var v ec2.Instance
 	var vol *ec2.Volume
 	resourceName := "aws_instance.test"
@@ -3336,6 +3368,20 @@ data "aws_availability_zones" "current" {
   }
 }
 `, exclude)
+}
+
+func testAccInstanceConfigBasic() string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
+		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m1.small", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  # Explicitly no tags so as to test creation without tags.
+}
+`))
 }
 
 func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
