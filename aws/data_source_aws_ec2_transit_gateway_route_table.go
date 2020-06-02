@@ -20,7 +20,6 @@ func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Default:  0,
 				Optional: true,
-				ForceNew: true,
 			},
 			"default_association_route_table": {
 				Type:     schema.TypeBool,
