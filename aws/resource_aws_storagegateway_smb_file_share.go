@@ -282,6 +282,7 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 			ReadOnly:             aws.Bool(d.Get("read_only").(bool)),
 			RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 			ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+			SMBACLEnabled:        aws.Bool(d.Get("smb_acl_enabled").(bool)),
 		}
 
 		if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
@@ -290,10 +291,6 @@ func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("audit_destination_arn"); ok && v.(string) != "" {
 			input.AuditDestinationARN = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("smb_acl_enabled"); ok {
-			input.SMBACLEnabled = aws.Bool(v.(bool))
 		}
 
 		log.Printf("[DEBUG] Updating Storage Gateway SMB File Share: %s", input)
