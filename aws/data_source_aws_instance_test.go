@@ -473,11 +473,7 @@ func TestAccAWSInstanceDataSource_metadataOptions(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets(t)
-		},
+		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -893,12 +889,13 @@ data "aws_instance" "test" {
 func testAccInstanceDataSourceConfig_metadataOptions(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
-		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m1.small"),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 
   tags = {
     Name = %[1]q

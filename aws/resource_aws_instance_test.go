@@ -2790,10 +2790,9 @@ func TestAccAWSInstance_creditSpecificationT3_unspecifiedDefaultsToUnlimited(t *
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"source_dest_check"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3108,11 +3107,7 @@ func TestAccAWSInstance_metadataOptions(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		// No subnet_id specified requires default VPC with default subnets or EC2-Classic.
-		PreCheck: func() {
-			testAccPreCheck(t)
-			testAccPreCheckEc2ClassicOrHasDefaultVpcWithDefaultSubnets(t)
-		},
+		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
@@ -4946,7 +4941,7 @@ data "aws_ami" "win2016core-ami" {
 }
 
 // testAccAwsInstanceVpcConfig returns the configuration for tests that create
-//   1) a VPC with IPv6 support
+//   1) a VPC without IPv6 support
 //   2) a subnet in the VPC
 // The resources are named 'test'.
 func testAccAwsInstanceVpcConfig(rName string, mapPublicIpOnLaunch bool) string {
@@ -5139,12 +5134,13 @@ resource "aws_instance" "test" {
 func testAccInstanceConfigMetadataOptions(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
-		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m1.small"),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
@@ -5164,12 +5160,13 @@ data "aws_instance" "test" {
 func testAccInstanceConfigMetadataOptionsUpdated(rName string) string {
 	return composeConfig(
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		// https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-classic-platform.html#ec2-classic-instance-types
-		testAccAvailableEc2InstanceTypeForRegion("t1.micro", "m1.small"),
+		testAccAwsInstanceVpcConfig(rName, false),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
 
   tags = {
     Name = %[1]q
