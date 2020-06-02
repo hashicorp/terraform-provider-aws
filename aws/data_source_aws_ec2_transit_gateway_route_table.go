@@ -47,9 +47,10 @@ func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 func dataSourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
-	var index int = 0
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
+
+	index := d.Get("index").(int)
 
 	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
@@ -69,8 +70,6 @@ func dataSourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta i
 	if output == nil || len(output.TransitGatewayRouteTables) == 0 {
 		return errors.New("error reading EC2 Transit Gateway Route Table: no results found")
 	}
-
-	index = d.Get("index").(int)
 
 	if index > len(output.TransitGatewayRouteTables) {
 		return errors.New("Index out of range")
