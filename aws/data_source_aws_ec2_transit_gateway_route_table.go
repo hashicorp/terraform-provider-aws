@@ -16,6 +16,12 @@ func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 		Read: dataSourceAwsEc2TransitGatewayRouteTableRead,
 
 		Schema: map[string]*schema.Schema{
+			"index": {
+				Type: schema.TypeInt,
+				Default: 0,
+				Optional: true,
+				ForceNew: true,
+			},
 			"default_association_route_table": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -41,6 +47,7 @@ func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 func dataSourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	var index int = 0
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
@@ -63,11 +70,13 @@ func dataSourceAwsEc2TransitGatewayRouteTableRead(d *schema.ResourceData, meta i
 		return errors.New("error reading EC2 Transit Gateway Route Table: no results found")
 	}
 
-	if len(output.TransitGatewayRouteTables) > 1 {
-		return errors.New("error reading EC2 Transit Gateway Route Table: multiple results found, try adjusting search criteria")
+	index = d.Get("index").(int)
+
+	if index > len(output.TransitGatewayRouteTables) {
+		return errors.New("Index out of range")
 	}
 
-	transitGatewayRouteTable := output.TransitGatewayRouteTables[0]
+	transitGatewayRouteTable := output.TransitGatewayRouteTables[index]
 
 	if transitGatewayRouteTable == nil {
 		return errors.New("error reading EC2 Transit Gateway Route Table: empty result")
