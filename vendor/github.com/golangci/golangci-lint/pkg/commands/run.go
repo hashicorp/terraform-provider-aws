@@ -30,7 +30,7 @@ func getDefaultIssueExcludeHelp() string {
 	parts := []string{"Use or not use default excludes:"}
 	for _, ep := range config.DefaultExcludePatterns {
 		parts = append(parts,
-			fmt.Sprintf("  # %s: %s", ep.Linter, ep.Why),
+			fmt.Sprintf("  # %s %s: %s", ep.ID, ep.Linter, ep.Why),
 			fmt.Sprintf("  - %s", color.YellowString(ep.Pattern)),
 			"",
 		)
@@ -79,6 +79,7 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 		wh(fmt.Sprintf("Format of output: %s", strings.Join(config.OutFormats, "|"))))
 	fs.BoolVar(&oc.PrintIssuedLine, "print-issued-lines", true, wh("Print lines of code with issue"))
 	fs.BoolVar(&oc.PrintLinterName, "print-linter-name", true, wh("Print linter name in issue line"))
+	fs.BoolVar(&oc.UniqByLine, "uniq-by-line", true, wh("Make issues output unique by line"))
 	fs.BoolVar(&oc.PrintWelcomeMessage, "print-welcome", false, wh("Print welcome message"))
 	hideFlag("print-welcome") // no longer used
 
@@ -188,6 +189,8 @@ func initFlagSet(fs *pflag.FlagSet, cfg *config.Config, m *lintersdb.Manager, is
 	ic := &cfg.Issues
 	fs.StringSliceVarP(&ic.ExcludePatterns, "exclude", "e", nil, wh("Exclude issue by regexp"))
 	fs.BoolVar(&ic.UseDefaultExcludes, "exclude-use-default", true, getDefaultIssueExcludeHelp())
+	fs.BoolVar(&ic.ExcludeCaseSensitive, "exclude-case-sensitive", false, wh("If set to true exclude "+
+		"and exclude rules regular expressions are case sensitive"))
 
 	fs.IntVar(&ic.MaxIssuesPerLinter, "max-issues-per-linter", 50,
 		wh("Maximum issues count per one linter. Set to 0 to disable"))
@@ -287,9 +290,14 @@ func (e *Executor) runAnalysis(ctx context.Context, args []string) ([]result.Iss
 		return nil, err
 	}
 
+	enabledOriginalLinters, err := e.EnabledLintersSet.Get(false)
+	if err != nil {
+		return nil, err
+	}
+
 	for _, lc := range e.DBManager.GetAllSupportedLinterConfigs() {
 		isEnabled := false
-		for _, enabledLC := range enabledLinters {
+		for _, enabledLC := range enabledOriginalLinters {
 			if enabledLC.Name() == lc.Name() {
 				isEnabled = true
 				break
@@ -310,7 +318,11 @@ func (e *Executor) runAnalysis(ctx context.Context, args []string) ([]result.Iss
 		return nil, err
 	}
 
-	issues := runner.Run(ctx, enabledLinters, lintCtx)
+	issues, err := runner.Run(ctx, enabledLinters, lintCtx)
+	if err != nil {
+		return nil, err
+	}
+
 	fixer := processors.NewFixer(e.cfg, e.log, e.fileCache)
 	return fixer.Process(issues), nil
 }
@@ -386,6 +398,8 @@ func (e *Executor) createPrinter() (printers.Printer, error) {
 		p = printers.NewCodeClimate()
 	case config.OutFormatJunitXML:
 		p = printers.NewJunitXML()
+	case config.OutFormatGithubActions:
+		p = printers.NewGithub()
 	default:
 		return nil, fmt.Errorf("unknown output format %s", format)
 	}
@@ -427,7 +441,7 @@ func (e *Executor) executeRun(_ *cobra.Command, args []string) {
 // to be removed when deadline is finally decommissioned
 func (e *Executor) setTimeoutToDeadlineIfOnlyDeadlineIsSet() {
 	//lint:ignore SA1019 We want to promoted the deprecated config value when needed
-	deadlineValue := e.cfg.Run.Deadline // nolint: staticcheck
+	deadlineValue := e.cfg.Run.Deadline // nolint:staticcheck
 	if deadlineValue != 0 && e.cfg.Run.Timeout == defaultTimeout {
 		e.cfg.Run.Timeout = deadlineValue
 	}
@@ -436,7 +450,7 @@ func (e *Executor) setTimeoutToDeadlineIfOnlyDeadlineIsSet() {
 func (e *Executor) setupExitCode(ctx context.Context) {
 	if ctx.Err() != nil {
 		e.exitCode = exitcodes.Timeout
-		e.log.Errorf("Timeout exceeded: try increase it by passing --timeout option")
+		e.log.Errorf("Timeout exceeded: try increasing it by passing --timeout option")
 		return
 	}
 
@@ -463,7 +477,9 @@ func watchResources(ctx context.Context, done chan struct{}, logger logutils.Log
 
 	var maxRSSMB, totalRSSMB float64
 	var iterationsCount int
-	ticker := time.NewTicker(100 * time.Millisecond)
+
+	const intervalMS = 100
+	ticker := time.NewTicker(intervalMS * time.Millisecond)
 	defer ticker.Stop()
 
 	logEveryRecord := os.Getenv("GL_MEM_LOG_EVERY") == "1"

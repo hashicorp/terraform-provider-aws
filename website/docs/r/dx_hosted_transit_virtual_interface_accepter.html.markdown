@@ -2,7 +2,6 @@
 subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_hosted_transit_virtual_interface_accepter"
-sidebar_current: "docs-aws-resource-dx-hosted-transit-virtual-interface-accepter"
 description: |-
   Provides a resource to manage the accepter's side of a Direct Connect hosted transit virtual interface.
 ---
@@ -71,7 +70,7 @@ The following arguments are supported:
 
 * `dx_gateway_id` - (Required) The ID of the [Direct Connect gateway](dx_gateway.html) to which to connect the virtual interface.
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

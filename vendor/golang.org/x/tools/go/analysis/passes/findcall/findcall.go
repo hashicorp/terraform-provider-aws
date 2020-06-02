@@ -2,16 +2,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-// The findcall package defines an Analyzer that serves as a trivial
+// Package findcall defines an Analyzer that serves as a trivial
 // example and test of the Analysis API. It reports a diagnostic for
 // every call to a function or method of the name specified by its
 // -name flag. It also exports a fact for each declaration that
 // matches the name, plus a package-level fact if the package contained
 // one or more such declarations.
-
 package findcall
 
 import (
+	"fmt"
 	"go/ast"
 	"go/types"
 
@@ -49,7 +49,18 @@ func run(pass *analysis.Pass) (interface{}, error) {
 					id = fun.Sel
 				}
 				if id != nil && !pass.TypesInfo.Types[id].IsType() && id.Name == name {
-					pass.Reportf(call.Lparen, "call of %s(...)", id.Name)
+					pass.Report(analysis.Diagnostic{
+						Pos:     call.Lparen,
+						Message: fmt.Sprintf("call of %s(...)", id.Name),
+						SuggestedFixes: []analysis.SuggestedFix{{
+							Message: fmt.Sprintf("Add '_TEST_'"),
+							TextEdits: []analysis.TextEdit{{
+								Pos:     call.Lparen,
+								End:     call.Lparen,
+								NewText: []byte("_TEST_"),
+							}},
+						}},
+					})
 				}
 			}
 			return true

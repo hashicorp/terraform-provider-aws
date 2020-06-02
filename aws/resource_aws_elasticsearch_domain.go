@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsElasticSearchDomain() *schema.Resource {
@@ -25,6 +26,10 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 		Delete: resourceAwsElasticSearchDomainDelete,
 		Importer: &schema.ResourceImporter{
 			State: resourceAwsElasticSearchDomainImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -57,13 +62,14 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"advanced_options": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -85,6 +91,29 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			"domain_id": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"domain_endpoint_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enforce_https": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+						"tls_security_policy": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elasticsearch.TLSSecurityPolicyPolicyMinTls10201907,
+								elasticsearch.TLSSecurityPolicyPolicyMinTls12201907,
+							}, false),
+						},
+					},
+				},
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
@@ -443,6 +472,10 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 		}
 	}
 
+	if v, ok := d.GetOk("domain_endpoint_options"); ok {
+		input.DomainEndpointOptions = expandESDomainEndpointOptions(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("cognito_options"); ok {
 		input.CognitoOptions = expandESCognitoOptions(v.([]interface{}))
 	}
@@ -471,6 +504,15 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 			if isAWSErr(err, "ValidationException", "The passed role has not propagated yet") {
 				return resource.RetryableError(err)
 			}
+			if isAWSErr(err, "ValidationException", "Authentication error") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "Unauthorized Operation: Elasticsearch must be authorised to describe") {
+				return resource.RetryableError(err)
+			}
+			if isAWSErr(err, "ValidationException", "The passed role must authorize Amazon Elasticsearch to describe") {
+				return resource.RetryableError(err)
+			}
 
 			return resource.NonRetryableError(err)
 		}
@@ -489,21 +531,17 @@ func resourceAwsElasticSearchDomainCreate(d *schema.ResourceData, meta interface
 	// This should mean that if the creation fails (eg because your token expired
 	// whilst the operation is being performed), we still get the required tags on
 	// the resources.
-	tags := tagsFromMapElasticsearchService(d.Get("tags").(map[string]interface{}))
-
-	if err := setTagsElasticsearchService(conn, d, aws.StringValue(out.DomainStatus.ARN)); err != nil {
-		return err
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), nil, v); err != nil {
+			return fmt.Errorf("error adding Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+		}
 	}
-
-	d.Set("tags", tagsToMapElasticsearchService(tags))
-	d.SetPartial("tags")
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be created", d.Id())
 	err = waitForElasticSearchDomainCreation(conn, d.Get("domain_name").(string), d.Id())
 	if err != nil {
 		return err
 	}
-	d.Partial(false)
 
 	log.Printf("[DEBUG] ElasticSearch domain %q created", d.Id())
 
@@ -546,6 +584,7 @@ func waitForElasticSearchDomainCreation(conn *elasticsearch.ElasticsearchService
 
 func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	out, err := conn.DescribeElasticsearchDomain(&elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -642,21 +681,21 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 		d.Set("log_publishing_options", m)
 	}
 
+	if err := d.Set("domain_endpoint_options", flattenESDomainEndpointOptions(ds.DomainEndpointOptions)); err != nil {
+		return fmt.Errorf("error setting domain_endpoint_options: %s", err)
+	}
+
 	d.Set("arn", ds.ARN)
 
-	listOut, err := conn.ListTags(&elasticsearch.ListTagsInput{
-		ARN: ds.ARN,
-	})
+	tags, err := keyvaluetags.ElasticsearchserviceListTags(conn, d.Id())
 
 	if err != nil {
-		return err
-	}
-	var est []*elasticsearch.Tag
-	if len(listOut.TagList) > 0 {
-		est = listOut.TagList
+		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
-	d.Set("tags", tagsToMapElasticsearchService(est))
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -664,13 +703,13 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).esconn
 
-	d.Partial(true)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err := setTagsElasticsearchService(conn, d, d.Id()); err != nil {
-		return err
+		if err := keyvaluetags.ElasticsearchserviceUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Elasticsearch Cluster (%s) tags: %s", d.Id(), err)
+		}
 	}
-
-	d.SetPartial("tags")
 
 	input := elasticsearch.UpdateElasticsearchDomainConfigInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -682,6 +721,10 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 
 	if d.HasChange("advanced_options") {
 		input.AdvancedOptions = stringMapToPointers(d.Get("advanced_options").(map[string]interface{}))
+	}
+
+	if d.HasChange("domain_endpoint_options") {
+		input.DomainEndpointOptions = expandESDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
 	}
 
 	if d.HasChange("ebs_options") || d.HasChange("cluster_config") {
@@ -797,9 +840,16 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 					return nil, "", err
 				}
 
+				// Elasticsearch upgrades consist of multiple steps:
+				// https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-version-migration.html
+				// Prevent false positive completion where the UpgradeStep is not the final UPGRADE step.
+				if aws.StringValue(out.StepStatus) == elasticsearch.UpgradeStatusSucceeded && aws.StringValue(out.UpgradeStep) != elasticsearch.UpgradeStepUpgrade {
+					return out, elasticsearch.UpgradeStatusInProgress, nil
+				}
+
 				return out, aws.StringValue(out.StepStatus), nil
 			},
-			Timeout:    60 * time.Minute, // TODO: Make this configurable. Large ES domains may take a very long time to upgrade
+			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			MinTimeout: 10 * time.Second,
 			Delay:      30 * time.Second, // The upgrade status isn't instantly available for the current upgrade so will either be nil or reflect a previous upgrade
 		}
@@ -808,8 +858,6 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 			return waitErr
 		}
 	}
-
-	d.Partial(false)
 
 	return resourceAwsElasticSearchDomainRead(d, meta)
 }

@@ -29,7 +29,7 @@ this resource will delete any propagating gateways not explicitly listed in
 `propagating_vgws`. Omit this argument when defining route propagation using
 the separate resource.
 
-## Example usage with tags:
+## Example Usage
 
 ```hcl
 resource "aws_route_table" "r" {
@@ -57,7 +57,7 @@ The following arguments are supported:
 
 * `vpc_id` - (Required) The VPC ID.
 * `route` - (Optional) A list of route objects. Their keys are documented below. This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
 ### route Argument Reference

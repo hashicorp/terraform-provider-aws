@@ -16,7 +16,7 @@ This resource does not deal with validation of a certificate but can provide inp
 for other resources implementing the validation. It does not wait for a certificate to be issued.
 Use a [`aws_acm_certificate_validation`](acm_certificate_validation.html) resource for this.
 
-Most commonly, this resource is used to together with [`aws_route53_record`](route53_record.html) and
+Most commonly, this resource is used together with [`aws_route53_record`](route53_record.html) and
 [`aws_acm_certificate_validation`](acm_certificate_validation.html) to request a DNS validated certificate,
 deploy the required validation records and wait for validation to complete.
 
@@ -93,7 +93,7 @@ The following arguments are supported:
   * `domain_name` - (Required) A domain name for which the certificate should be issued
   * `certificate_authority_arn` - (Required) ARN of an ACMPCA
   * `subject_alternative_names` - (Optional) A list of domains that should be SANs in the issued certificate
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## options Configuration Block
 

@@ -1,5 +1,5 @@
 poll "closed_issue_locker" "locker" {
-  schedule             = "0 50 14 * * *"
+  schedule             = "0 10 17 * * *"
   closed_for           = "720h" # 30 days
   max_issues           = 500
   sleep_between_issues = "5s"
@@ -9,21 +9,6 @@ poll "closed_issue_locker" "locker" {
 
     If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
   EOF
-}
-
-poll "stale_issue_closer" "closer" {
-    schedule = "0 22 23 * * *"
-    no_reply_in_last = "2160h" # 90 days
-    max_issues = 500
-    sleep_between_issues = "5s"
-    created_after = "2019-06-01"
-    exclude_labels = ["needs-triage", "technical-debt"]
-    extra_search_params = "reactions:<20 no:milestone no:assignee"
-    message = <<-EOF
-    I'm going to close this issue due to inactivity (_90 days_ without response ⏳ ). This helps our maintainers find and focus on the active issues.
-
-    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
-    EOF
 }
 
 behavior "deprecated_import_commenter" "hashicorp_terraform" {
@@ -51,7 +36,8 @@ behavior "deprecated_import_commenter" "hashicorp_terraform" {
 }
 
 behavior "opened_pull_request_labeler" "triage" {
-  labels = ["needs-triage"]
+  labels             = ["needs-triage"]
+  skip_collaborators = true
 }
 
 queued_behavior "release_commenter" "releases" {
@@ -78,6 +64,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
   regexp = "(\\* ?`?|- ?`?|data \"|resource \")aws_(\\w+)"
 
   label_map = {
+    "service/accessanalyzer" = [
+      "aws_accessanalyzer_",
+    ],
     "service/acm" = [
       "aws_acm_",
     ],
@@ -96,6 +85,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/apigatewayv2" = [
       "aws_api_gateway_v2_",
+      "aws_apigatewayv2_",
     ],
     "service/applicationautoscaling" = [
       "aws_appautoscaling_",
@@ -179,6 +169,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarnotifications" = [
+      "aws_codestarnotifications_",
+    ],
     "service/cognito" = [
       "aws_cognito_",
     ],
@@ -187,6 +180,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/databasemigrationservice" = [
       "aws_dms_",
+    ],
+    "service/dataexchange" = [
+      "aws_dataexchange_",
     ],
     "service/datapipeline" = [
       "aws_datapipeline_",
@@ -232,8 +228,11 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_main_route_table_association",
       "aws_network_interface",
       "aws_placement_group",
+      "aws_prefix_list",
       "aws_spot",
       "aws_route(\"|`|$)",
+      "aws_vpn_",
+      "aws_volume_attachment",
     ],
     "service/ecr" = [
       "aws_ecr_",
@@ -308,6 +307,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iam" = [
       "aws_iam_",
     ],
+    "service/imagebuilder" = [
+      "aws_imagebuilder_",
+    ],
     "service/inspector" = [
       "aws_inspector_",
     ],
@@ -328,7 +330,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_kinesis_([^f]|f[^i]|fi[^r]|fir[^e]|fire[^h]|fireh[^o]|fireho[^s]|firehos[^e]|firehose[^_])",
     ],
     "service/kinesisanalytics" = [
-      "aws_kinesisanalytics_",
+      "aws_kinesis_analytics_",
+    ],
+    "service/kinesisanalyticsv2" = [
+      "aws_kinesisanalyticsv2_",
     ],
     "service/kms" = [
       "aws_kms_",
@@ -350,6 +355,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/macie" = [
       "aws_macie_",
+    ],
+    "service/marketplacecatalog" = [
+      "aws_marketplace_catalog_",
     ],
     "service/mediaconnect" = [
       "aws_media_connect_",
@@ -377,6 +385,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/neptune" = [
       "aws_neptune_",
+    ],
+    "service/networkmanager" = [
+      "aws_networkmanager_",
     ],
     "service/opsworks" = [
       "aws_opsworks_",
@@ -423,7 +434,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_route53_([^d]|d[^o]|do[^m]|dom[^a]|doma[^i]|domai[^n]|domain[^s]|domains[^_]|[^r]|r[^e]|re[^s]|res[^o]|reso[^l]|resol[^v]|resolv[^e]|resolve[^r]|resolver[^_])",
     ],
     "service/route53domains" = [
-      "aws_route53_domains_",
+      "aws_route53domains_",
     ],
     "service/route53resolver" = [
       "aws_route53_resolver_",
@@ -486,12 +497,18 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/swf" = [
       "aws_swf_",
     ],
+    "service/synthetics" = [
+      "aws_synthetics_",
+    ],
     "service/transfer" = [
       "aws_transfer_",
     ],
     "service/waf" = [
       "aws_waf_",
       "aws_wafregional_",
+    ],
+    "service/wafv2" = [
+      "aws_wafv2_",
     ],
     "service/workdocs" = [
       "aws_workdocs_",
@@ -515,6 +532,11 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
+      "*.md",
+      ".github/**/*",
+      ".gitignore",
+      ".go-version",
+      ".hashibot.hcl",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -522,21 +544,46 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_ip_ranges*",
       "aws/*_aws_partition*",
       "aws/*_aws_region*",
+      "aws/internal/flatmap/*",
+      "aws/internal/keyvaluetags/*",
+      "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "docs/*.md",
+      "docs/contributing/**/*",
+      "GNUmakefile",
+      "infrastructure/**/*",
+      "main.go",
+      "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
       "website/**/ip_ranges*",
       "website/**/partition*",
       "website/**/region*"
     ]
-    # label test related changes
+    "documentation" = [
+      "docs/**/*",
+      "*.md",
+    ]
+    "examples" = [
+      "examples/**/*",
+    ]
     "tests" = [
       "**/*_test.go",
+      "**/testdata/**/*",
+      "**/test-fixtures/**/*",
+      ".github/workflows/*",
       ".gometalinter.json",
-      ".travis.yml"
+      ".markdownlinkcheck.json",
+      ".markdownlint.yml",
+      ".travis.yml",
+      "staticcheck.conf"
     ]
     # label services
+    "service/accessanalyzer" = [
+      "**/*_accessanalyzer_*",
+      "**/accessanalyzer_*"
+    ]
     "service/acm" = [
       "**/*_acm_*",
       "**/acm_*"
@@ -561,7 +608,9 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
-      "**/api_gateway_v2_*"
+      "**/*_apigatewayv2_*",
+      "**/api_gateway_v2_*",
+      "**/apigatewayv2_*"
     ]
     "service/applicationautoscaling" = [
       "**/*_appautoscaling_*",
@@ -675,6 +724,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_codestar_*",
       "**/codestar_*"
     ]
+    "service/codestarnotifications" = [
+      "**/*_codestarnotifications_*",
+      "**/codestarnotifications_*"
+    ]
     "service/cognito" = [
       "**/*_cognito_*",
       "**/cognito_*"
@@ -687,9 +740,17 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_config_*",
       "website/**/config_*"
     ]
+    "service/costandusagereportservice" = [
+      "aws/*_aws_cur_*",
+      "website/**/cur_*"
+    ]
     "service/databasemigrationservice" = [
       "**/*_dms_*",
       "**/dms_*"
+    ]
+    "service/dataexchange" = [
+      "**/*_dataexchange_*",
+      "**/dataexchange_*",
     ]
     "service/datapipeline" = [
       "**/*_datapipeline_*",
@@ -752,13 +813,16 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_network_acl*",
       "aws/*_aws_network_interface*",
       "aws/*_aws_placement_group*",
+      "aws/*_aws_prefix_list*",
       "aws/*_aws_route_table*",
       "aws/*_aws_route.*",
       "aws/*_aws_security_group*",
+      "aws/*_aws_snapshot_create_volume_permission*",
       "aws/*_aws_spot*",
       "aws/*_aws_subnet*",
       "aws/*_aws_vpc*",
       "aws/*_aws_vpn*",
+      "aws/*_aws_volume_attachment*",
       "website/**/availability_zone*",
       "website/**/customer_gateway*",
       "website/**/default_network_acl*",
@@ -779,13 +843,16 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/network_acl*",
       "website/**/network_interface*",
       "website/**/placement_group*",
+      "website/**/prefix_list*",
       "website/**/route_table*",
       "website/**/route.*",
       "website/**/security_group*",
+      "website/**/snapshot_create_volume_permission*",
       "website/**/spot_*",
-      "website/**/subnet.*",
+      "website/**/subnet*",
       "website/**/vpc*",
-      "website/**/vpn*"
+      "website/**/vpn*",
+      "website/**/volume_attachment*"
     ]
     "service/ecr" = [
       "**/*_ecr_*",
@@ -804,6 +871,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/eks_*"
     ]
     "service/elastic-transcoder" = [
+      "**/*_elastictranscoder_*",
+      "**/elastictranscoder_*",
       "**/*_elastic_transcoder_*",
       "**/elastic_transcoder_*"
     ]
@@ -886,6 +955,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iam_*",
       "**/iam_*"
     ]
+    "service/imagebuilder" = [
+      "**/*_imagebuilder_*",
+      "**/imagebuilder_*"
+    ]
     "service/inspector" = [
       "**/*_inspector_*",
       "**/inspector_*"
@@ -911,8 +984,12 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/kinesis_stream*"
     ]
     "service/kinesisanalytics" = [
-      "**/*_kinesisanalytics_*",
-      "**/kinesisanalytics_*"
+      "**/*_kinesis_analytics_*",
+      "**/kinesis_analytics_*"
+    ]
+    "service/kinesisanalyticsv2" = [
+      "**/*_kinesisanalyticsv2_*",
+      "**/kinesisanalyticsv2_*"
     ]
     "service/kms" = [
       "**/*_kms_*",
@@ -941,6 +1018,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/macie" = [
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/marketplacecatalog" = [
+      "**/*_marketplace_catalog_*",
+      "**/marketplace_catalog_*"
     ]
     "service/mediaconnect" = [
       "**/*_media_connect_*",
@@ -977,6 +1058,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/neptune" = [
       "**/*_neptune_*",
       "**/neptune_*"
+    ]
+    "service/networkmanager" = [
+      "**/*_networkmanager_*",
+      "**/networkmanager_*"
     ]
     "service/opsworks" = [
       "**/*_opsworks_*",
@@ -1041,8 +1126,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_zone*"
     ]
     "service/route53domains" = [
-      "**/*_route53_domains_*",
-      "**/route53_domains_*"
+      "**/*_route53domains_*",
+      "**/route53domains_*"
     ]
     "service/route53resolver" = [
       "**/*_route53_resolver_*",
@@ -1126,6 +1211,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_swf_*",
       "**/swf_*"
     ]
+    "service/synthetics" = [
+      "**/*_synthetics_*",
+      "**/synthetics_*"
+    ]
     "service/transfer" = [
       "**/*_transfer_*",
       "**/transfer_*"
@@ -1135,6 +1224,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/waf_*",
       "**/*_wafregional_*",
       "**/wafregional_*"
+    ]
+    "service/wafv2" = [
+      "**/*_wafv2_*",
+      "**/wafv2_*",
     ]
     "service/workdocs" = [
       "**/*_workdocs_*",

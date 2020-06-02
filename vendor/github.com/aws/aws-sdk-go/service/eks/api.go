@@ -3,6 +3,7 @@
 package eks
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -105,29 +106,29 @@ func (c *EKS) CreateClusterRequest(input *CreateClusterInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation CreateCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   * ResourceLimitExceededException
 //   You have encountered a service limit on the specified resource.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
-//   * ErrCodeUnsupportedAvailabilityZoneException "UnsupportedAvailabilityZoneException"
+//   * UnsupportedAvailabilityZoneException
 //   At least one of your specified cluster subnets is in an Availability Zone
 //   that does not support Amazon EKS. The exception output specifies the supported
 //   Availability Zones for your account, from which you can choose subnets for
@@ -150,6 +151,138 @@ func (c *EKS) CreateCluster(input *CreateClusterInput) (*CreateClusterOutput, er
 // for more information on using Contexts.
 func (c *EKS) CreateClusterWithContext(ctx aws.Context, input *CreateClusterInput, opts ...request.Option) (*CreateClusterOutput, error) {
 	req, out := c.CreateClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateFargateProfile = "CreateFargateProfile"
+
+// CreateFargateProfileRequest generates a "aws/request.Request" representing the
+// client's request for the CreateFargateProfile operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateFargateProfile for more information on using the CreateFargateProfile
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateFargateProfileRequest method.
+//    req, resp := client.CreateFargateProfileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/CreateFargateProfile
+func (c *EKS) CreateFargateProfileRequest(input *CreateFargateProfileInput) (req *request.Request, output *CreateFargateProfileOutput) {
+	op := &request.Operation{
+		Name:       opCreateFargateProfile,
+		HTTPMethod: "POST",
+		HTTPPath:   "/clusters/{name}/fargate-profiles",
+	}
+
+	if input == nil {
+		input = &CreateFargateProfileInput{}
+	}
+
+	output = &CreateFargateProfileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateFargateProfile API operation for Amazon Elastic Kubernetes Service.
+//
+// Creates an AWS Fargate profile for your Amazon EKS cluster. You must have
+// at least one Fargate profile in a cluster to be able to run pods on Fargate.
+//
+// The Fargate profile allows an administrator to declare which pods run on
+// Fargate and specify which pods run on which Fargate profile. This declaration
+// is done through the profile’s selectors. Each profile can have up to five
+// selectors that contain a namespace and labels. A namespace is required for
+// every selector. The label field consists of multiple optional key-value pairs.
+// Pods that match the selectors are scheduled on Fargate. If a to-be-scheduled
+// pod matches any of the selectors in the Fargate profile, then that pod is
+// run on Fargate.
+//
+// When you create a Fargate profile, you must specify a pod execution role
+// to use with the pods that are scheduled with the profile. This role is added
+// to the cluster's Kubernetes Role Based Access Control (https://kubernetes.io/docs/admin/authorization/rbac/)
+// (RBAC) for authorization so that the kubelet that is running on the Fargate
+// infrastructure can register with your Amazon EKS cluster so that it can appear
+// in your cluster as a node. The pod execution role also provides IAM permissions
+// to the Fargate infrastructure to allow read access to Amazon ECR image repositories.
+// For more information, see Pod Execution Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
+// in the Amazon EKS User Guide.
+//
+// Fargate profiles are immutable. However, you can create a new updated profile
+// to replace an existing profile and then delete the original after the updated
+// profile has finished creating.
+//
+// If any Fargate profiles in a cluster are in the DELETING status, you must
+// wait for that Fargate profile to finish deleting before you can create any
+// other profiles in that cluster.
+//
+// For more information, see AWS Fargate Profile (https://docs.aws.amazon.com/eks/latest/userguide/fargate-profile.html)
+// in the Amazon EKS User Guide.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Kubernetes Service's
+// API operation CreateFargateProfile for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * InvalidRequestException
+//   The request is invalid given the state of the cluster. Check the state of
+//   the cluster and the associated operations.
+//
+//   * ClientException
+//   These errors are usually caused by a client action. Actions can include using
+//   an action or resource on behalf of a user that doesn't have permissions to
+//   use the action or resource or specifying an identifier that is not valid.
+//
+//   * ServerException
+//   These errors are usually caused by a server-side issue.
+//
+//   * ResourceLimitExceededException
+//   You have encountered a service limit on the specified resource.
+//
+//   * UnsupportedAvailabilityZoneException
+//   At least one of your specified cluster subnets is in an Availability Zone
+//   that does not support Amazon EKS. The exception output specifies the supported
+//   Availability Zones for your account, from which you can choose subnets for
+//   your cluster.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/CreateFargateProfile
+func (c *EKS) CreateFargateProfile(input *CreateFargateProfileInput) (*CreateFargateProfileOutput, error) {
+	req, out := c.CreateFargateProfileRequest(input)
+	return out, req.Send()
+}
+
+// CreateFargateProfileWithContext is the same as CreateFargateProfile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateFargateProfile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EKS) CreateFargateProfileWithContext(ctx aws.Context, input *CreateFargateProfileInput, opts ...request.Option) (*CreateFargateProfileOutput, error) {
+	req, out := c.CreateFargateProfileRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -217,30 +350,30 @@ func (c *EKS) CreateNodegroupRequest(input *CreateNodegroupInput) (req *request.
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation CreateNodegroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceLimitExceededException "ResourceLimitExceededException"
+//   * ResourceLimitExceededException
 //   You have encountered a service limit on the specified resource.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is invalid given the state of the cluster. Check the state of
 //   the cluster and the associated operations.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/CreateNodegroup
@@ -318,8 +451,9 @@ func (c *EKS) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 // For more information, see Deleting a Cluster (https://docs.aws.amazon.com/eks/latest/userguide/delete-cluster.html)
 // in the Amazon EKS User Guide.
 //
-// If you have managed node groups attached to the cluster, you must delete
-// them first. For more information, see DeleteNodegroup.
+// If you have managed node groups or Fargate profiles attached to the cluster,
+// you must delete them first. For more information, see DeleteNodegroup and
+// DeleteFargateProfile.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -328,24 +462,24 @@ func (c *EKS) DeleteClusterRequest(input *DeleteClusterInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation DeleteCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DeleteCluster
@@ -365,6 +499,109 @@ func (c *EKS) DeleteCluster(input *DeleteClusterInput) (*DeleteClusterOutput, er
 // for more information on using Contexts.
 func (c *EKS) DeleteClusterWithContext(ctx aws.Context, input *DeleteClusterInput, opts ...request.Option) (*DeleteClusterOutput, error) {
 	req, out := c.DeleteClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteFargateProfile = "DeleteFargateProfile"
+
+// DeleteFargateProfileRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteFargateProfile operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteFargateProfile for more information on using the DeleteFargateProfile
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteFargateProfileRequest method.
+//    req, resp := client.DeleteFargateProfileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DeleteFargateProfile
+func (c *EKS) DeleteFargateProfileRequest(input *DeleteFargateProfileInput) (req *request.Request, output *DeleteFargateProfileOutput) {
+	op := &request.Operation{
+		Name:       opDeleteFargateProfile,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/clusters/{name}/fargate-profiles/{fargateProfileName}",
+	}
+
+	if input == nil {
+		input = &DeleteFargateProfileInput{}
+	}
+
+	output = &DeleteFargateProfileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteFargateProfile API operation for Amazon Elastic Kubernetes Service.
+//
+// Deletes an AWS Fargate profile.
+//
+// When you delete a Fargate profile, any pods running on Fargate that were
+// created with the profile are deleted. If those pods match another Fargate
+// profile, then they are scheduled on Fargate with that profile. If they no
+// longer match any Fargate profiles, then they are not scheduled on Fargate
+// and they may remain in a pending state.
+//
+// Only one Fargate profile in a cluster can be in the DELETING status at a
+// time. You must wait for a Fargate profile to finish deleting before you can
+// delete any other profiles in that cluster.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Kubernetes Service's
+// API operation DeleteFargateProfile for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ClientException
+//   These errors are usually caused by a client action. Actions can include using
+//   an action or resource on behalf of a user that doesn't have permissions to
+//   use the action or resource or specifying an identifier that is not valid.
+//
+//   * ServerException
+//   These errors are usually caused by a server-side issue.
+//
+//   * ResourceNotFoundException
+//   The specified resource could not be found. You can view your available clusters
+//   with ListClusters. You can view your available managed node groups with ListNodegroups.
+//   Amazon EKS clusters and node groups are Region-specific.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DeleteFargateProfile
+func (c *EKS) DeleteFargateProfile(input *DeleteFargateProfileInput) (*DeleteFargateProfileOutput, error) {
+	req, out := c.DeleteFargateProfileRequest(input)
+	return out, req.Send()
+}
+
+// DeleteFargateProfileWithContext is the same as DeleteFargateProfile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteFargateProfile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EKS) DeleteFargateProfileWithContext(ctx aws.Context, input *DeleteFargateProfileInput, opts ...request.Option) (*DeleteFargateProfileOutput, error) {
+	req, out := c.DeleteFargateProfileRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -423,28 +660,28 @@ func (c *EKS) DeleteNodegroupRequest(input *DeleteNodegroupInput) (req *request.
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation DeleteNodegroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+// Returned Error Types:
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DeleteNodegroup
@@ -530,21 +767,21 @@ func (c *EKS) DescribeClusterRequest(input *DescribeClusterInput) (req *request.
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation DescribeCluster for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DescribeCluster
@@ -564,6 +801,99 @@ func (c *EKS) DescribeCluster(input *DescribeClusterInput) (*DescribeClusterOutp
 // for more information on using Contexts.
 func (c *EKS) DescribeClusterWithContext(ctx aws.Context, input *DescribeClusterInput, opts ...request.Option) (*DescribeClusterOutput, error) {
 	req, out := c.DescribeClusterRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeFargateProfile = "DescribeFargateProfile"
+
+// DescribeFargateProfileRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeFargateProfile operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeFargateProfile for more information on using the DescribeFargateProfile
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeFargateProfileRequest method.
+//    req, resp := client.DescribeFargateProfileRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DescribeFargateProfile
+func (c *EKS) DescribeFargateProfileRequest(input *DescribeFargateProfileInput) (req *request.Request, output *DescribeFargateProfileOutput) {
+	op := &request.Operation{
+		Name:       opDescribeFargateProfile,
+		HTTPMethod: "GET",
+		HTTPPath:   "/clusters/{name}/fargate-profiles/{fargateProfileName}",
+	}
+
+	if input == nil {
+		input = &DescribeFargateProfileInput{}
+	}
+
+	output = &DescribeFargateProfileOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeFargateProfile API operation for Amazon Elastic Kubernetes Service.
+//
+// Returns descriptive information about an AWS Fargate profile.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Kubernetes Service's
+// API operation DescribeFargateProfile for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ClientException
+//   These errors are usually caused by a client action. Actions can include using
+//   an action or resource on behalf of a user that doesn't have permissions to
+//   use the action or resource or specifying an identifier that is not valid.
+//
+//   * ServerException
+//   These errors are usually caused by a server-side issue.
+//
+//   * ResourceNotFoundException
+//   The specified resource could not be found. You can view your available clusters
+//   with ListClusters. You can view your available managed node groups with ListNodegroups.
+//   Amazon EKS clusters and node groups are Region-specific.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DescribeFargateProfile
+func (c *EKS) DescribeFargateProfile(input *DescribeFargateProfileInput) (*DescribeFargateProfileOutput, error) {
+	req, out := c.DescribeFargateProfileRequest(input)
+	return out, req.Send()
+}
+
+// DescribeFargateProfileWithContext is the same as DescribeFargateProfile with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeFargateProfile for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EKS) DescribeFargateProfileWithContext(ctx aws.Context, input *DescribeFargateProfileInput, opts ...request.Option) (*DescribeFargateProfileOutput, error) {
+	req, out := c.DescribeFargateProfileRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -622,25 +952,25 @@ func (c *EKS) DescribeNodegroupRequest(input *DescribeNodegroupInput) (req *requ
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation DescribeNodegroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/DescribeNodegroup
@@ -723,20 +1053,20 @@ func (c *EKS) DescribeUpdateRequest(input *DescribeUpdateInput) (req *request.Re
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation DescribeUpdate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
@@ -822,20 +1152,20 @@ func (c *EKS) ListClustersRequest(input *ListClustersInput) (req *request.Reques
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation ListClusters for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/ListClusters
@@ -912,6 +1242,158 @@ func (c *EKS) ListClustersPagesWithContext(ctx aws.Context, input *ListClustersI
 	return p.Err()
 }
 
+const opListFargateProfiles = "ListFargateProfiles"
+
+// ListFargateProfilesRequest generates a "aws/request.Request" representing the
+// client's request for the ListFargateProfiles operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListFargateProfiles for more information on using the ListFargateProfiles
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListFargateProfilesRequest method.
+//    req, resp := client.ListFargateProfilesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/ListFargateProfiles
+func (c *EKS) ListFargateProfilesRequest(input *ListFargateProfilesInput) (req *request.Request, output *ListFargateProfilesOutput) {
+	op := &request.Operation{
+		Name:       opListFargateProfiles,
+		HTTPMethod: "GET",
+		HTTPPath:   "/clusters/{name}/fargate-profiles",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"nextToken"},
+			OutputTokens:    []string{"nextToken"},
+			LimitToken:      "maxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListFargateProfilesInput{}
+	}
+
+	output = &ListFargateProfilesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListFargateProfiles API operation for Amazon Elastic Kubernetes Service.
+//
+// Lists the AWS Fargate profiles associated with the specified cluster in your
+// AWS account in the specified Region.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elastic Kubernetes Service's
+// API operation ListFargateProfiles for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   The specified parameter is invalid. Review the available parameters for the
+//   API request.
+//
+//   * ResourceNotFoundException
+//   The specified resource could not be found. You can view your available clusters
+//   with ListClusters. You can view your available managed node groups with ListNodegroups.
+//   Amazon EKS clusters and node groups are Region-specific.
+//
+//   * ClientException
+//   These errors are usually caused by a client action. Actions can include using
+//   an action or resource on behalf of a user that doesn't have permissions to
+//   use the action or resource or specifying an identifier that is not valid.
+//
+//   * ServerException
+//   These errors are usually caused by a server-side issue.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/eks-2017-11-01/ListFargateProfiles
+func (c *EKS) ListFargateProfiles(input *ListFargateProfilesInput) (*ListFargateProfilesOutput, error) {
+	req, out := c.ListFargateProfilesRequest(input)
+	return out, req.Send()
+}
+
+// ListFargateProfilesWithContext is the same as ListFargateProfiles with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListFargateProfiles for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EKS) ListFargateProfilesWithContext(ctx aws.Context, input *ListFargateProfilesInput, opts ...request.Option) (*ListFargateProfilesOutput, error) {
+	req, out := c.ListFargateProfilesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListFargateProfilesPages iterates over the pages of a ListFargateProfiles operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListFargateProfiles method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListFargateProfiles operation.
+//    pageNum := 0
+//    err := client.ListFargateProfilesPages(params,
+//        func(page *eks.ListFargateProfilesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *EKS) ListFargateProfilesPages(input *ListFargateProfilesInput, fn func(*ListFargateProfilesOutput, bool) bool) error {
+	return c.ListFargateProfilesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListFargateProfilesPagesWithContext same as ListFargateProfilesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *EKS) ListFargateProfilesPagesWithContext(ctx aws.Context, input *ListFargateProfilesInput, fn func(*ListFargateProfilesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListFargateProfilesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListFargateProfilesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListFargateProfilesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
 const opListNodegroups = "ListNodegroups"
 
 // ListNodegroupsRequest generates a "aws/request.Request" representing the
@@ -962,8 +1444,9 @@ func (c *EKS) ListNodegroupsRequest(input *ListNodegroupsInput) (req *request.Re
 
 // ListNodegroups API operation for Amazon Elastic Kubernetes Service.
 //
-// Lists the Amazon EKS node groups associated with the specified cluster in
-// your AWS account in the specified Region.
+// Lists the Amazon EKS managed node groups associated with the specified cluster
+// in your AWS account in the specified Region. Self-managed node groups are
+// not listed.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -972,23 +1455,23 @@ func (c *EKS) ListNodegroupsRequest(input *ListNodegroupsInput) (req *request.Re
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation ListNodegroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
@@ -1120,12 +1603,12 @@ func (c *EKS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   This exception is thrown if the request contains a semantic error. The precise
 //   meaning will depend on the API, and will be documented in the error message.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -1211,20 +1694,20 @@ func (c *EKS) ListUpdatesRequest(input *ListUpdatesInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation ListUpdates for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
@@ -1363,12 +1846,12 @@ func (c *EKS) TagResourceRequest(input *TagResourceInput) (req *request.Request,
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   This exception is thrown if the request contains a semantic error. The precise
 //   meaning will depend on the API, and will be documented in the error message.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -1448,12 +1931,12 @@ func (c *EKS) UntagResourceRequest(input *UntagResourceInput) (req *request.Requ
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBadRequestException "BadRequestException"
+// Returned Error Types:
+//   * BadRequestException
 //   This exception is thrown if the request contains a semantic error. The precise
 //   meaning will depend on the API, and will be documented in the error message.
 //
-//   * ErrCodeNotFoundException "NotFoundException"
+//   * NotFoundException
 //   A service resource associated with the request could not be found. Clients
 //   should not retry such requests.
 //
@@ -1559,28 +2042,28 @@ func (c *EKS) UpdateClusterConfigRequest(input *UpdateClusterConfigInput) (req *
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation UpdateClusterConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is invalid given the state of the cluster. Check the state of
 //   the cluster and the associated operations.
 //
@@ -1671,28 +2154,28 @@ func (c *EKS) UpdateClusterVersionRequest(input *UpdateClusterVersionInput) (req
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation UpdateClusterVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is invalid given the state of the cluster. Check the state of
 //   the cluster and the associated operations.
 //
@@ -1775,28 +2258,28 @@ func (c *EKS) UpdateNodegroupConfigRequest(input *UpdateNodegroupConfigInput) (r
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation UpdateNodegroupConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is invalid given the state of the cluster. Check the state of
 //   the cluster and the associated operations.
 //
@@ -1892,28 +2375,28 @@ func (c *EKS) UpdateNodegroupVersionRequest(input *UpdateNodegroupVersionInput) 
 // See the AWS API reference guide for Amazon Elastic Kubernetes Service's
 // API operation UpdateNodegroupVersion for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidParameterException "InvalidParameterException"
+// Returned Error Types:
+//   * InvalidParameterException
 //   The specified parameter is invalid. Review the available parameters for the
 //   API request.
 //
-//   * ErrCodeClientException "ClientException"
+//   * ClientException
 //   These errors are usually caused by a client action. Actions can include using
 //   an action or resource on behalf of a user that doesn't have permissions to
 //   use the action or resource or specifying an identifier that is not valid.
 //
-//   * ErrCodeServerException "ServerException"
+//   * ServerException
 //   These errors are usually caused by a server-side issue.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   The specified resource is in use.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource could not be found. You can view your available clusters
 //   with ListClusters. You can view your available managed node groups with ListNodegroups.
 //   Amazon EKS clusters and node groups are Region-specific.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   The request is invalid given the state of the cluster. Check the state of
 //   the cluster and the associated operations.
 //
@@ -1939,12 +2422,13 @@ func (c *EKS) UpdateNodegroupVersionWithContext(ctx aws.Context, input *UpdateNo
 	return out, req.Send()
 }
 
-// An AutoScaling group that is associated with an Amazon EKS managed node group.
+// An Auto Scaling group that is associated with an Amazon EKS managed node
+// group.
 type AutoScalingGroup struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the AutoScaling group associated with an Amazon EKS managed node
-	// group.
+	// The name of the Auto Scaling group associated with an Amazon EKS managed
+	// node group.
 	Name *string `locationName:"name" type:"string"`
 }
 
@@ -1962,6 +2446,63 @@ func (s AutoScalingGroup) GoString() string {
 func (s *AutoScalingGroup) SetName(v string) *AutoScalingGroup {
 	s.Name = &v
 	return s
+}
+
+// This exception is thrown if the request contains a semantic error. The precise
+// meaning will depend on the API, and will be documented in the error message.
+type BadRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BadRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BadRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorBadRequestException(v protocol.ResponseMetadata) error {
+	return &BadRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *BadRequestException) Code() string {
+	return "BadRequestException"
+}
+
+// Message returns the exception's message.
+func (s *BadRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *BadRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *BadRequestException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // An object representing the certificate-authority-data for your cluster.
@@ -1990,6 +2531,70 @@ func (s *Certificate) SetData(v string) *Certificate {
 	return s
 }
 
+// These errors are usually caused by a client action. Actions can include using
+// an action or resource on behalf of a user that doesn't have permissions to
+// use the action or resource or specifying an identifier that is not valid.
+type ClientException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+}
+
+// String returns the string representation
+func (s ClientException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ClientException) GoString() string {
+	return s.String()
+}
+
+func newErrorClientException(v protocol.ResponseMetadata) error {
+	return &ClientException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ClientException) Code() string {
+	return "ClientException"
+}
+
+// Message returns the exception's message.
+func (s *ClientException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ClientException) OrigErr() error {
+	return nil
+}
+
+func (s *ClientException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ClientException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ClientException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // An object representing an Amazon EKS cluster.
 type Cluster struct {
 	_ struct{} `type:"structure"`
@@ -2006,6 +2611,9 @@ type Cluster struct {
 
 	// The Unix epoch timestamp in seconds for when the cluster was created.
 	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// The encryption configuration for the cluster.
+	EncryptionConfig []*EncryptionConfig `locationName:"encryptionConfig" type:"list"`
 
 	// The endpoint for your Kubernetes API server.
 	Endpoint *string `locationName:"endpoint" type:"string"`
@@ -2083,6 +2691,12 @@ func (s *Cluster) SetCreatedAt(v time.Time) *Cluster {
 	return s
 }
 
+// SetEncryptionConfig sets the EncryptionConfig field's value.
+func (s *Cluster) SetEncryptionConfig(v []*EncryptionConfig) *Cluster {
+	s.EncryptionConfig = v
+	return s
+}
+
 // SetEndpoint sets the Endpoint field's value.
 func (s *Cluster) SetEndpoint(v string) *Cluster {
 	s.Endpoint = &v
@@ -2149,6 +2763,9 @@ type CreateClusterInput struct {
 	// Unique, case-sensitive identifier that you provide to ensure the idempotency
 	// of the request.
 	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
+
+	// The encryption configuration for the cluster.
+	EncryptionConfig []*EncryptionConfig `locationName:"encryptionConfig" type:"list"`
 
 	// Enable or disable exporting the Kubernetes control plane logs for your cluster
 	// to CloudWatch Logs. By default, cluster control plane logs aren't exported
@@ -2235,6 +2852,12 @@ func (s *CreateClusterInput) SetClientRequestToken(v string) *CreateClusterInput
 	return s
 }
 
+// SetEncryptionConfig sets the EncryptionConfig field's value.
+func (s *CreateClusterInput) SetEncryptionConfig(v []*EncryptionConfig) *CreateClusterInput {
+	s.EncryptionConfig = v
+	return s
+}
+
 // SetLogging sets the Logging field's value.
 func (s *CreateClusterInput) SetLogging(v *Logging) *CreateClusterInput {
 	s.Logging = v
@@ -2294,12 +2917,157 @@ func (s *CreateClusterOutput) SetCluster(v *Cluster) *CreateClusterOutput {
 	return s
 }
 
+type CreateFargateProfileInput struct {
+	_ struct{} `type:"structure"`
+
+	// Unique, case-sensitive identifier that you provide to ensure the idempotency
+	// of the request.
+	ClientRequestToken *string `locationName:"clientRequestToken" type:"string" idempotencyToken:"true"`
+
+	// The name of the Amazon EKS cluster to apply the Fargate profile to.
+	//
+	// ClusterName is a required field
+	ClusterName *string `location:"uri" locationName:"name" type:"string" required:"true"`
+
+	// The name of the Fargate profile.
+	//
+	// FargateProfileName is a required field
+	FargateProfileName *string `locationName:"fargateProfileName" type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the pod execution role to use for pods
+	// that match the selectors in the Fargate profile. The pod execution role allows
+	// Fargate infrastructure to register with your cluster as a node, and it provides
+	// read access to Amazon ECR image repositories. For more information, see Pod
+	// Execution Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
+	// in the Amazon EKS User Guide.
+	//
+	// PodExecutionRoleArn is a required field
+	PodExecutionRoleArn *string `locationName:"podExecutionRoleArn" type:"string" required:"true"`
+
+	// The selectors to match for pods to use this Fargate profile. Each selector
+	// must have an associated namespace. Optionally, you can also specify labels
+	// for a namespace. You may specify up to five selectors in a Fargate profile.
+	Selectors []*FargateProfileSelector `locationName:"selectors" type:"list"`
+
+	// The IDs of subnets to launch your pods into. At this time, pods running on
+	// Fargate are not assigned public IP addresses, so only private subnets (with
+	// no direct route to an Internet Gateway) are accepted for this parameter.
+	Subnets []*string `locationName:"subnets" type:"list"`
+
+	// The metadata to apply to the Fargate profile to assist with categorization
+	// and organization. Each tag consists of a key and an optional value, both
+	// of which you define. Fargate profile tags do not propagate to any other resources
+	// associated with the Fargate profile, such as the pods that are scheduled
+	// with it.
+	Tags map[string]*string `locationName:"tags" min:"1" type:"map"`
+}
+
+// String returns the string representation
+func (s CreateFargateProfileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateFargateProfileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateFargateProfileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateFargateProfileInput"}
+	if s.ClusterName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterName"))
+	}
+	if s.ClusterName != nil && len(*s.ClusterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterName", 1))
+	}
+	if s.FargateProfileName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FargateProfileName"))
+	}
+	if s.PodExecutionRoleArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("PodExecutionRoleArn"))
+	}
+	if s.Tags != nil && len(s.Tags) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Tags", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClientRequestToken sets the ClientRequestToken field's value.
+func (s *CreateFargateProfileInput) SetClientRequestToken(v string) *CreateFargateProfileInput {
+	s.ClientRequestToken = &v
+	return s
+}
+
+// SetClusterName sets the ClusterName field's value.
+func (s *CreateFargateProfileInput) SetClusterName(v string) *CreateFargateProfileInput {
+	s.ClusterName = &v
+	return s
+}
+
+// SetFargateProfileName sets the FargateProfileName field's value.
+func (s *CreateFargateProfileInput) SetFargateProfileName(v string) *CreateFargateProfileInput {
+	s.FargateProfileName = &v
+	return s
+}
+
+// SetPodExecutionRoleArn sets the PodExecutionRoleArn field's value.
+func (s *CreateFargateProfileInput) SetPodExecutionRoleArn(v string) *CreateFargateProfileInput {
+	s.PodExecutionRoleArn = &v
+	return s
+}
+
+// SetSelectors sets the Selectors field's value.
+func (s *CreateFargateProfileInput) SetSelectors(v []*FargateProfileSelector) *CreateFargateProfileInput {
+	s.Selectors = v
+	return s
+}
+
+// SetSubnets sets the Subnets field's value.
+func (s *CreateFargateProfileInput) SetSubnets(v []*string) *CreateFargateProfileInput {
+	s.Subnets = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateFargateProfileInput) SetTags(v map[string]*string) *CreateFargateProfileInput {
+	s.Tags = v
+	return s
+}
+
+type CreateFargateProfileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The full description of your new Fargate profile.
+	FargateProfile *FargateProfile `locationName:"fargateProfile" type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateFargateProfileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateFargateProfileOutput) GoString() string {
+	return s.String()
+}
+
+// SetFargateProfile sets the FargateProfile field's value.
+func (s *CreateFargateProfileOutput) SetFargateProfile(v *FargateProfile) *CreateFargateProfileOutput {
+	s.FargateProfile = v
+	return s
+}
+
 type CreateNodegroupInput struct {
 	_ struct{} `type:"structure"`
 
 	// The AMI type for your node group. GPU instance types should use the AL2_x86_64_GPU
-	// AMI type, which uses the Amazon EKS-optimized Linux AMI with GPU support;
-	// non-GPU instances should use the AL2_x86_64 AMI type, which uses the Amazon
+	// AMI type, which uses the Amazon EKS-optimized Linux AMI with GPU support.
+	// Non-GPU instances should use the AL2_x86_64 AMI type, which uses the Amazon
 	// EKS-optimized Linux AMI.
 	AmiType *string `locationName:"amiType" type:"string" enum:"AMITypes"`
 
@@ -2326,12 +3094,13 @@ type CreateNodegroupInput struct {
 	// are created.
 	Labels map[string]*string `locationName:"labels" type:"map"`
 
-	// The IAM role associated with your node group. The Amazon EKS worker node
-	// kubelet daemon makes calls to AWS APIs on your behalf. Worker nodes receive
-	// permissions for these API calls through an IAM instance profile and associated
-	// policies. Before you can launch worker nodes and register them into a cluster,
-	// you must create an IAM role for those worker nodes to use when they are launched.
-	// For more information, see Amazon EKS Worker Node IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
+	// The Amazon Resource Name (ARN) of the IAM role to associate with your node
+	// group. The Amazon EKS worker node kubelet daemon makes calls to AWS APIs
+	// on your behalf. Worker nodes receive permissions for these API calls through
+	// an IAM instance profile and associated policies. Before you can launch worker
+	// nodes and register them into a cluster, you must create an IAM role for those
+	// worker nodes to use when they are launched. For more information, see Amazon
+	// EKS Worker Node IAM Role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
 	// in the Amazon EKS User Guide .
 	//
 	// NodeRole is a required field
@@ -2352,11 +3121,11 @@ type CreateNodegroupInput struct {
 	// The remote access (SSH) configuration to use with your node group.
 	RemoteAccess *RemoteAccessConfig `locationName:"remoteAccess" type:"structure"`
 
-	// The scaling configuration details for the AutoScaling group that is created
+	// The scaling configuration details for the Auto Scaling group that is created
 	// for your node group.
 	ScalingConfig *NodegroupScalingConfig `locationName:"scalingConfig" type:"structure"`
 
-	// The subnets to use for the AutoScaling group that is created for your node
+	// The subnets to use for the Auto Scaling group that is created for your node
 	// group. These subnets must have the tag key kubernetes.io/cluster/CLUSTER_NAME
 	// with a value of shared, where CLUSTER_NAME is replaced with the name of your
 	// cluster.
@@ -2589,6 +3358,88 @@ func (s *DeleteClusterOutput) SetCluster(v *Cluster) *DeleteClusterOutput {
 	return s
 }
 
+type DeleteFargateProfileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Amazon EKS cluster associated with the Fargate profile to
+	// delete.
+	//
+	// ClusterName is a required field
+	ClusterName *string `location:"uri" locationName:"name" type:"string" required:"true"`
+
+	// The name of the Fargate profile to delete.
+	//
+	// FargateProfileName is a required field
+	FargateProfileName *string `location:"uri" locationName:"fargateProfileName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteFargateProfileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFargateProfileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteFargateProfileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteFargateProfileInput"}
+	if s.ClusterName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterName"))
+	}
+	if s.ClusterName != nil && len(*s.ClusterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterName", 1))
+	}
+	if s.FargateProfileName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FargateProfileName"))
+	}
+	if s.FargateProfileName != nil && len(*s.FargateProfileName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FargateProfileName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterName sets the ClusterName field's value.
+func (s *DeleteFargateProfileInput) SetClusterName(v string) *DeleteFargateProfileInput {
+	s.ClusterName = &v
+	return s
+}
+
+// SetFargateProfileName sets the FargateProfileName field's value.
+func (s *DeleteFargateProfileInput) SetFargateProfileName(v string) *DeleteFargateProfileInput {
+	s.FargateProfileName = &v
+	return s
+}
+
+type DeleteFargateProfileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The deleted Fargate profile.
+	FargateProfile *FargateProfile `locationName:"fargateProfile" type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteFargateProfileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteFargateProfileOutput) GoString() string {
+	return s.String()
+}
+
+// SetFargateProfile sets the FargateProfile field's value.
+func (s *DeleteFargateProfileOutput) SetFargateProfile(v *FargateProfile) *DeleteFargateProfileOutput {
+	s.FargateProfile = v
+	return s
+}
+
 type DeleteNodegroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2731,6 +3582,87 @@ func (s DescribeClusterOutput) GoString() string {
 // SetCluster sets the Cluster field's value.
 func (s *DescribeClusterOutput) SetCluster(v *Cluster) *DescribeClusterOutput {
 	s.Cluster = v
+	return s
+}
+
+type DescribeFargateProfileInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Amazon EKS cluster associated with the Fargate profile.
+	//
+	// ClusterName is a required field
+	ClusterName *string `location:"uri" locationName:"name" type:"string" required:"true"`
+
+	// The name of the Fargate profile to describe.
+	//
+	// FargateProfileName is a required field
+	FargateProfileName *string `location:"uri" locationName:"fargateProfileName" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeFargateProfileInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeFargateProfileInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeFargateProfileInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeFargateProfileInput"}
+	if s.ClusterName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterName"))
+	}
+	if s.ClusterName != nil && len(*s.ClusterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterName", 1))
+	}
+	if s.FargateProfileName == nil {
+		invalidParams.Add(request.NewErrParamRequired("FargateProfileName"))
+	}
+	if s.FargateProfileName != nil && len(*s.FargateProfileName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("FargateProfileName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterName sets the ClusterName field's value.
+func (s *DescribeFargateProfileInput) SetClusterName(v string) *DescribeFargateProfileInput {
+	s.ClusterName = &v
+	return s
+}
+
+// SetFargateProfileName sets the FargateProfileName field's value.
+func (s *DescribeFargateProfileInput) SetFargateProfileName(v string) *DescribeFargateProfileInput {
+	s.FargateProfileName = &v
+	return s
+}
+
+type DescribeFargateProfileOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The full description of your Fargate profile.
+	FargateProfile *FargateProfile `locationName:"fargateProfile" type:"structure"`
+}
+
+// String returns the string representation
+func (s DescribeFargateProfileOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeFargateProfileOutput) GoString() string {
+	return s.String()
+}
+
+// SetFargateProfile sets the FargateProfile field's value.
+func (s *DescribeFargateProfileOutput) SetFargateProfile(v *FargateProfile) *DescribeFargateProfileOutput {
+	s.FargateProfile = v
 	return s
 }
 
@@ -2905,6 +3837,40 @@ func (s *DescribeUpdateOutput) SetUpdate(v *Update) *DescribeUpdateOutput {
 	return s
 }
 
+// The encryption configuration for the cluster.
+type EncryptionConfig struct {
+	_ struct{} `type:"structure"`
+
+	// AWS Key Management Service (AWS KMS) customer master key (CMK). Either the
+	// ARN or the alias can be used.
+	Provider *Provider `locationName:"provider" type:"structure"`
+
+	// Specifies the resources to be encrypted. The only supported value is "secrets".
+	Resources []*string `locationName:"resources" type:"list"`
+}
+
+// String returns the string representation
+func (s EncryptionConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EncryptionConfig) GoString() string {
+	return s.String()
+}
+
+// SetProvider sets the Provider field's value.
+func (s *EncryptionConfig) SetProvider(v *Provider) *EncryptionConfig {
+	s.Provider = v
+	return s
+}
+
+// SetResources sets the Resources field's value.
+func (s *EncryptionConfig) SetResources(v []*string) *EncryptionConfig {
+	s.Resources = v
+	return s
+}
+
 // An object representing an error when an asynchronous operation fails.
 type ErrorDetail struct {
 	_ struct{} `type:"structure"`
@@ -2966,6 +3932,144 @@ func (s *ErrorDetail) SetResourceIds(v []*string) *ErrorDetail {
 	return s
 }
 
+// An object representing an AWS Fargate profile.
+type FargateProfile struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Amazon EKS cluster that the Fargate profile belongs to.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	// The Unix epoch timestamp in seconds for when the Fargate profile was created.
+	CreatedAt *time.Time `locationName:"createdAt" type:"timestamp"`
+
+	// The full Amazon Resource Name (ARN) of the Fargate profile.
+	FargateProfileArn *string `locationName:"fargateProfileArn" type:"string"`
+
+	// The name of the Fargate profile.
+	FargateProfileName *string `locationName:"fargateProfileName" type:"string"`
+
+	// The Amazon Resource Name (ARN) of the pod execution role to use for pods
+	// that match the selectors in the Fargate profile. For more information, see
+	// Pod Execution Role (https://docs.aws.amazon.com/eks/latest/userguide/pod-execution-role.html)
+	// in the Amazon EKS User Guide.
+	PodExecutionRoleArn *string `locationName:"podExecutionRoleArn" type:"string"`
+
+	// The selectors to match for pods to use this Fargate profile.
+	Selectors []*FargateProfileSelector `locationName:"selectors" type:"list"`
+
+	// The current status of the Fargate profile.
+	Status *string `locationName:"status" type:"string" enum:"FargateProfileStatus"`
+
+	// The IDs of subnets to launch pods into.
+	Subnets []*string `locationName:"subnets" type:"list"`
+
+	// The metadata applied to the Fargate profile to assist with categorization
+	// and organization. Each tag consists of a key and an optional value, both
+	// of which you define. Fargate profile tags do not propagate to any other resources
+	// associated with the Fargate profile, such as the pods that are scheduled
+	// with it.
+	Tags map[string]*string `locationName:"tags" min:"1" type:"map"`
+}
+
+// String returns the string representation
+func (s FargateProfile) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FargateProfile) GoString() string {
+	return s.String()
+}
+
+// SetClusterName sets the ClusterName field's value.
+func (s *FargateProfile) SetClusterName(v string) *FargateProfile {
+	s.ClusterName = &v
+	return s
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *FargateProfile) SetCreatedAt(v time.Time) *FargateProfile {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetFargateProfileArn sets the FargateProfileArn field's value.
+func (s *FargateProfile) SetFargateProfileArn(v string) *FargateProfile {
+	s.FargateProfileArn = &v
+	return s
+}
+
+// SetFargateProfileName sets the FargateProfileName field's value.
+func (s *FargateProfile) SetFargateProfileName(v string) *FargateProfile {
+	s.FargateProfileName = &v
+	return s
+}
+
+// SetPodExecutionRoleArn sets the PodExecutionRoleArn field's value.
+func (s *FargateProfile) SetPodExecutionRoleArn(v string) *FargateProfile {
+	s.PodExecutionRoleArn = &v
+	return s
+}
+
+// SetSelectors sets the Selectors field's value.
+func (s *FargateProfile) SetSelectors(v []*FargateProfileSelector) *FargateProfile {
+	s.Selectors = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *FargateProfile) SetStatus(v string) *FargateProfile {
+	s.Status = &v
+	return s
+}
+
+// SetSubnets sets the Subnets field's value.
+func (s *FargateProfile) SetSubnets(v []*string) *FargateProfile {
+	s.Subnets = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *FargateProfile) SetTags(v map[string]*string) *FargateProfile {
+	s.Tags = v
+	return s
+}
+
+// An object representing an AWS Fargate profile selector.
+type FargateProfileSelector struct {
+	_ struct{} `type:"structure"`
+
+	// The Kubernetes labels that the selector should match. A pod must contain
+	// all of the labels that are specified in the selector for it to be considered
+	// a match.
+	Labels map[string]*string `locationName:"labels" type:"map"`
+
+	// The Kubernetes namespace that the selector should match.
+	Namespace *string `locationName:"namespace" type:"string"`
+}
+
+// String returns the string representation
+func (s FargateProfileSelector) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FargateProfileSelector) GoString() string {
+	return s.String()
+}
+
+// SetLabels sets the Labels field's value.
+func (s *FargateProfileSelector) SetLabels(v map[string]*string) *FargateProfileSelector {
+	s.Labels = v
+	return s
+}
+
+// SetNamespace sets the Namespace field's value.
+func (s *FargateProfileSelector) SetNamespace(v string) *FargateProfileSelector {
+	s.Namespace = &v
+	return s
+}
+
 // An object representing an identity provider for authentication credentials.
 type Identity struct {
 	_ struct{} `type:"structure"`
@@ -2991,6 +4095,135 @@ func (s *Identity) SetOidc(v *OIDC) *Identity {
 	return s
 }
 
+// The specified parameter is invalid. Review the available parameters for the
+// API request.
+type InvalidParameterException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	// The Fargate profile associated with the exception.
+	FargateProfileName *string `locationName:"fargateProfileName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidParameterException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidParameterException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidParameterException(v protocol.ResponseMetadata) error {
+	return &InvalidParameterException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidParameterException) Code() string {
+	return "InvalidParameterException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidParameterException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidParameterException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidParameterException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidParameterException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidParameterException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request is invalid given the state of the cluster. Check the state of
+// the cluster and the associated operations.
+type InvalidRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // An object representing an issue with an Amazon EKS resource.
 type Issue struct {
 	_ struct{} `type:"structure"`
@@ -3014,8 +4247,8 @@ type Issue struct {
 	//
 	//    * Ec2LaunchTemplateVersionMismatch: The Amazon EC2 launch template version
 	//    for your managed node group does not match the version that Amazon EKS
-	//    created. You may be able to revert to the Amazon EKS-created version to
-	//    recover.
+	//    created. You may be able to revert to the version that Amazon EKS created
+	//    to recover.
 	//
 	//    * IamInstanceProfileNotFound: We couldn't find the IAM instance profile
 	//    for your managed node group. You may be able to recreate an instance profile
@@ -3028,6 +4261,11 @@ type Issue struct {
 	//    * AsgInstanceLaunchFailures: Your Auto Scaling group is experiencing failures
 	//    while attempting to launch instances.
 	//
+	//    * NodeCreationFailure: Your launched instances are unable to register
+	//    with your Amazon EKS cluster. Common causes of this failure are insufficient
+	//    worker node IAM role (https://docs.aws.amazon.com/eks/latest/userguide/worker_node_IAM_role.html)
+	//    permissions or lack of outbound internet access for the nodes.
+	//
 	//    * InstanceLimitExceeded: Your AWS account is unable to launch any more
 	//    instances of the specified instance type. You may be able to request an
 	//    Amazon EC2 instance limit increase to recover.
@@ -3036,8 +4274,8 @@ type Issue struct {
 	//    your managed node group does not have enough available IP addresses for
 	//    new nodes.
 	//
-	//    * AccessDenied: Amazon EKS and or one or more of your managed nodes is
-	//    unable to communicate with your cluster API server.
+	//    * AccessDenied: Amazon EKS or one or more of your managed nodes is unable
+	//    to communicate with your cluster API server.
 	//
 	//    * InternalFailure: These errors are usually caused by an Amazon EKS server-side
 	//    issue.
@@ -3166,6 +4404,113 @@ func (s *ListClustersOutput) SetClusters(v []*string) *ListClustersOutput {
 
 // SetNextToken sets the NextToken field's value.
 func (s *ListClustersOutput) SetNextToken(v string) *ListClustersOutput {
+	s.NextToken = &v
+	return s
+}
+
+type ListFargateProfilesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Amazon EKS cluster that you would like to listFargate profiles
+	// in.
+	//
+	// ClusterName is a required field
+	ClusterName *string `location:"uri" locationName:"name" type:"string" required:"true"`
+
+	// The maximum number of Fargate profile results returned by ListFargateProfiles
+	// in paginated output. When you use this parameter, ListFargateProfiles returns
+	// only maxResults results in a single page along with a nextToken response
+	// element. You can see the remaining results of the initial request by sending
+	// another ListFargateProfiles request with the returned nextToken value. This
+	// value can be between 1 and 100. If you don't use this parameter, ListFargateProfiles
+	// returns up to 100 results and a nextToken value if applicable.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
+
+	// The nextToken value returned from a previous paginated ListFargateProfiles
+	// request where maxResults was used and the results exceeded the value of that
+	// parameter. Pagination continues from the end of the previous results that
+	// returned the nextToken value.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListFargateProfilesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListFargateProfilesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListFargateProfilesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListFargateProfilesInput"}
+	if s.ClusterName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ClusterName"))
+	}
+	if s.ClusterName != nil && len(*s.ClusterName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ClusterName", 1))
+	}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetClusterName sets the ClusterName field's value.
+func (s *ListFargateProfilesInput) SetClusterName(v string) *ListFargateProfilesInput {
+	s.ClusterName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListFargateProfilesInput) SetMaxResults(v int64) *ListFargateProfilesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListFargateProfilesInput) SetNextToken(v string) *ListFargateProfilesInput {
+	s.NextToken = &v
+	return s
+}
+
+type ListFargateProfilesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of all of the Fargate profiles associated with the specified cluster.
+	FargateProfileNames []*string `locationName:"fargateProfileNames" type:"list"`
+
+	// The nextToken value to include in a future ListFargateProfiles request. When
+	// the results of a ListFargateProfiles request exceed maxResults, you can use
+	// this value to retrieve the next page of results. This value is null when
+	// there are no more results to return.
+	NextToken *string `locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListFargateProfilesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListFargateProfilesOutput) GoString() string {
+	return s.String()
+}
+
+// SetFargateProfileNames sets the FargateProfileNames field's value.
+func (s *ListFargateProfilesOutput) SetFargateProfileNames(v []*string) *ListFargateProfilesOutput {
+	s.FargateProfileNames = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListFargateProfilesOutput) SetNextToken(v string) *ListFargateProfilesOutput {
 	s.NextToken = &v
 	return s
 }
@@ -3525,7 +4870,7 @@ type Nodegroup struct {
 
 	// The AMI type associated with your node group. GPU instance types should use
 	// the AL2_x86_64_GPU AMI type, which uses the Amazon EKS-optimized Linux AMI
-	// with GPU support; non-GPU instances should use the AL2_x86_64 AMI type, which
+	// with GPU support. Non-GPU instances should use the AL2_x86_64 AMI type, which
 	// uses the Amazon EKS-optimized Linux AMI.
 	AmiType *string `locationName:"amiType" type:"string" enum:"AMITypes"`
 
@@ -3579,26 +4924,26 @@ type Nodegroup struct {
 	// The remote access (SSH) configuration that is associated with the node group.
 	RemoteAccess *RemoteAccessConfig `locationName:"remoteAccess" type:"structure"`
 
-	// The resources associated with the nodegroup, such as AutoScaling groups and
-	// security groups for remote access.
+	// The resources associated with the node group, such as Auto Scaling groups
+	// and security groups for remote access.
 	Resources *NodegroupResources `locationName:"resources" type:"structure"`
 
-	// The scaling configuration details for the AutoScaling group that is associated
+	// The scaling configuration details for the Auto Scaling group that is associated
 	// with your node group.
 	ScalingConfig *NodegroupScalingConfig `locationName:"scalingConfig" type:"structure"`
 
 	// The current status of the managed node group.
 	Status *string `locationName:"status" type:"string" enum:"NodegroupStatus"`
 
-	// The subnets allowed for the AutoScaling group that is associated with your
+	// The subnets allowed for the Auto Scaling group that is associated with your
 	// node group. These subnets must have the following tag: kubernetes.io/cluster/CLUSTER_NAME,
 	// where CLUSTER_NAME is replaced with the name of your cluster.
 	Subnets []*string `locationName:"subnets" type:"list"`
 
-	// The metadata applied the node group to assist with categorization and organization.
-	// Each tag consists of a key and an optional value, both of which you define.
-	// Node group tags do not propagate to any other resources associated with the
-	// node group, such as the Amazon EC2 instances or subnets.
+	// The metadata applied to the node group to assist with categorization and
+	// organization. Each tag consists of a key and an optional value, both of which
+	// you define. Node group tags do not propagate to any other resources associated
+	// with the node group, such as the Amazon EC2 instances or subnets.
 	Tags map[string]*string `locationName:"tags" min:"1" type:"map"`
 
 	// The Kubernetes version of the managed node group.
@@ -3753,12 +5098,12 @@ func (s *NodegroupHealth) SetIssues(v []*Issue) *NodegroupHealth {
 	return s
 }
 
-// An object representing the resources associated with the nodegroup, such
-// as AutoScaling groups and security groups for remote access.
+// An object representing the resources associated with the node group, such
+// as Auto Scaling groups and security groups for remote access.
 type NodegroupResources struct {
 	_ struct{} `type:"structure"`
 
-	// The autoscaling groups associated with the node group.
+	// The Auto Scaling groups associated with the node group.
 	AutoScalingGroups []*AutoScalingGroup `locationName:"autoScalingGroups" type:"list"`
 
 	// The remote access security group associated with the node group. This security
@@ -3788,7 +5133,7 @@ func (s *NodegroupResources) SetRemoteAccessSecurityGroup(v string) *NodegroupRe
 	return s
 }
 
-// An object representing the scaling configuration details for the AutoScaling
+// An object representing the scaling configuration details for the Auto Scaling
 // group that is associated with your node group.
 type NodegroupScalingConfig struct {
 	_ struct{} `type:"structure"`
@@ -3852,6 +5197,63 @@ func (s *NodegroupScalingConfig) SetMinSize(v int64) *NodegroupScalingConfig {
 	return s
 }
 
+// A service resource associated with the request could not be found. Clients
+// should not retry such requests.
+type NotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s NotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorNotFoundException(v protocol.ResponseMetadata) error {
+	return &NotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *NotFoundException) Code() string {
+	return "NotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *NotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *NotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *NotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // An object representing the OpenID Connect (https://openid.net/connect/) identity
 // provider information for the cluster.
 type OIDC struct {
@@ -3877,6 +5279,36 @@ func (s *OIDC) SetIssuer(v string) *OIDC {
 	return s
 }
 
+// Identifies the AWS Key Management Service (AWS KMS) customer master key (CMK)
+// used to encrypt the secrets.
+type Provider struct {
+	_ struct{} `type:"structure"`
+
+	// Amazon Resource Name (ARN) or alias of the customer master key (CMK). The
+	// CMK must be symmetric, created in the same region as the cluster, and if
+	// the CMK was created in a different account, the user must have access to
+	// the CMK. For more information, see Allowing Users in Other Accounts to Use
+	// a CMK (https://docs.aws.amazon.com/kms/latest/developerguide/key-policy-modifying-external-accounts.html)
+	// in the AWS Key Management Service Developer Guide.
+	KeyArn *string `locationName:"keyArn" type:"string"`
+}
+
+// String returns the string representation
+func (s Provider) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Provider) GoString() string {
+	return s.String()
+}
+
+// SetKeyArn sets the KeyArn field's value.
+func (s *Provider) SetKeyArn(v string) *Provider {
+	s.KeyArn = &v
+	return s
+}
+
 // An object representing the remote access configuration for the managed node
 // group.
 type RemoteAccessConfig struct {
@@ -3888,11 +5320,11 @@ type RemoteAccessConfig struct {
 	// in the Amazon Elastic Compute Cloud User Guide for Linux Instances.
 	Ec2SshKey *string `locationName:"ec2SshKey" type:"string"`
 
-	// The security groups to allow SSH access (port 22) from on the worker nodes.
-	// If you specify an Amazon EC2 SSH key, but you do not specify a source security
-	// group when you create a managed node group, port 22 on the worker nodes is
-	// opened to the internet (0.0.0.0/0). For more information, see Security Groups
-	// for Your VPC (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html)
+	// The security groups that are allowed SSH access (port 22) to the worker nodes.
+	// If you specify an Amazon EC2 SSH key but do not specify a source security
+	// group when you create a managed node group, then port 22 on the worker nodes
+	// is opened to the internet (0.0.0.0/0). For more information, see Security
+	// Groups for Your VPC (https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html)
 	// in the Amazon Virtual Private Cloud User Guide.
 	SourceSecurityGroups []*string `locationName:"sourceSecurityGroups" type:"list"`
 }
@@ -3917,6 +5349,315 @@ func (s *RemoteAccessConfig) SetEc2SshKey(v string) *RemoteAccessConfig {
 func (s *RemoteAccessConfig) SetSourceSecurityGroups(v []*string) *RemoteAccessConfig {
 	s.SourceSecurityGroups = v
 	return s
+}
+
+// The specified resource is in use.
+type ResourceInUseException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// You have encountered a service limit on the specified resource.
+type ResourceLimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceLimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceLimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceLimitExceededException(v protocol.ResponseMetadata) error {
+	return &ResourceLimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceLimitExceededException) Code() string {
+	return "ResourceLimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceLimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceLimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceLimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The specified resource could not be found. You can view your available clusters
+// with ListClusters. You can view your available managed node groups with ListNodegroups.
+// Amazon EKS clusters and node groups are Region-specific.
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	// The Fargate profile associated with the exception.
+	FargateProfileName *string `locationName:"fargateProfileName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// These errors are usually caused by a server-side issue.
+type ServerException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+}
+
+// String returns the string representation
+func (s ServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorServerException(v protocol.ResponseMetadata) error {
+	return &ServerException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ServerException) Code() string {
+	return "ServerException"
+}
+
+// Message returns the exception's message.
+func (s *ServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ServerException) OrigErr() error {
+	return nil
+}
+
+func (s *ServerException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ServerException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The service is unavailable. Back off and retry the operation.
+type ServiceUnavailableException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ServiceUnavailableException) Code() string {
+	return "ServiceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s *ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ServiceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s *ServiceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type TagResourceInput struct {
@@ -3990,6 +5731,75 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// At least one of your specified cluster subnets is in an Availability Zone
+// that does not support Amazon EKS. The exception output specifies the supported
+// Availability Zones for your account, from which you can choose subnets for
+// your cluster.
+type UnsupportedAvailabilityZoneException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The Amazon EKS cluster associated with the exception.
+	ClusterName *string `locationName:"clusterName" type:"string"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	// The Amazon EKS managed node group associated with the exception.
+	NodegroupName *string `locationName:"nodegroupName" type:"string"`
+
+	// The supported Availability Zones for your account. Choose subnets in these
+	// Availability Zones for your cluster.
+	ValidZones []*string `locationName:"validZones" type:"list"`
+}
+
+// String returns the string representation
+func (s UnsupportedAvailabilityZoneException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedAvailabilityZoneException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedAvailabilityZoneException(v protocol.ResponseMetadata) error {
+	return &UnsupportedAvailabilityZoneException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnsupportedAvailabilityZoneException) Code() string {
+	return "UnsupportedAvailabilityZoneException"
+}
+
+// Message returns the exception's message.
+func (s *UnsupportedAvailabilityZoneException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnsupportedAvailabilityZoneException) OrigErr() error {
+	return nil
+}
+
+func (s *UnsupportedAvailabilityZoneException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnsupportedAvailabilityZoneException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnsupportedAvailabilityZoneException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {
@@ -4377,7 +6187,7 @@ type UpdateNodegroupConfigInput struct {
 	// NodegroupName is a required field
 	NodegroupName *string `location:"uri" locationName:"nodegroupName" type:"string" required:"true"`
 
-	// The scaling configuration details for the AutoScaling group after the update.
+	// The scaling configuration details for the Auto Scaling group after the update.
 	ScalingConfig *NodegroupScalingConfig `locationName:"scalingConfig" type:"structure"`
 }
 
@@ -4485,9 +6295,9 @@ type UpdateNodegroupVersionInput struct {
 	ClusterName *string `location:"uri" locationName:"name" type:"string" required:"true"`
 
 	// Force the update if the existing node group's pods are unable to be drained
-	// due to a pod disruption budget issue. If a previous update fails because
-	// pods could not be drained, you can force the update after it fails to terminate
-	// the old node regardless of whether or not any pods are running on the node.
+	// due to a pod disruption budget issue. If an update fails because pods could
+	// not be drained, you can force the update after it fails to terminate the
+	// old node whether or not any pods are running on the node.
 	Force *bool `locationName:"force" type:"boolean"`
 
 	// The name of the managed node group to update.
@@ -4641,19 +6451,32 @@ type VpcConfigRequest struct {
 	// API server endpoint. If you enable private access, Kubernetes API requests
 	// from within your cluster's VPC use the private VPC endpoint. The default
 	// value for this parameter is false, which disables private access for your
-	// Kubernetes API server. For more information, see Amazon EKS Cluster Endpoint
-	// Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// Kubernetes API server. If you disable private access and you have worker
+	// nodes or AWS Fargate pods in the cluster, then ensure that publicAccessCidrs
+	// includes the necessary CIDR blocks for communication with the worker nodes
+	// or Fargate pods. For more information, see Amazon EKS Cluster Endpoint Access
+	// Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
 	// in the Amazon EKS User Guide .
 	EndpointPrivateAccess *bool `locationName:"endpointPrivateAccess" type:"boolean"`
 
-	// Set this value to false to disable public access for your cluster's Kubernetes
+	// Set this value to false to disable public access to your cluster's Kubernetes
 	// API server endpoint. If you disable public access, your cluster's Kubernetes
-	// API server can receive only requests from within the cluster VPC. The default
+	// API server can only receive requests from within the cluster VPC. The default
 	// value for this parameter is true, which enables public access for your Kubernetes
 	// API server. For more information, see Amazon EKS Cluster Endpoint Access
 	// Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
 	// in the Amazon EKS User Guide .
 	EndpointPublicAccess *bool `locationName:"endpointPublicAccess" type:"boolean"`
+
+	// The CIDR blocks that are allowed access to your cluster's public Kubernetes
+	// API server endpoint. Communication to the endpoint from addresses outside
+	// of the CIDR blocks that you specify is denied. The default value is 0.0.0.0/0.
+	// If you've disabled private endpoint access and you have worker nodes or AWS
+	// Fargate pods in the cluster, then ensure that you specify the necessary CIDR
+	// blocks. For more information, see Amazon EKS Cluster Endpoint Access Control
+	// (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// in the Amazon EKS User Guide .
+	PublicAccessCidrs []*string `locationName:"publicAccessCidrs" type:"list"`
 
 	// Specify one or more security groups for the cross-account elastic network
 	// interfaces that Amazon EKS creates to use to allow communication between
@@ -4689,6 +6512,12 @@ func (s *VpcConfigRequest) SetEndpointPublicAccess(v bool) *VpcConfigRequest {
 	return s
 }
 
+// SetPublicAccessCidrs sets the PublicAccessCidrs field's value.
+func (s *VpcConfigRequest) SetPublicAccessCidrs(v []*string) *VpcConfigRequest {
+	s.PublicAccessCidrs = v
+	return s
+}
+
 // SetSecurityGroupIds sets the SecurityGroupIds field's value.
 func (s *VpcConfigRequest) SetSecurityGroupIds(v []*string) *VpcConfigRequest {
 	s.SecurityGroupIds = v
@@ -4706,21 +6535,35 @@ type VpcConfigResponse struct {
 	_ struct{} `type:"structure"`
 
 	// The cluster security group that was created by Amazon EKS for the cluster.
-	// Managed node groups use this security group for control plane to data plane
+	// Managed node groups use this security group for control-plane-to-data-plane
 	// communication.
 	ClusterSecurityGroupId *string `locationName:"clusterSecurityGroupId" type:"string"`
 
 	// This parameter indicates whether the Amazon EKS private API server endpoint
 	// is enabled. If the Amazon EKS private API server endpoint is enabled, Kubernetes
 	// API requests that originate from within your cluster's VPC use the private
-	// VPC endpoint instead of traversing the internet.
+	// VPC endpoint instead of traversing the internet. If this value is disabled
+	// and you have worker nodes or AWS Fargate pods in the cluster, then ensure
+	// that publicAccessCidrs includes the necessary CIDR blocks for communication
+	// with the worker nodes or Fargate pods. For more information, see Amazon EKS
+	// Cluster Endpoint Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// in the Amazon EKS User Guide .
 	EndpointPrivateAccess *bool `locationName:"endpointPrivateAccess" type:"boolean"`
 
 	// This parameter indicates whether the Amazon EKS public API server endpoint
 	// is enabled. If the Amazon EKS public API server endpoint is disabled, your
-	// cluster's Kubernetes API server can receive only requests that originate
+	// cluster's Kubernetes API server can only receive requests that originate
 	// from within the cluster VPC.
 	EndpointPublicAccess *bool `locationName:"endpointPublicAccess" type:"boolean"`
+
+	// The CIDR blocks that are allowed access to your cluster's public Kubernetes
+	// API server endpoint. Communication to the endpoint from addresses outside
+	// of the listed CIDR blocks is denied. The default value is 0.0.0.0/0. If you've
+	// disabled private endpoint access and you have worker nodes or AWS Fargate
+	// pods in the cluster, then ensure that the necessary CIDR blocks are listed.
+	// For more information, see Amazon EKS Cluster Endpoint Access Control (https://docs.aws.amazon.com/eks/latest/userguide/cluster-endpoint.html)
+	// in the Amazon EKS User Guide .
+	PublicAccessCidrs []*string `locationName:"publicAccessCidrs" type:"list"`
 
 	// The security groups associated with the cross-account elastic network interfaces
 	// that are used to allow communication between your worker nodes and the Kubernetes
@@ -4759,6 +6602,12 @@ func (s *VpcConfigResponse) SetEndpointPrivateAccess(v bool) *VpcConfigResponse 
 // SetEndpointPublicAccess sets the EndpointPublicAccess field's value.
 func (s *VpcConfigResponse) SetEndpointPublicAccess(v bool) *VpcConfigResponse {
 	s.EndpointPublicAccess = &v
+	return s
+}
+
+// SetPublicAccessCidrs sets the PublicAccessCidrs field's value.
+func (s *VpcConfigResponse) SetPublicAccessCidrs(v []*string) *VpcConfigResponse {
+	s.PublicAccessCidrs = v
 	return s
 }
 
@@ -4841,6 +6690,23 @@ const (
 )
 
 const (
+	// FargateProfileStatusCreating is a FargateProfileStatus enum value
+	FargateProfileStatusCreating = "CREATING"
+
+	// FargateProfileStatusActive is a FargateProfileStatus enum value
+	FargateProfileStatusActive = "ACTIVE"
+
+	// FargateProfileStatusDeleting is a FargateProfileStatus enum value
+	FargateProfileStatusDeleting = "DELETING"
+
+	// FargateProfileStatusCreateFailed is a FargateProfileStatus enum value
+	FargateProfileStatusCreateFailed = "CREATE_FAILED"
+
+	// FargateProfileStatusDeleteFailed is a FargateProfileStatus enum value
+	FargateProfileStatusDeleteFailed = "DELETE_FAILED"
+)
+
+const (
 	// LogTypeApi is a LogType enum value
 	LogTypeApi = "api"
 
@@ -4861,6 +6727,9 @@ const (
 	// NodegroupIssueCodeAutoScalingGroupNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeAutoScalingGroupNotFound = "AutoScalingGroupNotFound"
 
+	// NodegroupIssueCodeAutoScalingGroupInvalidConfiguration is a NodegroupIssueCode enum value
+	NodegroupIssueCodeAutoScalingGroupInvalidConfiguration = "AutoScalingGroupInvalidConfiguration"
+
 	// NodegroupIssueCodeEc2securityGroupNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeEc2securityGroupNotFound = "Ec2SecurityGroupNotFound"
 
@@ -4873,11 +6742,23 @@ const (
 	// NodegroupIssueCodeEc2launchTemplateVersionMismatch is a NodegroupIssueCode enum value
 	NodegroupIssueCodeEc2launchTemplateVersionMismatch = "Ec2LaunchTemplateVersionMismatch"
 
+	// NodegroupIssueCodeEc2subnetNotFound is a NodegroupIssueCode enum value
+	NodegroupIssueCodeEc2subnetNotFound = "Ec2SubnetNotFound"
+
+	// NodegroupIssueCodeEc2subnetInvalidConfiguration is a NodegroupIssueCode enum value
+	NodegroupIssueCodeEc2subnetInvalidConfiguration = "Ec2SubnetInvalidConfiguration"
+
 	// NodegroupIssueCodeIamInstanceProfileNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeIamInstanceProfileNotFound = "IamInstanceProfileNotFound"
 
+	// NodegroupIssueCodeIamLimitExceeded is a NodegroupIssueCode enum value
+	NodegroupIssueCodeIamLimitExceeded = "IamLimitExceeded"
+
 	// NodegroupIssueCodeIamNodeRoleNotFound is a NodegroupIssueCode enum value
 	NodegroupIssueCodeIamNodeRoleNotFound = "IamNodeRoleNotFound"
+
+	// NodegroupIssueCodeNodeCreationFailure is a NodegroupIssueCode enum value
+	NodegroupIssueCodeNodeCreationFailure = "NodeCreationFailure"
 
 	// NodegroupIssueCodeAsgInstanceLaunchFailures is a NodegroupIssueCode enum value
 	NodegroupIssueCodeAsgInstanceLaunchFailures = "AsgInstanceLaunchFailures"
@@ -4951,6 +6832,9 @@ const (
 
 	// UpdateParamTypeReleaseVersion is a UpdateParamType enum value
 	UpdateParamTypeReleaseVersion = "ReleaseVersion"
+
+	// UpdateParamTypePublicAccessCidrs is a UpdateParamType enum value
+	UpdateParamTypePublicAccessCidrs = "PublicAccessCidrs"
 )
 
 const (
