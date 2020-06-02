@@ -17,8 +17,8 @@ func dataSourceAwsEc2TransitGatewayRouteTable() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"index": {
-				Type: schema.TypeInt,
-				Default: 0,
+				Type:     schema.TypeInt,
+				Default:  0,
 				Optional: true,
 				ForceNew: true,
 			},
