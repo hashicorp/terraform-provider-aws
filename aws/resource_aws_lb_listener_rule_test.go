@@ -56,12 +56,15 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 
 func TestAccAWSLBListenerRule_basic(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	targetGroupResourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -69,28 +72,28 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "forward"),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "action.0.target_group_arn", "elasticloadbalancing", regexp.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_cognito.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_oidc.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.447032695.values.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.static", "condition.447032695.values.0"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.target_group_arn", targetGroupResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.values.0", "/static/*"),
 				),
 			},
 		},
@@ -99,23 +102,25 @@ func TestAccAWSLBListenerRule_basic(t *testing.T) {
 
 func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 	var conf elbv2.Rule
+	lbName := fmt.Sprintf("testrule-weighted-%s", acctest.RandString(13))
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+
 	resourceName := "aws_lb_listener_rule.weighted"
-	lbName := acctest.RandomWithPrefix("testrule-weighted")
-	targetGroupName1 := acctest.RandomWithPrefix("testtargetgroup")
-	targetGroupName2 := acctest.RandomWithPrefix("testtargetgroup")
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	targetGroup1ResourceName := "aws_lb_target_group.test1"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_forwardWeighted(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
@@ -135,8 +140,8 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 				Config: testAccAWSLBListenerRuleConfig_changeForwardWeightedStickiness(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
@@ -156,14 +161,13 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 				Config: testAccAWSLBListenerRuleConfig_changeForwardWeightedToBasic(lbName, targetGroupName1, targetGroupName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN(resourceName, "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "action.0.target_group_arn", "elasticloadbalancing", regexp.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttrPair(resourceName, "action.0.target_group_arn", "aws_lb_target_group.test1", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.target_group_arn", targetGroup1ResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
@@ -177,12 +181,15 @@ func TestAccAWSLBListenerRule_forwardWeighted(t *testing.T) {
 
 func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+
+	resourceName := "aws_alb_listener_rule.static"
+	frontEndListenerResourceName := "aws_alb_listener.front_end"
+	targetGroupResourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_alb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -190,29 +197,28 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfigBackwardsCompatibility(lbName, targetGroupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_alb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_alb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_alb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.type", "forward"),
-					testAccMatchResourceAttrRegionalARN("aws_alb_listener_rule.static", "action.0.target_group_arn", "elasticloadbalancing", regexp.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttrPair("aws_lb_listener_rule.static", "action.0.target_group_arn", "aws_alb_target_group.test", "arn"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.redirect.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.fixed_response.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.authenticate_cognito.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "action.0.authenticate_oidc.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_alb_listener_rule.static", "condition.447032695.values.#", "1"),
-					resource.TestCheckResourceAttrSet("aws_alb_listener_rule.static", "condition.447032695.values.0"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.target_group_arn", targetGroupResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.447032695.values.0", "/static/*"),
 				),
 			},
 		},
@@ -221,36 +227,38 @@ func TestAccAWSLBListenerRuleBackwardsCompatibility(t *testing.T) {
 
 func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-redirect-%s", acctest.RandString(14))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_redirect(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "redirect"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.target_group_arn", ""),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.host", "#{host}"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.path", "/#{path}"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.port", "443"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.protocol", "HTTPS"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.query", "#{query}"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.0.status_code", "HTTP_301"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_cognito.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_oidc.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "redirect"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target_group_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.host", "#{host}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.path", "/#{path}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.query", "#{query}"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.0.status_code", "HTTP_301"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 				),
 			},
 		},
@@ -259,33 +267,35 @@ func TestAccAWSLBListenerRule_redirect(t *testing.T) {
 
 func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-fixedresponse-%s", acctest.RandStringFromCharSet(9, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-fixedresponse-%s", acctest.RandString(9))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName, "Fixed response content"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.type", "fixed-response"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.target_group_arn", ""),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.redirect.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.content_type", "text/plain"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.message_body", "Fixed response content"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.status_code", "200"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_cognito.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.authenticate_oidc.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "fixed-response"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target_group_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.content_type", "text/plain"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.message_body", "Fixed response content"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.status_code", "200"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 				),
 			},
 		},
@@ -295,26 +305,27 @@ func TestAccAWSLBListenerRule_fixedResponse(t *testing.T) {
 // Updating Action breaks Condition change logic GH-11323 and GH-11362
 func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
 	var rule elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+
+	resourceName := "aws_lb_listener_rule.static"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName, "Fixed Response 1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.message_body", "Fixed Response 1"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.message_body", "Fixed Response 1"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_fixedResponse(lbName, "Fixed Response 2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.0.fixed_response.0.message_body", "Fixed Response 2"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "action.0.fixed_response.0.message_body", "Fixed Response 2"),
 				),
 			},
 		},
@@ -323,27 +334,28 @@ func TestAccAWSLBListenerRule_updateFixedResponse(t *testing.T) {
 
 func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
 	var rule elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+
+	resourceName := "aws_lb_listener_rule.static"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_updateRulePriority(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &rule),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "101"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "priority", "101"),
 				),
 			},
 		},
@@ -352,25 +364,26 @@ func TestAccAWSLBListenerRule_updateRulePriority(t *testing.T) {
 
 func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
 	var before, after elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
+
+	resourceName := "aws_lb_listener_rule.static"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.static",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_basic(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &before),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &before),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_changeRuleArn(lbName, targetGroupName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &after),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &after),
 					testAccCheckAWSLbListenerRuleRecreated(t, &before, &after),
 				),
 			},
@@ -379,8 +392,8 @@ func TestAccAWSLBListenerRule_changeListenerRuleArnForcesNew(t *testing.T) {
 }
 
 func TestAccAWSLBListenerRule_multipleConditionThrowsError(t *testing.T) {
-	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -397,14 +410,13 @@ func TestAccAWSLBListenerRule_multipleConditionThrowsError(t *testing.T) {
 
 func TestAccAWSLBListenerRule_priority(t *testing.T) {
 	var rule elbv2.Rule
-	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-basic-%s", acctest.RandString(13))
+	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.first",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLBListenerRuleConfig_priorityFirst(lbName, targetGroupName),
@@ -473,34 +485,39 @@ func TestAccAWSLBListenerRule_cognito(t *testing.T) {
 	var conf elbv2.Rule
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	lbName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_lb_listener_rule.cognito"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	targetGroupResourceName := "aws_lb_target_group.test"
+	cognitoPoolResourceName := "aws_cognito_user_pool.test"
+	cognitoPoolClientResourceName := "aws_cognito_user_pool_client.test"
+	cognitoPoolDomainResourceName := "aws_cognito_user_pool_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.cognito",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_cognito(rName, key, certificate),
+				Config: testAccAWSLBListenerRuleConfig_cognito(lbName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.cognito", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.cognito", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.cognito", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.type", "authenticate-cognito"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.user_pool_arn"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.user_pool_client_id"),
-					resource.TestCheckResourceAttrSet("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.user_pool_domain"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.authentication_request_extra_params.%", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.0.authenticate_cognito.0.authentication_request_extra_params.param", "test"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.1.order", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "action.1.type", "forward"),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.cognito", "action.1.target_group_arn", "elasticloadbalancing", regexp.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttrPair("aws_lb_listener_rule.cognito", "action.1.target_group_arn", "aws_lb_target_group.test", "arn"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.cognito", "condition.#", "1"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "authenticate-cognito"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.authenticate_cognito.0.user_pool_arn", cognitoPoolResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.authenticate_cognito.0.user_pool_client_id", cognitoPoolClientResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.0.authenticate_cognito.0.user_pool_domain", cognitoPoolDomainResourceName, "domain"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.authentication_request_extra_params.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_cognito.0.authentication_request_extra_params.param", "test"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.1.target_group_arn", targetGroupResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 				),
 			},
 		},
@@ -511,37 +528,39 @@ func TestAccAWSLBListenerRule_oidc(t *testing.T) {
 	var conf elbv2.Rule
 	key := tlsRsaPrivateKeyPem(2048)
 	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
-	rName := acctest.RandomWithPrefix("tf-acc-test")
+	lbName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resourceName := "aws_lb_listener_rule.oidc"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+	targetGroupResourceName := "aws_lb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_lb_listener_rule.oidc",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSLBListenerRuleDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSLBListenerRuleDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerRuleConfig_oidc(rName, key, certificate),
+				Config: testAccAWSLBListenerRuleConfig_oidc(lbName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.oidc", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.oidc", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.oidc", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.order", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.type", "authenticate-oidc"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.authorization_endpoint", "https://example.com/authorization_endpoint"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.client_id", "s6BhdRkqt3"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.client_secret", "7Fjfp0ZBr1KtDRbnfVdmIw"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.issuer", "https://example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.token_endpoint", "https://example.com/token_endpoint"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.user_info_endpoint", "https://example.com/user_info_endpoint"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.authentication_request_extra_params.%", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.0.authenticate_oidc.0.authentication_request_extra_params.param", "test"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.1.order", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "action.1.type", "forward"),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.oidc", "action.1.target_group_arn", "elasticloadbalancing", regexp.MustCompile("targetgroup/.+$")),
-					resource.TestCheckResourceAttrPair("aws_lb_listener_rule.oidc", "action.1.target_group_arn", "aws_lb_target_group.test", "arn"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.oidc", "condition.#", "1"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "authenticate-oidc"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.authorization_endpoint", "https://example.com/authorization_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_id", "s6BhdRkqt3"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.client_secret", "7Fjfp0ZBr1KtDRbnfVdmIw"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.issuer", "https://example.com"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.token_endpoint", "https://example.com/token_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.user_info_endpoint", "https://example.com/user_info_endpoint"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.authentication_request_extra_params.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.authenticate_oidc.0.authentication_request_extra_params.param", "test"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "action.1.target_group_arn", targetGroupResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
 				),
 			},
 		},
@@ -653,11 +672,13 @@ func TestAccAWSLBListenerRule_conditionAttributesCount(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandString(12))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -665,25 +686,25 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHostHeader(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.field", "host-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.0.values.3069857465", "example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.host_header.0.values.785793723", "www.example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.values.0", "example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1089289132.values.1", "www.example.com"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.field", "host-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.host_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.host_header.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.host_header.0.values.3069857465", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.host_header.0.values.785793723", "www.example.com"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.values.0", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1089289132.values.1", "www.example.com"),
 				),
 			},
 		},
@@ -692,11 +713,13 @@ func TestAccAWSLBListenerRule_conditionHostHeader(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionHostHeader_deprecated(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-hostHeader-%s", acctest.RandString(12))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -704,23 +727,23 @@ func TestAccAWSLBListenerRule_conditionHostHeader_deprecated(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHostHeader_deprecated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.field", "host-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.3069857465", "example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.0", "example.com"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.field", "host-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.host_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.host_header.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.host_header.0.values.3069857465", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.values.0", "example.com"),
 				),
 			},
 		},
@@ -729,11 +752,13 @@ func TestAccAWSLBListenerRule_conditionHostHeader_deprecated(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-httpHeader-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-httpHeader-%s", acctest.RandString(12))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -741,35 +766,35 @@ func TestAccAWSLBListenerRule_conditionHttpHeader(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHttpHeader(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.field", "http-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.http_header_name", "X-Forwarded-For"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.values.2895841407", "10.0.0.*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_header.0.values.35666611", "192.168.1.*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.168627567.values.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.field", "http-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.0.http_header_name", "Zz9~|_^.-+*'&%$#!0aA"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_header.0.values.1801271041", "RFC7230 Validity"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4090220723.values.#", "0"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.field", "http-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.http_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.http_header.0.http_header_name", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.http_header.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.http_header.0.values.2895841407", "10.0.0.*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.http_header.0.values.35666611", "192.168.1.*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.168627567.values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.field", "http-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.http_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.http_header.0.http_header_name", "Zz9~|_^.-+*'&%$#!0aA"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.http_header.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.http_header.0.values.1801271041", "RFC7230 Validity"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4090220723.values.#", "0"),
 				),
 			},
 		},
@@ -792,11 +817,13 @@ func TestAccAWSLBListenerRule_conditionHttpHeader_invalid(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-httpRequest-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-httpRequest-%s", acctest.RandString(11))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -804,23 +831,23 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionHttpRequestMethod(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.field", "http-request-method"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.0.values.1805413626", "GET"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.http_request_method.0.values.1814004025", "POST"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2223521492.values.#", "0"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.field", "http-request-method"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.http_request_method.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.http_request_method.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.http_request_method.0.values.1805413626", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.http_request_method.0.values.1814004025", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2223521492.values.#", "0"),
 				),
 			},
 		},
@@ -829,11 +856,13 @@ func TestAccAWSLBListenerRule_conditionHttpRequestMethod(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandString(11))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -841,25 +870,25 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.0.values.1764929539", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.0", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.1", "/public/*"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.path_pattern.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.values.0", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.values.1", "/public/*"),
 				),
 			},
 		},
@@ -868,11 +897,13 @@ func TestAccAWSLBListenerRule_conditionPathPattern(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionPathPattern_deprecated(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandString(11))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -880,23 +911,23 @@ func TestAccAWSLBListenerRule_conditionPathPattern_deprecated(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.0", "/public/*"),
 				),
 			},
 		},
@@ -905,11 +936,13 @@ func TestAccAWSLBListenerRule_conditionPathPattern_deprecated(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionUpdatePathPattern_deprecated(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-pathPattern-%s", acctest.RandString(11))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -917,44 +950,44 @@ func TestAccAWSLBListenerRule_conditionUpdatePathPattern_deprecated(t *testing.T
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.0", "/public/*"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_deprecatedUpdated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.values.0", "/cgi-bin/*"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.values.0", "/cgi-bin/*"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern_migrated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.values.0", "/cgi-bin/*"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.values.0", "/cgi-bin/*"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionPathPattern(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.0.values.1764929539", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.0", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2177156802.values.1", "/public/*"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.values.0", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2177156802.values.1", "/public/*"),
 				),
 			},
 		},
@@ -963,11 +996,13 @@ func TestAccAWSLBListenerRule_conditionUpdatePathPattern_deprecated(t *testing.T
 
 func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-queryString-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-queryString-%s", acctest.RandString(11))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -975,36 +1010,36 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionQueryString(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.field", "query-string"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.167408634.key", ""),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.167408634.value", "surprise"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.4042884147.key", ""),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.query_string.4042884147.value", "blank"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.1697057359.values.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.field", "query-string"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1123504603.key", "foo"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1123504603.value", "baz"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1278007785.key", "foo"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.query_string.1278007785.value", "bar"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.863121889.values.#", "0"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.field", "query-string"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.query_string.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.query_string.167408634.key", ""),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.query_string.167408634.value", "surprise"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.query_string.4042884147.key", ""),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.query_string.4042884147.value", "blank"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.1697057359.values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.field", "query-string"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.query_string.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.query_string.1123504603.key", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.query_string.1123504603.value", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.query_string.1278007785.key", "foo"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.query_string.1278007785.value", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.863121889.values.#", "0"),
 				),
 			},
 		},
@@ -1013,11 +1048,13 @@ func TestAccAWSLBListenerRule_conditionQueryString(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-sourceIp-%s", acctest.RandStringFromCharSet(14, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-sourceIp-%s", acctest.RandString(14))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -1025,23 +1062,23 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionSourceIp(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.source_ip.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.source_ip.0.values.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.source_ip.0.values.1567875353", "dead:cafe::/64"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.source_ip.0.values.3901788224", "192.168.0.0/16"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3009583077.values.#", "0"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.field", "source-ip"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.source_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.source_ip.0.values.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.source_ip.0.values.1567875353", "dead:cafe::/64"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.source_ip.0.values.3901788224", "192.168.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3009583077.values.#", "0"),
 				),
 			},
 		},
@@ -1050,11 +1087,13 @@ func TestAccAWSLBListenerRule_conditionSourceIp(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-mixed-%s", acctest.RandStringFromCharSet(17, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-mixed-%s", acctest.RandString(17))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -1062,55 +1101,55 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMixed(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.0", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.field", "source-ip"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.source_ip.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMixed_updated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.1567875353", "dead:cafe::/64"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.0", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2685063104.field", "source-ip"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2685063104.source_ip.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2685063104.source_ip.0.values.1567875353", "dead:cafe::/64"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMixed_updated2(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "2"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.3300407761.values.0", "/cgi-bin/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2685063104.source_ip.0.values.1567875353", "dead:cafe::/64"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.path_pattern.0.values.1764929539", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.3300407761.values.0", "/cgi-bin/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2685063104.field", "source-ip"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2685063104.source_ip.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2685063104.source_ip.0.values.1567875353", "dead:cafe::/64"),
 				),
 			},
 		},
@@ -1119,11 +1158,13 @@ func TestAccAWSLBListenerRule_conditionUpdateMixed(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandString(13))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -1131,65 +1172,65 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMultiple(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "priority", "100"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "5"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.field", "http-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.http_header_name", "X-Forwarded-For"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.values.35666611", "192.168.1.*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.values.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.values.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.field", "http-request-method"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.0.values.1805413626", "GET"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.values.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.host_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.field", "host-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.3069857465", "example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_header.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.http_request_method.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.path_pattern.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.query_string.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.source_ip.#", "0"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.0", "example.com"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "priority", "100"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.field", "http-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.http_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.http_header.0.http_header_name", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.http_header.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.http_header.0.values.35666611", "192.168.1.*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.field", "source-ip"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.source_ip.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.source_ip.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.field", "http-request-method"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.http_request_method.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.http_request_method.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.http_request_method.0.values.1805413626", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.values.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.host_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.0", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.field", "host-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.host_header.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.host_header.0.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.host_header.0.values.3069857465", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.http_header.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.http_request_method.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.path_pattern.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.query_string.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.source_ip.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.values.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.values.0", "example.com"),
 				),
 			},
 		},
@@ -1198,11 +1239,13 @@ func TestAccAWSLBListenerRule_conditionMultiple(t *testing.T) {
 
 func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 	var conf elbv2.Rule
-	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	lbName := fmt.Sprintf("testrule-condMulti-%s", acctest.RandString(13))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_lb_listener_rule.static",
 		Providers:           testAccProviders,
 		CheckDestroy:        testAccCheckAWSLBListenerRuleDestroy,
 		DisableBinaryDriver: true,
@@ -1210,47 +1253,47 @@ func TestAccAWSLBListenerRule_conditionUpdateMultiple(t *testing.T) {
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMultiple(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "5"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.field", "http-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.http_header_name", "X-Forwarded-For"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.139999317.http_header.0.values.35666611", "192.168.1.*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.field", "http-request-method"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.4038921246.http_request_method.0.values.1805413626", "GET"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.837782343.values.0", "/public/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.field", "host-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.host_header.0.values.3069857465", "example.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.887624213.values.0", "example.com"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.field", "http-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.http_header.0.http_header_name", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr(resourceName, "condition.139999317.http_header.0.values.35666611", "192.168.1.*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.field", "source-ip"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2986919393.source_ip.0.values.3901788224", "192.168.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.field", "http-request-method"),
+					resource.TestCheckResourceAttr(resourceName, "condition.4038921246.http_request_method.0.values.1805413626", "GET"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.path_pattern.0.values.1973895062", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.837782343.values.0", "/public/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.field", "host-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.host_header.0.values.3069857465", "example.com"),
+					resource.TestCheckResourceAttr(resourceName, "condition.887624213.values.0", "example.com"),
 				),
 			},
 			{
 				Config: testAccAWSLBListenerRuleConfig_conditionMultiple_updated(lbName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSLBListenerRuleExists("aws_lb_listener_rule.static", &conf),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "arn", "elasticloadbalancing", regexp.MustCompile("listener-rule/.+$")),
-					testAccMatchResourceAttrRegionalARN("aws_lb_listener_rule.static", "listener_arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "action.#", "1"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.#", "5"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.451778491.field", "http-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.451778491.http_header.0.http_header_name", "X-Forwarded-For"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.451778491.http_header.0.values.6718698", "192.168.2.*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2188908858.field", "source-ip"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.2188908858.source_ip.0.values.766747311", "192.168.0.0/24"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.736971867.field", "http-request-method"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.736971867.http_request_method.0.values.1814004025", "POST"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.941005625.field", "path-pattern"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.941005625.path_pattern.0.values.188114058", "/public/2/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.941005625.values.0", "/public/2/*"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.923495315.field", "host-header"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.923495315.host_header.0.values.854267206", "foobar.com"),
-					resource.TestCheckResourceAttr("aws_lb_listener_rule.static", "condition.923495315.values.0", "foobar.com"),
+					testAccCheckAWSLBListenerRuleExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "condition.#", "5"),
+					resource.TestCheckResourceAttr(resourceName, "condition.451778491.field", "http-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.451778491.http_header.0.http_header_name", "X-Forwarded-For"),
+					resource.TestCheckResourceAttr(resourceName, "condition.451778491.http_header.0.values.6718698", "192.168.2.*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2188908858.field", "source-ip"),
+					resource.TestCheckResourceAttr(resourceName, "condition.2188908858.source_ip.0.values.766747311", "192.168.0.0/24"),
+					resource.TestCheckResourceAttr(resourceName, "condition.736971867.field", "http-request-method"),
+					resource.TestCheckResourceAttr(resourceName, "condition.736971867.http_request_method.0.values.1814004025", "POST"),
+					resource.TestCheckResourceAttr(resourceName, "condition.941005625.field", "path-pattern"),
+					resource.TestCheckResourceAttr(resourceName, "condition.941005625.path_pattern.0.values.188114058", "/public/2/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.941005625.values.0", "/public/2/*"),
+					resource.TestCheckResourceAttr(resourceName, "condition.923495315.field", "host-header"),
+					resource.TestCheckResourceAttr(resourceName, "condition.923495315.host_header.0.values.854267206", "foobar.com"),
+					resource.TestCheckResourceAttr(resourceName, "condition.923495315.values.0", "foobar.com"),
 				),
 			},
 		},
