@@ -667,9 +667,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		aws.StringValue(instance.InstanceId))
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"running"},
-		Refresh:    InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{"terminated", "shutting-down"}),
+		Pending:    []string{ec2.InstanceStateNamePending},
+		Target:     []string{ec2.InstanceStateNameRunning},
+		Refresh:    InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{ec2.InstanceStateNameTerminated, ec2.InstanceStateNameShuttingDown}),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -709,7 +709,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+		if isAWSErr(err, ec2.UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound, "") {
 			d.SetId("")
 			return nil
 		}
@@ -726,7 +726,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if instance.State != nil {
 		// If the instance is terminated, then it is gone
-		if aws.StringValue(instance.State.Name) == "terminated" {
+		if aws.StringValue(instance.State.Name) == ec2.InstanceStateNameTerminated {
 			d.SetId("")
 			return nil
 		}
@@ -849,7 +849,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 	if instance.Monitoring != nil && instance.Monitoring.State != nil {
 		monitoringState := aws.StringValue(instance.Monitoring.State)
-		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
+		d.Set("monitoring", monitoringState == ec2.MonitoringStateEnabled || monitoringState == ec2.MonitoringStatePending)
 	}
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -1163,9 +1163,9 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"pending", "stopped"},
+			Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
 			Target:     []string{"running"},
-			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{"terminated"}),
+			Refresh:    InstanceStateRefreshFunc(conn, d.Id(), []string{ec2.InstanceStateNameTerminated}),
 			Timeout:    d.Timeout(schema.TimeoutUpdate),
 			Delay:      10 * time.Second,
 			MinTimeout: 3 * time.Second,
@@ -1356,7 +1356,7 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
+			if !isAWSErr(err, ec2.UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound, "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -2153,7 +2153,7 @@ func awsTerminateInstance(conn *ec2.EC2, id string, timeout time.Duration) error
 		InstanceIds: []*string{aws.String(id)},
 	}
 	if _, err := conn.TerminateInstances(req); err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
+		if isAWSErr(err, ec2.UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound, "") {
 			return nil
 		}
 		return err
@@ -2166,8 +2166,8 @@ func waitForInstanceStopping(conn *ec2.EC2, id string, timeout time.Duration) er
 	log.Printf("[DEBUG] Waiting for instance (%s) to become stopped", id)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
-		Target:     []string{"stopped"},
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning, ec2.InstanceStateNameShuttingDown, ec2.InstanceStateNameStopped, ec2.InstanceStateNameStopping},
+		Target:     []string{ec2.InstanceStateNameStopped},
 		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -2187,8 +2187,8 @@ func waitForInstanceDeletion(conn *ec2.EC2, id string, timeout time.Duration) er
 	log.Printf("[DEBUG] Waiting for instance (%s) to become terminated", id)
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending", "running", "shutting-down", "stopped", "stopping"},
-		Target:     []string{"terminated"},
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameRunning, ec2.InstanceStateNameShuttingDown, ec2.InstanceStateNameStopped, ec2.InstanceStateNameStopping},
+		Target:     []string{ec2.InstanceStateNameTerminated},
 		Refresh:    InstanceStateRefreshFunc(conn, id, []string{}),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
