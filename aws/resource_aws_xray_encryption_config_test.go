@@ -110,7 +110,7 @@ POLICY
 
 resource "aws_xray_encryption_config" "test" {
   type   = "KMS"
-  key_id = "${aws_kms_key.test.arn}" 
+  key_id = "${aws_kms_key.test.arn}"
 }
 `, acctest.RandString(8))
 }
