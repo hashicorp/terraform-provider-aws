@@ -1426,6 +1426,20 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
+	// This handles cases where the root device block is of type "EBS"
+	// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
+	// stored in ibds["root"]
+	if _, ok := d.GetOk("ebs_block_device"); ok {
+		if len(ibds["ebs"].([]map[string]interface{})) == 0 {
+			ebs := make(map[string]interface{})
+			for k, v := range ibds["root"].(map[string]interface{}) {
+				ebs[k] = v
+			}
+			ebs["snapshot_id"] = ibds["snapshot_id"]
+			ibds["ebs"] = append(ibds["ebs"].([]map[string]interface{}), ebs)
+		}
+	}
+
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
 		return err
 	}
@@ -1552,16 +1566,12 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 		}
 	}
-	// If the root device is the only block device mapping in the instance,
-	// explicitly set the ebs_block_device as a clone of the root device
-	// with the snapshot_id populated iff available
+	// If we determine the root device is the only block device mapping
+	// in the instance (including ephemerals) after returning from this function,
+	// we'll need to set the ebs_block_device as a clone of the root device
+	// with the snapshot_id populated; thus, we store the ID for safe-keeping
 	if blockDevices["root"] != nil && len(blockDevices["ebs"].([]map[string]interface{})) == 0 {
-		ebs := make(map[string]interface{})
-		for k, v := range blockDevices["root"].(map[string]interface{}) {
-			ebs[k] = v
-		}
-		ebs["snapshot_id"] = volResp.Volumes[0].SnapshotId
-		blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), ebs)
+		blockDevices["snapshot_id"] = volResp.Volumes[0].SnapshotId
 	}
 
 	return blockDevices, nil
