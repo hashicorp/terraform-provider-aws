@@ -1,9 +1,8 @@
 package waiter
 
 import (
-	"github.com/aws/aws-sdk-go/service/xray"
-
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/xray"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
