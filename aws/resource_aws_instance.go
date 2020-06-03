@@ -709,7 +709,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		// If the instance was not found, return nil so that we can show
 		// that the instance is gone.
-		if isAWSErr(err, ec2.UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound, "") {
+		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidInstanceID.NotFound" {
 			d.SetId("")
 			return nil
 		}
@@ -843,7 +843,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.Set("ebs_optimized", instance.EbsOptimized)
-	if instance.SubnetId != nil && aws.StringValue(instance.SubnetId) != "" {
+	if aws.StringValue(instance.SubnetId) != "" {
 		d.Set("source_dest_check", instance.SourceDestCheck)
 	}
 
@@ -1356,7 +1356,7 @@ func InstanceStateRefreshFunc(conn *ec2.EC2, instanceID string, failStates []str
 	return func() (interface{}, string, error) {
 		instance, err := resourceAwsInstanceFindByID(conn, instanceID)
 		if err != nil {
-			if !isAWSErr(err, ec2.UnsuccessfulInstanceCreditSpecificationErrorCodeInvalidInstanceIdNotFound, "") {
+			if !isAWSErr(err, "InvalidInstanceID.NotFound", "") {
 				log.Printf("Error on InstanceStateRefresh: %s", err)
 				return nil, "", err
 			}
@@ -1799,14 +1799,14 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 				ebs.VolumeType = aws.String(v)
 			}
 
-			if v, ok := bd["iops"].(int); ok && v > 0 && aws.StringValue(ebs.VolumeType) == "io1" {
+			if v, ok := bd["iops"].(int); ok && v > 0 && aws.StringValue(ebs.VolumeType) == ec2.VolumeTypeIo1 {
 				// Only set the iops attribute if the volume type is io1. Setting otherwise
 				// can trigger a refresh/plan loop based on the computed value that is given
 				// from AWS, and prevent us from specifying 0 as a valid iops.
 				//   See https://github.com/hashicorp/terraform/pull/4146
 				//   See https://github.com/hashicorp/terraform/issues/7765
 				ebs.Iops = aws.Int64(int64(v))
-			} else if v, ok := bd["iops"].(int); ok && v > 0 && aws.StringValue(ebs.VolumeType) != "io1" {
+			} else if v, ok := bd["iops"].(int); ok && v > 0 && aws.StringValue(ebs.VolumeType) != ec2.VolumeTypeIo1 {
 				// Message user about incompatibility
 				log.Print("[WARN] IOPs is only valid on IO1 storage type for EBS Volumes")
 			}
@@ -1856,12 +1856,12 @@ func readVolumeTags(conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
 // config determine which one to use in Plan and Apply.
 func readSecurityGroups(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
 	// An instance with a subnet is in a VPC; an instance without a subnet is in EC2-Classic.
-	hasSubnet := instance.SubnetId != nil && aws.StringValue(instance.SubnetId) != ""
+	hasSubnet := aws.StringValue(instance.SubnetId) != ""
 	useID, useName := hasSubnet, !hasSubnet
 
 	// If the instance is in a VPC, find out if that VPC is Default to determine
 	// whether to store names.
-	if instance.VpcId != nil && aws.StringValue(instance.VpcId) != "" {
+	if aws.StringValue(instance.VpcId) != "" {
 		out, err := conn.DescribeVpcs(&ec2.DescribeVpcsInput{
 			VpcIds: []*string{instance.VpcId},
 		})
