@@ -690,8 +690,7 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		Pending: []string{ec2.InstanceStateNamePending},
 		Target:  []string{ec2.InstanceStateNameRunning},
 		Refresh: InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{
-			ec2.InstanceStateNameTerminated,
-			ec2.InstanceStateNameShuttingDown}),
+			ec2.InstanceStateNameTerminated,ec2.InstanceStateNameShuttingDown}),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
