@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,7 +33,7 @@ func resourceAwsWafByteMatchSet() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"field_to_match": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
@@ -44,6 +45,15 @@ func resourceAwsWafByteMatchSet() *schema.Resource {
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											waf.MatchFieldTypeUri,
+											waf.MatchFieldTypeQueryString,
+											waf.MatchFieldTypeHeader,
+											waf.MatchFieldTypeMethod,
+											waf.MatchFieldTypeBody,
+											waf.MatchFieldTypeSingleQueryArg,
+											waf.MatchFieldTypeAllQueryArgs,
+										}, false),
 									},
 								},
 							},
@@ -208,7 +218,7 @@ func diffWafByteMatchSetTuples(oldT, newT []interface{}) []*waf.ByteMatchSetUpda
 		updates = append(updates, &waf.ByteMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionDelete),
 			ByteMatchTuple: &waf.ByteMatchTuple{
-				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].(*schema.Set).List()[0].(map[string]interface{})),
+				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: aws.String(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   aws.String(tuple["text_transformation"].(string)),
@@ -222,7 +232,7 @@ func diffWafByteMatchSetTuples(oldT, newT []interface{}) []*waf.ByteMatchSetUpda
 		updates = append(updates, &waf.ByteMatchSetUpdate{
 			Action: aws.String(waf.ChangeActionInsert),
 			ByteMatchTuple: &waf.ByteMatchTuple{
-				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].(*schema.Set).List()[0].(map[string]interface{})),
+				FieldToMatch:         expandFieldToMatch(tuple["field_to_match"].([]interface{})[0].(map[string]interface{})),
 				PositionalConstraint: aws.String(tuple["positional_constraint"].(string)),
 				TargetString:         []byte(tuple["target_string"].(string)),
 				TextTransformation:   aws.String(tuple["text_transformation"].(string)),
