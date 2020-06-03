@@ -9,6 +9,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_apigatewayv2_stage: Prevent perpetual plan differences with `default_route_settings.logging_level` argument for HTTP APIs [GH-12904]
+* resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [GH-13589] 
 * resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [GH-12024] 
 
 ## 2.64.0 (May 28, 2020)
