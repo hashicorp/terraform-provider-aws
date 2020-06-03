@@ -1787,7 +1787,7 @@ func readBlockDeviceMappingsFromConfig(d *schema.ResourceData, conn *ec2.EC2) ([
 				ebs.Iops = aws.Int64(int64(v))
 			} else if v, ok := bd["iops"].(int); ok && v > 0 && *ebs.VolumeType != "io1" {
 				// Message user about incompatibility
-				log.Print("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
+				log.Print("[WARN] IOPs is only valid on IO1 storage type for EBS Volumes")
 			}
 
 			if dn, err := fetchRootDeviceName(d.Get("ami").(string), conn); err == nil {

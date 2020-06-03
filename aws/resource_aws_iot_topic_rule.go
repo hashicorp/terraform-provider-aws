@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsIotTopicRule() *schema.Resource {
@@ -347,6 +348,27 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					},
 				},
 			},
+			"step_functions": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"execution_name_prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"state_machine_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"role_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+					},
+				},
+			},
 			"sns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -399,6 +421,7 @@ func resourceAwsIotTopicRule() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -410,6 +433,7 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
+		Tags:             aws.String(keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().UrlEncode()),
 		TopicRulePayload: expandIotTopicRulePayload(d),
 	}
 
@@ -426,6 +450,7 @@ func resourceAwsIotTopicRuleCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &iot.GetTopicRuleInput{
 		RuleName: aws.String(d.Id()),
@@ -443,6 +468,16 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("enabled", !aws.BoolValue(out.Rule.RuleDisabled))
 	d.Set("sql", out.Rule.Sql)
 	d.Set("sql_version", out.Rule.AwsIotSqlVersion)
+
+	tags, err := keyvaluetags.IotListTags(conn, aws.StringValue(out.RuleArn))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for IoT Topic Rule (%s): %w", aws.StringValue(out.RuleArn), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	if err := d.Set("cloudwatch_alarm", flattenIotCloudWatchAlarmActions(out.Rule.Actions)); err != nil {
 		return fmt.Errorf("error setting cloudwatch_alarm: %w", err)
@@ -500,21 +535,55 @@ func resourceAwsIotTopicRuleRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting sqs: %w", err)
 	}
 
+	if err := d.Set("step_functions", flattenIotStepFunctionsActions(out.Rule.Actions)); err != nil {
+		return fmt.Errorf("error setting step_functions: %w", err)
+	}
+
 	return nil
 }
 
 func resourceAwsIotTopicRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).iotconn
 
-	input := &iot.ReplaceTopicRuleInput{
-		RuleName:         aws.String(d.Get("name").(string)),
-		TopicRulePayload: expandIotTopicRulePayload(d),
+	if d.HasChanges(
+		"cloudwatch_alarm",
+		"cloudwatch_metric",
+		"description",
+		"dynamodb",
+		"dynamodbv2",
+		"elasticsearch",
+		"enabled",
+		"firehose",
+		"iot_analytics",
+		"iot_events",
+		"kinesis",
+		"lambda",
+		"republish",
+		"s3",
+		"step_functions",
+		"sns",
+		"sql",
+		"sql_version",
+		"sqs",
+	) {
+		input := &iot.ReplaceTopicRuleInput{
+			RuleName:         aws.String(d.Get("name").(string)),
+			TopicRulePayload: expandIotTopicRulePayload(d),
+		}
+
+		_, err := conn.ReplaceTopicRule(input)
+
+		if err != nil {
+			return fmt.Errorf("error updating IoT Topic Rule (%s): %w", d.Id(), err)
+		}
 	}
 
-	_, err := conn.ReplaceTopicRule(input)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err != nil {
-		return fmt.Errorf("error updating IoT Topic Rule (%s): %w", d.Id(), err)
+		if err := keyvaluetags.IotUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsIotTopicRuleRead(d, meta)
@@ -885,6 +954,7 @@ func expandIotSnsAction(tfList []interface{}) *iot.SnsAction {
 
 	return apiObject
 }
+
 func expandIotSqsAction(tfList []interface{}) *iot.SqsAction {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -903,6 +973,29 @@ func expandIotSqsAction(tfList []interface{}) *iot.SqsAction {
 
 	if v, ok := tfMap["use_base64"].(bool); ok {
 		apiObject.UseBase64 = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandIotStepFunctionsAction(tfList []interface{}) *iot.StepFunctionsAction {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	apiObject := &iot.StepFunctionsAction{}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["execution_name_prefix"].(string); ok && v != "" {
+		apiObject.ExecutionNamePrefix = aws.String(v)
+	}
+
+	if v, ok := tfMap["state_machine_name"].(string); ok && v != "" {
+		apiObject.StateMachineName = aws.String(v)
+	}
+
+	if v, ok := tfMap["role_arn"].(string); ok && v != "" {
+		apiObject.RoleArn = aws.String(v)
 	}
 
 	return apiObject
@@ -1063,6 +1156,17 @@ func expandIotTopicRulePayload(d *schema.ResourceData) *iot.TopicRulePayload {
 		}
 
 		actions = append(actions, &iot.Action{Sqs: action})
+	}
+
+	// Legacy root attribute handling
+	for _, tfMapRaw := range d.Get("step_functions").(*schema.Set).List() {
+		action := expandIotStepFunctionsAction([]interface{}{tfMapRaw})
+
+		if action == nil {
+			continue
+		}
+
+		actions = append(actions, &iot.Action{StepFunctions: action})
 	}
 
 	// Prevent sending empty Actions:
@@ -1671,6 +1775,45 @@ func flattenIotSqsAction(apiObject *iot.SqsAction) []interface{} {
 
 	if v := apiObject.UseBase64; v != nil {
 		tfMap["use_base64"] = aws.BoolValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+// Legacy root attribute handling
+func flattenIotStepFunctionsActions(actions []*iot.Action) []interface{} {
+	results := make([]interface{}, 0)
+
+	for _, action := range actions {
+		if action == nil {
+			continue
+		}
+
+		if v := action.StepFunctions; v != nil {
+			results = append(results, flattenIotStepFunctionsAction(v)...)
+		}
+	}
+
+	return results
+}
+
+func flattenIotStepFunctionsAction(apiObject *iot.StepFunctionsAction) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make(map[string]interface{})
+
+	if v := apiObject.ExecutionNamePrefix; v != nil {
+		tfMap["execution_name_prefix"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.StateMachineName; v != nil {
+		tfMap["state_machine_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RoleArn; v != nil {
+		tfMap["role_arn"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

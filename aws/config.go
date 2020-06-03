@@ -139,6 +139,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
@@ -322,6 +323,7 @@ type AWSClient struct {
 	stsconn                             *sts.STS
 	supportedplatforms                  []string
 	swfconn                             *swf.SWF
+	syntheticsconn                      *synthetics.Synthetics
 	terraformVersion                    string
 	transferconn                        *transfer.Transfer
 	wafconn                             *waf.WAF
@@ -535,6 +537,7 @@ func (c *Config) Client() (interface{}, error) {
 		storagegatewayconn:                  storagegateway.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["storagegateway"])})),
 		stsconn:                             sts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["sts"])})),
 		swfconn:                             swf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["swf"])})),
+		syntheticsconn:                      synthetics.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["synthetics"])})),
 		terraformVersion:                    c.terraformVersion,
 		transferconn:                        transfer.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["transfer"])})),
 		wafconn:                             waf.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["waf"])})),
@@ -709,6 +712,22 @@ func (c *Config) Client() (interface{}, error) {
 		// InvalidGatewayRequestException: The specified gateway proxy network connection is busy.
 		if isAWSErr(r.Error, storagegateway.ErrCodeInvalidGatewayRequestException, "The specified gateway proxy network connection is busy") {
 			r.Retryable = aws.Bool(true)
+		}
+	})
+
+	client.wafv2conn.Handlers.Retry.PushBack(func(r *request.Request) {
+		if isAWSErr(r.Error, wafv2.ErrCodeWAFInternalErrorException, "Retry your request") {
+			r.Retryable = aws.Bool(true)
+		}
+
+		if r.Operation.Name == "CreateIPSet" || r.Operation.Name == "CreateRegexPatternSet" {
+			// WAFv2 supports tag on create which can result in the below error codes according to the documentation
+			if isAWSErr(r.Error, wafv2.ErrCodeWAFTagOperationException, "Retry your request") {
+				r.Retryable = aws.Bool(true)
+			}
+			if isAWSErr(err, wafv2.ErrCodeWAFTagOperationInternalErrorException, "Retry your request") {
+				r.Retryable = aws.Bool(true)
+			}
 		}
 	})
 

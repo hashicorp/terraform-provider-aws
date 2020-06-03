@@ -132,6 +132,7 @@ var mapServiceNames = []string{
 	"resourcegroups",
 	"securityhub",
 	"sqs",
+	"synthetics",
 }
 
 type TemplateData struct {

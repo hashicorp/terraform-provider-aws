@@ -21,6 +21,7 @@ import (
 )
 
 const rfc3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
+const uuidRegexPattern = `[a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[ab89][a-f0-9]{3}-[a-f0-9]{12}`
 
 var testAccProviders map[string]terraform.ResourceProvider
 var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
@@ -126,7 +127,7 @@ func testAccCheckResourceAttrRegionalARNNoAccount(resourceName, attributeName, a
 }
 
 // testAccCheckResourceAttrRegionalARNAccountID ensures the Terraform state exactly matches a formatted ARN with region and specific account ID
-func testAccCheckResourceAttrRegionalARNAccountID(resourceName, attributeName, accountID, arnService, arnResource string) resource.TestCheckFunc {
+func testAccCheckResourceAttrRegionalARNAccountID(resourceName, attributeName, arnService, accountID, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
 			AccountID: accountID,
@@ -180,6 +181,27 @@ func testAccMatchResourceAttrRegionalARNNoAccount(resourceName, attributeName, a
 	}
 }
 
+// testAccMatchResourceAttrRegionalARNAccountID ensures the Terraform state regexp matches a formatted ARN with region and specific account ID
+func testAccMatchResourceAttrRegionalARNAccountID(resourceName, attributeName, arnService, accountID string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: accountID,
+			Partition: testAccGetPartition(),
+			Region:    testAccGetRegion(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("Unable to compile ARN regexp (%s): %s", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
 // testAccMatchResourceAttrRegionalHostname ensures the Terraform state regexp matches a formatted DNS hostname with region and partition DNS suffix
 func testAccMatchResourceAttrRegionalHostname(resourceName, attributeName, serviceName string, hostnamePrefixRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -212,6 +234,19 @@ func testAccCheckResourceAttrGlobalARN(resourceName, attributeName, arnService, 
 func testAccCheckResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService, arnResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		attributeValue := arn.ARN{
+			Partition: testAccGetPartition(),
+			Resource:  arnResource,
+			Service:   arnService,
+		}.String()
+		return resource.TestCheckResourceAttr(resourceName, attributeName, attributeValue)(s)
+	}
+}
+
+// testAccCheckResourceAttrGlobalARNAccountID ensures the Terraform state exactly matches a formatted ARN without region and with specific account ID
+func testAccCheckResourceAttrGlobalARNAccountID(resourceName, attributeName, accountID, arnService, arnResource string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		attributeValue := arn.ARN{
+			AccountID: accountID,
 			Partition: testAccGetPartition(),
 			Resource:  arnResource,
 			Service:   arnService,
@@ -339,7 +374,7 @@ func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceS
 }
 
 // testAccGetAccountID returns the account ID of testAccProvider
-// Must be used returned within a resource.TestCheckFunc
+// Must be used within a resource.TestCheckFunc
 func testAccGetAccountID() string {
 	return testAccAwsProviderAccountID(testAccProvider)
 }
@@ -943,6 +978,24 @@ func TestAccAWSProvider_Region_AwsGovCloudUs(t *testing.T) {
 	})
 }
 
+func TestAccAWSProvider_AssumeRole_Empty(t *testing.T) {
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAWSProviderConfigAssumeRoleEmpty,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSProviderDnsSuffix(providers *[]*schema.Provider, expectedDnsSuffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if providers == nil {
@@ -1464,6 +1517,15 @@ provider "aws" {
 }
 `, os.Getenv("TF_ACC_ASSUME_ROLE_ARN"), policy)
 }
+
+const testAccCheckAWSProviderConfigAssumeRoleEmpty = `
+provider "aws" {
+  assume_role {
+  }
+}
+
+data "aws_caller_identity" "current" {}
+`
 
 // composeConfig can be called to concatenate multiple strings to build test configurations
 func composeConfig(config ...string) string {

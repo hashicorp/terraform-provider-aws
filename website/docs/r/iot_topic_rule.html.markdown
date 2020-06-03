@@ -76,6 +76,7 @@ EOF
 * `enabled` - (Required) Specifies whether the rule is enabled.
 * `sql` - (Required) The SQL statement used to query the topic. For more information, see AWS IoT SQL Reference (http://docs.aws.amazon.com/iot/latest/developerguide/iot-rules.html#aws-iot-sql-reference) in the AWS IoT Developer Guide.
 * `sql_version` - (Required) The version of the SQL rules engine to use when evaluating the rule.
+* `tags` - (Optional) Key-value map of resource tags
 
 The `cloudwatch_alarm` object takes the following arguments:
 
@@ -159,6 +160,12 @@ The `sqs` object takes the following arguments:
 * `queue_url` - (Required) The URL of the Amazon SQS queue.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `use_base64` - (Required) Specifies whether to use Base64 encoding.
+
+The `step_functions` object takes the following arguments:
+
+* `execution_name_prefix` - (Optional) The prefix used to generate, along with a UUID, the unique state machine execution name.
+* `state_machine_name` - (Required) The name of the Step Functions state machine whose execution will be started.
+* `role_arn` - (Required) The ARN of the IAM role that grants access to start execution of the state machine.
 
 The `iot_analytics` object takes the following arguments:
 

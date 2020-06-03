@@ -68,13 +68,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"forwarded_values": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{

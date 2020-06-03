@@ -113,6 +113,7 @@ var serviceNames = []string{
 	"ssm",
 	"storagegateway",
 	"swf",
+	"synthetics",
 	"transfer",
 	"waf",
 	"wafregional",
