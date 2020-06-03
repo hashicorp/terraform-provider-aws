@@ -46,7 +46,7 @@ POLICY
 
 resource "aws_xray_encryption_config" "example" {
   type   = "KMS"
-  key_id = "${aws_kms_key.example.arn}" 
+  key_id = "${aws_kms_key.example.arn}"
 }
 ```
 
