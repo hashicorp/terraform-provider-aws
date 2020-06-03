@@ -6,7 +6,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
@@ -95,7 +94,7 @@ func resourceAwsWafByteMatchSetCreate(d *schema.ResourceData, meta interface{}) 
 	}
 	resp := out.(*waf.CreateByteMatchSetOutput)
 
-	d.SetId(*resp.ByteMatchSet.ByteMatchSetId)
+	d.SetId(aws.StringValue(resp.ByteMatchSet.ByteMatchSetId))
 
 	return resourceAwsWafByteMatchSetUpdate(d, meta)
 }
@@ -109,7 +108,7 @@ func resourceAwsWafByteMatchSetRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.GetByteMatchSet(params)
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "WAFNonexistentItemException" {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 			log.Printf("[WARN] WAF IPSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -195,9 +194,9 @@ func flattenWafByteMatchTuples(bmt []*waf.ByteMatchTuple) []interface{} {
 		if t.FieldToMatch != nil {
 			m["field_to_match"] = flattenFieldToMatch(t.FieldToMatch)
 		}
-		m["positional_constraint"] = *t.PositionalConstraint
+		m["positional_constraint"] = aws.StringValue(t.PositionalConstraint)
 		m["target_string"] = string(t.TargetString)
-		m["text_transformation"] = *t.TextTransformation
+		m["text_transformation"] = aws.StringValue(t.TextTransformation)
 
 		out[i] = m
 	}
