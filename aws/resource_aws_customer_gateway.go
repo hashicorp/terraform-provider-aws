@@ -7,10 +7,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -26,24 +27,33 @@ func resourceAwsCustomerGateway() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"bgp_asn": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeInt,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(64512, 65534),
 			},
 
 			"ip_address": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPv4Address,
 			},
 
 			"type": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.GatewayTypeIpsec1,
+				}, false),
 			},
 
 			"tags": tagsSchema(),
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -105,7 +115,7 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	return nil
+	return resourceAwsCustomerGatewayRead(d, meta)
 }
 
 func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateRefreshFunc {
@@ -119,7 +129,7 @@ func customerGatewayRefreshFunc(conn *ec2.EC2, gatewayId string) resource.StateR
 			Filters: []*ec2.Filter{gatewayFilter},
 		})
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidCustomerGatewayID.NotFound" {
+			if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
 				resp = nil
 			} else {
 				log.Printf("Error on CustomerGatewayRefresh: %s", err)
@@ -181,7 +191,8 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 		Filters: []*ec2.Filter{gatewayFilter},
 	})
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidCustomerGatewayID.NotFound" {
+		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
+			log.Printf("[WARN] Customer Gateway (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		} else {
@@ -208,7 +219,7 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	if *customerGateway.BgpAsn != "" {
+	if aws.StringValue(customerGateway.BgpAsn) != "" {
 		val, err := strconv.ParseInt(*customerGateway.BgpAsn, 0, 0)
 		if err != nil {
 			return fmt.Errorf("error parsing bgp_asn: %s", err)
@@ -216,6 +227,16 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 
 		d.Set("bgp_asn", int(val))
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("customer-gateway/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
 }
@@ -241,7 +262,7 @@ func resourceAwsCustomerGatewayDelete(d *schema.ResourceData, meta interface{}) 
 		CustomerGatewayId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidCustomerGatewayID.NotFound" {
+		if isAWSErr(err, "InvalidCustomerGatewayID.NotFound", "") {
 			return nil
 		} else {
 			return fmt.Errorf("[ERROR] Error deleting CustomerGateway: %s", err)
