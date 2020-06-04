@@ -1,29 +1,29 @@
-## 2.65.0 (Unreleased)
+## 2.65.0 (June 04, 2020)
 
 ENHANCEMENTS:
 
-* resource/aws_acm_certificate: Add `status` attribute [GH-13513]
-* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `vpc_settings` block [GH-12654]
-* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `connect_settings` block [GH-12654]
-* resource/aws_directory_servicedirectory: Add plan time validation to `customer_dns_ips` in `connect_settings` block [GH-12654]
-* resource/aws_ec2_client_vpn_endpoint: Add `arn` attribute and plan time validation to `root_certificate_chain_arn` (in `authentication_options` block), `client_cidr_block`, and `server_certificate_arn` [GH-13601] 
-* resource/aws_instance: Add plan time validation to `volume_type`(in `ebs_block_device` and `root_block_device` blocks), `private_ip`, `ipv6_addresses`, and `tenancy` [GH-13033]
-* resource/aws_lb_listener_rule: Add support for multiple, weighted target groups in `forward` rules [GH-12574]
-* resource/aws_lb_listener: Add support for multiple, weighted target groups in default actions [GH-12574]
-* resource/aws_workspaces_ip_group: Add plan-time validation for `rules.source` [GH-13178]
+* resource/aws_acm_certificate: Add `status` attribute ([#13513](https://github.com/terraform-providers/terraform-provider-aws/issues/13513))
+* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `vpc_settings` block ([#12654](https://github.com/terraform-providers/terraform-provider-aws/issues/12654))
+* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `connect_settings` block ([#12654](https://github.com/terraform-providers/terraform-provider-aws/issues/12654))
+* resource/aws_directory_servicedirectory: Add plan time validation to `customer_dns_ips` in `connect_settings` block ([#12654](https://github.com/terraform-providers/terraform-provider-aws/issues/12654))
+* resource/aws_ec2_client_vpn_endpoint: Add `arn` attribute and plan time validation to `root_certificate_chain_arn` (in `authentication_options` block), `client_cidr_block`, and `server_certificate_arn` [[#13601](https://github.com/terraform-providers/terraform-provider-aws/issues/13601)] 
+* resource/aws_instance: Add plan time validation to `volume_type`(in `ebs_block_device` and `root_block_device` blocks), `private_ip`, `ipv6_addresses`, and `tenancy` ([#13033](https://github.com/terraform-providers/terraform-provider-aws/issues/13033))
+* resource/aws_lb_listener_rule: Add support for multiple, weighted target groups in `forward` rules ([#12574](https://github.com/terraform-providers/terraform-provider-aws/issues/12574))
+* resource/aws_lb_listener: Add support for multiple, weighted target groups in default actions ([#12574](https://github.com/terraform-providers/terraform-provider-aws/issues/12574))
+* resource/aws_workspaces_ip_group: Add plan-time validation for `rules.source` ([#13178](https://github.com/terraform-providers/terraform-provider-aws/issues/13178))
 
 BUG FIXES:
 
-* resource/aws_acm_certificate: Detect `AMAZON_ISSUED` type `validation_method` value directly from API response instead of custom logic [GH-13513]
-* resource/aws_acm_certificate: Increase deletion retries from 10 minutes to 20 minutes (better support API Gateway Custom Domain deletion) [GH-13513]
-* resource/aws_apigatewayv2_stage: Prevent perpetual plan differences with `default_route_settings.logging_level` argument for HTTP APIs [GH-12904]
-* resource/aws_appmesh_route: Allow configuration of `spec` `http_route` `action` `weighted_target` `weight` argument to be 0 [GH-13539]
-* resource/aws_autoscaling_group: Prevent crash with `tags` argument containing boolean values in Terraform 0.11 and earlier [GH-13604]
-* resource/aws_dynamodb_table: Prevent multiple replica creation/deletion errors [GH-13523]
-* resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [GH-13589] 
-* resource/aws_kinesis_firehose_delivery_stream: Correctly set `kinesis_source_configuration` during import to prevent resource recreation [GH-13536]
-* resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [GH-12024] 
-* resource/aws_workspaces_ip_group: Remove resource from state if deleted outside of Terraform [GH-13178]
+* resource/aws_acm_certificate: Detect `AMAZON_ISSUED` type `validation_method` value directly from API response instead of custom logic ([#13513](https://github.com/terraform-providers/terraform-provider-aws/issues/13513))
+* resource/aws_acm_certificate: Increase deletion retries from 10 minutes to 20 minutes (better support API Gateway Custom Domain deletion) ([#13513](https://github.com/terraform-providers/terraform-provider-aws/issues/13513))
+* resource/aws_apigatewayv2_stage: Prevent perpetual plan differences with `default_route_settings.logging_level` argument for HTTP APIs ([#12904](https://github.com/terraform-providers/terraform-provider-aws/issues/12904))
+* resource/aws_appmesh_route: Allow configuration of `spec` `http_route` `action` `weighted_target` `weight` argument to be 0 ([#13539](https://github.com/terraform-providers/terraform-provider-aws/issues/13539))
+* resource/aws_autoscaling_group: Prevent crash with `tags` argument containing boolean values in Terraform 0.11 and earlier ([#13604](https://github.com/terraform-providers/terraform-provider-aws/issues/13604))
+* resource/aws_dynamodb_table: Prevent multiple replica creation/deletion errors ([#13523](https://github.com/terraform-providers/terraform-provider-aws/issues/13523))
+* resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [[#13589](https://github.com/terraform-providers/terraform-provider-aws/issues/13589)] 
+* resource/aws_kinesis_firehose_delivery_stream: Correctly set `kinesis_source_configuration` during import to prevent resource recreation ([#13536](https://github.com/terraform-providers/terraform-provider-aws/issues/13536))
+* resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [[#12024](https://github.com/terraform-providers/terraform-provider-aws/issues/12024)] 
+* resource/aws_workspaces_ip_group: Remove resource from state if deleted outside of Terraform ([#13178](https://github.com/terraform-providers/terraform-provider-aws/issues/13178))
 
 ## 2.64.0 (May 28, 2020)
 
