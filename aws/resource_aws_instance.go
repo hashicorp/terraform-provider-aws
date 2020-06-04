@@ -687,9 +687,9 @@ func resourceAwsInstanceCreate(d *schema.ResourceData, meta interface{}) error {
 		aws.StringValue(instance.InstanceId))
 
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.InstanceStateNamePending},
-		Target:  []string{ec2.InstanceStateNameRunning},
-		Refresh: InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{ec2.InstanceStateNameTerminated, ec2.InstanceStateNameShuttingDown}),
+		Pending:    []string{ec2.InstanceStateNamePending},
+		Target:     []string{ec2.InstanceStateNameRunning},
+		Refresh:    InstanceStateRefreshFunc(conn, aws.StringValue(instance.InstanceId), []string{ec2.InstanceStateNameTerminated, ec2.InstanceStateNameShuttingDown}),
 		Timeout:    d.Timeout(schema.TimeoutCreate),
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -1095,7 +1095,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 				},
 			})
 			if err != nil {
-				if isAWSErr(err, "InvalidParameterCombination", "") {
+				if !isAWSErr(err, "InvalidParameterCombination", "") {
 					return err
 				}
 				log.Printf("[WARN] Attempted to modify SourceDestCheck on non VPC instance: %s", err)
