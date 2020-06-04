@@ -3,13 +3,14 @@
 ENHANCEMENTS:
 
 * resource/aws_acm_certificate: Add `status` attribute [GH-13513]
-* resource/aws_directory_servicedirectory: add `availability_zones` attribute to `vpc_settings` block [GH-12654]
-* resource/aws_directory_servicedirectory: add `availability_zones` attribute to `connect_settings` block [GH-12654]
-* resource/aws_directory_servicedirectory: add plan time validation to `customer_dns_ips` in `connect_settings` block [GH-12654]
-* resource/aws_ec2_client_vpn_endpoint: add `arn` attribute and plan time validation to `root_certificate_chain_arn` (in `authentication_options` block), `client_cidr_block`, and `server_certificate_arn` [GH-13601] 
-* resource/aws_instance: add plan time validation to `volume_type`(in `ebs_block_device` and `root_block_device` blocks), `private_ip`, `ipv6_addresses`, and `tenancy` [GH-13033]
+* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `vpc_settings` block [GH-12654]
+* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `connect_settings` block [GH-12654]
+* resource/aws_directory_servicedirectory: Add plan time validation to `customer_dns_ips` in `connect_settings` block [GH-12654]
+* resource/aws_ec2_client_vpn_endpoint: Add `arn` attribute and plan time validation to `root_certificate_chain_arn` (in `authentication_options` block), `client_cidr_block`, and `server_certificate_arn` [GH-13601] 
+* resource/aws_instance: Add plan time validation to `volume_type`(in `ebs_block_device` and `root_block_device` blocks), `private_ip`, `ipv6_addresses`, and `tenancy` [GH-13033]
 * resource/aws_lb_listener_rule: Add support for multiple, weighted target groups in `forward` rules [GH-12574]
 * resource/aws_lb_listener: Add support for multiple, weighted target groups in default actions [GH-12574]
+* resource/aws_workspaces_ip_group: Add plan-time validation for `rules.source` [GH-13178]
 
 BUG FIXES:
 
@@ -22,6 +23,7 @@ BUG FIXES:
 * resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [GH-13589] 
 * resource/aws_kinesis_firehose_delivery_stream: Correctly set `kinesis_source_configuration` during import to prevent resource recreation [GH-13536]
 * resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [GH-12024] 
+* resource/aws_workspaces_ip_group: Remove resource from state if deleted outside of Terraform [GH-13178]
 
 ## 2.64.0 (May 28, 2020)
 
