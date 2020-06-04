@@ -2,12 +2,15 @@
 
 ENHANCEMENTS:
 
+* resource/aws_acm_certificate: Add `status` attribute [GH-13513]
 * resource/aws_directory_servicedirectory: add `availability_zones` attribute to `vpc_settings` block [GH-12654]
 * resource/aws_directory_servicedirectory: add `availability_zones` attribute to `connect_settings` block [GH-12654]
 * resource/aws_directory_servicedirectory: add plan time validation to `customer_dns_ips` in `connect_settings` block [GH-12654]
 
 BUG FIXES:
 
+* resource/aws_acm_certificate: Detect `AMAZON_ISSUED` type `validation_method` value directly from API response instead of custom logic [GH-13513]
+* resource/aws_acm_certificate: Increase deletion retries from 10 minutes to 20 minutes (better support API Gateway Custom Domain deletion) [GH-13513]
 * resource/aws_apigatewayv2_stage: Prevent perpetual plan differences with `default_route_settings.logging_level` argument for HTTP APIs [GH-12904]
 * resource/aws_appmesh_route: Allow configuration of `spec` `http_route` `action` `weighted_target` `weight` argument to be 0 [GH-13539]
 * resource/aws_dynamodb_table: Prevent multiple replica creation/deletion errors [GH-13523]
