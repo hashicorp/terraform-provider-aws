@@ -47,6 +47,8 @@ which take the following arguments:
 
 ## Attributes Reference
 
+* `arn` - The ARN of the Internet Gateway.
+
 All of the argument attributes except `filter` block are also exported as
 result attributes. This data source will complete the data by populating
 any fields that are not included in the configuration with the data for

@@ -23,6 +23,7 @@ func TestAccDataSourceAwsInternetGateway_typical(t *testing.T) {
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "internet_gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "owner_id", igwResourceName, "owner_id"),
 					resource.TestCheckResourceAttrPair(ds1ResourceName, "attachments.0.vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttrPair(ds1ResourceName, "arn", igwResourceName, "arn"),
 
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "internet_gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttrPair(ds2ResourceName, "owner_id", igwResourceName, "owner_id"),
