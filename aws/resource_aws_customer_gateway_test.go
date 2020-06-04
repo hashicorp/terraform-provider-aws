@@ -7,14 +7,13 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCustomerGateway_basic(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := 65000
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -48,7 +47,7 @@ func TestAccAWSCustomerGateway_basic(t *testing.T) {
 
 func TestAccAWSCustomerGateway_tags(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := 65000
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -90,7 +89,7 @@ func TestAccAWSCustomerGateway_tags(t *testing.T) {
 
 func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 	var gateway ec2.CustomerGateway
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := 65000
 	resourceName := "aws_customer_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -119,7 +118,7 @@ func TestAccAWSCustomerGateway_similarAlreadyExists(t *testing.T) {
 }
 
 func TestAccAWSCustomerGateway_disappears(t *testing.T) {
-	rBgpAsn := acctest.RandIntRange(64512, 65534)
+	rBgpAsn := 65000
 	var gateway ec2.CustomerGateway
 	resourceName := "aws_customer_gateway.test"
 
