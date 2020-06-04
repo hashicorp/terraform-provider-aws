@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_acm_certificate: Increase deletion retries from 10 minutes to 20 minutes (better support API Gateway Custom Domain deletion) [GH-13513]
 * resource/aws_apigatewayv2_stage: Prevent perpetual plan differences with `default_route_settings.logging_level` argument for HTTP APIs [GH-12904]
 * resource/aws_appmesh_route: Allow configuration of `spec` `http_route` `action` `weighted_target` `weight` argument to be 0 [GH-13539]
+* resource/aws_autoscaling_group: Prevent crash with `tags` argument containing boolean values in Terraform 0.11 and earlier [GH-13604]
 * resource/aws_dynamodb_table: Prevent multiple replica creation/deletion errors [GH-13523]
 * resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [GH-13589] 
 * resource/aws_kinesis_firehose_delivery_stream: Correctly set `kinesis_source_configuration` during import to prevent resource recreation [GH-13536]
