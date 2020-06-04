@@ -151,6 +151,7 @@ func TestAccAWSInternetGateway_basic(t *testing.T) {
 					testAccCheckInternetGatewayExists(resourceName, &v),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`internet-gateway/igw-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -247,10 +248,9 @@ func TestAccAWSInternetGateway_disappears(t *testing.T) {
 	resourceName := "aws_internet_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: resourceName,
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckInternetGatewayDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInternetGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInternetGatewayConfig,
@@ -340,9 +340,6 @@ resource "aws_vpc" "test" {
 
 resource "aws_internet_gateway" "test" {
 	vpc_id = "${aws_vpc.test.id}"
-	tags = {
-		Name = "terraform-testacc-internet-gateway"
-	}
 }
 `
 
