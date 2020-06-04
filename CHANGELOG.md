@@ -8,6 +8,8 @@ ENHANCEMENTS:
 * resource/aws_directory_servicedirectory: add plan time validation to `customer_dns_ips` in `connect_settings` block [GH-12654]
 * resource/aws_ec2_client_vpn_endpoint: add `arn` attribute and plan time validation to `root_certificate_chain_arn` (in `authentication_options` block), `client_cidr_block`, and `server_certificate_arn` [GH-13601] 
 * resource/aws_instance: add plan time validation to `volume_type`(in `ebs_block_device` and `root_block_device` blocks), `private_ip`, `ipv6_addresses`, and `tenancy` [GH-13033]
+* resource/aws_lb_listener_rule: Add support for multiple, weighted target groups in `forward` rules [GH-12574]
+* resource/aws_lb_listener: Add support for multiple, weighted target groups in default actions [GH-12574]
 
 BUG FIXES:
 
