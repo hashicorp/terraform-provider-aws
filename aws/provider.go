@@ -391,6 +391,7 @@ func Provider() *schema.Provider {
 			"aws_api_gateway_request_validator":                       resourceAwsApiGatewayRequestValidator(),
 			"aws_api_gateway_resource":                                resourceAwsApiGatewayResource(),
 			"aws_api_gateway_rest_api":                                resourceAwsApiGatewayRestApi(),
+			"aws_api_gateway_rest_api_policy":                         resourceAwsApiGatewayRestApiPolicy(),
 			"aws_api_gateway_stage":                                   resourceAwsApiGatewayStage(),
 			"aws_api_gateway_usage_plan":                              resourceAwsApiGatewayUsagePlan(),
 			"aws_api_gateway_usage_plan_key":                          resourceAwsApiGatewayUsagePlanKey(),
