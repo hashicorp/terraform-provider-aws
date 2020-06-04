@@ -1096,7 +1096,7 @@ func resourceAwsInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 			})
 			if err != nil {
 				// Tolerate InvalidParameterCombination error in Classic, otherwise
-                                // return the error
+				// return the error
 				if !isAWSErr(err, "InvalidParameterCombination", "") {
 					return err
 				}
