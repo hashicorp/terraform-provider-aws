@@ -6,7 +6,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"strconv"
 	"testing"
 )
 
@@ -86,7 +88,17 @@ func testAccCheckAWSAPIGatewayRestApiPolicyExists(n string, res *apigateway.Rest
 			return err
 		}
 
-		if aws.StringValue(describe.Id) != rs.Primary.ID {
+		normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.StringValue(describe.Policy) + `"`)
+		if err != nil {
+			fmt.Printf("error normalizing policy JSON: %s\n", err)
+		}
+		policy, err := strconv.Unquote(normalizedPolicy)
+		if err != nil {
+			return fmt.Errorf("error unescaping policy: %s", err)
+		}
+
+		if aws.StringValue(describe.Id) != rs.Primary.ID &&
+			policy != rs.Primary.Attributes["policy"] {
 			return fmt.Errorf("API Gateway REST API Policy not found")
 		}
 
@@ -109,7 +121,8 @@ func testAccCheckAWSAPIGatewayRestApiPolicyDestroy(s *terraform.State) error {
 
 		if err == nil {
 			if len(describe.Items) != 0 &&
-				aws.StringValue(describe.Items[0].Id) == rs.Primary.ID {
+				aws.StringValue(describe.Items[0].Id) == rs.Primary.ID &&
+				aws.StringValue(describe.Items[0].Policy) == "" {
 				return fmt.Errorf("API Gateway REST API Policy still exists")
 			}
 		}

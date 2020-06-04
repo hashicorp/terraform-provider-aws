@@ -109,9 +109,9 @@ func resourceAwsApiGatewayRestApiPolicyDelete(d *schema.ResourceData, meta inter
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	operations = append(operations, &apigateway.PatchOperation{
-		Op:    aws.String(apigateway.OpRemove),
+		Op:    aws.String(apigateway.OpReplace),
 		Path:  aws.String("/policy"),
-		Value: aws.String(d.Get("policy").(string)),
+		Value: aws.String(""),
 	})
 
 	_, err := conn.UpdateRestApi(&apigateway.UpdateRestApiInput{
