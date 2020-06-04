@@ -15,6 +15,7 @@ BUG FIXES:
 * resource/aws_appmesh_route: Allow configuration of `spec` `http_route` `action` `weighted_target` `weight` argument to be 0 [GH-13539]
 * resource/aws_dynamodb_table: Prevent multiple replica creation/deletion errors [GH-13523]
 * resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [GH-13589] 
+* resource/aws_kinesis_firehose_delivery_stream: Correctly set `kinesis_source_configuration` during import to prevent resource recreation 
 * resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [GH-12024] 
 
 ## 2.64.0 (May 28, 2020)
