@@ -700,7 +700,7 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
 
-		if volume.DockerVolumeConfiguration != nil {
+		if volume.EfsVolumeConfiguration != nil {
 			l["efs_volume_configuration"] = flattenEFSVolumeConfiguration(volume.EfsVolumeConfiguration)
 		}
 
@@ -1620,8 +1620,9 @@ func flattenDSVpcSettings(
 		return nil
 	}
 
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
@@ -1736,11 +1737,32 @@ func flattenDSConnectSettings(
 
 	settings := make(map[string]interface{})
 
-	settings["customer_dns_ips"] = schema.NewSet(schema.HashString, flattenStringList(customerDnsIps))
-	settings["connect_ips"] = schema.NewSet(schema.HashString, flattenStringList(s.ConnectIps))
-	settings["customer_username"] = *s.CustomerUserName
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["customer_dns_ips"] = flattenStringSet(customerDnsIps)
+	settings["connect_ips"] = flattenStringSet(s.ConnectIps)
+	settings["customer_username"] = aws.StringValue(s.CustomerUserName)
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
+
+	return []map[string]interface{}{settings}
+}
+
+func flattenDSRadiusSettings(
+	s *directoryservice.RadiusSettings, radiusSecret *string) []map[string]interface{} {
+	if s == nil {
+		return nil
+	}
+
+	settings := make(map[string]interface{})
+
+	settings["protocol"] = *s.AuthenticationProtocol
+	settings["label"] = *s.DisplayLabel
+	settings["port"] = *s.RadiusPort
+	settings["retries"] = *s.RadiusRetries
+	settings["servers"] = schema.NewSet(schema.HashString, flattenStringList(s.RadiusServers))
+	settings["timeout"] = *s.RadiusTimeout
+	settings["same_username"] = *s.UseSameUsername
+	settings["secret"] = radiusSecret
 
 	return []map[string]interface{}{settings}
 }
@@ -5130,7 +5152,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 						weightedTarget.VirtualNode = aws.String(vVirtualNode)
 					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok && vWeight > 0 {
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 						weightedTarget.Weight = aws.Int64(int64(vWeight))
 					}
 
@@ -5234,7 +5256,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 						weightedTarget.VirtualNode = aws.String(vVirtualNode)
 					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok && vWeight > 0 {
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 						weightedTarget.Weight = aws.Int64(int64(vWeight))
 					}
 

@@ -80,12 +80,12 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 		removeTags = append(removeTags, r...)
 
 		oraw, nraw = d.GetChange("tags")
-		old, err = autoscalingTagsFromList(oraw.([]interface{}), resourceID)
+		old, err = autoscalingTagsFromList(oraw.(*schema.Set).List(), resourceID)
 		if err != nil {
 			return err
 		}
 
-		new, err = autoscalingTagsFromList(nraw.([]interface{}), resourceID)
+		new, err = autoscalingTagsFromList(nraw.(*schema.Set).List(), resourceID)
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func autoscalingTagsFromList(vs []interface{}, resourceID string) ([]*autoscalin
 	result := make([]*autoscaling.Tag, 0, len(vs))
 	for _, tag := range vs {
 		attr, ok := tag.(map[string]interface{})
-		if !ok {
+		if !ok || len(attr) == 0 {
 			continue
 		}
 
