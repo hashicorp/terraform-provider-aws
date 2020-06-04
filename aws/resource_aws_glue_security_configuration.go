@@ -214,7 +214,9 @@ func expandGlueCloudWatchEncryption(l []interface{}) *glue.CloudWatchEncryption 
 	}
 
 	if v, ok := m["kms_key_arn"]; ok {
-		cloudwatchEncryption.KmsKeyArn = aws.String(v.(string))
+		if v.(string) != "" {
+			cloudwatchEncryption.KmsKeyArn = aws.String(v.(string))
+		}
 	}
 
 	return cloudwatchEncryption
@@ -248,7 +250,9 @@ func expandGlueJobBookmarksEncryption(l []interface{}) *glue.JobBookmarksEncrypt
 	}
 
 	if v, ok := m["kms_key_arn"]; ok {
-		jobBookmarksEncryption.KmsKeyArn = aws.String(v.(string))
+		if v.(string) != "" {
+			jobBookmarksEncryption.KmsKeyArn = aws.String(v.(string))
+		}
 	}
 
 	return jobBookmarksEncryption
