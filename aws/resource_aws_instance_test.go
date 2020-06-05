@@ -1305,6 +1305,45 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 		},
 	})
 }
+
+func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+
+	testCheckPrivateIP := func() resource.TestCheckFunc {
+		return func(*terraform.State) error {
+			if *v.PrivateIpAddress != "10.1.1.42" {
+				return fmt.Errorf("bad private IP: %s", *v.PrivateIpAddress)
+			}
+
+			return nil
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"associate_public_ip_address"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigAssociatePublicIPAndPrivateIP(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					testCheckPrivateIP(),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // Allow Empty Private IP
 // https://github.com/terraform-providers/terraform-provider-aws/issues/13626
 func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
