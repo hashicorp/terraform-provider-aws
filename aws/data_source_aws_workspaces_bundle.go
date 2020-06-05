@@ -86,13 +86,13 @@ func dataSourceAwsWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if len(resp.Bundles) != 1 {
-			return fmt.Errorf("expect 1 result for workspace bundle %q, got %d", bundleID, len(resp.Bundles))
+			return fmt.Errorf("expected 1 result for Workspace bundle %q, found %d", bundleID, len(resp.Bundles))
 		}
 
 		bundle = resp.Bundles[0]
 
 		if bundle == nil {
-			return fmt.Errorf("not found workspace bundle with ID %q", bundleID)
+			return fmt.Errorf("no Workspace bundle with ID %q found", bundleID)
 		}
 	}
 
@@ -116,7 +116,7 @@ func dataSourceAwsWorkspaceBundleRead(d *schema.ResourceData, meta interface{}) 
 		}
 
 		if bundle == nil {
-			return fmt.Errorf("not found workspace bundle with name %q", name)
+			return fmt.Errorf("no Workspace bundle with name %q found", name)
 		}
 	}
 
