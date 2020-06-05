@@ -28,7 +28,7 @@ data "aws_workspaces_bundle" "example" {
 The following arguments are supported:
 
 * `bundle_id` – (Optional) The ID of the bundle.
-* `owner` – (Optional) The owner of the bundles. You cannot combine this parameter with `bundle_id`.
+* `owner` – (Optional) The owner of the bundles. You have to leave it blank for own bundles. You cannot combine this parameter with `bundle_id`.
 * `name` – (Optional) The name of the bundle. You cannot combine this parameter with `bundle_id`.
 
 ## Attributes Reference
