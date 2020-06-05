@@ -69,13 +69,15 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"interval": {
 													Type:         schema.TypeInt,
-													Required:     true,
+													Optional:     true,
+													ConflictsWith: []string{"cron_expression"},
 													ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
 												},
 												"interval_unit": {
 													Type:     schema.TypeString,
 													Optional: true,
 													Default:  dlm.IntervalUnitValuesHours,
+													ConflictsWith: []string{"cron_expression"},
 													ValidateFunc: validation.StringInSlice([]string{
 														dlm.IntervalUnitValuesHours,
 													}, false),
@@ -84,11 +86,18 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 													Type:     schema.TypeList,
 													Optional: true,
 													Computed: true,
+													ConflictsWith: []string{"cron_expression"},
 													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
 														ValidateFunc: validation.StringMatch(regexp.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
 													},
+												},
+												"cron_expression": {
+													Type: schema.TypeString,
+													Optional: true,
+													ConflictsWith: []string{"interval_unit", "interval", "times"},
+													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^cron\([^\n]{11,100}\)$`), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-CronExpression"),
 												},
 											},
 										},
@@ -336,6 +345,7 @@ func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
 	createRule := &dlm.CreateRule{
 		Interval:     aws.Int64(int64(c["interval"].(int))),
 		IntervalUnit: aws.String(c["interval_unit"].(string)),
+		CronExpression: aws.String(c["cron_expression"].(string)),
 	}
 	if v, ok := c["times"]; ok {
 		createRule.Times = expandStringList(v.([]interface{}))
@@ -353,6 +363,7 @@ func flattenDlmCreateRule(createRule *dlm.CreateRule) []map[string]interface{} {
 	result["interval"] = aws.Int64Value(createRule.Interval)
 	result["interval_unit"] = aws.StringValue(createRule.IntervalUnit)
 	result["times"] = flattenStringList(createRule.Times)
+	result["cron_expression"] = aws.StringValue(createRule.CronExpression)
 
 	return []map[string]interface{}{result}
 }

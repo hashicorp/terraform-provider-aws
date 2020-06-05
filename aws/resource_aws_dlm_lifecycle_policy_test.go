@@ -40,10 +40,27 @@ func TestAccAWSDlmLifecyclePolicy_Basic(t *testing.T) {
 				),
 			},
 			{
+				Config: dlmLifecyclePolicyBasicConfigWithCron(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "dlm", regexp.MustCompile(`policy/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-basic"),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-basic"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression", "cron(0 18 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "basic"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+		},
 		},
 	})
 }
@@ -94,8 +111,101 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 				),
 			},
 		},
+	},
 	})
 }
+
+func TestAccAWSDlmLifecyclePolicy_FullWithCron(t *testing.T) {
+	resourceName := "aws_dlm_lifecycle_policy.full"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyFullConfigWithCron(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full"),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full"),
+			),
+			},
+			{
+				Config: dlmLifecyclePolicyFullUpdateConfigWithCron(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full-updated"),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full-updated"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "100"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full-updated"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
+				),
+			},
+		}
+	},
+	})
+}
+
+func TestAccAWSDlmLifecyclePolicy_FullToCron(t *testing.T) {
+	resourceName := "aws_dlm_lifecycle_policy.full"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dlmLifecyclePolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dlmLifecyclePolicyFullConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full"),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "10"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full"),
+			),
+			},
+			{
+				Config: dlmLifecyclePolicyFullUpdateConfigWithCron(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDlmLifecyclePolicyExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full-updated"),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full-updated"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "100"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full-updated"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
+				),
+			},
+		},
+	})
+}
+
 
 func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -258,6 +368,55 @@ resource "aws_dlm_lifecycle_policy" "basic" {
 `, rName)
 }
 
+func dlmLifecyclePolicyBasicConfigWithCron(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "dlm_lifecycle_role" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dlm.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_dlm_lifecycle_policy" "basic" {
+  description        = "tf-acc-basic"
+  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}"
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = "tf-acc-basic"
+
+      create_rule {
+        cron_expression = "cron(0 18 ? * WED *)"
+      }
+
+      retain_rule {
+        count = 10
+      }
+    }
+
+    target_tags = {
+      tf-acc-test = "basic"
+    }
+  }
+}
+`, rName)
+}
+
 func dlmLifecyclePolicyFullConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "dlm_lifecycle_role" {
@@ -316,6 +475,63 @@ resource "aws_dlm_lifecycle_policy" "full" {
 `, rName)
 }
 
+func dlmLifecyclePolicyFullConfigWithCron(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "dlm_lifecycle_role" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dlm.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_dlm_lifecycle_policy" "full" {
+  description        = "tf-acc-full"
+  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}"
+  state              = "ENABLED"
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = "tf-acc-full"
+
+      create_rule {
+        cron_expression = "cron(0 18 ? * WED *)"
+      }
+
+      retain_rule {
+        count = 10
+      }
+
+      tags_to_add = {
+        tf-acc-test-added = "full"
+      }
+
+      copy_tags = false
+    }
+
+    target_tags = {
+      tf-acc-test = "full"
+    }
+  }
+}
+`, rName)
+}
+
+
 func dlmLifecyclePolicyFullUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "dlm_lifecycle_role" {
@@ -353,6 +569,63 @@ resource "aws_dlm_lifecycle_policy" "full" {
         interval      = 24
         interval_unit = "HOURS"
         times         = ["09:42"]
+      }
+
+      retain_rule {
+        count = 100
+      }
+
+      tags_to_add = {
+        tf-acc-test-added = "full-updated"
+      }
+
+      copy_tags = true
+    }
+
+    target_tags = {
+      tf-acc-test = "full-updated"
+    }
+  }
+}
+`, rName)
+}
+
+
+func dlmLifecyclePolicyFullUpdateConfigWithCron(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "dlm_lifecycle_role" {
+  name = %q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "dlm.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_dlm_lifecycle_policy" "full" {
+  description        = "tf-acc-full-updated"
+  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}-doesnt-exist"
+  state              = "DISABLED"
+
+  policy_details {
+    resource_types = ["VOLUME"]
+
+    schedule {
+      name = "tf-acc-full-updated"
+
+      create_rule {
+        cron_expression = "cron(10 14 ? * MON *)"
       }
 
       retain_rule {
