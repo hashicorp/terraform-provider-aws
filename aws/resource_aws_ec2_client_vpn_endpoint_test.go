@@ -354,6 +354,81 @@ func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnEndpoint_vpc(t *testing.T) {
+	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+	vpcResourceName := "aws_vpc.test"
+	secondVpcResourceName := "aws_vpc.test2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigVPC(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigVPCUpdated(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", secondVpcResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsEc2ClientVpnEndpoint_security_groups(t *testing.T) {
+	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSecurityGroups(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSecurityGroupsUpdated(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
+				),
+			},
+			{
+				Config: testAccEc2ClientVpnEndpointConfigSecurityGroups(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 	sync.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
 }
@@ -640,4 +715,153 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName, splitTunnel)
+}
+
+func testAccEc2ClientVpnEndpointConfigVPC(rName string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-%[1]s"
+  }
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%[1]s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+  vpc_id                 = "${aws_vpc.test.id}"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigVPCUpdated(rName string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-%[1]s"
+  }
+}
+
+resource "aws_vpc" "test2" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-updated-%[1]s"
+  }
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%[1]s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+  vpc_id                 = "${aws_vpc.test2.id}"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigSecurityGroups(rName string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-%[1]s"
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  name   = "terraform-testacc-clientvpn-%[1]s"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-%[1]s"
+  }
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%[1]s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+  vpc_id                 = "${aws_vpc.test.id}"
+  security_group_ids     = ["${aws_security_group.test.id}"]
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName)
+}
+
+func testAccEc2ClientVpnEndpointConfigSecurityGroupsUpdated(rName string) string {
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-%[1]s"
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+  name   = "terraform-testacc-clientvpn-%[1]s"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-%[1]s"
+  }
+}
+
+resource "aws_security_group" "test2" {
+  vpc_id = "${aws_vpc.test.id}"
+  name   = "terraform-testacc-clientvpn-updated-%[1]s"
+
+  tags = {
+    Name = "terraform-testacc-clientvpn-updated-%[1]s"
+  }
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%[1]s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+  vpc_id                 = "${aws_vpc.test.id}"
+  security_group_ids     = ["${aws_security_group.test.id}", "${aws_security_group.test2.id}"]
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName)
 }

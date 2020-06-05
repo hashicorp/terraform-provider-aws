@@ -123,6 +123,16 @@ func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 	}
 }
@@ -144,6 +154,14 @@ func resourceAwsEc2ClientVpnEndpointCreate(d *schema.ResourceData, meta interfac
 
 	if v, ok := d.GetOk("dns_servers"); ok {
 		req.DnsServers = expandStringList(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("vpc_id"); ok {
+		req.VpcId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("security_group_ids"); ok {
+		req.SecurityGroupIds = expandStringList(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("authentication_options"); ok {
@@ -213,35 +231,42 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		return nil
 	}
 
-	if result.ClientVpnEndpoints[0].Status != nil && aws.StringValue(result.ClientVpnEndpoints[0].Status.Code) == ec2.ClientVpnEndpointStatusCodeDeleted {
+	endpoint := result.ClientVpnEndpoints[0]
+
+	if endpoint.Status != nil && aws.StringValue(endpoint.Status.Code) == ec2.ClientVpnEndpointStatusCodeDeleted {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("description", result.ClientVpnEndpoints[0].Description)
-	d.Set("client_cidr_block", result.ClientVpnEndpoints[0].ClientCidrBlock)
-	d.Set("server_certificate_arn", result.ClientVpnEndpoints[0].ServerCertificateArn)
-	d.Set("transport_protocol", result.ClientVpnEndpoints[0].TransportProtocol)
-	d.Set("dns_name", result.ClientVpnEndpoints[0].DnsName)
-	d.Set("dns_servers", result.ClientVpnEndpoints[0].DnsServers)
+	d.Set("description", endpoint.Description)
+	d.Set("client_cidr_block", endpoint.ClientCidrBlock)
+	d.Set("server_certificate_arn", endpoint.ServerCertificateArn)
+	d.Set("transport_protocol", endpoint.TransportProtocol)
+	d.Set("dns_name", endpoint.DnsName)
+	d.Set("dns_servers", endpoint.DnsServers)
+	d.Set("vpc_id", endpoint.VpcId)
 
-	if result.ClientVpnEndpoints[0].Status != nil {
-		d.Set("status", result.ClientVpnEndpoints[0].Status.Code)
+	if err := d.Set("security_group_ids", flattenStringSet(endpoint.SecurityGroupIds)); err != nil {
+		return fmt.Errorf("error setting security groups ids: %s", err)
 	}
-	d.Set("split_tunnel", result.ClientVpnEndpoints[0].SplitTunnel)
 
-	err = d.Set("authentication_options", flattenAuthOptsConfig(result.ClientVpnEndpoints[0].AuthenticationOptions))
+	if endpoint.Status != nil {
+		d.Set("status", endpoint.Status.Code)
+	}
+	d.Set("split_tunnel", endpoint.SplitTunnel)
+
+	err = d.Set("authentication_options", flattenAuthOptsConfig(endpoint.AuthenticationOptions))
 	if err != nil {
 		return fmt.Errorf("error setting authentication_options: %w", err)
 	}
 
-	err = d.Set("connection_log_options", flattenConnLoggingConfig(result.ClientVpnEndpoints[0].ConnectionLogOptions))
+	err = d.Set("connection_log_options", flattenConnLoggingConfig(endpoint.ConnectionLogOptions))
 	if err != nil {
 		return fmt.Errorf("error setting connection_log_options: %w", err)
 	}
 
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(result.ClientVpnEndpoints[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(endpoint.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %w", err)
 	}
@@ -281,7 +306,7 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	if d.HasChange("dns_servers") {
-		dnsValue := expandStringList(d.Get("dns_servers").(*schema.Set).List())
+		dnsValue := expandStringSet(d.Get("dns_servers").(*schema.Set))
 		var enabledValue *bool
 
 		if len(dnsValue) > 0 {
@@ -324,6 +349,15 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 
 			req.ConnectionLogOptions = connReq
 		}
+	}
+
+	if d.HasChange("vpc_id") {
+		req.VpcId = aws.String(d.Get("vpc_id").(string))
+	}
+
+	if d.HasChange("security_group_ids") {
+		req.VpcId = aws.String(d.Get("vpc_id").(string))
+		req.SecurityGroupIds = expandStringSet(d.Get("security_group_ids").(*schema.Set))
 	}
 
 	if _, err := conn.ModifyClientVpnEndpoint(req); err != nil {

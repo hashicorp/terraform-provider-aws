@@ -45,6 +45,8 @@ The following arguments are supported:
 * `split_tunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
+* `vpc_id` - (Optional) The ID of the VPC to associate with the Client VPN endpoint.
+* `security_group_ids` - (Optional) The IDs of one or more security groups to apply to the target network. If a VPC is provided but with no security groups, the default VPC security group will be used.
 
 
 ### `authentication_options` Argument Reference
