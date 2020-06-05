@@ -3,6 +3,7 @@
 BUG FIXES:
 
 * resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties [GH-13634]
+* resource/aws_instance: Continue supporting empty string (`""`) `private_ip` argument [GH-13640]
 
 ## 2.65.0 (June 04, 2020)
 
