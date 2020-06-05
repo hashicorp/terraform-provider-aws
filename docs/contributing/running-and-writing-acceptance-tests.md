@@ -130,12 +130,13 @@ export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
 
 ### Running Cross-Region Tests
 
-Certain testing requires multiple AWS regions. Additional setup is not typically required because the testing defaults the alternate AWS region to `us-east-1`.
+Certain testing requires multiple AWS regions. Additional setup is not typically required because the testing defaults the second AWS region to `us-east-1` and the third AWS region to `us-east-2`.
 
-Running these acceptance tests is the same as before, but if you wish to override the alternate region:
+Running these acceptance tests is the same as before, but if you wish to override the second and third regions:
 
 ```sh
 export AWS_ALTERNATE_REGION=...
+export AWS_THIRD_REGION=...
 ```
 
 ## Writing an Acceptance Test
@@ -693,12 +694,12 @@ Searching for usage of `testAccAlternateAccountPreCheck` in the codebase will yi
 
 #### Cross-Region Acceptance Tests
 
-When testing requires AWS infrastructure in a second AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
+When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
-- In the `PreCheck` function, include `testAccMultipleRegionsPreCheck(t)` and `testAccAlternateRegionPreCheck(t)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
+- In the `PreCheck` function, include `testAccMultipleRegionPreCheck(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
 - Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
-- Add `testAccAlternateRegionProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- Add `testAccMultipleRegionProviderConfig(###)` to the test configuration and use `provider = "aws.alternate"` (and/or `provider = "aws.third"`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -711,8 +712,7 @@ func TestAccAwsExample_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
       testAccPreCheck(t)
-      testAccMultipleRegionsPreCheck(t)
-      testAccAlternateRegionPreCheck(t)
+      testAccMultipleRegionPreCheck(t, 2)
     },
     ProviderFactories: testAccProviderFactories(&providers),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
@@ -735,7 +735,7 @@ func TestAccAwsExample_basic(t *testing.T) {
 }
 
 func testAccAwsExampleConfig() string {
-  return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+  return testAccMultipleRegionProviderConfig(2) + fmt.Sprintf(`
 # Cross region resources should be handled by the cross region provider.
 # The standardized provider alias is aws.alternate as seen below.
 resource "aws_cross_region_example" "test" {
@@ -753,7 +753,7 @@ resource "aws_example" "test" {
 }
 ```
 
-Searching for usage of `testAccAlternateRegionPreCheck` in the codebase will yield real world examples of this setup in action.
+Searching for usage of `testAccMultipleRegionPreCheck` in the codebase will yield real world examples of this setup in action.
 
 ### Data Source Acceptance Testing
 
