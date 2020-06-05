@@ -104,11 +104,14 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"private_ip": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Computed:     true,
-				ValidateFunc: validation.IsIPv4Address,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.StringIsEmpty,
+					validation.IsIPv4Address,
+				),
 			},
 
 			"source_dest_check": {
