@@ -1305,16 +1305,17 @@ func TestAccAWSInstance_privateIP(t *testing.T) {
 		},
 	})
 }
-
-func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
+// Allow Empty Private IP
+// https://github.com/terraform-providers/terraform-provider-aws/issues/13626
+func TestAccAWSInstance_Empty_PrivateIP(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
 	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
 
 	testCheckPrivateIP := func() resource.TestCheckFunc {
 		return func(*terraform.State) error {
-			if *v.PrivateIpAddress != "10.1.1.42" {
-				return fmt.Errorf("bad private IP: %s", *v.PrivateIpAddress)
+			if aws.StringValue(v.PrivateIpAddress) == "" {
+				return fmt.Errorf("bad computed private IP: %s", aws.StringValue(v.PrivateIpAddress))
 			}
 
 			return nil
@@ -1322,14 +1323,13 @@ func TestAccAWSInstance_associatePublicIPAndPrivateIP(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:        func() { testAccPreCheck(t) },
-		IDRefreshName:   resourceName,
-		IDRefreshIgnore: []string{"associate_public_ip_address"},
-		Providers:       testAccProviders,
-		CheckDestroy:    testAccCheckInstanceDestroy,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigAssociatePublicIPAndPrivateIP(rName),
+				Config: testAccInstanceConfigEmptyPrivateIP(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					testCheckPrivateIP(),
@@ -3866,6 +3866,17 @@ resource "aws_instance" "test" {
   instance_type = "t2.micro"
   subnet_id     = "${aws_subnet.test.id}"
   private_ip    = "10.1.1.42"
+}
+`)
+}
+
+func testAccInstanceConfigEmptyPrivateIP(rName string) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+  private_ip    = ""
 }
 `)
 }
