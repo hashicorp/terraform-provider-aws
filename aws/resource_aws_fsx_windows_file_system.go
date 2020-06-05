@@ -85,6 +85,18 @@ func resourceAwsFsxWindowsFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"windows_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"remote_administration_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -333,6 +345,10 @@ func resourceAwsFsxWindowsFileSystemRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting self_managed_active_directory: %s", err)
 	}
 
+	if err := d.Set("windows_configuration", flattenFsxWindowsConfiguration(d, filesystem.WindowsConfiguration)); err != nil {
+		return fmt.Errorf("error setting windows configuration: %s", err)
+	}
+
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds)); err != nil {
@@ -437,6 +453,18 @@ func flattenFsxSelfManagedActiveDirectoryConfiguration(d *schema.ResourceData, a
 		"organizational_unit_distinguished_name": aws.StringValue(adopts.OrganizationalUnitDistinguishedName),
 		"password":                               d.Get("self_managed_active_directory.0.password").(string),
 		"username":                               aws.StringValue(adopts.UserName),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenFsxWindowsConfiguration(d *schema.ResourceData, adopts *fsx.WindowsFileSystemConfiguration) []map[string]interface{} {
+	if adopts == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"remote_administration_endpoint": aws.StringValue(adopts.RemoteAdministrationEndpoint),
 	}
 
 	return []map[string]interface{}{m}

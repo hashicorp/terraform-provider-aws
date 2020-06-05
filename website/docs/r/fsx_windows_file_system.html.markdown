@@ -87,7 +87,8 @@ In addition to all arguments above, the following attributes are exported:
 * `network_interface_ids` - Set of Elastic Network Interface identifiers from which the file system is accessible.
 * `owner_id` - AWS account identifier that created the file system.
 * `vpc_id` - Identifier of the Virtual Private Cloud for the file system.
-
+* `windows_configuration`
+  * `remote_administration_endpoint` -  The DNS endpoint of the file system
 ## Timeouts
 
 `aws_fsx_windows_file_system` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
