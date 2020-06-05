@@ -1,4 +1,9 @@
 ## 2.66.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties [GH-13634]
+
 ## 2.65.0 (June 04, 2020)
 
 ENHANCEMENTS:
