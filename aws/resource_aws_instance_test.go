@@ -1799,7 +1799,8 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 }
 
 // Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
-func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.T) {
+// EBS Block Devices created dynamically (without a root device configured)
+func TestAccAWSInstance_DynamicEbsBlockDevice_Multiple(t *testing.T) {
 	var instance ec2.Instance
 
 	resourceName := "aws_instance.test"
@@ -1811,28 +1812,101 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices,
+				Config: testAccAwsEc2InstanceConfig_MultipleDynamicEBSBlockDevices,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.delete_on_termination", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.device_name", "/dev/sdc"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.delete_on_termination", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.volume_size", "8"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.device_name", "/dev/sda"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.delete_on_termination", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.iops", "100"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.volume_size", "10"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.volume_type", "standard"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.device_name", "/dev/sdc"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.iops", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "8"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "standard"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
+// EBS Block Devices created dynamically from AMI's block_device_mappings (only 1 i.e. the root device)
+func TestAccAWSInstance_DynamicEbsBlockDevice_SingleFromAmi(t *testing.T) {
+	var instance ec2.Instance
+
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceConfig_SingleDynamicEBSBlockDeviceFromAmi,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
+// EBS Block Devices created dynamically from AMI's block_device_mappings (more than 1 i.e. n mappings + root device)
+func TestAccAWSInstance_DynamicEbsBlockDevice_MultipleFromAmi(t *testing.T) {
+	var instance ec2.Instance
+
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceConfig_MultipleDynamicEBSBlockDevicesFromAmi,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "6"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 				),
 			},
 			{
@@ -4768,7 +4842,7 @@ data "aws_ec2_instance_type_offering" "available" {
 `, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
-const testAccAwsEc2InstanceConfigDynamicEBSBlockDevices = `
+const testAccAwsEc2InstanceConfig_MultipleDynamicEBSBlockDevices = `
 resource "aws_instance" "test" {
   ami           = "ami-55a7ea65"
   instance_type = "m3.medium"
@@ -4780,6 +4854,61 @@ resource "aws_instance" "test" {
       device_name = format("/dev/sd%s", device.value)
       volume_size = "10"
       volume_type = "gp2"
+    }
+  }
+}
+`
+
+var testAccAwsEc2InstanceConfig_SingleDynamicEBSBlockDeviceFromAmi = composeConfig(`
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["aws-marketplace"]
+  filter {
+    name   = "product-code"
+    values = ["aw0evgkw8e5c1q413zgy5pjce"]
+  }
+}
+`, testAccAWSEc2InstanceConfig_DynamicEBSBlocks)
+
+var testAccAwsEc2InstanceConfig_MultipleDynamicEBSBlockDevicesFromAmi = composeConfig(`
+data "aws_ami" "test" {
+  most_recent = true
+
+  owners = ["679593333241"] # The official CIS account
+
+  filter {
+    name = "name"
+    values = [
+      "CIS Amazon Linux 2 Benchmark * Level 2*",
+    ]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+`, testAccAWSEc2InstanceConfig_DynamicEBSBlocks)
+
+const testAccAWSEc2InstanceConfig_DynamicEBSBlocks = `
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.test.id
+  instance_type = "m3.medium"
+
+  dynamic "ebs_block_device" {
+    for_each = data.aws_ami.test.block_device_mappings
+    iterator = device
+    content {
+      device_name = device.value["device_name"]
+      iops        = device.value["ebs"]["iops"]
+      snapshot_id = device.value["ebs"]["snapshot_id"]
+      volume_size = device.value["ebs"]["volume_size"]
+      volume_type = device.value["ebs"]["volume_type"]
     }
   }
 }

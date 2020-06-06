@@ -332,6 +332,13 @@ func resourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					o, n := d.GetChange("ebs_block_device")
+					if o == nil || n == nil {
+						return false
+					}
+					return suppressEBSBlockDeviceDiffs(o, n, d)
+				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"delete_on_termination": {
@@ -1444,20 +1451,6 @@ func readBlockDevices(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.
 		return err
 	}
 
-	// This handles cases where the root device block is of type "EBS"
-	// and #readBlockDevicesFromInstance only returns 1 reference to a block-device
-	// stored in ibds["root"]
-	if _, ok := d.GetOk("ebs_block_device"); ok {
-		if len(ibds["ebs"].([]map[string]interface{})) == 0 {
-			ebs := make(map[string]interface{})
-			for k, v := range ibds["root"].(map[string]interface{}) {
-				ebs[k] = v
-			}
-			ebs["snapshot_id"] = ibds["snapshot_id"]
-			ibds["ebs"] = append(ibds["ebs"].([]map[string]interface{}), ebs)
-		}
-	}
-
 	if err := d.Set("ebs_block_device", ibds["ebs"]); err != nil {
 		return err
 	}
@@ -1576,20 +1569,16 @@ func readBlockDevicesFromInstance(instance *ec2.Instance, conn *ec2.EC2) (map[st
 
 		if blockDeviceIsRoot(instanceBd, instance) {
 			blockDevices["root"] = bd
-		} else {
-			if vol.SnapshotId != nil {
-				bd["snapshot_id"] = aws.StringValue(vol.SnapshotId)
-			}
-
-			blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), bd)
 		}
-	}
-	// If we determine the root device is the only block device mapping
-	// in the instance (including ephemerals) after returning from this function,
-	// we'll need to set the ebs_block_device as a clone of the root device
-	// with the snapshot_id populated; thus, we store the ID for safe-keeping
-	if blockDevices["root"] != nil && len(blockDevices["ebs"].([]map[string]interface{})) == 0 {
-		blockDevices["snapshot_id"] = volResp.Volumes[0].SnapshotId
+		// In an EC2 Instance, the list of EBS devices is inclusive of the device set as "root"
+		ebs := make(map[string]interface{})
+		for k, v := range bd {
+			ebs[k] = v
+		}
+		if vol.SnapshotId != nil {
+			ebs["snapshot_id"] = aws.StringValue(vol.SnapshotId)
+		}
+		blockDevices["ebs"] = append(blockDevices["ebs"].([]map[string]interface{}), ebs)
 	}
 
 	return blockDevices, nil
@@ -2356,4 +2345,42 @@ func resourceAwsInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) 
 	}
 
 	return resp.Reservations[0].Instances, nil
+}
+
+func suppressEBSBlockDeviceDiffs(o, n interface{}, d *schema.ResourceData) bool {
+	// In configurations where a root device is not explicitly set,
+	// either omitted or provided within the list of ebs_block_devices (e.g from an AMI's block_device_mappings),
+	// a DIFF will occur as AWS computes the root_block_device (or uses the ebs_block_device from an AMI defined as "root")
+	// and adds the computed device to the list of ebs_block_devices as well
+	// e.g. 1 ebs_block_device block set in a config without a root_block_device block -> 2 ebs_block_devices blocks (includes the new root) and 1 root_block_device block
+	//      1 ebs_block_device set in a config from an AMI data_source -> 1 ebs_block_device block (the root) and 1 root_block_device block
+	oldDevices := o.(*schema.Set)
+	newDevices := n.(*schema.Set)
+	deviceDiff := newDevices.Difference(oldDevices)
+	if deviceDiff == nil || len(deviceDiff.List()) == 0 {
+		return true
+	}
+	device := make(map[string]interface{})
+	for k, v := range deviceDiff.List()[0].(map[string]interface{}) {
+		if k == "snapshot_id" {
+			continue
+		}
+		device[k] = v
+	}
+	deviceSet := schema.NewSet(genericDeviceHash, []interface{}{device})
+	if v, ok := d.GetOk("root_block_device"); ok {
+		if r := v.([]interface{}); len(r) > 0 && r[0] != nil {
+			root := r[0].(map[string]interface{})
+			rootSet := schema.NewSet(genericDeviceHash, []interface{}{root})
+			return deviceSet.Equal(rootSet)
+		}
+	}
+	return false
+}
+
+func genericDeviceHash(v interface{}) int {
+	var buf bytes.Buffer
+	m := v.(map[string]interface{})
+	buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+	return hashcode.String(buf.String())
 }
