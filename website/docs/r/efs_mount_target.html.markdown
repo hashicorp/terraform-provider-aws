@@ -48,7 +48,6 @@ and [VPC resource](https://www.terraform.io/docs/providers/aws/r/vpc.html#enable
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the mount target.
 * `id` - The ID of the mount target.
 * `dns_name` - The DNS name for the EFS file system.
 * `mount_target_dns_name` - The DNS name for the given subnet/AZ per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).

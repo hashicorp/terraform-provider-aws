@@ -143,7 +143,7 @@ func resourceAwsEfsMountTargetCreate(d *schema.ResourceData, meta interface{}) e
 			mt := resp.MountTargets[0]
 
 			log.Printf("[DEBUG] Current status of %q: %q", aws.StringValue(mt.MountTargetId), aws.StringValue(mt.LifeCycleState))
-			return mt, *mt.LifeCycleState, nil
+			return mt, aws.StringValue(mt.LifeCycleState), nil
 		},
 		Timeout:    10 * time.Minute,
 		Delay:      2 * time.Second,
@@ -229,12 +229,6 @@ func resourceAwsEfsMountTargetRead(d *schema.ResourceData, meta interface{}) err
 	err = d.Set("security_groups", flattenStringSet(sgResp.SecurityGroups))
 	if err != nil {
 		return err
-	}
-
-	// DNS name per http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html
-	_, err = getAzFromSubnetId(aws.StringValue(mt.SubnetId), meta.(*AWSClient).ec2conn)
-	if err != nil {
-		return fmt.Errorf("Failed getting Availability Zone from subnet ID (%s): %s", *mt.SubnetId, err)
 	}
 
 	d.Set("dns_name", meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
