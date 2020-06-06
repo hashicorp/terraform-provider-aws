@@ -328,10 +328,18 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.device_name", "/dev/sdd"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.encrypted", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2634515331.kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.3568741603.device_name", resourceName,"root_block_device.0.device_name"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.encrypted", "false"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -481,7 +489,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 			// Map out the block devices by name, which should be unique.
 			blockDevices := make(map[string]*ec2.InstanceBlockDeviceMapping)
 			for _, blockDevice := range v.BlockDeviceMappings {
-				blockDevices[*blockDevice.DeviceName] = blockDevice
+				blockDevices[aws.StringValue(blockDevice.DeviceName)] = blockDevice
 			}
 
 			// Check if the root block device exists.
@@ -526,7 +534,11 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "root_block_device.0.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.device_name", "/dev/sda1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.3568741603.volume_id", resourceName, "root_block_device.0.volume_id"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.volume_size", rootVolumeSize),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
 					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),

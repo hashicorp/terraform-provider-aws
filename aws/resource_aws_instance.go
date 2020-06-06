@@ -2348,10 +2348,9 @@ func resourceAwsInstanceFind(conn *ec2.EC2, params *ec2.DescribeInstancesInput) 
 }
 
 func suppressEBSBlockDeviceDiffs(o, n interface{}, d *schema.ResourceData) bool {
-	// In configurations where a root device is not explicitly set,
-	// either omitted or provided within the list of ebs_block_devices (e.g from an AMI's block_device_mappings),
-	// a DIFF will occur as AWS computes the root_block_device (or uses the ebs_block_device from an AMI defined as "root")
-	// and adds the computed device to the list of ebs_block_devices
+	// A DIFF will occur as AWS computes ebs_block_devices, either from the root_block_device block
+	// or from ebs_block_device blocks configured which can also include the "root" if e.g. dynamically set from
+	// an AMI's block_device_mappings attribute
 	// e.g. 1 ebs_block_device block set in a config without a root_block_device block -> 2 ebs_block_devices blocks (includes the new root) and 1 root_block_device block
 	//      1 ebs_block_device set in a config from an AMI data_source -> 1 ebs_block_device block (the root) and 1 root_block_device block
 	oldDevices := o.(*schema.Set)
