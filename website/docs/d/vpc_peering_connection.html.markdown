@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_peering_connection"
-sidebar_current: "docs-aws-datasource-vpc-peering-connection"
 description: |-
     Provides details about a specific VPC peering connection.
 ---
@@ -60,7 +60,7 @@ The given filters must match exactly one VPC peering connection whose data will 
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired VPC Peering Connection.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -77,10 +77,10 @@ which take the following arguments:
 All of the argument attributes except `filter` are also exported as result attributes.
 
 * `accepter` - A configuration block that describes [VPC Peering Connection]
-(http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide) options set for the accepter VPC.
+(https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the accepter VPC.
 
 * `requester` - A configuration block that describes [VPC Peering Connection]
-(http://docs.aws.amazon.com/AmazonVPC/latest/PeeringGuide) options set for the requester VPC.
+(https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options set for the requester VPC.
 
 #### Accepter and Requester Attributes Reference
 

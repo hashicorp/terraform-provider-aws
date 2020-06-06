@@ -58,6 +58,7 @@ func (c *KinesisAnalytics) AddApplicationCloudWatchLoggingOptionRequest(input *A
 
 // AddApplicationCloudWatchLoggingOption API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -74,22 +75,22 @@ func (c *KinesisAnalytics) AddApplicationCloudWatchLoggingOptionRequest(input *A
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationCloudWatchLoggingOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -160,6 +161,7 @@ func (c *KinesisAnalytics) AddApplicationInputRequest(input *AddApplicationInput
 
 // AddApplicationInput API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -187,26 +189,26 @@ func (c *KinesisAnalytics) AddApplicationInputRequest(input *AddApplicationInput
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationInput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeCodeValidationException "CodeValidationException"
+//   * CodeValidationException
 //   User-provided application code (query) is invalid. This can be a simple syntax
 //   error.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -277,6 +279,7 @@ func (c *KinesisAnalytics) AddApplicationInputProcessingConfigurationRequest(inp
 
 // AddApplicationInputProcessingConfiguration API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -294,22 +297,22 @@ func (c *KinesisAnalytics) AddApplicationInputProcessingConfigurationRequest(inp
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationInputProcessingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -380,6 +383,7 @@ func (c *KinesisAnalytics) AddApplicationOutputRequest(input *AddApplicationOutp
 
 // AddApplicationOutput API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -417,22 +421,22 @@ func (c *KinesisAnalytics) AddApplicationOutputRequest(input *AddApplicationOutp
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationOutput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -503,6 +507,7 @@ func (c *KinesisAnalytics) AddApplicationReferenceDataSourceRequest(input *AddAp
 
 // AddApplicationReferenceDataSource API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -531,22 +536,22 @@ func (c *KinesisAnalytics) AddApplicationReferenceDataSourceRequest(input *AddAp
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation AddApplicationReferenceDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -616,6 +621,7 @@ func (c *KinesisAnalytics) CreateApplicationRequest(input *CreateApplicationInpu
 
 // CreateApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -654,26 +660,26 @@ func (c *KinesisAnalytics) CreateApplicationRequest(input *CreateApplicationInpu
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation CreateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCodeValidationException "CodeValidationException"
+// Returned Error Types:
+//   * CodeValidationException
 //   User-provided application code (query) is invalid. This can be a simple syntax
 //   error.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   Exceeded the number of applications allowed.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   Application created with too many tags, or too many tags added to an application.
 //   Note that the maximum number of application tags includes system tags. The
 //   maximum number of user-defined application tags is 50.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
@@ -745,6 +751,7 @@ func (c *KinesisAnalytics) DeleteApplicationRequest(input *DeleteApplicationInpu
 
 // DeleteApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -764,19 +771,19 @@ func (c *KinesisAnalytics) DeleteApplicationRequest(input *DeleteApplicationInpu
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+// Returned Error Types:
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -847,6 +854,7 @@ func (c *KinesisAnalytics) DeleteApplicationCloudWatchLoggingOptionRequest(input
 
 // DeleteApplicationCloudWatchLoggingOption API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -863,22 +871,22 @@ func (c *KinesisAnalytics) DeleteApplicationCloudWatchLoggingOptionRequest(input
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationCloudWatchLoggingOption for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -949,6 +957,7 @@ func (c *KinesisAnalytics) DeleteApplicationInputProcessingConfigurationRequest(
 
 // DeleteApplicationInputProcessingConfiguration API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -964,22 +973,22 @@ func (c *KinesisAnalytics) DeleteApplicationInputProcessingConfigurationRequest(
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationInputProcessingConfiguration for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1050,6 +1059,7 @@ func (c *KinesisAnalytics) DeleteApplicationOutputRequest(input *DeleteApplicati
 
 // DeleteApplicationOutput API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1069,22 +1079,22 @@ func (c *KinesisAnalytics) DeleteApplicationOutputRequest(input *DeleteApplicati
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationOutput for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1155,6 +1165,7 @@ func (c *KinesisAnalytics) DeleteApplicationReferenceDataSourceRequest(input *De
 
 // DeleteApplicationReferenceDataSource API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1178,22 +1189,22 @@ func (c *KinesisAnalytics) DeleteApplicationReferenceDataSourceRequest(input *De
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DeleteApplicationReferenceDataSource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1263,6 +1274,7 @@ func (c *KinesisAnalytics) DescribeApplicationRequest(input *DescribeApplication
 
 // DescribeApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1285,11 +1297,11 @@ func (c *KinesisAnalytics) DescribeApplicationRequest(input *DescribeApplication
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DescribeApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1359,6 +1371,7 @@ func (c *KinesisAnalytics) DiscoverInputSchemaRequest(input *DiscoverInputSchema
 
 // DiscoverInputSchema API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1386,21 +1399,21 @@ func (c *KinesisAnalytics) DiscoverInputSchemaRequest(input *DiscoverInputSchema
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation DiscoverInputSchema for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+// Returned Error Types:
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeUnableToDetectSchemaException "UnableToDetectSchemaException"
+//   * UnableToDetectSchemaException
 //   Data format is not valid. Amazon Kinesis Analytics is not able to detect
 //   schema for the given streaming source.
 //
-//   * ErrCodeResourceProvisionedThroughputExceededException "ResourceProvisionedThroughputExceededException"
+//   * ResourceProvisionedThroughputExceededException
 //   Discovery failed to get a record from the streaming source because of the
 //   Amazon Kinesis Streams ProvisionedThroughputExceededException. For more information,
-//   see GetRecords (kinesis/latest/APIReference/API_GetRecords.html) in the Amazon
-//   Kinesis Streams API Reference.
+//   see GetRecords (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
+//   in the Amazon Kinesis Streams API Reference.
 //
-//   * ErrCodeServiceUnavailableException "ServiceUnavailableException"
+//   * ServiceUnavailableException
 //   The service is unavailable. Back off and retry the operation.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisanalytics-2015-08-14/DiscoverInputSchema
@@ -1468,6 +1481,7 @@ func (c *KinesisAnalytics) ListApplicationsRequest(input *ListApplicationsInput)
 }
 
 // ListApplications API operation for Amazon Kinesis Analytics.
+//
 //
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
@@ -1559,7 +1573,8 @@ func (c *KinesisAnalytics) ListTagsForResourceRequest(input *ListTagsForResource
 
 // ListTagsForResource API operation for Amazon Kinesis Analytics.
 //
-// Retrieves the list of key-value tags assigned to the application.
+// Retrieves the list of key-value tags assigned to the application. For more
+// information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1568,14 +1583,14 @@ func (c *KinesisAnalytics) ListTagsForResourceRequest(input *ListTagsForResource
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
@@ -1647,6 +1662,7 @@ func (c *KinesisAnalytics) StartApplicationRequest(input *StartApplicationInput)
 
 // StartApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1677,20 +1693,20 @@ func (c *KinesisAnalytics) StartApplicationRequest(input *StartApplicationInput)
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation StartApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeInvalidApplicationConfigurationException "InvalidApplicationConfigurationException"
+//   * InvalidApplicationConfigurationException
 //   User-provided application configuration is not valid.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1761,6 +1777,7 @@ func (c *KinesisAnalytics) StopApplicationRequest(input *StopApplicationInput) (
 
 // StopApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -1782,14 +1799,14 @@ func (c *KinesisAnalytics) StopApplicationRequest(input *StopApplicationInput) (
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation StopApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -1862,7 +1879,8 @@ func (c *KinesisAnalytics) TagResourceRequest(input *TagResourceInput) (req *req
 //
 // Adds one or more key-value tags to a Kinesis Analytics application. Note
 // that the maximum number of application tags includes system tags. The maximum
-// number of user-defined application tags is 50.
+// number of user-defined application tags is 50. For more information, see
+// Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1871,22 +1889,22 @@ func (c *KinesisAnalytics) TagResourceRequest(input *TagResourceInput) (req *req
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   Application created with too many tags, or too many tags added to an application.
 //   Note that the maximum number of application tags includes system tags. The
 //   maximum number of user-defined application tags is 50.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
@@ -1958,7 +1976,8 @@ func (c *KinesisAnalytics) UntagResourceRequest(input *UntagResourceInput) (req 
 
 // UntagResource API operation for Amazon Kinesis Analytics.
 //
-// Removes one or more tags from a Kinesis Analytics application.
+// Removes one or more tags from a Kinesis Analytics application. For more information,
+// see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1967,22 +1986,22 @@ func (c *KinesisAnalytics) UntagResourceRequest(input *UntagResourceInput) (req 
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeTooManyTagsException "TooManyTagsException"
+//   * TooManyTagsException
 //   Application created with too many tags, or too many tags added to an application.
 //   Note that the maximum number of application tags includes system tags. The
 //   maximum number of user-defined application tags is 50.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
@@ -2054,6 +2073,7 @@ func (c *KinesisAnalytics) UpdateApplicationRequest(input *UpdateApplicationInpu
 
 // UpdateApplication API operation for Amazon Kinesis Analytics.
 //
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -2075,26 +2095,26 @@ func (c *KinesisAnalytics) UpdateApplicationRequest(input *UpdateApplicationInpu
 // See the AWS API reference guide for Amazon Kinesis Analytics's
 // API operation UpdateApplication for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeCodeValidationException "CodeValidationException"
+// Returned Error Types:
+//   * CodeValidationException
 //   User-provided application code (query) is invalid. This can be a simple syntax
 //   error.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   Specified application can't be found.
 //
-//   * ErrCodeResourceInUseException "ResourceInUseException"
+//   * ResourceInUseException
 //   Application is not available for this operation.
 //
-//   * ErrCodeInvalidArgumentException "InvalidArgumentException"
+//   * InvalidArgumentException
 //   Specified input parameter value is invalid.
 //
-//   * ErrCodeConcurrentModificationException "ConcurrentModificationException"
+//   * ConcurrentModificationException
 //   Exception thrown as a result of concurrent modification to an application.
 //   For example, two individuals attempting to edit the same application at the
 //   same time.
 //
-//   * ErrCodeUnsupportedOperationException "UnsupportedOperationException"
+//   * UnsupportedOperationException
 //   The request was rejected because a specified parameter is not supported or
 //   a specified resource is not valid for this operation.
 //
@@ -2620,6 +2640,7 @@ func (s AddApplicationReferenceDataSourceOutput) GoString() string {
 	return s.String()
 }
 
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -2763,6 +2784,7 @@ func (s *ApplicationDetail) SetReferenceDataSourceDescriptions(v []*ReferenceDat
 	return s
 }
 
+//
 // This documentation is for version 1 of the Amazon Kinesis Data Analytics
 // API, which only supports SQL applications. Version 2 of the API supports
 // SQL and Java applications. For more information about version 2, see Amazon
@@ -3172,6 +3194,122 @@ func (s *CloudWatchLoggingOptionUpdate) SetRoleARNUpdate(v string) *CloudWatchLo
 	return s
 }
 
+// User-provided application code (query) is invalid. This can be a simple syntax
+// error.
+type CodeValidationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// Test
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s CodeValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CodeValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorCodeValidationException(v protocol.ResponseMetadata) error {
+	return &CodeValidationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *CodeValidationException) Code() string {
+	return "CodeValidationException"
+}
+
+// Message returns the exception's message.
+func (s *CodeValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *CodeValidationException) OrigErr() error {
+	return nil
+}
+
+func (s *CodeValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *CodeValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *CodeValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Exception thrown as a result of concurrent modification to an application.
+// For example, two individuals attempting to edit the same application at the
+// same time.
+type ConcurrentModificationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentModificationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentModificationException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentModificationException(v protocol.ResponseMetadata) error {
+	return &ConcurrentModificationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConcurrentModificationException) Code() string {
+	return "ConcurrentModificationException"
+}
+
+// Message returns the exception's message.
+func (s *ConcurrentModificationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConcurrentModificationException) OrigErr() error {
+	return nil
+}
+
+func (s *ConcurrentModificationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConcurrentModificationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConcurrentModificationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // TBD
 type CreateApplicationInput struct {
 	_ struct{} `type:"structure"`
@@ -3246,8 +3384,7 @@ type CreateApplicationInput struct {
 	// A list of one or more tags to assign to the application. A tag is a key-value
 	// pair that identifies an application. Note that the maximum number of application
 	// tags includes system tags. The maximum number of user-defined application
-	// tags is 50. For more information, see Using Cost Allocation Tags (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
-	// in the AWS Billing and Cost Management Guide.
+	// tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 	Tags []*Tag `min:"1" type:"list"`
 }
 
@@ -4503,7 +4640,7 @@ func (s *InputLambdaProcessorDescription) SetRoleARN(v string) *InputLambdaProce
 type InputLambdaProcessorUpdate struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the new AWS Lambda (https://docs.aws.amazon.com/ambda/)
+	// The Amazon Resource Name (ARN) of the new AWS Lambda (https://docs.aws.amazon.com/lambda/)
 	// function that is used to preprocess the records in the stream.
 	//
 	// To specify an earlier version of the Lambda function than the latest, include
@@ -4984,6 +5121,119 @@ func (s *InputUpdate) SetKinesisStreamsInputUpdate(v *KinesisStreamsInputUpdate)
 func (s *InputUpdate) SetNamePrefixUpdate(v string) *InputUpdate {
 	s.NamePrefixUpdate = &v
 	return s
+}
+
+// User-provided application configuration is not valid.
+type InvalidApplicationConfigurationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// test
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidApplicationConfigurationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidApplicationConfigurationException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidApplicationConfigurationException(v protocol.ResponseMetadata) error {
+	return &InvalidApplicationConfigurationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidApplicationConfigurationException) Code() string {
+	return "InvalidApplicationConfigurationException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidApplicationConfigurationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidApplicationConfigurationException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidApplicationConfigurationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidApplicationConfigurationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidApplicationConfigurationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Specified input parameter value is invalid.
+type InvalidArgumentException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidArgumentException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidArgumentException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidArgumentException(v protocol.ResponseMetadata) error {
+	return &InvalidArgumentException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidArgumentException) Code() string {
+	return "InvalidArgumentException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidArgumentException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidArgumentException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidArgumentException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidArgumentException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidArgumentException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides additional mapping information when JSON is the record format on
@@ -5795,6 +6045,62 @@ func (s *LambdaOutputUpdate) SetRoleARNUpdate(v string) *LambdaOutputUpdate {
 	return s
 }
 
+// Exceeded the number of applications allowed.
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type ListApplicationsInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6010,7 +6316,7 @@ func (s *MappingParameters) SetJSONMappingParameters(v *JSONMappingParameters) *
 // Kinesis Firehose delivery stream.
 //
 // For limits on how many destinations an application can write and other limitations,
-// see Limits (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/limits.html)
+// see Limits (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/limits.html).
 type Output struct {
 	_ struct{} `type:"structure"`
 
@@ -6668,6 +6974,177 @@ func (s *ReferenceDataSourceUpdate) SetTableNameUpdate(v string) *ReferenceDataS
 	return s
 }
 
+// Application is not available for this operation.
+type ResourceInUseException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceInUseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceInUseException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
+	return &ResourceInUseException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceInUseException) Code() string {
+	return "ResourceInUseException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceInUseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceInUseException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceInUseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Specified application can't be found.
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Discovery failed to get a record from the streaming source because of the
+// Amazon Kinesis Streams ProvisionedThroughputExceededException. For more information,
+// see GetRecords (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
+// in the Amazon Kinesis Streams API Reference.
+type ResourceProvisionedThroughputExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceProvisionedThroughputExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceProvisionedThroughputExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceProvisionedThroughputExceededException(v protocol.ResponseMetadata) error {
+	return &ResourceProvisionedThroughputExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceProvisionedThroughputExceededException) Code() string {
+	return "ResourceProvisionedThroughputExceededException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceProvisionedThroughputExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceProvisionedThroughputExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceProvisionedThroughputExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceProvisionedThroughputExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceProvisionedThroughputExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Provides a description of an Amazon S3 data source, including the Amazon
 // Resource Name (ARN) of the S3 bucket, the ARN of the IAM role that is used
 // to access the bucket, and the name of the Amazon S3 object that contains
@@ -6946,6 +7423,62 @@ func (s *S3ReferenceDataSourceUpdate) SetReferenceRoleARNUpdate(v string) *S3Ref
 	return s
 }
 
+// The service is unavailable. Back off and retry the operation.
+type ServiceUnavailableException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableException) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableException(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ServiceUnavailableException) Code() string {
+	return "ServiceUnavailableException"
+}
+
+// Message returns the exception's message.
+func (s *ServiceUnavailableException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ServiceUnavailableException) OrigErr() error {
+	return nil
+}
+
+func (s *ServiceUnavailableException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ServiceUnavailableException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ServiceUnavailableException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Describes the format of the data in the streaming source, and how each data
 // element maps to corresponding columns created in the in-application stream.
 type SourceSchema struct {
@@ -7169,9 +7702,7 @@ func (s StopApplicationOutput) GoString() string {
 // AWS resources. If you specify a tag that already exists, the tag value is
 // replaced with the value that you specify in the request. Note that the maximum
 // number of application tags includes system tags. The maximum number of user-defined
-// application tags is 50. For more information, see Using Cost Allocation Tags
-// (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/cost-alloc-tags.html)
-// in the AWS Billing and Cost Management Guide.
+// application tags is 50. For more information, see Using Tagging (https://docs.aws.amazon.com/kinesisanalytics/latest/dev/how-tagging.html).
 type Tag struct {
 	_ struct{} `type:"structure"`
 
@@ -7302,6 +7833,182 @@ func (s TagResourceOutput) String() string {
 // GoString returns the string representation
 func (s TagResourceOutput) GoString() string {
 	return s.String()
+}
+
+// Application created with too many tags, or too many tags added to an application.
+// Note that the maximum number of application tags includes system tags. The
+// maximum number of user-defined application tags is 50.
+type TooManyTagsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyTagsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
+	return &TooManyTagsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TooManyTagsException) Code() string {
+	return "TooManyTagsException"
+}
+
+// Message returns the exception's message.
+func (s *TooManyTagsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TooManyTagsException) OrigErr() error {
+	return nil
+}
+
+func (s *TooManyTagsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TooManyTagsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TooManyTagsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Data format is not valid. Amazon Kinesis Analytics is not able to detect
+// schema for the given streaming source.
+type UnableToDetectSchemaException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+
+	ProcessedInputRecords []*string `type:"list"`
+
+	RawInputRecords []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s UnableToDetectSchemaException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnableToDetectSchemaException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnableToDetectSchemaException(v protocol.ResponseMetadata) error {
+	return &UnableToDetectSchemaException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnableToDetectSchemaException) Code() string {
+	return "UnableToDetectSchemaException"
+}
+
+// Message returns the exception's message.
+func (s *UnableToDetectSchemaException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnableToDetectSchemaException) OrigErr() error {
+	return nil
+}
+
+func (s *UnableToDetectSchemaException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnableToDetectSchemaException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnableToDetectSchemaException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request was rejected because a specified parameter is not supported or
+// a specified resource is not valid for this operation.
+type UnsupportedOperationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s UnsupportedOperationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UnsupportedOperationException) GoString() string {
+	return s.String()
+}
+
+func newErrorUnsupportedOperationException(v protocol.ResponseMetadata) error {
+	return &UnsupportedOperationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *UnsupportedOperationException) Code() string {
+	return "UnsupportedOperationException"
+}
+
+// Message returns the exception's message.
+func (s *UnsupportedOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *UnsupportedOperationException) OrigErr() error {
+	return nil
+}
+
+func (s *UnsupportedOperationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *UnsupportedOperationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *UnsupportedOperationException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type UntagResourceInput struct {

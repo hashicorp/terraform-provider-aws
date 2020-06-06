@@ -1,7 +1,7 @@
 ---
+subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_broker"
-sidebar_current: "docs-aws-resource-mq-broker"
 description: |-
   Provides an MQ Broker Resource
 ---
@@ -58,8 +58,9 @@ The following arguments are supported:
 * `broker_name` - (Required) The name of the broker.
 * `configuration` - (Optional) Configuration of the broker. See below.
 * `deployment_mode` - (Optional) The deployment mode of the broker. Supported: `SINGLE_INSTANCE` and `ACTIVE_STANDBY_MULTI_AZ`. Defaults to `SINGLE_INSTANCE`.
+* `encryption_options` - (Optional) Configuration block containing encryption options. See below.
 * `engine_type` - (Required) The type of broker engine. Currently, Amazon MQ supports only `ActiveMQ`.
-* `engine_version` - (Required) The version of the broker engine. Currently, See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions.
+* `engine_version` - (Required) The version of the broker engine. See the [AmazonMQ Broker Engine docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/broker-engine.html) for supported versions.
 * `host_instance_type` - (Required) The broker's instance type. e.g. `mq.t2.micro` or `mq.m4.large`
 * `publicly_accessible` - (Optional) Whether to enable connections from applications outside of the VPC that hosts the broker's subnets.
 * `security_groups` - (Required) The list of security group IDs assigned to the broker.
@@ -67,7 +68,7 @@ The following arguments are supported:
 * `maintenance_window_start_time` - (Optional) Maintenance window start time. See below.
 * `logs` - (Optional) Logging configuration of the broker. See below.
 * `user` - (Optional) The list of all ActiveMQ usernames for the specified broker. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Nested Fields
 
@@ -75,6 +76,11 @@ The following arguments are supported:
 
 * `id` - (Optional) The Configuration ID.
 * `revision` - (Optional) Revision of the Configuration.
+
+#### `encryption_options`
+
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of Key Management Service (KMS) Customer Master Key (CMK) to use for encryption at rest. Requires setting `use_aws_owned_key` to `false`. To perform drift detection when AWS managed CMKs or customer managed CMKs are in use, this value must be configured.
+* `use_aws_owned_key` - (Optional) Boolean to enable an AWS owned Key Management Service (KMS) Customer Master Key (CMK) that is not in your account. Defaults to `true`. Setting to `false` without configuring `kms_key_id` will create an AWS managed Customer Master Key (CMK) aliased to `aws/mq` in your account.
 
 #### `maintenance_window_start_time`
 
@@ -114,4 +120,8 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MQ Broker is currently not importable.
+MQ Brokers can be imported using their broker id, e.g.
+
+```
+$ terraform import aws_mq_broker.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

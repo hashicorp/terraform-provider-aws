@@ -7,14 +7,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsFlowLog() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsLogFlowCreate,
 		Read:   resourceAwsLogFlowRead,
+		Update: resourceAwsLogFlowUpdate,
 		Delete: resourceAwsLogFlowDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -22,9 +24,10 @@ func resourceAwsFlowLog() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"iam_role_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 
 			"log_destination": {
@@ -85,7 +88,29 @@ func resourceAwsFlowLog() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.TrafficTypeAccept,
+					ec2.TrafficTypeAll,
+					ec2.TrafficTypeReject,
+				}, false),
 			},
+
+			"log_format": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+			},
+
+			"max_aggregation_interval": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      600,
+				ValidateFunc: validation.IntInSlice([]int{60, 600}),
+			},
+
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -135,6 +160,18 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 		opts.LogGroupName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("log_format"); ok && v != "" {
+		opts.LogFormat = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_aggregation_interval"); ok {
+		opts.MaxAggregationInterval = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
+		opts.TagSpecifications = ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVpcFlowLog)
+	}
+
 	log.Printf(
 		"[DEBUG] Flow Log Create configuration: %s", opts)
 	resp, err := conn.CreateFlowLogs(opts)
@@ -157,6 +194,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	opts := &ec2.DescribeFlowLogsInput{
 		FlowLogIds: []*string{aws.String(d.Id())},
@@ -181,7 +219,8 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("log_destination_type", fl.LogDestinationType)
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
-
+	d.Set("log_format", fl.LogFormat)
+	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
 	var resourceKey string
 	if strings.HasPrefix(*fl.ResourceId, "vpc-") {
 		resourceKey = "vpc_id"
@@ -194,7 +233,24 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set(resourceKey, fl.ResourceId)
 	}
 
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
+}
+
+func resourceAwsLogFlowUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
+	return resourceAwsLogFlowRead(d, meta)
 }
 
 func resourceAwsLogFlowDelete(d *schema.ResourceData, meta interface{}) error {

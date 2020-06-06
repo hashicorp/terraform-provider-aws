@@ -8,9 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	awspolicy "github.com/jen20/awspolicyequivalence"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kms/waiter"
 )
 
 func TestAccAWSKmsExternalKey_basic(t *testing.T) {
@@ -483,7 +484,9 @@ func testAccCheckAWSKmsExternalKeyDisappears(key *kms.KeyMetadata) resource.Test
 			return err
 		}
 
-		return waitForKmsKeyScheduleDeletion(conn, aws.StringValue(key.KeyId))
+		_, err = waiter.KeyStatePendingDeletion(conn, aws.StringValue(key.KeyId))
+
+		return err
 	}
 }
 
@@ -554,7 +557,8 @@ func testAccAWSKmsExternalKeyConfigPolicy(policy string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   deletion_window_in_days = 7
-  policy                  = <<POLICY
+
+  policy = <<POLICY
 %[1]s
 POLICY
 }
@@ -565,7 +569,8 @@ func testAccAWSKmsExternalKeyConfigTags1(value1 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   deletion_window_in_days = 7
-  tags                    = {
+
+  tags = {
     key1 = %[1]q
   }
 }
@@ -576,7 +581,8 @@ func testAccAWSKmsExternalKeyConfigTags2(value1, value2 string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_external_key" "test" {
   deletion_window_in_days = 7
-  tags                    = {
+
+  tags = {
     key1 = %[1]q
     key2 = %[2]q
   }

@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/customdiff"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsGlueClassifier() *schema.Resource {
@@ -24,6 +24,18 @@ func resourceAwsGlueClassifier() *schema.Resource {
 			func(diff *schema.ResourceDiff, v interface{}) error {
 				// ForceNew when changing classifier type
 				// InvalidInputException: UpdateClassifierRequest can't change the type of the classifier
+				if diff.HasChange("csv_classifier") && diff.HasChange("grok_classifier") {
+					diff.ForceNew("csv_classifier")
+					diff.ForceNew("grok_classifier")
+				}
+				if diff.HasChange("csv_classifier") && diff.HasChange("json_classifier") {
+					diff.ForceNew("csv_classifier")
+					diff.ForceNew("json_classifier")
+				}
+				if diff.HasChange("csv_classifier") && diff.HasChange("xml_classifier") {
+					diff.ForceNew("csv_classifier")
+					diff.ForceNew("xml_classifier")
+				}
 				if diff.HasChange("grok_classifier") && diff.HasChange("json_classifier") {
 					diff.ForceNew("grok_classifier")
 					diff.ForceNew("json_classifier")
@@ -41,11 +53,47 @@ func resourceAwsGlueClassifier() *schema.Resource {
 		),
 
 		Schema: map[string]*schema.Schema{
+			"csv_classifier": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				ConflictsWith: []string{"grok_classifier", "json_classifier", "xml_classifier"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allow_single_column": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"contains_header": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validateHeaderOptions(),
+						},
+						"delimiter": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"disable_value_trimming": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"header": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"quote_symbol": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"grok_classifier": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"json_classifier", "xml_classifier"},
+				ConflictsWith: []string{"csv_classifier", "json_classifier", "xml_classifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"classification": {
@@ -69,7 +117,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"grok_classifier", "xml_classifier"},
+				ConflictsWith: []string{"csv_classifier", "grok_classifier", "xml_classifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"json_path": {
@@ -89,7 +137,7 @@ func resourceAwsGlueClassifier() *schema.Resource {
 				Type:          schema.TypeList,
 				Optional:      true,
 				MaxItems:      1,
-				ConflictsWith: []string{"grok_classifier", "json_classifier"},
+				ConflictsWith: []string{"csv_classifier", "grok_classifier", "json_classifier"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"classification": {
@@ -112,6 +160,11 @@ func resourceAwsGlueClassifierCreate(d *schema.ResourceData, meta interface{}) e
 	name := d.Get("name").(string)
 
 	input := &glue.CreateClassifierInput{}
+
+	if v, ok := d.GetOk("csv_classifier"); ok {
+		m := v.([]interface{})[0].(map[string]interface{})
+		input.CsvClassifier = expandGlueCsvClassifierCreate(name, m)
+	}
 
 	if v, ok := d.GetOk("grok_classifier"); ok {
 		m := v.([]interface{})[0].(map[string]interface{})
@@ -164,6 +217,10 @@ func resourceAwsGlueClassifierRead(d *schema.ResourceData, meta interface{}) err
 		return nil
 	}
 
+	if err := d.Set("csv_classifier", flattenGlueCsvClassifier(classifier.CsvClassifier)); err != nil {
+		return fmt.Errorf("error setting match_criteria: %s", err)
+	}
+
 	if err := d.Set("grok_classifier", flattenGlueGrokClassifier(classifier.GrokClassifier)); err != nil {
 		return fmt.Errorf("error setting match_criteria: %s", err)
 	}
@@ -185,6 +242,11 @@ func resourceAwsGlueClassifierUpdate(d *schema.ResourceData, meta interface{}) e
 	conn := meta.(*AWSClient).glueconn
 
 	input := &glue.UpdateClassifierInput{}
+
+	if v, ok := d.GetOk("csv_classifier"); ok {
+		m := v.([]interface{})[0].(map[string]interface{})
+		input.CsvClassifier = expandGlueCsvClassifierUpdate(d.Id(), m)
+	}
 
 	if v, ok := d.GetOk("grok_classifier"); ok {
 		m := v.([]interface{})[0].(map[string]interface{})
@@ -222,6 +284,14 @@ func resourceAwsGlueClassifierDelete(d *schema.ResourceData, meta interface{}) e
 	return nil
 }
 
+func validateHeaderOptions() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"UNKNOWN",
+		"PRESENT",
+		"ABSENT",
+	}, true)
+}
+
 func deleteGlueClassifier(conn *glue.Glue, name string) error {
 	input := &glue.DeleteClassifierInput{
 		Name: aws.String(name),
@@ -236,6 +306,48 @@ func deleteGlueClassifier(conn *glue.Glue, name string) error {
 	}
 
 	return nil
+}
+
+func expandGlueCsvClassifierCreate(name string, m map[string]interface{}) *glue.CreateCsvClassifierRequest {
+	csvClassifier := &glue.CreateCsvClassifierRequest{
+		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
+		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		Delimiter:            aws.String(m["delimiter"].(string)),
+		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
+		Name:                 aws.String(name),
+		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
+	}
+
+	if v, ok := m["header"]; ok {
+		header := make([]string, len(v.([]interface{})))
+		for i, item := range v.([]interface{}) {
+			header[i] = fmt.Sprint(item)
+		}
+		csvClassifier.Header = aws.StringSlice(header)
+	}
+
+	return csvClassifier
+}
+
+func expandGlueCsvClassifierUpdate(name string, m map[string]interface{}) *glue.UpdateCsvClassifierRequest {
+	csvClassifier := &glue.UpdateCsvClassifierRequest{
+		AllowSingleColumn:    aws.Bool(m["allow_single_column"].(bool)),
+		ContainsHeader:       aws.String(m["contains_header"].(string)),
+		Delimiter:            aws.String(m["delimiter"].(string)),
+		DisableValueTrimming: aws.Bool(m["disable_value_trimming"].(bool)),
+		Name:                 aws.String(name),
+		QuoteSymbol:          aws.String(m["quote_symbol"].(string)),
+	}
+
+	if v, ok := m["header"]; ok {
+		header := make([]string, len(v.([]interface{})))
+		for i, item := range v.([]interface{}) {
+			header[i] = fmt.Sprint(item)
+		}
+		csvClassifier.Header = aws.StringSlice(header)
+	}
+
+	return csvClassifier
 }
 
 func expandGlueGrokClassifierCreate(name string, m map[string]interface{}) *glue.CreateGrokClassifierRequest {
@@ -306,6 +418,23 @@ func expandGlueXmlClassifierUpdate(name string, m map[string]interface{}) *glue.
 	}
 
 	return xmlClassifier
+}
+
+func flattenGlueCsvClassifier(csvClassifier *glue.CsvClassifier) []map[string]interface{} {
+	if csvClassifier == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"allow_single_column":    aws.BoolValue(csvClassifier.AllowSingleColumn),
+		"contains_header":        aws.StringValue(csvClassifier.ContainsHeader),
+		"delimiter":              aws.StringValue(csvClassifier.Delimiter),
+		"disable_value_trimming": aws.BoolValue(csvClassifier.DisableValueTrimming),
+		"header":                 aws.StringValueSlice(csvClassifier.Header),
+		"quote_symbol":           aws.StringValue(csvClassifier.QuoteSymbol),
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func flattenGlueGrokClassifier(grokClassifier *glue.GrokClassifier) []map[string]interface{} {

@@ -1,7 +1,7 @@
 ---
+subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_image"
-sidebar_current: "docs-aws-datasource-ecr-image"
 description: |-
     Provides details about an ECR Image
 ---
@@ -15,7 +15,7 @@ The ECR Image data source allows the details of an image with a particular tag o
 ```hcl
 data "aws_ecr_image" "service_image" {
   repository_name = "my/service"
-  image_tag = "latest"
+  image_tag       = "latest"
 }
 ```
 

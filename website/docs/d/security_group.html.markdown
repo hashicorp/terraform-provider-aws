@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_security_group"
-sidebar_current: "docs-aws-datasource-security-group-x"
 description: |-
     Provides details about a specific Security Group
 ---
@@ -45,7 +45,7 @@ security group whose data will be exported as attributes.
 
 * `name` - (Optional) The name that the desired security group must have.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired security group.
 
 * `vpc_id` - (Optional) The id of the VPC that the desired security group belongs to.

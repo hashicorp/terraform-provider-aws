@@ -2,6 +2,10 @@
 
 package glue
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -70,6 +74,12 @@ const (
 	// The same unique identifier was associated with two different records.
 	ErrCodeIdempotentParameterMismatchException = "IdempotentParameterMismatchException"
 
+	// ErrCodeIllegalWorkflowStateException for service response error code
+	// "IllegalWorkflowStateException".
+	//
+	// The workflow is in an invalid state to perform a requested operation.
+	ErrCodeIllegalWorkflowStateException = "IllegalWorkflowStateException"
+
 	// ErrCodeInternalServiceException for service response error code
 	// "InternalServiceException".
 	//
@@ -81,6 +91,12 @@ const (
 	//
 	// The input provided was not valid.
 	ErrCodeInvalidInputException = "InvalidInputException"
+
+	// ErrCodeMLTransformNotReadyException for service response error code
+	// "MLTransformNotReadyException".
+	//
+	// The machine learning transform is not ready to run.
+	ErrCodeMLTransformNotReadyException = "MLTransformNotReadyException"
 
 	// ErrCodeNoScheduleException for service response error code
 	// "NoScheduleException".
@@ -130,3 +146,29 @@ const (
 	// There was a version conflict.
 	ErrCodeVersionMismatchException = "VersionMismatchException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":                newErrorAccessDeniedException,
+	"AlreadyExistsException":               newErrorAlreadyExistsException,
+	"ConcurrentModificationException":      newErrorConcurrentModificationException,
+	"ConcurrentRunsExceededException":      newErrorConcurrentRunsExceededException,
+	"ConditionCheckFailureException":       newErrorConditionCheckFailureException,
+	"CrawlerNotRunningException":           newErrorCrawlerNotRunningException,
+	"CrawlerRunningException":              newErrorCrawlerRunningException,
+	"CrawlerStoppingException":             newErrorCrawlerStoppingException,
+	"GlueEncryptionException":              newErrorEncryptionException,
+	"EntityNotFoundException":              newErrorEntityNotFoundException,
+	"IdempotentParameterMismatchException": newErrorIdempotentParameterMismatchException,
+	"IllegalWorkflowStateException":        newErrorIllegalWorkflowStateException,
+	"InternalServiceException":             newErrorInternalServiceException,
+	"InvalidInputException":                newErrorInvalidInputException,
+	"MLTransformNotReadyException":         newErrorMLTransformNotReadyException,
+	"NoScheduleException":                  newErrorNoScheduleException,
+	"OperationTimeoutException":            newErrorOperationTimeoutException,
+	"ResourceNumberLimitExceededException": newErrorResourceNumberLimitExceededException,
+	"SchedulerNotRunningException":         newErrorSchedulerNotRunningException,
+	"SchedulerRunningException":            newErrorSchedulerRunningException,
+	"SchedulerTransitioningException":      newErrorSchedulerTransitioningException,
+	"ValidationException":                  newErrorValidationException,
+	"VersionMismatchException":             newErrorVersionMismatchException,
+}

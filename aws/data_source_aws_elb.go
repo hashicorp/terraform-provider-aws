@@ -5,8 +5,9 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsElb() *schema.Resource {
@@ -18,10 +19,14 @@ func dataSourceAwsElb() *schema.Resource {
 				Required: true,
 			},
 
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"access_logs": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"interval": {
@@ -74,7 +79,6 @@ func dataSourceAwsElb() *schema.Resource {
 			"health_check": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"healthy_threshold": {
@@ -192,6 +196,8 @@ func dataSourceAwsElb() *schema.Resource {
 
 func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	elbconn := meta.(*AWSClient).elbconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	lbName := d.Get("name").(string)
 
 	input := &elb.DescribeLoadBalancersInput{
@@ -208,5 +214,14 @@ func dataSourceAwsElbRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.SetId(*resp.LoadBalancerDescriptions[0].LoadBalancerName)
 
-	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, resp.LoadBalancerDescriptions[0])
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "elasticloadbalancing",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("loadbalancer/%s", *resp.LoadBalancerDescriptions[0].LoadBalancerName),
+	}
+	d.Set("arn", arn.String())
+
+	return flattenAwsELbResource(d, meta.(*AWSClient).ec2conn, elbconn, resp.LoadBalancerDescriptions[0], ignoreTagsConfig)
 }

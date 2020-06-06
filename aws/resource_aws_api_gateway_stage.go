@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsApiGatewayStage() *schema.Resource {
@@ -64,6 +65,16 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 			"cache_cluster_size": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					apigateway.CacheClusterSize05,
+					apigateway.CacheClusterSize16,
+					apigateway.CacheClusterSize61,
+					apigateway.CacheClusterSize118,
+					apigateway.CacheClusterSize135,
+					apigateway.CacheClusterSize237,
+					apigateway.CacheClusterSize284,
+					apigateway.CacheClusterSize582,
+				}, true),
 			},
 			"client_certificate_id": {
 				Type:     schema.TypeString,
@@ -102,20 +113,23 @@ func resourceAwsApiGatewayStage() *schema.Resource {
 			"variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tagsSchema(),
 			"xray_tracing_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
 
 func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
-
-	d.Partial(true)
+	conn := meta.(*AWSClient).apigatewayconn
 
 	input := apigateway.CreateStageInput{
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
@@ -148,12 +162,8 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 		}
 		input.Variables = aws.StringMap(variables)
 	}
-	if vars, ok := d.GetOk("tags"); ok {
-		newMap := make(map[string]string, len(vars.(map[string]interface{})))
-		for k, v := range vars.(map[string]interface{}) {
-			newMap[k] = v.(string)
-		}
-		input.Tags = aws.StringMap(newMap)
+	if v, ok := d.GetOk("tags"); ok {
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ApigatewayTags()
 	}
 
 	out, err := conn.CreateStage(&input)
@@ -163,21 +173,14 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 
 	d.SetId(fmt.Sprintf("ags-%s-%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)))
 
-	d.SetPartial("rest_api_id")
-	d.SetPartial("stage_name")
-	d.SetPartial("deployment_id")
-	d.SetPartial("description")
-	d.SetPartial("variables")
-	d.SetPartial("xray_tracing_enabled")
-
-	if waitForCache && *out.CacheClusterStatus != "NOT_AVAILABLE" {
+	if waitForCache && *out.CacheClusterStatus != apigateway.CacheClusterStatusNotAvailable {
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{
-				"CREATE_IN_PROGRESS",
-				"DELETE_IN_PROGRESS",
-				"FLUSH_IN_PROGRESS",
+				apigateway.CacheClusterStatusCreateInProgress,
+				apigateway.CacheClusterStatusDeleteInProgress,
+				apigateway.CacheClusterStatusFlushInProgress,
 			},
-			Target: []string{"AVAILABLE"},
+			Target: []string{apigateway.CacheClusterStatusAvailable},
 			Refresh: apiGatewayStageCacheRefreshFunc(conn,
 				d.Get("rest_api_id").(string),
 				d.Get("stage_name").(string)),
@@ -190,10 +193,6 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 		}
 	}
 
-	d.SetPartial("cache_cluster_enabled")
-	d.SetPartial("cache_cluster_size")
-	d.Partial(false)
-
 	if _, ok := d.GetOk("client_certificate_id"); ok {
 		return resourceAwsApiGatewayStageUpdate(d, meta)
 	}
@@ -204,7 +203,8 @@ func resourceAwsApiGatewayStageCreate(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading API Gateway Stage %s", d.Id())
 	restApiId := d.Get("rest_api_id").(string)
@@ -214,14 +214,17 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 		StageName: aws.String(stageName),
 	}
 	stage, err := conn.GetStage(&input)
-	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "NotFoundException" {
-			log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error getting API Gateway REST API (%s) Stage (%s): %w", restApiId, stageName, err)
+	}
+
 	log.Printf("[DEBUG] Received API Gateway Stage: %s", stage)
 
 	if err := d.Set("access_log_settings", flattenApiGatewayStageAccessLogSettings(stage.AccessLogSettings)); err != nil {
@@ -230,7 +233,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 
 	d.Set("client_certificate_id", stage.ClientCertificateId)
 
-	if stage.CacheClusterStatus != nil && *stage.CacheClusterStatus == "DELETE_IN_PROGRESS" {
+	if stage.CacheClusterStatus != nil && *stage.CacheClusterStatus == apigateway.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", nil)
 	} else {
@@ -243,16 +246,23 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("documentation_version", stage.DocumentationVersion)
 	d.Set("xray_tracing_enabled", stage.TracingEnabled)
 
-	if err := d.Set("tags", aws.StringValueMap(stage.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(stage.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
+
+	stageArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
+	}.String()
+	d.Set("arn", stageArn)
 
 	if err := d.Set("variables", aws.StringValueMap(stage.Variables)); err != nil {
 		return fmt.Errorf("error setting variables: %s", err)
 	}
 
-	region := meta.(*AWSClient).region
-	d.Set("invoke_url", buildApiGatewayInvokeURL(restApiId, region, stageName))
+	d.Set("invoke_url", buildApiGatewayInvokeURL(meta.(*AWSClient), restApiId, stageName))
 
 	executionArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -267,9 +277,7 @@ func resourceAwsApiGatewayStageRead(d *schema.ResourceData, meta interface{}) er
 }
 
 func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
-
-	d.Partial(true)
+	conn := meta.(*AWSClient).apigatewayconn
 
 	stageArn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -277,10 +285,12 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		Service:   "apigateway",
 		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", d.Get("rest_api_id").(string), d.Get("stage_name").(string)),
 	}.String()
-	if tagErr := setTagsAPIGatewayStage(conn, d, stageArn); tagErr != nil {
-		return tagErr
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.ApigatewayUpdateTags(conn, stageArn, o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
-	d.SetPartial("tags")
 
 	operations := make([]*apigateway.PatchOperation, 0)
 	waitForCache := false
@@ -374,23 +384,17 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Updating API Gateway Stage failed: %s", err)
 	}
 
-	d.SetPartial("client_certificate_id")
-	d.SetPartial("deployment_id")
-	d.SetPartial("description")
-	d.SetPartial("xray_tracing_enabled")
-	d.SetPartial("variables")
-
-	if waitForCache && *out.CacheClusterStatus != "NOT_AVAILABLE" {
+	if waitForCache && *out.CacheClusterStatus != apigateway.CacheClusterStatusNotAvailable {
 		stateConf := &resource.StateChangeConf{
 			Pending: []string{
-				"CREATE_IN_PROGRESS",
-				"FLUSH_IN_PROGRESS",
+				apigateway.CacheClusterStatusCreateInProgress,
+				apigateway.CacheClusterStatusFlushInProgress,
 			},
 			Target: []string{
-				"AVAILABLE",
+				apigateway.CacheClusterStatusAvailable,
 				// There's an AWS API bug (raised & confirmed in Sep 2016 by support)
 				// which causes the stage to remain in deletion state forever
-				"DELETE_IN_PROGRESS",
+				apigateway.CacheClusterStatusDeleteInProgress,
 			},
 			Refresh: apiGatewayStageCacheRefreshFunc(conn,
 				d.Get("rest_api_id").(string),
@@ -403,10 +407,6 @@ func resourceAwsApiGatewayStageUpdate(d *schema.ResourceData, meta interface{}) 
 			return err
 		}
 	}
-
-	d.SetPartial("cache_cluster_enabled")
-	d.SetPartial("cache_cluster_size")
-	d.Partial(false)
 
 	return resourceAwsApiGatewayStageRead(d, meta)
 }
@@ -459,15 +459,20 @@ func apiGatewayStageCacheRefreshFunc(conn *apigateway.APIGateway, apiId, stageNa
 }
 
 func resourceAwsApiGatewayStageDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway Stage: %s", d.Id())
 	input := apigateway.DeleteStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
 	}
 	_, err := conn.DeleteStage(&input)
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
 	if err != nil {
-		return fmt.Errorf("Deleting API Gateway Stage failed: %s", err)
+		return fmt.Errorf("error deleting API Gateway REST API (%s) Stage (%s): %w", d.Get("rest_api_id").(string), d.Get("stage_name").(string), err)
 	}
 
 	return nil

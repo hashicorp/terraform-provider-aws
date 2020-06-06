@@ -1,7 +1,7 @@
 ---
+subcategory: "Redshift"
 layout: "aws"
 page_title: "AWS: aws_redshift_cluster"
-sidebar_current: "docs-aws-resource-redshift-cluster"
 description: |-
   Provides a Redshift Cluster resource.
 ---
@@ -71,7 +71,7 @@ string.
 * `iam_roles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
 * `logging` - (Optional) Logging, documented below.
 * `snapshot_copy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Timeouts
 
@@ -101,6 +101,7 @@ For more information on the permissions required for the bucket, please read the
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of cluster
 * `id` - The Redshift Cluster ID.
 * `cluster_identifier` - The Cluster Identifier
 * `cluster_type` - The cluster type

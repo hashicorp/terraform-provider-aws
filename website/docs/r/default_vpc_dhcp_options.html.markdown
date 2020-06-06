@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_vpc_dhcp_options"
-sidebar_current: "docs-aws-resource-default-vpc-dhcp-options"
 description: |-
   Manage the default VPC DHCP Options resource.
 ---
@@ -39,7 +39,7 @@ The following arguments are still supported:
 
 * `netbios_name_servers` - (Optional) List of NETBIOS name servers.
 * `netbios_node_type` - (Optional) The NetBIOS node type (1, 2, 4, or 8). AWS recommends to specify 2 since broadcast and multicast are not supported in their network. For more information about these node types, see [RFC 2132](http://www.ietf.org/rfc/rfc2132.txt).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Removing `aws_default_vpc_dhcp_options` from your configuration
 

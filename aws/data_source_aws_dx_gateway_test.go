@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsDxGateway_Basic(t *testing.T) {
@@ -41,6 +41,7 @@ resource "aws_dx_gateway" "wrong" {
   amazon_side_asn = "%d"
   name            = "%s-wrong"
 }
+
 resource "aws_dx_gateway" "test" {
   amazon_side_asn = "%d"
   name            = "%s"

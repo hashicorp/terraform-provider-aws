@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_network_acl"
-sidebar_current: "docs-aws-resource-default-network-acl"
 description: |-
   Manage the default Network ACL resource.
 ---
@@ -45,13 +45,13 @@ resource "aws_vpc" "mainvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.mainvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.mainvpc.default_network_acl_id
 
   ingress {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = # set a CIDR block here
+    cidr_block = aws_vpc.mainvpc.cidr_block
     from_port  = 0
     to_port    = 0
   }
@@ -78,20 +78,20 @@ resource "aws_vpc" "mainvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.mainvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.mainvpc.default_network_acl_id
 
   ingress {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = # set a CIDR block here
+    cidr_block = aws_vpc.mainvpc.cidr_block
     from_port  = 0
     to_port    = 0
   }
 }
 ```
 
-## Example config to deny all traffic to any Subnet in the Default Network ACL:
+## Example config to deny all traffic to any Subnet in the Default Network ACL
 
 This config denies all traffic in the Default ACL. This can be useful if you
 want a locked down default to force all resources in the VPC to assign a
@@ -119,7 +119,7 @@ attribute is exported from `aws_vpc`, or manually found via the AWS Console.
 notes below on managing Subnets in the Default Network ACL
 * `ingress` - (Optional) Specifies an ingress rule. Parameters defined below.
 * `egress` - (Optional) Specifies an egress rule. Parameters defined below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Both `egress` and `ingress` support the following keys:
 
@@ -164,7 +164,7 @@ As an alternative to the above, you can also specify the following lifecycle con
 
 ```hcl
 lifecycle {
-  ignore_changes = ["subnet_ids"]
+  ignore_changes = [subnet_ids]
 }
 ```
 
@@ -189,3 +189,11 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The ID of the AWS account that owns the Default Network ACL
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html
+
+## Import
+
+Default Network ACLs can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_default_network_acl.sample acl-7aaabd18
+```

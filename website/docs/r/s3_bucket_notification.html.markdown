@@ -1,7 +1,7 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_notification"
-sidebar_current: "docs-aws-resource-s3-bucket-notification"
 description: |-
   Manages a S3 Bucket Notification Configuration
 ---
@@ -10,7 +10,7 @@ description: |-
 
 Manages a S3 Bucket Notification Configuration. For additional information, see the [Configuring S3 Event Notifications section in the Amazon S3 Developer Guide](https://docs.aws.amazon.com/AmazonS3/latest/dev/NotificationHowTo.html).
 
-~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration.
+~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
 
 ## Example Usage
 
@@ -141,6 +141,8 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     filter_prefix       = "AWSLogs/"
     filter_suffix       = ".log"
   }
+
+  depends_on = [aws_lambda_permission.allow_bucket]
 }
 ```
 
@@ -217,6 +219,11 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
     filter_prefix       = "OtherLogs/"
     filter_suffix       = ".log"
   }
+
+  depends_on = [
+    aws_lambda_permission.allow_bucket1,
+    aws_lambda_permission.allow_bucket2
+  ]
 }
 ```
 

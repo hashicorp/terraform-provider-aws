@@ -1,7 +1,7 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_parameter_group"
-sidebar_current: "docs-aws-resource-docdb-cluster-parameter-group"
 description: |-
   Manages a DocumentDB Cluster Parameter Group
 ---
@@ -34,7 +34,7 @@ The following arguments are supported:
 * `family` - (Required, Forces new resource) The family of the documentDB cluster parameter group.
 * `description` - (Optional, Forces new resource) The description of the documentDB cluster parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of documentDB parameters to apply.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Parameter blocks support the following:
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_virtual_service"
-sidebar_current: "docs-aws-resource-appmesh-virtual-service"
 description: |-
   Provides an AWS App Mesh virtual service resource.
 ---
@@ -16,8 +16,8 @@ Provides an AWS App Mesh virtual service resource.
 
 ```hcl
 resource "aws_appmesh_virtual_service" "servicea" {
-  name                = "servicea.simpleapp.local"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "servicea.simpleapp.local"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     provider {
@@ -33,8 +33,8 @@ resource "aws_appmesh_virtual_service" "servicea" {
 
 ```hcl
 resource "aws_appmesh_virtual_service" "servicea" {
-  name                = "servicea.simpleapp.local"
-  mesh_name           = "${aws_appmesh_mesh.simple.id}"
+  name      = "servicea.simpleapp.local"
+  mesh_name = "${aws_appmesh_mesh.simple.id}"
 
   spec {
     provider {
@@ -53,6 +53,7 @@ The following arguments are supported:
 * `name` - (Required) The name to use for the virtual service.
 * `mesh_name` - (Required) The name of the service mesh in which to create the virtual service.
 * `spec` - (Required) The virtual service specification to apply.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `spec` object supports the following:
 

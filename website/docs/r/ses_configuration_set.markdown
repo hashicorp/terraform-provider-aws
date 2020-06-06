@@ -1,7 +1,7 @@
 ---
+subcategory: "SES"
 layout: "aws"
-page_title: "AWS: ses_configuration_set"
-sidebar_current: "docs-aws-resource-ses-configuration-set"
+page_title: "AWS: aws_ses_configuration_set"
 description: |-
   Provides an SES configuration set
 ---

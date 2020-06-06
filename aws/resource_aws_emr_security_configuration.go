@@ -2,12 +2,13 @@ package aws
 
 import (
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/emr"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsEMRSecurityConfiguration() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsEMRSecurityConfiguration() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 			},
 
 			"creation_date": {
@@ -93,7 +94,7 @@ func resourceAwsEmrSecurityConfigurationRead(d *schema.ResourceData, meta interf
 		return err
 	}
 
-	d.Set("creation_date", resp.CreationDateTime)
+	d.Set("creation_date", aws.TimeValue(resp.CreationDateTime).Format(time.RFC3339))
 	d.Set("name", resp.Name)
 	d.Set("configuration", resp.SecurityConfiguration)
 

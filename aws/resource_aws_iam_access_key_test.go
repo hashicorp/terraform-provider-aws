@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/hashicorp/vault/helper/pgpkeys"
 )
 
@@ -196,11 +196,11 @@ func testDecryptSecretKeyAndTest(nAccessKey, key string) resource.TestCheckFunc 
 func testAccAWSAccessKeyConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-        name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-        user    = "${aws_iam_user.a_user.name}"
+  user = "${aws_iam_user.a_user.name}"
 }
 `, rName)
 }
@@ -208,12 +208,13 @@ resource "aws_iam_access_key" "a_key" {
 func testAccAWSAccessKeyConfig_encrypted(rName, key string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-        name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-        user    = "${aws_iam_user.a_user.name}"
-        pgp_key = <<EOF
+  user = "${aws_iam_user.a_user.name}"
+
+  pgp_key = <<EOF
 %s
 EOF
 }
@@ -223,17 +224,40 @@ EOF
 func testAccAWSAccessKeyConfig_inactive(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_user" "a_user" {
-        name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_access_key" "a_key" {
-		user   = "${aws_iam_user.a_user.name}"
-		status = "Inactive"
+  user   = "${aws_iam_user.a_user.name}"
+  status = "Inactive"
 }
 `, rName)
 }
 
-func TestSesSmtpPasswordFromSecretKey(t *testing.T) {
+func TestSesSmtpPasswordFromSecretKeySigV4(t *testing.T) {
+	cases := []struct {
+		Region   string
+		Input    string
+		Expected string
+	}{
+		{"eu-central-1", "some+secret+key", "BMXhUYlu5Z3gSXVQORxlVa7XPaz91aGWdfHxvkOZdWZ2"},
+		{"eu-central-1", "another+secret+key", "BBbphbrQmrKMx42d1N6+C7VINYEBGI5v9VsZeTxwskfh"},
+		{"us-west-1", "some+secret+key", "BH+jbMzper5WwlwUar9E1ySBqHa9whi0GPo+sJ0mVYJj"},
+		{"us-west-1", "another+secret+key", "BKVmjjMDFk/qqw8EROW99bjCS65PF8WKvK5bSr4Y6EqF"},
+	}
+
+	for _, tc := range cases {
+		actual, err := sesSmtpPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
+		if err != nil {
+			t.Fatalf("unexpected error: %s", err)
+		}
+		if actual != tc.Expected {
+			t.Fatalf("%q: expected %q, got %q", tc.Input, tc.Expected, actual)
+		}
+	}
+}
+
+func TestSesSmtpPasswordFromSecretKeySigV2(t *testing.T) {
 	cases := []struct {
 		Input    string
 		Expected string
@@ -243,7 +267,7 @@ func TestSesSmtpPasswordFromSecretKey(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual, err := sesSmtpPasswordFromSecretKey(&tc.Input)
+		actual, err := sesSmtpPasswordFromSecretKeySigV2(&tc.Input)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}

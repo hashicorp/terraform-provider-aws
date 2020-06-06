@@ -7,7 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/acm"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsAcmCertificate() *schema.Resource {
@@ -27,6 +29,21 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"key_types": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					ValidateFunc: validation.StringInSlice([]string{
+						acm.KeyAlgorithmEcPrime256v1,
+						acm.KeyAlgorithmEcSecp384r1,
+						acm.KeyAlgorithmEcSecp521r1,
+						acm.KeyAlgorithmRsa1024,
+						acm.KeyAlgorithmRsa2048,
+						acm.KeyAlgorithmRsa4096,
+					}, false),
+				},
+			},
 			"types": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -37,21 +54,30 @@ func dataSourceAwsAcmCertificate() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).acmconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	params := &acm.ListCertificatesInput{}
+
+	if v := d.Get("key_types").(*schema.Set); v.Len() > 0 {
+		params.Includes = &acm.Filters{
+			KeyTypes: expandStringSet(v),
+		}
+	}
+
 	target := d.Get("domain")
 	statuses, ok := d.GetOk("statuses")
 	if ok {
 		statusStrings := statuses.([]interface{})
 		params.CertificateStatuses = expandStringList(statusStrings)
 	} else {
-		params.CertificateStatuses = []*string{aws.String("ISSUED")}
+		params.CertificateStatuses = []*string{aws.String(acm.CertificateStatusIssued)}
 	}
 
 	var arns []*string
@@ -145,6 +171,16 @@ func dataSourceAwsAcmCertificateRead(d *schema.ResourceData, meta interface{}) e
 
 	d.SetId(time.Now().UTC().String())
 	d.Set("arn", matchedCertificate.CertificateArn)
+
+	tags, err := keyvaluetags.AcmListTags(conn, aws.StringValue(matchedCertificate.CertificateArn))
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for ACM Certificate (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }

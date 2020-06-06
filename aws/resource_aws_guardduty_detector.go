@@ -6,7 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
 )
 
 func resourceAwsGuardDutyDetector() *schema.Resource {
@@ -106,14 +108,32 @@ func resourceAwsGuardDutyDetectorUpdate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsGuardDutyDetectorDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).guarddutyconn
-	input := guardduty.DeleteDetectorInput{
+
+	input := &guardduty.DeleteDetectorInput{
 		DetectorId: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Delete GuardDuty Detector: %s", input)
-	_, err := conn.DeleteDetector(&input)
-	if err != nil {
-		return fmt.Errorf("Deleting GuardDuty Detector '%s' failed: %s", d.Id(), err.Error())
+	err := resource.Retry(waiter.MembershipPropagationTimeout, func() *resource.RetryError {
+		_, err := conn.DeleteDetector(input)
+
+		if isAWSErr(err, guardduty.ErrCodeBadRequestException, "cannot delete detector while it has invited or associated members") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteDetector(input)
 	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting GuardDuty Detector (%s): %w", d.Id(), err)
+	}
+
 	return nil
 }

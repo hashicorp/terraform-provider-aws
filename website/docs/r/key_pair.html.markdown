@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_key_pair"
-sidebar_current: "docs-aws-resource-key-pair"
 description: |-
   Provides a Key Pair resource. Currently this supports importing an existing key pair but not creating a new key pair.
 ---
@@ -34,12 +34,14 @@ The following arguments are supported:
 * `key_name` - (Optional) The name for the key pair.
 * `key_name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `key_name`.
 * `public_key` - (Required) The public key material.
+* `tags` - (Optional) Key-value map of resource tags
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `key_name` - The key pair name.
+* `key_pair_id` - The key pair ID.
 * `fingerprint` - The MD5 public key fingerprint as specified in section 4 of RFC 4716.
 
 ## Import

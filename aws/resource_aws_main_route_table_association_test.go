@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSMainRouteTableAssociation_basic(t *testing.T) {
@@ -18,21 +18,13 @@ func TestAccAWSMainRouteTableAssociation_basic(t *testing.T) {
 			{
 				Config: testAccMainRouteTableAssociationConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMainRouteTableAssociation(
-						"aws_main_route_table_association.foo",
-						"aws_vpc.foo",
-						"aws_route_table.foo",
-					),
+					testAccCheckMainRouteTableAssociation("aws_main_route_table_association.foo", "aws_vpc.foo"),
 				),
 			},
 			{
 				Config: testAccMainRouteTableAssociationConfigUpdate,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckMainRouteTableAssociation(
-						"aws_main_route_table_association.foo",
-						"aws_vpc.foo",
-						"aws_route_table.bar",
-					),
+					testAccCheckMainRouteTableAssociation("aws_main_route_table_association.foo", "aws_vpc.foo"),
 				),
 			},
 		},
@@ -67,10 +59,7 @@ func testAccCheckMainRouteTableAssociationDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckMainRouteTableAssociation(
-	mainRouteTableAssociationResource string,
-	vpcResource string,
-	routeTableResource string) resource.TestCheckFunc {
+func testAccCheckMainRouteTableAssociation(mainRouteTableAssociationResource string, vpcResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[mainRouteTableAssociationResource]
 		if !ok {

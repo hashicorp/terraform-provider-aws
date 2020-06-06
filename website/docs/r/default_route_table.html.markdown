@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_route_table"
-sidebar_current: "docs-aws-resource-default-route-table"
 description: |-
   Provides a resource to manage a Default VPC Routing Table.
 ---
@@ -40,7 +40,7 @@ in conjunction with any Route resources. Doing so will cause
 a conflict of rule settings and will overwrite routes.
 
 
-## Example usage with tags:
+## Example usage with tags
 
 ```hcl
 resource "aws_default_route_table" "r" {
@@ -63,7 +63,7 @@ The following arguments are supported:
 * `default_route_table_id` - (Required) The ID of the Default Routing Table.
 * `route` - (Optional) A list of route objects. Their keys are documented below.
   This argument is processed in [attribute-as-blocks mode](/docs/configuration/attr-as-blocks.html).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `propagating_vgws` - (Optional) A list of virtual gateways for propagation.
 
 ### route Argument Reference
@@ -71,7 +71,7 @@ The following arguments are supported:
 One of the following destination arguments must be supplied:
 
 * `cidr_block` - (Required) The CIDR block of the route.
-* `ipv6_cidr_block` - Optional) The Ipv6 CIDR block of the route
+* `ipv6_cidr_block` - (Optional) The Ipv6 CIDR block of the route
 
 One of the following target arguments must be supplied:
 
@@ -92,6 +92,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the routing table
 * `owner_id` - The ID of the AWS account that owns the route table
 
+## Import
+
+Default VPC Routing tables can be imported using the `vpc_id`, e.g.
+
+```
+$ terraform import aws_default_route_table.example vpc-33cc44dd
+```
 
 [aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
 [tf-route-tables]: /docs/providers/aws/r/route_table.html

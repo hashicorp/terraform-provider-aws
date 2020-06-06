@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb_target_group_attachment"
-sidebar_current: "docs-aws-resource-elbv2-target-group-attachment"
 description: |-
   Provides the ability to register instances and containers with a LB
   target group
@@ -52,9 +52,9 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_lb_target_group_attachment" "test" {
-  target_group_arn  = "${aws_lb_target_group.test.arn}"
-  target_id         = "${aws_lambda_function.test.arn}"
-  depends_on        = ["aws_lambda_permission.with_lb"]
+  target_group_arn = "${aws_lb_target_group.test.arn}"
+  target_id        = "${aws_lambda_function.test.arn}"
+  depends_on       = ["aws_lambda_permission.with_lb"]
 }
 ```
 

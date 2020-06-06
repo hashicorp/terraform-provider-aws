@@ -1,7 +1,7 @@
 ---
+subcategory: "XRay"
 layout: "aws"
 page_title: "AWS: aws_xray_sampling_rule"
-sidebar_current: "docs-aws-resource-xray-sampling-rule"
 description: |-
     Creates and manages an AWS XRay Sampling Rule.
 ---
@@ -14,17 +14,18 @@ Creates and manages an AWS XRay Sampling Rule.
 
 ```hcl
 resource "aws_xray_sampling_rule" "example" {
-  rule_name = "example"
-  priority = 10000
-  version = 1
+  rule_name      = "example"
+  priority       = 10000
+  version        = 1
   reservoir_size = 1
-  fixed_rate = 0.05,
-  url_path = "*"
-  host = "*"
-  http_method = "*"
-  service_type = "*"
-  service_name = "*"
-  resource_arn = "*"
+  fixed_rate     = 0.05
+  url_path       = "*"
+  host           = "*"
+  http_method    = "*"
+  service_type   = "*"
+  service_name   = "*"
+  resource_arn   = "*"
+
   attributes = {
     Hello = "Tris"
   }

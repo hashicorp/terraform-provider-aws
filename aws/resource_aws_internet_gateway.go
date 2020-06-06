@@ -8,8 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsInternetGateway() *schema.Resource {
@@ -51,9 +52,9 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	ig := *resp.InternetGateway
 	d.SetId(*ig.InternetGatewayId)
 	log.Printf("[INFO] InternetGateway ID: %s", d.Id())
-
+	var igRaw interface{}
 	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		igRaw, _, err := IGStateRefreshFunc(conn, d.Id())()
+		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
 		if igRaw != nil {
 			return nil
 		}
@@ -63,14 +64,20 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 			return resource.NonRetryableError(err)
 		}
 	})
-
+	if isResourceTimeoutError(err) {
+		igRaw, _, err = IGStateRefreshFunc(conn, d.Id())()
+		if igRaw == nil {
+			return fmt.Errorf("error finding Internet Gateway (%s) after creation; retry running Terraform", d.Id())
+		}
+	}
 	if err != nil {
-		return fmt.Errorf("%s", err)
+		return fmt.Errorf("Error refreshing internet gateway state: %s", err)
 	}
 
-	err = setTags(conn, d)
-	if err != nil {
-		return err
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding EC2 Internet Gateway (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	// Attach the new gateway to the correct vpc
@@ -84,6 +91,7 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 
 func resourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	igRaw, _, err := IGStateRefreshFunc(conn, d.Id())()
 	if err != nil {
@@ -103,7 +111,10 @@ func resourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) er
 		d.Set("vpc_id", ig.Attachments[0].VpcId)
 	}
 
-	d.Set("tags", tagsToMap(ig.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(ig.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("owner_id", ig.OwnerId)
 
 	return nil
@@ -124,11 +135,13 @@ func resourceAwsInternetGatewayUpdate(d *schema.ResourceData, meta interface{}) 
 
 	conn := meta.(*AWSClient).ec2conn
 
-	if err := setTags(conn, d); err != nil {
-		return err
-	}
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	d.SetPartial("tags")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating EC2 Internet Gateway (%s) tags: %s", d.Id(), err)
+		}
+	}
 
 	return resourceAwsInternetGatewayRead(d, meta)
 }
@@ -142,29 +155,32 @@ func resourceAwsInternetGatewayDelete(d *schema.ResourceData, meta interface{}) 
 	}
 
 	log.Printf("[INFO] Deleting Internet Gateway: %s", d.Id())
-
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteInternetGateway(&ec2.DeleteInternetGatewayInput{
-			InternetGatewayId: aws.String(d.Id()),
-		})
+	input := &ec2.DeleteInternetGatewayInput{
+		InternetGatewayId: aws.String(d.Id()),
+	}
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
+		_, err := conn.DeleteInternetGateway(input)
 		if err == nil {
 			return nil
 		}
 
-		ec2err, ok := err.(awserr.Error)
-		if !ok {
-			return resource.RetryableError(err)
+		if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+			return nil
 		}
 
-		switch ec2err.Code() {
-		case "InvalidInternetGatewayID.NotFound":
-			return nil
-		case "DependencyViolation":
-			return resource.RetryableError(err) // retry
+		if isAWSErr(err, "DependencyViolation", "") {
+			return resource.RetryableError(err)
 		}
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteInternetGateway(input)
+	}
+	if err != nil {
+		return fmt.Errorf("Error deleting internet gateway: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) error {
@@ -181,25 +197,26 @@ func resourceAwsInternetGatewayAttach(d *schema.ResourceData, meta interface{}) 
 		"[INFO] Attaching Internet Gateway '%s' to VPC '%s'",
 		d.Id(),
 		d.Get("vpc_id").(string))
-
+	input := &ec2.AttachInternetGatewayInput{
+		InternetGatewayId: aws.String(d.Id()),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
+	}
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.AttachInternetGateway(&ec2.AttachInternetGatewayInput{
-			InternetGatewayId: aws.String(d.Id()),
-			VpcId:             aws.String(d.Get("vpc_id").(string)),
-		})
+		_, err := conn.AttachInternetGateway(input)
 		if err == nil {
 			return nil
 		}
-		if ec2err, ok := err.(awserr.Error); ok {
-			switch ec2err.Code() {
-			case "InvalidInternetGatewayID.NotFound":
-				return resource.RetryableError(err) // retry
-			}
+		if isAWSErr(err, "InvalidInternetGatewayID.NotFound", "") {
+			return resource.RetryableError(err)
 		}
+
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AttachInternetGateway(input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error attaching internet gateway: %s", err)
 	}
 
 	// A note on the states below: the AWS docs (as of July, 2014) say

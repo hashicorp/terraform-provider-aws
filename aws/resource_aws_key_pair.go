@@ -4,20 +4,19 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
-
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsKeyPair() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsKeyPairCreate,
 		Read:   resourceAwsKeyPairRead,
-		Update: nil,
+		Update: resourceAwsKeyPairUpdate,
 		Delete: resourceAwsKeyPairDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
@@ -59,6 +58,11 @@ func resourceAwsKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_pair_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -81,6 +85,7 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	req := &ec2.ImportKeyPairInput{
 		KeyName:           aws.String(keyName),
 		PublicKeyMaterial: []byte(publicKey),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeKeyPair),
 	}
 	resp, err := conn.ImportKeyPair(req)
 	if err != nil {
@@ -88,18 +93,20 @@ func resourceAwsKeyPairCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(*resp.KeyName)
+
 	return resourceAwsKeyPairRead(d, meta)
 }
 
 func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &ec2.DescribeKeyPairsInput{
 		KeyNames: []*string{aws.String(d.Id())},
 	}
 	resp, err := conn.DescribeKeyPairs(req)
 	if err != nil {
-		awsErr, ok := err.(awserr.Error)
-		if ok && awsErr.Code() == "InvalidKeyPair.NotFound" {
+		if isAWSErr(err, "InvalidKeyPair.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -110,11 +117,28 @@ func resourceAwsKeyPairRead(d *schema.ResourceData, meta interface{}) error {
 		if *keyPair.KeyName == d.Id() {
 			d.Set("key_name", keyPair.KeyName)
 			d.Set("fingerprint", keyPair.KeyFingerprint)
+			d.Set("key_pair_id", keyPair.KeyPairId)
+			if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(keyPair.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+				return fmt.Errorf("error setting tags: %s", err)
+			}
 			return nil
 		}
 	}
 
 	return fmt.Errorf("Unable to find key pair within: %#v", resp.KeyPairs)
+}
+
+func resourceAwsKeyPairUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).ec2conn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Get("key_pair_id").(string), o, n); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
+	}
+
+	return resourceAwsKeyPairRead(d, meta)
 }
 
 func resourceAwsKeyPairDelete(d *schema.ResourceData, meta interface{}) error {

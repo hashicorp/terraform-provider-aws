@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_instance"
-sidebar_current: "docs-aws-datasource-db-instance"
 description: |-
   Get information on an RDS Database Instance.
 ---
