@@ -1798,7 +1798,7 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 	})
 }
 
-// Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
+// Test to validate fix for GH-ISSUE #13118 (dynamic ebs_block_devices forcing replacement after state refresh)
 // EBS Block Devices created dynamically (without a root device configured)
 func TestAccAWSInstance_DynamicEbsBlockDevice_Multiple(t *testing.T) {
 	var instance ec2.Instance
@@ -1858,7 +1858,7 @@ func TestAccAWSInstance_DynamicEbsBlockDevice_Multiple(t *testing.T) {
 	})
 }
 
-// Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
+// Test to validate fix for GH-ISSUE #13118 (dynamic ebs_block_devices forcing replacement after state refresh)
 // EBS Block Devices created dynamically from AMI's block_device_mappings (only 1 i.e. the root device)
 func TestAccAWSInstance_DynamicEbsBlockDevice_SingleFromAmi(t *testing.T) {
 	var instance ec2.Instance
@@ -1888,7 +1888,7 @@ func TestAccAWSInstance_DynamicEbsBlockDevice_SingleFromAmi(t *testing.T) {
 	})
 }
 
-// Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
+// Test to validate fix for GH-ISSUE #13118 (dynamic ebs_block_devices forcing replacement after state refresh)
 // EBS Block Devices created dynamically from AMI's block_device_mappings (more than 1 i.e. n mappings + root device)
 func TestAccAWSInstance_DynamicEbsBlockDevice_MultipleFromAmi(t *testing.T) {
 	var instance ec2.Instance
