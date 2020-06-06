@@ -2360,6 +2360,9 @@ func suppressEBSBlockDeviceDiffs(o, n interface{}, d *schema.ResourceData) bool 
 	if deviceDiff == nil || len(deviceDiff.List()) == 0 {
 		return true
 	}
+	if len(deviceDiff.List()) > 1 {
+		return false
+	}
 	device := make(map[string]interface{})
 	for k, v := range deviceDiff.List()[0].(map[string]interface{}) {
 		if k == "snapshot_id" {
