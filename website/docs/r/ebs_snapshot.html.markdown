@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot"
-sidebar_current: "docs-aws-resource-ebs-snapshot"
 description: |-
   Provides an elastic block storage snapshot resource.
 ---
@@ -37,8 +37,15 @@ The following arguments are supported:
 
 * `volume_id` - (Required) The Volume ID of which to make a snapshot.
 * `description` - (Optional) A description of what the snapshot is.
-* `tags` - (Optional) A mapping of tags to assign to the snapshot
+* `tags` - (Optional) A map of tags to assign to the snapshot
 
+### Timeouts
+
+`aws_ebs_snapshot` provides the following
+[Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `create` - (Default `10 minutes`) Used for creating the ebs snapshot
+- `delete` - (Default `10 minutes`) Used for deleting the ebs snapshot
 
 ## Attributes Reference
 
@@ -51,4 +58,4 @@ In addition to all arguments above, the following attributes are exported:
 * `volume_size` - The size of the drive in GiBs.
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
-* `tags` - A mapping of tags for the snapshot.
+* `tags` - A map of tags for the snapshot.

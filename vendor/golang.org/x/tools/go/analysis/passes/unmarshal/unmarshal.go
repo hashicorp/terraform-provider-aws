@@ -16,19 +16,26 @@ import (
 	"golang.org/x/tools/go/types/typeutil"
 )
 
-const doc = `report passing non-pointer or non-interface values to unmarshal
+const Doc = `report passing non-pointer or non-interface values to unmarshal
 
 The unmarshal analysis reports calls to functions such as json.Unmarshal
 in which the argument type is not a pointer or an interface.`
 
 var Analyzer = &analysis.Analyzer{
 	Name:     "unmarshal",
-	Doc:      doc,
+	Doc:      Doc,
 	Requires: []*analysis.Analyzer{inspect.Analyzer},
 	Run:      run,
 }
 
 func run(pass *analysis.Pass) (interface{}, error) {
+	switch pass.Pkg.Path() {
+	case "encoding/gob", "encoding/json", "encoding/xml":
+		// These packages know how to use their own APIs.
+		// Sometimes they are testing what happens to incorrect programs.
+		return nil, nil
+	}
+
 	inspect := pass.ResultOf[inspect.Analyzer].(*inspector.Inspector)
 
 	nodeFilter := []ast.Node{

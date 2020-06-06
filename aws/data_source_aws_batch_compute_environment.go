@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsBatchComputeEnvironment() *schema.Resource {
@@ -17,7 +17,6 @@ func dataSourceAwsBatchComputeEnvironment() *schema.Resource {
 			"compute_environment_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"arn": {

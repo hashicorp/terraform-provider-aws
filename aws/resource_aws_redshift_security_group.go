@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsRedshiftSecurityGroup() *schema.Resource {
@@ -23,15 +24,19 @@ func resourceAwsRedshiftSecurityGroup() *schema.Resource {
 		Update: resourceAwsRedshiftSecurityGroupUpdate,
 		Delete: resourceAwsRedshiftSecurityGroupDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsRedshiftClusterImport,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validateRedshiftSecurityGroupName,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringNotInSlice([]string{"default"}, false),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+				),
 			},
 
 			"description": {
@@ -135,21 +140,21 @@ func resourceAwsRedshiftSecurityGroupRead(d *schema.ResourceData, meta interface
 	}
 
 	for _, v := range sg.IPRanges {
-		rule := map[string]interface{}{"cidr": *v.CIDRIP}
+		rule := map[string]interface{}{"cidr": aws.StringValue(v.CIDRIP)}
 		rules.Add(rule)
 	}
 
 	for _, g := range sg.EC2SecurityGroups {
 		rule := map[string]interface{}{
-			"security_group_name":     *g.EC2SecurityGroupName,
-			"security_group_owner_id": *g.EC2SecurityGroupOwnerId,
+			"security_group_name":     aws.StringValue(g.EC2SecurityGroupName),
+			"security_group_owner_id": aws.StringValue(g.EC2SecurityGroupOwnerId),
 		}
 		rules.Add(rule)
 	}
 
 	d.Set("ingress", rules)
-	d.Set("name", *sg.ClusterSecurityGroupName)
-	d.Set("description", *sg.Description)
+	d.Set("name", sg.ClusterSecurityGroupName)
+	d.Set("description", sg.Description)
 
 	return nil
 }
@@ -246,24 +251,6 @@ func resourceAwsRedshiftSecurityGroupRetrieve(d *schema.ResourceData, meta inter
 	}
 
 	return resp.ClusterSecurityGroups[0], nil
-}
-
-func validateRedshiftSecurityGroupName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if value == "default" {
-		errors = append(errors, fmt.Errorf("the Redshift Security Group name cannot be %q", value))
-	}
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q: %q",
-			k, value))
-	}
-	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 32 characters: %q", k, value))
-	}
-	return
-
 }
 
 func resourceAwsRedshiftSecurityGroupIngressHash(v interface{}) int {

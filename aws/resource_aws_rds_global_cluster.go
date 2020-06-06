@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsRDSGlobalCluster() *schema.Resource {
@@ -44,6 +44,8 @@ func resourceAwsRDSGlobalCluster() *schema.Resource {
 				Default:  "aurora",
 				ValidateFunc: validation.StringInSlice([]string{
 					"aurora",
+					"aurora-mysql",
+					"aurora-postgresql",
 				}, false),
 			},
 			"engine_version": {
@@ -195,6 +197,10 @@ func resourceAwsRDSGlobalClusterDelete(d *schema.ResourceData, meta interface{})
 
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteGlobalCluster(input)
+	}
 
 	if isAWSErr(err, rds.ErrCodeGlobalClusterNotFoundFault, "") {
 		return nil

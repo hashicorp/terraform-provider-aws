@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDbInstanceRoleAssociation_basic(t *testing.T) {
@@ -176,13 +176,13 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  allocated_storage               = 10
-  engine                          = "oracle-se"
-  identifier                      = %[1]q
-  instance_class                  = "db.t2.micro"
-  password                        = "avoid-plaintext-passwords"
-  username                        = "tfacctest"
-  skip_final_snapshot             = true
+  allocated_storage   = 10
+  engine              = "oracle-se"
+  identifier          = %[1]q
+  instance_class      = "db.t3.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_instance_role_association" "test" {

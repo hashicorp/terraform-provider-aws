@@ -8,10 +8,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsVpcEndpoint() *schema.Resource {
@@ -25,81 +26,14 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"vpc_endpoint_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  ec2.VpcEndpointTypeGateway,
-				ValidateFunc: validation.StringInSlice([]string{
-					ec2.VpcEndpointTypeGateway,
-					ec2.VpcEndpointTypeInterface,
-				}, false),
-			},
-			"service_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.ValidateJsonString,
-				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"route_table_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"subnet_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"security_group_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"private_dns_enabled": {
+			"auto_accept": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"prefix_list_id": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 			"cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"network_interface_ids": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"dns_entry": {
 				Type:     schema.TypeList,
@@ -117,9 +51,85 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 					},
 				},
 			},
-			"auto_accept": {
+			"network_interface_ids": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"owner_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"policy": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
+			},
+			"prefix_list_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"private_dns_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
+			},
+			"requester_managed": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"route_table_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"security_group_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"service_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"subnet_ids": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Set:      schema.HashString,
+			},
+			"tags": tagsSchema(),
+			"vpc_endpoint_type": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Default:  ec2.VpcEndpointTypeGateway,
+				ValidateFunc: validation.StringInSlice([]string{
+					ec2.VpcEndpointTypeGateway,
+					ec2.VpcEndpointTypeInterface,
+				}, false),
+			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 			},
 		},
 
@@ -144,6 +154,7 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 		VpcEndpointType:   aws.String(d.Get("vpc_endpoint_type").(string)),
 		ServiceName:       aws.String(d.Get("service_name").(string)),
 		PrivateDnsEnabled: aws.Bool(d.Get("private_dns_enabled").(bool)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), "vpc-endpoint"),
 	}
 
 	if v, ok := d.GetOk("policy"); ok {
@@ -182,10 +193,11 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	vpce, state, err := vpcEndpointStateRefresh(conn, d.Id())()
+	vpceRaw, state, err := vpcEndpointStateRefresh(conn, d.Id())()
 	if err != nil && state != "failed" {
-		return fmt.Errorf("Error reading VPC Endpoint: %s", err)
+		return fmt.Errorf("error reading VPC Endpoint (%s): %s", d.Id(), err)
 	}
 
 	terminalStates := map[string]bool{
@@ -201,7 +213,75 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 		return nil
 	}
 
-	return vpcEndpointAttributes(d, vpce.(*ec2.VpcEndpoint), conn)
+	vpce := vpceRaw.(*ec2.VpcEndpoint)
+
+	serviceName := aws.StringValue(vpce.ServiceName)
+	d.Set("service_name", serviceName)
+	d.Set("state", vpce.State)
+	d.Set("vpc_id", vpce.VpcId)
+
+	respPl, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
+		Filters: buildEC2AttributeFilterList(map[string]string{
+			"prefix-list-name": serviceName,
+		}),
+	})
+	if err != nil {
+		return fmt.Errorf("error reading Prefix List (%s): %s", serviceName, err)
+	}
+	if respPl == nil || len(respPl.PrefixLists) == 0 {
+		d.Set("cidr_blocks", []interface{}{})
+	} else if len(respPl.PrefixLists) > 1 {
+		return fmt.Errorf("multiple prefix lists associated with the service name '%s'. Unexpected", serviceName)
+	} else {
+		pl := respPl.PrefixLists[0]
+
+		d.Set("prefix_list_id", pl.PrefixListId)
+		err = d.Set("cidr_blocks", flattenStringList(pl.Cidrs))
+		if err != nil {
+			return fmt.Errorf("error setting cidr_blocks: %s", err)
+		}
+	}
+
+	err = d.Set("dns_entry", flattenVpcEndpointDnsEntries(vpce.DnsEntries))
+	if err != nil {
+		return fmt.Errorf("error setting dns_entry: %s", err)
+	}
+	err = d.Set("network_interface_ids", flattenStringSet(vpce.NetworkInterfaceIds))
+	if err != nil {
+		return fmt.Errorf("error setting network_interface_ids: %s", err)
+	}
+	d.Set("owner_id", vpce.OwnerId)
+	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
+	if err != nil {
+		return fmt.Errorf("policy contains an invalid JSON: %s", err)
+	}
+	d.Set("policy", policy)
+	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
+	err = d.Set("route_table_ids", flattenStringSet(vpce.RouteTableIds))
+	if err != nil {
+		return fmt.Errorf("error setting route_table_ids: %s", err)
+	}
+	d.Set("requester_managed", vpce.RequesterManaged)
+	err = d.Set("security_group_ids", flattenVpcEndpointSecurityGroupIds(vpce.Groups))
+	if err != nil {
+		return fmt.Errorf("error setting security_group_ids: %s", err)
+	}
+	err = d.Set("subnet_ids", flattenStringSet(vpce.SubnetIds))
+	if err != nil {
+		return fmt.Errorf("error setting subnet_ids: %s", err)
+	}
+	// VPC endpoints don't have types in GovCloud, so set type to default if empty
+	if vpceType := aws.StringValue(vpce.VpcEndpointType); vpceType == "" {
+		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
+	} else {
+		d.Set("vpc_endpoint_type", vpceType)
+	}
+
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(vpce.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	return nil
 }
 
 func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -245,6 +325,13 @@ func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 
 	if err := vpcEndpointWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return err
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsVpcEndpointRead(d, meta)
@@ -367,72 +454,6 @@ func vpcEndpointWaitUntilDeleted(conn *ec2.EC2, vpceId string, timeout time.Dura
 	return err
 }
 
-func vpcEndpointAttributes(d *schema.ResourceData, vpce *ec2.VpcEndpoint, conn *ec2.EC2) error {
-	d.Set("state", vpce.State)
-	d.Set("vpc_id", vpce.VpcId)
-
-	serviceName := aws.StringValue(vpce.ServiceName)
-	d.Set("service_name", serviceName)
-	// VPC endpoints don't have types in GovCloud, so set type to default if empty
-	if aws.StringValue(vpce.VpcEndpointType) == "" {
-		d.Set("vpc_endpoint_type", ec2.VpcEndpointTypeGateway)
-	} else {
-		d.Set("vpc_endpoint_type", vpce.VpcEndpointType)
-	}
-
-	policy, err := structure.NormalizeJsonString(aws.StringValue(vpce.PolicyDocument))
-	if err != nil {
-		return fmt.Errorf("policy contains an invalid JSON: %s", err)
-	}
-	d.Set("policy", policy)
-
-	d.Set("route_table_ids", flattenStringList(vpce.RouteTableIds))
-
-	req := &ec2.DescribePrefixListsInput{}
-	req.Filters = buildEC2AttributeFilterList(
-		map[string]string{
-			"prefix-list-name": serviceName,
-		},
-	)
-	resp, err := conn.DescribePrefixLists(req)
-	if err != nil {
-		return err
-	}
-	if resp != nil && len(resp.PrefixLists) > 0 {
-		if len(resp.PrefixLists) > 1 {
-			return fmt.Errorf("multiple prefix lists associated with the service name '%s'. Unexpected", serviceName)
-		}
-
-		pl := resp.PrefixLists[0]
-		d.Set("prefix_list_id", pl.PrefixListId)
-		d.Set("cidr_blocks", flattenStringList(pl.Cidrs))
-	} else {
-		d.Set("cidr_blocks", make([]string, 0))
-	}
-
-	d.Set("subnet_ids", flattenStringList(vpce.SubnetIds))
-	d.Set("network_interface_ids", flattenStringList(vpce.NetworkInterfaceIds))
-
-	sgIds := make([]interface{}, 0, len(vpce.Groups))
-	for _, group := range vpce.Groups {
-		sgIds = append(sgIds, aws.StringValue(group.GroupId))
-	}
-	d.Set("security_group_ids", sgIds)
-
-	d.Set("private_dns_enabled", vpce.PrivateDnsEnabled)
-
-	dnsEntries := make([]interface{}, len(vpce.DnsEntries))
-	for i, entry := range vpce.DnsEntries {
-		m := make(map[string]interface{})
-		m["dns_name"] = aws.StringValue(entry.DnsName)
-		m["hosted_zone_id"] = aws.StringValue(entry.HostedZoneId)
-		dnsEntries[i] = m
-	}
-	d.Set("dns_entry", dnsEntries)
-
-	return nil
-}
-
 func setVpcEndpointCreateList(d *schema.ResourceData, key string, c *[]*string) {
 	if v, ok := d.GetOk(key); ok {
 		list := v.(*schema.Set).List()
@@ -458,4 +479,27 @@ func setVpcEndpointUpdateLists(d *schema.ResourceData, key string, a, r *[]*stri
 			*r = remove
 		}
 	}
+}
+
+func flattenVpcEndpointDnsEntries(dnsEntries []*ec2.DnsEntry) []interface{} {
+	vDnsEntries := []interface{}{}
+
+	for _, dnsEntry := range dnsEntries {
+		vDnsEntries = append(vDnsEntries, map[string]interface{}{
+			"dns_name":       aws.StringValue(dnsEntry.DnsName),
+			"hosted_zone_id": aws.StringValue(dnsEntry.HostedZoneId),
+		})
+	}
+
+	return vDnsEntries
+}
+
+func flattenVpcEndpointSecurityGroupIds(groups []*ec2.SecurityGroupIdentifier) *schema.Set {
+	vSecurityGroupIds := []interface{}{}
+
+	for _, group := range groups {
+		vSecurityGroupIds = append(vSecurityGroupIds, aws.StringValue(group.GroupId))
+	}
+
+	return schema.NewSet(schema.HashString, vSecurityGroupIds)
 }

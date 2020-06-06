@@ -2,22 +2,91 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
+	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_route53_resolver_rule", &resource.Sweeper{
+		Name: "aws_route53_resolver_rule",
+		F:    testSweepRoute53ResolverRules,
+		Dependencies: []string{
+			"aws_route53_resolver_rule_association",
+		},
+	})
+}
+
+func testSweepRoute53ResolverRules(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).route53resolverconn
+
+	var errors error
+	err = conn.ListResolverRulesPages(&route53resolver.ListResolverRulesInput{}, func(page *route53resolver.ListResolverRulesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, resolverRule := range page.ResolverRules {
+			id := aws.StringValue(resolverRule.Id)
+
+			ownerID := aws.StringValue(resolverRule.OwnerId)
+			if ownerID != client.(*AWSClient).accountid {
+				log.Printf("[INFO] Skipping Route53 Resolver rule %q, owned by %q", id, ownerID)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Route53 Resolver rule %q", id)
+			_, err := conn.DeleteResolverRule(&route53resolver.DeleteResolverRuleInput{
+				ResolverRuleId: aws.String(id),
+			})
+			if isAWSErr(err, route53resolver.ErrCodeResourceNotFoundException, "") {
+				continue
+			}
+			if err != nil {
+				errors = multierror.Append(errors, fmt.Errorf("error deleting Route53 Resolver rule (%s): %w", id, err))
+				continue
+			}
+
+			err = route53ResolverRuleWaitUntilTargetState(conn, id, 10*time.Minute,
+				[]string{route53resolver.ResolverRuleStatusDeleting},
+				[]string{route53ResolverRuleStatusDeleted})
+			if err != nil {
+				errors = multierror.Append(errors, err)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Route53 Resolver rule sweep for %s: %s", region, err)
+			return nil
+		}
+		errors = multierror.Append(errors, fmt.Errorf("error retrievingRoute53 Resolver rules: %w", err))
+	}
+
+	return errors
+}
 
 func TestAccAwsRoute53ResolverRule_basic(t *testing.T) {
 	var rule route53resolver.ResolverRule
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +115,7 @@ func TestAccAwsRoute53ResolverRule_tags(t *testing.T) {
 	resourceName := "aws_route53_resolver_rule.example"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -98,7 +167,7 @@ func TestAccAwsRoute53ResolverRule_updateName(t *testing.T) {
 	name2 := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
 		Steps: []resource.TestStep{
@@ -138,9 +207,10 @@ func TestAccAwsRoute53ResolverRule_forward(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckRoute53ResolverRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ResolverRuleConfig_forward(name),
@@ -203,9 +273,10 @@ func TestAccAwsRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	name := fmt.Sprintf("terraform-testacc-r53-resolver-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53ResolverRuleDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSRoute53Resolver(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckRoute53ResolverRuleDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53ResolverRuleConfig_forward(name),
@@ -376,6 +447,7 @@ resource "aws_route53_resolver_rule" "example" {
   target_ip {
     ip = "192.0.2.7"
   }
+
   target_ip {
     ip   = "192.0.2.17"
     port = 54
@@ -398,6 +470,7 @@ resource "aws_route53_resolver_rule" "example" {
   target_ip {
     ip = "192.0.2.7"
   }
+
   target_ip {
     ip   = "192.0.2.17"
     port = 54
@@ -436,7 +509,14 @@ resource "aws_vpc" "foo" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "sn1" {
   vpc_id            = "${aws_vpc.foo.id}"

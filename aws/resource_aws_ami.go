@@ -12,9 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 const (
@@ -170,7 +171,6 @@ func resourceAwsAmi() *schema.Resource {
 			"manage_ebs_snapshots": {
 				Type:     schema.TypeBool,
 				Computed: true,
-				ForceNew: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -278,16 +278,24 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 	id := *res.ImageId
 	d.SetId(id)
 
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(client, id, v); err != nil {
+			return fmt.Errorf("error adding tags: %s", err)
+		}
+	}
+
 	_, err = resourceAwsAmiWaitForAvailable(d.Timeout(schema.TimeoutCreate), id, client)
 	if err != nil {
 		return err
 	}
 
-	return resourceAwsAmiUpdate(d, meta)
+	return resourceAwsAmiRead(d, meta)
 }
 
 func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	id := d.Id()
 
 	req := &ec2.DescribeImagesInput{
@@ -299,7 +307,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		res, err = client.DescribeImages(req)
 		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidAMIID.NotFound" {
+			if isAWSErr(err, "InvalidAMIID.NotFound", "") {
 				if d.IsNewResource() {
 					return resource.RetryableError(err)
 				}
@@ -313,6 +321,9 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		res, err = client.DescribeImages(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Unable to find AMI after retries: %s", err)
 	}
@@ -391,7 +402,9 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ebs_block_device", ebsBlockDevs)
 	d.Set("ephemeral_block_device", ephemeralBlockDevs)
 
-	d.Set("tags", tagsToMap(image.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -399,12 +412,12 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).ec2conn
 
-	d.Partial(true)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
 
-	if err := setTags(client, d); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+		if err := keyvaluetags.Ec2UpdateTags(client, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating AMI (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if d.Get("description").(string) != "" {
@@ -417,10 +430,7 @@ func resourceAwsAmiUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return err
 		}
-		d.SetPartial("description")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsAmiRead(d, meta)
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_client_certificate"
-sidebar_current: "docs-aws-resource-api-gateway-client-certificate"
 description: |-
   Provides an API Gateway Client Certificate.
 ---
@@ -23,6 +23,7 @@ resource "aws_api_gateway_client_certificate" "demo" {
 The following arguments are supported:
 
 * `description` - (Optional) The description of the client certificate.
+* `tags` - (Optional) Key-value map of resource tags
 
 
 ## Attribute Reference
@@ -33,6 +34,7 @@ In addition to all arguments above, the following attributes are exported:
 * `created_date` - The date when the client certificate was created.
 * `expiration_date` - The date when the client certificate will expire.
 * `pem_encoded_certificate` - The PEM-encoded public key of the client certificate.
+* `arn` - Amazon Resource Name (ARN)
 
 ## Import
 

@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccDataSourceAwsVpcs_basic(t *testing.T) {
@@ -129,23 +129,24 @@ func testAccDataSourceAwsVpcsConfig_tags(rName string) string {
 			Service = "${aws_vpc.test-vpc.tags["Service"]}"
 		}
 	}
-	`, rName, rName)
+`, rName, rName)
 }
 
 func testAccDataSourceAwsVpcsConfig_filters(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test-vpc" {
-  		cidr_block = "192.168.0.0/25"
-  		tags = {
-  			Name = "testacc-vpc-%s"
-  		}
-	}
+resource "aws_vpc" "test-vpc" {
+  cidr_block = "192.168.0.0/25"
 
-	data "aws_vpcs" "selected" {
-		filter {
-			name = "cidr"
-    		values = ["${aws_vpc.test-vpc.cidr_block}"]
-		}
-	}
-	`, rName)
+  tags = {
+    Name = "testacc-vpc-%s"
+  }
+}
+
+data "aws_vpcs" "selected" {
+  filter {
+    name   = "cidr"
+    values = ["${aws_vpc.test-vpc.cidr_block}"]
+  }
+}
+`, rName)
 }

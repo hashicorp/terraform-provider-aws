@@ -7,9 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -81,12 +81,6 @@ func resourceAwsElasticacheParameterGroupCreate(d *schema.ResourceData, meta int
 		return fmt.Errorf("Error creating Cache Parameter Group: %s", err)
 	}
 
-	d.Partial(true)
-	d.SetPartial("name")
-	d.SetPartial("family")
-	d.SetPartial("description")
-	d.Partial(false)
-
 	d.SetId(*resp.CacheParameterGroup.CacheParameterGroupName)
 	log.Printf("[INFO] Cache Parameter Group ID: %s", d.Id())
 
@@ -132,8 +126,6 @@ func resourceAwsElasticacheParameterGroupRead(d *schema.ResourceData, meta inter
 
 func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
-
-	d.Partial(true)
 
 	if d.HasChange("parameter") {
 		o, n := d.GetChange("parameter")
@@ -306,11 +298,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 				return fmt.Errorf("Error modifying Cache Parameter Group: %s", err)
 			}
 		}
-
-		d.SetPartial("parameter")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsElasticacheParameterGroupRead(d, meta)
 }
@@ -318,10 +306,10 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
 
-	return resource.Retry(3*time.Minute, func() *resource.RetryError {
-		deleteOpts := elasticache.DeleteCacheParameterGroupInput{
-			CacheParameterGroupName: aws.String(d.Id()),
-		}
+	deleteOpts := elasticache.DeleteCacheParameterGroupInput{
+		CacheParameterGroupName: aws.String(d.Id()),
+	}
+	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheParameterGroup(&deleteOpts)
 		if err != nil {
 			awsErr, ok := err.(awserr.Error)
@@ -335,6 +323,18 @@ func resourceAwsElasticacheParameterGroupDelete(d *schema.ResourceData, meta int
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCacheParameterGroup(&deleteOpts)
+	}
+	if isAWSErr(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Elasticache Parameter Group (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }
 
 func resourceAwsElasticacheParameterHash(v interface{}) int {

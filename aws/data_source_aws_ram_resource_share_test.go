@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsRamResourceShare_Basic(t *testing.T) {
@@ -27,6 +27,7 @@ func TestAccDataSourceAwsRamResourceShare_Basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "owning_account_id"),
 				),
 			},
 		},
@@ -57,14 +58,15 @@ func TestAccDataSourceAwsRamResourceShare_Tags(t *testing.T) {
 func testAccDataSourceAwsRamResourceShareConfig_Name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "wrong" {
-  name            = "%s-wrong"
+  name = "%s-wrong"
 }
+
 resource "aws_ram_resource_share" "test" {
-	name            = "%s"
+  name = "%s"
 }
 
 data "aws_ram_resource_share" "test" {
-  name = "${aws_ram_resource_share.test.name}"
+  name           = "${aws_ram_resource_share.test.name}"
   resource_owner = "SELF"
 }
 `, rName, rName)
@@ -73,20 +75,20 @@ data "aws_ram_resource_share" "test" {
 func testAccDataSourceAwsRamResourceShareConfig_Tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
-	name            = "%s"
+  name = "%s"
 
-	tags = {
-		Name = "%s-Tags"
-	}
+  tags = {
+    Name = "%s-Tags"
+  }
 }
 
 data "aws_ram_resource_share" "test" {
-  name = "${aws_ram_resource_share.test.name}"
+  name           = "${aws_ram_resource_share.test.name}"
   resource_owner = "SELF"
-	
+
   filter {
-	name = "Name"
-	values = ["%s-Tags"]
+    name   = "Name"
+    values = ["%s-Tags"]
   }
 }
 `, rName, rName, rName)

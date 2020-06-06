@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSVpcEndpointServiceAllowedPrincipal_basic(t *testing.T) {
@@ -158,5 +158,5 @@ resource "aws_vpc_endpoint_service_allowed_principal" "foo" {
 
   principal_arn = "${data.aws_caller_identity.current.arn}"
 }
-	`, lbName)
+`, lbName)
 }

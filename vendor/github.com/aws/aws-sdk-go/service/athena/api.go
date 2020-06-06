@@ -74,12 +74,12 @@ func (c *Athena) BatchGetNamedQueryRequest(input *BatchGetNamedQueryInput) (req 
 // See the AWS API reference guide for Amazon Athena's
 // API operation BatchGetNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -163,12 +163,12 @@ func (c *Athena) BatchGetQueryExecutionRequest(input *BatchGetQueryExecutionInpu
 // See the AWS API reference guide for Amazon Athena's
 // API operation BatchGetQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -252,12 +252,12 @@ func (c *Athena) CreateNamedQueryRequest(input *CreateNamedQueryInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation CreateNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -337,12 +337,12 @@ func (c *Athena) CreateWorkGroupRequest(input *CreateWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation CreateWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -427,12 +427,12 @@ func (c *Athena) DeleteNamedQueryRequest(input *DeleteNamedQueryInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation DeleteNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -513,12 +513,12 @@ func (c *Athena) DeleteWorkGroupRequest(input *DeleteWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation DeleteWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -598,12 +598,12 @@ func (c *Athena) GetNamedQueryRequest(input *GetNamedQueryInput) (req *request.R
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetNamedQuery for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -684,12 +684,12 @@ func (c *Athena) GetQueryExecutionRequest(input *GetQueryExecutionInput) (req *r
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -765,10 +765,21 @@ func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *reque
 
 // GetQueryResults API operation for Amazon Athena.
 //
-// Returns the results of a single query execution specified by QueryExecutionId
-// if you have access to the workgroup in which the query ran. This request
-// does not execute the query but returns results. Use StartQueryExecution to
-// run a query.
+// Streams the results of a single query execution specified by QueryExecutionId
+// from the Athena query results location in Amazon S3. For more information,
+// see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+// in the Amazon Athena User Guide. This request does not execute the query
+// but returns results. Use StartQueryExecution to run a query.
+//
+// To stream query results successfully, the IAM principal with permission to
+// call GetQueryResults also must have permissions to the Amazon S3 GetObject
+// action for the Athena query results location.
+//
+// IAM principals with permission to the Amazon S3 GetObject action for the
+// query results location are able to retrieve query results from Amazon S3
+// even if permission to the GetQueryResults action is denied. To restrict user
+// or role access, ensure that Amazon S3 permissions to the Athena query location
+// are denied.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -777,12 +788,12 @@ func (c *Athena) GetQueryResultsRequest(input *GetQueryResultsInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetQueryResults for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -819,7 +830,7 @@ func (c *Athena) GetQueryResultsWithContext(ctx aws.Context, input *GetQueryResu
 //    // Example iterating over at most 3 pages of a GetQueryResults operation.
 //    pageNum := 0
 //    err := client.GetQueryResultsPages(params,
-//        func(page *GetQueryResultsOutput, lastPage bool) bool {
+//        func(page *athena.GetQueryResultsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -851,10 +862,12 @@ func (c *Athena) GetQueryResultsPagesWithContext(ctx aws.Context, input *GetQuer
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetQueryResultsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetQueryResultsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -911,12 +924,12 @@ func (c *Athena) GetWorkGroupRequest(input *GetWorkGroupInput) (req *request.Req
 // See the AWS API reference guide for Amazon Athena's
 // API operation GetWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -993,7 +1006,8 @@ func (c *Athena) ListNamedQueriesRequest(input *ListNamedQueriesInput) (req *req
 // ListNamedQueries API operation for Amazon Athena.
 //
 // Provides a list of available query IDs only for queries saved in the specified
-// workgroup. Requires that you have access to the workgroup.
+// workgroup. Requires that you have access to the workgroup. If a workgroup
+// is not specified, lists the saved queries for the primary workgroup.
 //
 // For code samples using the AWS SDK for Java, see Examples and Code Samples
 // (http://docs.aws.amazon.com/athena/latest/ug/code-samples.html) in the Amazon
@@ -1006,12 +1020,12 @@ func (c *Athena) ListNamedQueriesRequest(input *ListNamedQueriesInput) (req *req
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListNamedQueries for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1048,7 +1062,7 @@ func (c *Athena) ListNamedQueriesWithContext(ctx aws.Context, input *ListNamedQu
 //    // Example iterating over at most 3 pages of a ListNamedQueries operation.
 //    pageNum := 0
 //    err := client.ListNamedQueriesPages(params,
-//        func(page *ListNamedQueriesOutput, lastPage bool) bool {
+//        func(page *athena.ListNamedQueriesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1080,10 +1094,12 @@ func (c *Athena) ListNamedQueriesPagesWithContext(ctx aws.Context, input *ListNa
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListNamedQueriesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListNamedQueriesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1138,8 +1154,9 @@ func (c *Athena) ListQueryExecutionsRequest(input *ListQueryExecutionsInput) (re
 // ListQueryExecutions API operation for Amazon Athena.
 //
 // Provides a list of available query execution IDs for the queries in the specified
-// workgroup. Requires you to have access to the workgroup in which the queries
-// ran.
+// workgroup. If a workgroup is not specified, returns a list of query execution
+// IDs for the primary workgroup. Requires you to have access to the workgroup
+// in which the queries ran.
 //
 // For code samples using the AWS SDK for Java, see Examples and Code Samples
 // (http://docs.aws.amazon.com/athena/latest/ug/code-samples.html) in the Amazon
@@ -1152,12 +1169,12 @@ func (c *Athena) ListQueryExecutionsRequest(input *ListQueryExecutionsInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListQueryExecutions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1194,7 +1211,7 @@ func (c *Athena) ListQueryExecutionsWithContext(ctx aws.Context, input *ListQuer
 //    // Example iterating over at most 3 pages of a ListQueryExecutions operation.
 //    pageNum := 0
 //    err := client.ListQueryExecutionsPages(params,
-//        func(page *ListQueryExecutionsOutput, lastPage bool) bool {
+//        func(page *athena.ListQueryExecutionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1226,10 +1243,12 @@ func (c *Athena) ListQueryExecutionsPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListQueryExecutionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListQueryExecutionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1286,16 +1305,16 @@ func (c *Athena) ListTagsForResourceRequest(input *ListTagsForResourceInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/ListTagsForResource
@@ -1379,12 +1398,12 @@ func (c *Athena) ListWorkGroupsRequest(input *ListWorkGroupsInput) (req *request
 // See the AWS API reference guide for Amazon Athena's
 // API operation ListWorkGroups for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1421,7 +1440,7 @@ func (c *Athena) ListWorkGroupsWithContext(ctx aws.Context, input *ListWorkGroup
 //    // Example iterating over at most 3 pages of a ListWorkGroups operation.
 //    pageNum := 0
 //    err := client.ListWorkGroupsPages(params,
-//        func(page *ListWorkGroupsOutput, lastPage bool) bool {
+//        func(page *athena.ListWorkGroupsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1453,10 +1472,12 @@ func (c *Athena) ListWorkGroupsPagesWithContext(ctx aws.Context, input *ListWork
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListWorkGroupsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListWorkGroupsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1518,16 +1539,16 @@ func (c *Athena) StartQueryExecutionRequest(input *StartQueryExecutionInput) (re
 // See the AWS API reference guide for Amazon Athena's
 // API operation StartQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeTooManyRequestsException "TooManyRequestsException"
+//   * TooManyRequestsException
 //   Indicates that the request was throttled.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/StartQueryExecution
@@ -1611,12 +1632,12 @@ func (c *Athena) StopQueryExecutionRequest(input *StopQueryExecutionInput) (req 
 // See the AWS API reference guide for Amazon Athena's
 // API operation StopQueryExecution for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -1708,16 +1729,16 @@ func (c *Athena) TagResourceRequest(input *TagResourceInput) (req *request.Reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation TagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/TagResource
@@ -1798,16 +1819,16 @@ func (c *Athena) UntagResourceRequest(input *UntagResourceInput) (req *request.R
 // See the AWS API reference guide for Amazon Athena's
 // API operation UntagResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   A resource, such as a workgroup, was not found.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/athena-2017-05-18/UntagResource
@@ -1887,12 +1908,12 @@ func (c *Athena) UpdateWorkGroupRequest(input *UpdateWorkGroupInput) (req *reque
 // See the AWS API reference guide for Amazon Athena's
 // API operation UpdateWorkGroup for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInternalServerException "InternalServerException"
+// Returned Error Types:
+//   * InternalServerException
 //   Indicates a platform issue, which may be due to a transient condition or
 //   outage.
 //
-//   * ErrCodeInvalidRequestException "InvalidRequestException"
+//   * InvalidRequestException
 //   Indicates that something is wrong with the input to the request. For example,
 //   a required parameter may be missing or out of range.
 //
@@ -2718,7 +2739,7 @@ type GetQueryResultsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The maximum number of results (rows) to return in this request.
-	MaxResults *int64 `type:"integer"`
+	MaxResults *int64 `min:"1" type:"integer"`
 
 	// The token that specifies where to start pagination if a previous request
 	// was truncated.
@@ -2743,6 +2764,9 @@ func (s GetQueryResultsInput) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *GetQueryResultsInput) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "GetQueryResultsInput"}
+	if s.MaxResults != nil && *s.MaxResults < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxResults", 1))
+	}
 	if s.NextToken != nil && len(*s.NextToken) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("NextToken", 1))
 	}
@@ -2876,6 +2900,124 @@ func (s *GetWorkGroupOutput) SetWorkGroup(v *WorkGroup) *GetWorkGroupOutput {
 	return s
 }
 
+// Indicates a platform issue, which may be due to a transient condition or
+// outage.
+type InternalServerException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerException(v protocol.ResponseMetadata) error {
+	return &InternalServerException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServerException) Code() string {
+	return "InternalServerException"
+}
+
+// Message returns the exception's message.
+func (s *InternalServerException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServerException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServerException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServerException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServerException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Indicates that something is wrong with the input to the request. For example,
+// a required parameter may be missing or out of range.
+type InvalidRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// The error code returned when the query execution failed to process, or when
+	// the processing request for the named query failed.
+	AthenaErrorCode *string `min:"1" type:"string"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidRequestException) Code() string {
+	return "InvalidRequestException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type ListNamedQueriesInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2886,7 +3028,9 @@ type ListNamedQueriesInput struct {
 	// was truncated.
 	NextToken *string `min:"1" type:"string"`
 
-	// The name of the workgroup from which the named queries are being returned.
+	// The name of the workgroup from which the named queries are returned. If a
+	// workgroup is not specified, the saved queries for the primary workgroup are
+	// returned.
 	WorkGroup *string `type:"string"`
 }
 
@@ -2973,7 +3117,9 @@ type ListQueryExecutionsInput struct {
 	// was truncated.
 	NextToken *string `min:"1" type:"string"`
 
-	// The name of the workgroup from which queries are being returned.
+	// The name of the workgroup from which queries are returned. If a workgroup
+	// is not specified, a list of available query execution IDs for the queries
+	// in the primary workgroup is returned.
 	WorkGroup *string `type:"string"`
 }
 
@@ -3333,8 +3479,9 @@ type QueryExecution struct {
 	// and DML, such as SHOW CREATE TABLE, or DESCRIBE <table>.
 	StatementType *string `type:"string" enum:"StatementType"`
 
-	// The amount of data scanned during the query execution and the amount of time
-	// that it took to execute, and the type of statement that was run.
+	// Query execution statistics, such as the amount of data scanned, the amount
+	// of time that the query took to process, and the type of statement that was
+	// run.
 	Statistics *QueryExecutionStatistics `type:"structure"`
 
 	// The completion date, current state, submission time, and state change reason
@@ -3445,11 +3592,39 @@ func (s *QueryExecutionContext) SetDatabase(v string) *QueryExecutionContext {
 type QueryExecutionStatistics struct {
 	_ struct{} `type:"structure"`
 
+	// The location and file name of a data manifest file. The manifest file is
+	// saved to the Athena query results location in Amazon S3. The manifest file
+	// tracks files that the query wrote to Amazon S3. If the query fails, the manifest
+	// file also tracks files that the query intended to write. The manifest is
+	// useful for identifying orphaned files resulting from a failed query. For
+	// more information, see Working with Query Results, Output Files, and Query
+	// History (https://docs.aws.amazon.com/athena/latest/ug/querying.html) in the
+	// Amazon Athena User Guide.
+	DataManifestLocation *string `type:"string"`
+
 	// The number of bytes in the data that was queried.
 	DataScannedInBytes *int64 `type:"long"`
 
 	// The number of milliseconds that the query took to execute.
 	EngineExecutionTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to plan the query processing
+	// flow. This includes the time spent retrieving table partitions from the data
+	// source. Note that because the query engine performs the query planning, query
+	// planning time is a subset of engine processing time.
+	QueryPlanningTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that the query was in your query queue waiting
+	// for resources. Note that if transient errors occur, Athena might automatically
+	// add the query back to the queue.
+	QueryQueueTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to finalize and publish the query
+	// results after the query engine finished running the query.
+	ServiceProcessingTimeInMillis *int64 `type:"long"`
+
+	// The number of milliseconds that Athena took to run the query.
+	TotalExecutionTimeInMillis *int64 `type:"long"`
 }
 
 // String returns the string representation
@@ -3460,6 +3635,12 @@ func (s QueryExecutionStatistics) String() string {
 // GoString returns the string representation
 func (s QueryExecutionStatistics) GoString() string {
 	return s.String()
+}
+
+// SetDataManifestLocation sets the DataManifestLocation field's value.
+func (s *QueryExecutionStatistics) SetDataManifestLocation(v string) *QueryExecutionStatistics {
+	s.DataManifestLocation = &v
+	return s
 }
 
 // SetDataScannedInBytes sets the DataScannedInBytes field's value.
@@ -3474,6 +3655,30 @@ func (s *QueryExecutionStatistics) SetEngineExecutionTimeInMillis(v int64) *Quer
 	return s
 }
 
+// SetQueryPlanningTimeInMillis sets the QueryPlanningTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetQueryPlanningTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.QueryPlanningTimeInMillis = &v
+	return s
+}
+
+// SetQueryQueueTimeInMillis sets the QueryQueueTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetQueryQueueTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.QueryQueueTimeInMillis = &v
+	return s
+}
+
+// SetServiceProcessingTimeInMillis sets the ServiceProcessingTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetServiceProcessingTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.ServiceProcessingTimeInMillis = &v
+	return s
+}
+
+// SetTotalExecutionTimeInMillis sets the TotalExecutionTimeInMillis field's value.
+func (s *QueryExecutionStatistics) SetTotalExecutionTimeInMillis(v int64) *QueryExecutionStatistics {
+	s.TotalExecutionTimeInMillis = &v
+	return s
+}
+
 // The completion date, current state, submission time, and state change reason
 // (if applicable) for the query execution.
 type QueryExecutionStatus struct {
@@ -3482,12 +3687,12 @@ type QueryExecutionStatus struct {
 	// The date and time that the query completed.
 	CompletionDateTime *time.Time `type:"timestamp"`
 
-	// The state of query execution. QUEUED state is listed but is not used by Athena
-	// and is reserved for future use. RUNNING indicates that the query has been
-	// submitted to the service, and Athena will execute the query as soon as resources
-	// are available. SUCCEEDED indicates that the query completed without errors.
-	// FAILED indicates that the query experienced an error and did not complete
-	// processing. CANCELLED indicates that a user input interrupted query execution.
+	// The state of query execution. QUEUED indicates that the query has been submitted
+	// to the service, and Athena will execute the query as soon as resources are
+	// available. RUNNING indicates that the query is in execution phase. SUCCEEDED
+	// indicates that the query completed without errors. FAILED indicates that
+	// the query experienced an error and did not complete processing. CANCELLED
+	// indicates that a user input interrupted query execution.
 	State *string `type:"string" enum:"QueryExecutionState"`
 
 	// Further detail about the status of the query.
@@ -3531,11 +3736,68 @@ func (s *QueryExecutionStatus) SetSubmissionDateTime(v time.Time) *QueryExecutio
 	return s
 }
 
+// A resource, such as a workgroup, was not found.
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	ResourceName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The location in Amazon S3 where query results are stored and the encryption
 // option, if any, used for query results. These are known as "client-side settings".
 // If workgroup settings override client-side settings, then the query uses
-// the location for the query results and the encryption configuration that
-// are specified for the workgroup.
+// the workgroup settings.
 type ResultConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -3549,12 +3811,13 @@ type ResultConfiguration struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// To run the query, you must specify the query results location using one of
+	// the ways: either for individual queries using either this setting (client-side),
+	// or in the workgroup, using WorkGroupConfiguration. If none of them is set,
+	// Athena issues an error that no output location is provided. For more information,
+	// see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	// If workgroup settings override client-side settings, then the query uses
-	// the location for the query results and the encryption configuration that
-	// are specified for the workgroup. The "workgroup settings override" is specified
-	// in EnforceWorkGroupConfiguration (true/false) in the WorkGroupConfiguration.
-	// See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
+	// the settings specified for the workgroup. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	OutputLocation *string `type:"string"`
 }
 
@@ -3604,7 +3867,7 @@ type ResultConfigurationUpdates struct {
 	EncryptionConfiguration *EncryptionConfiguration `type:"structure"`
 
 	// The location in Amazon S3 where your query results are stored, such as s3://path/to/query/bucket/.
-	// For more information, see Queries and Query Result Files. (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
+	// For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html)
 	// If workgroup settings override client-side settings, then the query uses
 	// the location for the query results and the encryption configuration that
 	// are specified for the workgroup. The "workgroup settings override" is specified
@@ -4066,6 +4329,66 @@ func (s TagResourceOutput) GoString() string {
 	return s.String()
 }
 
+// Indicates that the request was throttled.
+type TooManyRequestsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	// The reason for the query throttling, for example, when it exceeds the concurrent
+	// query limit.
+	Reason *string `type:"string" enum:"ThrottleReason"`
+}
+
+// String returns the string representation
+func (s TooManyRequestsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyRequestsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyRequestsException(v protocol.ResponseMetadata) error {
+	return &TooManyRequestsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TooManyRequestsException) Code() string {
+	return "TooManyRequestsException"
+}
+
+// Message returns the exception's message.
+func (s *TooManyRequestsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TooManyRequestsException) OrigErr() error {
+	return nil
+}
+
+func (s *TooManyRequestsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TooManyRequestsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TooManyRequestsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Information about a named query ID that could not be processed.
 type UnprocessedNamedQueryId struct {
 	_ struct{} `type:"structure"`
@@ -4323,8 +4646,8 @@ type WorkGroup struct {
 	// S3 where query results are stored, the encryption configuration, if any,
 	// used for query results; whether the Amazon CloudWatch Metrics are enabled
 	// for the workgroup; whether workgroup settings override client-side settings;
-	// and the data usage limit for the amount of data scanned per query, if it
-	// is specified. The workgroup settings override is specified in EnforceWorkGroupConfiguration
+	// and the data usage limits for the amount of data scanned per query or per
+	// workgroup. The workgroup settings override is specified in EnforceWorkGroupConfiguration
 	// (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 	Configuration *WorkGroupConfiguration `type:"structure"`
 
@@ -4387,7 +4710,7 @@ func (s *WorkGroup) SetState(v string) *WorkGroup {
 // S3 where query results are stored, the encryption option, if any, used for
 // query results, whether the Amazon CloudWatch Metrics are enabled for the
 // workgroup and whether workgroup settings override query settings, and the
-// data usage limit for the amount of data scanned per query, if it is specified.
+// data usage limits for the amount of data scanned per query or per workgroup.
 // The workgroup settings override is specified in EnforceWorkGroupConfiguration
 // (true/false) in the WorkGroupConfiguration. See WorkGroupConfiguration$EnforceWorkGroupConfiguration.
 type WorkGroupConfiguration struct {
@@ -4405,9 +4728,22 @@ type WorkGroupConfiguration struct {
 	// Indicates that the Amazon CloudWatch metrics are enabled for the workgroup.
 	PublishCloudWatchMetricsEnabled *bool `type:"boolean"`
 
+	// If set to true, allows members assigned to a workgroup to reference Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
+
 	// The configuration for the workgroup, which includes the location in Amazon
 	// S3 where query results are stored and the encryption option, if any, used
-	// for query results.
+	// for query results. To run the query, you must specify the query results location
+	// using one of the ways: either in the workgroup using this setting, or for
+	// individual queries (client-side), using ResultConfiguration$OutputLocation.
+	// If none of them is set, Athena issues an error that no output location is
+	// provided. For more information, see Query Results (https://docs.aws.amazon.com/athena/latest/ug/querying.html).
 	ResultConfiguration *ResultConfiguration `type:"structure"`
 }
 
@@ -4457,6 +4793,12 @@ func (s *WorkGroupConfiguration) SetPublishCloudWatchMetricsEnabled(v bool) *Wor
 	return s
 }
 
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfiguration) SetRequesterPaysEnabled(v bool) *WorkGroupConfiguration {
+	s.RequesterPaysEnabled = &v
+	return s
+}
+
 // SetResultConfiguration sets the ResultConfiguration field's value.
 func (s *WorkGroupConfiguration) SetResultConfiguration(v *ResultConfiguration) *WorkGroupConfiguration {
 	s.ResultConfiguration = v
@@ -4486,6 +4828,15 @@ type WorkGroupConfigurationUpdates struct {
 
 	// Indicates that the data usage control limit per query is removed. WorkGroupConfiguration$BytesScannedCutoffPerQuery
 	RemoveBytesScannedCutoffPerQuery *bool `type:"boolean"`
+
+	// If set to true, allows members assigned to a workgroup to specify Amazon
+	// S3 Requester Pays buckets in queries. If set to false, workgroup members
+	// cannot query data from Requester Pays buckets, and queries that retrieve
+	// data from Requester Pays buckets cause an error. The default is false. For
+	// more information about Requester Pays buckets, see Requester Pays Buckets
+	// (https://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
+	// in the Amazon Simple Storage Service Developer Guide.
+	RequesterPaysEnabled *bool `type:"boolean"`
 
 	// The result configuration information about the queries in this workgroup
 	// that will be updated. Includes the updated results location and an updated
@@ -4542,6 +4893,12 @@ func (s *WorkGroupConfigurationUpdates) SetPublishCloudWatchMetricsEnabled(v boo
 // SetRemoveBytesScannedCutoffPerQuery sets the RemoveBytesScannedCutoffPerQuery field's value.
 func (s *WorkGroupConfigurationUpdates) SetRemoveBytesScannedCutoffPerQuery(v bool) *WorkGroupConfigurationUpdates {
 	s.RemoveBytesScannedCutoffPerQuery = &v
+	return s
+}
+
+// SetRequesterPaysEnabled sets the RequesterPaysEnabled field's value.
+func (s *WorkGroupConfigurationUpdates) SetRequesterPaysEnabled(v bool) *WorkGroupConfigurationUpdates {
+	s.RequesterPaysEnabled = &v
 	return s
 }
 

@@ -1,7 +1,7 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_domain"
-sidebar_current: "docs-aws-resource-lightsail-domain"
 description: |-
   Provides an Lightsail Domain
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "ElastiCache"
 layout: "aws"
 page_title: "AWS: aws_elasticache_replication_group"
-sidebar_current: "docs-aws-resource-elasticache-replication-group"
 description: |-
   Provides an ElastiCache Replication Group resource.
 ---
@@ -109,6 +109,7 @@ The following arguments are supported:
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `transit_encryption_enabled` - (Optional) Whether to enable encryption in transit.
 * `auth_token` - (Optional) The password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
+* `kms_key_id` - (Optional) The ARN of the key that you wish to use if encrypting at rest. If not supplied, uses service managed encryption. Can be specified only if `at_rest_encryption_enabled = true`.
 * `engine_version` - (Optional) The version number of the cache engine to be used for the cache clusters in this replication group.
 * `parameter_group_name` - (Optional) The name of the parameter group to associate with this replication group. If this argument is omitted, the default cache parameter group for the specified engine is used.
 * `port` – (Optional) The port number on which each of the cache nodes will accept connections. For Memcache the default is 11211, and for Redis the default port is 6379.
@@ -133,7 +134,7 @@ SnapshotRetentionLimit to 5, then a snapshot that was taken today will be retain
 before being deleted. If the value of SnapshotRetentionLimit is set to zero (0), backups are turned off.
 Please note that setting a `snapshot_retention_limit` is not supported on cache.t1.micro or cache.t2.* cache nodes
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
-* `tags` - (Optional) A mapping of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource
 * `cluster_mode` - (Optional) Create a native redis cluster. `automatic_failover_enabled` must be set to true. Cluster Mode documented below. Only 1 `cluster_mode` block is allowed.
 
 Cluster Mode (`cluster_mode`) supports the following:

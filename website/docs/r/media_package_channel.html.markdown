@@ -1,7 +1,7 @@
 ---
+subcategory: "MediaPackage"
 layout: "aws"
 page_title: "AWS: aws_media_package_channel"
-sidebar_current: "docs-aws-resource-media-package-channel"
 description: |-
   Provides an AWS Elemental MediaPackage Channel.
 ---
@@ -25,7 +25,7 @@ The following arguments are supported:
 
 * `channel_id` - (Required) A unique identifier describing the channel
 * `description` - (Optional) A description of the channel
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

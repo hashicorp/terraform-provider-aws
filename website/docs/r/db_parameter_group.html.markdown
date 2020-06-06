@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_parameter_group"
-sidebar_current: "docs-aws-resource-db-parameter-group"
 description: |-
   Provides an RDS DB parameter group resource.
 ---
@@ -9,6 +9,7 @@ description: |-
 # Resource: aws_db_parameter_group
 
 Provides an RDS DB parameter group resource .Documentation of the available parameters for various RDS engines can be found at:
+
 * [Aurora MySQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Reference.html)
 * [Aurora PostgreSQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraPostgreSQL.Reference.html)
 * [MariaDB Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.MariaDB.Parameters.html)
@@ -43,7 +44,7 @@ The following arguments are supported:
 * `family` - (Required) The family of the DB parameter group.
 * `description` - (Optional) The description of the DB parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of DB parameters to apply. Note that parameters may differ from a family to an other. Full list of all parameters can be discovered via [`aws rds describe-db-parameters`](https://docs.aws.amazon.com/cli/latest/reference/rds/describe-db-parameters.html) after initial creation of the group.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Parameter blocks support the following:
 

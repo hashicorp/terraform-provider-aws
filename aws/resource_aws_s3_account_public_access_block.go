@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsS3AccountPublicAccessBlock() *schema.Resource {
@@ -105,6 +105,10 @@ func resourceAwsS3AccountPublicAccessBlockRead(d *schema.ResourceData, meta inte
 
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		output, err = conn.GetPublicAccessBlock(input)
+	}
 
 	if isAWSErr(err, s3control.ErrCodeNoSuchPublicAccessBlockConfiguration, "") {
 		log.Printf("[WARN] S3 Account Public Access Block (%s) not found, removing from state", d.Id())

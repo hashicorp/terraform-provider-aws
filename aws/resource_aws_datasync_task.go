@@ -5,12 +5,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDataSyncTask() *schema.Resource {
@@ -99,7 +99,6 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							Optional: true,
 							Default:  datasync.PosixPermissionsPreserve,
 							ValidateFunc: validation.StringInSlice([]string{
-								datasync.PosixPermissionsBestEffort,
 								datasync.PosixPermissionsNone,
 								datasync.PosixPermissionsPreserve,
 							}, false),
@@ -140,6 +139,7 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								datasync.VerifyModeNone,
 								datasync.VerifyModePointInTimeConsistent,
+								datasync.VerifyModeOnlyFilesTransferred,
 							}, false),
 						},
 					},
@@ -151,11 +151,7 @@ func resourceAwsDataSyncTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -167,7 +163,7 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
 		Options:                expandDataSyncOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
-		Tags:                   expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
+		Tags:                   keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatasyncTags(),
 	}
 
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
@@ -186,11 +182,13 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 	d.SetId(aws.StringValue(output.TaskArn))
 
-	// Task creation can take a few minutes
+	// Task creation can take a few minutes\
+	taskInput := &datasync.DescribeTaskInput{
+		TaskArn: aws.String(d.Id()),
+	}
+	var taskOutput *datasync.DescribeTaskOutput
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		output, err := conn.DescribeTask(&datasync.DescribeTaskInput{
-			TaskArn: aws.String(d.Id()),
-		})
+		taskOutput, err := conn.DescribeTask(taskInput)
 
 		if isAWSErr(err, "InvalidRequestException", "not found") {
 			return resource.RetryableError(err)
@@ -200,19 +198,31 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 			return resource.NonRetryableError(err)
 		}
 
-		if aws.StringValue(output.Status) == datasync.TaskStatusAvailable || aws.StringValue(output.Status) == datasync.TaskStatusRunning {
+		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusAvailable || aws.StringValue(taskOutput.Status) == datasync.TaskStatusRunning {
 			return nil
 		}
 
 		err = fmt.Errorf("waiting for DataSync Task (%s) creation: last status (%s), error code (%s), error detail: %s",
-			d.Id(), aws.StringValue(output.Status), aws.StringValue(output.ErrorCode), aws.StringValue(output.ErrorDetail))
+			d.Id(), aws.StringValue(taskOutput.Status), aws.StringValue(taskOutput.ErrorCode), aws.StringValue(taskOutput.ErrorDetail))
 
-		if aws.StringValue(output.Status) == datasync.TaskStatusCreating {
+		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusCreating {
 			return resource.RetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		return resource.NonRetryableError(err) // should only happen if err != nil
 	})
+	if isResourceTimeoutError(err) {
+		taskOutput, err = conn.DescribeTask(taskInput)
+		if isAWSErr(err, "InvalidRequestException", "not found") {
+			return fmt.Errorf("Task not found after creation: %s", err)
+		}
+		if err != nil {
+			return fmt.Errorf("Error describing task after creation: %s", err)
+		}
+		if aws.StringValue(taskOutput.Status) == datasync.TaskStatusCreating {
+			return fmt.Errorf("Data sync task status has not finished creating")
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %s", d.Id(), err)
 	}
@@ -222,6 +232,7 @@ func resourceAwsDataSyncTaskCreate(d *schema.ResourceData, meta interface{}) err
 
 func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeTaskInput{
 		TaskArn: aws.String(d.Id()),
@@ -240,17 +251,6 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error reading DataSync Task (%s): %s", d.Id(), err)
 	}
 
-	tagsInput := &datasync.ListTagsForResourceInput{
-		ResourceArn: output.TaskArn,
-	}
-
-	log.Printf("[DEBUG] Reading DataSync Task tags: %s", tagsInput)
-	tagsOutput, err := conn.ListTagsForResource(tagsInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading DataSync Task (%s) tags: %s", d.Id(), err)
-	}
-
 	d.Set("arn", output.TaskArn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
@@ -262,7 +262,13 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 
 	d.Set("source_location_arn", output.SourceLocationArn)
 
-	if err := d.Set("tags", flattenDataSyncTagListEntry(tagsOutput.Tags)); err != nil {
+	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DataSync Task (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -286,31 +292,10 @@ func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) err
 	}
 
 	if d.HasChange("tags") {
-		oldRaw, newRaw := d.GetChange("tags")
-		createTags, removeTags := dataSyncTagsDiff(expandDataSyncTagListEntry(oldRaw.(map[string]interface{})), expandDataSyncTagListEntry(newRaw.(map[string]interface{})))
+		o, n := d.GetChange("tags")
 
-		if len(removeTags) > 0 {
-			input := &datasync.UntagResourceInput{
-				Keys:        dataSyncTagsKeys(removeTags),
-				ResourceArn: aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Untagging DataSync Task: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging DataSync Task (%s): %s", d.Id(), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &datasync.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging DataSync Task: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging DataSync Task (%s): %s", d.Id(), err)
-			}
+		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating DataSync Task (%s) tags: %s", d.Id(), err)
 		}
 	}
 

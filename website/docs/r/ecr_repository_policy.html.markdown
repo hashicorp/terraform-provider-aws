@@ -1,20 +1,16 @@
 ---
+subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository_policy"
-sidebar_current: "docs-aws-resource-ecr-repository-policy"
 description: |-
-  Provides an ECR Repository Policy.
+  Provides an Elastic Container Registry Repository Policy.
 ---
 
 # Resource: aws_ecr_repository_policy
 
-Provides an ECR repository policy.
+Provides an Elastic Container Registry Repository Policy.
 
 Note that currently only one policy may be applied to a repository.
-
-~> **NOTE on ECR Availability**: The EC2 Container Registry is not yet rolled out
-in all regions - available regions are listed
-[the AWS Docs](https://docs.aws.amazon.com/general/latest/gr/rande.html#ecr_region).
 
 ## Example Usage
 
@@ -62,7 +58,7 @@ EOF
 The following arguments are supported:
 
 * `repository` - (Required) Name of the repository to apply the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](/docs/providers/aws/guides/iam-policy-documents.html)
+* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 
 ## Attributes Reference
 

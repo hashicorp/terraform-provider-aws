@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFront"
 layout: "aws"
-page_title: "AWS: cloudfront_distribution"
-sidebar_current: "docs-aws-resource-cloudfront-distribution"
+page_title: "AWS: aws_cloudfront_distribution"
 description: |-
   Provides a CloudFront web distribution resource.
 ---
@@ -184,7 +184,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
 
   default_cache_behavior {
     # ... other configuration ...
-    target_origin_id       = "groupS3"
+    target_origin_id = "groupS3"
   }
 
   # ... other configuration ...
@@ -232,7 +232,7 @@ of several sub-resources - these resources are laid out below.
   * `origin` (Required) - One or more [origins](#origin-arguments) for this
     distribution (multiples allowed).
 
-  * `origin_group` (Required) - One or more [origin_group](#origin-group-arguments) for this
+  * `origin_group` (Optional) - One or more [origin_group](#origin-group-arguments) for this
   distribution (multiples allowed).  
 
   * `price_class` (Optional) - The price class for this distribution. One of
@@ -241,7 +241,7 @@ of several sub-resources - these resources are laid out below.
   * `restrictions` (Required) - The [restriction
     configuration](#restrictions-arguments) for this distribution (maximum one).
 
-  * `tags` - (Optional) A mapping of tags to assign to the resource.
+  * `tags` - (Optional) A map of tags to assign to the resource.
 
   * `viewer_certificate` (Required) - The [SSL
     configuration](#viewer-certificate-arguments) for this distribution (maximum
@@ -249,7 +249,9 @@ of several sub-resources - these resources are laid out below.
 
   * `web_acl_id` (Optional) - If you're using AWS WAF to filter CloudFront
     requests, the Id of the AWS WAF web ACL that is associated with the
-    distribution.
+    distribution. The WAF Web ACL must exist in the WAF Global (CloudFront)
+    region and the credentials configuring this argument must have
+    `waf:GetWebACL` permissions assigned.
 
   * `retain_on_delete` (Optional) - Disables the distribution instead of
     deleting it when destroying the resource through Terraform. If this is set,
@@ -456,7 +458,7 @@ argument is not required.
 
   * `failover_criteria` (Required) - The [failover criteria](#failover-criteria-arguments) for when to failover to the secondary origin
 
-  * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. Minimum 2.
+  * `member` (Required) - Ordered [member](#member-arguments) configuration blocks assigned to the origin group, where the first member is the primary origin. You must specify two members.
 
 ##### Failover Criteria Arguments
 
@@ -497,7 +499,8 @@ The arguments of `geo_restriction` are:
     this, `acm_certificate_arn`, or `cloudfront_default_certificate`.
 
   * `minimum_protocol_version` - The minimum version of the SSL protocol that
-    you want CloudFront to use for HTTPS connections. One of `SSLv3`, `TLSv1`,
+    you want CloudFront to use for HTTPS connections. Can only be set if 
+    `cloudfront_default_certificate = false`. One of `SSLv3`, `TLSv1`,
     `TLSv1_2016`, `TLSv1.1_2016` or `TLSv1.2_2018`. Default: `TLSv1`. **NOTE**:
     If you are using a custom certificate (specified with `acm_certificate_arn`
     or `iam_certificate_id`), and have specified `sni-only` in
@@ -517,7 +520,7 @@ In addition to all arguments above, the following attributes are exported:
 
   * `id` - The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
 
-  * `arn` - The ARN (Amazon Resource Name) for the distribution. For example: arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5, where 123456789012 is your AWS account ID.
+  * `arn` - The ARN (Amazon Resource Name) for the distribution. For example: `arn:aws:cloudfront::123456789012:distribution/EDFDVBD632BHDS5`, where `123456789012` is your AWS account ID.
 
   * `caller_reference` - Internal value used by CloudFront to allow future
     updates to the distribution configuration.

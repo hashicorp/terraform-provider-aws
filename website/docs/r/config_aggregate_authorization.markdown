@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_aggregate_authorization"
-sidebar_current: "docs-aws-resource-config-aggregate-authorization"
 description: |-
   Manages an AWS Config Aggregate Authorization.
 ---
@@ -25,6 +25,7 @@ The following arguments are supported:
 
 * `account_id` - (Required) Account ID
 * `region` - (Required) Region
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

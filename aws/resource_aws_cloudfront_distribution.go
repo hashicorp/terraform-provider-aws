@@ -8,9 +8,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
@@ -67,13 +68,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"forwarded_values": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -519,6 +520,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Type:     schema.TypeList,
 							Required: true,
 							MinItems: 2,
+							MaxItems: 2,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"origin_id": {
@@ -645,6 +647,11 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 									"restriction_type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											cloudfront.GeoRestrictionTypeNone,
+											cloudfront.GeoRestrictionTypeBlacklist,
+											cloudfront.GeoRestrictionTypeWhitelist,
+										}, false),
 									},
 								},
 							},
@@ -697,6 +704,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 			"active_trusted_signers": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -748,7 +756,7 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 	params := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
-			Tags:               tagsFromMapCloudFront(d.Get("tags").(map[string]interface{})),
+			Tags:               &cloudfront.Tags{Items: keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudfrontTags()},
 		},
 	}
 
@@ -794,6 +802,8 @@ func resourceAwsCloudFrontDistributionCreate(d *schema.ResourceData, meta interf
 
 func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudfrontconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	params := &cloudfront.GetDistributionInput{
 		Id: aws.String(d.Id()),
 	}
@@ -814,6 +824,7 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	if err != nil {
 		return err
 	}
+
 	// Update other attributes outside of DistributionConfig
 	err = d.Set("active_trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners))
 	if err != nil {
@@ -826,18 +837,12 @@ func resourceAwsCloudFrontDistributionRead(d *schema.ResourceData, meta interfac
 	d.Set("etag", resp.ETag)
 	d.Set("arn", resp.Distribution.ARN)
 
-	tagResp, err := conn.ListTagsForResource(&cloudfront.ListTagsForResourceInput{
-		Resource: aws.String(d.Get("arn").(string)),
-	})
-
+	tags, err := keyvaluetags.CloudfrontListTags(conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf(
-			"Error retrieving EC2 tags for CloudFront Distribution %q (ARN: %q): %s",
-			d.Id(), d.Get("arn").(string), err)
+		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}
-
-	if err := d.Set("tags", tagsToMapCloudFront(tagResp.Tags)); err != nil {
-		return err
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -884,8 +889,11 @@ func resourceAwsCloudFrontDistributionUpdate(d *schema.ResourceData, meta interf
 		}
 	}
 
-	if err := setTagsCloudFront(conn, d, d.Get("arn").(string)); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.CloudfrontUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags for CloudFront Distribution (%s): %s", d.Id(), err)
+		}
 	}
 
 	return resourceAwsCloudFrontDistributionRead(d, meta)
@@ -1065,7 +1073,7 @@ func resourceAwsCloudFrontDistributionWaitUntilDeployed(id string, meta interfac
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
 		Refresh:    resourceAwsCloudFrontWebDistributionStateRefreshFunc(id, meta),
-		Timeout:    70 * time.Minute,
+		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
 		Delay:      1 * time.Minute,
 	}

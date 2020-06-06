@@ -1,14 +1,14 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_model"
-sidebar_current: "docs-aws-resource-api-gateway-model"
 description: |-
-  Provides a Model for a API Gateway.
+  Provides a Model for a REST API Gateway.
 ---
 
 # Resource: aws_api_gateway_model
 
-Provides a Model for a API Gateway.
+Provides a Model for a REST API Gateway.
 
 ## Example Usage
 

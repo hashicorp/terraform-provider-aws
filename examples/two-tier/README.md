@@ -11,7 +11,7 @@ management tool, or by pre-baking configured AMIs with
 [Packer](http://www.packer.io).
 
 This example will also create a new EC2 Key Pair in the specified AWS Region. 
-The key name and path to the public key must be specified via the  
+The key name and path to the public key must be specified via the
 terraform command vars.
 
 After you run `terraform apply` on this configuration, it will
@@ -34,3 +34,5 @@ For example:
 ```
 terraform apply -var 'key_name=terraform' -var 'public_key_path=/Users/jsmith/.ssh/terraform.pub'
 ```
+
+Alternatively to using `-var` with each command, the `terraform.template.tfvars` file can be copied to `terraform.tfvars` and updated.

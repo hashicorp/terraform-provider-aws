@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_internet_gateway"
-sidebar_current: "docs-aws-datasource-internet_gateway"
 description: |-
     Provides details about a specific Internet Gateway
 ---
@@ -31,7 +31,7 @@ Internet Gateway whose data will be exported as attributes.
 
 * `internet_gateway_id` - (Optional) The id of the specific Internet Gateway to retrieve.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired Internet Gateway.
 
 * `filter` - (Optional) Custom filter block as described below.

@@ -1,7 +1,7 @@
 ---
+subcategory: "GuardDuty"
 layout: "aws"
 page_title: "AWS: aws_guardduty_invite_accepter"
-sidebar_current: "docs-aws-resource-guardduty-invite-accepter"
 description: |-
   Provides a resource to accept a pending GuardDuty invite on creation, ensure the detector has the correct master account on read, and disassociate with the master account upon removal.
 ---
@@ -20,10 +20,10 @@ resource "aws_guardduty_detector" "member" {
 }
 
 resource "aws_guardduty_member" "dev" {
-  account_id         = "${aws_guardduty_detector.member.account_id}"
-  detector_id        = "${aws_guardduty_detector.master.id}"
-  email              = "required@example.com"
-  invite             = true
+  account_id  = "${aws_guardduty_detector.member.account_id}"
+  detector_id = "${aws_guardduty_detector.master.id}"
+  email       = "required@example.com"
+  invite      = true
 }
 
 resource "aws_guardduty_invite_accepter" "member" {

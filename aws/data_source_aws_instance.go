@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"strings"
@@ -8,7 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsInstance() *schema.Resource {
@@ -22,7 +25,6 @@ func dataSourceAwsInstance() *schema.Resource {
 			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
-				ForceNew: true,
 			},
 			"ami": {
 				Type:     schema.TypeString,
@@ -93,6 +95,10 @@ func dataSourceAwsInstance() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"outpost_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"network_interface_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -141,7 +147,7 @@ func dataSourceAwsInstance() *schema.Resource {
 				},
 			},
 			"ephemeral_block_device": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -187,6 +193,11 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"kms_key_id": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
 						"snapshot_id": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -208,6 +219,14 @@ func dataSourceAwsInstance() *schema.Resource {
 						},
 					},
 				},
+				// This should not be necessary, but currently is (see #7198)
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+					m := v.(map[string]interface{})
+					buf.WriteString(fmt.Sprintf("%s-", m["device_name"].(string)))
+					buf.WriteString(fmt.Sprintf("%s-", m["snapshot_id"].(string)))
+					return hashcode.String(buf.String())
+				},
 			},
 			"root_block_device": {
 				Type:     schema.TypeSet,
@@ -219,8 +238,23 @@ func dataSourceAwsInstance() *schema.Resource {
 							Computed: true,
 						},
 
+						"device_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+
+						"encrypted": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+
 						"iops": {
 							Type:     schema.TypeInt,
+							Computed: true,
+						},
+
+						"kms_key_id": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 
@@ -253,6 +287,26 @@ func dataSourceAwsInstance() *schema.Resource {
 					},
 				},
 			},
+			"metadata_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"http_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_tokens": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_put_response_hop_limit": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"disable_api_termination": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -264,6 +318,7 @@ func dataSourceAwsInstance() *schema.Resource {
 // dataSourceAwsInstanceRead performs the instanceID lookup
 func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	instanceID, instanceIDOk := d.GetOk("instance_id")
@@ -282,9 +337,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		params.InstanceIds = []*string{aws.String(instanceID.(string))}
 	}
 	if tagsOk {
-		params.Filters = append(params.Filters, buildEC2TagFilterList(
-			tagsFromMap(tags.(map[string]interface{})),
-		)...)
+		params.Filters = append(params.Filters, ec2TagFiltersFromMap(tags.(map[string]interface{}))...)
 	}
 
 	log.Printf("[DEBUG] Reading IAM Instance: %s", params)
@@ -324,7 +377,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", *instance.InstanceId)
-	if err := instanceDescriptionAttributes(d, instance, conn); err != nil {
+	if err := instanceDescriptionAttributes(d, instance, conn, ignoreTagsConfig); err != nil {
 		return err
 	}
 
@@ -350,7 +403,7 @@ func dataSourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2) error {
+func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *keyvaluetags.IgnoreConfig) error {
 	d.SetId(*instance.InstanceId)
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
@@ -373,6 +426,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	d.Set("public_ip", instance.PublicIpAddress)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
+	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("iam_instance_profile", iamInstanceProfileArnToName(instance.IamInstanceProfile))
 
 	// iterate through network interfaces, and set subnet, network_interface, public_addr
@@ -399,7 +453,9 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
-	d.Set("tags", tagsToMap(instance.Tags))
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(instance.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	// Security Groups
 	if err := readSecurityGroups(d, instance, conn); err != nil {
@@ -458,6 +514,10 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	if err := d.Set("credit_specification", creditSpecifications); err != nil {
 		return fmt.Errorf("error setting credit_specification: %s", err)
+	}
+
+	if err := d.Set("metadata_options", flattenEc2InstanceMetadataOptions(instance.MetadataOptions)); err != nil {
+		return fmt.Errorf("error setting metadata_options: %s", err)
 	}
 
 	return nil

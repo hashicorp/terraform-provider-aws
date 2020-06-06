@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEcrDataSource_ecrImage(t *testing.T) {
@@ -37,15 +37,15 @@ func TestAccAWSEcrDataSource_ecrImage(t *testing.T) {
 func testAccCheckAwsEcrImageDataSourceConfig(reg, repo, tag string) string {
 	return fmt.Sprintf(`
 data "aws_ecr_image" "by_tag" {
-	registry_id = "%s"
-	repository_name = "%s"
-	image_tag = "%s"
+  registry_id     = "%s"
+  repository_name = "%s"
+  image_tag       = "%s"
 }
 
 data "aws_ecr_image" "by_digest" {
-	registry_id = "${data.aws_ecr_image.by_tag.registry_id}"
-	repository_name = "${data.aws_ecr_image.by_tag.repository_name}"
-	image_digest = "${data.aws_ecr_image.by_tag.image_digest}"
+  registry_id     = "${data.aws_ecr_image.by_tag.registry_id}"
+  repository_name = "${data.aws_ecr_image.by_tag.repository_name}"
+  image_digest    = "${data.aws_ecr_image.by_tag.image_digest}"
 }
 `, reg, repo, tag)
 }

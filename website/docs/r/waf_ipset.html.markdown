@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF"
 layout: "aws"
-page_title: "AWS: waf_ipset"
-sidebar_current: "docs-aws-resource-waf-ipset"
+page_title: "AWS: aws_waf_ipset"
 description: |-
   Provides a AWS WAF IPSet resource.
 ---

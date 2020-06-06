@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEbsSnapshotDataSource_basic(t *testing.T) {
@@ -88,7 +88,14 @@ func testAccCheckAwsEbsSnapshotDataSourceID(n string) resource.TestCheckFunc {
 }
 
 const testAccCheckAwsEbsSnapshotDataSourceConfig = `
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
@@ -106,7 +113,14 @@ data "aws_ebs_snapshot" "test" {
 `
 
 const testAccCheckAwsEbsSnapshotDataSourceConfigFilter = `
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
@@ -127,7 +141,14 @@ data "aws_ebs_snapshot" "test" {
 `
 
 const testAccCheckAwsEbsSnapshotDataSourceConfigMostRecent = `
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"

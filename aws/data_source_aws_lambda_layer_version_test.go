@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAWSLambdaLayerVersion_basic(t *testing.T) {
@@ -79,9 +79,9 @@ func TestAccDataSourceAWSLambdaLayerVersion_runtime(t *testing.T) {
 func testAccDataSourceAWSLambdaLayerVersionConfigBasic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
-  filename = "test-fixtures/lambdatest.zip"
-  layer_name = %[1]q
-  compatible_runtimes = ["nodejs8.10"]
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
@@ -93,20 +93,20 @@ data "aws_lambda_layer_version" "test" {
 func testAccDataSourceAWSLambdaLayerVersionConfigVersion(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
-  filename = "test-fixtures/lambdatest.zip"
-  layer_name = %[1]q
-  compatible_runtimes = ["nodejs8.10"]
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 resource "aws_lambda_layer_version" "test_two" {
-  filename = "test-fixtures/lambdatest_modified.zip"
-  layer_name = %[1]q
-  compatible_runtimes = ["nodejs8.10"]
+  filename            = "test-fixtures/lambdatest_modified.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
   layer_name = "${aws_lambda_layer_version.test_two.layer_name}"
-  version = "${aws_lambda_layer_version.test.version}"
+  version    = "${aws_lambda_layer_version.test.version}"
 }
 `, rName)
 }
@@ -114,19 +114,19 @@ data "aws_lambda_layer_version" "test" {
 func testAccDataSourceAWSLambdaLayerVersionConfigRuntimes(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "test" {
-  filename = "test-fixtures/lambdatest.zip"
-  layer_name = %[1]q
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
   compatible_runtimes = ["go1.x"]
 }
 
 resource "aws_lambda_layer_version" "test_two" {
-  filename = "test-fixtures/lambdatest_modified.zip"
-  layer_name = "${aws_lambda_layer_version.test.layer_name}"
-  compatible_runtimes = ["nodejs8.10"]
+  filename            = "test-fixtures/lambdatest_modified.zip"
+  layer_name          = "${aws_lambda_layer_version.test.layer_name}"
+  compatible_runtimes = ["nodejs12.x"]
 }
 
 data "aws_lambda_layer_version" "test" {
-  layer_name = "${aws_lambda_layer_version.test_two.layer_name}"
+  layer_name         = "${aws_lambda_layer_version.test_two.layer_name}"
   compatible_runtime = "go1.x"
 }
 `, rName)

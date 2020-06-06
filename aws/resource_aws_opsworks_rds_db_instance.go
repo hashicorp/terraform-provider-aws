@@ -3,13 +3,10 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
@@ -46,21 +43,16 @@ func resourceAwsOpsworksRdsDbInstance() *schema.Resource {
 func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).opsworksconn
 
-	d.Partial(true)
-
-	d.SetPartial("rds_db_instance_arn")
 	req := &opsworks.UpdateRdsDbInstanceInput{
 		RdsDbInstanceArn: aws.String(d.Get("rds_db_instance_arn").(string)),
 	}
 
 	requestUpdate := false
 	if d.HasChange("db_user") {
-		d.SetPartial("db_user")
 		req.DbUser = aws.String(d.Get("db_user").(string))
 		requestUpdate = true
 	}
 	if d.HasChange("db_password") {
-		d.SetPartial("db_password")
 		req.DbPassword = aws.String(d.Get("db_password").(string))
 		requestUpdate = true
 	}
@@ -68,26 +60,11 @@ func resourceAwsOpsworksRdsDbInstanceUpdate(d *schema.ResourceData, meta interfa
 	if requestUpdate {
 		log.Printf("[DEBUG] Opsworks RDS DB Instance Modification request: %s", req)
 
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-			var cerr error
-			_, cerr = client.UpdateRdsDbInstance(req)
-			if cerr != nil {
-				log.Printf("[INFO] client error")
-				if opserr, ok := cerr.(awserr.Error); ok {
-					log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-				}
-				return resource.NonRetryableError(cerr)
-			}
-			return nil
-		})
-
+		_, err := client.UpdateRdsDbInstance(req)
 		if err != nil {
-			return err
+			return fmt.Errorf("Error updating Opsworks RDS DB instance: %s", err)
 		}
-
 	}
-
-	d.Partial(false)
 
 	return resourceAwsOpsworksRdsDbInstanceRead(d, meta)
 }
@@ -101,27 +78,17 @@ func resourceAwsOpsworksRdsDbInstanceDeregister(d *schema.ResourceData, meta int
 
 	log.Printf("[DEBUG] Unregistering rds db instance '%s' from stack: %s", d.Get("rds_db_instance_arn"), d.Get("stack_id"))
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		_, cerr = client.DeregisterRdsDbInstance(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				if opserr.Code() == "ResourceNotFoundException" {
-					log.Printf("[INFO] The db instance could not be found. Remove it from state.")
-					d.SetId("")
-
-					return nil
-				}
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-			}
-			return resource.NonRetryableError(cerr)
+	_, err := client.DeregisterRdsDbInstance(req)
+	if err != nil {
+		if isAWSErr(err, "ResourceNotFoundException", "") {
+			log.Printf("[INFO] The db instance could not be found. Remove it from state.")
+			d.SetId("")
+			return nil
 		}
+		return fmt.Errorf("Error deregistering Opsworks RDS DB instance: %s", err)
+	}
 
-		return nil
-	})
-
-	return err
+	return nil
 }
 
 func resourceAwsOpsworksRdsDbInstanceRead(d *schema.ResourceData, meta interface{}) error {
@@ -171,22 +138,9 @@ func resourceAwsOpsworksRdsDbInstanceRegister(d *schema.ResourceData, meta inter
 		DbPassword:       aws.String(d.Get("db_password").(string)),
 	}
 
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		var cerr error
-		_, cerr = client.RegisterRdsDbInstance(req)
-		if cerr != nil {
-			log.Printf("[INFO] client error")
-			if opserr, ok := cerr.(awserr.Error); ok {
-				log.Printf("[ERROR] OpsWorks error: %s message: %s", opserr.Code(), opserr.Message())
-			}
-			return resource.NonRetryableError(cerr)
-		}
-
-		return nil
-	})
-
+	_, err := client.RegisterRdsDbInstance(req)
 	if err != nil {
-		return err
+		return fmt.Errorf("Error registering Opsworks RDS DB instance: %s", err)
 	}
 
 	return resourceAwsOpsworksRdsDbInstanceRead(d, meta)

@@ -13,9 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIAMServerCertificate() *schema.Resource {
@@ -182,6 +182,12 @@ func resourceAwsIAMServerCertificateDelete(d *schema.ResourceData, meta interfac
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteServerCertificate(&iam.DeleteServerCertificateInput{
+			ServerCertificateName: aws.String(d.Get("name").(string)),
+		})
+	}
 
 	return err
 }

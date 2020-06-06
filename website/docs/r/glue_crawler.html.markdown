@@ -1,7 +1,7 @@
 ---
+subcategory: "Glue"
 layout: "aws"
 page_title: "AWS: aws_glue_crawler"
-sidebar_current: "docs-aws-resource-glue-crawler"
 description: |-
   Manages a Glue Crawler
 ---
@@ -55,9 +55,38 @@ resource "aws_glue_crawler" "example" {
 }
 ```
 
+
+### Catalog Target
+
+```hcl
+resource "aws_glue_crawler" "example" {
+  database_name = "${aws_glue_catalog_database.example.name}"
+  name          = "example"
+  role          = "${aws_iam_role.example.arn}"
+
+  catalog_target {
+    database_name = "${aws_glue_catalog_database.example.name}"
+    tables        = ["${aws_glue_catalog_table.example.name}"]
+  }
+
+  schema_change_policy {
+    delete_behavior = "LOG"
+  }
+
+  configuration = <<EOF
+{
+  "Version":1.0,
+  "Grouping": {
+    "TableGroupingPolicy": "CombineCompatibleSchemas"
+  }
+}
+EOF
+}
+```
+
 ## Argument Reference
 
-~> **NOTE:** At least one `jdbc_target` or `s3_target` must be specified.
+~> **NOTE:** Must specify at least one of `dynamodb_target`, `jdbc_target`, `s3_target` or `catalog_target`.
 
 The following arguments are supported:
 
@@ -72,8 +101,9 @@ The following arguments are supported:
 * `s3_target` (Optional) List nested Amazon S3 target arguments. See below.
 * `schedule` (Optional) A cron expression used to specify the schedule. For more information, see [Time-Based Schedules for Jobs and Crawlers](https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html). For example, to run something every day at 12:15 UTC, you would specify: `cron(15 12 * * ? *)`.
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior.
-* `table_prefix` (Optional) The table prefix used for catalog tables that are created.
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
+* `table_prefix` (Optional) The table prefix used for catalog tables that are created.
+* `tags` - (Optional) Key-value map of resource tags
 
 ### dynamodb_target Argument Reference
 
@@ -89,6 +119,16 @@ The following arguments are supported:
 
 * `path` - (Required) The path to the Amazon S3 target.
 * `exclusions` - (Optional) A list of glob patterns used to exclude from the crawl.
+
+### catalog_target Argument Reference
+
+* `database_name` - (Required) The name of the Glue database to be synchronized.
+* `tables` - (Required) A list of catalog tables to be synchronized.
+
+~> **Note:** `deletion_behavior` of catalog target doesn't support `DEPRECATE_IN_DATABASE`.
+
+-> **Note:** `configuration` for catalog target crawlers will have `{ ... "Grouping": { "TableGroupingPolicy": "CombineCompatibleSchemas"} }` by default.
+
 
 ### schema_change_policy Argument Reference
 

@@ -7,8 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsSecretsManagerSecret() *schema.Resource {
@@ -62,6 +63,7 @@ func dataSourceAwsSecretsManagerSecret() *schema.Resource {
 			"tags": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -69,6 +71,8 @@ func dataSourceAwsSecretsManagerSecret() *schema.Resource {
 
 func dataSourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	var secretID string
 	if v, ok := d.GetOk("arn"); ok {
 		secretID = v.(string)
@@ -131,7 +135,7 @@ func dataSourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interfac
 		return fmt.Errorf("error setting rotation_rules: %s", err)
 	}
 
-	if err := d.Set("tags", tagsToMapSecretsManager(output.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.SecretsmanagerKeyValueTags(output.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

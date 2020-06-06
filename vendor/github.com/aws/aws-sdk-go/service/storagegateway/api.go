@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
 )
 
 const opActivateGateway = "ActivateGateway"
@@ -56,11 +57,11 @@ func (c *StorageGateway) ActivateGatewayRequest(input *ActivateGatewayInput) (re
 // ActivateGateway API operation for AWS Storage Gateway.
 //
 // Activates the gateway you previously deployed on your host. In the activation
-// process, you specify information such as the region you want to use for storing
-// snapshots or tapes, the time zone for scheduled snapshots the gateway snapshot
-// schedule window, an activation key, and a name for your gateway. The activation
-// process also associates your gateway with your account; for more information,
-// see UpdateGatewayInformation.
+// process, you specify information such as the AWS Region that you want to
+// use for storing snapshots or tapes, the time zone for scheduled snapshots
+// the gateway snapshot schedule window, an activation key, and a name for your
+// gateway. The activation process also associates your gateway with your account;
+// for more information, see UpdateGatewayInformation.
 //
 // You must turn on the gateway VM before you can activate your gateway.
 //
@@ -71,12 +72,12 @@ func (c *StorageGateway) ActivateGatewayRequest(input *ActivateGatewayInput) (re
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ActivateGateway for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -161,12 +162,12 @@ func (c *StorageGateway) AddCacheRequest(input *AddCacheInput) (req *request.Req
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation AddCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -260,12 +261,12 @@ func (c *StorageGateway) AddTagsToResourceRequest(input *AddTagsToResourceInput)
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation AddTagsToResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -350,12 +351,12 @@ func (c *StorageGateway) AddUploadBufferRequest(input *AddUploadBufferInput) (re
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation AddUploadBuffer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -444,12 +445,12 @@ func (c *StorageGateway) AddWorkingStorageRequest(input *AddWorkingStorageInput)
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation AddWorkingStorage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -470,6 +471,96 @@ func (c *StorageGateway) AddWorkingStorage(input *AddWorkingStorageInput) (*AddW
 // for more information on using Contexts.
 func (c *StorageGateway) AddWorkingStorageWithContext(ctx aws.Context, input *AddWorkingStorageInput, opts ...request.Option) (*AddWorkingStorageOutput, error) {
 	req, out := c.AddWorkingStorageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAssignTapePool = "AssignTapePool"
+
+// AssignTapePoolRequest generates a "aws/request.Request" representing the
+// client's request for the AssignTapePool operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssignTapePool for more information on using the AssignTapePool
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssignTapePoolRequest method.
+//    req, resp := client.AssignTapePoolRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AssignTapePool
+func (c *StorageGateway) AssignTapePoolRequest(input *AssignTapePoolInput) (req *request.Request, output *AssignTapePoolOutput) {
+	op := &request.Operation{
+		Name:       opAssignTapePool,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &AssignTapePoolInput{}
+	}
+
+	output = &AssignTapePoolOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AssignTapePool API operation for AWS Storage Gateway.
+//
+// Assigns a tape to a tape pool for archiving. The tape assigned to a pool
+// is archived in the S3 storage class that is associated with the pool. When
+// you use your backup application to eject the tape, the tape is archived directly
+// into the S3 storage class (S3 Glacier or S3 Glacier Deep Archive) that corresponds
+// to the pool.
+//
+// Valid values: "GLACIER", "DEEP_ARCHIVE"
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation AssignTapePool for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidGatewayRequestException
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * InternalServerError
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/AssignTapePool
+func (c *StorageGateway) AssignTapePool(input *AssignTapePoolInput) (*AssignTapePoolOutput, error) {
+	req, out := c.AssignTapePoolRequest(input)
+	return out, req.Send()
+}
+
+// AssignTapePoolWithContext is the same as AssignTapePool with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssignTapePool for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) AssignTapePoolWithContext(ctx aws.Context, input *AssignTapePoolInput, opts ...request.Option) (*AssignTapePoolOutput, error) {
+	req, out := c.AssignTapePoolRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -532,12 +623,12 @@ func (c *StorageGateway) AttachVolumeRequest(input *AttachVolumeInput) (req *req
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation AttachVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -618,12 +709,12 @@ func (c *StorageGateway) CancelArchivalRequest(input *CancelArchivalInput) (req 
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CancelArchival for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -704,12 +795,12 @@ func (c *StorageGateway) CancelRetrievalRequest(input *CancelRetrievalInput) (re
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CancelRetrieval for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -804,12 +895,12 @@ func (c *StorageGateway) CreateCachediSCSIVolumeRequest(input *CreateCachediSCSI
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateCachediSCSIVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -881,15 +972,15 @@ func (c *StorageGateway) CreateNFSFileShareRequest(input *CreateNFSFileShareInpu
 //
 // Creates a Network File System (NFS) file share on an existing file gateway.
 // In Storage Gateway, a file share is a file system mount point backed by Amazon
-// S3 cloud storage. Storage Gateway exposes file shares using a NFS interface.
+// S3 cloud storage. Storage Gateway exposes file shares using an NFS interface.
 // This operation is only supported for file gateways.
 //
 // File gateway requires AWS Security Token Service (AWS STS) to be activated
-// to enable you create a file share. Make sure AWS STS is activated in the
-// region you are creating your file gateway in. If AWS STS is not activated
-// in the region, activate it. For information about how to activate AWS STS,
-// see Activating and Deactivating AWS STS in an AWS Region in the AWS Identity
-// and Access Management User Guide.
+// to enable you to create a file share. Make sure AWS STS is activated in the
+// AWS Region you are creating your file gateway in. If AWS STS is not activated
+// in the AWS Region, activate it. For information about how to activate AWS
+// STS, see Activating and Deactivating AWS STS in an AWS Region in the AWS
+// Identity and Access Management User Guide.
 //
 // File gateway does not support creating hard or symbolic links on a file share.
 //
@@ -900,12 +991,12 @@ func (c *StorageGateway) CreateNFSFileShareRequest(input *CreateNFSFileShareInpu
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateNFSFileShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -977,7 +1068,7 @@ func (c *StorageGateway) CreateSMBFileShareRequest(input *CreateSMBFileShareInpu
 //
 // Creates a Server Message Block (SMB) file share on an existing file gateway.
 // In Storage Gateway, a file share is a file system mount point backed by Amazon
-// S3 cloud storage. Storage Gateway expose file shares using a SMB interface.
+// S3 cloud storage. Storage Gateway expose file shares using an SMB interface.
 // This operation is only supported for file gateways.
 //
 // File gateways require AWS Security Token Service (AWS STS) to be activated
@@ -996,12 +1087,12 @@ func (c *StorageGateway) CreateSMBFileShareRequest(input *CreateSMBFileShareInpu
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateSMBFileShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1074,11 +1165,12 @@ func (c *StorageGateway) CreateSnapshotRequest(input *CreateSnapshotInput) (req 
 // Initiates a snapshot of a volume.
 //
 // AWS Storage Gateway provides the ability to back up point-in-time snapshots
-// of your data to Amazon Simple Storage (S3) for durable off-site recovery,
-// as well as import the data to an Amazon Elastic Block Store (EBS) volume
-// in Amazon Elastic Compute Cloud (EC2). You can take snapshots of your gateway
-// volume on a scheduled or ad hoc basis. This API enables you to take ad-hoc
-// snapshot. For more information, see Editing a Snapshot Schedule (https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-volumes.html#SchedulingSnapshot).
+// of your data to Amazon Simple Storage Service (Amazon S3) for durable off-site
+// recovery, as well as import the data to an Amazon Elastic Block Store (EBS)
+// volume in Amazon Elastic Compute Cloud (EC2). You can take snapshots of your
+// gateway volume on a scheduled or ad hoc basis. This API enables you to take
+// an ad hoc snapshot. For more information, see Editing a Snapshot Schedule
+// (https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-volumes.html#SchedulingSnapshot).
 //
 // In the CreateSnapshot request you identify the volume by providing its Amazon
 // Resource Name (ARN). You must also provide description for the snapshot.
@@ -1103,16 +1195,16 @@ func (c *StorageGateway) CreateSnapshotRequest(input *CreateSnapshotInput) (req 
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateSnapshot for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
-//   * ErrCodeServiceUnavailableError "ServiceUnavailableError"
+//   * ServiceUnavailableError
 //   An internal server error has occurred because the service is unavailable.
 //   For more information, see the error and message fields.
 //
@@ -1207,16 +1299,16 @@ func (c *StorageGateway) CreateSnapshotFromVolumeRecoveryPointRequest(input *Cre
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateSnapshotFromVolumeRecoveryPoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
-//   * ErrCodeServiceUnavailableError "ServiceUnavailableError"
+//   * ServiceUnavailableError
 //   An internal server error has occurred because the service is unavailable.
 //   For more information, see the error and message fields.
 //
@@ -1307,12 +1399,12 @@ func (c *StorageGateway) CreateStorediSCSIVolumeRequest(input *CreateStorediSCSI
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateStorediSCSIVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1383,9 +1475,9 @@ func (c *StorageGateway) CreateTapeWithBarcodeRequest(input *CreateTapeWithBarco
 // CreateTapeWithBarcode API operation for AWS Storage Gateway.
 //
 // Creates a virtual tape by using your own barcode. You write data to the virtual
-// tape and then archive the tape. A barcode is unique and can not be reused
-// if it has already been used on a tape . This applies to barcodes used on
-// deleted tapes. This operation is only supported in the tape gateway type.
+// tape and then archive the tape. A barcode is unique and cannot be reused
+// if it has already been used on a tape. This applies to barcodes used on deleted
+// tapes. This operation is only supported in the tape gateway type.
 //
 // Cache storage must be allocated to the gateway before you can create a virtual
 // tape. Use the AddCache operation to add cache storage to a gateway.
@@ -1397,12 +1489,12 @@ func (c *StorageGateway) CreateTapeWithBarcodeRequest(input *CreateTapeWithBarco
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateTapeWithBarcode for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1486,12 +1578,12 @@ func (c *StorageGateway) CreateTapesRequest(input *CreateTapesInput) (req *reque
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation CreateTapes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1512,6 +1604,92 @@ func (c *StorageGateway) CreateTapes(input *CreateTapesInput) (*CreateTapesOutpu
 // for more information on using Contexts.
 func (c *StorageGateway) CreateTapesWithContext(ctx aws.Context, input *CreateTapesInput, opts ...request.Option) (*CreateTapesOutput, error) {
 	req, out := c.CreateTapesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteAutomaticTapeCreationPolicy = "DeleteAutomaticTapeCreationPolicy"
+
+// DeleteAutomaticTapeCreationPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteAutomaticTapeCreationPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteAutomaticTapeCreationPolicy for more information on using the DeleteAutomaticTapeCreationPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteAutomaticTapeCreationPolicyRequest method.
+//    req, resp := client.DeleteAutomaticTapeCreationPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DeleteAutomaticTapeCreationPolicy
+func (c *StorageGateway) DeleteAutomaticTapeCreationPolicyRequest(input *DeleteAutomaticTapeCreationPolicyInput) (req *request.Request, output *DeleteAutomaticTapeCreationPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteAutomaticTapeCreationPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteAutomaticTapeCreationPolicyInput{}
+	}
+
+	output = &DeleteAutomaticTapeCreationPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteAutomaticTapeCreationPolicy API operation for AWS Storage Gateway.
+//
+// Deletes the automatic tape creation policy of a gateway. If you delete this
+// policy, new virtual tapes must be created manually. Use the Amazon Resource
+// Name (ARN) of the gateway in your request to remove the policy.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation DeleteAutomaticTapeCreationPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidGatewayRequestException
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * InternalServerError
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DeleteAutomaticTapeCreationPolicy
+func (c *StorageGateway) DeleteAutomaticTapeCreationPolicy(input *DeleteAutomaticTapeCreationPolicyInput) (*DeleteAutomaticTapeCreationPolicyOutput, error) {
+	req, out := c.DeleteAutomaticTapeCreationPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteAutomaticTapeCreationPolicyWithContext is the same as DeleteAutomaticTapeCreationPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteAutomaticTapeCreationPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) DeleteAutomaticTapeCreationPolicyWithContext(ctx aws.Context, input *DeleteAutomaticTapeCreationPolicyInput, opts ...request.Option) (*DeleteAutomaticTapeCreationPolicyOutput, error) {
+	req, out := c.DeleteAutomaticTapeCreationPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1565,7 +1743,8 @@ func (c *StorageGateway) DeleteBandwidthRateLimitRequest(input *DeleteBandwidthR
 // upload and download bandwidth rate limit, or you can delete both. If you
 // delete only one of the limits, the other limit remains unchanged. To specify
 // which gateway to work with, use the Amazon Resource Name (ARN) of the gateway
-// in your request.
+// in your request. This operation is supported for the stored volume, cached
+// volume and tape gateway types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1574,12 +1753,12 @@ func (c *StorageGateway) DeleteBandwidthRateLimitRequest(input *DeleteBandwidthR
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteBandwidthRateLimit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1650,7 +1829,8 @@ func (c *StorageGateway) DeleteChapCredentialsRequest(input *DeleteChapCredentia
 // DeleteChapCredentials API operation for AWS Storage Gateway.
 //
 // Deletes Challenge-Handshake Authentication Protocol (CHAP) credentials for
-// a specified iSCSI target and initiator pair.
+// a specified iSCSI target and initiator pair. This operation is supported
+// in volume and tape gateway types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1659,12 +1839,12 @@ func (c *StorageGateway) DeleteChapCredentialsRequest(input *DeleteChapCredentia
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteChapCredentials for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1744,12 +1924,12 @@ func (c *StorageGateway) DeleteFileShareRequest(input *DeleteFileShareInput) (re
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteFileShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1831,10 +2011,10 @@ func (c *StorageGateway) DeleteGatewayRequest(input *DeleteGatewayInput) (req *r
 //
 // You no longer pay software charges after the gateway is deleted; however,
 // your existing Amazon EBS snapshots persist and you will continue to be billed
-// for these snapshots. You can choose to remove all remaining Amazon EBS snapshots
-// by canceling your Amazon EC2 subscription.  If you prefer not to cancel your
+// for these snapshots. You can choose to remove all remaining Amazon EBS snapshots
+// by canceling your Amazon EC2 subscription. If you prefer not to cancel your
 // Amazon EC2 subscription, you can delete your snapshots using the Amazon EC2
-// console. For more information, see the  AWS Storage Gateway Detail Page (http://aws.amazon.com/storagegateway).
+// console. For more information, see the AWS Storage Gateway Detail Page (http://aws.amazon.com/storagegateway).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1843,12 +2023,12 @@ func (c *StorageGateway) DeleteGatewayRequest(input *DeleteGatewayInput) (req *r
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteGateway for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -1927,8 +2107,9 @@ func (c *StorageGateway) DeleteSnapshotScheduleRequest(input *DeleteSnapshotSche
 // its Amazon Resource Name (ARN). This operation is only supported in stored
 // and cached volume gateway types.
 //
-// To list or delete a snapshot, you must use the Amazon EC2 API. in Amazon
-// Elastic Compute Cloud API Reference.
+// To list or delete a snapshot, you must use the Amazon EC2 API. For more information,
+// go to DescribeSnapshots (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSnapshots.html)
+// in the Amazon Elastic Compute Cloud API Reference.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1937,12 +2118,12 @@ func (c *StorageGateway) DeleteSnapshotScheduleRequest(input *DeleteSnapshotSche
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteSnapshotSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2022,12 +2203,12 @@ func (c *StorageGateway) DeleteTapeRequest(input *DeleteTapeInput) (req *request
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteTape for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2107,12 +2288,12 @@ func (c *StorageGateway) DeleteTapeArchiveRequest(input *DeleteTapeArchiveInput)
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteTapeArchive for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2205,12 +2386,12 @@ func (c *StorageGateway) DeleteVolumeRequest(input *DeleteVolumeInput) (req *req
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DeleteVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2231,6 +2412,92 @@ func (c *StorageGateway) DeleteVolume(input *DeleteVolumeInput) (*DeleteVolumeOu
 // for more information on using Contexts.
 func (c *StorageGateway) DeleteVolumeWithContext(ctx aws.Context, input *DeleteVolumeInput, opts ...request.Option) (*DeleteVolumeOutput, error) {
 	req, out := c.DeleteVolumeRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeAvailabilityMonitorTest = "DescribeAvailabilityMonitorTest"
+
+// DescribeAvailabilityMonitorTestRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeAvailabilityMonitorTest operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeAvailabilityMonitorTest for more information on using the DescribeAvailabilityMonitorTest
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeAvailabilityMonitorTestRequest method.
+//    req, resp := client.DescribeAvailabilityMonitorTestRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DescribeAvailabilityMonitorTest
+func (c *StorageGateway) DescribeAvailabilityMonitorTestRequest(input *DescribeAvailabilityMonitorTestInput) (req *request.Request, output *DescribeAvailabilityMonitorTestOutput) {
+	op := &request.Operation{
+		Name:       opDescribeAvailabilityMonitorTest,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeAvailabilityMonitorTestInput{}
+	}
+
+	output = &DescribeAvailabilityMonitorTestOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeAvailabilityMonitorTest API operation for AWS Storage Gateway.
+//
+// Returns information about the most recent High Availability monitoring test
+// that was performed on the host in a cluster. If a test isn't performed, the
+// status and start time in the response would be null.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation DescribeAvailabilityMonitorTest for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidGatewayRequestException
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * InternalServerError
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/DescribeAvailabilityMonitorTest
+func (c *StorageGateway) DescribeAvailabilityMonitorTest(input *DescribeAvailabilityMonitorTestInput) (*DescribeAvailabilityMonitorTestOutput, error) {
+	req, out := c.DescribeAvailabilityMonitorTestRequest(input)
+	return out, req.Send()
+}
+
+// DescribeAvailabilityMonitorTestWithContext is the same as DescribeAvailabilityMonitorTest with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeAvailabilityMonitorTest for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) DescribeAvailabilityMonitorTestWithContext(ctx aws.Context, input *DescribeAvailabilityMonitorTestInput, opts ...request.Option) (*DescribeAvailabilityMonitorTestOutput, error) {
+	req, out := c.DescribeAvailabilityMonitorTestRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2281,7 +2548,8 @@ func (c *StorageGateway) DescribeBandwidthRateLimitRequest(input *DescribeBandwi
 // DescribeBandwidthRateLimit API operation for AWS Storage Gateway.
 //
 // Returns the bandwidth rate limits of a gateway. By default, these limits
-// are not set, which means no bandwidth rate limiting is in effect.
+// are not set, which means no bandwidth rate limiting is in effect. This operation
+// is supported for the stored volume, cached volume and tape gateway types.'
 //
 // This operation only returns a value for a bandwidth rate limit only if the
 // limit is set. If no limits are set for the gateway, then this operation returns
@@ -2295,12 +2563,12 @@ func (c *StorageGateway) DescribeBandwidthRateLimitRequest(input *DescribeBandwi
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeBandwidthRateLimit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2371,7 +2639,7 @@ func (c *StorageGateway) DescribeCacheRequest(input *DescribeCacheInput) (req *r
 // DescribeCache API operation for AWS Storage Gateway.
 //
 // Returns information about the cache of a gateway. This operation is only
-// supported in the cached volume, tape and file gateway types.
+// supported in the cached volume, tape, and file gateway types.
 //
 // The response includes disk IDs that are configured as cache, and it includes
 // the amount of cache allocated and used.
@@ -2383,12 +2651,12 @@ func (c *StorageGateway) DescribeCacheRequest(input *DescribeCacheInput) (req *r
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2462,7 +2730,7 @@ func (c *StorageGateway) DescribeCachediSCSIVolumesRequest(input *DescribeCached
 // operation is only supported in the cached volume gateway types.
 //
 // The list of gateway volumes in the request must be from one gateway. In the
-// response Amazon Storage Gateway returns volume information sorted by volume
+// response, AWS Storage Gateway returns volume information sorted by volume
 // Amazon Resource Name (ARN).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -2472,12 +2740,12 @@ func (c *StorageGateway) DescribeCachediSCSIVolumesRequest(input *DescribeCached
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeCachediSCSIVolumes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2549,6 +2817,7 @@ func (c *StorageGateway) DescribeChapCredentialsRequest(input *DescribeChapCrede
 //
 // Returns an array of Challenge-Handshake Authentication Protocol (CHAP) credentials
 // information for a specified iSCSI target, one for each target-initiator pair.
+// This operation is supported in the volume and tape gateway types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2557,12 +2826,12 @@ func (c *StorageGateway) DescribeChapCredentialsRequest(input *DescribeChapCrede
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeChapCredentials for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2644,12 +2913,12 @@ func (c *StorageGateway) DescribeGatewayInformationRequest(input *DescribeGatewa
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeGatewayInformation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2729,12 +2998,12 @@ func (c *StorageGateway) DescribeMaintenanceStartTimeRequest(input *DescribeMain
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeMaintenanceStartTime for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2814,12 +3083,12 @@ func (c *StorageGateway) DescribeNFSFileSharesRequest(input *DescribeNFSFileShar
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeNFSFileShares for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2899,12 +3168,12 @@ func (c *StorageGateway) DescribeSMBFileSharesRequest(input *DescribeSMBFileShar
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeSMBFileShares for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -2984,12 +3253,12 @@ func (c *StorageGateway) DescribeSMBSettingsRequest(input *DescribeSMBSettingsIn
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeSMBSettings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3071,12 +3340,12 @@ func (c *StorageGateway) DescribeSnapshotScheduleRequest(input *DescribeSnapshot
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeSnapshotSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3148,7 +3417,7 @@ func (c *StorageGateway) DescribeStorediSCSIVolumesRequest(input *DescribeStored
 //
 // Returns the description of the gateway volumes specified in the request.
 // The list of gateway volumes in the request must be from one gateway. In the
-// response Amazon Storage Gateway returns volume information sorted by volume
+// response AWS Storage Gateway returns volume information sorted by volume
 // ARNs. This operation is only supported in stored volume gateway type.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -3158,12 +3427,12 @@ func (c *StorageGateway) DescribeStorediSCSIVolumesRequest(input *DescribeStored
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeStorediSCSIVolumes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3252,12 +3521,12 @@ func (c *StorageGateway) DescribeTapeArchivesRequest(input *DescribeTapeArchives
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeTapeArchives for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3294,7 +3563,7 @@ func (c *StorageGateway) DescribeTapeArchivesWithContext(ctx aws.Context, input 
 //    // Example iterating over at most 3 pages of a DescribeTapeArchives operation.
 //    pageNum := 0
 //    err := client.DescribeTapeArchivesPages(params,
-//        func(page *DescribeTapeArchivesOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeTapeArchivesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3326,10 +3595,12 @@ func (c *StorageGateway) DescribeTapeArchivesPagesWithContext(ctx aws.Context, i
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTapeArchivesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTapeArchivesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3398,12 +3669,12 @@ func (c *StorageGateway) DescribeTapeRecoveryPointsRequest(input *DescribeTapeRe
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeTapeRecoveryPoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3440,7 +3711,7 @@ func (c *StorageGateway) DescribeTapeRecoveryPointsWithContext(ctx aws.Context, 
 //    // Example iterating over at most 3 pages of a DescribeTapeRecoveryPoints operation.
 //    pageNum := 0
 //    err := client.DescribeTapeRecoveryPointsPages(params,
-//        func(page *DescribeTapeRecoveryPointsOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeTapeRecoveryPointsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3472,10 +3743,12 @@ func (c *StorageGateway) DescribeTapeRecoveryPointsPagesWithContext(ctx aws.Cont
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTapeRecoveryPointsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTapeRecoveryPointsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3541,12 +3814,12 @@ func (c *StorageGateway) DescribeTapesRequest(input *DescribeTapesInput) (req *r
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeTapes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3583,7 +3856,7 @@ func (c *StorageGateway) DescribeTapesWithContext(ctx aws.Context, input *Descri
 //    // Example iterating over at most 3 pages of a DescribeTapes operation.
 //    pageNum := 0
 //    err := client.DescribeTapesPages(params,
-//        func(page *DescribeTapesOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeTapesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3615,10 +3888,12 @@ func (c *StorageGateway) DescribeTapesPagesWithContext(ctx aws.Context, input *D
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeTapesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeTapesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3679,12 +3954,12 @@ func (c *StorageGateway) DescribeUploadBufferRequest(input *DescribeUploadBuffer
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeUploadBuffer for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3772,12 +4047,12 @@ func (c *StorageGateway) DescribeVTLDevicesRequest(input *DescribeVTLDevicesInpu
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeVTLDevices for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3814,7 +4089,7 @@ func (c *StorageGateway) DescribeVTLDevicesWithContext(ctx aws.Context, input *D
 //    // Example iterating over at most 3 pages of a DescribeVTLDevices operation.
 //    pageNum := 0
 //    err := client.DescribeVTLDevicesPages(params,
-//        func(page *DescribeVTLDevicesOutput, lastPage bool) bool {
+//        func(page *storagegateway.DescribeVTLDevicesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -3846,10 +4121,12 @@ func (c *StorageGateway) DescribeVTLDevicesPagesWithContext(ctx aws.Context, inp
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeVTLDevicesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeVTLDevicesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -3914,12 +4191,12 @@ func (c *StorageGateway) DescribeWorkingStorageRequest(input *DescribeWorkingSto
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DescribeWorkingStorage for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -3993,7 +4270,8 @@ func (c *StorageGateway) DetachVolumeRequest(input *DetachVolumeInput) (req *req
 // from the specified gateway. Detaching and attaching a volume enables you
 // to recover your data from one gateway to a different gateway without creating
 // a snapshot. It also makes it easier to move your volumes from an on-premises
-// gateway to a gateway hosted on an Amazon EC2 instance.
+// gateway to a gateway hosted on an Amazon EC2 instance. This operation is
+// only supported in the volume gateway type.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4002,12 +4280,12 @@ func (c *StorageGateway) DetachVolumeRequest(input *DetachVolumeInput) (req *req
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DetachVolume for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4084,7 +4362,7 @@ func (c *StorageGateway) DisableGatewayRequest(input *DisableGatewayInput) (req 
 // Use this operation for a tape gateway that is not reachable or not functioning.
 // This operation is only supported in the tape gateway type.
 //
-// Once a gateway is disabled it cannot be enabled.
+// After a gateway is disabled, it cannot be enabled.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4093,12 +4371,12 @@ func (c *StorageGateway) DisableGatewayRequest(input *DisableGatewayInput) (req 
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation DisableGateway for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4178,12 +4456,12 @@ func (c *StorageGateway) JoinDomainRequest(input *JoinDomainInput) (req *request
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation JoinDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4204,6 +4482,93 @@ func (c *StorageGateway) JoinDomain(input *JoinDomainInput) (*JoinDomainOutput, 
 // for more information on using Contexts.
 func (c *StorageGateway) JoinDomainWithContext(ctx aws.Context, input *JoinDomainInput, opts ...request.Option) (*JoinDomainOutput, error) {
 	req, out := c.JoinDomainRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opListAutomaticTapeCreationPolicies = "ListAutomaticTapeCreationPolicies"
+
+// ListAutomaticTapeCreationPoliciesRequest generates a "aws/request.Request" representing the
+// client's request for the ListAutomaticTapeCreationPolicies operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListAutomaticTapeCreationPolicies for more information on using the ListAutomaticTapeCreationPolicies
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListAutomaticTapeCreationPoliciesRequest method.
+//    req, resp := client.ListAutomaticTapeCreationPoliciesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/ListAutomaticTapeCreationPolicies
+func (c *StorageGateway) ListAutomaticTapeCreationPoliciesRequest(input *ListAutomaticTapeCreationPoliciesInput) (req *request.Request, output *ListAutomaticTapeCreationPoliciesOutput) {
+	op := &request.Operation{
+		Name:       opListAutomaticTapeCreationPolicies,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListAutomaticTapeCreationPoliciesInput{}
+	}
+
+	output = &ListAutomaticTapeCreationPoliciesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListAutomaticTapeCreationPolicies API operation for AWS Storage Gateway.
+//
+// Lists the automatic tape creation policies for a gateway. If there are no
+// automatic tape creation policies for the gateway, it returns an empty list.
+//
+// This operation is only supported for tape gateways.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation ListAutomaticTapeCreationPolicies for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidGatewayRequestException
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * InternalServerError
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/ListAutomaticTapeCreationPolicies
+func (c *StorageGateway) ListAutomaticTapeCreationPolicies(input *ListAutomaticTapeCreationPoliciesInput) (*ListAutomaticTapeCreationPoliciesOutput, error) {
+	req, out := c.ListAutomaticTapeCreationPoliciesRequest(input)
+	return out, req.Send()
+}
+
+// ListAutomaticTapeCreationPoliciesWithContext is the same as ListAutomaticTapeCreationPolicies with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListAutomaticTapeCreationPolicies for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) ListAutomaticTapeCreationPoliciesWithContext(ctx aws.Context, input *ListAutomaticTapeCreationPoliciesInput, opts ...request.Option) (*ListAutomaticTapeCreationPoliciesOutput, error) {
+	req, out := c.ListAutomaticTapeCreationPoliciesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -4270,12 +4635,12 @@ func (c *StorageGateway) ListFileSharesRequest(input *ListFileSharesInput) (req 
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListFileShares for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4312,7 +4677,7 @@ func (c *StorageGateway) ListFileSharesWithContext(ctx aws.Context, input *ListF
 //    // Example iterating over at most 3 pages of a ListFileShares operation.
 //    pageNum := 0
 //    err := client.ListFileSharesPages(params,
-//        func(page *ListFileSharesOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListFileSharesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4344,10 +4709,12 @@ func (c *StorageGateway) ListFileSharesPagesWithContext(ctx aws.Context, input *
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListFileSharesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListFileSharesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4401,8 +4768,8 @@ func (c *StorageGateway) ListGatewaysRequest(input *ListGatewaysInput) (req *req
 
 // ListGateways API operation for AWS Storage Gateway.
 //
-// Lists gateways owned by an AWS account in a region specified in the request.
-// The returned list is ordered by gateway Amazon Resource Name (ARN).
+// Lists gateways owned by an AWS account in an AWS Region specified in the
+// request. The returned list is ordered by gateway Amazon Resource Name (ARN).
 //
 // By default, the operation returns a maximum of 100 gateways. This operation
 // supports pagination that allows you to optionally reduce the number of gateways
@@ -4420,12 +4787,12 @@ func (c *StorageGateway) ListGatewaysRequest(input *ListGatewaysInput) (req *req
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListGateways for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4462,7 +4829,7 @@ func (c *StorageGateway) ListGatewaysWithContext(ctx aws.Context, input *ListGat
 //    // Example iterating over at most 3 pages of a ListGateways operation.
 //    pageNum := 0
 //    err := client.ListGatewaysPages(params,
-//        func(page *ListGatewaysOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListGatewaysOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4494,10 +4861,12 @@ func (c *StorageGateway) ListGatewaysPagesWithContext(ctx aws.Context, input *Li
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListGatewaysOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListGatewaysOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4563,12 +4932,12 @@ func (c *StorageGateway) ListLocalDisksRequest(input *ListLocalDisksInput) (req 
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListLocalDisks for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4645,7 +5014,7 @@ func (c *StorageGateway) ListTagsForResourceRequest(input *ListTagsForResourceIn
 // ListTagsForResource API operation for AWS Storage Gateway.
 //
 // Lists the tags that have been added to the specified resource. This operation
-// is only supported in the cached volume, stored volume and tape gateway type.
+// is supported in storage gateways of all types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -4654,12 +5023,12 @@ func (c *StorageGateway) ListTagsForResourceRequest(input *ListTagsForResourceIn
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListTagsForResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4696,7 +5065,7 @@ func (c *StorageGateway) ListTagsForResourceWithContext(ctx aws.Context, input *
 //    // Example iterating over at most 3 pages of a ListTagsForResource operation.
 //    pageNum := 0
 //    err := client.ListTagsForResourcePages(params,
-//        func(page *ListTagsForResourceOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListTagsForResourceOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4728,10 +5097,12 @@ func (c *StorageGateway) ListTagsForResourcePagesWithContext(ctx aws.Context, in
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTagsForResourceOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4804,12 +5175,12 @@ func (c *StorageGateway) ListTapesRequest(input *ListTapesInput) (req *request.R
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListTapes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -4846,7 +5217,7 @@ func (c *StorageGateway) ListTapesWithContext(ctx aws.Context, input *ListTapesI
 //    // Example iterating over at most 3 pages of a ListTapes operation.
 //    pageNum := 0
 //    err := client.ListTapesPages(params,
-//        func(page *ListTapesOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListTapesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -4878,10 +5249,12 @@ func (c *StorageGateway) ListTapesPagesWithContext(ctx aws.Context, input *ListT
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListTapesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListTapesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -4940,12 +5313,12 @@ func (c *StorageGateway) ListVolumeInitiatorsRequest(input *ListVolumeInitiators
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListVolumeInitiators for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5031,12 +5404,12 @@ func (c *StorageGateway) ListVolumeRecoveryPointsRequest(input *ListVolumeRecove
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListVolumeRecoveryPoints for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5132,12 +5505,12 @@ func (c *StorageGateway) ListVolumesRequest(input *ListVolumesInput) (req *reque
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ListVolumes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5174,7 +5547,7 @@ func (c *StorageGateway) ListVolumesWithContext(ctx aws.Context, input *ListVolu
 //    // Example iterating over at most 3 pages of a ListVolumes operation.
 //    pageNum := 0
 //    err := client.ListVolumesPages(params,
-//        func(page *ListVolumesOutput, lastPage bool) bool {
+//        func(page *storagegateway.ListVolumesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -5206,10 +5579,12 @@ func (c *StorageGateway) ListVolumesPagesWithContext(ctx aws.Context, input *Lis
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListVolumesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListVolumesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -5258,12 +5633,12 @@ func (c *StorageGateway) NotifyWhenUploadedRequest(input *NotifyWhenUploadedInpu
 // NotifyWhenUploaded API operation for AWS Storage Gateway.
 //
 // Sends you notification through CloudWatch Events when all files written to
-// your NFS file share have been uploaded to Amazon S3.
+// your file share have been uploaded to Amazon S3.
 //
 // AWS Storage Gateway can send a notification through Amazon CloudWatch Events
 // when all files written to your file share up to that point in time have been
-// uploaded to Amazon S3. These files include files written to the NFS file
-// share up to the time that you make a request for notification. When the upload
+// uploaded to Amazon S3. These files include files written to the file share
+// up to the time that you make a request for notification. When the upload
 // is done, Storage Gateway sends you notification through an Amazon CloudWatch
 // Event. You can configure CloudWatch Events to send the notification through
 // event targets such as Amazon SNS or AWS Lambda function. This operation is
@@ -5279,12 +5654,12 @@ func (c *StorageGateway) NotifyWhenUploadedRequest(input *NotifyWhenUploadedInpu
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation NotifyWhenUploaded for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5368,6 +5743,17 @@ func (c *StorageGateway) RefreshCacheRequest(input *RefreshCacheInput) (req *req
 // for new files on the gateway file share. You can subscribe to be notified
 // through an CloudWatch event when your RefreshCache operation completes.
 //
+// Throttle limit: This API is asynchronous so the gateway will accept no more
+// than two refreshes at any time. We recommend using the refresh-complete CloudWatch
+// event notification before issuing additional requests. For more information,
+// see Getting Notified About File Operations (https://docs.aws.amazon.com/storagegateway/latest/userguide/monitoring-file-gateway.html#get-notification).
+//
+// If you invoke the RefreshCache API when two requests are already being processed,
+// any new request will cause an InvalidGatewayRequestException error because
+// too many requests were sent to the server.
+//
+// For more information, see "https://docs.aws.amazon.com/storagegateway/latest/userguide/monitoring-file-gateway.html#get-notification".
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -5375,12 +5761,12 @@ func (c *StorageGateway) RefreshCacheRequest(input *RefreshCacheInput) (req *req
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation RefreshCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5450,8 +5836,8 @@ func (c *StorageGateway) RemoveTagsFromResourceRequest(input *RemoveTagsFromReso
 
 // RemoveTagsFromResource API operation for AWS Storage Gateway.
 //
-// Removes one or more tags from the specified resource. This operation is only
-// supported in the cached volume, stored volume and tape gateway types.
+// Removes one or more tags from the specified resource. This operation is supported
+// in storage gateways of all types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5460,12 +5846,12 @@ func (c *StorageGateway) RemoveTagsFromResourceRequest(input *RemoveTagsFromReso
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation RemoveTagsFromResource for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5535,12 +5921,12 @@ func (c *StorageGateway) ResetCacheRequest(input *ResetCacheInput) (req *request
 
 // ResetCache API operation for AWS Storage Gateway.
 //
-// Resets all cache disks that have encountered a error and makes the disks
+// Resets all cache disks that have encountered an error and makes the disks
 // available for reconfiguration as cache storage. If your cache disk encounters
-// a error, the gateway prevents read and write operations on virtual tapes
+// an error, the gateway prevents read and write operations on virtual tapes
 // in the gateway. For example, an error can occur when a disk is corrupted
 // or removed from the gateway. When a cache is reset, the gateway loses its
-// cache storage. At this point you can reconfigure the disks as cache disks.
+// cache storage. At this point, you can reconfigure the disks as cache disks.
 // This operation is only supported in the cached volume and tape types.
 //
 // If the cache disk you are resetting contains data that has not been uploaded
@@ -5555,12 +5941,12 @@ func (c *StorageGateway) ResetCacheRequest(input *ResetCacheInput) (req *request
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ResetCache for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5648,12 +6034,12 @@ func (c *StorageGateway) RetrieveTapeArchiveRequest(input *RetrieveTapeArchiveIn
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation RetrieveTapeArchive for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5741,12 +6127,12 @@ func (c *StorageGateway) RetrieveTapeRecoveryPointRequest(input *RetrieveTapeRec
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation RetrieveTapeRecoveryPoint for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5828,12 +6214,12 @@ func (c *StorageGateway) SetLocalConsolePasswordRequest(input *SetLocalConsolePa
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation SetLocalConsolePassword for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5913,12 +6299,12 @@ func (c *StorageGateway) SetSMBGuestPasswordRequest(input *SetSMBGuestPasswordIn
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation SetSMBGuestPassword for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -5998,7 +6384,7 @@ func (c *StorageGateway) ShutdownGatewayRequest(input *ShutdownGatewayInput) (re
 // the gateway component in the VM to avoid unpredictable conditions.
 //
 // After the gateway is shutdown, you cannot call any other API except StartGateway,
-// DescribeGatewayInformation, and ListGateways. For more information, see ActivateGateway.
+// DescribeGatewayInformation and ListGateways. For more information, see ActivateGateway.
 // Your applications cannot read from or write to the gateway's storage volumes,
 // and there are no snapshots taken.
 //
@@ -6017,12 +6403,12 @@ func (c *StorageGateway) ShutdownGatewayRequest(input *ShutdownGatewayInput) (re
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation ShutdownGateway for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6043,6 +6429,96 @@ func (c *StorageGateway) ShutdownGateway(input *ShutdownGatewayInput) (*Shutdown
 // for more information on using Contexts.
 func (c *StorageGateway) ShutdownGatewayWithContext(ctx aws.Context, input *ShutdownGatewayInput, opts ...request.Option) (*ShutdownGatewayOutput, error) {
 	req, out := c.ShutdownGatewayRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opStartAvailabilityMonitorTest = "StartAvailabilityMonitorTest"
+
+// StartAvailabilityMonitorTestRequest generates a "aws/request.Request" representing the
+// client's request for the StartAvailabilityMonitorTest operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartAvailabilityMonitorTest for more information on using the StartAvailabilityMonitorTest
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartAvailabilityMonitorTestRequest method.
+//    req, resp := client.StartAvailabilityMonitorTestRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/StartAvailabilityMonitorTest
+func (c *StorageGateway) StartAvailabilityMonitorTestRequest(input *StartAvailabilityMonitorTestInput) (req *request.Request, output *StartAvailabilityMonitorTestOutput) {
+	op := &request.Operation{
+		Name:       opStartAvailabilityMonitorTest,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartAvailabilityMonitorTestInput{}
+	}
+
+	output = &StartAvailabilityMonitorTestOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartAvailabilityMonitorTest API operation for AWS Storage Gateway.
+//
+// Start a test that verifies that the specified gateway is configured for High
+// Availability monitoring in your host environment. This request only initiates
+// the test and that a successful response only indicates that the test was
+// started. It doesn't indicate that the test passed. For the status of the
+// test, invoke the DescribeAvailabilityMonitorTest API.
+//
+// Starting this test will cause your gateway to go offline for a brief period.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation StartAvailabilityMonitorTest for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidGatewayRequestException
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * InternalServerError
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/StartAvailabilityMonitorTest
+func (c *StorageGateway) StartAvailabilityMonitorTest(input *StartAvailabilityMonitorTestInput) (*StartAvailabilityMonitorTestOutput, error) {
+	req, out := c.StartAvailabilityMonitorTestRequest(input)
+	return out, req.Send()
+}
+
+// StartAvailabilityMonitorTestWithContext is the same as StartAvailabilityMonitorTest with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartAvailabilityMonitorTest for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) StartAvailabilityMonitorTestWithContext(ctx aws.Context, input *StartAvailabilityMonitorTestInput, opts ...request.Option) (*StartAvailabilityMonitorTestOutput, error) {
+	req, out := c.StartAvailabilityMonitorTestRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6112,12 +6588,12 @@ func (c *StorageGateway) StartGatewayRequest(input *StartGatewayInput) (req *req
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation StartGateway for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6138,6 +6614,96 @@ func (c *StorageGateway) StartGateway(input *StartGatewayInput) (*StartGatewayOu
 // for more information on using Contexts.
 func (c *StorageGateway) StartGatewayWithContext(ctx aws.Context, input *StartGatewayInput, opts ...request.Option) (*StartGatewayOutput, error) {
 	req, out := c.StartGatewayRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateAutomaticTapeCreationPolicy = "UpdateAutomaticTapeCreationPolicy"
+
+// UpdateAutomaticTapeCreationPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateAutomaticTapeCreationPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateAutomaticTapeCreationPolicy for more information on using the UpdateAutomaticTapeCreationPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateAutomaticTapeCreationPolicyRequest method.
+//    req, resp := client.UpdateAutomaticTapeCreationPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/UpdateAutomaticTapeCreationPolicy
+func (c *StorageGateway) UpdateAutomaticTapeCreationPolicyRequest(input *UpdateAutomaticTapeCreationPolicyInput) (req *request.Request, output *UpdateAutomaticTapeCreationPolicyOutput) {
+	op := &request.Operation{
+		Name:       opUpdateAutomaticTapeCreationPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateAutomaticTapeCreationPolicyInput{}
+	}
+
+	output = &UpdateAutomaticTapeCreationPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateAutomaticTapeCreationPolicy API operation for AWS Storage Gateway.
+//
+// Updates the automatic tape creation policy of a gateway. Use this to update
+// the policy with a new set of automatic tape creation rules. This is only
+// supported for tape gateways.
+//
+// By default, there is no automatic tape creation policy.
+//
+// A gateway can have only one automatic tape creation policy.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation UpdateAutomaticTapeCreationPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidGatewayRequestException
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * InternalServerError
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/UpdateAutomaticTapeCreationPolicy
+func (c *StorageGateway) UpdateAutomaticTapeCreationPolicy(input *UpdateAutomaticTapeCreationPolicyInput) (*UpdateAutomaticTapeCreationPolicyOutput, error) {
+	req, out := c.UpdateAutomaticTapeCreationPolicyRequest(input)
+	return out, req.Send()
+}
+
+// UpdateAutomaticTapeCreationPolicyWithContext is the same as UpdateAutomaticTapeCreationPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateAutomaticTapeCreationPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) UpdateAutomaticTapeCreationPolicyWithContext(ctx aws.Context, input *UpdateAutomaticTapeCreationPolicyInput, opts ...request.Option) (*UpdateAutomaticTapeCreationPolicyOutput, error) {
+	req, out := c.UpdateAutomaticTapeCreationPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6189,7 +6755,8 @@ func (c *StorageGateway) UpdateBandwidthRateLimitRequest(input *UpdateBandwidthR
 //
 // Updates the bandwidth rate limits of a gateway. You can update both the upload
 // and download bandwidth rate limit or specify only one of the two. If you
-// don't set a bandwidth rate limit, the existing rate limit remains.
+// don't set a bandwidth rate limit, the existing rate limit remains. This operation
+// is supported for the stored volume, cached volume and tape gateway types.'
 //
 // By default, a gateway's bandwidth rate limits are not set. If you don't set
 // any limit, the gateway does not have any limitations on its bandwidth usage
@@ -6205,12 +6772,12 @@ func (c *StorageGateway) UpdateBandwidthRateLimitRequest(input *UpdateBandwidthR
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateBandwidthRateLimit for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6282,7 +6849,8 @@ func (c *StorageGateway) UpdateChapCredentialsRequest(input *UpdateChapCredentia
 //
 // Updates the Challenge-Handshake Authentication Protocol (CHAP) credentials
 // for a specified iSCSI target. By default, a gateway does not have CHAP enabled;
-// however, for added security, you might use it.
+// however, for added security, you might use it. This operation is supported
+// in the volume and tape gateway types.
 //
 // When you update CHAP credentials, all existing connections on the target
 // are closed and initiators must reconnect with the new credentials.
@@ -6294,12 +6862,12 @@ func (c *StorageGateway) UpdateChapCredentialsRequest(input *UpdateChapCredentia
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateChapCredentials for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6384,12 +6952,12 @@ func (c *StorageGateway) UpdateGatewayInformationRequest(input *UpdateGatewayInf
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateGatewayInformation for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6482,12 +7050,12 @@ func (c *StorageGateway) UpdateGatewaySoftwareNowRequest(input *UpdateGatewaySof
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateGatewaySoftwareNow for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6568,12 +7136,12 @@ func (c *StorageGateway) UpdateMaintenanceStartTimeRequest(input *UpdateMaintena
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateMaintenanceStartTime for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6671,12 +7239,12 @@ func (c *StorageGateway) UpdateNFSFileShareRequest(input *UpdateNFSFileShareInpu
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateNFSFileShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6767,12 +7335,12 @@ func (c *StorageGateway) UpdateSMBFileShareRequest(input *UpdateSMBFileShareInpu
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateSMBFileShare for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6793,6 +7361,95 @@ func (c *StorageGateway) UpdateSMBFileShare(input *UpdateSMBFileShareInput) (*Up
 // for more information on using Contexts.
 func (c *StorageGateway) UpdateSMBFileShareWithContext(ctx aws.Context, input *UpdateSMBFileShareInput, opts ...request.Option) (*UpdateSMBFileShareOutput, error) {
 	req, out := c.UpdateSMBFileShareRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateSMBSecurityStrategy = "UpdateSMBSecurityStrategy"
+
+// UpdateSMBSecurityStrategyRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateSMBSecurityStrategy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateSMBSecurityStrategy for more information on using the UpdateSMBSecurityStrategy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateSMBSecurityStrategyRequest method.
+//    req, resp := client.UpdateSMBSecurityStrategyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/UpdateSMBSecurityStrategy
+func (c *StorageGateway) UpdateSMBSecurityStrategyRequest(input *UpdateSMBSecurityStrategyInput) (req *request.Request, output *UpdateSMBSecurityStrategyOutput) {
+	op := &request.Operation{
+		Name:       opUpdateSMBSecurityStrategy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateSMBSecurityStrategyInput{}
+	}
+
+	output = &UpdateSMBSecurityStrategyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateSMBSecurityStrategy API operation for AWS Storage Gateway.
+//
+// Updates the SMB security strategy on a file gateway. This action is only
+// supported in file gateways.
+//
+// This API is called Security level in the User Guide.
+//
+// A higher security level can affect performance of the gateway.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Storage Gateway's
+// API operation UpdateSMBSecurityStrategy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidGatewayRequestException
+//   An exception occurred because an invalid gateway request was issued to the
+//   service. For more information, see the error and message fields.
+//
+//   * InternalServerError
+//   An internal server error has occurred during the request. For more information,
+//   see the error and message fields.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/storagegateway-2013-06-30/UpdateSMBSecurityStrategy
+func (c *StorageGateway) UpdateSMBSecurityStrategy(input *UpdateSMBSecurityStrategyInput) (*UpdateSMBSecurityStrategyOutput, error) {
+	req, out := c.UpdateSMBSecurityStrategyRequest(input)
+	return out, req.Send()
+}
+
+// UpdateSMBSecurityStrategyWithContext is the same as UpdateSMBSecurityStrategy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateSMBSecurityStrategy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *StorageGateway) UpdateSMBSecurityStrategyWithContext(ctx aws.Context, input *UpdateSMBSecurityStrategyInput, opts ...request.Option) (*UpdateSMBSecurityStrategyOutput, error) {
+	req, out := c.UpdateSMBSecurityStrategyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -6860,12 +7517,12 @@ func (c *StorageGateway) UpdateSnapshotScheduleRequest(input *UpdateSnapshotSche
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateSnapshotSchedule for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -6948,12 +7605,12 @@ func (c *StorageGateway) UpdateVTLDeviceTypeRequest(input *UpdateVTLDeviceTypeIn
 // See the AWS API reference guide for AWS Storage Gateway's
 // API operation UpdateVTLDeviceType for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidGatewayRequestException "InvalidGatewayRequestException"
+// Returned Error Types:
+//   * InvalidGatewayRequestException
 //   An exception occurred because an invalid gateway request was issued to the
 //   service. For more information, see the error and message fields.
 //
-//   * ErrCodeInternalServerError "InternalServerError"
+//   * InternalServerError
 //   An internal server error has occurred during the request. For more information,
 //   see the error and message fields.
 //
@@ -7016,11 +7673,12 @@ type ActivateGatewayInput struct {
 	// GatewayName is a required field
 	GatewayName *string `min:"2" type:"string" required:"true"`
 
-	// A value that indicates the region where you want to store your data. The
-	// gateway region specified must be the same region as the region in your Host
-	// header in the request. For more information about available regions and endpoints
-	// for AWS Storage Gateway, see Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
-	// in the Amazon Web Services Glossary.
+	// A value that indicates the AWS Region where you want to store your data.
+	// The gateway AWS Region specified must be the same AWS Region as the AWS Region
+	// in your Host header in the request. For more information about available
+	// AWS Regions and endpoints for AWS Storage Gateway, see Regions and Endpoints
+	// (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region) in the
+	// Amazon Web Services Glossary.
 	//
 	// Valid Values: See AWS Storage Gateway Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#sg_region)
 	// in the AWS General Reference.
@@ -7050,13 +7708,13 @@ type ActivateGatewayInput struct {
 	// Valid Values: "STK-L700", "AWS-Gateway-VTL"
 	MediumChangerType *string `min:"2" type:"string"`
 
-	// A list of up to 50 tags that can be assigned to the gateway. Each tag is
-	// a key-value pair.
+	// A list of up to 50 tags that you can assign to the gateway. Each tag is a
+	// key-value pair.
 	//
-	// Valid characters for key and value are letters, spaces, and numbers representable
-	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
-	// maximum length of a tag's key is 128 characters, and the maximum length for
-	// a tag's value is 256.
+	// Valid characters for key and value are letters, spaces, and numbers that
+	// can be represented in UTF-8 format, and the following special characters:
+	// + - = . _ : / @. The maximum length of a tag's key is 128 characters, and
+	// the maximum length for a tag's value is 256 characters.
 	Tags []*Tag `type:"list"`
 
 	// The value that indicates the type of tape drive to use for tape gateway.
@@ -7179,8 +7837,8 @@ func (s *ActivateGatewayInput) SetTapeDriveType(v string) *ActivateGatewayInput 
 
 // AWS Storage Gateway returns the Amazon Resource Name (ARN) of the activated
 // gateway. It is a string made of information such as your account, gateway
-// name, and region. This ARN is used to reference the gateway in other API
-// operations as well as resource-based authorization.
+// name, and AWS Region. This ARN is used to reference the gateway in other
+// API operations as well as resource-based authorization.
 //
 // For gateways activated prior to September 02, 2015, the gateway ARN contains
 // the gateway name rather than the gateway ID. Changing the name of the gateway
@@ -7189,7 +7847,7 @@ type ActivateGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -7213,14 +7871,14 @@ type AddCacheInput struct {
 	_ struct{} `type:"structure"`
 
 	// An array of strings that identify disks that are to be configured as working
-	// storage. Each string have a minimum length of 1 and maximum length of 300.
+	// storage. Each string has a minimum length of 1 and maximum length of 300.
 	// You can get the disk IDs from the ListLocalDisks API.
 	//
 	// DiskIds is a required field
 	DiskIds []*string `type:"list" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -7271,7 +7929,7 @@ type AddCacheOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -7391,14 +8049,14 @@ type AddUploadBufferInput struct {
 	_ struct{} `type:"structure"`
 
 	// An array of strings that identify disks that are to be configured as working
-	// storage. Each string have a minimum length of 1 and maximum length of 300.
+	// storage. Each string has a minimum length of 1 and maximum length of 300.
 	// You can get the disk IDs from the ListLocalDisks API.
 	//
 	// DiskIds is a required field
 	DiskIds []*string `type:"list" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -7449,7 +8107,7 @@ type AddUploadBufferOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -7476,14 +8134,14 @@ type AddWorkingStorageInput struct {
 	_ struct{} `type:"structure"`
 
 	// An array of strings that identify disks that are to be configured as working
-	// storage. Each string have a minimum length of 1 and maximum length of 300.
+	// storage. Each string has a minimum length of 1 and maximum length of 300.
 	// You can get the disk IDs from the ListLocalDisks API.
 	//
 	// DiskIds is a required field
 	DiskIds []*string `type:"list" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -7530,13 +8188,13 @@ func (s *AddWorkingStorageInput) SetGatewayARN(v string) *AddWorkingStorageInput
 	return s
 }
 
-// A JSON object containing the of the gateway for which working storage was
-// configured.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway for
+// which working storage was configured.
 type AddWorkingStorageOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -7553,6 +8211,95 @@ func (s AddWorkingStorageOutput) GoString() string {
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *AddWorkingStorageOutput) SetGatewayARN(v string) *AddWorkingStorageOutput {
 	s.GatewayARN = &v
+	return s
+}
+
+type AssignTapePoolInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the S3 storage class that is associated with
+	// the pool. When you use your backup application to eject the tape, the tape
+	// is archived directly into the storage class (S3 Glacier or S3 Glacier Deep
+	// Archive) that corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	//
+	// PoolId is a required field
+	PoolId *string `min:"1" type:"string" required:"true"`
+
+	// The unique Amazon Resource Name (ARN) of the virtual tape that you want to
+	// add to the tape pool.
+	//
+	// TapeARN is a required field
+	TapeARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssignTapePoolInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignTapePoolInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssignTapePoolInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssignTapePoolInput"}
+	if s.PoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PoolId"))
+	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
+	if s.TapeARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("TapeARN"))
+	}
+	if s.TapeARN != nil && len(*s.TapeARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("TapeARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *AssignTapePoolInput) SetPoolId(v string) *AssignTapePoolInput {
+	s.PoolId = &v
+	return s
+}
+
+// SetTapeARN sets the TapeARN field's value.
+func (s *AssignTapePoolInput) SetTapeARN(v string) *AssignTapePoolInput {
+	s.TapeARN = &v
+	return s
+}
+
+type AssignTapePoolOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The unique Amazon Resource Names (ARN) of the virtual tape that was added
+	// to the tape pool.
+	TapeARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s AssignTapePoolOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssignTapePoolOutput) GoString() string {
+	return s.String()
+}
+
+// SetTapeARN sets the TapeARN field's value.
+func (s *AssignTapePoolOutput) SetTapeARN(v string) *AssignTapePoolOutput {
+	s.TapeARN = &v
 	return s
 }
 
@@ -7700,6 +8447,147 @@ func (s *AttachVolumeOutput) SetVolumeARN(v string) *AttachVolumeOutput {
 	return s
 }
 
+// Information about the gateway's automatic tape creation policies, including
+// the automatic tape creation rules and the gateway that is using the policies.
+type AutomaticTapeCreationPolicyInfo struct {
+	_ struct{} `type:"structure"`
+
+	// An automatic tape creation policy consists of a list of automatic tape creation
+	// rules. This returns the rules that determine when and how to automatically
+	// create new tapes.
+	AutomaticTapeCreationRules []*AutomaticTapeCreationRule `min:"1" type:"list"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s AutomaticTapeCreationPolicyInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutomaticTapeCreationPolicyInfo) GoString() string {
+	return s.String()
+}
+
+// SetAutomaticTapeCreationRules sets the AutomaticTapeCreationRules field's value.
+func (s *AutomaticTapeCreationPolicyInfo) SetAutomaticTapeCreationRules(v []*AutomaticTapeCreationRule) *AutomaticTapeCreationPolicyInfo {
+	s.AutomaticTapeCreationRules = v
+	return s
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *AutomaticTapeCreationPolicyInfo) SetGatewayARN(v string) *AutomaticTapeCreationPolicyInfo {
+	s.GatewayARN = &v
+	return s
+}
+
+// An automatic tape creation policy consists of automatic tape creation rules
+// where each rule defines when and how to create new tapes.
+type AutomaticTapeCreationRule struct {
+	_ struct{} `type:"structure"`
+
+	// The minimum number of available virtual tapes that the gateway maintains
+	// at all times. If the number of tapes on the gateway goes below this value,
+	// the gateway creates as many new tapes as are needed to have MinimumNumTapes
+	// on the gateway.
+	//
+	// MinimumNumTapes is a required field
+	MinimumNumTapes *int64 `min:"1" type:"integer" required:"true"`
+
+	// The ID of the pool that you want to add your tape to for archiving. The tape
+	// in this pool is archived in the Amazon S3 storage class that is associated
+	// with the pool. When you use your backup application to eject the tape, the
+	// tape is archived directly into the storage class (S3 Glacier or S3 Glacier
+	// Deep Archive) that corresponds to the pool.
+	//
+	// Valid values: "GLACIER", "DEEP_ARCHIVE"
+	//
+	// PoolId is a required field
+	PoolId *string `min:"1" type:"string" required:"true"`
+
+	// A prefix that you append to the barcode of the virtual tape that you are
+	// creating. This prefix makes the barcode unique.
+	//
+	// The prefix must be 1-4 characters in length and must be one of the uppercase
+	// letters from A to Z.
+	//
+	// TapeBarcodePrefix is a required field
+	TapeBarcodePrefix *string `min:"1" type:"string" required:"true"`
+
+	// The size, in bytes, of the virtual tape capacity.
+	//
+	// TapeSizeInBytes is a required field
+	TapeSizeInBytes *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s AutomaticTapeCreationRule) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AutomaticTapeCreationRule) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AutomaticTapeCreationRule) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AutomaticTapeCreationRule"}
+	if s.MinimumNumTapes == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinimumNumTapes"))
+	}
+	if s.MinimumNumTapes != nil && *s.MinimumNumTapes < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MinimumNumTapes", 1))
+	}
+	if s.PoolId == nil {
+		invalidParams.Add(request.NewErrParamRequired("PoolId"))
+	}
+	if s.PoolId != nil && len(*s.PoolId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PoolId", 1))
+	}
+	if s.TapeBarcodePrefix == nil {
+		invalidParams.Add(request.NewErrParamRequired("TapeBarcodePrefix"))
+	}
+	if s.TapeBarcodePrefix != nil && len(*s.TapeBarcodePrefix) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TapeBarcodePrefix", 1))
+	}
+	if s.TapeSizeInBytes == nil {
+		invalidParams.Add(request.NewErrParamRequired("TapeSizeInBytes"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMinimumNumTapes sets the MinimumNumTapes field's value.
+func (s *AutomaticTapeCreationRule) SetMinimumNumTapes(v int64) *AutomaticTapeCreationRule {
+	s.MinimumNumTapes = &v
+	return s
+}
+
+// SetPoolId sets the PoolId field's value.
+func (s *AutomaticTapeCreationRule) SetPoolId(v string) *AutomaticTapeCreationRule {
+	s.PoolId = &v
+	return s
+}
+
+// SetTapeBarcodePrefix sets the TapeBarcodePrefix field's value.
+func (s *AutomaticTapeCreationRule) SetTapeBarcodePrefix(v string) *AutomaticTapeCreationRule {
+	s.TapeBarcodePrefix = &v
+	return s
+}
+
+// SetTapeSizeInBytes sets the TapeSizeInBytes field's value.
+func (s *AutomaticTapeCreationRule) SetTapeSizeInBytes(v int64) *AutomaticTapeCreationRule {
+	s.TapeSizeInBytes = &v
+	return s
+}
+
 // Describes an iSCSI cached volume.
 type CachediSCSIVolume struct {
 	_ struct{} `type:"structure"`
@@ -7708,8 +8596,8 @@ type CachediSCSIVolume struct {
 	// don’t have this time stamp.
 	CreatedDate *time.Time `type:"timestamp"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// If the cached volume was created from a snapshot, this field contains the
@@ -7859,7 +8747,7 @@ type CancelArchivalInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -7945,7 +8833,7 @@ type CancelRetrievalInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -8036,11 +8924,11 @@ type ChapInfo struct {
 
 	// The secret key that the initiator (for example, the Windows client) must
 	// provide to participate in mutual CHAP with the target.
-	SecretToAuthenticateInitiator *string `min:"1" type:"string"`
+	SecretToAuthenticateInitiator *string `min:"1" type:"string" sensitive:"true"`
 
 	// The secret key that the target must provide to participate in mutual CHAP
 	// with the initiator (e.g. Windows client).
-	SecretToAuthenticateTarget *string `min:"1" type:"string"`
+	SecretToAuthenticateTarget *string `min:"1" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the volume.
 	//
@@ -8093,17 +8981,17 @@ type CreateCachediSCSIVolumeInput struct {
 	ClientToken *string `min:"5" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The network interface of the gateway on which to expose the iSCSI target.
@@ -8128,13 +9016,13 @@ type CreateCachediSCSIVolumeInput struct {
 	// than the size of the existing volume, in bytes.
 	SourceVolumeARN *string `min:"50" type:"string"`
 
-	// A list of up to 50 tags that can be assigned to a cached volume. Each tag
+	// A list of up to 50 tags that you can assign to a cached volume. Each tag
 	// is a key-value pair.
 	//
-	// Valid characters for key and value are letters, spaces, and numbers representable
-	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
-	// maximum length of a tag's key is 128 characters, and the maximum length for
-	// a tag's value is 256.
+	// Valid characters for key and value are letters, spaces, and numbers that
+	// you can represent in UTF-8 format, and the following special characters:
+	// + - = . _ : / @. The maximum length of a tag's key is 128 characters, and
+	// the maximum length for a tag's value is 256 characters.
 	Tags []*Tag `type:"list"`
 
 	// The name of the iSCSI target used by an initiator to connect to a volume
@@ -8337,11 +9225,11 @@ type CreateNFSFileShareInput struct {
 	// and otherwise to false. The default value is true.
 	GuessMIMETypeEnabled *bool `type:"boolean"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) AWS KMS key used for Amazon S3 server side
+	// The Amazon Resource Name (ARN) AWS KMS key used for Amazon S3 server-side
 	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
@@ -8585,10 +9473,16 @@ func (s *CreateNFSFileShareOutput) SetFileShareARN(v string) *CreateNFSFileShare
 type CreateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users or groups in the Active Directory that have administrator
-	// rights to the file share. A group must be prefixed with the @ character.
-	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// A list of users in the Active Directory that will be granted administrator
+	// privileges on the file share. These users can do all file operations as the
+	// super-user.
+	//
+	// Use this option very carefully, because any user in this list can do anything
+	// they like on the file share, regardless of file permissions.
 	AdminUserList []*string `type:"list"`
+
+	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
+	AuditDestinationARN *string `type:"string"`
 
 	// The authentication method that users use to access the file share.
 	//
@@ -8606,8 +9500,7 @@ type CreateSMBFileShareInput struct {
 	// If this field is not populated, the default value S3_STANDARD is used. Optional.
 	DefaultStorageClass *string `min:"5" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the file gateway on which you want to create
-	// a file share.
+	// The ARN of the file gateway on which you want to create a file share.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -8619,15 +9512,15 @@ type CreateSMBFileShareInput struct {
 
 	// A list of users or groups in the Active Directory that are not allowed to
 	// access the file share. A group must be prefixed with the @ character. For
-	// example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// example, @group1. Can only be set if Authentication is set to ActiveDirectory.
 	InvalidUserList []*string `type:"list"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The ARN of the backed storage used for storing file data.
@@ -8748,6 +9641,12 @@ func (s *CreateSMBFileShareInput) Validate() error {
 // SetAdminUserList sets the AdminUserList field's value.
 func (s *CreateSMBFileShareInput) SetAdminUserList(v []*string) *CreateSMBFileShareInput {
 	s.AdminUserList = v
+	return s
+}
+
+// SetAuditDestinationARN sets the AuditDestinationARN field's value.
+func (s *CreateSMBFileShareInput) SetAuditDestinationARN(v string) *CreateSMBFileShareInput {
+	s.AuditDestinationARN = &v
 	return s
 }
 
@@ -8881,6 +9780,15 @@ type CreateSnapshotFromVolumeRecoveryPointInput struct {
 	// SnapshotDescription is a required field
 	SnapshotDescription *string `min:"1" type:"string" required:"true"`
 
+	// A list of up to 50 tags that can be assigned to a snapshot. Each tag is a
+	// key-value pair.
+	//
+	// Valid characters for key and value are letters, spaces, and numbers representable
+	// in UTF-8 format, and the following special characters: + - = . _ : / @. The
+	// maximum length of a tag's key is 128 characters, and the maximum length for
+	// a tag's value is 256.
+	Tags []*Tag `type:"list"`
+
 	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
 	// operation to return to retrieve the TargetARN for specified VolumeARN.
 	//
@@ -8913,6 +9821,16 @@ func (s *CreateSnapshotFromVolumeRecoveryPointInput) Validate() error {
 	if s.VolumeARN != nil && len(*s.VolumeARN) < 50 {
 		invalidParams.Add(request.NewErrParamMinLen("VolumeARN", 50))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -8923,6 +9841,12 @@ func (s *CreateSnapshotFromVolumeRecoveryPointInput) Validate() error {
 // SetSnapshotDescription sets the SnapshotDescription field's value.
 func (s *CreateSnapshotFromVolumeRecoveryPointInput) SetSnapshotDescription(v string) *CreateSnapshotFromVolumeRecoveryPointInput {
 	s.SnapshotDescription = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateSnapshotFromVolumeRecoveryPointInput) SetTags(v []*Tag) *CreateSnapshotFromVolumeRecoveryPointInput {
+	s.Tags = v
 	return s
 }
 
@@ -9122,16 +10046,16 @@ type CreateStorediSCSIVolumeInput struct {
 	DiskId *string `min:"1" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the KMS key used for Amazon S3 server side
+	// The Amazon Resource Name (ARN) of the KMS key used for Amazon S3 server-side
 	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
@@ -9340,24 +10264,24 @@ type CreateTapeWithBarcodeInput struct {
 
 	// The unique Amazon Resource Name (ARN) that represents the gateway to associate
 	// the virtual tape with. Use the ListGateways operation to return a list of
-	// gateways for your account and region.
+	// gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS Key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The ID of the pool that you want to add your tape to for archiving. The tape
 	// in this pool is archived in the S3 storage class that is associated with
 	// the pool. When you use your backup application to eject the tape, the tape
-	// is archived directly into the storage class (Glacier or Deep Archive) that
-	// corresponds to the pool.
+	// is archived directly into the storage class (S3 Glacier or S3 Glacier Deep
+	// Archive) that corresponds to the pool.
 	//
 	// Valid values: "GLACIER", "DEEP_ARCHIVE"
 	PoolId *string `min:"1" type:"string"`
@@ -9381,7 +10305,7 @@ type CreateTapeWithBarcodeInput struct {
 
 	// The size, in bytes, of the virtual tape that you want to create.
 	//
-	// The size must be aligned by gigabyte (1024*1024*1024 byte).
+	// The size must be aligned by gigabyte (1024*1024*1024 bytes).
 	//
 	// TapeSizeInBytes is a required field
 	TapeSizeInBytes *int64 `type:"long" required:"true"`
@@ -9519,17 +10443,17 @@ type CreateTapesInput struct {
 
 	// The unique Amazon Resource Name (ARN) that represents the gateway to associate
 	// the virtual tapes with. Use the ListGateways operation to return a list of
-	// gateways for your account and region.
+	// gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The number of virtual tapes that you want to create.
@@ -9540,8 +10464,8 @@ type CreateTapesInput struct {
 	// The ID of the pool that you want to add your tape to for archiving. The tape
 	// in this pool is archived in the S3 storage class that is associated with
 	// the pool. When you use your backup application to eject the tape, the tape
-	// is archived directly into the storage class (Glacier or Deep Archive) that
-	// corresponds to the pool.
+	// is archived directly into the storage class (S3 Glacier or S3 Glacier Deep
+	// Archive) that corresponds to the pool.
 	//
 	// Valid values: "GLACIER", "DEEP_ARCHIVE"
 	PoolId *string `min:"1" type:"string"`
@@ -9566,7 +10490,7 @@ type CreateTapesInput struct {
 
 	// The size, in bytes, of the virtual tapes that you want to create.
 	//
-	// The size must be aligned by gigabyte (1024*1024*1024 byte).
+	// The size must be aligned by gigabyte (1024*1024*1024 bytes).
 	//
 	// TapeSizeInBytes is a required field
 	TapeSizeInBytes *int64 `type:"long" required:"true"`
@@ -9714,6 +10638,72 @@ func (s *CreateTapesOutput) SetTapeARNs(v []*string) *CreateTapesOutput {
 	return s
 }
 
+type DeleteAutomaticTapeCreationPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteAutomaticTapeCreationPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAutomaticTapeCreationPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteAutomaticTapeCreationPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteAutomaticTapeCreationPolicyInput"}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *DeleteAutomaticTapeCreationPolicyInput) SetGatewayARN(v string) *DeleteAutomaticTapeCreationPolicyInput {
+	s.GatewayARN = &v
+	return s
+}
+
+type DeleteAutomaticTapeCreationPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s DeleteAutomaticTapeCreationPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteAutomaticTapeCreationPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *DeleteAutomaticTapeCreationPolicyOutput) SetGatewayARN(v string) *DeleteAutomaticTapeCreationPolicyOutput {
+	s.GatewayARN = &v
+	return s
+}
+
 // A JSON object containing the following fields:
 //
 //    * DeleteBandwidthRateLimitInput$BandwidthType
@@ -9729,7 +10719,7 @@ type DeleteBandwidthRateLimitInput struct {
 	BandwidthType *string `min:"3" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -9779,13 +10769,13 @@ func (s *DeleteBandwidthRateLimitInput) SetGatewayARN(v string) *DeleteBandwidth
 	return s
 }
 
-// A JSON object containing the of the gateway whose bandwidth rate information
-// was deleted.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway whose
+// bandwidth rate information was deleted.
 type DeleteBandwidthRateLimitOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -9985,7 +10975,7 @@ type DeleteGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10028,7 +11018,7 @@ type DeleteGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -10186,7 +11176,7 @@ type DeleteTapeInput struct {
 
 	// The unique Amazon Resource Name (ARN) of the gateway that the virtual tape
 	// to delete is associated with. Use the ListGateways operation to return a
-	// list of gateways for your account and region.
+	// list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10308,7 +11298,8 @@ func (s *DeleteVolumeInput) SetVolumeARN(v string) *DeleteVolumeInput {
 	return s
 }
 
-// A JSON object containing the of the storage volume that was deleted
+// A JSON object containing the Amazon Resource Name (ARN) of the storage volume
+// that was deleted
 type DeleteVolumeOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -10333,12 +11324,98 @@ func (s *DeleteVolumeOutput) SetVolumeARN(v string) *DeleteVolumeOutput {
 	return s
 }
 
-// A JSON object containing the of the gateway.
+type DescribeAvailabilityMonitorTestInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DescribeAvailabilityMonitorTestInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAvailabilityMonitorTestInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeAvailabilityMonitorTestInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeAvailabilityMonitorTestInput"}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *DescribeAvailabilityMonitorTestInput) SetGatewayARN(v string) *DescribeAvailabilityMonitorTestInput {
+	s.GatewayARN = &v
+	return s
+}
+
+type DescribeAvailabilityMonitorTestOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+
+	// The time the High Availability monitoring test was started. If a test hasn't
+	// been performed, the value of this field is null.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The status of the High Availability monitoring test. If a test hasn't been
+	// performed, the value of this field is null.
+	Status *string `type:"string" enum:"AvailabilityMonitorTestStatus"`
+}
+
+// String returns the string representation
+func (s DescribeAvailabilityMonitorTestOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeAvailabilityMonitorTestOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *DescribeAvailabilityMonitorTestOutput) SetGatewayARN(v string) *DescribeAvailabilityMonitorTestOutput {
+	s.GatewayARN = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *DescribeAvailabilityMonitorTestOutput) SetStartTime(v time.Time) *DescribeAvailabilityMonitorTestOutput {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DescribeAvailabilityMonitorTestOutput) SetStatus(v string) *DescribeAvailabilityMonitorTestOutput {
+	s.Status = &v
+	return s
+}
+
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway.
 type DescribeBandwidthRateLimitInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10389,7 +11466,7 @@ type DescribeBandwidthRateLimitOutput struct {
 	AverageUploadRateLimitInBitsPerSec *int64 `min:"51200" type:"long"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -10425,7 +11502,7 @@ type DescribeCacheInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10466,7 +11543,7 @@ func (s *DescribeCacheInput) SetGatewayARN(v string) *DescribeCacheInput {
 type DescribeCacheOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The amount of cache in bytes allocated to the a gateway.
+	// The amount of cache in bytes allocated to a gateway.
 	CacheAllocatedInBytes *int64 `type:"long"`
 
 	// The file share's contribution to the overall percentage of the gateway's
@@ -10488,12 +11565,12 @@ type DescribeCacheOutput struct {
 	CacheUsedPercentage *float64 `type:"double"`
 
 	// An array of strings that identify disks that are to be configured as working
-	// storage. Each string have a minimum length of 1 and maximum length of 300.
+	// storage. Each string has a minimum length of 1 and maximum length of 300.
 	// You can get the disk IDs from the ListLocalDisks API.
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -10553,8 +11630,8 @@ type DescribeCachediSCSIVolumesInput struct {
 	_ struct{} `type:"structure"`
 
 	// An array of strings where each string represents the Amazon Resource Name
-	// (ARN) of a cached volume. All of the specified cached volumes must from the
-	// same gateway. Use ListVolumes to get volume ARNs for a gateway.
+	// (ARN) of a cached volume. All of the specified cached volumes must be from
+	// the same gateway. Use ListVolumes to get volume ARNs for a gateway.
 	//
 	// VolumeARNs is a required field
 	VolumeARNs []*string `type:"list" required:"true"`
@@ -10701,7 +11778,7 @@ type DescribeGatewayInformationInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10743,6 +11820,10 @@ func (s *DescribeGatewayInformationInput) SetGatewayARN(v string) *DescribeGatew
 type DescribeGatewayInformationOutput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the Amazon CloudWatch Log Group that is
+	// used to monitor events in the gateway.
+	CloudWatchLogGroupARN *string `type:"string"`
+
 	// The ID of the Amazon EC2 instance that was used to launch the gateway.
 	Ec2InstanceId *string `type:"string"`
 
@@ -10750,7 +11831,7 @@ type DescribeGatewayInformationOutput struct {
 	Ec2InstanceRegion *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The unique identifier assigned to your gateway during activation. This ID
@@ -10774,6 +11855,9 @@ type DescribeGatewayInformationOutput struct {
 	// The type of the gateway.
 	GatewayType *string `min:"2" type:"string"`
 
+	// The type of hypervisor environment used by the host.
+	HostEnvironment *string `type:"string" enum:"HostEnvironment"`
+
 	// The date on which the last software update was applied to the gateway. If
 	// the gateway has never been updated, this field does not return a value in
 	// the response.
@@ -10788,6 +11872,10 @@ type DescribeGatewayInformationOutput struct {
 	// key name. Each tag is a key-value pair. For a gateway with more than 10 tags
 	// assigned, you can view all tags using the ListTagsForResource API operation.
 	Tags []*Tag `type:"list"`
+
+	// The configuration settings for the virtual private cloud (VPC) endpoint for
+	// your gateway.
+	VPCEndpoint *string `type:"string"`
 }
 
 // String returns the string representation
@@ -10798,6 +11886,12 @@ func (s DescribeGatewayInformationOutput) String() string {
 // GoString returns the string representation
 func (s DescribeGatewayInformationOutput) GoString() string {
 	return s.String()
+}
+
+// SetCloudWatchLogGroupARN sets the CloudWatchLogGroupARN field's value.
+func (s *DescribeGatewayInformationOutput) SetCloudWatchLogGroupARN(v string) *DescribeGatewayInformationOutput {
+	s.CloudWatchLogGroupARN = &v
+	return s
 }
 
 // SetEc2InstanceId sets the Ec2InstanceId field's value.
@@ -10854,6 +11948,12 @@ func (s *DescribeGatewayInformationOutput) SetGatewayType(v string) *DescribeGat
 	return s
 }
 
+// SetHostEnvironment sets the HostEnvironment field's value.
+func (s *DescribeGatewayInformationOutput) SetHostEnvironment(v string) *DescribeGatewayInformationOutput {
+	s.HostEnvironment = &v
+	return s
+}
+
 // SetLastSoftwareUpdate sets the LastSoftwareUpdate field's value.
 func (s *DescribeGatewayInformationOutput) SetLastSoftwareUpdate(v string) *DescribeGatewayInformationOutput {
 	s.LastSoftwareUpdate = &v
@@ -10872,12 +11972,18 @@ func (s *DescribeGatewayInformationOutput) SetTags(v []*Tag) *DescribeGatewayInf
 	return s
 }
 
-// A JSON object containing the of the gateway.
+// SetVPCEndpoint sets the VPCEndpoint field's value.
+func (s *DescribeGatewayInformationOutput) SetVPCEndpoint(v string) *DescribeGatewayInformationOutput {
+	s.VPCEndpoint = &v
+	return s
+}
+
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway.
 type DescribeMaintenanceStartTimeInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -10942,7 +12048,7 @@ type DescribeMaintenanceStartTimeOutput struct {
 	DayOfWeek *int64 `type:"integer"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The hour component of the maintenance start time represented as hh, where
@@ -11144,7 +12250,7 @@ type DescribeSMBSettingsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11185,16 +12291,54 @@ func (s *DescribeSMBSettingsInput) SetGatewayARN(v string) *DescribeSMBSettingsI
 type DescribeSMBSettingsOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates the status of a gateway that is a member of the Active Directory
+	// domain.
+	//
+	//    * ACCESS_DENIED: Indicates that the JoinDomain operation failed due to
+	//    an authentication error.
+	//
+	//    * DETACHED: Indicates that gateway is not joined to a domain.
+	//
+	//    * JOINED: Indicates that the gateway has successfully joined a domain.
+	//
+	//    * JOINING: Indicates that a JoinDomain operation is in progress.
+	//
+	//    * NETWORK_ERROR: Indicates that JoinDomain operation failed due to a network
+	//    or connectivity error.
+	//
+	//    * TIMEOUT: Indicates that the JoinDomain operation failed because the
+	//    operation didn't complete within the allotted time.
+	//
+	//    * UNKNOWN_ERROR: Indicates that the JoinDomain operation failed due to
+	//    another type of error.
+	ActiveDirectoryStatus *string `type:"string" enum:"ActiveDirectoryStatus"`
+
 	// The name of the domain that the gateway is joined to.
 	DomainName *string `min:"1" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
-	// This value is true if a password for the guest user “smbguest” is set, and
-	// otherwise false.
+	// This value is true if a password for the guest user “smbguest” is set,
+	// and otherwise false.
 	SMBGuestPasswordSet *bool `type:"boolean"`
+
+	// The type of security strategy that was specified for file gateway.
+	//
+	// ClientSpecified: if you use this option, requests are established based on
+	// what is negotiated by the client. This option is recommended when you want
+	// to maximize compatibility across different clients in your environment.
+	//
+	// MandatorySigning: if you use this option, file gateway only allows connections
+	// from SMBv2 or SMBv3 clients that have signing enabled. This option works
+	// with SMB clients on Microsoft Windows Vista, Windows Server 2008 or newer.
+	//
+	// MandatoryEncryption: if you use this option, file gateway only allows connections
+	// from SMBv3 clients that have encryption enabled. This option is highly recommended
+	// for environments that handle sensitive data. This option works with SMB clients
+	// on Microsoft Windows 8, Windows Server 2012 or newer.
+	SMBSecurityStrategy *string `type:"string" enum:"SMBSecurityStrategy"`
 }
 
 // String returns the string representation
@@ -11205,6 +12349,12 @@ func (s DescribeSMBSettingsOutput) String() string {
 // GoString returns the string representation
 func (s DescribeSMBSettingsOutput) GoString() string {
 	return s.String()
+}
+
+// SetActiveDirectoryStatus sets the ActiveDirectoryStatus field's value.
+func (s *DescribeSMBSettingsOutput) SetActiveDirectoryStatus(v string) *DescribeSMBSettingsOutput {
+	s.ActiveDirectoryStatus = &v
+	return s
 }
 
 // SetDomainName sets the DomainName field's value.
@@ -11222,6 +12372,12 @@ func (s *DescribeSMBSettingsOutput) SetGatewayARN(v string) *DescribeSMBSettings
 // SetSMBGuestPasswordSet sets the SMBGuestPasswordSet field's value.
 func (s *DescribeSMBSettingsOutput) SetSMBGuestPasswordSet(v bool) *DescribeSMBSettingsOutput {
 	s.SMBGuestPasswordSet = &v
+	return s
+}
+
+// SetSMBSecurityStrategy sets the SMBSecurityStrategy field's value.
+func (s *DescribeSMBSettingsOutput) SetSMBSecurityStrategy(v string) *DescribeSMBSettingsOutput {
+	s.SMBSecurityStrategy = &v
 	return s
 }
 
@@ -11283,6 +12439,11 @@ type DescribeSnapshotScheduleOutput struct {
 	// of the gateway.
 	StartAt *int64 `type:"integer"`
 
+	// A list of up to 50 tags assigned to the snapshot schedule, sorted alphabetically
+	// by key name. Each tag is a key-value pair. For a gateway with more than 10
+	// tags assigned, you can view all tags using the ListTagsForResource API operation.
+	Tags []*Tag `type:"list"`
+
 	// A value that indicates the time zone of the gateway.
 	Timezone *string `min:"3" type:"string"`
 
@@ -11318,6 +12479,12 @@ func (s *DescribeSnapshotScheduleOutput) SetStartAt(v int64) *DescribeSnapshotSc
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *DescribeSnapshotScheduleOutput) SetTags(v []*Tag) *DescribeSnapshotScheduleOutput {
+	s.Tags = v
+	return s
+}
+
 // SetTimezone sets the Timezone field's value.
 func (s *DescribeSnapshotScheduleOutput) SetTimezone(v string) *DescribeSnapshotScheduleOutput {
 	s.Timezone = &v
@@ -11335,8 +12502,8 @@ type DescribeStorediSCSIVolumesInput struct {
 	_ struct{} `type:"structure"`
 
 	// An array of strings where each string represents the Amazon Resource Name
-	// (ARN) of a stored volume. All of the specified stored volumes must from the
-	// same gateway. Use ListVolumes to get volume ARNs for a gateway.
+	// (ARN) of a stored volume. All of the specified stored volumes must be from
+	// the same gateway. Use ListVolumes to get volume ARNs for a gateway.
 	//
 	// VolumeARNs is a required field
 	VolumeARNs []*string `type:"list" required:"true"`
@@ -11444,7 +12611,7 @@ func (s *DescribeStorediSCSIVolumesOutput) SetStorediSCSIVolumes(v []*StorediSCS
 type DescribeTapeArchivesInput struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies that the number of virtual tapes descried be limited to the specified
+	// Specifies that the number of virtual tapes described be limited to the specified
 	// number.
 	Limit *int64 `min:"1" type:"integer"`
 
@@ -11546,7 +12713,7 @@ type DescribeTapeRecoveryPointsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11615,7 +12782,7 @@ type DescribeTapeRecoveryPointsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// An opaque string that indicates the position at which the virtual tape recovery
@@ -11663,7 +12830,7 @@ type DescribeTapesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11784,7 +12951,7 @@ type DescribeUploadBufferInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11832,7 +12999,7 @@ type DescribeUploadBufferOutput struct {
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The total number of bytes allocated in the gateway's as upload buffer.
@@ -11881,7 +13048,7 @@ type DescribeVTLDevicesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -11964,7 +13131,7 @@ type DescribeVTLDevicesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// An opaque string that indicates the position at which the VTL devices that
@@ -11973,7 +13140,7 @@ type DescribeVTLDevicesOutput struct {
 	// to describe, this field does not appear in the response.
 	Marker *string `min:"1" type:"string"`
 
-	// An array of VTL device objects composed of the Amazon Resource Name(ARN)
+	// An array of VTL device objects composed of the Amazon Resource Name (ARN)
 	// of the VTL devices.
 	VTLDevices []*VTLDevice `type:"list"`
 }
@@ -12006,12 +13173,12 @@ func (s *DescribeVTLDevicesOutput) SetVTLDevices(v []*VTLDevice) *DescribeVTLDev
 	return s
 }
 
-// A JSON object containing the of the gateway.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway.
 type DescribeWorkingStorageInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12060,7 +13227,7 @@ type DescribeWorkingStorageOutput struct {
 	DiskIds []*string `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The total working storage in bytes allocated for the gateway. If no working
@@ -12240,7 +13407,7 @@ type DisableGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12393,9 +13560,9 @@ func (s *Disk) SetDiskStatus(v string) *Disk {
 	return s
 }
 
-// Provides additional information about an error that was returned by the service
-// as an or. See the errorCode and errorDetails members for more information
-// about the error.
+// Provides additional information about an error that was returned by the service.
+// See the errorCode and errorDetails members for more information about the
+// error.
 type Error struct {
 	_ struct{} `type:"structure"`
 
@@ -12446,7 +13613,7 @@ type FileShareInfo struct {
 	FileShareType *string `type:"string" enum:"FileShareType"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -12501,7 +13668,7 @@ type GatewayInfo struct {
 	Ec2InstanceRegion *string `type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The unique identifier assigned to your gateway during activation. This ID
@@ -12573,6 +13740,129 @@ func (s *GatewayInfo) SetGatewayType(v string) *GatewayInfo {
 	return s
 }
 
+// An internal server error has occurred during the request. For more information,
+// see the error and message fields.
+type InternalServerError struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A StorageGatewayError that provides more information about the cause of the
+	// error.
+	Error_ *Error `locationName:"error" type:"structure"`
+
+	// A human-readable message describing the error that occurred.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServerError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServerError) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServerError(v protocol.ResponseMetadata) error {
+	return &InternalServerError{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServerError) Code() string {
+	return "InternalServerError"
+}
+
+// Message returns the exception's message.
+func (s *InternalServerError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServerError) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServerError) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServerError) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServerError) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// An exception occurred because an invalid gateway request was issued to the
+// service. For more information, see the error and message fields.
+type InvalidGatewayRequestException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A StorageGatewayError that provides more detail about the cause of the error.
+	Error_ *Error `locationName:"error" type:"structure"`
+
+	// A human-readable message describing the error that occurred.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidGatewayRequestException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidGatewayRequestException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidGatewayRequestException(v protocol.ResponseMetadata) error {
+	return &InvalidGatewayRequestException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidGatewayRequestException) Code() string {
+	return "InvalidGatewayRequestException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidGatewayRequestException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidGatewayRequestException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidGatewayRequestException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidGatewayRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidGatewayRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // JoinDomainInput
 type JoinDomainInput struct {
 	_ struct{} `type:"structure"`
@@ -12588,13 +13878,13 @@ type JoinDomainInput struct {
 	DomainName *string `min:"1" type:"string" required:"true"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
 
-	// The organizational unit (OU) is a container with an Active Directory that
-	// can hold users, groups, computers, and other OUs and this parameter specifies
+	// The organizational unit (OU) is a container in an Active Directory that can
+	// hold users, groups, computers, and other OUs and this parameter specifies
 	// the OU that the gateway will join within the AD domain.
 	OrganizationalUnit *string `min:"1" type:"string"`
 
@@ -12604,8 +13894,14 @@ type JoinDomainInput struct {
 	// Password is a required field
 	Password *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
+	// Specifies the time in seconds, in which the JoinDomain operation must complete.
+	// The default is 20 seconds.
+	TimeoutInSeconds *int64 `type:"integer"`
+
 	// Sets the user name of user who has permission to add the gateway to the Active
-	// Directory domain.
+	// Directory domain. The domain user account should be enabled to join computers
+	// to the domain. For example, you can use the domain administrator account
+	// or an account with delegated permissions to join computers to the domain.
 	//
 	// UserName is a required field
 	UserName *string `min:"1" type:"string" required:"true"`
@@ -12688,6 +13984,12 @@ func (s *JoinDomainInput) SetPassword(v string) *JoinDomainInput {
 	return s
 }
 
+// SetTimeoutInSeconds sets the TimeoutInSeconds field's value.
+func (s *JoinDomainInput) SetTimeoutInSeconds(v int64) *JoinDomainInput {
+	s.TimeoutInSeconds = &v
+	return s
+}
+
 // SetUserName sets the UserName field's value.
 func (s *JoinDomainInput) SetUserName(v string) *JoinDomainInput {
 	s.UserName = &v
@@ -12697,6 +13999,27 @@ func (s *JoinDomainInput) SetUserName(v string) *JoinDomainInput {
 // JoinDomainOutput
 type JoinDomainOutput struct {
 	_ struct{} `type:"structure"`
+
+	// Indicates the status of the gateway as a member of the Active Directory domain.
+	//
+	//    * ACCESS_DENIED: Indicates that the JoinDomain operation failed due to
+	//    an authentication error.
+	//
+	//    * DETACHED: Indicates that gateway is not joined to a domain.
+	//
+	//    * JOINED: Indicates that the gateway has successfully joined a domain.
+	//
+	//    * JOINING: Indicates that a JoinDomain operation is in progress.
+	//
+	//    * NETWORK_ERROR: Indicates that JoinDomain operation failed due to a network
+	//    or connectivity error.
+	//
+	//    * TIMEOUT: Indicates that the JoinDomain operation failed because the
+	//    operation didn't complete within the allotted time.
+	//
+	//    * UNKNOWN_ERROR: Indicates that the JoinDomain operation failed due to
+	//    another type of error.
+	ActiveDirectoryStatus *string `type:"string" enum:"ActiveDirectoryStatus"`
 
 	// The unique Amazon Resource Name (ARN) of the gateway that joined the domain.
 	GatewayARN *string `min:"50" type:"string"`
@@ -12712,9 +14035,77 @@ func (s JoinDomainOutput) GoString() string {
 	return s.String()
 }
 
+// SetActiveDirectoryStatus sets the ActiveDirectoryStatus field's value.
+func (s *JoinDomainOutput) SetActiveDirectoryStatus(v string) *JoinDomainOutput {
+	s.ActiveDirectoryStatus = &v
+	return s
+}
+
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *JoinDomainOutput) SetGatewayARN(v string) *JoinDomainOutput {
 	s.GatewayARN = &v
+	return s
+}
+
+type ListAutomaticTapeCreationPoliciesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s ListAutomaticTapeCreationPoliciesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAutomaticTapeCreationPoliciesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListAutomaticTapeCreationPoliciesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListAutomaticTapeCreationPoliciesInput"}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *ListAutomaticTapeCreationPoliciesInput) SetGatewayARN(v string) *ListAutomaticTapeCreationPoliciesInput {
+	s.GatewayARN = &v
+	return s
+}
+
+type ListAutomaticTapeCreationPoliciesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Gets a listing of information about the gateway's automatic tape creation
+	// policies, including the automatic tape creation rules and the gateway that
+	// is using the policies.
+	AutomaticTapeCreationPolicyInfos []*AutomaticTapeCreationPolicyInfo `type:"list"`
+}
+
+// String returns the string representation
+func (s ListAutomaticTapeCreationPoliciesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListAutomaticTapeCreationPoliciesOutput) GoString() string {
+	return s.String()
+}
+
+// SetAutomaticTapeCreationPolicyInfos sets the AutomaticTapeCreationPolicyInfos field's value.
+func (s *ListAutomaticTapeCreationPoliciesOutput) SetAutomaticTapeCreationPolicyInfos(v []*AutomaticTapeCreationPolicyInfo) *ListAutomaticTapeCreationPoliciesOutput {
+	s.AutomaticTapeCreationPolicyInfos = v
 	return s
 }
 
@@ -12722,7 +14113,7 @@ func (s *JoinDomainOutput) SetGatewayARN(v string) *JoinDomainOutput {
 type ListFileSharesInput struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon resource Name (ARN) of the gateway whose file shares you want
+	// The Amazon Resource Name (ARN) of the gateway whose file shares you want
 	// to list. If this field is not present, all file shares under your account
 	// are listed.
 	GatewayARN *string `min:"50" type:"string"`
@@ -12917,12 +14308,12 @@ func (s *ListGatewaysOutput) SetMarker(v string) *ListGatewaysOutput {
 	return s
 }
 
-// A JSON object containing the of the gateway.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway.
 type ListLocalDisksInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -12969,7 +14360,7 @@ type ListLocalDisksOutput struct {
 	Disks []*Disk `type:"list"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -13189,9 +14580,9 @@ type ListTapesOutput struct {
 	// in the response body.
 	Marker *string `min:"1" type:"string"`
 
-	// An array of TapeInfo objects, where each object describes an a single tape.
-	// If there not tapes in the tape library or VTS, then the TapeInfos is an empty
-	// array.
+	// An array of TapeInfo objects, where each object describes a single tape.
+	// If there are no tapes in the tape library or VTS, then the TapeInfos is an
+	// empty array.
 	TapeInfos []*TapeInfo `type:"list"`
 }
 
@@ -13289,7 +14680,7 @@ type ListVolumeRecoveryPointsInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -13331,7 +14722,7 @@ type ListVolumeRecoveryPointsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// An array of VolumeRecoveryPointInfo objects.
@@ -13369,7 +14760,7 @@ type ListVolumesInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// Specifies that the list of volumes returned be limited to the specified number
@@ -13438,7 +14829,7 @@ type ListVolumesOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// Use the marker in your next request to continue pagination of iSCSI volumes.
@@ -13583,7 +14974,7 @@ type NFSFileShareInfo struct {
 	FileShareStatus *string `min:"3" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// A value that enables guessing of the MIME type for uploaded objects based
@@ -13591,12 +14982,12 @@ type NFSFileShareInfo struct {
 	// and otherwise to false. The default value is true.
 	GuessMIMETypeEnabled *bool `type:"boolean"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The ARN of the backend storage used for storing file data.
@@ -14004,7 +15395,7 @@ type RemoveTagsFromResourceInput struct {
 	ResourceARN *string `min:"50" type:"string" required:"true"`
 
 	// The keys of the tags you want to remove from the specified resource. A tag
-	// is composed of a key/value pair.
+	// is composed of a key-value pair.
 	//
 	// TagKeys is a required field
 	TagKeys []*string `type:"list" required:"true"`
@@ -14080,7 +15471,7 @@ type ResetCacheInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14122,7 +15513,7 @@ type ResetCacheOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -14148,7 +15539,7 @@ type RetrieveTapeArchiveInput struct {
 
 	// The Amazon Resource Name (ARN) of the gateway you want to retrieve the virtual
 	// tape to. Use the ListGateways operation to return a list of gateways for
-	// your account and region.
+	// your account and AWS Region.
 	//
 	// You retrieve archived virtual tapes to only one gateway and the gateway must
 	// be a tape gateway.
@@ -14236,7 +15627,7 @@ type RetrieveTapeRecoveryPointInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14328,6 +15719,9 @@ type SMBFileShareInfo struct {
 	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
 
+	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
+	AuditDestinationARN *string `type:"string"`
+
 	// The authentication method of the file share.
 	//
 	// Valid values are ActiveDirectory or GuestAccess. The default is ActiveDirectory.
@@ -14349,7 +15743,7 @@ type SMBFileShareInfo struct {
 	FileShareStatus *string `min:"3" type:"string"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// A value that enables guessing of the MIME type for uploaded objects based
@@ -14366,8 +15760,8 @@ type SMBFileShareInfo struct {
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The ARN of the backend storage used for storing file data.
@@ -14430,6 +15824,12 @@ func (s SMBFileShareInfo) GoString() string {
 // SetAdminUserList sets the AdminUserList field's value.
 func (s *SMBFileShareInfo) SetAdminUserList(v []*string) *SMBFileShareInfo {
 	s.AdminUserList = v
+	return s
+}
+
+// SetAuditDestinationARN sets the AuditDestinationARN field's value.
+func (s *SMBFileShareInfo) SetAuditDestinationARN(v string) *SMBFileShareInfo {
+	s.AuditDestinationARN = &v
 	return s
 }
 
@@ -14547,12 +15947,74 @@ func (s *SMBFileShareInfo) SetValidUserList(v []*string) *SMBFileShareInfo {
 	return s
 }
 
+// An internal server error has occurred because the service is unavailable.
+// For more information, see the error and message fields.
+type ServiceUnavailableError struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A StorageGatewayError that provides more information about the cause of the
+	// error.
+	Error_ *Error `locationName:"error" type:"structure"`
+
+	// A human-readable message describing the error that occurred.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ServiceUnavailableError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ServiceUnavailableError) GoString() string {
+	return s.String()
+}
+
+func newErrorServiceUnavailableError(v protocol.ResponseMetadata) error {
+	return &ServiceUnavailableError{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ServiceUnavailableError) Code() string {
+	return "ServiceUnavailableError"
+}
+
+// Message returns the exception's message.
+func (s *ServiceUnavailableError) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ServiceUnavailableError) OrigErr() error {
+	return nil
+}
+
+func (s *ServiceUnavailableError) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ServiceUnavailableError) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ServiceUnavailableError) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // SetLocalConsolePasswordInput
 type SetLocalConsolePasswordInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14611,7 +16073,7 @@ type SetLocalConsolePasswordOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -14695,7 +16157,7 @@ type SetSMBGuestPasswordOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -14715,12 +16177,13 @@ func (s *SetSMBGuestPasswordOutput) SetGatewayARN(v string) *SetSMBGuestPassword
 	return s
 }
 
-// A JSON object containing the of the gateway to shut down.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway to
+// shut down.
 type ShutdownGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14758,12 +16221,13 @@ func (s *ShutdownGatewayInput) SetGatewayARN(v string) *ShutdownGatewayInput {
 	return s
 }
 
-// A JSON object containing the of the gateway that was shut down.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway that
+// was shut down.
 type ShutdownGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -14783,12 +16247,79 @@ func (s *ShutdownGatewayOutput) SetGatewayARN(v string) *ShutdownGatewayOutput {
 	return s
 }
 
-// A JSON object containing the of the gateway to start.
+type StartAvailabilityMonitorTestInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StartAvailabilityMonitorTestInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAvailabilityMonitorTestInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartAvailabilityMonitorTestInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartAvailabilityMonitorTestInput"}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *StartAvailabilityMonitorTestInput) SetGatewayARN(v string) *StartAvailabilityMonitorTestInput {
+	s.GatewayARN = &v
+	return s
+}
+
+type StartAvailabilityMonitorTestOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s StartAvailabilityMonitorTestOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartAvailabilityMonitorTestOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *StartAvailabilityMonitorTestOutput) SetGatewayARN(v string) *StartAvailabilityMonitorTestOutput {
+	s.GatewayARN = &v
+	return s
+}
+
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway to
+// start.
 type StartGatewayInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -14826,12 +16357,13 @@ func (s *StartGatewayInput) SetGatewayARN(v string) *StartGatewayInput {
 	return s
 }
 
-// A JSON object containing the of the gateway that was restarted.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway that
+// was restarted.
 type StartGatewayOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -14859,8 +16391,8 @@ type StorediSCSIVolume struct {
 	// don’t have this time stamp.
 	CreatedDate *time.Time `type:"timestamp"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// Indicates if when the stored volume was created, existing data on the underlying
@@ -15089,15 +16621,15 @@ func (s *Tag) SetValue(v string) *Tag {
 type Tape struct {
 	_ struct{} `type:"structure"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The ID of the pool that contains tapes that will be archived. The tapes in
 	// this pool are archived in the S3 storage class that is associated with the
 	// pool. When you use your backup application to eject the tape, the tape is
-	// archived directly into the storage class (Glacier or Deep Archive) that corresponds
-	// to the pool.
+	// archived directly into the storage class (S3 Glacier or S# Glacier Deep Archive)
+	// that corresponds to the pool.
 	//
 	// Valid values: "GLACIER", "DEEP_ARCHIVE"
 	PoolId *string `min:"1" type:"string"`
@@ -15213,8 +16745,8 @@ type TapeArchive struct {
 	// format.
 	CompletionTime *time.Time `type:"timestamp"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The ID of the pool that was used to archive the tape. The tapes in this pool
@@ -15325,14 +16857,14 @@ type TapeInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The ID of the pool that you want to add your tape to for archiving. The tape
 	// in this pool is archived in the S3 storage class that is associated with
 	// the pool. When you use your backup application to eject the tape, the tape
-	// is archived directly into the storage class (Glacier or Deep Archive) that
-	// corresponds to the pool.
+	// is archived directly into the storage class (S3 Glacier or S3 Glacier Deep
+	// Archive) that corresponds to the pool.
 	//
 	// Valid values: "GLACIER", "DEEP_ARCHIVE"
 	PoolId *string `min:"1" type:"string"`
@@ -15451,6 +16983,100 @@ func (s *TapeRecoveryPointInfo) SetTapeStatus(v string) *TapeRecoveryPointInfo {
 	return s
 }
 
+type UpdateAutomaticTapeCreationPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// An automatic tape creation policy consists of a list of automatic tape creation
+	// rules. The rules determine when and how to automatically create new tapes.
+	//
+	// AutomaticTapeCreationRules is a required field
+	AutomaticTapeCreationRules []*AutomaticTapeCreationRule `min:"1" type:"list" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateAutomaticTapeCreationPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAutomaticTapeCreationPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateAutomaticTapeCreationPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateAutomaticTapeCreationPolicyInput"}
+	if s.AutomaticTapeCreationRules == nil {
+		invalidParams.Add(request.NewErrParamRequired("AutomaticTapeCreationRules"))
+	}
+	if s.AutomaticTapeCreationRules != nil && len(s.AutomaticTapeCreationRules) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AutomaticTapeCreationRules", 1))
+	}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+	if s.AutomaticTapeCreationRules != nil {
+		for i, v := range s.AutomaticTapeCreationRules {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AutomaticTapeCreationRules", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAutomaticTapeCreationRules sets the AutomaticTapeCreationRules field's value.
+func (s *UpdateAutomaticTapeCreationPolicyInput) SetAutomaticTapeCreationRules(v []*AutomaticTapeCreationRule) *UpdateAutomaticTapeCreationPolicyInput {
+	s.AutomaticTapeCreationRules = v
+	return s
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *UpdateAutomaticTapeCreationPolicyInput) SetGatewayARN(v string) *UpdateAutomaticTapeCreationPolicyInput {
+	s.GatewayARN = &v
+	return s
+}
+
+type UpdateAutomaticTapeCreationPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateAutomaticTapeCreationPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateAutomaticTapeCreationPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *UpdateAutomaticTapeCreationPolicyOutput) SetGatewayARN(v string) *UpdateAutomaticTapeCreationPolicyOutput {
+	s.GatewayARN = &v
+	return s
+}
+
 // A JSON object containing one or more of the following fields:
 //
 //    * UpdateBandwidthRateLimitInput$AverageDownloadRateLimitInBitsPerSec
@@ -15466,7 +17092,7 @@ type UpdateBandwidthRateLimitInput struct {
 	AverageUploadRateLimitInBitsPerSec *int64 `min:"51200" type:"long"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -15522,13 +17148,13 @@ func (s *UpdateBandwidthRateLimitInput) SetGatewayARN(v string) *UpdateBandwidth
 	return s
 }
 
-// A JSON object containing the of the gateway whose throttle information was
-// updated.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway whose
+// throttle information was updated.
 type UpdateBandwidthRateLimitOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -15571,7 +17197,7 @@ type UpdateChapCredentialsInput struct {
 	// The secret key must be between 12 and 16 bytes when encoded in UTF-8.
 	//
 	// SecretToAuthenticateInitiator is a required field
-	SecretToAuthenticateInitiator *string `min:"1" type:"string" required:"true"`
+	SecretToAuthenticateInitiator *string `min:"1" type:"string" required:"true" sensitive:"true"`
 
 	// The secret key that the target must provide to participate in mutual CHAP
 	// with the initiator (e.g. Windows client).
@@ -15579,7 +17205,7 @@ type UpdateChapCredentialsInput struct {
 	// Byte constraints: Minimum bytes of 12. Maximum bytes of 16.
 	//
 	// The secret key must be between 12 and 16 bytes when encoded in UTF-8.
-	SecretToAuthenticateTarget *string `min:"1" type:"string"`
+	SecretToAuthenticateTarget *string `min:"1" type:"string" sensitive:"true"`
 
 	// The Amazon Resource Name (ARN) of the iSCSI volume target. Use the DescribeStorediSCSIVolumes
 	// operation to return the TargetARN for specified VolumeARN.
@@ -15691,8 +17317,14 @@ func (s *UpdateChapCredentialsOutput) SetTargetARN(v string) *UpdateChapCredenti
 type UpdateGatewayInformationInput struct {
 	_ struct{} `type:"structure"`
 
+	// The Amazon Resource Name (ARN) of the Amazon CloudWatch log group that you
+	// want to use to monitor and log events in the gateway.
+	//
+	// For more information, see What Is Amazon CloudWatch Logs? (https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html).
+	CloudWatchLogGroupARN *string `type:"string"`
+
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -15736,6 +17368,12 @@ func (s *UpdateGatewayInformationInput) Validate() error {
 	return nil
 }
 
+// SetCloudWatchLogGroupARN sets the CloudWatchLogGroupARN field's value.
+func (s *UpdateGatewayInformationInput) SetCloudWatchLogGroupARN(v string) *UpdateGatewayInformationInput {
+	s.CloudWatchLogGroupARN = &v
+	return s
+}
+
 // SetGatewayARN sets the GatewayARN field's value.
 func (s *UpdateGatewayInformationInput) SetGatewayARN(v string) *UpdateGatewayInformationInput {
 	s.GatewayARN = &v
@@ -15759,7 +17397,7 @@ type UpdateGatewayInformationOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The name you configured for your gateway.
@@ -15788,12 +17426,13 @@ func (s *UpdateGatewayInformationOutput) SetGatewayName(v string) *UpdateGateway
 	return s
 }
 
-// A JSON object containing the of the gateway to update.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway to
+// update.
 type UpdateGatewaySoftwareNowInput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -15831,12 +17470,13 @@ func (s *UpdateGatewaySoftwareNowInput) SetGatewayARN(v string) *UpdateGatewaySo
 	return s
 }
 
-// A JSON object containing the of the gateway that was updated.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway that
+// was updated.
 type UpdateGatewaySoftwareNowOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -15880,7 +17520,7 @@ type UpdateMaintenanceStartTimeInput struct {
 	DayOfWeek *int64 `type:"integer"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	//
 	// GatewayARN is a required field
 	GatewayARN *string `min:"50" type:"string" required:"true"`
@@ -15965,13 +17605,13 @@ func (s *UpdateMaintenanceStartTimeInput) SetMinuteOfHour(v int64) *UpdateMainte
 	return s
 }
 
-// A JSON object containing the of the gateway whose maintenance start time
-// is updated.
+// A JSON object containing the Amazon Resource Name (ARN) of the gateway whose
+// maintenance start time is updated.
 type UpdateMaintenanceStartTimeOutput struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 }
 
@@ -16014,12 +17654,12 @@ type UpdateNFSFileShareInput struct {
 	// and otherwise to false. The default value is true.
 	GuessMIMETypeEnabled *bool `type:"boolean"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// The default values for the file share. Optional.
@@ -16190,10 +17830,13 @@ func (s *UpdateNFSFileShareOutput) SetFileShareARN(v string) *UpdateNFSFileShare
 type UpdateSMBFileShareInput struct {
 	_ struct{} `type:"structure"`
 
-	// A list of users or groups in the Active Directory that have administrator
-	// rights to the file share. A group must be prefixed with the @ character.
-	// For example @group1. Can only be set if Authentication is set to ActiveDirectory.
+	// A list of users in the Active Directory that have administrator rights to
+	// the file share. A group must be prefixed with the @ character. For example
+	// @group1. Can only be set if Authentication is set to ActiveDirectory.
 	AdminUserList []*string `type:"list"`
+
+	// The Amazon Resource Name (ARN) of the storage used for the audit logs.
+	AuditDestinationARN *string `type:"string"`
 
 	// The default storage class for objects put into an Amazon S3 bucket by the
 	// file gateway. Possible values are S3_STANDARD, S3_STANDARD_IA, or S3_ONEZONE_IA.
@@ -16215,12 +17858,12 @@ type UpdateSMBFileShareInput struct {
 	// example @group1. Can only be set if Authentication is set to ActiveDirectory.
 	InvalidUserList []*string `type:"list"`
 
-	// True to use Amazon S3 server side encryption with your own AWS KMS key, or
+	// True to use Amazon S3 server-side encryption with your own AWS KMS key, or
 	// false to use a key managed by Amazon S3. Optional.
 	KMSEncrypted *bool `type:"boolean"`
 
-	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server
-	// side encryption. This value can only be set when KMSEncrypted is true. Optional.
+	// The Amazon Resource Name (ARN) of the AWS KMS key used for Amazon S3 server-side
+	// encryption. This value can only be set when KMSEncrypted is true. Optional.
 	KMSKey *string `min:"7" type:"string"`
 
 	// A value that sets the access control list permission for objects in the S3
@@ -16290,6 +17933,12 @@ func (s *UpdateSMBFileShareInput) Validate() error {
 // SetAdminUserList sets the AdminUserList field's value.
 func (s *UpdateSMBFileShareInput) SetAdminUserList(v []*string) *UpdateSMBFileShareInput {
 	s.AdminUserList = v
+	return s
+}
+
+// SetAuditDestinationARN sets the AuditDestinationARN field's value.
+func (s *UpdateSMBFileShareInput) SetAuditDestinationARN(v string) *UpdateSMBFileShareInput {
+	s.AuditDestinationARN = &v
 	return s
 }
 
@@ -16380,6 +18029,99 @@ func (s UpdateSMBFileShareOutput) GoString() string {
 // SetFileShareARN sets the FileShareARN field's value.
 func (s *UpdateSMBFileShareOutput) SetFileShareARN(v string) *UpdateSMBFileShareOutput {
 	s.FileShareARN = &v
+	return s
+}
+
+type UpdateSMBSecurityStrategyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	//
+	// GatewayARN is a required field
+	GatewayARN *string `min:"50" type:"string" required:"true"`
+
+	// Specifies the type of security strategy.
+	//
+	// ClientSpecified: if you use this option, requests are established based on
+	// what is negotiated by the client. This option is recommended when you want
+	// to maximize compatibility across different clients in your environment.
+	//
+	// MandatorySigning: if you use this option, file gateway only allows connections
+	// from SMBv2 or SMBv3 clients that have signing enabled. This option works
+	// with SMB clients on Microsoft Windows Vista, Windows Server 2008 or newer.
+	//
+	// MandatoryEncryption: if you use this option, file gateway only allows connections
+	// from SMBv3 clients that have encryption enabled. This option is highly recommended
+	// for environments that handle sensitive data. This option works with SMB clients
+	// on Microsoft Windows 8, Windows Server 2012 or newer.
+	//
+	// SMBSecurityStrategy is a required field
+	SMBSecurityStrategy *string `type:"string" required:"true" enum:"SMBSecurityStrategy"`
+}
+
+// String returns the string representation
+func (s UpdateSMBSecurityStrategyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSMBSecurityStrategyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateSMBSecurityStrategyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateSMBSecurityStrategyInput"}
+	if s.GatewayARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("GatewayARN"))
+	}
+	if s.GatewayARN != nil && len(*s.GatewayARN) < 50 {
+		invalidParams.Add(request.NewErrParamMinLen("GatewayARN", 50))
+	}
+	if s.SMBSecurityStrategy == nil {
+		invalidParams.Add(request.NewErrParamRequired("SMBSecurityStrategy"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *UpdateSMBSecurityStrategyInput) SetGatewayARN(v string) *UpdateSMBSecurityStrategyInput {
+	s.GatewayARN = &v
+	return s
+}
+
+// SetSMBSecurityStrategy sets the SMBSecurityStrategy field's value.
+func (s *UpdateSMBSecurityStrategyInput) SetSMBSecurityStrategy(v string) *UpdateSMBSecurityStrategyInput {
+	s.SMBSecurityStrategy = &v
+	return s
+}
+
+type UpdateSMBSecurityStrategyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
+	// to return a list of gateways for your account and AWS Region.
+	GatewayARN *string `min:"50" type:"string"`
+}
+
+// String returns the string representation
+func (s UpdateSMBSecurityStrategyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateSMBSecurityStrategyOutput) GoString() string {
+	return s.String()
+}
+
+// SetGatewayARN sets the GatewayARN field's value.
+func (s *UpdateSMBSecurityStrategyOutput) SetGatewayARN(v string) *UpdateSMBSecurityStrategyOutput {
+	s.GatewayARN = &v
 	return s
 }
 
@@ -16504,7 +18246,8 @@ func (s *UpdateSnapshotScheduleInput) SetVolumeARN(v string) *UpdateSnapshotSche
 	return s
 }
 
-// A JSON object containing the of the updated storage volume.
+// A JSON object containing the Amazon Resource Name (ARN) of the updated storage
+// volume.
 type UpdateSnapshotScheduleOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -16679,7 +18422,7 @@ type VolumeInfo struct {
 	_ struct{} `type:"structure"`
 
 	// The Amazon Resource Name (ARN) of the gateway. Use the ListGateways operation
-	// to return a list of gateways for your account and region.
+	// to return a list of gateways for your account and AWS Region.
 	GatewayARN *string `min:"50" type:"string"`
 
 	// The unique identifier assigned to your gateway during activation. This ID
@@ -16886,6 +18629,40 @@ func (s *VolumeiSCSIAttributes) SetTargetARN(v string) *VolumeiSCSIAttributes {
 }
 
 const (
+	// ActiveDirectoryStatusAccessDenied is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusAccessDenied = "ACCESS_DENIED"
+
+	// ActiveDirectoryStatusDetached is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusDetached = "DETACHED"
+
+	// ActiveDirectoryStatusJoined is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusJoined = "JOINED"
+
+	// ActiveDirectoryStatusJoining is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusJoining = "JOINING"
+
+	// ActiveDirectoryStatusNetworkError is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusNetworkError = "NETWORK_ERROR"
+
+	// ActiveDirectoryStatusTimeout is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusTimeout = "TIMEOUT"
+
+	// ActiveDirectoryStatusUnknownError is a ActiveDirectoryStatus enum value
+	ActiveDirectoryStatusUnknownError = "UNKNOWN_ERROR"
+)
+
+const (
+	// AvailabilityMonitorTestStatusComplete is a AvailabilityMonitorTestStatus enum value
+	AvailabilityMonitorTestStatusComplete = "COMPLETE"
+
+	// AvailabilityMonitorTestStatusFailed is a AvailabilityMonitorTestStatus enum value
+	AvailabilityMonitorTestStatusFailed = "FAILED"
+
+	// AvailabilityMonitorTestStatusPending is a AvailabilityMonitorTestStatus enum value
+	AvailabilityMonitorTestStatusPending = "PENDING"
+)
+
+const (
 	// ErrorCodeActivationKeyExpired is a ErrorCode enum value
 	ErrorCodeActivationKeyExpired = "ActivationKeyExpired"
 
@@ -16978,6 +18755,9 @@ const (
 
 	// ErrorCodeLunInvalid is a ErrorCode enum value
 	ErrorCodeLunInvalid = "LunInvalid"
+
+	// ErrorCodeJoinDomainInProgress is a ErrorCode enum value
+	ErrorCodeJoinDomainInProgress = "JoinDomainInProgress"
 
 	// ErrorCodeMaximumContentLengthExceeded is a ErrorCode enum value
 	ErrorCodeMaximumContentLengthExceeded = "MaximumContentLengthExceeded"
@@ -17079,6 +18859,23 @@ const (
 	FileShareTypeSmb = "SMB"
 )
 
+const (
+	// HostEnvironmentVmware is a HostEnvironment enum value
+	HostEnvironmentVmware = "VMWARE"
+
+	// HostEnvironmentHyperV is a HostEnvironment enum value
+	HostEnvironmentHyperV = "HYPER-V"
+
+	// HostEnvironmentEc2 is a HostEnvironment enum value
+	HostEnvironmentEc2 = "EC2"
+
+	// HostEnvironmentKvm is a HostEnvironment enum value
+	HostEnvironmentKvm = "KVM"
+
+	// HostEnvironmentOther is a HostEnvironment enum value
+	HostEnvironmentOther = "OTHER"
+)
+
 // A value that sets the access control list permission for objects in the S3
 // bucket that a file gateway puts objects into. The default value is "private".
 const (
@@ -17102,4 +18899,15 @@ const (
 
 	// ObjectACLAwsExecRead is a ObjectACL enum value
 	ObjectACLAwsExecRead = "aws-exec-read"
+)
+
+const (
+	// SMBSecurityStrategyClientSpecified is a SMBSecurityStrategy enum value
+	SMBSecurityStrategyClientSpecified = "ClientSpecified"
+
+	// SMBSecurityStrategyMandatorySigning is a SMBSecurityStrategy enum value
+	SMBSecurityStrategyMandatorySigning = "MandatorySigning"
+
+	// SMBSecurityStrategyMandatoryEncryption is a SMBSecurityStrategy enum value
+	SMBSecurityStrategyMandatoryEncryption = "MandatoryEncryption"
 )

@@ -8,10 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsTransferServer() *schema.Resource {
@@ -69,6 +69,18 @@ func resourceAwsTransferServer() *schema.Resource {
 				},
 			},
 
+			"host_key": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Sensitive:    true,
+				ValidateFunc: validation.StringLenBetween(0, 4096),
+			},
+
+			"host_key_fingerprint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"invocation_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -110,7 +122,7 @@ func resourceAwsTransferServer() *schema.Resource {
 
 func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
-	tags := tagsFromMapTransfer(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().TransferTags()
 	createOpts := &transfer.CreateServerInput{}
 
 	if len(tags) != 0 {
@@ -146,6 +158,10 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 		createOpts.EndpointDetails = expandTransferServerEndpointDetails(attr.([]interface{}))
 	}
 
+	if attr, ok := d.GetOk("host_key"); ok {
+		createOpts.HostKey = aws.String(attr.(string))
+	}
+
 	log.Printf("[DEBUG] Create Transfer Server Option: %#v", createOpts)
 
 	resp, err := conn.CreateServer(createOpts)
@@ -160,6 +176,7 @@ func resourceAwsTransferServerCreate(d *schema.ResourceData, meta interface{}) e
 
 func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).transferconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	descOpts := &transfer.DescribeServerInput{
 		ServerId: aws.String(d.Id()),
@@ -177,7 +194,7 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	endpoint := fmt.Sprintf("%s.server.transfer.%s.amazonaws.com", d.Id(), meta.(*AWSClient).region)
+	endpoint := meta.(*AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id()))
 
 	d.Set("arn", resp.Server.Arn)
 	d.Set("endpoint", endpoint)
@@ -191,8 +208,9 @@ func resourceAwsTransferServerRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("endpoint_details", flattenTransferServerEndpointDetails(resp.Server.EndpointDetails))
 	d.Set("identity_provider_type", resp.Server.IdentityProviderType)
 	d.Set("logging_role", resp.Server.LoggingRole)
+	d.Set("host_key_fingerprint", resp.Server.HostKeyFingerprint)
 
-	if err := d.Set("tags", tagsToMapTransfer(resp.Server.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.TransferKeyValueTags(resp.Server.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("Error setting tags: %s", err)
 	}
 	return nil
@@ -237,6 +255,13 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
+	if d.HasChange("host_key") {
+		updateFlag = true
+		if attr, ok := d.GetOk("host_key"); ok {
+			updateOpts.HostKey = aws.String(attr.(string))
+		}
+	}
+
 	if updateFlag {
 		_, err := conn.UpdateServer(updateOpts)
 		if err != nil {
@@ -249,8 +274,11 @@ func resourceAwsTransferServerUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if err := setTagsTransfer(conn, d); err != nil {
-		return fmt.Errorf("Error update tags: %s", err)
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.TransferUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
 	}
 
 	return resourceAwsTransferServerRead(d, meta)
@@ -292,7 +320,7 @@ func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) err
 		ServerId: aws.String(serverID),
 	}
 
-	return resource.Retry(10*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(10*time.Minute, func() *resource.RetryError {
 		_, err := conn.DescribeServer(params)
 
 		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
@@ -305,6 +333,19 @@ func waitForTransferServerDeletion(conn *transfer.Transfer, serverID string) err
 
 		return resource.RetryableError(fmt.Errorf("Transfer Server (%s) still exists", serverID))
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeServer(params)
+		if isAWSErr(err, transfer.ErrCodeResourceNotFoundException, "") {
+			return nil
+		}
+		if err == nil {
+			return fmt.Errorf("Transfer server (%s) still exists", serverID)
+		}
+	}
+	if err != nil {
+		return fmt.Errorf("Error waiting for transfer server deletion: %s", err)
+	}
+	return nil
 }
 
 func deleteTransferUsers(conn *transfer.Transfer, serverID string, nextToken *string) error {

@@ -13,33 +13,93 @@ import (
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/kinesis"
+	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform/flatmap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-// Returns test configuration
-func testConf() map[string]string {
-	return map[string]string{
-		"listener.#":                   "1",
-		"listener.0.lb_port":           "80",
-		"listener.0.lb_protocol":       "http",
-		"listener.0.instance_port":     "8000",
-		"listener.0.instance_protocol": "http",
-		"availability_zones.#":         "2",
-		"availability_zones.0":         "us-east-1a",
-		"availability_zones.1":         "us-east-1b",
-		"ingress.#":                    "1",
-		"ingress.0.protocol":           "icmp",
-		"ingress.0.from_port":          "1",
-		"ingress.0.to_port":            "-1",
-		"ingress.0.cidr_blocks.#":      "1",
-		"ingress.0.cidr_blocks.0":      "0.0.0.0/0",
-		"ingress.0.security_groups.#":  "2",
-		"ingress.0.security_groups.0":  "sg-11111",
-		"ingress.0.security_groups.1":  "foo/sg-22222",
+func TestDiffStringMaps(t *testing.T) {
+	cases := []struct {
+		Old, New       map[string]interface{}
+		Create, Remove map[string]interface{}
+	}{
+		// Add
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			Create: map[string]interface{}{
+				"bar": "baz",
+			},
+			Remove: map[string]interface{}{},
+		},
+
+		// Modify
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "baz",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]interface{}{},
+			Remove: map[string]interface{}{
+				"bar": "baz",
+			},
+		},
+	}
+
+	for i, tc := range cases {
+		c, r := diffStringMaps(tc.Old, tc.New)
+		cm := pointersMapToStringList(c)
+		rm := pointersMapToStringList(r)
+		if !reflect.DeepEqual(cm, tc.Create) {
+			t.Fatalf("%d: bad create: %#v", i, cm)
+		}
+		if !reflect.DeepEqual(rm, tc.Remove) {
+			t.Fatalf("%d: bad remove: %#v", i, rm)
+		}
 	}
 }
 
@@ -442,8 +502,31 @@ func TestFlattenHealthCheck(t *testing.T) {
 	}
 }
 
+func TestFlattenOrganizationsOrganizationalUnits(t *testing.T) {
+	input := []*organizations.OrganizationalUnit{
+		{
+			Arn:  aws.String("arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234"),
+			Id:   aws.String("ou-ab12-abcd1234"),
+			Name: aws.String("Engineering"),
+		},
+	}
+
+	expected_output := []map[string]interface{}{
+		{
+			"arn":  "arn:aws:organizations::123456789012:ou/o-abcde12345/ou-ab12-abcd1234",
+			"id":   "ou-ab12-abcd1234",
+			"name": "Engineering",
+		},
+	}
+
+	output := flattenOrganizationsOrganizationalUnits(input)
+	if !reflect.DeepEqual(expected_output, output) {
+		t.Fatalf("Got:\n\n%#v\n\nExpected:\n\n%#v", output, expected_output)
+	}
+}
+
 func TestExpandStringList(t *testing.T) {
-	expanded := flatmap.Expand(testConf(), "availability_zones").([]interface{})
+	expanded := []interface{}{"us-east-1a", "us-east-1b"}
 	stringList := expandStringList(expanded)
 	expected := []*string{
 		aws.String("us-east-1a"),
@@ -459,12 +542,8 @@ func TestExpandStringList(t *testing.T) {
 }
 
 func TestExpandStringListEmptyItems(t *testing.T) {
-	initialList := []string{"foo", "bar", "", "baz"}
-	l := make([]interface{}, len(initialList))
-	for i, v := range initialList {
-		l[i] = v
-	}
-	stringList := expandStringList(l)
+	expanded := []interface{}{"foo", "bar", "", "baz"}
+	stringList := expandStringList(expanded)
 	expected := []*string{
 		aws.String("foo"),
 		aws.String("bar"),
@@ -1549,3 +1628,102 @@ const testExampleXML_from_msdn_flawed = `
     </items>
 </purchaseOrder>
 `
+
+func TestExpandRdsClusterScalingConfiguration_serverless(t *testing.T) {
+	type testCase struct {
+		EngineMode string
+		Input      []interface{}
+		Expected   *rds.ScalingConfiguration
+	}
+	cases := []testCase{
+		{
+			EngineMode: "serverless",
+			Input: []interface{}{
+				map[string]interface{}{
+					"auto_pause":               false,
+					"max_capacity":             32,
+					"min_capacity":             4,
+					"seconds_until_auto_pause": 600,
+					"timeout_action":           "ForceApplyCapacityChange",
+				},
+			},
+			Expected: &rds.ScalingConfiguration{
+				AutoPause:             aws.Bool(false),
+				MaxCapacity:           aws.Int64(32),
+				MinCapacity:           aws.Int64(4),
+				SecondsUntilAutoPause: aws.Int64(600),
+				TimeoutAction:         aws.String("ForceApplyCapacityChange"),
+			},
+		},
+		{
+			EngineMode: "serverless",
+			Input:      []interface{}{},
+			Expected: &rds.ScalingConfiguration{
+				MinCapacity: aws.Int64(2),
+			},
+		},
+		{
+			EngineMode: "serverless",
+			Input: []interface{}{
+				nil,
+			},
+			Expected: &rds.ScalingConfiguration{
+				MinCapacity: aws.Int64(2),
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		output := expandRdsClusterScalingConfiguration(tc.Input, tc.EngineMode)
+		if !reflect.DeepEqual(output, tc.Expected) {
+			t.Errorf("EngineMode: %s\nExpected: %v,\nGot: %v", tc.EngineMode, tc.Expected, output)
+		}
+	}
+}
+
+func TestExpandRdsClusterScalingConfiguration_basic(t *testing.T) {
+	type testCase struct {
+		EngineMode string
+		Input      []interface{}
+		ExpectNil  bool
+	}
+	cases := []testCase{}
+
+	// RDS Cluster Scaling Configuration is only valid for serverless, but we're relying on AWS errors.
+	// If Terraform adds whole-resource validation, we can do our own validation at plan time.
+	for _, engineMode := range []string{"global", "multimaster", "parallelquery", "provisioned"} {
+		cases = append(cases, []testCase{
+			{
+				EngineMode: engineMode,
+				Input: []interface{}{
+					map[string]interface{}{
+						"auto_pause":               false,
+						"max_capacity":             32,
+						"min_capacity":             4,
+						"seconds_until_auto_pause": 600,
+						"timeout_action":           "ForceApplyCapacityChange",
+					},
+				},
+				ExpectNil: false,
+			},
+			{
+				EngineMode: engineMode,
+				Input:      []interface{}{},
+				ExpectNil:  true,
+			}, {
+				EngineMode: engineMode,
+				Input: []interface{}{
+					nil,
+				},
+				ExpectNil: true,
+			},
+		}...)
+	}
+
+	for _, tc := range cases {
+		output := expandRdsClusterScalingConfiguration(tc.Input, tc.EngineMode)
+		if tc.ExpectNil != (output == nil) {
+			t.Errorf("EngineMode %q: Expected nil: %t, Got: %v", tc.EngineMode, tc.ExpectNil, output)
+		}
+	}
+}

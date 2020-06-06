@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_route_tables"
-sidebar_current: "docs-aws-datasource-route-tables"
 description: |-
     Get information on Amazon route tables.
 ---
@@ -40,7 +40,7 @@ resource "aws_route" "r" {
 
 * `vpc_id` - (Optional) The VPC ID that you want to filter from.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired route tables.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -54,4 +54,4 @@ which take the following arguments:
 
 ## Attributes Reference
 
-* `ids` - A list of all the route table ids found. This data source will fail if none are found.
+* `ids` - A set of all the route table ids found. This data source will fail if none are found.

@@ -7,8 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsWafWebAcl() *schema.Resource {
@@ -32,7 +33,7 @@ func resourceAwsWafWebAcl() *schema.Resource {
 				ForceNew: true,
 			},
 			"default_action": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -140,20 +141,26 @@ func resourceAwsWafWebAcl() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().WafTags()
 
 	wr := newWafRetryer(conn)
 	out, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 		params := &waf.CreateWebACLInput{
 			ChangeToken:   token,
-			DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+			DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 			MetricName:    aws.String(d.Get("metric_name").(string)),
 			Name:          aws.String(d.Get("name").(string)),
+		}
+
+		if len(tags) > 0 {
+			params.Tags = tags
 		}
 
 		return conn.CreateWebACL(params)
@@ -171,13 +178,42 @@ func resourceAwsWafWebAclCreate(d *schema.ResourceData, meta interface{}) error 
 		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
 	}.String()
 
-	// Set for update
-	d.Set("arn", arn)
-	return resourceAwsWafWebAclUpdate(d, meta)
+	loggingConfiguration := d.Get("logging_configuration").([]interface{})
+	if len(loggingConfiguration) == 1 {
+		input := &waf.PutLoggingConfigurationInput{
+			LoggingConfiguration: expandWAFLoggingConfiguration(loggingConfiguration, arn),
+		}
+
+		log.Printf("[DEBUG] Updating WAF Web ACL (%s) Logging Configuration: %s", d.Id(), input)
+		if _, err := conn.PutLoggingConfiguration(input); err != nil {
+			return fmt.Errorf("error updating WAF Web ACL (%s) Logging Configuration: %s", d.Id(), err)
+		}
+	}
+
+	rules := d.Get("rules").(*schema.Set).List()
+	if len(rules) > 0 {
+		wr := newWafRetryer(conn)
+		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
+			req := &waf.UpdateWebACLInput{
+				ChangeToken:   token,
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
+				Updates:       diffWafWebAclRules([]interface{}{}, rules),
+				WebACLId:      aws.String(d.Id()),
+			}
+			return conn.UpdateWebACL(req)
+		})
+		if err != nil {
+			return fmt.Errorf("Error Updating WAF ACL: %s", err)
+		}
+	}
+
+	return resourceAwsWafWebAclRead(d, meta)
 }
 
 func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	params := &waf.GetWebACLInput{
 		WebACLId: aws.String(d.Id()),
 	}
@@ -199,19 +235,23 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*AWSClient).partition,
-		Service:   "waf",
-		AccountID: meta.(*AWSClient).accountid,
-		Resource:  fmt.Sprintf("webacl/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
+	d.Set("arn", resp.WebACL.WebACLArn)
+	arn := *resp.WebACL.WebACLArn
 
 	if err := d.Set("default_action", flattenWafAction(resp.WebACL.DefaultAction)); err != nil {
 		return fmt.Errorf("error setting default_action: %s", err)
 	}
 	d.Set("name", resp.WebACL.Name)
 	d.Set("metric_name", resp.WebACL.MetricName)
+
+	tags, err := keyvaluetags.WafListTags(conn, arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for WAF ACL (%s): %s", arn, err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	if err := d.Set("rules", flattenWafWebAclRules(resp.WebACL.Rules)); err != nil {
 		return fmt.Errorf("error setting rules: %s", err)
 	}
@@ -250,7 +290,7 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWafWebAclRules(oldR, newR),
 				WebACLId:      aws.String(d.Id()),
 			}
@@ -286,6 +326,14 @@ func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error 
 
 	}
 
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.WafUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
+
 	return resourceAwsWafWebAclRead(d, meta)
 }
 
@@ -299,7 +347,7 @@ func resourceAwsWafWebAclDelete(d *schema.ResourceData, meta interface{}) error 
 		_, err := wr.RetryWithToken(func(token *string) (interface{}, error) {
 			req := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
-				DefaultAction: expandWafAction(d.Get("default_action").(*schema.Set).List()),
+				DefaultAction: expandWafAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWafWebAclRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}

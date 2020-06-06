@@ -10,7 +10,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsS3BucketObject() *schema.Resource {
@@ -73,6 +74,19 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"object_lock_legal_hold_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"object_lock_mode": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"object_lock_retain_until_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"range": {
 				Type:     schema.TypeString,
@@ -107,6 +121,7 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 
 func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).s3conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
@@ -155,6 +170,9 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("expires", out.Expires)
 	d.Set("last_modified", out.LastModified.Format(time.RFC1123))
 	d.Set("metadata", pointersMapToStringList(out.Metadata))
+	d.Set("object_lock_legal_hold_status", out.ObjectLockLegalHoldStatus)
+	d.Set("object_lock_mode", out.ObjectLockMode)
+	d.Set("object_lock_retain_until_date", flattenS3ObjectLockRetainUntilDate(out.ObjectLockRetainUntilDate))
 	d.Set("server_side_encryption", out.ServerSideEncryption)
 	d.Set("sse_kms_key_id", out.SSEKMSKeyId)
 	d.Set("version_id", out.VersionId)
@@ -203,15 +221,15 @@ func dataSourceAwsS3BucketObjectRead(d *schema.ResourceData, meta interface{}) e
 			uniqueId, contentType)
 	}
 
-	tagResp, err := conn.GetObjectTagging(
-		&s3.GetObjectTaggingInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
+	tags, err := keyvaluetags.S3ObjectListTags(conn, bucket, key)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-	d.Set("tags", tagsToMapS3(tagResp.TagSet))
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
