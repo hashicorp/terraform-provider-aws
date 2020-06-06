@@ -332,7 +332,7 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.device_name", "/dev/sdd"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.encrypted", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2634515331.kms_key_id", kmsKeyResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.3568741603.device_name", resourceName,"root_block_device.0.device_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.3568741603.device_name", resourceName, "root_block_device.0.device_name"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.3568741603.encrypted", "false"),
 				),
 			},
