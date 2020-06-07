@@ -13,7 +13,7 @@ import (
 
 func TestAccAWSMediaLiveInputSecurityGroup_basic(t *testing.T) {
 	var v medialive.DescribeInputSecurityGroupOutput
-	resourceName := "aws_media_live_input_security_group.test"
+	resourceName := "aws_medialive_input_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -63,7 +63,7 @@ func TestAccAWSMediaLiveInputSecurityGroup_basic(t *testing.T) {
 
 func TestAccAWSMediaLiveInputSecurityGroup_tags(t *testing.T) {
 	var v medialive.DescribeInputSecurityGroupOutput
-	resourceName := "aws_media_live_input_security_group.test"
+	resourceName := "aws_medialive_input_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -106,7 +106,7 @@ func TestAccAWSMediaLiveInputSecurityGroup_tags(t *testing.T) {
 
 func testAccCheckAwsMediaLiveInputSecurityGroupDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_media_live_input_security_group" {
+		if rs.Type != "aws_medialive_input_security_group" {
 			continue
 		}
 
@@ -164,7 +164,7 @@ func testAccMediaLiveInputSecurityGroupExists(n string, v *medialive.DescribeInp
 
 func testAccAwsMediaLiveInputSecurityGroupConfig(cidr string) string {
 	return fmt.Sprintf(`
-resource "aws_media_live_input_security_group" "test" {
+resource "aws_medialive_input_security_group" "test" {
   whitelist_rule {
     cidr = %[1]q
   }
@@ -174,7 +174,7 @@ resource "aws_media_live_input_security_group" "test" {
 
 func testAccAwsMediaLiveInputSecurityGroupConfigWithMultiple(cidr1, cidr2 string) string {
 	return fmt.Sprintf(`
-resource "aws_media_live_input_security_group" "test" {
+resource "aws_medialive_input_security_group" "test" {
   whitelist_rule {
     cidr = %[1]q
   }
@@ -188,7 +188,7 @@ resource "aws_media_live_input_security_group" "test" {
 
 func testAccAwsMediaLiveInputSecurityGroupConfigWithTag(cidr, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
-resource "aws_media_live_input_security_group" "test" {
+resource "aws_medialive_input_security_group" "test" {
   whitelist_rule {
     cidr = %[1]q
   }
@@ -202,7 +202,7 @@ resource "aws_media_live_input_security_group" "test" {
 
 func testAccAwsMediaLiveInputSecurityGroupConfigWithTag2(cidr, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_media_live_input_security_group" "test" {
+resource "aws_medialive_input_security_group" "test" {
   whitelist_rule {
     cidr = %[1]q
   }
