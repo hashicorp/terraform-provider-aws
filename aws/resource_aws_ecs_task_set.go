@@ -90,7 +90,7 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 			// multiple target groups are not supported.
 			// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/register-multiple-targetgroups.html
 			"load_balancer": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
 				ForceNew: true,
@@ -119,7 +119,6 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 						},
 					},
 				},
-				Set: resourceAwsEcsLoadBalancerHash,
 			},
 
 			"service_registries": {
