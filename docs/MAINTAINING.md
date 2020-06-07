@@ -184,7 +184,7 @@ ENHANCEMENTS:
 * provider: Support automatic region validation for `XX-XXXXX-#` [GH-####]
 ```
 
-- Follow the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#new-region) to submit updates for various data sources to support the new region
+- Follow the [Contributing Guide](contributing/contribution-checklists.md#new-region) to submit updates for various data sources to support the new region
 - Submit the dependency update to the Terraform S3 Backend by running the following:
 
 ```shell
