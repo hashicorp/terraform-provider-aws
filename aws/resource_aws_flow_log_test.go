@@ -592,15 +592,14 @@ resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 resource "aws_s3_bucket" "test" {
-	bucket        = %[1]q
-	force_destroy = true
-  }
-
+  bucket        = %[1]q
+  force_destroy = true
+}
 
 resource "aws_flow_log" "test" {
   log_destination      = "${aws_s3_bucket.test.arn}"
   log_destination_type = "s3"
-  iam_role_arn   = "${aws_iam_role.test.arn}"
+  iam_role_arn         = "${aws_iam_role.test.arn}"
 
   traffic_type   = "ALL"
   vpc_id         = "${aws_vpc.test.id}"
