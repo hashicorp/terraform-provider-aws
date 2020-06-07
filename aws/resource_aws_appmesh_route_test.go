@@ -162,7 +162,56 @@ func testAccAwsAppmeshRoute_grpcRoute(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.weighted_target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.weighted_target.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3692984846.invert", "true"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3692984846.match.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3692984846.name", "X-Testing1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.invert", "false"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.0.exact", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.0.prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.0.range.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.0.range.0.end", "7"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.0.range.0.start", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.0.regex", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.match.0.suffix", ""),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3002668394.name", "X-Testing2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.method_name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.service_name", "test.local"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.grpc_retry_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.grpc_retry_events.4193647559", "cancelled"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.http_retry_events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.http_retry_events.1737003747", "gateway-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.http_retry_events.3092941836", "client-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.max_retries", "3"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.per_retry_timeout.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.per_retry_timeout.0.unit", "ms"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.per_retry_timeout.0.value", "250000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.tcp_retry_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.retry_policy.0.tcp_retry_events.3724400910", "connection-error"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http2_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.http_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.tcp_route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualRouter/%s/route/%s", meshName, vrName, rName)),
+				),
+			},
+			{
+				Config: testAccAwsAppmeshRouteConfig_grpcRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppmeshRouteExists(resourceName, &r),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
+					resource.TestCheckResourceAttr(resourceName, "virtual_router_name", vrName),
+					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.action.0.weighted_target.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.grpc_route.0.match.0.metadata.3692984846.invert", "true"),
@@ -1043,7 +1092,82 @@ resource "aws_appmesh_route" "test" {
       action {
         weighted_target {
           virtual_node = "${aws_appmesh_virtual_node.foo.name}"
-          weight       = 100
+          weight       = 90
+        }
+
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          weight       = 10
+        }
+      }
+    }
+  }
+}
+`, rName)
+}
+
+func testAccAwsAppmeshRouteConfig_grpcRouteUpdatedWithZeroWeight(meshName, vrName, vn1Name, vn2Name, rName string) string {
+	return testAccAppmeshRouteConfigBase(meshName, vrName, "grpc", vn1Name, vn2Name) + fmt.Sprintf(`
+resource "aws_appmesh_route" "test" {
+  name                = %[1]q
+  mesh_name           = "${aws_appmesh_mesh.test.id}"
+  virtual_router_name = "${aws_appmesh_virtual_router.test.name}"
+
+  spec {
+    grpc_route {
+      match {
+        method_name  = "test"
+        service_name = "test.local"
+
+        metadata {
+          name   = "X-Testing1"
+          invert = true
+        }
+
+        metadata {
+          name   = "X-Testing2"
+          invert = false
+
+          match {
+            range {
+              start = 2
+              end   = 7
+            }
+          }
+        }
+      }
+
+      retry_policy {
+        grpc_retry_events = [
+          "cancelled",
+        ]
+
+        http_retry_events = [
+          "client-error",
+          "gateway-error",
+        ]
+
+        max_retries = 3
+
+        per_retry_timeout {
+          unit  = "ms"
+          value = 250000
+        }
+
+        tcp_retry_events = [
+          "connection-error",
+        ]
+      }
+
+      action {
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.foo.name}"
+          weight       = 99
+        }
+
+        weighted_target {
+          virtual_node = "${aws_appmesh_virtual_node.bar.name}"
+          weight       = 0
         }
       }
     }
