@@ -720,7 +720,7 @@ func (c *Config) Client() (interface{}, error) {
 			r.Retryable = aws.Bool(true)
 		}
 
-		if r.Operation.Name == "CreateIPSet" || r.Operation.Name == "CreateRegexPatternSet" {
+		if r.Operation.Name == "CreateIPSet" || r.Operation.Name == "CreateRegexPatternSet" || r.Operation.Name == "CreateRuleGroup" {
 			// WAFv2 supports tag on create which can result in the below error codes according to the documentation
 			if isAWSErr(r.Error, wafv2.ErrCodeWAFTagOperationException, "Retry your request") {
 				r.Retryable = aws.Bool(true)
