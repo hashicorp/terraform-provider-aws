@@ -12,6 +12,310 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
+func TestAccAWSEcsTaskSet_withARN(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	resourceName := "aws_ecs_task_set.mongo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 0.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
+				),
+			},
+
+			{
+				Config: testAccAWSEcsTaskSetModified(clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "external_id", "TEST_ID"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_disappears(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	resourceName := "aws_ecs_task_set.mongo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 0.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEcsTaskSet(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_scale(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	resourceName := "aws_ecs_task_set.mongo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 0.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", "PERCENT"),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "0"),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 100.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.unit", "PERCENT"),
+					resource.TestCheckResourceAttr(resourceName, "scale.0.value", "100"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_withCapacityProviderStrategy(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	providerName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_task_set.mongo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSetWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 1, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskSetWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 10, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	sgName := acctest.RandomWithPrefix("tf-acc-sg")
+	resourceName := "aws_ecs_task_set.mongo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSetWithMultipleCapacityProviderStrategies(clusterName, tdName, svcName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_withAlb(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	lbName := acctest.RandomWithPrefix("tf-acc-lb")
+	resourceName := "aws_ecs_task_set.with_alb"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSetWithAlb(clusterName, tdName, lbName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_withLaunchTypeFargate(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	sg1Name := acctest.RandomWithPrefix("tf-acc-sg-1")
+	sg2Name := acctest.RandomWithPrefix("tf-acc-sg-2")
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	resourceName := "aws_ecs_task_set.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSetWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "launch_type", "FARGATE"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.assign_public_ip", "false"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.security_groups.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "network_configuration.0.subnets.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.3.0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	sg1Name := acctest.RandomWithPrefix("tf-acc-sg-1")
+	sg2Name := acctest.RandomWithPrefix("tf-acc-sg-2")
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	resourceName := "aws_ecs_task_set.main"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSetWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "1.2.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.2.0"),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskSetWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "1.3.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "platform_version", "1.3.0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_withServiceRegistries(t *testing.T) {
+	var taskSet ecs.TaskSet
+	rString := acctest.RandString(8)
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	resourceName := "aws_ecs_task_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSet_withServiceRegistries(rString, clusterName, tdName, svcName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsTaskSet_Tags(t *testing.T) {
+	var taskSet ecs.TaskSet
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_task_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSetConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskSetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSEcsTaskSetConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+//////////////
+// Fixtures //
+//////////////
+
 func testAccAWSEcsTaskSet(clusterName, tdName, svcName string, scale float64) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "default" {
@@ -40,7 +344,7 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 resource "aws_ecs_task_set" "mongo" {
-  service 		    = "${aws_ecs_service.mongo.id}"
+  service         = "${aws_ecs_service.mongo.id}"
   cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   scale {
@@ -78,7 +382,7 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 resource "aws_ecs_task_set" "mongo" {
-  service 		    = "${aws_ecs_service.mongo.id}"
+  service         = "${aws_ecs_service.mongo.id}"
   cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   external_id     = "TEST_ID"
@@ -120,7 +424,7 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 resource "aws_ecs_task_set" "mongo" {
-  service 		    = "${aws_ecs_service.mongo.id}"
+  service         = "${aws_ecs_service.mongo.id}"
   cluster         = "${aws_ecs_cluster.default.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   capacity_provider_strategy {
@@ -143,7 +447,7 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 resource "aws_ecs_task_set" "mongo" {
-  service 		    = "${aws_ecs_service.mongo.id}"
+  service         = "${aws_ecs_service.mongo.id}"
   cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   network_configuration {
@@ -282,7 +586,7 @@ resource "aws_ecs_service" "with_alb" {
   }
 }
 resource "aws_ecs_task_set" "with_alb" {
-  service 		    = "${aws_ecs_service.with_alb.id}"
+  service         = "${aws_ecs_service.with_alb.id}"
   cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
   load_balancer {
@@ -322,7 +626,7 @@ resource "aws_ecs_service" "test" {
   }
 }
 resource "aws_ecs_task_set" "test" {
-  service 		    = "${aws_ecs_service.test.id}"
+  service         = "${aws_ecs_service.test.id}"
   cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.test.arn}"
   tags = {
@@ -360,7 +664,7 @@ resource "aws_ecs_service" "test" {
   }
 }
 resource "aws_ecs_task_set" "test" {
-  service 		    = "${aws_ecs_service.test.id}"
+  service         = "${aws_ecs_service.test.id}"
   cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.test.arn}"
   tags = {
@@ -447,7 +751,7 @@ resource "aws_ecs_service" "test" {
   }
 }
 resource "aws_ecs_task_set" "test" {
-  service 		    = "${aws_ecs_service.test.id}"
+  service         = "${aws_ecs_service.test.id}"
   cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.test.arn}"
   service_registries {
@@ -630,7 +934,7 @@ resource "aws_ecs_service" "main" {
   }
 }
 resource "aws_ecs_task_set" "main" {
-  service 		    = "${aws_ecs_service.main.id}"
+  service         = "${aws_ecs_service.main.id}"
   cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.mongo.arn}"
   launch_type      = "FARGATE"
@@ -643,6 +947,10 @@ resource "aws_ecs_task_set" "main" {
 }
 `, sg1Name, sg2Name, clusterName, tdName, svcName, platformVersion)
 }
+
+////////////
+// Utils //
+///////////
 
 func testAccCheckAWSEcsTaskSetExists(name string, taskSet *ecs.TaskSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -774,303 +1082,4 @@ func testAccCheckAWSEcsTaskSetDisappears(taskSet *ecs.TaskSet) resource.TestChec
 
 		return err
 	}
-}
-
-func TestAccAWSEcsTaskSet_withARN(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-arn-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 0.0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "service_registries.#", "0"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "load_balancer.#", "0"),
-				),
-			},
-
-			{
-				Config: testAccAWSEcsTaskSetModified(clusterName, tdName, svcName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "service_registries.#", "0"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "load_balancer.#", "0"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "external_id", "TEST_ID"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_disappears(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-arn-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 0.0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-					testAccCheckAWSEcsTaskSetDisappears(&taskSet),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_scale(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-arn-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-arn-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-arn-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 0.0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "scale.0.unit", "PERCENT"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "scale.0.value", "0"),
-				),
-			},
-			{
-				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 100.0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "scale.0.unit", "PERCENT"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "scale.0.value", "100"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_withCapacityProviderStrategy(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
-	providerName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSetWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 1, 0),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-				),
-			},
-			{
-				Config: testAccAWSEcsTaskSetWithCapacityProviderStrategy(providerName, clusterName, tdName, svcName, 10, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-mcps-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-mcps-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-mcps-%s", rString)
-	sgName := fmt.Sprintf("tf-acc-sg-svc-w-mcps-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSetWithMultipleCapacityProviderStrategies(clusterName, tdName, svcName, sgName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.mongo", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.mongo", "capacity_provider_strategy.#", "2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_withAlb(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-alb-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-alb-%s", rString)
-	lbName := fmt.Sprintf("tf-acc-lb-svc-w-alb-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-alb-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSetWithAlb(clusterName, tdName, lbName, svcName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.with_alb", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.with_alb", "load_balancer.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_withLaunchTypeFargate(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-w-ltf-%s", rString)
-	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-w-ltf-%s", rString)
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ltf-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-ltf-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-ltf-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSetWithLaunchTypeFargate(sg1Name, sg2Name, clusterName, tdName, svcName, "false"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.main", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.main", "launch_type", "FARGATE"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.main", "network_configuration.0.assign_public_ip", "false"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.main", "network_configuration.0.security_groups.#", "2"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.main", "network_configuration.0.subnets.#", "2"),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.main", "platform_version", "1.3.0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_withLaunchTypeFargateAndPlatformVersion(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	sg1Name := fmt.Sprintf("tf-acc-sg-1-svc-ltf-w-pv-%s", rString)
-	sg2Name := fmt.Sprintf("tf-acc-sg-2-svc-ltf-w-pv-%s", rString)
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-ltf-w-pv-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-ltf-w-pv-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-ltf-w-pv-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSetWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "1.2.0"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.main", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.main", "platform_version", "1.2.0"),
-				),
-			},
-			{
-				Config: testAccAWSEcsTaskSetWithLaunchTypeFargateAndPlatformVersion(sg1Name, sg2Name, clusterName, tdName, svcName, "1.3.0"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.main", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.main", "platform_version", "1.3.0"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_withServiceRegistries(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rString := acctest.RandString(8)
-
-	clusterName := fmt.Sprintf("tf-acc-cluster-svc-w-ups-%s", rString)
-	tdName := fmt.Sprintf("tf-acc-td-svc-w-ups-%s", rString)
-	svcName := fmt.Sprintf("tf-acc-svc-w-ups-%s", rString)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSet_withServiceRegistries(rString, clusterName, tdName, svcName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists("aws_ecs_task_set.test", &taskSet),
-					resource.TestCheckResourceAttr("aws_ecs_task_set.test", "service_registries.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEcsTaskSet_Tags(t *testing.T) {
-	var taskSet ecs.TaskSet
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resourceName := "aws_ecs_task_set.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSEcsTaskSetConfigTags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccAWSEcsTaskSetConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccAWSEcsTaskSetConfigTags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
 }
