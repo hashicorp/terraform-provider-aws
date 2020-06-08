@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,19 +13,24 @@ import (
 func TestAccAWSEc2ResourceTag_basic(t *testing.T) {
 	var tag ec2.TagDescription
 
-	testCheck := func(*terraform.State) error {
-		key := aws.StringValue(tag.Key)
-		if key != "Name" {
-			return fmt.Errorf("Expected Key to be 'Name'; got '%s'", key)
-		}
+	resource.ParallelTest(t, resource.TestCase{
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfigIgnoreTagsKeys1("Name") + testAccEc2ResourceTagConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEc2ResourceTagExists(
+						"aws_ec2_tag.test", &tag),
+					resource.TestCheckResourceAttr("aws_ec2_tag.test", "key", "Name"),
+					resource.TestCheckResourceAttr("aws_ec2_tag.test", "value", "Hello World"),
+				),
+			},
+		},
+	})
+}
 
-		value := aws.StringValue(tag.Value)
-		if value != "Hello World" {
-			return fmt.Errorf("Expected Value to be 'Hello World'; got '%s'", value)
-		}
-
-		return nil
-	}
+func TestAccAWSEc2ResourceTag_OutOfBandDelete(t *testing.T) {
+	var tag ec2.TagDescription
 
 	resource.ParallelTest(t, resource.TestCase{
 		Providers: testAccProviders,
@@ -34,105 +38,13 @@ func TestAccAWSEc2ResourceTag_basic(t *testing.T) {
 			{
 				Config: testAccEc2ResourceTagConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2ResourceTagExists(
-						"aws_ec2_tag.test", &tag),
-					testCheck,
+					testAccCheckEc2ResourceTagExists("aws_ec2_tag.test", &tag),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2Tag(), "aws_ec2_tag.test"),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func TestAccAWSEc2ResourceTag_subnet(t *testing.T) {
-	var tag ec2.TagDescription
-
-	testCheck := func(*terraform.State) error {
-		key := aws.StringValue(tag.Key)
-		if key != "Name" {
-			return fmt.Errorf("Expected Key to be 'Name'; got '%s'", key)
-		}
-
-		value := aws.StringValue(tag.Value)
-		if value != "Hello World" {
-			return fmt.Errorf("Expected Value to be 'Hello World'; got '%s'", value)
-		}
-
-		return nil
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2ResourceTagSubnetConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2ResourceTagExists(
-						"aws_ec2_tag.test", &tag),
-					testCheck,
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSEc2ResourceTag_out_of_band_delete(t *testing.T) {
-	var tag ec2.TagDescription
-
-	testCheck := func(*terraform.State) error {
-		key := aws.StringValue(tag.Key)
-		if key != "Name" {
-			return fmt.Errorf("Expected Key to be 'Name'; got '%s'", key)
-		}
-
-		value := aws.StringValue(tag.Value)
-		if value != "Hello World" {
-			return fmt.Errorf("Expected Value to be 'Hello World'; got '%s'", value)
-		}
-
-		return nil
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2ResourceTagConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2ResourceTagExists(
-						"aws_ec2_tag.test", &tag),
-					testCheck,
-				),
-			},
-			{
-				PreConfig: deleteTag(t, &tag), // Simulate out of band delete
-				Config:    testAccEc2ResourceTagConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEc2ResourceTagExists(
-						"aws_ec2_tag.test", &tag),
-					testCheck,
-				),
-			},
-		},
-	})
-}
-
-func deleteTag(t *testing.T, tag *ec2.TagDescription) func() {
-	return func() {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, err := conn.DeleteTags(&ec2.DeleteTagsInput{
-			Resources: []*string{tag.ResourceId},
-			Tags: []*ec2.Tag{
-				{
-					Key:   tag.Key,
-					Value: tag.Value,
-				},
-			},
-		})
-
-		if err != nil {
-			t.Errorf("Failed to delete the tag: %v", tag)
-		}
-	}
 }
 
 func testAccCheckEc2ResourceTagExists(n string, tag *ec2.TagDescription) resource.TestCheckFunc {
@@ -146,9 +58,10 @@ func testAccCheckEc2ResourceTagExists(n string, tag *ec2.TagDescription) resourc
 			return fmt.Errorf("No ID is set")
 		}
 
-		parts := strings.Split(rs.Primary.ID, ":")
-		id := parts[0]
-		key := parts[1]
+		id, key, err := extractResourceIDAndKeyFromEc2TagID(rs.Primary.ID)
+		if err != nil {
+			return fmt.Errorf("Error getting ID or key from EC2 tag ID: %s", rs.Primary.ID)
+		}
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		resp, err := conn.DescribeTags(&ec2.DescribeTagsInput{
 			Filters: []*ec2.Filter{
@@ -185,27 +98,6 @@ resource "aws_vpc" "test" {
 
 resource "aws_ec2_tag" "test" {
   resource_id = "${aws_vpc.test.id}"
-  key         = "Name"
-  value       = "Hello World"
-
-  timeouts {
-    create = "2s"
-  }
-}
-`
-
-const testAccEc2ResourceTagSubnetConfig = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  vpc_id     = "${aws_vpc.test.id}"
-  cidr_block = "10.0.1.0/24"
-}
-
-resource "aws_ec2_tag" "test" {
-  resource_id = "${aws_subnet.test.id}"
   key         = "Name"
   value       = "Hello World"
 }

@@ -12,25 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
-type ResourceNotExists struct {
-	message string
-}
-
-func NewResourceNotExists(message string) *ResourceNotExists {
-	return &ResourceNotExists{
-		message: message,
-	}
-}
-func (e *ResourceNotExists) Error() string {
-	return e.message
-}
-
 func resourceAwsEc2Tag() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEc2TagCreate,
 		Read:   resourceAwsEc2TagRead,
 		Delete: resourceAwsEc2TagDelete,
-
 
 		Schema: map[string]*schema.Schema{
 			"resource_id": {
@@ -52,15 +38,14 @@ func resourceAwsEc2Tag() *schema.Resource {
 	}
 }
 
-func extractResourceIdFromEc2TagId(d *schema.ResourceData) (string, error) {
-	i := d.Id()
-	parts := strings.Split(i, ":")
+func extractResourceIDAndKeyFromEc2TagID(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
 
 	if len(parts) != 2 {
-		return "", fmt.Errorf("Invalid resource ID; cannot look up resource: %s", i)
+		return "", "", fmt.Errorf("Invalid resource ID; cannot look up resource: %s", id)
 	}
 
-	return parts[0], nil
+	return parts[0], parts[1], nil
 }
 
 func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
@@ -86,7 +71,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 
 	// Handle EC2 eventual consistency on creation
 	log.Printf("[DEBUG] Waiting for tag %s on resource %s to become available", key, resourceID)
-	retryError := resource.Retry(5 * time.Minute, func() *resource.RetryError {
+	retryError := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		var tags *ec2.DescribeTagsOutput
 		tags, err = conn.DescribeTags(&ec2.DescribeTagsInput{
 			Filters: []*ec2.Filter{
@@ -102,20 +87,20 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 		})
 
 		if err != nil {
-			return resource.RetryableError(err)
+			return resource.NonRetryableError(err)
 		}
 
 		// tag not found _yet_
 		if len(tags.Tags) == 0 {
-			return resource.RetryableError(NewResourceNotExists("tag not found"))
+			return resource.RetryableError(&resource.NotFoundError{})
 		}
 
 		return nil
 	})
 
 	if retryError != nil {
-		if _, ok := retryError.(*ResourceNotExists); !ok {
-			return fmt.Errorf("[ERROR] Could not create tag %s:%s on resource %s", key, value, resourceID)
+		if isResourceNotFoundError(err) {
+			return fmt.Errorf("error creating EC2 Tag (%s) on resource (%s): %w", key, resourceID, err)
 		}
 	}
 
@@ -125,7 +110,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	id, err := extractResourceIdFromEc2TagId(d)
+	id, _, err := extractResourceIDAndKeyFromEc2TagID(d.Id())
 
 	if err != nil {
 		return err
@@ -148,7 +133,7 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("[ERROR] Could not read tag %s on resource %s", key, id)
+		return fmt.Errorf("error reading EC2 Tag (%s) on resource (%s): %w", key, id, err)
 	}
 
 	if len(tags.Tags) == 0 {
@@ -171,7 +156,7 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	id, err := extractResourceIdFromEc2TagId(d)
+	id, _, err := extractResourceIDAndKeyFromEc2TagID(d.Id())
 
 	if err != nil {
 		return err
@@ -188,7 +173,7 @@ func resourceAwsEc2TagDelete(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting EC2 Tag (%s) on resource (%s): %w", d.Get("key").(string), id, err)
 	}
 
 	return nil

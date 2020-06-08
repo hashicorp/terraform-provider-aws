@@ -2,7 +2,6 @@
 subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_tag"
-sidebar_current: "docs-aws-resource-ec2-tag-x"
 description: |-
   Manages a single tag for a given EC2 resource
 ---

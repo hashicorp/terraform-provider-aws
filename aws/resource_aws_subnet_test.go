@@ -171,11 +171,6 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// This is needed because we don't always call d.Set() in Read for tags as per
-					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
-					"tags",
-				},
 			},
 		},
 	})
@@ -233,11 +228,6 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// This is needed because we don't always call d.Set() in Read for tags as per
-					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
-					"tags",
-				},
 			},
 			{
 				Config: testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation,
@@ -281,11 +271,6 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// This is needed because we don't always call d.Set() in Read for tags as per
-					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
-					"tags",
-				},
 			},
 			{
 				Config: testAccSubnetConfigIpv6,
@@ -323,11 +308,6 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// This is needed because we don't always call d.Set() in Read for tags as per
-					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
-					"tags",
-				},
 			},
 		},
 	})
@@ -364,11 +344,6 @@ func TestAccAWSSubnet_outpost(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					// This is needed because we don't always call d.Set() in Read for tags as per
-					// https://github.com/hashicorp/terraform/pull/21019 and https://github.com/hashicorp/terraform/issues/20985
-					"tags",
-				},
 			},
 		},
 	})
