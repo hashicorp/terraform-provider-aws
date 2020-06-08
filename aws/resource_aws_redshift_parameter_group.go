@@ -101,11 +101,7 @@ func resourceAwsRedshiftParameterGroupCreate(d *schema.ResourceData, meta interf
 	d.SetId(*createOpts.ParameterGroupName)
 
 	if v := d.Get("parameter").(*schema.Set); v.Len() > 0 {
-		parameters, err := expandRedshiftParameters(v.List())
-
-		if err != nil {
-			return fmt.Errorf("error expanding parameter: %s", err)
-		}
+		parameters := expandRedshiftParameters(v.List())
 
 		modifyOpts := redshift.ModifyClusterParameterGroupInput{
 			ParameterGroupName: aws.String(d.Id()),
@@ -134,7 +130,7 @@ func resourceAwsRedshiftParameterGroupRead(d *schema.ResourceData, meta interfac
 	}
 
 	if len(describeResp.ParameterGroups) != 1 ||
-		*describeResp.ParameterGroups[0].ParameterGroupName != d.Id() {
+		aws.StringValue(describeResp.ParameterGroups[0].ParameterGroupName) != d.Id() {
 		d.SetId("")
 		return fmt.Errorf("Unable to find Parameter Group: %#v", describeResp.ParameterGroups)
 	}
@@ -186,10 +182,7 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []redshift.Parameter
-		parameters, err := expandRedshiftParameters(ns.Difference(os).List())
-		if err != nil {
-			return err
-		}
+		parameters := expandRedshiftParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			modifyOpts := redshift.ModifyClusterParameterGroupInput{
@@ -198,7 +191,7 @@ func resourceAwsRedshiftParameterGroupUpdate(d *schema.ResourceData, meta interf
 			}
 
 			log.Printf("[DEBUG] Modify Redshift Parameter Group: %s", modifyOpts)
-			_, err = conn.ModifyClusterParameterGroup(&modifyOpts)
+			_, err := conn.ModifyClusterParameterGroup(&modifyOpts)
 			if err != nil {
 				return fmt.Errorf("Error modifying Redshift Parameter Group: %s", err)
 			}
