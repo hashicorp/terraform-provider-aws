@@ -30,8 +30,9 @@ func resourceAwsCognitoUserPoolClient() *schema.Resource {
 			},
 
 			"client_secret": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:      schema.TypeString,
+				Computed:  true,
+				Sensitive: true,
 			},
 
 			"generate_secret": {
