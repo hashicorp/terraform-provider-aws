@@ -101,9 +101,6 @@ func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
 }
 
 func testAccAwsVpnConnectionRoute(
-	vpnGatewayResource string,
-	customerGatewayResource string,
-	vpnConnectionResource string,
 	vpnConnectionRouteResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[vpnConnectionRouteResource]
