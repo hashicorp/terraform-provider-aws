@@ -14,6 +14,7 @@ import (
 )
 
 func TestAccAWSSESDomainDkim_basic(t *testing.T) {
+	resourceName := "aws_ses_domain_dkim.test"
 	domain := fmt.Sprintf(
 		"%s.terraformtesting.com",
 		acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
@@ -29,8 +30,8 @@ func TestAccAWSSESDomainDkim_basic(t *testing.T) {
 			{
 				Config: fmt.Sprintf(testAccAwsSESDomainDkimConfig, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsSESDomainDkimExists("aws_ses_domain_dkim.test"),
-					testAccCheckAwsSESDomainDkimTokens("aws_ses_domain_dkim.test", domain),
+					testAccCheckAwsSESDomainDkimExists(resourceName),
+					testAccCheckAwsSESDomainDkimTokens(resourceName),
 				),
 			},
 		},
@@ -99,7 +100,7 @@ func testAccCheckAwsSESDomainDkimExists(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsSESDomainDkimTokens(n string, domain string) resource.TestCheckFunc {
+func testAccCheckAwsSESDomainDkimTokens(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs := s.RootModule().Resources[n]
 
