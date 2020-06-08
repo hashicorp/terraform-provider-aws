@@ -175,7 +175,6 @@ func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
 
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6710
 func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
 	var vpc ec2.Vpc
 	vpcResourceName := "aws_vpc.test"
 	resourceName := "aws_network_acl_rule.test"
