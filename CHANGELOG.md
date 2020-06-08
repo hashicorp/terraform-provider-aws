@@ -2,6 +2,9 @@
 
 BUG FIXES:
 
+* resource/aws_autoscaling_group: Allow `on_demand_base_capacity` to be set to 0 [GH-13623] 
+* resource/aws_autoscaling_group: Add `Computed` field to `instances_distribution` and it's sub-fields `on_demand_allocation_strategy`, `on_demand_base_capacity`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  [GH-13623]
+* resource/aws_autoscaling_group: Remove `Default` field from `instances_distribution` sub-fields `on_demand_allocation_strategy`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  [GH-13623]
 * resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties [GH-13634]
 * resource/aws_instance: Continue supporting empty string (`""`) `private_ip` argument [GH-13640]
 
