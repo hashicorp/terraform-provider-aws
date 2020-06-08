@@ -237,7 +237,6 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 			"wait_until_stable_timeout": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "10m",
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
 					duration, err := time.ParseDuration(value)
@@ -281,7 +280,7 @@ func resourceAwsEcsTaskSetCreate(d *schema.ResourceData, meta interface{}) error
 
 	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
-	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").(*schema.Set).List())
+	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").([]interface{}))
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
 		input.LoadBalancers = loadBalancers
@@ -338,10 +337,15 @@ func resourceAwsEcsTaskSetCreate(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(taskSet.TaskSetArn))
 
 	if d.Get("wait_until_stable").(bool) {
-		waitUntilStableTimeOut, err := time.ParseDuration(d.Get("wait_until_stable_timeout").(string))
-		if err != nil {
-			return err
+		waitUntilStableTimeOut := d.Timeout(schema.TimeoutCreate)
+		if v, ok := d.GetOk("wait_until_stable_timeout"); ok && v.(string) != "" {
+			timeout, err := time.ParseDuration(v.(string))
+			if err != nil {
+				return err
+			}
+			waitUntilStableTimeOut = timeout
 		}
+
 		// Wait until it's stable
 		wait := resource.StateChangeConf{
 			Pending: []string{ecs.StabilityStatusStabilizing},
@@ -532,9 +536,13 @@ func resourceAwsEcsTaskSetUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if d.Get("wait_until_stable").(bool) {
-			waitUntilStableTimeOut, err := time.ParseDuration(d.Get("wait_until_stable_timeout").(string))
-			if err != nil {
-				return err
+			waitUntilStableTimeOut := d.Timeout(schema.TimeoutUpdate)
+			if v, ok := d.GetOk("wait_until_stable_timeout"); ok && v.(string) != "" {
+				timeout, err := time.ParseDuration(v.(string))
+				if err != nil {
+					return err
+				}
+				waitUntilStableTimeOut = timeout
 			}
 
 			// Wait until it's stable
