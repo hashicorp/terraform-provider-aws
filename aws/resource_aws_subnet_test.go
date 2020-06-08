@@ -212,7 +212,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &before),
-					testAccCheckAwsSubnetIpv6BeforeUpdate(t, &before),
+					testAccCheckAwsSubnetIpv6BeforeUpdate(&before),
 				),
 			},
 			{
@@ -224,7 +224,7 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 				Config: testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubnetExists(resourceName, &after),
-					testAccCheckAwsSubnetIpv6AfterUpdate(t, &after),
+					testAccCheckAwsSubnetIpv6AfterUpdate(&after),
 				),
 			},
 			{
