@@ -102,9 +102,10 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 							ForceNew: true,
 						},
 						"target_group_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validateArn,
 						},
 						"container_name": {
 							Type:     schema.TypeString,
@@ -115,7 +116,7 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(0, 65536),
+							ValidateFunc: validation.IsPortNumber,
 						},
 					},
 				},
@@ -135,12 +136,12 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 						"container_port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 65536),
+							ValidateFunc: validation.IsPortNumber,
 						},
 						"port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(0, 65536),
+							ValidateFunc: validation.IsPortNumber,
 						},
 						"registry_arn": {
 							Type:         schema.TypeString,
@@ -311,16 +312,10 @@ func resourceAwsEcsTaskSetCreate(d *schema.ResourceData, meta interface{}) error
 		out, err = conn.CreateTaskSet(&input)
 
 		if err != nil {
-			if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
-				return resource.RetryableError(err)
-			}
-			if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+			if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") ||
+				isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") ||
+				isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") ||
+				isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -364,8 +359,8 @@ func resourceAwsEcsTaskSetCreate(d *schema.ResourceData, meta interface{}) error
 					return resp, "FAILED", err
 				}
 
-				log.Printf("[DEBUG] ECS task set (%s) is currently %q", d.Id(), *resp.TaskSets[0].StabilityStatus)
-				return resp, *resp.TaskSets[0].StabilityStatus, nil
+				log.Printf("[DEBUG] ECS task set (%s) is currently %s", d.Id(), aws.StringValue(resp.TaskSets[0].StabilityStatus))
+				return resp, aws.StringValue(resp.TaskSets[0].StabilityStatus), nil
 			},
 		}
 
@@ -396,7 +391,10 @@ func resourceAwsEcsTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 		var err error
 		out, err = conn.DescribeTaskSets(&input)
 		if err != nil {
-			if d.IsNewResource() && isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") || isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") || isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
+			if d.IsNewResource() &&
+				isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") ||
+				isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") ||
+				isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
 				return resource.RetryableError(err)
 			}
 			return resource.NonRetryableError(err)
@@ -420,17 +418,9 @@ func resourceAwsEcsTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	// after retrying
 	if err != nil {
-		if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
-			log.Printf("[WARN] ECS TaskSet (%s) not found because cluster(%s) isn't found , removing from state", d.Id(), cluster)
-			d.SetId("")
-			return nil
-		}
-		if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
-			log.Printf("[WARN] ECS TaskSet (%s) not found because service(%s) isn't found , removing from state", d.Id(), service)
-			d.SetId("")
-			return nil
-		}
-		if isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
+		if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") ||
+			isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") ||
+			isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
 			log.Printf("[WARN] ECS TaskSet (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -523,16 +513,10 @@ func resourceAwsEcsTaskSetUpdate(d *schema.ResourceData, meta interface{}) error
 		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
 			_, err := conn.UpdateTaskSet(&input)
 			if err != nil {
-				if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
+				if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") ||
+					isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") ||
+					isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") ||
+					isAWSErr(err, ecs.ErrCodeInvalidParameterException, "does not have an associated load balancer") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
@@ -609,7 +593,7 @@ func resourceAwsEcsTaskSetDelete(d *schema.ResourceData, meta interface{}) error
 		return nil
 	}
 
-	log.Printf("[DEBUG] ECS TaskSet %s is currently %s", d.Id(), *resp.TaskSets[0].Status)
+	log.Printf("[DEBUG] ECS TaskSet %s is currently %s", d.Id(), aws.StringValue(resp.TaskSets[0].Status))
 
 	input := ecs.DeleteTaskSetInput{
 		Cluster: aws.String(d.Get("cluster").(string)),
@@ -670,8 +654,8 @@ func resourceAwsEcsTaskSetDelete(d *schema.ResourceData, meta interface{}) error
 				return resp, "INACTIVE", nil
 			}
 
-			log.Printf("[DEBUG] ECS task set (%s) is currently %q", d.Id(), *resp.TaskSets[0].Status)
-			return resp, *resp.TaskSets[0].Status, nil
+			log.Printf("[DEBUG] ECS task set (%s) is currently %s", d.Id(), aws.StringValue(resp.TaskSets[0].Status))
+			return resp, aws.StringValue(resp.TaskSets[0].Status), nil
 		},
 	}
 
