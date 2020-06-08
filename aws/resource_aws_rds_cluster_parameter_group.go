@@ -276,39 +276,20 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsRDSClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"pending"},
-		Target:     []string{"destroyed"},
-		Refresh:    resourceAwsRDSClusterParameterGroupDeleteRefreshFunc(d, meta),
-		Timeout:    3 * time.Minute,
-		MinTimeout: 1 * time.Second,
-	}
-	_, err := stateConf.WaitForState()
-	return err
+	rdsconn := meta.(*AWSClient).rdsconn
+	return deleteRDSClusterParameterGroup(rdsconn, d.Id())
 }
 
-func resourceAwsRDSClusterParameterGroupDeleteRefreshFunc(
-	d *schema.ResourceData,
-	meta interface{}) resource.StateRefreshFunc {
-	rdsconn := meta.(*AWSClient).rdsconn
-
-	return func() (interface{}, string, error) {
-
-		deleteOpts := rds.DeleteDBClusterParameterGroupInput{
-			DBClusterParameterGroupName: aws.String(d.Id()),
-		}
-
-		if _, err := rdsconn.DeleteDBClusterParameterGroup(&deleteOpts); err != nil {
-			rdserr, ok := err.(awserr.Error)
-			if !ok {
-				return d, "error", err
-			}
-
-			if rdserr.Code() != "DBParameterGroupNotFound" {
-				return d, "error", err
-			}
-		}
-
-		return d, "destroyed", nil
+func deleteRDSClusterParameterGroup(conn *rds.RDS, id string) error {
+	input := rds.DeleteDBClusterParameterGroupInput{
+		DBClusterParameterGroupName: aws.String(id),
 	}
+
+	if _, err := conn.DeleteDBClusterParameterGroup(&input); err != nil {
+		if isAWSErr(err, rds.ErrCodeDBParameterGroupNotFoundFault, "") {
+			return nil
+		}
+		return err
+	}
+	return nil
 }

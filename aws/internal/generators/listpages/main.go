@@ -22,6 +22,7 @@ const (
 
 var (
 	functionNames = flag.String("function", "", "comma-separated list of API List functions; required")
+	paginatorName = flag.String("paginator", "NextToken", "name of the pagination token field")
 	packageName   = flag.String("package", "", "override package name for generated code")
 )
 
@@ -52,7 +53,8 @@ func main() {
 	sort.Strings(functions)
 
 	g := Generator{
-		tmpl: template.Must(template.New("function").Parse(functionTemplate)),
+		paginator: *paginatorName,
+		tmpl:      template.Must(template.New("function").Parse(functionTemplate)),
 	}
 	g.parsePackage(sourcePackage)
 
@@ -81,9 +83,10 @@ type HeaderInfo struct {
 }
 
 type Generator struct {
-	buf  bytes.Buffer
-	pkg  *Package
-	tmpl *template.Template
+	buf       bytes.Buffer
+	pkg       *Package
+	tmpl      *template.Template
+	paginator string
 }
 
 func (g *Generator) Printf(format string, args ...interface{}) {
@@ -139,6 +142,7 @@ type FuncSpec struct {
 	RecvType   string
 	ParamType  string
 	ResultType string
+	Paginator  string
 }
 
 func (g *Generator) generateFunction(functionName string) {
@@ -170,6 +174,7 @@ func (g *Generator) generateFunction(functionName string) {
 		RecvType:   g.expandTypeField(function.Recv),
 		ParamType:  g.expandTypeField(function.Type.Params),  // Assumes there is a single input parameter
 		ResultType: g.expandTypeField(function.Type.Results), // Assumes we can take the first return parameter
+		Paginator:  g.paginator,
 	}
 
 	err := g.tmpl.Execute(&g.buf, funcSpec)
@@ -216,12 +221,12 @@ func {{ .Name }}Pages(conn {{ .RecvType }}, input {{ .ParamType }}, fn func({{ .
 			return err
 		}
 
-		lastPage := aws.StringValue(output.NextToken) == ""
+		lastPage := aws.StringValue(output.{{ .Paginator }}) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
 
-		input.NextToken = output.NextToken
+		input.{{ .Paginator }} = output.{{ .Paginator }}
 	}
 	return nil
 }
