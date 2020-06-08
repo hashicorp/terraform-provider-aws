@@ -1,5 +1,9 @@
 ## 2.66.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_wafv2_rule_group` [GH-12677]
+
 BUG FIXES:
 
 * resource/aws_autoscaling_group: Allow `on_demand_base_capacity` to be set to 0 [GH-13623] 
