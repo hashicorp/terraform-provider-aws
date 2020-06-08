@@ -210,22 +210,43 @@ func resourceAwsCloudFormationStackSetInstanceDelete(d *schema.ResourceData, met
 	conn := meta.(*AWSClient).cfconn
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
-	return deleteCloudFormationStackSetInstance(conn, d.Id(), d.Get("retain_stack").(bool), d.Timeout(schema.TimeoutDelete))
-}
-
-func deleteCloudFormationStackSetInstance(conn *cloudformation.CloudFormation, id string, retainStack bool, timeout time.Duration) error {
-	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(id)
+	input, err := deleteCloudFormationStackSetInstanceInputFromResourceData(d)
 	if err != nil {
 		return err
 	}
+	return deleteCloudFormationStackSetInstance(conn, input, d.Timeout(schema.TimeoutDelete))
+}
 
-	input := &cloudformation.DeleteStackInstancesInput{
-		Accounts:     aws.StringSlice([]string{accountID}),
-		OperationId:  aws.String(resource.UniqueId()),
-		Regions:      aws.StringSlice([]string{region}),
-		RetainStacks: aws.Bool(retainStack),
-		StackSetName: aws.String(stackSetName),
+func deleteCloudFormationStackSetInstanceInputFromResourceData(d *schema.ResourceData) (*cloudformation.DeleteStackInstancesInput, error) {
+	stackSetName, accountID, region, err := resourceAwsCloudFormationStackSetInstanceParseId(d.Id())
+	if err != nil {
+		return nil, err
 	}
+
+	return &cloudformation.DeleteStackInstancesInput{
+		OperationId:  aws.String(resource.UniqueId()),
+		Accounts:     aws.StringSlice([]string{accountID}),
+		Regions:      aws.StringSlice([]string{region}),
+		StackSetName: aws.String(stackSetName),
+		RetainStacks: aws.Bool(d.Get("retain_stack").(bool)),
+	}, nil
+}
+
+func deleteCloudFormationStackSetInstanceInputFromAPIResource(p *cloudformation.StackSetSummary, r *cloudformation.StackInstanceSummary) *cloudformation.DeleteStackInstancesInput {
+	return &cloudformation.DeleteStackInstancesInput{
+		OperationId:  aws.String(resource.UniqueId()),
+		Accounts:     []*string{r.Account},
+		Regions:      []*string{r.Region},
+		StackSetName: p.StackSetName,
+		RetainStacks: aws.Bool(false),
+	}
+}
+
+func deleteCloudFormationStackSetInstance(conn *cloudformation.CloudFormation, input *cloudformation.DeleteStackInstancesInput, timeout time.Duration) error {
+	stackSetName := aws.StringValue(input.StackSetName)
+	accountID := aws.StringValue(input.Accounts[0])
+	region := aws.StringValue(input.Regions[0])
+	id := resourceAwsCloudFormationStackSetInstanceCreateId(stackSetName, accountID, region)
 
 	output, err := conn.DeleteStackInstances(input)
 	if isAWSErr(err, cloudformation.ErrCodeStackInstanceNotFoundException, "") {

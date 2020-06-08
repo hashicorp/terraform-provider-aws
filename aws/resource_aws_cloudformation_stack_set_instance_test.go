@@ -48,7 +48,7 @@ func testSweepCloudformationStackSetInstances(region string) error {
 					id := resourceAwsCloudFormationStackSetInstanceCreateId(stackSetName, accountID, region)
 
 					log.Printf("[INFO] Deleting CloudFormation StackSet Instance: %s", id)
-					err := deleteCloudFormationStackSetInstance(conn, id, false, StackSetInstanceDeletedTimeout)
+					err := deleteCloudFormationStackSetInstance(conn, deleteCloudFormationStackSetInstanceInputFromAPIResource(set, instance), StackSetInstanceDeletedTimeout)
 
 					if err != nil {
 						log.Printf("[ERROR] %s", err)

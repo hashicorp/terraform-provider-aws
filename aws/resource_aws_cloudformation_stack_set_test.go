@@ -56,7 +56,7 @@ func testSweepCloudformationStackSets(region string) error {
 			name := aws.StringValue(stackSet.StackSetName)
 
 			log.Printf("[INFO] Deleting CloudFormation StackSet: %s", name)
-			err := deleteCloudFormationStackSet(conn, name)
+			err := deleteCloudFormationStackSet(conn, deleteCloudFormationStackSetInputFromAPIResource(stackSet))
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting CloudFormation StackSet (%s): %w", name, err))
 				continue

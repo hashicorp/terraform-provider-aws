@@ -277,19 +277,30 @@ func resourceAwsRDSClusterParameterGroupUpdate(d *schema.ResourceData, meta inte
 
 func resourceAwsRDSClusterParameterGroupDelete(d *schema.ResourceData, meta interface{}) error {
 	rdsconn := meta.(*AWSClient).rdsconn
-	return deleteRDSClusterParameterGroup(rdsconn, d.Id())
-}
 
-func deleteRDSClusterParameterGroup(conn *rds.RDS, id string) error {
-	input := rds.DeleteDBClusterParameterGroupInput{
-		DBClusterParameterGroupName: aws.String(id),
-	}
-
-	if _, err := conn.DeleteDBClusterParameterGroup(&input); err != nil {
-		if isAWSErr(err, rds.ErrCodeDBParameterGroupNotFoundFault, "") {
-			return nil
-		}
+	input, err := deleteRDSClusterParameterGroupInputFromResourceData(d)
+	if err != nil {
 		return err
 	}
-	return nil
+	return deleteRDSClusterParameterGroup(rdsconn, input)
+}
+
+func deleteRDSClusterParameterGroupInputFromResourceData(d *schema.ResourceData) (*rds.DeleteDBClusterParameterGroupInput, error) {
+	return &rds.DeleteDBClusterParameterGroupInput{
+		DBClusterParameterGroupName: aws.String(d.Id()),
+	}, nil
+}
+
+func deleteRDSClusterParameterGroupInputFromAPIResource(r *rds.DBClusterParameterGroup) *rds.DeleteDBClusterParameterGroupInput {
+	return &rds.DeleteDBClusterParameterGroupInput{
+		DBClusterParameterGroupName: r.DBClusterParameterGroupName,
+	}
+}
+
+func deleteRDSClusterParameterGroup(conn *rds.RDS, input *rds.DeleteDBClusterParameterGroupInput) error {
+	_, err := conn.DeleteDBClusterParameterGroup(input)
+	if isAWSErr(err, rds.ErrCodeDBParameterGroupNotFoundFault, "") {
+		return nil
+	}
+	return err
 }

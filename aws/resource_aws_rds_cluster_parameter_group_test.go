@@ -52,7 +52,7 @@ func testSweepRdsClusterParameterGroups(region string) error {
 
 			log.Printf("[INFO] Deleting DB Cluster Parameter Group: %s", name)
 
-			err := deleteRDSClusterParameterGroup(conn, aws.StringValue(dbcpg.DBClusterParameterGroupName))
+			err := deleteRDSClusterParameterGroup(conn, deleteRDSClusterParameterGroupInputFromAPIResource(dbcpg))
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete DB Cluster Parameter Group %s: %s", name, err)
 				sweeperErrs = multierror.Append(sweeperErrs, err)
