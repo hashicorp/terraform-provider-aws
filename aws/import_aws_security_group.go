@@ -184,9 +184,7 @@ func resourceAwsSecurityGroupImportStatePermPair(sg *ec2.SecurityGroup, ruleType
 		}
 	}
 
-	if err := setFromIPPerm(d, sg, perm); err != nil {
-		return nil, fmt.Errorf("Error importing AWS Security Group: %s", err)
-	}
+	setFromIPPerm(d, sg, perm)
 
 	return d, nil
 }

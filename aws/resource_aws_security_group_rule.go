@@ -30,9 +30,7 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 				if err != nil {
 					return nil, err
 				}
-				if err := populateSecurityGroupRuleFromImport(d, importParts); err != nil {
-					return nil, err
-				}
+				populateSecurityGroupRuleFromImport(d, importParts)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -326,9 +324,8 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 	log.Printf("[DEBUG] Found rule for Security Group Rule (%s): %s", d.Id(), rule)
 
 	d.Set("type", ruleType)
-	if err := setFromIPPerm(d, sg, p); err != nil {
-		return fmt.Errorf("Error setting IP Permission for Security Group Rule: %s", err)
-	}
+
+	setFromIPPerm(d, sg, p)
 
 	d.Set("description", descriptionFromIPPerm(d, rule))
 
@@ -731,7 +728,7 @@ func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermiss
 	return &perm, nil
 }
 
-func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPermission) error {
+func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPermission) {
 	isVPC := sg.VpcId != nil && *sg.VpcId != ""
 
 	d.Set("from_port", rule.FromPort)
@@ -777,8 +774,6 @@ func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPe
 			d.Set("source_security_group_id", s.GroupName)
 		}
 	}
-
-	return nil
 }
 
 func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) string {
@@ -998,7 +993,7 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 	return importParts, nil
 }
 
-func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []string) error {
+func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []string) {
 	log.Printf("[DEBUG] Populating resource data on import: %v", importParts)
 
 	sgID := importParts[0]
@@ -1040,6 +1035,4 @@ func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []s
 	d.Set("ipv6_cidr_blocks", ipv6cidrs)
 	d.Set("cidr_blocks", cidrs)
 	d.Set("prefix_list_ids", prefixList)
-
-	return nil
 }
