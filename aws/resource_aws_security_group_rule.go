@@ -329,7 +329,6 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 
 	setFromIPPerm(d, sg, p)
 
-
 	d.Set("description", descriptionFromIPPerm(d, rule))
 
 	if strings.Contains(d.Id(), "_") {
