@@ -100,7 +100,7 @@ func expandListeners(configured []interface{}) ([]*elb.Listener, error) {
 
 // Takes the result of flatmap. Expand for an array of listeners and
 // returns ECS Volume compatible objects
-func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
+func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 	volumes := make([]*ecs.Volume, 0, len(configured))
 
 	// Loop over our configured volumes and create
@@ -165,7 +165,7 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 		volumes = append(volumes, l)
 	}
 
-	return volumes, nil
+	return volumes
 }
 
 // Takes JSON in a string. Decodes JSON into
