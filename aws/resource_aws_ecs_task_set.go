@@ -26,11 +26,16 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Read:   schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"service": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -89,7 +94,7 @@ func resourceAwsEcsTaskSet() *schema.Resource {
 			// If you are using the CodeDeploy or an external deployment controller,
 			// multiple target groups are not supported.
 			// https://docs.aws.amazon.com/AmazonECS/latest/developerguide/register-multiple-targetgroups.html
-			"load_balancer": {
+			"load_balancers": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
@@ -280,7 +285,7 @@ func resourceAwsEcsTaskSetCreate(d *schema.ResourceData, meta interface{}) error
 
 	input.CapacityProviderStrategy = expandEcsCapacityProviderStrategy(d.Get("capacity_provider_strategy").(*schema.Set))
 
-	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancer").([]interface{}))
+	loadBalancers := expandEcsLoadBalancers(d.Get("load_balancers").([]interface{}))
 	if len(loadBalancers) > 0 {
 		log.Printf("[DEBUG] Adding ECS load balancers: %s", loadBalancers)
 		input.LoadBalancers = loadBalancers
@@ -307,7 +312,7 @@ func resourceAwsEcsTaskSetCreate(d *schema.ResourceData, meta interface{}) error
 	// Retry due to AWS IAM & ECS eventual consistency
 	var out *ecs.CreateTaskSetOutput
 	var err error
-	err = resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		out, err = conn.CreateTaskSet(&input)
 
 		if err != nil {
@@ -333,8 +338,8 @@ func resourceAwsEcsTaskSetCreate(d *schema.ResourceData, meta interface{}) error
 
 	taskSet := *out.TaskSet
 
-	log.Printf("[DEBUG] ECS Task set created: %s", aws.StringValue(taskSet.TaskSetArn))
-	d.SetId(aws.StringValue(taskSet.TaskSetArn))
+	log.Printf("[DEBUG] ECS Task set created: %s", aws.StringValue(taskSet.Id))
+	d.SetId(aws.StringValue(taskSet.Id))
 
 	if d.Get("wait_until_stable").(bool) {
 		waitUntilStableTimeOut := d.Timeout(schema.TimeoutCreate)
@@ -391,7 +396,7 @@ func resourceAwsEcsTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var out *ecs.DescribeTaskSetsOutput
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutRead), func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeTaskSets(&input)
 		if err != nil {
@@ -449,7 +454,8 @@ func resourceAwsEcsTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 
 	log.Printf("[DEBUG] Received ECS task set %s", taskSet)
 
-	d.SetId(aws.StringValue(taskSet.TaskSetArn))
+	d.SetId(aws.StringValue(taskSet.Id))
+	d.Set("arn", taskSet.TaskSetArn)
 	d.Set("launch_type", taskSet.LaunchType)
 	d.Set("platform_version", taskSet.PlatformVersion)
 	d.Set("external_id", taskSet.ExternalId)
@@ -471,7 +477,7 @@ func resourceAwsEcsTaskSetRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if taskSet.LoadBalancers != nil {
-		d.Set("load_balancer", flattenEcsLoadBalancers(taskSet.LoadBalancers))
+		d.Set("load_balancers", flattenEcsLoadBalancers(taskSet.LoadBalancers))
 	}
 
 	if err := d.Set("scale", flattenAwsEcsScale(taskSet.Scale)); err != nil {
@@ -514,7 +520,7 @@ func resourceAwsEcsTaskSetUpdate(d *schema.ResourceData, meta interface{}) error
 	if updateTaskset {
 		log.Printf("[DEBUG] Updating ECS Task Set (%s): %s", d.Id(), input)
 		// Retry due to IAM eventual consistency
-		err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		err := resource.Retry(d.Timeout(schema.TimeoutUpdate), func() *resource.RetryError {
 			_, err := conn.UpdateTaskSet(&input)
 			if err != nil {
 				if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") ||
@@ -614,7 +620,7 @@ func resourceAwsEcsTaskSetDelete(d *schema.ResourceData, meta interface{}) error
 	}
 
 	// Wait until the ECS task set is drained
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err = resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		log.Printf("[DEBUG] Trying to delete ECS task set %s", input)
 		_, err := conn.DeleteTaskSet(&input)
 		if err != nil {

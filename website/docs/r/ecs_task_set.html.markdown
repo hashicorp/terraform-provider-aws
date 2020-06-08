@@ -117,4 +117,5 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The Amazon Resource Name (ARN) that identifies the task set
+* `id` - The ID of the task set
+* `arn` - The Amazon Resource Name (ARN) that identifies the task set

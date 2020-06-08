@@ -12,6 +12,32 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
+func TestAccAwsEcsTaskSet_basic(t *testing.T) {
+	var taskSet ecs.TaskSet
+
+	clusterName := acctest.RandomWithPrefix("tf-acc-cluster")
+	tdName := acctest.RandomWithPrefix("tf-acc-td")
+	svcName := acctest.RandomWithPrefix("tf-acc-svc")
+	resourceName := "aws_ecs_task_set.mongo"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsTaskSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsTaskSet(clusterName, tdName, svcName, 0.0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
+					testAccCheckAwsEcsTaskSetArn(resourceName, clusterName, svcName, &taskSet),
+					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsTaskSet_withARN(t *testing.T) {
 	var taskSet ecs.TaskSet
 
@@ -30,7 +56,7 @@ func TestAccAWSEcsTaskSet_withARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
 				),
 			},
 
@@ -39,7 +65,7 @@ func TestAccAWSEcsTaskSet_withARN(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "external_id", "TEST_ID"),
 				),
 			},
@@ -178,7 +204,7 @@ func TestAccAWSEcsTaskSet_withAlb(t *testing.T) {
 				Config: testAccAWSEcsTaskSetWithAlb(clusterName, tdName, lbName, svcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskSetExists(resourceName, &taskSet),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
 				),
 			},
 		},
@@ -589,7 +615,7 @@ resource "aws_ecs_task_set" "with_alb" {
   service         = "${aws_ecs_service.with_alb.id}"
   cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.with_lb_changes.arn}"
-  load_balancer {
+  load_balancers {
     target_group_arn = "${aws_lb_target_group.test.id}"
     container_name   = "ghost"
     container_port   = "2368"
@@ -952,6 +978,14 @@ resource "aws_ecs_task_set" "main" {
 // Utils //
 ///////////
 
+func testAccCheckAwsEcsTaskSetArn(resourceName, clusterName, svcName string, m *ecs.TaskSet) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		id := aws.StringValue(m.Id)
+		taskSetArnPrefix := fmt.Sprintf("task-set/%s/%s/%s", clusterName, svcName, id)
+		return testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ecs", taskSetArnPrefix)(s)
+	}
+}
+
 func testAccCheckAWSEcsTaskSetExists(name string, taskSet *ecs.TaskSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -972,13 +1006,9 @@ func testAccCheckAWSEcsTaskSetExists(name string, taskSet *ecs.TaskSet) resource
 			output, err = conn.DescribeTaskSets(input)
 
 			if err != nil {
-				if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") {
-					return resource.RetryableError(err)
-				}
-				if isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
+				if isAWSErr(err, ecs.ErrCodeClusterNotFoundException, "") ||
+					isAWSErr(err, ecs.ErrCodeServiceNotFoundException, "") ||
+					isAWSErr(err, ecs.ErrCodeTaskSetNotFoundException, "") {
 					return resource.RetryableError(err)
 				}
 				return resource.NonRetryableError(err)
