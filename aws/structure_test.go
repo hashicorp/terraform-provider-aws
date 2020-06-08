@@ -566,10 +566,7 @@ func TestExpandParameters(t *testing.T) {
 			"apply_method": "immediate",
 		},
 	}
-	parameters, err := expandParameters(expanded)
-	if err != nil {
-		t.Fatalf("bad: %#v", err)
-	}
+	parameters := expandParameters(expanded)
 
 	expected := &rds.Parameter{
 		ParameterName:  aws.String("character_set_client"),

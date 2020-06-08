@@ -321,7 +321,7 @@ func expandIPPerms(
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandParameters(configured []interface{}) ([]*rds.Parameter, error) {
+func expandParameters(configured []interface{}) []*rds.Parameter {
 	var parameters []*rds.Parameter
 
 	// Loop over our configured parameters and create
@@ -342,7 +342,7 @@ func expandParameters(configured []interface{}) ([]*rds.Parameter, error) {
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 func expandRedshiftParameters(configured []interface{}) ([]*redshift.Parameter, error) {
