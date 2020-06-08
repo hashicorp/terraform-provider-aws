@@ -66,7 +66,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating EC2 Tag (%s) for resource (%s): %w", key, resourceID, err)
 	}
 
 	// Handle EC2 eventual consistency on creation
