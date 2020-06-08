@@ -518,7 +518,7 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 					computeWafv2IpSetRefStatementIndex(&v, &idx),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.#", &idx, "1"),
-					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.0.arn", &idx,  regexp.MustCompile(`regional/ipset/.+$`)),
+					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/ipset/.+$`)),
 				),
 			},
 			{
