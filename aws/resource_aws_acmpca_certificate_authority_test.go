@@ -41,24 +41,45 @@ func testSweepAcmpcaCertificateAuthorities(region string) error {
 		return nil
 	}
 
+	var sweeperErrs *multierror.Error
+
 	for _, certificateAuthority := range certificateAuthorities {
 		arn := aws.StringValue(certificateAuthority.Arn)
-		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
-		input := &acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn:     aws.String(arn),
-			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
-		}
 
-		_, err := conn.DeleteCertificateAuthority(input)
-		if err != nil {
+		if aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusActive {
+			log.Printf("[INFO] Disabling ACMPCA Certificate Authority: %s", arn)
+			_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
+				CertificateAuthorityArn: aws.String(arn),
+				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+			})
 			if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
 				continue
 			}
-			log.Printf("[ERROR] Failed to delete ACMPCA Certificate Authority (%s): %s", arn, err)
+			if err != nil {
+				sweeperErr := fmt.Errorf("error disabling ACMPCA Certificate Authority (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		log.Printf("[INFO] Deleting ACMPCA Certificate Authority: %s", arn)
+		_, err := conn.DeleteCertificateAuthority(&acmpca.DeleteCertificateAuthorityInput{
+			CertificateAuthorityArn:     aws.String(arn),
+			PermanentDeletionTimeInDays: aws.Int64(int64(7)),
+		})
+		if isAWSErr(err, acmpca.ErrCodeResourceNotFoundException, "") {
+			continue
+		}
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting ACMPCA Certificate Authority (%s): %w", arn, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
 		}
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAwsAcmpcaCertificateAuthority_basic(t *testing.T) {

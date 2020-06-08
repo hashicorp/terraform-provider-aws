@@ -410,7 +410,10 @@ func resourceAwsAcmpcaCertificateAuthorityRead(d *schema.ResourceData, meta inte
 	tags, err := keyvaluetags.AcmpcaListTags(conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for ACMPCA Certificate Authority (%s): %s", d.Id(), err)
+		if !isAWSErr(err, acmpca.ErrCodeInvalidStateException, "") {
+			// InvalidStateException: The certificate authority is in the DELETED state and must be restored to complete this action.
+			return fmt.Errorf("error listing tags for ACMPCA Certificate Authority (%s): %s", d.Id(), err)
+		}
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
