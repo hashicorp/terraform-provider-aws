@@ -30,7 +30,9 @@ func resourceAwsSecurityGroupRule() *schema.Resource {
 				if err != nil {
 					return nil, err
 				}
-				populateSecurityGroupRuleFromImport(d, importParts)
+				if err := populateSecurityGroupRuleFromImport(d, importParts); err != nil {
+					return nil, err
+				}
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -326,6 +328,7 @@ func resourceAwsSecurityGroupRuleRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("type", ruleType)
 
 	setFromIPPerm(d, sg, p)
+
 
 	d.Set("description", descriptionFromIPPerm(d, rule))
 
@@ -729,7 +732,7 @@ func expandIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup) (*ec2.IpPermiss
 }
 
 func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPermission) {
-	isVPC := sg.VpcId != nil && *sg.VpcId != ""
+	isVPC := aws.StringValue(sg.VpcId) != ""
 
 	d.Set("from_port", rule.FromPort)
 	d.Set("to_port", rule.ToPort)
@@ -993,14 +996,20 @@ func validateSecurityGroupRuleImportString(importStr string) ([]string, error) {
 	return importParts, nil
 }
 
-func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []string) {
+func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []string) error {
 	log.Printf("[DEBUG] Populating resource data on import: %v", importParts)
 
 	sgID := importParts[0]
 	ruleType := importParts[1]
 	protocol := importParts[2]
-	fromPort, _ := strconv.Atoi(importParts[3])
-	toPort, _ := strconv.Atoi(importParts[4])
+	fromPort, err := strconv.Atoi(importParts[3])
+	if err != nil {
+		return err
+	}
+	toPort, err := strconv.Atoi(importParts[4])
+	if err != nil {
+		return err
+	}
 	sources := importParts[5:]
 
 	d.Set("security_group_id", sgID)
@@ -1035,4 +1044,6 @@ func populateSecurityGroupRuleFromImport(d *schema.ResourceData, importParts []s
 	d.Set("ipv6_cidr_blocks", ipv6cidrs)
 	d.Set("cidr_blocks", cidrs)
 	d.Set("prefix_list_ids", prefixList)
+
+	return nil
 }
