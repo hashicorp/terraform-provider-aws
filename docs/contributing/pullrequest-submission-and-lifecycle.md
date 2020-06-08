@@ -52,6 +52,7 @@ We try to use a common set of branch name prefixes when submitting pull requests
 - f = feature
 - b = bug fix
 - d = documentation
+- t = tests
 - td = technical debt
 - v = "vendoring"/dependencies
 
