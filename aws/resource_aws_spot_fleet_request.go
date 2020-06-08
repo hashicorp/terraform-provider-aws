@@ -870,7 +870,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if launchTemplateConfigsOk {
-		launchTemplates:= buildLaunchTemplateConfigs(d)
+		launchTemplates := buildLaunchTemplateConfigs(d)
 		spotFleetConfig.LaunchTemplateConfigs = launchTemplates
 	}
 
