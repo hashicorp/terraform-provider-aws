@@ -333,7 +333,7 @@ func TestAccAWSSubnet_outpost(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsSubnetIpv6BeforeUpdate(t *testing.T, subnet *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckAwsSubnetIpv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
 			return fmt.Errorf("Expected IPV6 CIDR Block Association")
@@ -347,7 +347,7 @@ func testAccCheckAwsSubnetIpv6BeforeUpdate(t *testing.T, subnet *ec2.Subnet) res
 	}
 }
 
-func testAccCheckAwsSubnetIpv6AfterUpdate(t *testing.T, subnet *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckAwsSubnetIpv6AfterUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.BoolValue(subnet.AssignIpv6AddressOnCreation) {
 			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.BoolValue(subnet.AssignIpv6AddressOnCreation))
