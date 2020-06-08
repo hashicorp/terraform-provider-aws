@@ -4871,19 +4871,13 @@ resource "aws_instance" "test" {
 }
 `
 
-var testAccAwsEc2InstanceConfig_SingleDynamicEBSBlockDeviceFromAmi = composeConfig(`
-data "aws_ami" "test" {
-  most_recent = true
-  owners      = ["aws-marketplace"]
-  filter {
-    name   = "product-code"
-    values = ["aw0evgkw8e5c1q413zgy5pjce"]
-  }
-}
-`, testAccAWSEc2InstanceConfig_DynamicEBSBlocks)
+var testAccAwsEc2InstanceConfig_SingleDynamicEBSBlockDeviceFromAmi = composeConfig(
+	testAccAwsEc2InstanceAmiWithEbsRootVolume,
+	testAccAWSEc2InstanceConfig_DynamicEBSBlocks,
+)
 
 var testAccAwsEc2InstanceConfig_MultipleDynamicEBSBlockDevicesFromAmi = composeConfig(`
-data "aws_ami" "test" {
+data "aws_ami" "ami" {
   most_recent = true
 
   owners = ["679593333241"] # The official CIS account
@@ -4909,11 +4903,11 @@ data "aws_ami" "test" {
 
 const testAccAWSEc2InstanceConfig_DynamicEBSBlocks = `
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.test.id
+  ami           = data.aws_ami.ami.id
   instance_type = "m3.medium"
 
   dynamic "ebs_block_device" {
-    for_each = data.aws_ami.test.block_device_mappings
+    for_each = data.aws_ami.ami.block_device_mappings
     iterator = device
     content {
       device_name = device.value["device_name"]
