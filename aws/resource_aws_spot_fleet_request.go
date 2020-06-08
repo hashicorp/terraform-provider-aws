@@ -765,7 +765,7 @@ func buildAwsSpotFleetLaunchSpecifications(
 	return specs, nil
 }
 
-func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateConfig, error) {
+func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateConfig {
 	launchTemplateConfigs := d.Get("launch_template_config").(*schema.Set)
 	configs := make([]*ec2.LaunchTemplateConfig, 0)
 
@@ -839,7 +839,7 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateCo
 		configs = append(configs, ltc)
 	}
 
-	return configs, nil
+	return configs
 }
 
 func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
@@ -870,10 +870,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if launchTemplateConfigsOk {
-		launchTemplates, err := buildLaunchTemplateConfigs(d)
-		if err != nil {
-			return err
-		}
+		launchTemplates:= buildLaunchTemplateConfigs(d)
 		spotFleetConfig.LaunchTemplateConfigs = launchTemplates
 	}
 
