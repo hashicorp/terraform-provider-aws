@@ -14,7 +14,8 @@ func TestAccAWSEc2ResourceTag_basic(t *testing.T) {
 	var tag ec2.TagDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProviderConfigIgnoreTagsKeys1("Name") + testAccEc2ResourceTagConfig,
@@ -33,7 +34,8 @@ func TestAccAWSEc2ResourceTag_OutOfBandDelete(t *testing.T) {
 	var tag ec2.TagDescription
 
 	resource.ParallelTest(t, resource.TestCase{
-		Providers: testAccProviders,
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEc2ResourceTagConfig,
