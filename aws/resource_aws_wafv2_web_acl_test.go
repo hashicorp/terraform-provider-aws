@@ -436,12 +436,6 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 	})
 }
 
-func testAccMatchResourceAttrArnWithIndexesAddr(name, format string, idx *int, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccMatchResourceAttrRegionalARN(name, fmt.Sprintf(format, *idx), arnService, arnResourceRegexp)(s)
-	}
-}
-
 // Calculates the index which isn't static because ARN is generated as part of the test
 func computeWafv2RuleGroupRefStatementIndex(r *wafv2.WebACL, idx *int, e []interface{}) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
