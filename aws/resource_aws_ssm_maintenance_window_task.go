@@ -228,6 +228,11 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 											ssm.DocumentHashTypeSha1,
 										}, false),
 									},
+									"document_version": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringMatch(regexp.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
+									},
 
 									"notification_config": {
 										Type:     schema.TypeList,
@@ -509,6 +514,9 @@ func expandAwsSsmTaskInvocationRunCommandParameters(config []interface{}) *ssm.M
 	if attr, ok := configParam["document_hash_type"]; ok && len(attr.(string)) != 0 {
 		params.DocumentHashType = aws.String(attr.(string))
 	}
+	if attr, ok := configParam["document_version"]; ok && len(attr.(string)) != 0 {
+		params.DocumentVersion = aws.String(attr.(string))
+	}
 	if attr, ok := configParam["notification_config"]; ok && len(attr.([]interface{})) > 0 {
 		params.NotificationConfig = expandAwsSsmTaskInvocationRunCommandParametersNotificationConfig(attr.([]interface{}))
 	}
@@ -541,6 +549,9 @@ func flattenAwsSsmTaskInvocationRunCommandParameters(parameters *ssm.Maintenance
 	}
 	if parameters.DocumentHashType != nil {
 		result["document_hash_type"] = aws.StringValue(parameters.DocumentHashType)
+	}
+	if parameters.DocumentVersion != nil {
+		result["document_version"] = aws.StringValue(parameters.DocumentVersion)
 	}
 	if parameters.NotificationConfig != nil {
 		result["notification_config"] = flattenAwsSsmTaskInvocationRunCommandParametersNotificationConfig(parameters.NotificationConfig)
