@@ -150,7 +150,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	tags, err := keyvaluetags.SsmListTags(ssmconn, name, ssm.ResourceTypeForTaggingParameter)
 
 	if err != nil {
-		return fmt.Errorf("error listing tags for SSM Maintenance Window (%s): %s", name, err)
+		return fmt.Errorf("error listing tags for SSM Parameter (%s): %s", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
