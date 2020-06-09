@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_wafv2_rule_group` [GH-12790]
 * **New Resource:** `aws_wafv2_rule_group` [GH-12677]
 
 BUG FIXES:
