@@ -1075,7 +1075,7 @@ func flattenCaseInsensitiveStringSet(list []*string) *schema.Set {
 // Takes list of pointers to int64s. Expand to an array
 // of raw ints and returns a []interface{}
 // to keep compatibility w/ schema.NewSet
-func flattenIntList(list []*int64) []interface{} {
+func flattenInt64List(list []*int64) []interface{} {
 	vs := make([]interface{}, 0, len(list))
 	for _, v := range list {
 		vs = append(vs, int(aws.Int64Value(v)))
@@ -1083,8 +1083,8 @@ func flattenIntList(list []*int64) []interface{} {
 	return vs
 }
 
-func flattenIntSet(list []*int64) *schema.Set {
-	return schema.NewSet(schema.HashInt, flattenIntList(list))
+func flattenInt64Set(list []*int64) *schema.Set {
+	return schema.NewSet(schema.HashInt, flattenInt64List(list))
 }
 
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
@@ -5228,7 +5228,7 @@ func flattenAppmeshClientPolicy(clientPolicy *appmesh.ClientPolicy) []interface{
 	if tls := clientPolicy.Tls; tls != nil {
 		mTls := map[string]interface{}{
 			"enforce": aws.BoolValue(tls.Enforce),
-			"ports":   flattenIntSet(tls.Ports),
+			"ports":   flattenInt64Set(tls.Ports),
 		}
 
 		if validation := tls.Validation; validation != nil {
