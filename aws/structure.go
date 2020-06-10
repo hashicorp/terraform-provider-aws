@@ -161,12 +161,8 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
 			}
 
-			if v, ok := config["transit_encryption"].(bool); ok {
-				if v {
-					l.EfsVolumeConfiguration.TransitEncryption = aws.String("ENABLED")
-				} else if !v {
-					l.EfsVolumeConfiguration.TransitEncryption = aws.String("DISABLED")
-				}
+			if v, ok := config["transit_encryption"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
 			}
 
 			if v, ok := config["transit_encryption_port"].(int64); ok && v != 0 {
@@ -178,12 +174,8 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 					l.EfsVolumeConfiguration.AuthorizationConfig.AccessPointId = aws.String(subV)
 				}
 
-				if subV, ok := v["iam_enabled"].(bool); ok {
-					if subV {
-						l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String("ENABLED")
-					} else if !subV {
-						l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String("DISABLED")
-					}
+				if subV, ok := v["iam"].(string); ok && subV != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String(subV)
 				}
 			}
 		}
@@ -776,11 +768,7 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 		}
 
 		if v := config.TransitEncryption; v != nil {
-			if v == aws.String("ENABLED") {
-				m["transit_encryption"] = aws.Bool(true)
-			} else if v == aws.String("DISABLED") {
-				m["transit_encryption"] = aws.Bool(false)
-			}
+			m["transit_encryption"] = aws.StringValue(v)
 		}
 
 		if v := config.TransitEncryptionPort; v != nil {
@@ -803,11 +791,7 @@ func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []i
 			m["access_point_id"] = aws.StringValue(v)
 		}
 		if v := config.Iam; v != nil {
-			if v == aws.String("ENABLED") {
-				m["iam_enabled"] = aws.Bool(true)
-			} else if v == aws.String("DISABLED") {
-				m["iam_enabled"] = aws.Bool(false)
-			}
+			m["iam"] = aws.StringValue(v)
 		}
 	}
 

@@ -197,7 +197,7 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Optional: true,
 									},
 									"transit_encryption": {
-										Type:     schema.TypeBool,
+										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
 									},
@@ -219,8 +219,8 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 													ForceNew: true,
 													Optional: true,
 												},
-												"iam_enabled": {
-													Type:     schema.TypeBool,
+												"iam": {
+													Type:     schema.TypeString,
 													ForceNew: true,
 													Optional: true,
 												},
