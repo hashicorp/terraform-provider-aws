@@ -163,7 +163,7 @@ For more information, see [Specifying an EFS volume in your Task Definition Deve
 
 * `file_system_id` - (Required) The ID of the EFS File System.
 * `root_directory` - (Optional) The directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter.
-* `transit_encryption` - (Optional) Boolean whether to use transit encryption.
+* `transit_encryption` - (Optional) Whether or not to enable encryption for Amazon EFS data in transit between the Amazon ECS host and the Amazon EFS server. Transit encryption must be enabled if Amazon EFS IAM authorization is used. Valid values: `ENABLED`, `DISABLED`. If this parameter is omitted, the default value of `DISABLED` is used.
 * `transit_encryption_port` - (Optional) The port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
 * `authorization_config` - (Optional) The authorization configuration details for the Amazon EFS file system. 
   * `access_point_id` - The access point ID to use. If an access point is specified, the root directory value will be relative to the directory set for the access point. If specified, transit encryption must be enabled in the EFSVolumeConfiguration. 
@@ -180,13 +180,13 @@ resource "aws_ecs_task_definition" "service" {
     name = "service-storage"
 
     efs_volume_configuration {
-      file_system_id          = "${aws_efs_file_system.fs.id}"
+      file_system_id          = aws_efs_file_system.fs.id
       root_directory          = "/opt/data"
       transit_encryption      = "ENABLED"
       transit_encryption_port = 2999
       authorization_config {
-        access_point_id = "${aws_efs_access_point.test.id}"
-        iam_enabled     = true
+        access_point_id = aws_efs_access_point.test.id
+        iam             = "ENABLED"
       }
     }
   }
