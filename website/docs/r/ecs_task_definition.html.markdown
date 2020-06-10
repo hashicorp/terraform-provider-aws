@@ -162,7 +162,7 @@ resource "aws_ecs_task_definition" "service" {
 For more information, see [Specifying an EFS volume in your Task Definition Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/efs-volumes.html#specify-efs-config)
 
 * `file_system_id` - (Required) The ID of the EFS File System.
-* `root_directory` - (Optional) The path to mount on the host
+* `root_directory` - (Optional) The directory within the Amazon EFS file system to mount as the root directory inside the host. If this parameter is omitted, the root of the Amazon EFS volume will be used. Specifying / will have the same effect as omitting this parameter.
 * `transit_encryption` - (Optional) Boolean whether to use transit encryption.
 * `transit_encryption_port` - (Optional) The port to use for transit encryption. If you do not specify a transit encryption port, it will use the port selection strategy that the Amazon EFS mount helper uses.
 * `authorization_config` - (Optional) The authorization configuration details for the Amazon EFS file system. 
