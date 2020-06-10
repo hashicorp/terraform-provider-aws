@@ -217,7 +217,7 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
   precedence over `min_elb_capacity` behavior.)
   (See also [Waiting for Capacity](#waiting-for-capacity) below.)
 * `protect_from_scale_in` (Optional) Allows setting instance protection. The
-   autoscaling group will not select instances with this setting for terminination
+   autoscaling group will not select instances with this setting for termination
    during scale in events.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 * `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 604800 and 31536000 seconds.
