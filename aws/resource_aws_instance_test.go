@@ -1798,6 +1798,52 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 	})
 }
 
+// Test to validate fix for GH-ISSUE #1318 (dynamic ebs_block_devices forcing replacement after state refresh)
+func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.T) {
+	var instance ec2.Instance
+
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckInstanceDestroy,
+		DisableBinaryDriver: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &instance),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.device_name", "/dev/sdc"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_type", "gp2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.delete_on_termination", "true"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.device_name", "/dev/sda"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.iops", "100"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.volume_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.volume_type", "gp2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSInstance_primaryNetworkInterface(t *testing.T) {
 	var instance ec2.Instance
 	var eni ec2.NetworkInterface
@@ -2938,22 +2984,6 @@ func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 		}
 
 		return waitForInstanceStopping(conn, *instance.InstanceId, 10*time.Minute)
-	}
-}
-
-func TestInstanceTenancySchema(t *testing.T) {
-	actualSchema := resourceAwsInstance().Schema["tenancy"]
-	expectedSchema := &schema.Schema{
-		Type:     schema.TypeString,
-		Optional: true,
-		Computed: true,
-		ForceNew: true,
-	}
-	if !reflect.DeepEqual(actualSchema, expectedSchema) {
-		t.Fatalf(
-			"Got:\n\n%#v\n\nExpected:\n\n%#v\n",
-			actualSchema,
-			expectedSchema)
 	}
 }
 
@@ -4737,3 +4767,20 @@ data "aws_ec2_instance_type_offering" "available" {
 }
 `, strings.Join(preferredInstanceTypes, "\", \""))
 }
+
+const testAccAwsEc2InstanceConfigDynamicEBSBlockDevices = `
+resource "aws_instance" "test" {
+  ami           = "ami-55a7ea65"
+  instance_type = "m3.medium"
+
+  dynamic "ebs_block_device" {
+    for_each = ["a", "b", "c"]
+    iterator = device
+    content {
+      device_name = format("/dev/sd%s", device.value)
+      volume_size = "10"
+      volume_type = "gp2"
+    }
+  }
+}
+`
