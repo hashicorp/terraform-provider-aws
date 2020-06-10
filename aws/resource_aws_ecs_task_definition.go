@@ -631,6 +631,23 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 		if v, ok := m["root_directory"]; ok && v.(string) != "" {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
+
+		if v, ok := m["transit_encryption"]; ok && v.(string) != "" {
+			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+		}
+		if v, ok := m["transit_encryption_port"]; ok && v.(int) >= 0 {
+			buf.WriteString(fmt.Sprintf("%d-", v.(int)))
+		}
+		if v, ok := m["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			m := v.([]interface{})[0].(map[string]interface{})
+			if v, ok := m["access_point_id"]; ok && v.(string) != "" {
+				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+			}
+			if v, ok := m["iam"]; ok && v.(string) != "" {
+				buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+			}
+		}
+
 	}
 
 	return hashcode.String(buf.String())
