@@ -334,6 +334,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_rate_based_rule":               dataSourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
+			"aws_wafv2_ip_set":                              dataSourceAwsWafv2IPSet(),
+			"aws_wafv2_regex_pattern_set":                   dataSourceAwsWafv2RegexPatternSet(),
+			"aws_wafv2_rule_group":                          dataSourceAwsWafv2RuleGroup(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
 			// Adding the Aliases for the ALB -> LB Rename
@@ -553,6 +556,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecs_task_definition":                                 resourceAwsEcsTaskDefinition(),
 			"aws_efs_access_point":                                    resourceAwsEfsAccessPoint(),
 			"aws_efs_file_system":                                     resourceAwsEfsFileSystem(),
+			"aws_efs_file_system_policy":                              resourceAwsEfsFileSystemPolicy(),
 			"aws_efs_mount_target":                                    resourceAwsEfsMountTarget(),
 			"aws_egress_only_internet_gateway":                        resourceAwsEgressOnlyInternetGateway(),
 			"aws_eip":                                                 resourceAwsEip(),
@@ -885,6 +889,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_web_acl":                                 resourceAwsWafRegionalWebAcl(),
 			"aws_wafregional_web_acl_association":                     resourceAwsWafRegionalWebAclAssociation(),
 			"aws_wafv2_ip_set":                                        resourceAwsWafv2IPSet(),
+			"aws_wafv2_regex_pattern_set":                             resourceAwsWafv2RegexPatternSet(),
+			"aws_wafv2_rule_group":                                    resourceAwsWafv2RuleGroup(),
 			"aws_worklink_fleet":                                      resourceAwsWorkLinkFleet(),
 			"aws_worklink_website_certificate_authority_association":  resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation(),
 			"aws_workspaces_directory":                                resourceAwsWorkspacesDirectory(),

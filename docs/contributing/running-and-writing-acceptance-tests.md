@@ -14,11 +14,15 @@
     - [Randomized Naming](#randomized-naming)
     - [Other Recommended Variables](#other-recommended-variables)
     - [Basic Acceptance Tests](#basic-acceptance-tests)
+    - [Service Availability PreCheck](#service-availability-precheck)
     - [Disappears Acceptance Tests](#disappears-acceptance-tests)
     - [Per Attribute Acceptance Tests](#per-attribute-acceptance-tests)
     - [Cross-Account Acceptance Tests](#cross-account-acceptance-tests)
     - [Cross-Region Acceptance Tests](#cross-region-acceptance-tests)
   - [Data Source Acceptance Testing](#data-source-acceptance-testing)
+- [Acceptance Test Sweepers](#acceptance-test-sweepers)
+  - [Running Test Sweepers](#running-test-sweepers)
+  - [Writing Test Sweepers](#writing-test-sweepers)
 - [Acceptance Test Checklist](#acceptance-test-checklist)
 
 Terraform includes an acceptance test harness that does most of the repetitive
@@ -126,12 +130,13 @@ export AWS_ALTERNATE_SECRET_ACCESS_KEY=...
 
 ### Running Cross-Region Tests
 
-Certain testing requires multiple AWS regions. Additional setup is not typically required because the testing defaults the alternate AWS region to `us-east-1`.
+Certain testing requires multiple AWS regions. Additional setup is not typically required because the testing defaults the second AWS region to `us-east-1` and the third AWS region to `us-east-2`.
 
-Running these acceptance tests is the same as before, but if you wish to override the alternate region:
+Running these acceptance tests is the same as before, but if you wish to override the second and third regions:
 
 ```sh
 export AWS_ALTERNATE_REGION=...
+export AWS_THIRD_REGION=...
 ```
 
 ## Writing an Acceptance Test
@@ -496,6 +501,36 @@ resource "aws_example_thing" "test" {
 }
 ```
 
+#### Service Availability PreCheck
+
+When new AWS services are added to the provider, a simple read-only request (e.g. list all X service things) should be implemented in an acceptance test PreCheck function that helps the acceptance testing determine if the service exists for the particular environment it runs in. Note: This was not common practice in the past so many existing tests will not include this step.
+
+For example:
+
+```go
+func TestAccAwsExampleThing_basic(t *testing.T) {
+  rName := acctest.RandomWithPrefix("tf-acc-test")
+  resourceName := "aws_example_thing.test"
+
+  resource.ParallelTest(t, resource.TestCase{
+    PreCheck:     func() { testAccPreCheck(t), testAccPreCheckAwsExample(t) },
+    // ... additional checks follow ...
+  })
+}
+
+func testAccPreCheckAwsExample(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).exampleconn
+	input := &example.ListThingsInput{}
+	_, err := conn.ListThings(input)
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+```
+
 #### Disappears Acceptance Tests
 
 This test is generally implemented second. It is straightforward to setup once the basic test is passing since it can reuse that test configuration. It prevents a common bug report with Terraform resources that error when they can not be found (e.g. deleted outside Terraform).
@@ -659,12 +694,12 @@ Searching for usage of `testAccAlternateAccountPreCheck` in the codebase will yi
 
 #### Cross-Region Acceptance Tests
 
-When testing requires AWS infrastructure in a second AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
+When testing requires AWS infrastructure in a second or third AWS region, the below changes to the normal setup will allow the management or reference of resources and data sources across regions:
 
-- In the `PreCheck` function, include `testAccMultipleRegionsPreCheck(t)` and `testAccAlternateRegionPreCheck(t)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
+- In the `PreCheck` function, include `testAccMultipleRegionPreCheck(t, ###)` to ensure a standardized set of information is required for cross-region testing configuration. If the infrastructure in the second AWS region is also in a second AWS account also include `testAccAlternateAccountPreCheck(t)`
 - Declare a `providers` variable at the top of the test function: `var providers []*schema.Provider`
 - Switch usage of `Providers: testAccProviders` to `ProviderFactories: testAccProviderFactories(&providers)`
-- Add `testAccAlternateRegionProviderConfig()` to the test configuration and use `provider = "aws.alternate"` for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
+- Add `testAccMultipleRegionProviderConfig(###)` to the test configuration and use `provider = "aws.alternate"` (and/or `provider = "aws.third"`) for cross-region resources. The resource that is the focus of the acceptance test should _not_ use the provider alias to simplify the testing setup. If the infrastructure in the second AWS region is also in a second AWS account use `testAccAlternateAccountAlternateRegionProviderConfig()` instead
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
@@ -677,8 +712,7 @@ func TestAccAwsExample_basic(t *testing.T) {
   resource.ParallelTest(t, resource.TestCase{
     PreCheck: func() {
       testAccPreCheck(t)
-      testAccMultipleRegionsPreCheck(t)
-      testAccAlternateRegionPreCheck(t)
+      testAccMultipleRegionPreCheck(t, 2)
     },
     ProviderFactories: testAccProviderFactories(&providers),
     CheckDestroy:      testAccCheckAwsExampleDestroy,
@@ -701,7 +735,7 @@ func TestAccAwsExample_basic(t *testing.T) {
 }
 
 func testAccAwsExampleConfig() string {
-  return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+  return testAccMultipleRegionProviderConfig(2) + fmt.Sprintf(`
 # Cross region resources should be handled by the cross region provider.
 # The standardized provider alias is aws.alternate as seen below.
 resource "aws_cross_region_example" "test" {
@@ -719,7 +753,7 @@ resource "aws_example" "test" {
 }
 ```
 
-Searching for usage of `testAccAlternateRegionPreCheck` in the codebase will yield real world examples of this setup in action.
+Searching for usage of `testAccMultipleRegionPreCheck` in the codebase will yield real world examples of this setup in action.
 
 ### Data Source Acceptance Testing
 
@@ -773,6 +807,150 @@ data "aws_example_thing" "test" {
   name = aws_example_thing.test.name
 }
 `, rName)
+}
+```
+
+## Acceptance Test Sweepers
+
+When running the acceptance tests, especially when developing or troubleshooting Terraform resources, its possible for code bugs or other issues to prevent the proper destruction of AWS infrastructure. To prevent lingering resources from consuming quota or causing unexpected billing, the Terraform Plugin SDK supports the test sweeper framework to clear out an AWS region of all resources. This section is meant to augment the [Extending Terraform documentation on test sweepers](https://www.terraform.io/docs/extend/testing/acceptance-tests/sweepers.html) with Terraform AWS Provider specific details.
+
+### Running Test Sweepers
+
+**WARNING: Test Sweepers will destroy AWS infrastructure and backups in the target AWS account and region! These are designed to override any API deletion protection. Never run these outside a development AWS account that should be completely empty of resources.**
+
+To run the sweepers for all resources in `us-west-2` and `us-east-1` (default testing regions):
+
+```console
+$ make sweep
+```
+
+To run a specific resource sweeper:
+
+```console
+$ SWEEPARGS=-sweep-run=aws_example_thing make sweep 
+```
+
+### Writing Test Sweepers
+
+The first step is to initialize the resource into the test sweeper framework:
+
+```go
+func init() {
+  resource.AddTestSweepers("aws_example_thing", &resource.Sweeper{
+    Name: "aws_example_thing",
+    F:    testSweepExampleThings,
+    // Optionally
+    Dependencies: []string{
+      "aws_other_thing",
+    },
+  })
+}
+```
+
+Then add the actual implementation. Preferably, if a paginated SDK call is available:
+
+```go
+func testSweepExampleThings(region string) error {
+  client, err := sharedClientForRegion(region)
+
+  if err != nil {
+    return fmt.Errorf("error getting client: %w", err)
+  }
+
+  conn := client.(*AWSClient).exampleconn
+  input := &example.ListThingsInput{}
+  var sweeperErrs *multierror.Error
+
+  err = conn.ListThingsPages(input, func(page *example.ListThingsOutput, isLast bool) bool {
+    if page == nil {
+      return !isLast
+    }
+
+    for _, thing := range page.Things {
+      id := aws.StringValue(thing.Id)
+      input := &example.DeleteThingInput{
+        Id: thing.Id,
+      }
+
+      log.Printf("[INFO] Deleting Example Thing: %s", id)
+      _, err := conn.DeleteThing(input)
+
+      if err != nil {
+        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", sweeperErr)
+        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        continue
+      }
+    }
+
+    return !isLast
+  })
+
+  if testSweepSkipSweepError(err) {
+    log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
+    return sweeperErrs.ErrorOrNil()
+  }
+
+  if err != nil {
+    sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Things: %w", err))
+  }
+
+  return sweeperErrs.ErrorOrNil()
+}
+```
+
+Otherwise, if no paginated SDK call is available:
+
+```go
+func testSweepExampleThings(region string) error {
+  client, err := sharedClientForRegion(region)
+
+  if err != nil {
+    return fmt.Errorf("error getting client: %w", err)
+  }
+
+  conn := client.(*AWSClient).exampleconn
+  input := &example.ListThingsInput{}
+  var sweeperErrs *multierror.Error
+
+  for {
+    output, err := conn.ListThings(input)
+
+    if testSweepSkipSweepError(err) {
+      log.Printf("[WARN] Skipping Example Thing sweep for %s: %s", region, err)
+      return sweeperErrs.ErrorOrNil()
+    }
+
+    if err != nil {
+      sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Example Thing: %w", err))
+      return sweeperErrs
+    }
+
+    for _, thing := range output.Things {
+      id := aws.StringValue(thing.Id)
+      input := &example.DeleteThingInput{
+        Id: thing.Id,
+      }
+
+      log.Printf("[INFO] Deleting Example Thing: %s", id)
+      _, err := conn.DeleteThing(input)
+
+      if err != nil {
+        sweeperErr := fmt.Errorf("error deleting Example Thing (%s): %w", id, err)
+        log.Printf("[ERROR] %s", sweeperErr)
+        sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+        continue
+      }
+    }
+
+    if aws.StringValue(output.NextToken) == "" {
+      break
+    }
+
+    input.NextToken = output.NextToken
+  }
+
+  return sweeperErrs.ErrorOrNil()
 }
 ```
 
