@@ -195,7 +195,6 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
-										Default:  "/",
 									},
 									"transit_encryption": {
 										Type:     schema.TypeString,
@@ -635,8 +634,8 @@ func resourceAwsEcsTaskDefinitionVolumeHash(v interface{}) int {
 		if v, ok := m["transit_encryption"]; ok && v.(string) != "" {
 			buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 		}
-		if v, ok := m["transit_encryption_port"]; ok && v != nil {
-			buf.WriteString(fmt.Sprintf("%s-", string(v.(int))))
+		if v, ok := m["transit_encryption_port"]; ok && v.(int) > 0 {
+			buf.WriteString(fmt.Sprintf("%d-", v.(int)))
 		}
 		if v, ok := m["authorization_config"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			m := v.([]interface{})[0].(map[string]interface{})

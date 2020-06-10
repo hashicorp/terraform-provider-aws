@@ -1633,7 +1633,6 @@ TASK_DEFINITION
 
     efs_volume_configuration {
       file_system_id          = "${aws_efs_file_system.test.id}"
-	  root_directory          = "/home/test"
 	  transit_encryption      = "ENABLED"
 	  transit_encryption_port = 2999
 	  authorization_config {
