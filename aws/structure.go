@@ -160,7 +160,6 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 			if v, ok := config["root_directory"].(string); ok && v != "" {
 				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
 			}
-
 			if v, ok := config["transit_encryption"].(string); ok && v != "" {
 				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
 			}
@@ -171,6 +170,7 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 			authConfig, ok := config["authorization_config"].([]interface{})
 			if ok && len(authConfig) > 0 {
 				authconfig := authConfig[0].(map[string]interface{})
+				l.EfsVolumeConfiguration.RootDirectory = nil
 				l.EfsVolumeConfiguration.AuthorizationConfig = &ecs.EFSAuthorizationConfig{}
 
 				if v, ok := authconfig["access_point_id"].(string); ok && v != "" {
@@ -766,10 +766,9 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 			m["file_system_id"] = aws.StringValue(v)
 		}
 
-		if v := config.RootDirectory; v != nil && aws.StringValue(v) != "/" {
+		if v := config.RootDirectory; v != nil {
 			m["root_directory"] = aws.StringValue(v)
 		}
-
 		if v := config.TransitEncryption; v != nil {
 			m["transit_encryption"] = aws.StringValue(v)
 		}

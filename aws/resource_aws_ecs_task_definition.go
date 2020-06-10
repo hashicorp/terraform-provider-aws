@@ -195,6 +195,7 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
+										Default:  "/",
 									},
 									"transit_encryption": {
 										Type:     schema.TypeString,
