@@ -395,8 +395,7 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 				Config: testAccAppmeshVirtualNodeConfigRootCA(vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
-					// TODO
-					//testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
 				),
 			},
 			{
@@ -424,10 +423,9 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 			},
 			{
 				Config: testAccAppmeshVirtualNodeConfig_tlsAcm(meshName, vnName),
-				Check:  resource.ComposeTestCheckFunc(
-				// CA must be DISABLED for deletion.
-				// TODO
-				//testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -583,8 +581,7 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 				Config: testAccAppmeshVirtualNodeConfigRootCA(vnName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAcmpcaCertificateAuthorityExists(acmCAResourceName, &ca),
-					// TODO
-					//testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
+					testAccCheckAwsAcmpcaCertificateAuthorityActivateCA(&ca),
 				),
 			},
 			{
@@ -652,10 +649,9 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 			},
 			{
 				Config: testAccAppmeshVirtualNodeConfig_clientPolicyAcm(meshName, vnName),
-				Check:  resource.ComposeTestCheckFunc(
-				// CA must be DISABLED for deletion.
-				// TODO
-				//testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
+				Check: resource.ComposeTestCheckFunc(
+					// CA must be DISABLED for deletion.
+					testAccCheckAwsAcmpcaCertificateAuthorityDisableCA(&ca),
 				),
 				ExpectNonEmptyPlan: true,
 			},
