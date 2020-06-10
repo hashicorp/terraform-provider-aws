@@ -78,6 +78,7 @@ func dataSourceAwsS3BucketObject() *schema.Resource {
 			"metadata": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"object_lock_legal_hold_status": {
 				Type:     schema.TypeString,
