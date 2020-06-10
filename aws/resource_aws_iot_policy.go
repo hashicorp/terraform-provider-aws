@@ -23,6 +23,7 @@ func resourceAwsIotPolicy() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"policy": {
 				Type:             schema.TypeString,
