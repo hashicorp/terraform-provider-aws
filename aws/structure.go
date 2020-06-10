@@ -165,8 +165,8 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
 			}
 
-			if v, ok := config["transit_encryption_port"].(int64); ok && v != 0 {
-				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(v)
+			if v, ok := config["transit_encryption_port"].(int); ok {
+				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(int64(v))
 			}
 			if v, ok := config["authorization_config"].(map[string]interface{}); ok && len(v) > 0 {
 
@@ -772,8 +772,9 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 		}
 
 		if v := config.TransitEncryptionPort; v != nil {
-			m["transit_encryption_port"] = aws.Int64Value(v)
+			m["transit_encryption_port"] = int(aws.Int64Value(v))
 		}
+
 		if v := config.AuthorizationConfig; v != nil {
 			m["authorization_config"] = flattenEFSVolumeAuthorizationConfig(v)
 		}

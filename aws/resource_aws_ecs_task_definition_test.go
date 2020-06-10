@@ -258,8 +258,7 @@ func TestAccAWSEcsTaskDefinition_withTransitEncryptionEFSVolume(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinitionWithTransitEncryptionEFSVolume(tdName, "ENABLED", 2999),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.transit_encryption", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.transit_encryption_port", "2999"),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 				),
 			},
 			{
@@ -277,6 +276,7 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 
 	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
 	resourceName := "aws_ecs_task_definition.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -286,8 +286,7 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 				Config: testAccAWSEcsTaskDefinitionWitEFSAccessPoint(tdName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
-					resource.TestCheckResourceAttrSet(resourceName, "volume.584193650.efs_volume_configuration.0.authorization_config.0.access_point_id"),
-					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.authorization_config.0.iam", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 				),
 			},
 			{
@@ -1585,13 +1584,14 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = "database_scratch"
+    name = %[1]q
 
     efs_volume_configuration {
       file_system_id          = "${aws_efs_file_system.test.id}"
 	  root_directory          = "/home/test"
 	  transit_encryption      = %[2]q
-      transit_encryption_port = %[3]d
+	  transit_encryption_port = %[3]d
+
     }
   }
 }
@@ -1629,7 +1629,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = "database_scratch"
+    name = %[1]q
 
     efs_volume_configuration {
       file_system_id          = "${aws_efs_file_system.test.id}"
