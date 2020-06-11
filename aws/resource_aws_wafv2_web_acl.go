@@ -278,6 +278,9 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
+		if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
+			return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
+		}
 		return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
 	}
 
