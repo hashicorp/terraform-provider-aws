@@ -201,6 +201,10 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 										Type:     schema.TypeString,
 										ForceNew: true,
 										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											ecs.EFSTransitEncryptionEnabled,
+											ecs.EFSTransitEncryptionDisabled,
+										}, false),
 									},
 									"transit_encryption_port": {
 										Type:         schema.TypeInt,
@@ -224,6 +228,10 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 													Type:     schema.TypeString,
 													ForceNew: true,
 													Optional: true,
+													ValidateFunc: validation.StringInSlice([]string{
+														ecs.EFSAuthorizationConfigIAMEnabled,
+														ecs.EFSAuthorizationConfigIAMDisabled,
+													}, false),
 												},
 											},
 										},
