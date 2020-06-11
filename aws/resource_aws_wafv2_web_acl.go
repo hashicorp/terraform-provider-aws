@@ -15,6 +15,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
+const (
+	Wafv2WebACLCreateTimeout = 5 * time.Minute
+	Wafv2WebACLUpdateTimeout = 5 * time.Minute
+	Wafv2WebACLDeleteTimeout = 5 * time.Minute
+)
+
 func resourceAwsWafv2WebACL() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsWafv2WebACLCreate,
@@ -153,7 +159,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 		params.Tags = keyvaluetags.New(v).IgnoreAws().Wafv2Tags()
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(Wafv2WebACLCreateTimeout, func() *resource.RetryError {
 		var err error
 		resp, err = conn.CreateWebACL(params)
 		if err != nil {
@@ -170,7 +176,7 @@ func resourceAwsWafv2WebACLCreate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating WAFv2 WebACL: %s", err)
+		return fmt.Errorf("Error creating WAFv2 WebACL: %w", err)
 	}
 
 	if resp == nil || resp.Summary == nil {
@@ -213,25 +219,25 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("lock_token", aws.StringValue(resp.LockToken))
 
 	if err := d.Set("default_action", flattenWafv2DefaultAction(resp.WebACL.DefaultAction)); err != nil {
-		return fmt.Errorf("Error setting default_action: %s", err)
+		return fmt.Errorf("Error setting default_action: %w", err)
 	}
 
 	if err := d.Set("rule", flattenWafv2WebACLRules(resp.WebACL.Rules)); err != nil {
-		return fmt.Errorf("Error setting rule: %s", err)
+		return fmt.Errorf("Error setting rule: %w", err)
 	}
 
 	if err := d.Set("visibility_config", flattenWafv2VisibilityConfig(resp.WebACL.VisibilityConfig)); err != nil {
-		return fmt.Errorf("Error setting visibility_config: %s", err)
+		return fmt.Errorf("Error setting visibility_config: %w", err)
 	}
 
 	arn := aws.StringValue(resp.WebACL.ARN)
 	tags, err := keyvaluetags.Wafv2ListTags(conn, arn)
 	if err != nil {
-		return fmt.Errorf("Error listing tags for WAFv2 WebACL (%s): %s", arn, err)
+		return fmt.Errorf("Error listing tags for WAFv2 WebACL (%s): %w", arn, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
+		return fmt.Errorf("Error setting tags: %w", err)
 	}
 
 	return nil
@@ -256,7 +262,7 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 		u.Description = aws.String(v.(string))
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
 		_, err := conn.UpdateWebACL(u)
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
@@ -272,13 +278,13 @@ func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error updating WAFv2 WebACL: %s", err)
+		return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
 	}
 
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 		if err := keyvaluetags.Wafv2UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %s", err)
+			return fmt.Errorf("error updating tags: %w", err)
 		}
 	}
 
@@ -297,7 +303,7 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 		LockToken: aws.String(d.Get("lock_token").(string)),
 	}
 
-	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(Wafv2WebACLDeleteTimeout, func() *resource.RetryError {
 		_, err := conn.DeleteWebACL(r)
 		if err != nil {
 			if isAWSErr(err, wafv2.ErrCodeWAFAssociatedItemException, "") {
@@ -316,7 +322,7 @@ func resourceAwsWafv2WebACLDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error deleting WAFv2 WebACL: %s", err)
+		return fmt.Errorf("Error deleting WAFv2 WebACL: %w", err)
 	}
 
 	return nil
@@ -398,6 +404,9 @@ func wafv2RateBasedStatementSchema(level int) *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  wafv2.RateBasedStatementAggregateKeyTypeIp,
+					ValidateFunc: validation.StringInSlice([]string{
+						wafv2.RateBasedStatementAggregateKeyTypeIp,
+					}, false),
 				},
 				"limit": {
 					Type:         schema.TypeInt,

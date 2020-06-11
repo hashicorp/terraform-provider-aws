@@ -15,7 +15,7 @@ import (
 
 func TestAccAwsWafv2WebACL_Basic(t *testing.T) {
 	var v wafv2.WebACL
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -96,8 +96,8 @@ func TestAccAwsWafv2WebACL_Basic(t *testing.T) {
 
 func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 	var before, after wafv2.WebACL
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
-	ruleGroupNewName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	ruleGroupNewName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -147,7 +147,7 @@ func TestAccAwsWafv2WebACL_ChangeNameForceNew(t *testing.T) {
 
 func TestAccAwsWafv2WebACL_Disappears(t *testing.T) {
 	var v wafv2.WebACL
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -169,7 +169,7 @@ func TestAccAwsWafv2WebACL_Disappears(t *testing.T) {
 
 func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 	var v wafv2.WebACL
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -229,7 +229,7 @@ func TestAccAwsWafv2WebACL_ManagedRuleGroupStatement(t *testing.T) {
 
 func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 	var v wafv2.WebACL
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -261,7 +261,7 @@ func TestAccAwsWafv2WebACL_Minimal(t *testing.T) {
 
 func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 	var v wafv2.WebACL
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -324,7 +324,7 @@ func TestAccAwsWafv2WebACL_RateBasedStatement(t *testing.T) {
 func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 	var v wafv2.WebACL
 	var idx int
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 	excludedRules := []interface{}{
 		map[string]interface{}{
@@ -390,7 +390,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 
 func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 	var v wafv2.WebACL
-	webACLName := fmt.Sprintf("web-acl-%s", acctest.RandString(5))
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -560,8 +560,8 @@ func testAccCheckAwsWafv2WebACLExists(n string, v *wafv2.WebACL) resource.TestCh
 func testAccAwsWafv2WebACLConfig_Basic(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = "%[1]s"
+  description = "%[1]s"
   scope       = "REGIONAL"
 
   default_action {
@@ -574,7 +574,7 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAwsWafv2WebACLConfig_BasicUpdate(name string) string {
@@ -657,8 +657,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = "%[1]s"
+  description = "%[1]s"
   scope       = "REGIONAL"
 
   default_action {
@@ -698,14 +698,14 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAwsWafv2WebACLConfig_ManagedRuleGroupStatement_Update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = "%[1]s"
+  description = "%[1]s"
   scope       = "REGIONAL"
 
   default_action {
@@ -753,14 +753,14 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAwsWafv2WebACLConfig_RateBasedStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = "%[1]s"
+  description = "%[1]s"
   scope       = "REGIONAL"
 
   default_action {
@@ -799,14 +799,14 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAwsWafv2WebACLConfig_RateBasedStatement_Update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = "%[1]s"
+  description = "%[1]s"
   scope       = "REGIONAL"
 
   default_action {
@@ -852,14 +852,14 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
-  name     = "rule-group-%s"
+  name     = "rule-group-%[1]s"
   scope    = "REGIONAL"
 
   visibility_config {
@@ -870,7 +870,7 @@ resource "aws_wafv2_rule_group" "test" {
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name  = "%s"
+  name  = "%[1]s"
   scope = "REGIONAL"
 
   default_action {
@@ -909,14 +909,14 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAwsWafv2WebACLConfig_RuleGroupReferenceStatement_Update(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_rule_group" "test" {
   capacity = 10
-  name     = "rule-group-%s"
+  name     = "rule-group-%[1]s"
   scope    = "REGIONAL"
 
   rule {
@@ -990,7 +990,7 @@ resource "aws_wafv2_rule_group" "test" {
 }
 
 resource "aws_wafv2_web_acl" "test" {
-  name  = "%s"
+  name  = "%[1]s"
   scope = "REGIONAL"
 
   default_action {
@@ -1037,7 +1037,7 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name, name)
+`, name)
 }
 
 func testAccAwsWafv2WebACLConfig_Minimal(name string) string {
@@ -1062,8 +1062,8 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_OneTag(name, tagKey, tagValue string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = "%[1]s"
+  description = "%[1]s"
   scope       = "REGIONAL"
 
   default_action {
@@ -1080,14 +1080,14 @@ resource "aws_wafv2_web_acl" "test" {
     "%s" = "%s"
   }
 }
-`, name, name, tagKey, tagValue)
+`, name, tagKey, tagValue)
 }
 
 func testAccAwsWafv2WebACLConfig_TwoTags(name, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
-  name        = "%s"
-  description = "%s"
+  name        = "%[1]s"
+  description = "%[1]s"
   scope       = "REGIONAL"
 
   default_action {
@@ -1105,7 +1105,7 @@ resource "aws_wafv2_web_acl" "test" {
     "%s" = "%s"
   }
 }
-`, name, name, tag1Key, tag1Value, tag2Key, tag2Value)
+`, name, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
 func testAccAwsWafv2WebACLImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
