@@ -209,12 +209,12 @@ func parseCsvCredentialReport(content []byte) (CredentialReport, error) {
 			PasswordLastChanged: line[header["password_last_changed"]],
 			MfaActive:           parseCsvBool(line[header["mfa_active"]]),
 			AccessKeys: []AccessKey{
-				AccessKey{
+				{
 					Active:       parseCsvBool(line[header["access_key_1_active"]]),
 					LastUsedDate: line[header["access_key_1_last_used_date"]],
 					LastRotated:  line[header["access_key_1_last_rotated"]],
 				},
-				AccessKey{
+				{
 					Active:       parseCsvBool(line[header["access_key_2_active"]]),
 					LastUsedDate: line[header["access_key_2_last_used_date"]],
 					LastRotated:  line[header["access_key_2_last_rotated"]],

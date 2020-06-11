@@ -51,17 +51,17 @@ func resourceAwsSubnet() *schema.Resource {
 			},
 
 			"availability_zone": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 
 			"availability_zone_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				Computed:      true,
-				ForceNew:      true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
 			},
 
 			"map_public_ip_on_launch": {
