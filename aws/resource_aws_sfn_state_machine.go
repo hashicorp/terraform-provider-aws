@@ -93,6 +93,7 @@ func resourceAwsSfnStateMachine() *schema.Resource {
 			"type": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				Default:  sfn.StateMachineTypeStandard,
 				ValidateFunc: validation.StringInSlice([]string{
 					sfn.StateMachineTypeStandard,
