@@ -283,7 +283,7 @@ func TestAccAWSEcsTaskDefinition_withEFSAccessPoint(t *testing.T) {
 		CheckDestroy: testAccCheckAWSEcsTaskDefinitionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEcsTaskDefinitionWitEFSAccessPoint(tdName, "DISABLED"),
+				Config: testAccAWSEcsTaskDefinitionWithEFSAccessPoint(tdName, "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
@@ -1598,7 +1598,7 @@ TASK_DEFINITION
 `, tdName, tEnc, tEncPort)
 }
 
-func testAccAWSEcsTaskDefinitionWitEFSAccessPoint(tdName, useIam string) string {
+func testAccAWSEcsTaskDefinitionWithEFSAccessPoint(tdName, useIam string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
 	creation_token = %[1]q
