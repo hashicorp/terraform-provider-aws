@@ -6,7 +6,7 @@ description: |-
   Creates a WAFv2 Web ACL resource.
 ---
 
-# Resource: aws_wafv2_rule_group
+# Resource: aws_wafv2_web_acl
 
 Creates a WAFv2 Web ACL resource.
 
@@ -256,8 +256,8 @@ resource "aws_wafv2_web_acl" "test" {
 The following arguments are supported:
 
 * `default_action` - (Required) The action to perform if none of the `rules` contained in the WebACL match. See [Default Action](#default-action) below for details.
-* `description` - (Optional) A friendly description of the rule group.
-* `name` - (Required) A friendly name of the rule group.
+* `description` - (Optional) A friendly description of the WebACL.
+* `name` - (Required) A friendly name of the WebACL.
 * `rule` - (Optional) The rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [Rules](#rules) below for details.
 * `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource.
@@ -276,7 +276,7 @@ Each `rule` supports the following arguments:
 
 * `action` - (Optional) The action that AWS WAF should take on a web request when it matches the rule's statement. This is used only for rules whose statements do not reference a rule group. Rule statements that reference a rule group include `rule_group_reference_statement` and `managed_rule_group_statement`. See [Action](#action) below for details.
 * `name` - (Required) A friendly name of the rule.
-* `override_action` - (Optional) The override action to apply to the rules in a rule group. Used only for rule statements that reference a rule group, like `rule_group_reference_statement` and `managed_rule_group_statement`. See [Override Action](#override-action) below for details.
+* `override_action` - (Optional) The override action to apply to the rules in a WebACL. Used only for rule statements that reference a rule group, like `rule_group_reference_statement` and `managed_rule_group_statement`. See [Override Action](#override-action) below for details.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
 * `statement` - (Required) The AWS WAF processing statement for the rule, for example `byte_match_statement` or `geo_match_statement`. See [Statement](#statement) below for details.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
@@ -482,9 +482,9 @@ The `visibility_config` block supports the following arguments:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - The ARN of the WAF rule group.
+* `arn` - The ARN of the WAF WebACL.
 * `capacity` - The web ACL capacity units (WCUs) currently being used by this web ACL.
-* `id` - The ID of the WAF rule group.
+* `id` - The ID of the WAF WebACL.
 
 ## Import
 
