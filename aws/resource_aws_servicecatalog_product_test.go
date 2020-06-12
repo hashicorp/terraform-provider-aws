@@ -223,12 +223,12 @@ resource "aws_servicecatalog_product" "test" {
   provisioning_artifact {
     description = "arbitrary description"
     name        = "%s"
-    info {
+    info = {
       LoadTemplateFromURL = "https://s3.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template1.key}"
     }
   }
 
-  tags {
+  tags = {
      %s
      %s
   }
