@@ -154,6 +154,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/cloudwatchlogs" = [
       "aws_cloudwatch_log_",
     ],
+    "service/codeartifact" = [
+      "aws_codeartifact_",
+    ],
     "service/codebuild" = [
       "aws_codebuild_",
     ],
@@ -702,6 +705,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/cloudwatchlogs" = [
       "**/*_cloudwatch_log_*",
       "**/cloudwatch_log_*"
+    ]
+    "service/codeartifact" = [
+      "**/*_codeartifact_*",
+      "**/codeartifact_*"
     ]
     "service/codebuild" = [
       "**/*_codebuild_*",

@@ -35,6 +35,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
@@ -212,6 +213,7 @@ type AWSClient struct {
 	cloudwatchconn                      *cloudwatch.CloudWatch
 	cloudwatcheventsconn                *cloudwatchevents.CloudWatchEvents
 	cloudwatchlogsconn                  *cloudwatchlogs.CloudWatchLogs
+	codeartifactconn                    *codeartifact.CodeArtifact
 	codebuildconn                       *codebuild.CodeBuild
 	codecommitconn                      *codecommit.CodeCommit
 	codedeployconn                      *codedeploy.CodeDeploy
@@ -433,6 +435,7 @@ func (c *Config) Client() (interface{}, error) {
 		cloudwatchconn:                      cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatch"])})),
 		cloudwatcheventsconn:                cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchevents"])})),
 		cloudwatchlogsconn:                  cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchlogs"])})),
+		codeartifactconn:                    codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codeartifact"])})),
 		codebuildconn:                       codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codebuild"])})),
 		codecommitconn:                      codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codecommit"])})),
 		codedeployconn:                      codedeploy.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codedeploy"])})),
