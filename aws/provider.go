@@ -1035,6 +1035,7 @@ func init() {
 		"cloudwatch",
 		"cloudwatchevents",
 		"cloudwatchlogs",
+		"codeartifact",
 		"codebuild",
 		"codecommit",
 		"codedeploy",

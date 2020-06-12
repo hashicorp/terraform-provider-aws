@@ -96,6 +96,7 @@ github.com/aws/aws-sdk-go/service/cloudtrail
 github.com/aws/aws-sdk-go/service/cloudwatch
 github.com/aws/aws-sdk-go/service/cloudwatchevents
 github.com/aws/aws-sdk-go/service/cloudwatchlogs
+github.com/aws/aws-sdk-go/service/codeartifact
 github.com/aws/aws-sdk-go/service/codebuild
 github.com/aws/aws-sdk-go/service/codecommit
 github.com/aws/aws-sdk-go/service/codedeploy
