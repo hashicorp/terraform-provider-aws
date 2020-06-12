@@ -15,7 +15,6 @@ import (
 )
 
 func TestAccAWSNetworkAclRule_basic(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -25,9 +24,9 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 			{
 				Config: testAccAWSNetworkAclRuleBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.qux", &networkAcl),
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.wibble", &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz"),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.qux"),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.wibble"),
 				),
 			},
 			{
@@ -53,7 +52,6 @@ func TestAccAWSNetworkAclRule_basic(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -63,7 +61,7 @@ func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
 			{
 				Config: testAccAWSNetworkAclRuleBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz"),
 					testAccCheckAWSNetworkAclRuleDelete("aws_network_acl_rule.baz"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -73,7 +71,6 @@ func TestAccAWSNetworkAclRule_disappears(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_ingressEgressSameNumberDisappears(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -83,7 +80,7 @@ func TestAccAWSNetworkAclRule_ingressEgressSameNumberDisappears(t *testing.T) {
 			{
 				Config: testAccAWSNetworkAclRuleIngressEgressSameNumberMissing,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz"),
 					testAccCheckAWSNetworkAclRuleDelete("aws_network_acl_rule.baz"),
 				),
 				ExpectNonEmptyPlan: true,
@@ -129,7 +126,6 @@ func TestAccAWSNetworkAclRule_missingParam(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -139,7 +135,7 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 			{
 				Config: testAccAWSNetworkAclRuleIpv6Config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz", &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists("aws_network_acl_rule.baz"),
 				),
 			},
 			{
@@ -153,7 +149,6 @@ func TestAccAWSNetworkAclRule_ipv6(t *testing.T) {
 }
 
 func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_network_acl_rule.test"
 
@@ -165,7 +160,7 @@ func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
 			{
 				Config: testAccAWSNetworkAclRuleConfigIpv6ICMP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists(resourceName),
 				),
 			},
 			{
@@ -180,7 +175,6 @@ func TestAccAWSNetworkAclRule_ipv6ICMP(t *testing.T) {
 
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6710
 func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testing.T) {
-	var networkAcl ec2.NetworkAcl
 	var vpc ec2.Vpc
 	vpcResourceName := "aws_vpc.test"
 	resourceName := "aws_network_acl_rule.test"
@@ -204,7 +198,7 @@ func TestAccAWSNetworkAclRule_ipv6VpcAssignGeneratedIpv6CidrBlockUpdate(t *testi
 					testAccCheckVpcExists(vpcResourceName, &vpc),
 					resource.TestCheckResourceAttr(vpcResourceName, "assign_generated_ipv6_cidr_block", "true"),
 					resource.TestMatchResourceAttr(vpcResourceName, "ipv6_cidr_block", regexp.MustCompile(`/56$`)),
-					testAccCheckAWSNetworkAclRuleExists(resourceName, &networkAcl),
+					testAccCheckAWSNetworkAclRuleExists(resourceName),
 				),
 			},
 			{
@@ -340,7 +334,7 @@ func testAccCheckAWSNetworkAclRuleDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAWSNetworkAclRuleExists(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckAWSNetworkAclRuleExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 		rs, ok := s.RootModule().Resources[n]
