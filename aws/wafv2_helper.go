@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"math"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -206,7 +207,7 @@ func wafv2SizeConstraintSchema() *schema.Schema {
 				"size": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(0, 21474836480),
+					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 				},
 				"text_transformation": wafv2TextTransformationSchema(),
 			},
