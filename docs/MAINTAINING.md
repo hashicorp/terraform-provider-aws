@@ -32,6 +32,10 @@ Incoming issues are classified using labels. These are assigned either by automa
 
 ### Pull Request Review Process
 
+Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guideliness](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp. 
+
+Our contributors are often working within the provider a hobby, or not in their main line of work so we need to give adequate time for response. By default this is two weeks, but it is worth considering taking on the work to complete the PR ourselves if the administration effort of waiting for a response is greater than just resolving the issues ourselves (Don't wait two weeks, or add a context shift for yourself and the contributor to fix a typo). As long as we use their commits, contributions will be recorded by Github and as always ensure to thank the contributor for their work. Roadmap items are another area where we would consider taking on the work ourselves more quickly in order to meet the commitments made to our users.
+
 Notes for each type of pull request are (or will be) available in subsections below.
 
 - If you plan to be responsible for the pull request through the merge/closure process, assign it to yourself
@@ -42,11 +46,11 @@ Notes for each type of pull request are (or will be) available in subsections be
 This pull request appears to be related to/solve #1234, so I have edited the pull request description to denote the issue reference.
 ```
 
-- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#checklists-for-contribution)
+- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/contribution-checklists.md)
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
 - If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for maintainer pull requests with minor modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
 - If the author is unresponsive for changes (by default we give two weeks), determine importance and level of effort to finish the pull request yourself including their commits or close the pull request
-- Run relevant acceptance testing ([locally](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#running-an-acceptance-test) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
+- Run relevant acceptance testing ([locally](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
 - Approve the pull request with a comment outlining what steps you took that ensure the change is acceptable, e.g. acceptance testing output
 
 ``````markdown
