@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -159,8 +160,10 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisFirehose(t *testing.T)
 				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_inputsKinesisFirehose(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.input.0.kinesis_firehose.#", "1"),
+					testUnknownSetId(resName, []string{"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_firehose.#"}, []string{"1"}),
+					// resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.input.848549981.kinesis_firehose.#", "1"),
 				),
 			},
 			{
@@ -1755,4 +1758,27 @@ resource "aws_kinesis_analyticsv2_application" "test" {
   }
 }
 `, rInt, rInt)
+}
+
+func testUnknownSetId(n string, testResources []string, expectedVals []string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No Kinesis Analytics Application ID is set")
+		}
+		stateStr := fmt.Sprintf("%+v", rs.Primary)
+		idx := strings.LastIndex(stateStr, "application_configuration.0.sql_application_configuration.0.input") + len("application_configuration.0.sql_application_configuration.0.input")
+		setId := strings.SplitN(stateStr[idx:], ".", 3)[1]
+		fmt.Printf("set ID: %+v\n", setId)
+		for i, r := range testResources {
+			if err := resource.TestCheckResourceAttr(n, fmt.Sprintf(r, setId), expectedVals[i])(s); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
 }

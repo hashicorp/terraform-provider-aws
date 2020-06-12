@@ -326,7 +326,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"input": {
-										Type:     schema.TypeList,
+										Type:     schema.TypeSet,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -837,10 +837,11 @@ func resourceAwsKinesisAnalyticsV2ApplicationRead(d *schema.ResourceData, meta i
 	d.Set("name", aws.StringValue(resp.ApplicationDetail.ApplicationName))
 	d.Set("arn", arn)
 	d.Set("service_execution_role", aws.StringValue(resp.ApplicationDetail.ServiceExecutionRole))
-	d.Set("runtime", aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment))
+	runtime := aws.StringValue(resp.ApplicationDetail.RuntimeEnvironment)
+	d.Set("runtime", runtime)
 	d.Set("version", int(aws.Int64Value(resp.ApplicationDetail.ApplicationVersionId)))
 
-	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(resp.ApplicationDetail.ApplicationConfigurationDescription)); err != nil {
+	if err := d.Set("application_configuration", flattenKinesisAnalyticsV2ApplicationConfiguration(runtime, resp.ApplicationDetail.ApplicationConfigurationDescription)); err != nil {
 		return fmt.Errorf("error setting application_configuration: %s", err)
 	}
 
@@ -943,7 +944,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 
 			if len(oldInputs) == 0 && len(newInputs) > 0 {
 				i := newInputs[0].(map[string]interface{})
-				input := expandKinesisAnalyticsV2Inputs(i)
+				input := expandKinesisAnalyticsV2Input(i)
 				addOpts := &kinesisanalyticsv2.AddApplicationInputInput{
 					ApplicationName:             aws.String(name),
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
@@ -975,7 +976,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 			}
 			if len(oldOutputs) == 0 && len(newOutputs) > 0 {
 				o := newOutputs[0].(map[string]interface{})
-				output := expandKinesisAnalyticsV2Outputs(o)
+				output := expandKinesisAnalyticsV2Output(o)
 				addOpts := &kinesisanalyticsv2.AddApplicationOutputInput{
 					ApplicationName:             aws.String(name),
 					CurrentApplicationVersionId: aws.Int64(int64(version)),
@@ -1130,7 +1131,7 @@ func expandPropertyGroups(i []interface{}) []*kinesisanalyticsv2.PropertyGroup {
 	return propertyGroups
 }
 
-func expandKinesisAnalyticsV2Inputs(i map[string]interface{}) *kinesisanalyticsv2.Input {
+func expandKinesisAnalyticsV2Input(i map[string]interface{}) *kinesisanalyticsv2.Input {
 	input := &kinesisanalyticsv2.Input{
 		NamePrefix: aws.String(i["name_prefix"].(string)),
 	}
@@ -1185,7 +1186,7 @@ func expandKinesisAnalyticsV2Inputs(i map[string]interface{}) *kinesisanalyticsv
 	return input
 }
 
-func expandKinesisAnalyticsV2Outputs(o map[string]interface{}) *kinesisanalyticsv2.Output {
+func expandKinesisAnalyticsV2Output(o map[string]interface{}) *kinesisanalyticsv2.Output {
 	output := &kinesisanalyticsv2.Output{
 		Name: aws.String(o["name"].(string)),
 	}
@@ -1755,18 +1756,18 @@ func expandKinesisAnalyticsV2CloudwatchLoggingOptionUpdate(clo map[string]interf
 
 func expandKinesisAnalayticsV2SqlApplicationConfiguration(appConfig map[string]interface{}) *kinesisanalyticsv2.SqlApplicationConfiguration {
 	sqlApplicationConfiguration := &kinesisanalyticsv2.SqlApplicationConfiguration{}
-	if appConfig["inputs"] != nil {
-		if v := appConfig["inputs"].([]interface{}); len(v) > 0 {
+	if appConfig["input"] != nil {
+		if v := appConfig["input"].(*schema.Set).List(); len(v) > 0 {
 			i := v[0].(map[string]interface{})
-			inputs := expandKinesisAnalyticsV2Inputs(i)
+			inputs := expandKinesisAnalyticsV2Input(i)
 			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
 		}
 	}
-	if appConfig["outputs"] != nil {
-		if v := appConfig["outputs"].([]interface{}); len(v) > 0 {
+	if appConfig["output"] != nil {
+		if v := appConfig["output"].(*schema.Set).List(); len(v) > 0 {
 			outputs := make([]*kinesisanalyticsv2.Output, 0)
 			for _, o := range v {
-				output := expandKinesisAnalyticsV2Outputs(o.(map[string]interface{}))
+				output := expandKinesisAnalyticsV2Output(o.(map[string]interface{}))
 				outputs = append(outputs, output)
 			}
 			sqlApplicationConfiguration.Outputs = outputs
@@ -1794,7 +1795,7 @@ func expandKinesisAnalyticsV2FlinkApplicationConfiguration(appConfig map[string]
 	return flinkApplicationConfiguration
 }
 
-func flattenKinesisAnalyticsV2ApplicationConfiguration(appConfig *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
+func flattenKinesisAnalyticsV2ApplicationConfiguration(runtime string, appConfig *kinesisanalyticsv2.ApplicationConfigurationDescription) []interface{} {
 
 	ret := map[string]interface{}{}
 	if appConfig == nil {
@@ -1803,13 +1804,11 @@ func flattenKinesisAnalyticsV2ApplicationConfiguration(appConfig *kinesisanalyti
 
 	// ApplicationCodeConfiguration is required
 	ret["application_code_configuration"] = flattenKinesisAnalyticsV2ApplicationCodeConfiguration(appConfig.ApplicationCodeConfigurationDescription)
-	fmt.Printf("application configuration: %+v\n", appConfig.ApplicationCodeConfigurationDescription)
-	fmt.Printf("code configuration: %+v\n", flattenKinesisAnalyticsV2ApplicationCodeConfiguration(appConfig.ApplicationCodeConfigurationDescription))
 
-	if appConfig.SqlApplicationConfigurationDescription != nil {
+	fmt.Printf("sql config: %+v\n\n", appConfig.SqlApplicationConfigurationDescription)
+	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
 		ret["sql_application_configuration"] = flattenSqlApplicationConfigurationDescription(appConfig.SqlApplicationConfigurationDescription)
-	}
-	if appConfig.FlinkApplicationConfigurationDescription != nil {
+	} else if runtimeIsFlink(runtime) {
 		ret["flink_application_configuration"] = flattenFlinkApplicationConfigurationDescription(appConfig.FlinkApplicationConfigurationDescription)
 	}
 	if appConfig.EnvironmentPropertyDescriptions != nil {
@@ -1818,6 +1817,7 @@ func flattenKinesisAnalyticsV2ApplicationConfiguration(appConfig *kinesisanalyti
 	if appConfig.ApplicationSnapshotConfigurationDescription != nil {
 		ret["application_snapshot_configuration"] = flattenKinesisAnalyticsV2SnapshotConfiguration(appConfig.ApplicationSnapshotConfigurationDescription)
 	}
+	fmt.Printf("flattenKinesisAnalyticsV2ApplicationConfiguration ret: %+v\n\n", ret)
 
 	return []interface{}{ret}
 }
@@ -2022,10 +2022,8 @@ func flattenKinesisAnalyticsV2CloudwatchLoggingOptions(options []*kinesisanalyti
 }
 
 func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescription) *schema.Set {
-	s := []interface{}{}
-
 	if len(inputs) == 0 {
-		return schema.NewSet(resourcePropertyGroupHash, nil)
+		return schema.NewSet(resourceInputHash, nil)
 	}
 	id := inputs[0]
 
@@ -2145,9 +2143,8 @@ func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescripti
 			},
 		}
 	}
-	s = append(s, input)
 
-	return schema.NewSet(resourcePropertyGroupHash, s)
+	return schema.NewSet(resourceInputHash, []interface{}{input})
 }
 
 func flattenKinesisAnalyticsV2Outputs(outputs []*kinesisanalyticsv2.OutputDescription) *schema.Set {
