@@ -370,7 +370,7 @@ func expandRedshiftParameters(configured []interface{}) []*redshift.Parameter {
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandDocDBParameters(configured []interface{}) ([]*docdb.Parameter, error) {
+func expandDocDBParameters(configured []interface{}) []*docdb.Parameter {
 	parameters := make([]*docdb.Parameter, 0, len(configured))
 
 	// Loop over our configured parameters and create
@@ -387,7 +387,7 @@ func expandDocDBParameters(configured []interface{}) ([]*docdb.Parameter, error)
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfiguration {
