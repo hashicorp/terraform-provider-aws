@@ -1683,7 +1683,24 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 
 // UpdateFileSystem API operation for Amazon FSx.
 //
-// Updates a file system configuration.
+// Use this operation to update the configuration of an existing Amazon FSx
+// file system. For an Amazon FSx for Lustre file system, you can update only
+// the WeeklyMaintenanceStartTime. For an Amazon for Windows File Server file
+// system, you can update the following properties:
+//
+//    * AutomaticBackupRetentionDays
+//
+//    * DailyAutomaticBackupStartTime
+//
+//    * SelfManagedActiveDirectoryConfiguration
+//
+//    * StorageCapacity
+//
+//    * ThroughputCapacity
+//
+//    * WeeklyMaintenanceStartTime
+//
+// You can update multiple properties in a single request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1712,6 +1729,10 @@ func (c *FSx) UpdateFileSystemRequest(input *UpdateFileSystemInput) (req *reques
 //
 //   * MissingFileSystemConfiguration
 //   A file system configuration is required for this operation.
+//
+//   * ServiceLimitExceeded
+//   An error indicating that a particular service limit was exceeded. You can
+//   increase some service limits by contacting AWS Support.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fsx-2018-03-01/UpdateFileSystem
 func (c *FSx) UpdateFileSystem(input *UpdateFileSystemInput) (*UpdateFileSystemOutput, error) {
@@ -1833,6 +1854,127 @@ func (s *ActiveDirectoryError) StatusCode() int {
 // RequestID returns the service's response RequestID for request.
 func (s *ActiveDirectoryError) RequestID() string {
 	return s.RespMetadata.RequestID
+}
+
+// Describes a specific Amazon FSx Administrative Action for the current Windows
+// file system.
+type AdministrativeAction struct {
+	_ struct{} `type:"structure"`
+
+	// Describes the type of administrative action, as follows:
+	//
+	//    * FILE_SYSTEM_UPDATE - A file system update administrative action initiated
+	//    by the user from the Amazon FSx console, API (UpdateFileSystem), or CLI
+	//    (update-file-system). A
+	//
+	//    * STORAGE_OPTIMIZATION - Once the FILE_SYSTEM_UPDATE task to increase
+	//    a file system's storage capacity completes successfully, a STORAGE_OPTIMIZATION
+	//    task starts. Storage optimization is the process of migrating the file
+	//    system data to the new, larger disks. You can track the storage migration
+	//    progress using the ProgressPercent property. When STORAGE_OPTIMIZATION
+	//    completes successfully, the parent FILE_SYSTEM_UPDATE action status changes
+	//    to COMPLETED. For more information, see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+	AdministrativeActionType *string `type:"string" enum:"AdministrativeActionType"`
+
+	// Provides information about a failed administrative action.
+	FailureDetails *AdministrativeActionFailureDetails `type:"structure"`
+
+	// Provides the percent complete of a STORAGE_OPTIMIZATION administrative action.
+	ProgressPercent *int64 `type:"integer"`
+
+	// Time that the administrative action request was received.
+	RequestTime *time.Time `type:"timestamp"`
+
+	// Describes the status of the administrative action, as follows:
+	//
+	//    * FAILED - Amazon FSx failed to process the administrative action successfully.
+	//
+	//    * IN_PROGRESS - Amazon FSx is processing the administrative action.
+	//
+	//    * PENDING - Amazon FSx is waiting to process the administrative action.
+	//
+	//    * COMPLETED - Amazon FSx has finished processing the administrative task.
+	//
+	//    * UPDATED_OPTIMIZING - For a storage capacity increase update, Amazon
+	//    FSx has updated the file system with the new storage capacity, and is
+	//    now performing the storage optimization process. For more information,
+	//    see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+	Status *string `type:"string" enum:"Status"`
+
+	// Describes the target StorageCapacity or ThroughputCapacity value provided
+	// in the UpdateFileSystem operation. Returned for FILE_SYSTEM_UPDATE administrative
+	// actions.
+	TargetFileSystemValues *FileSystem `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdministrativeAction) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdministrativeAction) GoString() string {
+	return s.String()
+}
+
+// SetAdministrativeActionType sets the AdministrativeActionType field's value.
+func (s *AdministrativeAction) SetAdministrativeActionType(v string) *AdministrativeAction {
+	s.AdministrativeActionType = &v
+	return s
+}
+
+// SetFailureDetails sets the FailureDetails field's value.
+func (s *AdministrativeAction) SetFailureDetails(v *AdministrativeActionFailureDetails) *AdministrativeAction {
+	s.FailureDetails = v
+	return s
+}
+
+// SetProgressPercent sets the ProgressPercent field's value.
+func (s *AdministrativeAction) SetProgressPercent(v int64) *AdministrativeAction {
+	s.ProgressPercent = &v
+	return s
+}
+
+// SetRequestTime sets the RequestTime field's value.
+func (s *AdministrativeAction) SetRequestTime(v time.Time) *AdministrativeAction {
+	s.RequestTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AdministrativeAction) SetStatus(v string) *AdministrativeAction {
+	s.Status = &v
+	return s
+}
+
+// SetTargetFileSystemValues sets the TargetFileSystemValues field's value.
+func (s *AdministrativeAction) SetTargetFileSystemValues(v *FileSystem) *AdministrativeAction {
+	s.TargetFileSystemValues = v
+	return s
+}
+
+// Provides information about a failed administrative action.
+type AdministrativeActionFailureDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Error message providing details about the failure.
+	Message *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s AdministrativeActionFailureDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdministrativeActionFailureDetails) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *AdministrativeActionFailureDetails) SetMessage(v string) *AdministrativeActionFailureDetails {
+	s.Message = &v
+	return s
 }
 
 // A backup of an Amazon FSx for Windows File Server file system. You can create
@@ -2885,7 +3027,7 @@ type CreateFileSystemInput struct {
 	//    * Set to HDD to use hard disk drive storage. HDD is supported on SINGLE_AZ_2
 	//    and MULTI_AZ_1 Windows file system deployment types.
 	//
-	// Default value is SSD. For more information, see Storage Type Options (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/optimize-fsx-tco.html#saz-maz-storage-type)
+	// Default value is SSD. For more information, see Storage Type Options (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/optimize-fsx-costs.html#storage-type-options)
 	// in the Amazon FSx for Windows User Guide.
 	StorageType *string `type:"string" enum:"StorageType"`
 
@@ -3095,7 +3237,9 @@ type CreateFileSystemLustreConfiguration struct {
 	// Valid values are 50, 100, 200.
 	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone, where d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -3258,7 +3402,8 @@ type CreateFileSystemWindowsConfiguration struct {
 	ThroughputCapacity *int64 `min:"8" type:"integer" required:"true"`
 
 	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
-	// in the UTC time zone.
+	// in the UTC time zone, where d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -4505,6 +4650,11 @@ func (s *DescribeFileSystemsOutput) SetNextToken(v string) *DescribeFileSystemsO
 type FileSystem struct {
 	_ struct{} `type:"structure"`
 
+	// A list of administrative actions for the file system that are in process
+	// or waiting to be processed. Administrative actions describe changes to the
+	// Windows file system that you have initiated using the UpdateFileSystem action.
+	AdministrativeActions []*AdministrativeAction `type:"list"`
+
 	// The time that the file system was created, in seconds (since 1970-01-01T00:00:00Z),
 	// also known as Unix time.
 	CreationTime *time.Time `type:"timestamp"`
@@ -4614,6 +4764,12 @@ func (s FileSystem) String() string {
 // GoString returns the string representation
 func (s FileSystem) GoString() string {
 	return s.String()
+}
+
+// SetAdministrativeActions sets the AdministrativeActions field's value.
+func (s *FileSystem) SetAdministrativeActions(v []*AdministrativeAction) *FileSystem {
+	s.AdministrativeActions = v
+	return s
 }
 
 // SetCreationTime sets the CreationTime field's value.
@@ -5332,7 +5488,9 @@ type LustreFileSystemConfiguration struct {
 	// are 50, 100, 200.
 	PerUnitStorageThroughput *int64 `min:"50" type:"integer"`
 
-	// The UTC time that you want to begin your weekly maintenance window.
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -5836,7 +5994,7 @@ func (s *SelfManagedActiveDirectoryConfiguration) SetUserName(v string) *SelfMan
 }
 
 // The configuration that Amazon FSx uses to join the Windows File Server instance
-// to the self-managed Microsoft Active Directory (AD) directory.
+// to a self-managed Microsoft Active Directory (AD) directory.
 type SelfManagedActiveDirectoryConfigurationUpdates struct {
 	_ struct{} `type:"structure"`
 
@@ -6237,12 +6395,12 @@ func (s UntagResourceOutput) GoString() string {
 type UpdateFileSystemInput struct {
 	_ struct{} `type:"structure"`
 
-	// (Optional) A string of up to 64 ASCII characters that Amazon FSx uses to
-	// ensure idempotent updates. This string is automatically filled on your behalf
-	// when you use the AWS Command Line Interface (AWS CLI) or an AWS SDK.
+	// A string of up to 64 ASCII characters that Amazon FSx uses to ensure idempotent
+	// updates. This string is automatically filled on your behalf when you use
+	// the AWS Command Line Interface (AWS CLI) or an AWS SDK.
 	ClientRequestToken *string `min:"1" type:"string" idempotencyToken:"true"`
 
-	// The globally unique ID of the file system, assigned by Amazon FSx.
+	// Identifies the file system that you are updating.
 	//
 	// FileSystemId is a required field
 	FileSystemId *string `min:"11" type:"string" required:"true"`
@@ -6251,9 +6409,18 @@ type UpdateFileSystemInput struct {
 	// UpdateFileSystem operation.
 	LustreConfiguration *UpdateFileSystemLustreConfiguration `type:"structure"`
 
-	// The configuration update for this Microsoft Windows file system. The only
-	// supported options are for backup and maintenance and for self-managed Active
-	// Directory configuration.
+	// Use this parameter to increase the storage capacity of an Amazon FSx for
+	// Windows File Server file system. Specifies the storage capacity target value,
+	// GiB, for the file system you're updating. The storage capacity target value
+	// must be at least 10 percent (%) greater than the current storage capacity
+	// value. In order to increase storage capacity, the file system needs to have
+	// at least 16 MB/s of throughput capacity. You cannot make a storage capacity
+	// increase request if there is an existing storage capacity increase request
+	// in progress. For more information, see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+	StorageCapacity *int64 `type:"integer"`
+
+	// The configuration updates for an Amazon FSx for Windows File Server file
+	// system.
 	WindowsConfiguration *UpdateFileSystemWindowsConfiguration `type:"structure"`
 }
 
@@ -6314,6 +6481,12 @@ func (s *UpdateFileSystemInput) SetLustreConfiguration(v *UpdateFileSystemLustre
 	return s
 }
 
+// SetStorageCapacity sets the StorageCapacity field's value.
+func (s *UpdateFileSystemInput) SetStorageCapacity(v int64) *UpdateFileSystemInput {
+	s.StorageCapacity = &v
+	return s
+}
+
 // SetWindowsConfiguration sets the WindowsConfiguration field's value.
 func (s *UpdateFileSystemInput) SetWindowsConfiguration(v *UpdateFileSystemWindowsConfiguration) *UpdateFileSystemInput {
 	s.WindowsConfiguration = v
@@ -6325,7 +6498,9 @@ func (s *UpdateFileSystemInput) SetWindowsConfiguration(v *UpdateFileSystemWindo
 type UpdateFileSystemLustreConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -6382,25 +6557,38 @@ func (s *UpdateFileSystemOutput) SetFileSystem(v *FileSystem) *UpdateFileSystemO
 	return s
 }
 
-// Updates the Microsoft Windows configuration for an existing Amazon FSx for
-// Windows File Server file system. Amazon FSx overwrites existing properties
-// with non-null values provided in the request. If you don't specify a non-null
-// value for a property, that property is not updated.
+// Updates the configuration for an existing Amazon FSx for Windows File Server
+// file system. Amazon FSx only overwrites existing properties with non-null
+// values provided in the request.
 type UpdateFileSystemWindowsConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The number of days to retain automatic backups. Setting this to 0 disables
-	// automatic backups. You can retain automatic backups for a maximum of 35 days.
+	// The number of days to retain automatic daily backups. Setting this to zero
+	// (0) disables automatic daily backups. You can retain automatic daily backups
+	// for a maximum of 35 days. For more information, see Working with Automatic
+	// Daily Backups (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/using-backups.html#automatic-backups).
 	AutomaticBackupRetentionDays *int64 `type:"integer"`
 
-	// The preferred time to take daily automatic backups, in the UTC time zone.
+	// The preferred time to start the daily automatic backup, in the UTC time zone,
+	// for example, 02:00
 	DailyAutomaticBackupStartTime *string `min:"5" type:"string"`
 
 	// The configuration Amazon FSx uses to join the Windows File Server instance
-	// to the self-managed Microsoft AD directory.
+	// to the self-managed Microsoft AD directory. You cannot make a self-managed
+	// Microsoft AD update request if there is an existing self-managed Microsoft
+	// AD update request in progress.
 	SelfManagedActiveDirectoryConfiguration *SelfManagedActiveDirectoryConfigurationUpdates `type:"structure"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// Sets the target value for a file system's throughput capacity, in MB/s, that
+	// you are updating the file system to. Valid values are 8, 16, 32, 64, 128,
+	// 256, 512, 1024, 2048. You cannot make a throughput capacity update request
+	// if there is an existing throughput capacity update request in progress. For
+	// more information, see Managing Throughput Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-throughput-capacity.html).
+	ThroughputCapacity *int64 `min:"8" type:"integer"`
+
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. Where d is the weekday number, from 1 through 7, with
+	// 1 = Monday and 7 = Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -6419,6 +6607,9 @@ func (s *UpdateFileSystemWindowsConfiguration) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "UpdateFileSystemWindowsConfiguration"}
 	if s.DailyAutomaticBackupStartTime != nil && len(*s.DailyAutomaticBackupStartTime) < 5 {
 		invalidParams.Add(request.NewErrParamMinLen("DailyAutomaticBackupStartTime", 5))
+	}
+	if s.ThroughputCapacity != nil && *s.ThroughputCapacity < 8 {
+		invalidParams.Add(request.NewErrParamMinValue("ThroughputCapacity", 8))
 	}
 	if s.WeeklyMaintenanceStartTime != nil && len(*s.WeeklyMaintenanceStartTime) < 7 {
 		invalidParams.Add(request.NewErrParamMinLen("WeeklyMaintenanceStartTime", 7))
@@ -6450,6 +6641,12 @@ func (s *UpdateFileSystemWindowsConfiguration) SetDailyAutomaticBackupStartTime(
 // SetSelfManagedActiveDirectoryConfiguration sets the SelfManagedActiveDirectoryConfiguration field's value.
 func (s *UpdateFileSystemWindowsConfiguration) SetSelfManagedActiveDirectoryConfiguration(v *SelfManagedActiveDirectoryConfigurationUpdates) *UpdateFileSystemWindowsConfiguration {
 	s.SelfManagedActiveDirectoryConfiguration = v
+	return s
+}
+
+// SetThroughputCapacity sets the ThroughputCapacity field's value.
+func (s *UpdateFileSystemWindowsConfiguration) SetThroughputCapacity(v int64) *UpdateFileSystemWindowsConfiguration {
+	s.ThroughputCapacity = &v
 	return s
 }
 
@@ -6541,7 +6738,9 @@ type WindowsFileSystemConfiguration struct {
 	// The throughput of an Amazon FSx file system, measured in megabytes per second.
 	ThroughputCapacity *int64 `min:"8" type:"integer"`
 
-	// The preferred time to perform weekly maintenance, in the UTC time zone.
+	// The preferred start time to perform weekly maintenance, formatted d:HH:MM
+	// in the UTC time zone. d is the weekday number, from 1 through 7, beginning
+	// with Monday and ending with Sunday.
 	WeeklyMaintenanceStartTime *string `min:"7" type:"string"`
 }
 
@@ -6645,6 +6844,27 @@ const (
 
 	// ActiveDirectoryErrorTypeInvalidDomainStage is a ActiveDirectoryErrorType enum value
 	ActiveDirectoryErrorTypeInvalidDomainStage = "INVALID_DOMAIN_STAGE"
+)
+
+// Describes the type of administrative action, as follows:
+//
+//    * FILE_SYSTEM_UPDATE - A file system update administrative action initiated
+//    by the user from the Amazon FSx console, API (UpdateFileSystem), or CLI
+//    (update-file-system). A
+//
+//    * STORAGE_OPTIMIZATION - Once the FILE_SYSTEM_UPDATE task to increase
+//    a file system's storage capacity completes successfully, a STORAGE_OPTIMIZATION
+//    task starts. Storage optimization is the process of migrating the file
+//    system data to the new, larger disks. You can track the storage migration
+//    progress using the ProgressPercent property. When STORAGE_OPTIMIZATION
+//    completes successfully, the parent FILE_SYSTEM_UPDATE action status changes
+//    to COMPLETED. For more information, see Managing Storage Capacity (https://docs.aws.amazon.com/fsx/latest/WindowsGuide/managing-storage-capacity.html).
+const (
+	// AdministrativeActionTypeFileSystemUpdate is a AdministrativeActionType enum value
+	AdministrativeActionTypeFileSystemUpdate = "FILE_SYSTEM_UPDATE"
+
+	// AdministrativeActionTypeStorageOptimization is a AdministrativeActionType enum value
+	AdministrativeActionTypeStorageOptimization = "STORAGE_OPTIMIZATION"
 )
 
 // The lifecycle status of the backup.
@@ -6789,6 +7009,23 @@ const (
 
 	// ServiceLimitTotalUserInitiatedBackups is a ServiceLimit enum value
 	ServiceLimitTotalUserInitiatedBackups = "TOTAL_USER_INITIATED_BACKUPS"
+)
+
+const (
+	// StatusFailed is a Status enum value
+	StatusFailed = "FAILED"
+
+	// StatusInProgress is a Status enum value
+	StatusInProgress = "IN_PROGRESS"
+
+	// StatusPending is a Status enum value
+	StatusPending = "PENDING"
+
+	// StatusCompleted is a Status enum value
+	StatusCompleted = "COMPLETED"
+
+	// StatusUpdatedOptimizing is a Status enum value
+	StatusUpdatedOptimizing = "UPDATED_OPTIMIZING"
 )
 
 // The storage type for your Amazon FSx file system.

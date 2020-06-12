@@ -4373,6 +4373,11 @@ type Cluster struct {
 	// in the EMR Management Guide.
 	KerberosAttributes *KerberosAttributes `type:"structure"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. This
+	// attribute is only available with EMR version 5.30.0 and later, excluding
+	// EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The path to the Amazon S3 location where logs for this cluster are stored.
 	LogUri *string `type:"string"`
 
@@ -4534,6 +4539,12 @@ func (s *Cluster) SetInstanceCollectionType(v string) *Cluster {
 // SetKerberosAttributes sets the KerberosAttributes field's value.
 func (s *Cluster) SetKerberosAttributes(v *KerberosAttributes) *Cluster {
 	s.KerberosAttributes = v
+	return s
+}
+
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *Cluster) SetLogEncryptionKmsKeyId(v string) *Cluster {
+	s.LogEncryptionKmsKeyId = &v
 	return s
 }
 
@@ -7985,6 +7996,11 @@ type JobFlowDetail struct {
 	// of the job flow assume this role.
 	JobFlowRole *string `type:"string"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. This
+	// attribute is only available with EMR version 5.30.0 and later, excluding
+	// EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The location in Amazon S3 where log files for the job are stored.
 	LogUri *string `type:"string"`
 
@@ -8079,6 +8095,12 @@ func (s *JobFlowDetail) SetJobFlowId(v string) *JobFlowDetail {
 // SetJobFlowRole sets the JobFlowRole field's value.
 func (s *JobFlowDetail) SetJobFlowRole(v string) *JobFlowDetail {
 	s.JobFlowRole = &v
+	return s
+}
+
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *JobFlowDetail) SetLogEncryptionKmsKeyId(v string) *JobFlowDetail {
+	s.LogEncryptionKmsKeyId = &v
 	return s
 }
 
@@ -10220,6 +10242,11 @@ type RunJobFlowInput struct {
 	// in the EMR Management Guide.
 	KerberosAttributes *KerberosAttributes `type:"structure"`
 
+	// The AWS KMS customer master key (CMK) used for encrypting log files. If a
+	// value is not provided, the logs will remain encrypted by AES-256. This attribute
+	// is only available with EMR version 5.30.0 and later, excluding EMR 6.0.0.
+	LogEncryptionKmsKeyId *string `type:"string"`
+
 	// The location in Amazon S3 to write the log files of the job flow. If a value
 	// is not provided, logs are not created.
 	LogUri *string `type:"string"`
@@ -10453,6 +10480,12 @@ func (s *RunJobFlowInput) SetJobFlowRole(v string) *RunJobFlowInput {
 // SetKerberosAttributes sets the KerberosAttributes field's value.
 func (s *RunJobFlowInput) SetKerberosAttributes(v *KerberosAttributes) *RunJobFlowInput {
 	s.KerberosAttributes = v
+	return s
+}
+
+// SetLogEncryptionKmsKeyId sets the LogEncryptionKmsKeyId field's value.
+func (s *RunJobFlowInput) SetLogEncryptionKmsKeyId(v string) *RunJobFlowInput {
+	s.LogEncryptionKmsKeyId = &v
 	return s
 }
 

@@ -796,7 +796,7 @@ func (c *QuickSight) CreateIngestionRequest(input *CreateIngestionInput) (req *r
 //
 // Any ingestions operating on tagged datasets inherit the same tags automatically
 // for use in access control. For an example, see How do I create an IAM policy
-// to control access to Amazon EC2 resources using tags? (https://aws.example.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/)
+// to control access to Amazon EC2 resources using tags? (https://aws.amazon.com/premiumsupport/knowledge-center/iam-ec2-resource-tags/)
 // in the AWS Knowledge Center. Tags are visible on the tagged dataset, but
 // not on the ingestion resource.
 //
@@ -10102,7 +10102,7 @@ type Dashboard struct {
 	// The last time that this dataset was updated.
 	LastUpdatedTime *time.Time `type:"timestamp"`
 
-	// A display name for the dataset.
+	// A display name for the dashboard.
 	Name *string `min:"1" type:"string"`
 
 	// Version.
@@ -10489,6 +10489,10 @@ type DashboardVersion struct {
 	// The time that this dashboard version was created.
 	CreatedTime *time.Time `type:"timestamp"`
 
+	// The Amazon Resource Numbers (ARNs) for the datasets that are associated with
+	// a version of the dashboard.
+	DataSetArns []*string `type:"list"`
+
 	// Description.
 	Description *string `min:"1" type:"string"`
 
@@ -10524,6 +10528,12 @@ func (s *DashboardVersion) SetArn(v string) *DashboardVersion {
 // SetCreatedTime sets the CreatedTime field's value.
 func (s *DashboardVersion) SetCreatedTime(v time.Time) *DashboardVersion {
 	s.CreatedTime = &v
+	return s
+}
+
+// SetDataSetArns sets the DataSetArns field's value.
+func (s *DashboardVersion) SetDataSetArns(v []*string) *DashboardVersion {
+	s.DataSetArns = v
 	return s
 }
 
@@ -15649,7 +15659,7 @@ func (s *ListDashboardsInput) SetNextToken(v string) *ListDashboardsInput {
 type ListDashboardsOutput struct {
 	_ struct{} `type:"structure"`
 
-	// A structure that contains all of the dashboards shared with the user. This
+	// A structure that contains all of the dashboards in your AWS account. This
 	// structure provides basic information about the dashboards.
 	DashboardSummaryList []*DashboardSummary `type:"list"`
 
@@ -18358,7 +18368,7 @@ type RegisterUserInput struct {
 	// scenarios, for example when you are registering an IAM user or an Amazon
 	// QuickSight user. You can register multiple users using the same IAM role
 	// if each user has a different session name. For more information on assuming
-	// IAM roles, see assume-role (https://docs.aws.example.com/cli/latest/reference/sts/assume-role.html)
+	// IAM roles, see assume-role (https://awscli.amazonaws.com/v2/documentation/api/latest/reference/sts/assume-role.html)
 	// in the AWS CLI Reference.
 	SessionName *string `min:"2" type:"string"`
 
@@ -20380,7 +20390,7 @@ func (s *TemplateVersion) SetVersionNumber(v int64) *TemplateVersion {
 type TemplateVersionSummary struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the template version.
+	// The Amazon Resource Name (ARN) of the template version.
 	Arn *string `type:"string"`
 
 	// The time that this template version was created.
@@ -23397,6 +23407,12 @@ const (
 )
 
 const (
+	// DashboardErrorTypeAccessDenied is a DashboardErrorType enum value
+	DashboardErrorTypeAccessDenied = "ACCESS_DENIED"
+
+	// DashboardErrorTypeSourceNotFound is a DashboardErrorType enum value
+	DashboardErrorTypeSourceNotFound = "SOURCE_NOT_FOUND"
+
 	// DashboardErrorTypeDataSetNotFound is a DashboardErrorType enum value
 	DashboardErrorTypeDataSetNotFound = "DATA_SET_NOT_FOUND"
 
@@ -23848,6 +23864,9 @@ const (
 )
 
 const (
+	// TemplateErrorTypeSourceNotFound is a TemplateErrorType enum value
+	TemplateErrorTypeSourceNotFound = "SOURCE_NOT_FOUND"
+
 	// TemplateErrorTypeDataSetNotFound is a TemplateErrorType enum value
 	TemplateErrorTypeDataSetNotFound = "DATA_SET_NOT_FOUND"
 
