@@ -266,6 +266,11 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	if err := d.Set("provisioning_artifact", provisioningArtifactList); err != nil {
 		return fmt.Errorf("setting ProvisioningArtifact for product '%s' failed: %s", d.Id(), err)
 	}
+	
+    // TODO budgets
+    // TODO tag options
+    // TODO launch paths? (from describe product) -- probably not needed
+
 	return nil
 }
 
