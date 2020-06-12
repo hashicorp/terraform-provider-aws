@@ -1,5 +1,9 @@
 ## 2.67.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_wafv2_web_acl` [GH-12688]
+
 BUG FIXES:
 
 * resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
