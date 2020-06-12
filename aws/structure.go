@@ -345,7 +345,7 @@ func expandParameters(configured []interface{}) []*rds.Parameter {
 	return parameters
 }
 
-func expandRedshiftParameters(configured []interface{}) ([]*redshift.Parameter, error) {
+func expandRedshiftParameters(configured []interface{}) []*redshift.Parameter {
 	var parameters []*redshift.Parameter
 
 	// Loop over our configured parameters and create
@@ -365,7 +365,7 @@ func expandRedshiftParameters(configured []interface{}) ([]*redshift.Parameter, 
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 // Takes the result of flatmap.Expand for an array of parameters and

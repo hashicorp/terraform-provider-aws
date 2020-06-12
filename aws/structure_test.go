@@ -589,10 +589,7 @@ func TestExpandRedshiftParameters(t *testing.T) {
 			"value": "utf8",
 		},
 	}
-	parameters, err := expandRedshiftParameters(expanded)
-	if err != nil {
-		t.Fatalf("bad: %#v", err)
-	}
+	parameters := expandRedshiftParameters(expanded)
 
 	expected := &redshift.Parameter{
 		ParameterName:  aws.String("character_set_client"),
