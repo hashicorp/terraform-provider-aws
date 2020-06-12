@@ -95,43 +95,37 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							// Ignore missing configuration block
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "1" && new == "0" {
-									return true
-								}
-								return false
-							},
+							Computed: true,
+							// Ideally we'd want to detect drift detection,
+							// but a DiffSuppressFunc here does not behave nicely
+							// for detecting missing configuration blocks
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									// These fields are returned from calls to the API
+									// even if not provided at input time and can be omitted in requests;
+									// thus, to prevent non-empty plans, we set these
+									// to Computed and remove Defaults
 									"on_demand_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  "prioritized",
-										// Reference: https://github.com/hashicorp/terraform/issues/18027
-										// ValidateFunc: validation.StringInSlice([]string{
-										// 	"prioritized",
-										// }, false),
+										Computed: true,
 									},
 									"on_demand_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"on_demand_percentage_above_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Default:      100,
+										Computed:     true,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
 									"spot_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  "lowest-price",
-										// Reference: https://github.com/hashicorp/terraform/issues/18027
-										// ValidateFunc: validation.StringInSlice([]string{
-										// 	"lowest-price",
-										// }, false),
+										Computed: true,
 									},
 									"spot_instance_pools": {
 										Type:         schema.TypeInt,
