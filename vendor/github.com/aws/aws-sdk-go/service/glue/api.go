@@ -24582,7 +24582,9 @@ type GetUserDefinedFunctionsInput struct {
 	// If none is provided, the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the catalog database where the functions are located.
+	// The name of the catalog database where the functions are located. If none
+	// is provided, functions from all the databases across the catalog will be
+	// returned.
 	DatabaseName *string `min:"1" type:"string"`
 
 	// The maximum number of functions to return in one response.
@@ -33794,6 +33796,9 @@ type UserDefinedFunction struct {
 	// The time at which the function was created.
 	CreateTime *time.Time `type:"timestamp"`
 
+	// The name of the database where the function resides.
+	DatabaseName *string `min:"1" type:"string"`
+
 	// The name of the function.
 	FunctionName *string `min:"1" type:"string"`
 
@@ -33826,6 +33831,12 @@ func (s *UserDefinedFunction) SetClassName(v string) *UserDefinedFunction {
 // SetCreateTime sets the CreateTime field's value.
 func (s *UserDefinedFunction) SetCreateTime(v time.Time) *UserDefinedFunction {
 	s.CreateTime = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *UserDefinedFunction) SetDatabaseName(v string) *UserDefinedFunction {
+	s.DatabaseName = &v
 	return s
 }
 
