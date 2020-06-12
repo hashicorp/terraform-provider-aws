@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"log"
 	"time"
 
@@ -14,91 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
-
-func GetLaunchPathByName(ProductName string) (string, error) {
-
-	productId, err := GetProductIdByName(ProductName)
-	if err != nil {
-        return "", fmt.Errorf("retrieving launch path by name failed: %s", err)
-    }
-
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-
-	svc := servicecatalog.New(sess)
-
-	params :=&servicecatalog.ListLaunchPathsInput{
-		ProductId: &productId,
-	}
-
-	resp, err := svc.ListLaunchPaths(params)
-
-	if err != nil {
-		return "", fmt.Errorf("retrieving launch path by name failed: %s", err)
-	}
-
-	var LaunchPathId interface{}
-
-	for i := range resp.LaunchPathSummaries {
-		if *resp.LaunchPathSummaries[i].Name == ProductName {
-			LaunchPathId = *resp.LaunchPathSummaries[i].Id
-		}
-	}
-	return LaunchPathId.(string), nil
-}
-
-func GetProductIdByName(ProductName string) (string, error) {
-	sess := session.Must(session.NewSessionWithOptions(session.Options{
-		SharedConfigState: session.SharedConfigEnable,
-	}))
-
-	svc := servicecatalog.New(sess)
-
-	params :=&servicecatalog.SearchProductsInput{
-		AcceptLanguage: aws.String("en"),
-	}
-
-	resp, err := svc.SearchProducts(params)
-
-	if err != nil {
-		return "", fmt.Errorf("retrieving product id by name failed: %s", err)
-	}
-
-	var ProductId interface{}
-
-	for i := range resp.ProductViewSummaries {
-		if *resp.ProductViewSummaries[i].Name == ProductName {
-			ProductId = *resp.ProductViewSummaries[i].ProductId
-		}
-	}
-	return ProductId.(string), nil
-}
-
-func GetProductArtifactIdByName(ProductId string, ProductArtifactName string, meta interface{}) (string, error) {
-	conn := meta.(*AWSClient).scconn
-
-	params :=&servicecatalog.DescribeProductInput{
-		AcceptLanguage: aws.String("en"),
-		Id:             aws.String(ProductId),
-	}
-
-	resp, err := conn.DescribeProduct(params)
-
-	if err != nil {
-		return "", fmt.Errorf("retrieving product artifact id by name failed: %s", err)
-	}
-
-	var ArtifactId interface{}
-
-	for i := range resp.ProvisioningArtifacts {
-		if *resp.ProvisioningArtifacts[i].Name == ProductArtifactName {
-			ArtifactId = *resp.ProvisioningArtifacts[i].Id
-		}
-	}
-
-	return ArtifactId.(string), nil
-}
 
 func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 	return &schema.Resource{
@@ -118,12 +32,6 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"tags": tagsSchema(),
-			"accept_language": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
 			"notification_arn": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -136,27 +44,18 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 			},
 			"product_id": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"product_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"provisioned_product_name": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"provisioning_artifact_id": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
-			"provisioning_artifact_name": {
-				Type:     schema.TypeString,
-				Optional: true,
 			},
 			"provisioning_parameters": {
 				Type:     schema.TypeList,
@@ -167,118 +66,172 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"tags": tagsSchema(),
+			
 		},
 	}
 }
 func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
-	//input := servicecatalog.CreatePortfolioInput{
-	//	AcceptLanguage:   aws.String("en"),
-	//	DisplayName:      aws.String(d.Get("name").(string)),
-	//	IdempotencyToken: aws.String(resource.UniqueId()),
-	//	Tags:             keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ServicecatalogTags(),
-	//}
-
-	fmt.Println(d.Get("provisioning_parameters"))
-	log.Println("matt")
-	log.Println(d.Get("provisioning_parameters"))
-
-	tempParams := d.Get("provisioning_parameters").([]interface{})
-
-	var pHold []*servicecatalog.ProvisioningParameter
-
-	for i, s := range tempParams {
-		log.Println(i, s)
-		for key, element := range s.(map[string]interface{}) {
-			log.Println("Key:", key, "=>", "Element:", element)
-			var tempelement = element.(string)
-			log.Println(element.(string))
-			temppp := servicecatalog.ProvisioningParameter{Key: &key, Value: &tempelement}
-			pHold = append(pHold, &temppp)
-		}
-	}
-
-	log.Println(pHold)
-
 	input := servicecatalog.ProvisionProductInput{
-		AcceptLanguage:         aws.String(d.Get("accept_language").(string)),
-		ProvisionedProductName: aws.String(d.Get("provisioned_product_name").(string)),
-		ProvisionToken:         aws.String(resource.UniqueId()),
 		ProductId:              aws.String(d.Get("product_id").(string)),
 		ProvisioningArtifactId: aws.String(d.Get("provisioning_artifact_id").(string)),
-		PathId:                 aws.String(d.Get("path_id").(string)),
-		ProvisioningParameters: pHold,
+		ProvisionedProductName: aws.String(d.Get("provisioned_product_name").(string)),
+		ProvisionToken:         aws.String(resource.UniqueId()),
+		Tags:                   keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ServicecatalogTags(),
 	}
+    
+    // TODO create with additional fields
+//		PathId:                 aws.String(d.Get("path_id").(string)),
+//		notificationArns
+//		ProvisioningParameters: pHold,
+/*
+    fmt.Println(d.Get("provisioning_parameters"))
+    log.Println("matt")
+    log.Println(d.Get("provisioning_parameters"))
 
-	//if v, ok := d.GetOk("description"); ok {
-	//	input.Description = aws.String(v.(string))
-	//}
-	//
-	//if v, ok := d.GetOk("provider_name"); ok {
-	//	input.ProviderName = aws.String(v.(string))
-	//}
+    tempParams := d.Get("provisioning_parameters").([]interface{})
+
+    var pHold []*servicecatalog.ProvisioningParameter
+
+    for i, s := range tempParams {
+        log.Println(i, s)
+        for key, element := range s.(map[string]interface{}) {
+            log.Println("Key:", key, "=>", "Element:", element)
+            var tempelement = element.(string)
+            log.Println(element.(string))
+            temppp := servicecatalog.ProvisioningParameter{Key: &key, Value: &tempelement}
+            pHold = append(pHold, &temppp)
+        }
+    }
+
+    log.Println(pHold)
+    if v := d.Get("instance_initiated_shutdown_behavior").(string); v != "" && ok {
+        opts.InstanceInitiatedShutdownBehavior = aws.String(v)
+    }
+*/
 
 	log.Printf("[DEBUG] Provision Service Catalog Product: %#v", input)
 	resp, err := conn.ProvisionProduct(&input)
 	if err != nil {
 		return fmt.Errorf("Provisioning Service Catalog product failed: %s", err.Error())
 	}
-	d.SetId(*resp.RecordDetail.RecordId)
+	
+	d.SetId(*resp.RecordDetail.ProvisionedProductId)
 
-	return resourceAwsServiceCatalogPortfolioRead(d, meta)
+    /* TODO wait for creation
+    waitForCreated := &resource.StateChangeConf{
+        Target: []string{"CREATED", servicecatalog.StatusAvailable},
+        Refresh: func() (result interface{}, state string, err error) {
+            resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
+                Id: aws.String(productId),
+            })
+            if err != nil {
+                return nil, "", err
+            }
+            return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
+        },
+        Timeout:      d.Timeout(schema.TimeoutCreate),
+        PollInterval: 3 * time.Second,
+    }
+    if _, err := waitForCreated.WaitForState(); err != nil {
+        return err
+    }
+    */
+    
+	return resourceAwsServiceCatalogProvisionedProductRead(d, meta)
 }
 
 func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
-	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	input := servicecatalog.DescribePortfolioInput{
-		AcceptLanguage: aws.String("en"),
+	input := servicecatalog.DescribeProvisionedProductInput{
+		Id: aws.String(d.Id()),
 	}
-	input.Id = aws.String(d.Id())
 
-	log.Printf("[DEBUG] Reading Service Catalog Portfolio: %#v", input)
-	resp, err := conn.DescribePortfolio(&input)
+	log.Printf("[DEBUG] Reading Service Catalog Provisioned Product: %#v", input)
+	resp, err := conn.DescribeProvisionedProduct(&input)
+	// TODO or SearchProvisionedProducts ???
+	
 	if err != nil {
 		if scErr, ok := err.(awserr.Error); ok && scErr.Code() == "ResourceNotFoundException" {
-			log.Printf("[WARN] Service Catalog Portfolio %q not found, removing from state", d.Id())
+			log.Printf("[WARN] Service Catalog Provisioned Product %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
-		return fmt.Errorf("Reading ServiceCatalog Portfolio '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("Reading ServiceCatalog Provisioned Product '%s' failed: %s", *input.Id, err.Error())
 	}
-	portfolioDetail := resp.PortfolioDetail
-	if err := d.Set("created_time", portfolioDetail.CreatedTime.Format(time.RFC3339)); err != nil {
+	
+	detail := resp.ProvisionedProductDetail
+	if err := d.Set("created_time", detail.CreatedTime.Format(time.RFC3339)); err != nil {
 		log.Printf("[DEBUG] Error setting created_time: %s", err)
 	}
-	d.Set("arn", portfolioDetail.ARN)
-	d.Set("description", portfolioDetail.Description)
-	d.Set("name", portfolioDetail.DisplayName)
-	d.Set("provider_name", portfolioDetail.ProviderName)
+	
+	// TODO read other fields
+	
+	//d.Set("arn", detail.ARN)
+/*
+    //  "ProvisionedProductDetail":	
+      "Arn": "string",
+      "CreatedTime": number,
+      "Id": "string",
+      "IdempotencyToken": "string",
+      "LastRecordId": "string",
+      "Name": "string",
+      "ProductId": "string",
+      "ProvisioningArtifactId": "string",
+      "Status": "string",
+      "StatusMessage": "string",
+      "Type": "string"
+      
+      
+      or ... first in ProvisionedProducts
+      
+         "Arn": "string",
+         "CreatedTime": number,
+         "Id": "string",
+         "IdempotencyToken": "string",
+         "LastRecordId": "string",
+         "Name": "string",
+         "ProductId": "string",
+         "ProvisioningArtifactId": "string",
+         "Status": "string",
+         "StatusMessage": "string",
+         "Type": "string",
+         
+         // extras:
+         "PhysicalId": "string",
+         "Tags": [ 
+            { 
+               "Key": "string",
+               "Value": "string"
+            }
+         ],
+         "UserArn": "string",
+         "UserArnSession": "string"
+*/
 
-	if err := d.Set("tags", keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
-	}
+//	if err := d.Set("tags", keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+//		return fmt.Errorf("error setting tags: %s", err)
+//	}
+	
+	// ignored: cloudwatch dashboards
 
 	return nil
 }
 
 func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, meta interface{}) error {
+    // TODO update not done (code is for portfolio)
+    
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.UpdatePortfolioInput{
-		AcceptLanguage: aws.String("en"),
 		Id:             aws.String(d.Id()),
 	}
 
 	if d.HasChange("name") {
 		v, _ := d.GetOk("name")
 		input.DisplayName = aws.String(v.(string))
-	}
-
-	if d.HasChange("accept_language") {
-		v, _ := d.GetOk("accept_language")
-		input.AcceptLanguage = aws.String(v.(string))
 	}
 
 	if d.HasChange("description") {
@@ -298,23 +251,25 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 		input.RemoveTags = aws.StringSlice(keyvaluetags.New(o).IgnoreAws().Keys())
 	}
 
-	log.Printf("[DEBUG] Update Service Catalog Portfolio: %#v", input)
+	log.Printf("[DEBUG] Update Service Catalog Provisioned Product: %#v", input)
 	_, err := conn.UpdatePortfolio(&input)
 	if err != nil {
-		return fmt.Errorf("Updating Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("Updating Service Catalog Provisioned Product '%s' failed: %s", *input.Id, err.Error())
 	}
-	return resourceAwsServiceCatalogPortfolioRead(d, meta)
+	return resourceAwsServiceCatalogProvisionedProductRead(d, meta)
 }
 
 func resourceAwsServiceCatalogProvisionedProductDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
-	input := servicecatalog.DeletePortfolioInput{}
-	input.Id = aws.String(d.Id())
+	input := servicecatalog.TerminateProvisionedProductInput{
+	    ProvisionedProductId : aws.String(d.Id()),
+	    TerminateToken : aws.String(resource.UniqueId()),
+	}
 
-	log.Printf("[DEBUG] Delete Service Catalog Portfolio: %#v", input)
-	_, err := conn.DeletePortfolio(&input)
+	log.Printf("[DEBUG] Delete Service Catalog Provisioned Product: %#v", input)
+	_, err := conn.TerminateProvisionedProduct(&input)
 	if err != nil {
-		return fmt.Errorf("Deleting Service Catalog Portfolio '%s' failed: %s", *input.Id, err.Error())
+		return fmt.Errorf("Deleting Service Catalog Provisioned Product '%s' failed: %s", *input.ProvisionedProductId, err.Error())
 	}
 	return nil
 }

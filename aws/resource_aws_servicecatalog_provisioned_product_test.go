@@ -17,17 +17,17 @@ import (
 func TestAccAWSServiceCatalogProvisionedProduct_Basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	name := acctest.RandString(5)
-	var dpo servicecatalog.DescribePortfolioOutput
-
+	
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
+		// TODO - CheckDestroy: ?,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigBasic(name),
+				Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate(name),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProvisionedProduct(resourceName, &dpo),
+					testAccCheckProvisionedProduct(resourceName),
+					// TODO addl checks (ones below are wrong)
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`portfolio/.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
@@ -45,76 +45,7 @@ func TestAccAWSServiceCatalogProvisionedProduct_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProvisionedProduct_Disappears(t *testing.T) {
-	name := acctest.RandString(5)
-	resourceName := "aws_servicecatalog_provisioned_product.test"
-	var dpo servicecatalog.DescribePortfolioOutput
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic(name),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					testAccCheckServiceCatlaogPortfolioDisappears(&dpo),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
-
-func TestAccAWSServiceCatalogProvisionedProduct_Tags(t *testing.T) {
-	resourceName := "aws_servicecatalog_provisioned_product.test"
-	name := acctest.RandString(5)
-	var dpo servicecatalog.DescribePortfolioOutput
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckServiceCatlaogPortfolioDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigTags1(name, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigTags2(name, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccCheckAwsServiceCatalogPortfolioResourceConfigTags1(name, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolio(resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func testAccCheckProvisionedProduct(pr string, dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
+func testAccCheckProvisionedProduct(pr string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 		rs, ok := s.RootModule().Resources[pr]
@@ -129,82 +60,50 @@ func testAccCheckProvisionedProduct(pr string, dpo *servicecatalog.DescribePortf
 		input := servicecatalog.DescribePortfolioInput{}
 		input.Id = aws.String(rs.Primary.ID)
 
-		resp, err := conn.DescribePortfolio(&input)
+		_, err := conn.DescribePortfolio(&input)
 		if err != nil {
 			return err
 		}
 
-		*dpo = *resp
+		// *dpo = *resp
 		return nil
 	}
 }
 
-func testAccCheckServiceCatlaogProvisionedProductDisappears(dpo *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).scconn
+func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate(provisionedProductName string) string {
 
-		input := servicecatalog.DeletePortfolioInput{}
-		input.Id = dpo.PortfolioDetail.Id
+    return fmt.Sprintf(`
+resource "aws_servicecatalog_provisioned_product" "test" {
+    provisioned_product_name = "%s"
+    product_id = "prod-lgqvxr6phzrzk"
+    provisioning_artifact_id = "pa-5bddiphhjdsoy"
+}
+`, provisionedProductName)
 
-		_, err := conn.DeletePortfolio(&input)
-		return err
-	}
+    // TODO test should create the portfolio etc as below, but we need portfolio_product_association for that
+    
+/*
+
+    portfolio_cfg := testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm_automated_test_portfolio");
+    
+    arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
+    arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
+    arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
+    p_tag1 := "FooKey = \"bar\""
+    p_tag2 := "BarKey = \"foo\""
+    product_cfg := testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, p_tag1, p_tag2)
+
+    return portfolio_cfg + "\n" + product_cfg + "\n" + fmt.Sprintf(`
+resource "aws_servicecatalog_portfolio_product_association" "association" {
+    portfolio_id = aws_servicecatalog_portfolio.test.id
+    product_id = aws_servicecatalog_product.test.id
 }
 
-func testAccCheckServiceCatlaogProvisionedProductDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_portfolio" {
-			continue
-		}
-		input := servicecatalog.DescribePortfolioInput{}
-		input.Id = aws.String(rs.Primary.ID)
-
-		_, err := conn.DescribePortfolio(&input)
-		if err == nil {
-			return fmt.Errorf("Portfolio still exists")
-		}
-	}
-
-	return nil
+resource "aws_servicecatalog_provisioned_product" "test" {
+    provisioned_product_name = "%s"
+    product_id = aws_servicecatalog_product.test.id
+    provisioning_artifact_id = aws_servicecatalog_product.test.provisioning_artifact[0].id
 }
-
-func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigBasic(name string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = "%s"
-  description   = "test-2"
-  provider_name = "test-3"
-}
-`, name)
-}
-
-func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTags1(name, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-b"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, name, tagKey1, tagValue1)
-}
-
-func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio" "test" {
-  name          = %[1]q
-  description   = "test-only-change-me"
-  provider_name = "test-c"
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
+`, provisionedProductName)
+*/
 }
