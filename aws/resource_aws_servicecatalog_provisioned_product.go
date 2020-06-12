@@ -15,9 +15,12 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
-func GetLaunchPathByName(ProductName string) string {
+func GetLaunchPathByName(ProductName string) (string, error) {
 
-	productId := GetProductIdByName(ProductName)
+	productId, err := GetProductIdByName(ProductName)
+	if err != nil {
+        return "", fmt.Errorf("retrieving launch path by name failed: %s", err)
+    }
 
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
@@ -32,9 +35,7 @@ func GetLaunchPathByName(ProductName string) string {
 	resp, err := svc.ListLaunchPaths(params)
 
 	if err != nil {
-		// Print the error, cast err to awserr.Error to get the Code and
-		// Message from an error.
-		fmt.Println(err.Error())
+		return "", fmt.Errorf("retrieving launch path by name failed: %s", err)
 	}
 
 	var LaunchPathId interface{}
@@ -44,10 +45,10 @@ func GetLaunchPathByName(ProductName string) string {
 			LaunchPathId = *resp.LaunchPathSummaries[i].Id
 		}
 	}
-	return LaunchPathId.(string)
+	return LaunchPathId.(string), nil
 }
 
-func GetProductIdByName(ProductName string) string {
+func GetProductIdByName(ProductName string) (string, error) {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
@@ -61,9 +62,7 @@ func GetProductIdByName(ProductName string) string {
 	resp, err := svc.SearchProducts(params)
 
 	if err != nil {
-		// Print the error, cast err to awserr.Error to get the Code and
-		// Message from an error.
-		fmt.Println(err.Error())
+		return "", fmt.Errorf("retrieving product id by name failed: %s", err)
 	}
 
 	var ProductId interface{}
@@ -73,10 +72,10 @@ func GetProductIdByName(ProductName string) string {
 			ProductId = *resp.ProductViewSummaries[i].ProductId
 		}
 	}
-	return ProductId.(string)
+	return ProductId.(string), nil
 }
 
-func GetProductArtifactIdByName(ProductId string, ProductArtifactName string, meta interface{}) string {
+func GetProductArtifactIdByName(ProductId string, ProductArtifactName string, meta interface{}) (string, error) {
 	conn := meta.(*AWSClient).scconn
 
 	params :=&servicecatalog.DescribeProductInput{
@@ -87,7 +86,7 @@ func GetProductArtifactIdByName(ProductId string, ProductArtifactName string, me
 	resp, err := conn.DescribeProduct(params)
 
 	if err != nil {
-		return fmt.Errorf("retrieving product artificate id by name failed: %s", err.Error())
+		return "", fmt.Errorf("retrieving product artifact id by name failed: %s", err)
 	}
 
 	var ArtifactId interface{}
@@ -98,7 +97,7 @@ func GetProductArtifactIdByName(ProductId string, ProductArtifactName string, me
 		}
 	}
 
-	return ArtifactId.(string)
+	return ArtifactId.(string), nil
 }
 
 func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
