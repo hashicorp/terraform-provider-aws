@@ -70,7 +70,7 @@ func dataSourceAwsEcrAuthorizationTokenRead(d *schema.ResourceData, meta interfa
 	}
 	basicAuthorization := strings.Split(string(authBytes), ":")
 	if len(basicAuthorization) != 2 {
-		return fmt.Errorf("unkown ECR authorization token format")
+		return fmt.Errorf("unknown ECR authorization token format")
 	}
 	userName := basicAuthorization[0]
 	password := basicAuthorization[1]
