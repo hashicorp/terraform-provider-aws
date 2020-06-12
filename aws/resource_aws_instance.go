@@ -22,6 +22,7 @@ import (
 )
 
 func resourceAwsInstance() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsInstanceCreate,
 		Read:   resourceAwsInstanceRead,
