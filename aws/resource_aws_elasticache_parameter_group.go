@@ -194,25 +194,29 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 					paramsToModify = append(paramsToModify[:i], paramsToModify[i+1:]...)
 
 					// If we are only trying to remove reserved-memory and not perform
-					// an update to reserved-memory or reserved-memory-percent, we
+					// an update to reserved-memory or reserved-memory-percentage, we
 					// can attempt to workaround the API issue by switching it to
-					// reserved-memory-percent first then reset that temporary parameter.
+					// reserved-memory-percentage first then reset that temporary parameter.
 
-					tryReservedMemoryPercentWorkaround := true
+					tryReservedMemoryPercentageWorkaround := true
 
 					allConfiguredParameters := expandElastiCacheParameters(d.Get("parameter").(*schema.Set).List())
+					if err != nil {
+						return fmt.Errorf("error expanding parameter configuration: %s", err)
+					}
+
 					for _, configuredParameter := range allConfiguredParameters {
-						if aws.StringValue(configuredParameter.ParameterName) == "reserved-memory" || aws.StringValue(configuredParameter.ParameterName) == "reserved-memory-percent" {
-							tryReservedMemoryPercentWorkaround = false
+						if aws.StringValue(configuredParameter.ParameterName) == "reserved-memory" || aws.StringValue(configuredParameter.ParameterName) == "reserved-memory-percentage" {
+							tryReservedMemoryPercentageWorkaround = false
 							break
 						}
 					}
 
-					if !tryReservedMemoryPercentWorkaround {
+					if !tryReservedMemoryPercentageWorkaround {
 						break
 					}
 
-					// The reserved-memory-percent parameter does not exist in redis2.6 and redis2.8
+					// The reserved-memory-percentage parameter does not exist in redis2.6 and redis2.8
 					family := d.Get("family").(string)
 					if family == "redis2.6" || family == "redis2.8" {
 						log.Printf("[WARN] Cannot reset Elasticache Parameter Group (%s) reserved-memory parameter with %s family", d.Id(), family)
@@ -223,7 +227,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 						CacheParameterGroupName: aws.String(d.Get("name").(string)),
 						ParameterNameValues: []*elasticache.ParameterNameValue{
 							{
-								ParameterName:  aws.String("reserved-memory-percent"),
+								ParameterName:  aws.String("reserved-memory-percentage"),
 								ParameterValue: aws.String("0"),
 							},
 						},
@@ -231,7 +235,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 					_, err = conn.ModifyCacheParameterGroup(modifyInput)
 
 					if err != nil {
-						log.Printf("[WARN] Error attempting reserved-memory workaround to switch to reserved-memory-percent: %s", err)
+						log.Printf("[WARN] Error attempting reserved-memory workaround to switch to reserved-memory-percentage: %s", err)
 						break
 					}
 
@@ -239,7 +243,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 						CacheParameterGroupName: aws.String(d.Get("name").(string)),
 						ParameterNameValues: []*elasticache.ParameterNameValue{
 							{
-								ParameterName:  aws.String("reserved-memory-percent"),
+								ParameterName:  aws.String("reserved-memory-percentage"),
 								ParameterValue: aws.String("0"),
 							},
 						},
@@ -248,7 +252,7 @@ func resourceAwsElasticacheParameterGroupUpdate(d *schema.ResourceData, meta int
 					_, err = conn.ResetCacheParameterGroup(resetInput)
 
 					if err != nil {
-						log.Printf("[WARN] Error attempting reserved-memory workaround to reset reserved-memory-percent: %s", err)
+						log.Printf("[WARN] Error attempting reserved-memory workaround to reset reserved-memory-percentage: %s", err)
 					}
 
 					break
