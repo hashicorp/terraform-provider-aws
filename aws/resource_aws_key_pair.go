@@ -13,6 +13,7 @@ import (
 )
 
 func resourceAwsKeyPair() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsKeyPairCreate,
 		Read:   resourceAwsKeyPairRead,

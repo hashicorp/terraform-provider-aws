@@ -17,6 +17,7 @@ import (
 )
 
 func resourceAwsEcsTaskDefinition() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsEcsTaskDefinitionCreate,
 		Read:   resourceAwsEcsTaskDefinitionRead,

@@ -17,6 +17,7 @@ import (
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSpotFleetRequestCreate,
 		Read:   resourceAwsSpotFleetRequestRead,

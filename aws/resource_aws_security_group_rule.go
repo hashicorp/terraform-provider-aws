@@ -19,6 +19,7 @@ import (
 )
 
 func resourceAwsSecurityGroupRule() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSecurityGroupRuleCreate,
 		Read:   resourceAwsSecurityGroupRuleRead,
