@@ -576,7 +576,6 @@ behavior "pull_request_path_labeler" "service_labels" {
       ".gometalinter.json",
       ".markdownlinkcheck.json",
       ".markdownlint.yml",
-      ".travis.yml",
       "staticcheck.conf"
     ]
     # label services
