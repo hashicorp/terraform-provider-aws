@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"math"
 	"regexp"
 	"strings"
 	"time"
@@ -494,7 +495,7 @@ func wafv2SizeConstraintSchema() *schema.Schema {
 				"size": {
 					Type:         schema.TypeInt,
 					Required:     true,
-					ValidateFunc: validation.IntBetween(0, 21474836480),
+					ValidateFunc: validation.IntBetween(0, math.MaxInt32),
 				},
 				"text_transformation": wafv2TextTransformationSchema(),
 			},
