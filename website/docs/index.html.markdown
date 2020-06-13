@@ -222,6 +222,9 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   API, or metadata API.  When set to `true` and not determined previously,
   returns an empty account ID when manually constructing ARN attributes with
   the following:
+  - [`aws_ami` resource](/docs/providers/aws/r/ami.html)
+  - [`aws_ami_copy` resource](/docs/providers/aws/r/ami_copy.html)
+  - [`aws_ami_from_instance` resource](/docs/providers/aws/r/ami_from_instance.html)  
   - [`aws_api_gateway_deployment` resource](/docs/providers/aws/r/api_gateway_deployment.html)
   - [`aws_api_gateway_rest_api` resource](/docs/providers/aws/r/api_gateway_rest_api.html)
   - [`aws_api_gateway_stage` resource](/docs/providers/aws/r/api_gateway_stage.html)
