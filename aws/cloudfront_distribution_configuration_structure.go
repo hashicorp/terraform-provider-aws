@@ -556,6 +556,12 @@ func expandOrigin(m map[string]interface{}) *cloudfront.Origin {
 		Id:         aws.String(m["origin_id"].(string)),
 		DomainName: aws.String(m["domain_name"].(string)),
 	}
+	if v, ok := m["connection_attempts"]; ok {
+		origin.ConnectionAttempts = aws.Int64(int64(v.(int)))
+	}
+	if v, ok := m["connection_timeout"]; ok {
+		origin.ConnectionTimeout = aws.Int64(int64(v.(int)))
+	}
 	if v, ok := m["custom_header"]; ok {
 		origin.CustomHeaders = expandCustomHeaders(v.(*schema.Set))
 	}
@@ -588,6 +594,8 @@ func flattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["origin_id"] = aws.StringValue(or.Id)
 	m["domain_name"] = aws.StringValue(or.DomainName)
+	m["connection_attempts"] = aws.Int64Value(or.ConnectionAttempts)
+	m["connection_timeout"] = aws.Int64Value(or.ConnectionTimeout)
 	if or.CustomHeaders != nil {
 		m["custom_header"] = flattenCustomHeaders(or.CustomHeaders)
 	}
