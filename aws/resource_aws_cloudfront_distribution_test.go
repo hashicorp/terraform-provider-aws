@@ -862,6 +862,35 @@ func TestAccAWSCloudFrontDistribution_WaitForDeployment(t *testing.T) {
 	})
 }
 
+func TestAccAWSCloudFrontDistribution_ConnectionAttemptAndTimeoutConfig(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.connection_props"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConnectionAttemptAndTimeoutConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.connection_attempts", "3"),
+					resource.TestCheckResourceAttr(resourceName, "origin.1857972443.connection_timeout", "5"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckCloudFrontDistributionDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).cloudfrontconn
 
@@ -2543,3 +2572,48 @@ resource "aws_cloudfront_distribution" "test" {
 }
 `, enabled, waitForDeployment)
 }
+
+var testAccAWSCloudFrontDistributionConnectionAttemptAndTimeoutConfig = fmt.Sprintf(`
+variable rand_id {
+	default = %d
+}
+
+resource "aws_cloudfront_distribution" "connection_props" {
+	origin {
+		connection_attempts = 3
+		connection_timeout = 5
+		domain_name = "www.example.com"
+		origin_id = "myCustomOrigin"
+		custom_origin_config {
+			http_port = 80
+			https_port = 443
+			origin_protocol_policy = "http-only"
+			origin_ssl_protocols = [ "SSLv3", "TLSv1" ]
+		}
+	}
+	enabled = true
+	default_cache_behavior {
+		allowed_methods = [ "DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT" ]
+		cached_methods = [ "GET", "HEAD" ]
+		target_origin_id = "myCustomOrigin"
+		smooth_streaming = false
+		forwarded_values {
+			query_string = false
+			cookies {
+				forward = "all"
+			}
+		}
+		viewer_protocol_policy = "allow-all"
+	}
+	restrictions {
+		geo_restriction {
+			restriction_type = "whitelist"
+			locations = [ "US", "CA", "GB", "DE" ]
+		}
+	}
+	viewer_certificate {
+		cloudfront_default_certificate = true
+	}
+	%s
+}
+`, acctest.RandInt(), testAccAWSCloudFrontDistributionRetainConfig())
