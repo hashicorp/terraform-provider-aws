@@ -70,6 +70,7 @@ are exported:
 ~> **NOTE:** Some values are not always set and may not be available for
 interpolation.
 
+* `arn` - The ARN of the AMI.
 * `architecture` - The OS architecture of the AMI (ie: `i386` or `x86_64`).
 * `block_device_mappings` - The block device mappings of the AMI.
   * `block_device_mappings.#.device_name` - The physical name of the device.
