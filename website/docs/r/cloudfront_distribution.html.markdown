@@ -409,6 +409,8 @@ argument is not required.
 
 #### Origin Arguments
 
+  * `connection_attempts` (Optional)- The number of times that CloudFront attempts to connect to the origin. The minimum number is 1, maximum is 3. If unspecified, it defaults to 3.
+  * `connection_timeout` (Optional) - The number of seconds that CloudFront waits when trying to establish a connection to the origin. The minimum timeout is 1 second, maximum is 10 seconds. If unspecified, it defaults to 10 seconds.
   * `custom_origin_config` - The [CloudFront custom
     origin](#custom-origin-config-arguments) configuration information. If an S3
     origin is required, use `s3_origin_config` instead.
