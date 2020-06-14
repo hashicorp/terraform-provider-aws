@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
+
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -209,6 +210,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ebs_snapshot":                              dataSourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_ids":                          dataSourceAwsEbsSnapshotIds(),
 			"aws_ebs_volume":                                dataSourceAwsEbsVolume(),
+			"aws_ebs_volumes":                               dataSourceAwsEbsVolumes(),
 			"aws_ec2_coip_pool":                             dataSourceAwsEc2CoipPool(),
 			"aws_ec2_coip_pools":                            dataSourceAwsEc2CoipPools(),
 			"aws_ec2_instance_type_offering":                dataSourceAwsEc2InstanceTypeOffering(),
