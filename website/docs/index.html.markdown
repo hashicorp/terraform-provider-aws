@@ -222,7 +222,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   API, or metadata API.  When set to `true` and not determined previously,
   returns an empty account ID when manually constructing ARN attributes with
   the following:
-  - [`aws_ami` data source](/docs/providers/aws/d/aws_ami.html)  
+  - [`aws_ami` data source](/docs/providers/aws/d/ami.html)  
   - [`aws_ami` resource](/docs/providers/aws/r/ami.html)
   - [`aws_ami_copy` resource](/docs/providers/aws/r/ami_copy.html)
   - [`aws_ami_from_instance` resource](/docs/providers/aws/r/ami_from_instance.html)  

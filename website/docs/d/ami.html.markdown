@@ -3,7 +3,7 @@ subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ami"
 description: |-
-  Get information on a Amazon Machine Image (AMI).
+  Get information on an Amazon Machine Image (AMI).
 ---
 
 # Data Source: aws_ami
