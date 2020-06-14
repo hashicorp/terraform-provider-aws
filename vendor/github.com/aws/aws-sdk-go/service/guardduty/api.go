@@ -3746,37 +3746,37 @@ func (c *GuardDuty) ListOrganizationAdminAccountsPagesWithContext(ctx aws.Contex
 	return p.Err()
 }
 
-const opListOrganizationAdminAccounts = "ListOrganizationAdminAccounts"
+const opListPublishingDestinations = "ListPublishingDestinations"
 
-// ListOrganizationAdminAccountsRequest generates a "aws/request.Request" representing the
-// client's request for the ListOrganizationAdminAccounts operation. The "output" return
+// ListPublishingDestinationsRequest generates a "aws/request.Request" representing the
+// client's request for the ListPublishingDestinations operation. The "output" return
 // value will be populated with the request's response once the request completes
 // successfully.
 //
 // Use "Send" method on the returned Request to send the API call to the service.
 // the "output" return value is not valid until after Send returns without error.
 //
-// See ListOrganizationAdminAccounts for more information on using the ListOrganizationAdminAccounts
+// See ListPublishingDestinations for more information on using the ListPublishingDestinations
 // API call, and error handling.
 //
 // This method is useful when you want to inject custom logic or configuration
 // into the SDK's request lifecycle. Such as custom headers, or retry logic.
 //
 //
-//    // Example sending a request using the ListOrganizationAdminAccountsRequest method.
-//    req, resp := client.ListOrganizationAdminAccountsRequest(params)
+//    // Example sending a request using the ListPublishingDestinationsRequest method.
+//    req, resp := client.ListPublishingDestinationsRequest(params)
 //
 //    err := req.Send()
 //    if err == nil { // resp is now filled
 //        fmt.Println(resp)
 //    }
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListOrganizationAdminAccounts
-func (c *GuardDuty) ListOrganizationAdminAccountsRequest(input *ListOrganizationAdminAccountsInput) (req *request.Request, output *ListOrganizationAdminAccountsOutput) {
+// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListPublishingDestinations
+func (c *GuardDuty) ListPublishingDestinationsRequest(input *ListPublishingDestinationsInput) (req *request.Request, output *ListPublishingDestinationsOutput) {
 	op := &request.Operation{
-		Name:       opListOrganizationAdminAccounts,
+		Name:       opListPublishingDestinations,
 		HTTPMethod: "GET",
-		HTTPPath:   "/admin",
+		HTTPPath:   "/detector/{detectorId}/publishingDestination",
 		Paginator: &request.Paginator{
 			InputTokens:     []string{"NextToken"},
 			OutputTokens:    []string{"NextToken"},
@@ -3786,24 +3786,24 @@ func (c *GuardDuty) ListOrganizationAdminAccountsRequest(input *ListOrganization
 	}
 
 	if input == nil {
-		input = &ListOrganizationAdminAccountsInput{}
+		input = &ListPublishingDestinationsInput{}
 	}
 
-	output = &ListOrganizationAdminAccountsOutput{}
+	output = &ListPublishingDestinationsOutput{}
 	req = c.newRequest(op, input, output)
 	return
 }
 
-// ListOrganizationAdminAccounts API operation for Amazon GuardDuty.
+// ListPublishingDestinations API operation for Amazon GuardDuty.
 //
-// Lists the accounts configured as GuardDuty delegated administrators.
+// Returns a list of publishing destinations associated with the specified dectectorId.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
 //
 // See the AWS API reference guide for Amazon GuardDuty's
-// API operation ListOrganizationAdminAccounts for usage and error information.
+// API operation ListPublishingDestinations for usage and error information.
 //
 // Returned Error Types:
 //   * BadRequestException
@@ -3812,16 +3812,153 @@ func (c *GuardDuty) ListOrganizationAdminAccountsRequest(input *ListOrganization
 //   * InternalServerErrorException
 //   An internal server error exception object.
 //
-// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListOrganizationAdminAccounts
-func (c *GuardDuty) ListOrganizationAdminAccounts(input *ListOrganizationAdminAccountsInput) (*ListOrganizationAdminAccountsOutput, error) {
-	req, out := c.ListOrganizationAdminAccountsRequest(input)
+// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListPublishingDestinations
+func (c *GuardDuty) ListPublishingDestinations(input *ListPublishingDestinationsInput) (*ListPublishingDestinationsOutput, error) {
+	req, out := c.ListPublishingDestinationsRequest(input)
 	return out, req.Send()
 }
 
-// ListOrganizationAdminAccountsWithContext is the same as ListOrganizationAdminAccounts with the addition of
+// ListPublishingDestinationsWithContext is the same as ListPublishingDestinations with the addition of
 // the ability to pass a context and additional request options.
 //
-// See ListOrganizationAdminAccounts for details on how to use this API operation.
+// See ListPublishingDestinations for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *GuardDuty) ListPublishingDestinationsWithContext(ctx aws.Context, input *ListPublishingDestinationsInput, opts ...request.Option) (*ListPublishingDestinationsOutput, error) {
+	req, out := c.ListPublishingDestinationsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListPublishingDestinationsPages iterates over the pages of a ListPublishingDestinations operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPublishingDestinations method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPublishingDestinations operation.
+//    pageNum := 0
+//    err := client.ListPublishingDestinationsPages(params,
+//        func(page *guardduty.ListPublishingDestinationsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *GuardDuty) ListPublishingDestinationsPages(input *ListPublishingDestinationsInput, fn func(*ListPublishingDestinationsOutput, bool) bool) error {
+	return c.ListPublishingDestinationsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPublishingDestinationsPagesWithContext same as ListPublishingDestinationsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *GuardDuty) ListPublishingDestinationsPagesWithContext(ctx aws.Context, input *ListPublishingDestinationsInput, fn func(*ListPublishingDestinationsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPublishingDestinationsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPublishingDestinationsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPublishingDestinationsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListTagsForResource
+func (c *GuardDuty) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/tags/{resourceArn}",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon GuardDuty.
+//
+// Lists tags for a resource. Tagging is currently supported for detectors,
+// finding filters, IP sets, and threat intel sets, with a limit of 50 tags
+// per resource. When invoked, this operation returns all assigned tags for
+// a given resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon GuardDuty's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   A bad request exception object.
+//
+//   * InternalServerErrorException
+//   An internal server error exception object.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/ListTagsForResource
+func (c *GuardDuty) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
 //
 // The context must be non-nil and will be used for request cancellation. If
 // the context is nil a panic will occur. In the future the SDK may create
@@ -5083,6 +5220,89 @@ func (c *GuardDuty) UpdateOrganizationConfigurationWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+const opUpdateOrganizationConfiguration = "UpdateOrganizationConfiguration"
+
+// UpdateOrganizationConfigurationRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateOrganizationConfiguration operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateOrganizationConfiguration for more information on using the UpdateOrganizationConfiguration
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateOrganizationConfigurationRequest method.
+//    req, resp := client.UpdateOrganizationConfigurationRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/UpdateOrganizationConfiguration
+func (c *GuardDuty) UpdateOrganizationConfigurationRequest(input *UpdateOrganizationConfigurationInput) (req *request.Request, output *UpdateOrganizationConfigurationOutput) {
+	op := &request.Operation{
+		Name:       opUpdateOrganizationConfiguration,
+		HTTPMethod: "POST",
+		HTTPPath:   "/detector/{detectorId}/admin",
+	}
+
+	if input == nil {
+		input = &UpdateOrganizationConfigurationInput{}
+	}
+
+	output = &UpdateOrganizationConfigurationOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UpdateOrganizationConfiguration API operation for Amazon GuardDuty.
+//
+// Updates the delegated administrator account with the values provided.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon GuardDuty's
+// API operation UpdateOrganizationConfiguration for usage and error information.
+//
+// Returned Error Types:
+//   * BadRequestException
+//   A bad request exception object.
+//
+//   * InternalServerErrorException
+//   An internal server error exception object.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/guardduty-2017-11-28/UpdateOrganizationConfiguration
+func (c *GuardDuty) UpdateOrganizationConfiguration(input *UpdateOrganizationConfigurationInput) (*UpdateOrganizationConfigurationOutput, error) {
+	req, out := c.UpdateOrganizationConfigurationRequest(input)
+	return out, req.Send()
+}
+
+// UpdateOrganizationConfigurationWithContext is the same as UpdateOrganizationConfiguration with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateOrganizationConfiguration for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *GuardDuty) UpdateOrganizationConfigurationWithContext(ctx aws.Context, input *UpdateOrganizationConfigurationInput, opts ...request.Option) (*UpdateOrganizationConfigurationOutput, error) {
+	req, out := c.UpdateOrganizationConfigurationRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdatePublishingDestination = "UpdatePublishingDestination"
 
 // UpdatePublishingDestinationRequest generates a "aws/request.Request" representing the
@@ -6227,10 +6447,22 @@ type CreateFilterInput struct {
 	// The unique ID of the detector of the GuardDuty account that you want to create
 	// a filter for.
 	//
-	// DetectorId is a required field
-	DetectorId *string `location:"uri" locationName:"detectorId" min:"1" type:"string" required:"true"`
-
-	// Represents the criteria to be used in the filter for querying findings.
+	//    * service.action.networkConnectionAction.remotePortDetails.port
+	//
+	//    * service.additionalInfo.threatListName
+	//
+	//    * service.archived When this attribute is set to TRUE, only archived findings
+	//    are listed. When it's set to FALSE, only unarchived findings are listed.
+	//    When this attribute is not set, all existing findings are listed.
+	//
+	//    * service.resourceRole
+	//
+	//    * severity
+	//
+	//    * type
+	//
+	//    * updatedAt Type: ISO 8601 string format: YYYY-MM-DDTHH:MM:SS.SSSZ or
+	//    YYYY-MM-DDTHH:MM:SSZ depending on whether the value contains milliseconds.
 	//
 	// You can only use the following attributes to query findings:
 	//
@@ -7653,78 +7885,6 @@ func (s DeleteThreatIntelSetOutput) GoString() string {
 type DescribeOrganizationConfigurationInput struct {
 	_ struct{} `type:"structure"`
 
-	// The unique ID of the detector that the threatIntelSet is associated with.
-	//
-	// DetectorId is a required field
-	DetectorId *string `location:"uri" locationName:"detectorId" min:"1" type:"string" required:"true"`
-
-	// The unique ID of the threatIntelSet that you want to delete.
-	//
-	// ThreatIntelSetId is a required field
-	ThreatIntelSetId *string `location:"uri" locationName:"threatIntelSetId" type:"string" required:"true"`
-}
-
-// String returns the string representation
-func (s DescribeOrganizationConfigurationInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DescribeOrganizationConfigurationInput) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *DescribeOrganizationConfigurationInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "DescribeOrganizationConfigurationInput"}
-	if s.DetectorId == nil {
-		invalidParams.Add(request.NewErrParamRequired("DetectorId"))
-	}
-	if s.DetectorId != nil && len(*s.DetectorId) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("DetectorId", 1))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetDetectorId sets the DetectorId field's value.
-func (s *DescribeOrganizationConfigurationInput) SetDetectorId(v string) *DescribeOrganizationConfigurationInput {
-	s.DetectorId = &v
-	return s
-}
-
-type DescribeOrganizationConfigurationOutput struct {
-	_ struct{} `type:"structure"`
-
-	// Indicates whether GuardDuty is automatically enabled for accounts added to
-	// the organization.
-	//
-	// AutoEnable is a required field
-	AutoEnable *bool `locationName:"autoEnable" type:"boolean" required:"true"`
-
-	// Indicates whether the maximum number of allowed member accounts are already
-	// associated with the delegated administrator master account.
-	//
-	// MemberAccountLimitReached is a required field
-	MemberAccountLimitReached *bool `locationName:"memberAccountLimitReached" type:"boolean" required:"true"`
-}
-
-// String returns the string representation
-func (s DescribeOrganizationConfigurationOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s DescribeOrganizationConfigurationOutput) GoString() string {
-	return s.String()
-}
-
-type DescribeOrganizationConfigurationInput struct {
-	_ struct{} `type:"structure"`
-
 	// The ID of the detector to retrieve information about the delegated administrator
 	// from.
 	//
@@ -8257,59 +8417,6 @@ func (s DomainDetails) GoString() string {
 func (s *DomainDetails) SetDomain(v string) *DomainDetails {
 	s.Domain = &v
 	return s
-}
-
-type EnableOrganizationAdminAccountInput struct {
-	_ struct{} `type:"structure"`
-
-	// The AWS Account ID for the organization account to be enabled as a GuardDuty
-	// delegated administrator.
-	//
-	// AdminAccountId is a required field
-	AdminAccountId *string `locationName:"adminAccountId" type:"string" required:"true"`
-}
-
-// String returns the string representation
-func (s EnableOrganizationAdminAccountInput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s EnableOrganizationAdminAccountInput) GoString() string {
-	return s.String()
-}
-
-// Validate inspects the fields of the type to determine if they are valid.
-func (s *EnableOrganizationAdminAccountInput) Validate() error {
-	invalidParams := request.ErrInvalidParams{Context: "EnableOrganizationAdminAccountInput"}
-	if s.AdminAccountId == nil {
-		invalidParams.Add(request.NewErrParamRequired("AdminAccountId"))
-	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
-	}
-	return nil
-}
-
-// SetAdminAccountId sets the AdminAccountId field's value.
-func (s *EnableOrganizationAdminAccountInput) SetAdminAccountId(v string) *EnableOrganizationAdminAccountInput {
-	s.AdminAccountId = &v
-	return s
-}
-
-type EnableOrganizationAdminAccountOutput struct {
-	_ struct{} `type:"structure"`
-}
-
-// String returns the string representation
-func (s EnableOrganizationAdminAccountOutput) String() string {
-	return awsutil.Prettify(s)
-}
-
-// GoString returns the string representation
-func (s EnableOrganizationAdminAccountOutput) GoString() string {
-	return s.String()
 }
 
 type EnableOrganizationAdminAccountInput struct {

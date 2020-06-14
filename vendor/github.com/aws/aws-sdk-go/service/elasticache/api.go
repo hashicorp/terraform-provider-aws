@@ -9236,32 +9236,6 @@ type CreateReplicationGroupInput struct {
 	//
 	//    * A name must contain from 1 to 40 alphanumeric characters or hyphens.
 	//
-	// Example: sun:23:00-mon:01:30
-	PreferredMaintenanceWindow *string `type:"string"`
-
-	// The identifier of the cluster that serves as the primary for this replication
-	// group. This cluster must already exist and have a status of available.
-	//
-	// This parameter is not required if NumCacheClusters, NumNodeGroups, or ReplicasPerNodeGroup
-	// is specified.
-	PrimaryClusterId *string `type:"string"`
-
-	// An optional parameter that specifies the number of replica nodes in each
-	// node group (shard). Valid values are 0 to 5.
-	ReplicasPerNodeGroup *int64 `type:"integer"`
-
-	// A user-created description for the replication group.
-	//
-	// ReplicationGroupDescription is a required field
-	ReplicationGroupDescription *string `type:"string" required:"true"`
-
-	// The replication group identifier. This parameter is stored as a lowercase
-	// string.
-	//
-	// Constraints:
-	//
-	//    * A name must contain from 1 to 40 alphanumeric characters or hyphens.
-	//
 	//    * The first character must be a letter.
 	//
 	//    * A name cannot end with a hyphen or contain two consecutive hyphens.
@@ -10341,16 +10315,6 @@ func (s *DeleteReplicationGroupInput) SetRetainPrimaryCluster(v bool) *DeleteRep
 type DeleteReplicationGroupOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The cache engine version to return.
-	//
-	// Example: 1.4.14
-	EngineVersion *string `type:"string"`
-
-	// An optional marker returned from a prior request. Use this marker for pagination
-	// of results from this operation. If this parameter is specified, the response
-	// includes only records beyond the marker, up to the value specified by MaxRecords.
-	Marker *string `type:"string"`
-
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a marker is included in the response
 	// so that the remaining results can be retrieved.
@@ -10802,10 +10766,10 @@ func (s *DescribeCacheParametersInput) Validate() error {
 		invalidParams.Add(request.NewErrParamRequired("CacheParameterGroupName"))
 	}
 
-// SetMarker sets the Marker field's value.
-func (s *DescribeCacheSubnetGroupsInput) SetMarker(v string) *DescribeCacheSubnetGroupsInput {
-	s.Marker = &v
-	return s
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetCacheParameterGroupName sets the CacheParameterGroupName field's value.

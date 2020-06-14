@@ -28587,8 +28587,6 @@ type HumanTaskConfig struct {
 	//
 	//    * arn:aws:lambda:ca-central-1:918755190332:function:PRE-SemanticSegmentation
 	//
-	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-ImageMultiClassMultiLabel
-	//
 	//    * arn:aws:lambda:eu-west-1:568282634449:function:PRE-SemanticSegmentation
 	//
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-SemanticSegmentation
@@ -28676,8 +28674,6 @@ type HumanTaskConfig struct {
 	//    * arn:aws:lambda:eu-west-2:487402164563:function:PRE-NamedEntityRecognition
 	//
 	//    * arn:aws:lambda:eu-central-1:203001061592:function:PRE-NamedEntityRecognition
-	//
-	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-TextMultiClassMultiLabel
 	//
 	//    * arn:aws:lambda:ap-northeast-1:477331159723:function:PRE-NamedEntityRecognition
 	//
