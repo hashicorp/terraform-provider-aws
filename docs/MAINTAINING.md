@@ -87,7 +87,6 @@ gox -os='linux darwin windows freebsd openbsd solaris' -arch='386 amd64 arm' -os
 - Update `docs/DEVELOPMENT.md`
 - Update `.github/workflows/*.yml`
 - Update `.go-version`
-- Update `.travis.yml`
 - Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
 
 See [#9992](https://github.com/terraform-providers/terraform-provider-aws/issues/9992) / [#10206](https://github.com/terraform-providers/terraform-provider-aws/pull/10206)  for a recent example.

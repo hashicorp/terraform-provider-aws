@@ -14,6 +14,7 @@ import (
 )
 
 func resourceAwsSubnet() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSubnetCreate,
 		Read:   resourceAwsSubnetRead,

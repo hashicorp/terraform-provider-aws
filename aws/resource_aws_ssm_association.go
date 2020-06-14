@@ -12,6 +12,7 @@ import (
 )
 
 func resourceAwsSsmAssociation() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSsmAssociationCreate,
 		Read:   resourceAwsSsmAssociationRead,

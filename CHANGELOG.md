@@ -1,17 +1,28 @@
-## 2.66.0 (Unreleased)
+## 2.67.0 (Unreleased)
 
 FEATURES:
 
-* **New Data Source:** `aws_wafv2_rule_group` [GH-12790]
-* **New Resource:** `aws_wafv2_rule_group` [GH-12677]
+* **New Resource:** `aws_ec2_tag` [GH-8457]
+* **New Resource:** `aws_wafv2_web_acl` [GH-12688]
 
 BUG FIXES:
 
-* resource/aws_autoscaling_group: Allow `on_demand_base_capacity` to be set to 0 [GH-13623] 
-* resource/aws_autoscaling_group: Add `Computed` field to `instances_distribution` and it's sub-fields `on_demand_allocation_strategy`, `on_demand_base_capacity`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  [GH-13623]
-* resource/aws_autoscaling_group: Remove `Default` field from `instances_distribution` sub-fields `on_demand_allocation_strategy`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  [GH-13623]
-* resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties [GH-13634]
-* resource/aws_instance: Continue supporting empty string (`""`) `private_ip` argument [GH-13640]
+* resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
+
+## 2.66.0 (June 12, 2020)
+
+FEATURES:
+
+* **New Data Source:** `aws_wafv2_rule_group` ([#12790](https://github.com/terraform-providers/terraform-provider-aws/issues/12790))
+* **New Resource:** `aws_wafv2_rule_group` ([#12677](https://github.com/terraform-providers/terraform-provider-aws/issues/12677))
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Allow `on_demand_base_capacity` to be set to 0 [[#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623)] 
+* resource/aws_autoscaling_group: Add `Computed` field to `instances_distribution` and it's sub-fields `on_demand_allocation_strategy`, `on_demand_base_capacity`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  ([#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623))
+* resource/aws_autoscaling_group: Remove `Default` field from `instances_distribution` sub-fields `on_demand_allocation_strategy`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  ([#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623))
+* resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties ([#13634](https://github.com/terraform-providers/terraform-provider-aws/issues/13634))
+* resource/aws_instance: Continue supporting empty string (`""`) `private_ip` argument ([#13640](https://github.com/terraform-providers/terraform-provider-aws/issues/13640))
 
 ## 2.65.0 (June 04, 2020)
 
