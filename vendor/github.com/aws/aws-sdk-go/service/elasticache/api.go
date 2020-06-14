@@ -9856,9 +9856,8 @@ func (s *DecreaseReplicaCountInput) Validate() error {
 	if s.ApplyImmediately == nil {
 		invalidParams.Add(request.NewErrParamRequired("ApplyImmediately"))
 	}
-
-	if invalidParams.Len() > 0 {
-		return invalidParams
+	if s.ReplicationGroupId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ReplicationGroupId"))
 	}
 	if s.ReplicaConfiguration != nil {
 		for i, v := range s.ReplicaConfiguration {
@@ -10315,14 +10314,8 @@ func (s *DeleteReplicationGroupInput) SetRetainPrimaryCluster(v bool) *DeleteRep
 type DeleteReplicationGroupOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum number of records to include in the response. If more records
-	// exist than the specified MaxRecords value, a marker is included in the response
-	// so that the remaining results can be retrieved.
-	//
-	// Default: 100
-	//
-	// Constraints: minimum 20; maximum 100.
-	MaxRecords *int64 `type:"integer"`
+	// Contains all of the attributes of a specific Redis replication group.
+	ReplicationGroup *ReplicationGroup `type:"structure"`
 }
 
 // String returns the string representation
@@ -10943,20 +10936,6 @@ type DescribeCacheSubnetGroupsInput struct {
 	//
 	// Constraints: minimum 20; maximum 100.
 	MaxRecords *int64 `type:"integer"`
-
-	// The identifier of the event source for which events are returned. If not
-	// specified, all sources are included in the response.
-	SourceIdentifier *string `type:"string"`
-
-	// The event source to retrieve events for. If no value is specified, all events
-	// are returned.
-	SourceType *string `type:"string" enum:"SourceType"`
-
-	// The beginning of the time interval to retrieve events for, specified in ISO
-	// 8601 format.
-	//
-	// Example: 2017-03-30T07:03:49.555Z
-	StartTime *time.Time `type:"timestamp"`
 }
 
 // String returns the string representation
@@ -11041,10 +11020,11 @@ type DescribeEngineDefaultParametersInput struct {
 	// The maximum number of records to include in the response. If more records
 	// exist than the specified MaxRecords value, a marker is included in the response
 	// so that the remaining results can be retrieved.
+	//
+	// Default: 100
+	//
+	// Constraints: minimum 20; maximum 100.
 	MaxRecords *int64 `type:"integer"`
-
-	// Returns the list of members that comprise the Global Datastore.
-	ShowMemberInfo *bool `type:"boolean"`
 }
 
 // String returns the string representation
@@ -11610,7 +11590,13 @@ type DescribeReservedCacheNodesOfferingsInput struct {
 	// includes only records beyond the marker, up to the value specified by MaxRecords.
 	Marker *string `type:"string"`
 
-	// The maximum number of records to include in the response
+	// The maximum number of records to include in the response. If more records
+	// exist than the specified MaxRecords value, a marker is included in the response
+	// so that the remaining results can be retrieved.
+	//
+	// Default: 100
+	//
+	// Constraints: minimum 20; maximum 100.
 	MaxRecords *int64 `type:"integer"`
 
 	// The offering type filter value. Use this parameter to show only the available
@@ -11753,10 +11739,6 @@ func (s *DescribeReservedCacheNodesOutput) SetReservedCacheNodes(v []*ReservedCa
 type DescribeServiceUpdatesInput struct {
 	_ struct{} `type:"structure"`
 
-	// A user-supplied cluster identifier. If this parameter is specified, only
-	// snapshots associated with that specific cluster are described.
-	CacheClusterId *string `type:"string"`
-
 	// An optional marker returned from a prior request. Use this marker for pagination
 	// of results from this operation. If this parameter is specified, the response
 	// includes only records beyond the marker, up to the value specified by MaxRecords.
@@ -11780,12 +11762,6 @@ func (s DescribeServiceUpdatesInput) String() string {
 // GoString returns the string representation
 func (s DescribeServiceUpdatesInput) GoString() string {
 	return s.String()
-}
-
-// SetCacheClusterId sets the CacheClusterId field's value.
-func (s *DescribeSnapshotsInput) SetCacheClusterId(v string) *DescribeSnapshotsInput {
-	s.CacheClusterId = &v
-	return s
 }
 
 // SetMarker sets the Marker field's value.

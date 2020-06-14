@@ -9243,7 +9243,7 @@ type StartBuildInput struct {
 
 	// A unique, case sensitive identifier you provide to ensure the idempotency
 	// of the StartBuild request. The token is included in the StartBuild request
-	// and is valid for 5 minutes. If you repeat the StartBuild request with the
+	// and is valid for 12 hours. If you repeat the StartBuild request with the
 	// same token, but change a parameter, AWS CodeBuild returns a parameter mismatch
 	// error.
 	IdempotencyToken *string `locationName:"idempotencyToken" type:"string"`
@@ -10667,8 +10667,8 @@ type WebhookFilter struct {
 	// Pattern is a required field
 	Pattern *string `locationName:"pattern" type:"string" required:"true"`
 
-	// The type of webhook filter. There are six webhook filter types: EVENT, ACTOR_ACCOUNT_ID,
-	// HEAD_REF, BASE_REF, FILE_PATH, and COMMIT_MESSAGE.
+	// The type of webhook filter. There are five webhook filter types: EVENT, ACTOR_ACCOUNT_ID,
+	// HEAD_REF, BASE_REF, and FILE_PATH.
 	//
 	// EVENT
 	//
@@ -10705,18 +10705,7 @@ type WebhookFilter struct {
 	// A webhook triggers a build when the path of a changed file matches the regular
 	// expression pattern.
 	//
-	// Works with GitHub and Bitbucket events push and pull requests events. Also
-	// works with GitHub Enterprise push events, but does not work with GitHub Enterprise
-	// pull request events.
-	//
-	// COMMIT_MESSAGE
-	//
-	// A webhook triggers a build when the head commit message matches the regular
-	// expression pattern.
-	//
-	// Works with GitHub and Bitbucket events push and pull requests events. Also
-	// works with GitHub Enterprise push events, but does not work with GitHub Enterprise
-	// pull request events.
+	// Works with GitHub and GitHub Enterprise push events only.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"WebhookFilterType"`

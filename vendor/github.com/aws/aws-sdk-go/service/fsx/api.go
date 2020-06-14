@@ -7011,41 +7011,6 @@ const (
 	ServiceLimitTotalUserInitiatedBackups = "TOTAL_USER_INITIATED_BACKUPS"
 )
 
-// The storage type for your Amazon FSx file system.
-const (
-	// StorageTypeSsd is a StorageType enum value
-	StorageTypeSsd = "SSD"
-
-	// StorageTypeHdd is a StorageType enum value
-	StorageTypeHdd = "HDD"
-)
-
-const (
-	// StatusFailed is a Status enum value
-	StatusFailed = "FAILED"
-
-	// StatusInProgress is a Status enum value
-	StatusInProgress = "IN_PROGRESS"
-
-	// StatusPending is a Status enum value
-	StatusPending = "PENDING"
-
-	// StatusCompleted is a Status enum value
-	StatusCompleted = "COMPLETED"
-
-	// StatusUpdatedOptimizing is a Status enum value
-	StatusUpdatedOptimizing = "UPDATED_OPTIMIZING"
-)
-
-// The storage type for your Amazon FSx file system.
-const (
-	// StorageTypeSsd is a StorageType enum value
-	StorageTypeSsd = "SSD"
-
-	// StorageTypeHdd is a StorageType enum value
-	StorageTypeHdd = "HDD"
-)
-
 const (
 	// StatusFailed is a Status enum value
 	StatusFailed = "FAILED"
