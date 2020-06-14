@@ -98,7 +98,7 @@ func resourceAwsCodeArtifactDomainRead(d *schema.ResourceData, meta interface{})
 	d.Set("repository_count", sm.Domain.RepositoryCount)
 
 	if err := d.Set("created_time", sm.Domain.CreatedTime.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting created_time: %s", err)
+		return fmt.Errorf("[DEBUG] Error setting created_time: %s", err)
 	}
 
 	return nil
