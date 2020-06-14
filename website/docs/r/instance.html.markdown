@@ -14,7 +14,7 @@ and deleted. Instances also support [provisioning](/docs/provisioners/index.html
 ## Example Usage
 
 ```hcl
-# Create a new instance of the latest Ubuntu 14.04 on an
+# Create a new instance of the latest Ubuntu 20.04 on an
 # t2.micro node with an AWS Tag naming it "HelloWorld"
 provider "aws" {
   region = "us-west-2"
