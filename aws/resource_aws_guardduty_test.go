@@ -8,8 +8,9 @@ import (
 func TestAccAWSGuardDuty(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Detector": {
-			"basic":  testAccAwsGuardDutyDetector_basic,
-			"import": testAccAwsGuardDutyDetector_import,
+			"basic":            testAccAwsGuardDutyDetector_basic,
+			"datasource_basic": testAccAWSGuarddutyDetectorDataSource_basic,
+			"datasource_id":    testAccAWSGuarddutyDetectorDataSource_Id,
 		},
 		"InviteAccepter": {
 			"basic": testAccAwsGuardDutyInviteAccepter_basic,
@@ -17,6 +18,12 @@ func TestAccAWSGuardDuty(t *testing.T) {
 		"IPSet": {
 			"basic":  testAccAwsGuardDutyIpset_basic,
 			"import": testAccAwsGuardDutyIpset_import,
+		},
+		"OrganizationAdminAccount": {
+			"basic": testAccAwsGuardDutyOrganizationAdminAccount_basic,
+		},
+		"OrganizationConfiguration": {
+			"basic": testAccAwsGuardDutyOrganizationConfiguration_basic,
 		},
 		"ThreatIntelSet": {
 			"basic":  testAccAwsGuardDutyThreatintelset_basic,

@@ -26,6 +26,12 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 		Read:   resourceAwsNetworkAclRead,
 		Delete: resourceAwsDefaultNetworkAclDelete,
 		Update: resourceAwsDefaultNetworkAclUpdate,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("default_network_acl_id", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {
@@ -169,7 +175,6 @@ func resourceAwsDefaultNetworkAclCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsDefaultNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	d.Partial(true)
 
 	if d.HasChange("ingress") {
 		err := updateNetworkAclEntries(d, "ingress", conn)
@@ -241,7 +246,6 @@ func resourceAwsDefaultNetworkAclUpdate(d *schema.ResourceData, meta interface{}
 		}
 	}
 
-	d.Partial(false)
 	// Re-use the exiting Network ACL Resources READ method
 	return resourceAwsNetworkAclRead(d, meta)
 }

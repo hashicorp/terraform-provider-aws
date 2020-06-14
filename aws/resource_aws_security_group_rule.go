@@ -455,6 +455,7 @@ func (b ByGroupPair) Less(i, j int) bool {
 		return *b[i].GroupName < *b[j].GroupName
 	}
 
+	//lintignore:R009
 	panic("mismatched security group rules, may be a terraform bug")
 }
 
@@ -759,7 +760,19 @@ func setFromIPPerm(d *schema.ResourceData, sg *ec2.SecurityGroup, rule *ec2.IpPe
 		s := rule.UserIdGroupPairs[0]
 
 		if isVPC {
-			d.Set("source_security_group_id", s.GroupId)
+			if existingSourceSgId, ok := d.GetOk("source_security_group_id"); ok {
+				sgIdComponents := strings.Split(existingSourceSgId.(string), "/")
+				hasAccountIdPrefix := len(sgIdComponents) == 2
+
+				if hasAccountIdPrefix && s.UserId != nil {
+					// then ensure on refresh that we preserve the account id prefix
+					d.Set("source_security_group_id", fmt.Sprintf("%s/%s", aws.StringValue(s.UserId), aws.StringValue(s.GroupId)))
+				} else {
+					d.Set("source_security_group_id", s.GroupId)
+				}
+			} else {
+				d.Set("source_security_group_id", s.GroupId)
+			}
 		} else {
 			d.Set("source_security_group_id", s.GroupName)
 		}
@@ -830,19 +843,33 @@ func descriptionFromIPPerm(d *schema.ResourceData, rule *ec2.IpPermission) strin
 	}
 
 	// probe UserIdGroupPairs
-	groupIds := make(map[string]bool)
 	if raw, ok := d.GetOk("source_security_group_id"); ok {
-		groupIds[raw.(string)] = true
-	}
+		components := strings.Split(raw.(string), "/")
 
-	if len(groupIds) > 0 {
-		for _, gp := range rule.UserIdGroupPairs {
-			if _, ok := groupIds[*gp.GroupId]; !ok {
-				continue
+		switch len(components) {
+		case 2:
+			userId := components[0]
+			groupId := components[1]
+
+			for _, gp := range rule.UserIdGroupPairs {
+				if aws.StringValue(gp.GroupId) != groupId || aws.StringValue(gp.UserId) != userId {
+					continue
+				}
+
+				if desc := aws.StringValue(gp.Description); desc != "" {
+					return desc
+				}
 			}
+		case 1:
+			groupId := components[0]
+			for _, gp := range rule.UserIdGroupPairs {
+				if aws.StringValue(gp.GroupId) != groupId {
+					continue
+				}
 
-			if desc := aws.StringValue(gp.Description); desc != "" {
-				return desc
+				if desc := aws.StringValue(gp.Description); desc != "" {
+					return desc
+				}
 			}
 		}
 	}

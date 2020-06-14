@@ -67,7 +67,7 @@ The following arguments are supported:
 * `source_backup_identifier` - (Optional) The id of Cloud HSM v2 cluster backup to be restored.
 * `hsm_type` - (Required) The type of HSM module in the cluster. Currently, only hsm1.medium is supported.
 * `subnet_ids` - (Required) The IDs of subnets in which cluster will operate.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

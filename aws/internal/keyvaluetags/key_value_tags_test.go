@@ -60,6 +60,203 @@ func TestKeyValueTagsIgnoreAws(t *testing.T) {
 	}
 }
 
+func TestKeyValueTagsIgnoreConfig(t *testing.T) {
+	testCases := []struct {
+		name         string
+		tags         KeyValueTags
+		ignoreConfig *IgnoreConfig
+		want         map[string]string
+	}{
+		{
+			name: "empty config",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{},
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "no config",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: nil,
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "no tags",
+			tags: New(map[string]string{}),
+			ignoreConfig: &IgnoreConfig{
+				KeyPrefixes: New([]string{
+					"key1",
+					"key2",
+					"key3",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "keys all matching",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				Keys: New(map[string]string{
+					"key1": "value1",
+					"key2": "value2",
+					"key3": "value3",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "keys some matching",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				Keys: New(map[string]string{
+					"key1": "value1",
+				}),
+			},
+			want: map[string]string{
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "keys none matching",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				Keys: New(map[string]string{
+					"key4": "value4",
+					"key5": "value5",
+					"key6": "value6",
+				}),
+			},
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "keys and key prefixes",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				Keys: New([]string{
+					"key1",
+				}),
+				KeyPrefixes: New([]string{
+					"key2",
+				}),
+			},
+			want: map[string]string{
+				"key3": "value3",
+			},
+		},
+		{
+			name: "key prefixes all exact",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeyPrefixes: New([]string{
+					"key1",
+					"key2",
+					"key3",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "key prefixes all prefixed",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeyPrefixes: New([]string{
+					"key",
+				}),
+			},
+			want: map[string]string{},
+		},
+		{
+			name: "key prefixes some prefixed",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeyPrefixes: New([]string{
+					"key1",
+				}),
+			},
+			want: map[string]string{
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+		{
+			name: "key prefixes none prefixed",
+			tags: New(map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			}),
+			ignoreConfig: &IgnoreConfig{
+				KeyPrefixes: New([]string{
+					"key4",
+					"key5",
+					"key6",
+				}),
+			},
+			want: map[string]string{
+				"key1": "value1",
+				"key2": "value2",
+				"key3": "value3",
+			},
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := testCase.tags.IgnoreConfig(testCase.ignoreConfig)
+
+			testKeyValueTagsVerifyMap(t, got.Map(), testCase.want)
+		})
+	}
+}
+
 func TestKeyValueTagsIgnoreElasticbeanstalk(t *testing.T) {
 	testCases := []struct {
 		name string

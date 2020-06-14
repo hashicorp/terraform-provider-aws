@@ -101,6 +101,15 @@ func resourceAwsFlowLog() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+
+			"max_aggregation_interval": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      600,
+				ValidateFunc: validation.IntInSlice([]int{60, 600}),
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -150,8 +159,13 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("log_group_name"); ok && v != "" {
 		opts.LogGroupName = aws.String(v.(string))
 	}
+
 	if v, ok := d.GetOk("log_format"); ok && v != "" {
 		opts.LogFormat = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_aggregation_interval"); ok {
+		opts.MaxAggregationInterval = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("tags"); ok && len(v.(map[string]interface{})) > 0 {
@@ -180,6 +194,7 @@ func resourceAwsLogFlowCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	opts := &ec2.DescribeFlowLogsInput{
 		FlowLogIds: []*string{aws.String(d.Id())},
@@ -205,6 +220,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("log_group_name", fl.LogGroupName)
 	d.Set("iam_role_arn", fl.DeliverLogsPermissionArn)
 	d.Set("log_format", fl.LogFormat)
+	d.Set("max_aggregation_interval", fl.MaxAggregationInterval)
 	var resourceKey string
 	if strings.HasPrefix(*fl.ResourceId, "vpc-") {
 		resourceKey = "vpc_id"
@@ -217,7 +233,7 @@ func resourceAwsLogFlowRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set(resourceKey, fl.ResourceId)
 	}
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(fl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

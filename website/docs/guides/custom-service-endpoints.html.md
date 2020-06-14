@@ -130,6 +130,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>kinesis_analytics</code> (<b>DEPRECATED</b> Use <code>kinesisanalytics</code> instead)</li>
   <li><code>kinesis</code></li>
   <li><code>kinesisanalytics</code></li>
+  <li><code>kinesisanalyticsv2</code></li>
   <li><code>kinesisvideo</code></li>
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
@@ -148,6 +149,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>mediastoredata</code></li>
   <li><code>mq</code></li>
   <li><code>neptune</code></li>
+  <li><code>networkmanager</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
   <li><code>personalize</code></li>
@@ -161,6 +163,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>redshift</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>route53</code></li>
+  <li><code>route53domains</code></li>
   <li><code>route53resolver</code></li>
   <li><code>s3</code></li>
   <li><code>s3control</code></li>
@@ -181,6 +184,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>storagegateway</code></li>
   <li><code>sts</code></li>
   <li><code>swf</code></li>
+  <li><code>synthetics</code></li>
   <li><code>transfer</code></li>
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>

@@ -136,8 +136,8 @@ This attribute is not compatible with KMS encryption, `kms_key_id` or `server_si
 This value is a fully qualified **ARN** of the KMS Key. If using `aws_kms_key`,
 use the exported `arn` attribute:
       `kms_key_id = "${aws_kms_key.foo.arn}"`
-* `metadata` - (Optional) A mapping of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
-* `tags` - (Optional) A mapping of tags to assign to the object.
+* `metadata` - (Optional) A map of keys/values to provision metadata (will be automatically prefixed by `x-amz-meta-`, note that only lowercase label are currently supported by the AWS Go API).
+* `tags` - (Optional) A map of tags to assign to the object.
 * `force_destroy` - (Optional) Allow the object to be deleted by removing any legal hold on any object version.
 Default is `false`. This value should be set to `true` only if the bucket has S3 object lock enabled.
 * `object_lock_legal_hold_status` - (Optional) The [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds) status that you want to apply to the specified object. Valid values are `ON` and `OFF`.

@@ -47,6 +47,8 @@ func dataSourceAwsInternetGateway() *schema.Resource {
 
 func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	req := &ec2.DescribeInternetGatewaysInput{}
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
 	tags, tagsOk := d.GetOk("tags")
@@ -82,7 +84,7 @@ func dataSourceAwsInternetGatewayRead(d *schema.ResourceData, meta interface{}) 
 	igw := resp.InternetGateways[0]
 	d.SetId(aws.StringValue(igw.InternetGatewayId))
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(igw.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(igw.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

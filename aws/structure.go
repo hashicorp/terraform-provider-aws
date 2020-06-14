@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"net"
 	"reflect"
 	"regexp"
 	"sort"
@@ -14,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
@@ -46,6 +46,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/mitchellh/copystructure"
@@ -699,7 +700,7 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
 
-		if volume.DockerVolumeConfiguration != nil {
+		if volume.EfsVolumeConfiguration != nil {
 			l["efs_volume_configuration"] = flattenEFSVolumeConfiguration(volume.EfsVolumeConfiguration)
 		}
 
@@ -970,6 +971,16 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
+// Takes the result of flatmap.Expand for an array of int64
+// and returns a []*int64
+func expandInt64List(configured []interface{}) []*int64 {
+	vs := make([]*int64, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, aws.Int64(int64(v.(int))))
+	}
+	return vs
+}
+
 // Expands a map of string to interface to a map of string to *float
 func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 	float64Map := make(map[string]*float64, len(m))
@@ -982,6 +993,11 @@ func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 // Takes the result of schema.Set of strings and returns a []*string
 func expandStringSet(configured *schema.Set) []*string {
 	return expandStringList(configured.List())
+}
+
+// Takes the result of schema.Set of strings and returns a []*int64
+func expandInt64Set(configured *schema.Set) []*int64 {
+	return expandInt64List(configured.List())
 }
 
 // Takes list of pointers to strings. Expand to an array
@@ -997,6 +1013,16 @@ func flattenStringList(list []*string) []interface{} {
 
 func flattenStringSet(list []*string) *schema.Set {
 	return schema.NewSet(schema.HashString, flattenStringList(list))
+}
+
+// hashStringCaseInsensitive hashes strings in a case insensitive manner.
+// If you want a Set of strings and are case inensitive, this is the SchemaSetFunc you want.
+func hashStringCaseInsensitive(v interface{}) int {
+	return hashcode.String(strings.ToLower(v.(string)))
+}
+
+func flattenCaseInsensitiveStringSet(list []*string) *schema.Set {
+	return schema.NewSet(hashStringCaseInsensitive, flattenStringList(list))
 }
 
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
@@ -1560,6 +1586,32 @@ func stringMapToPointers(m map[string]interface{}) map[string]*string {
 	return list
 }
 
+// diffStringMaps returns the set of keys and values that must be created,
+// and the set of keys and values that must be destroyed.
+// Equivalent to 'diffTagsGeneric'.
+func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string) {
+	// First, we're creating everything we have
+	create := map[string]*string{}
+	for k, v := range newMap {
+		create[k] = aws.String(v.(string))
+	}
+
+	// Build the map of what to remove
+	remove := map[string]*string{}
+	for k, v := range oldMap {
+		old, ok := create[k]
+		if !ok || aws.StringValue(old) != v.(string) {
+			// Delete it!
+			remove[k] = aws.String(v.(string))
+		} else if ok {
+			// already present so remove from new
+			delete(create, k)
+		}
+	}
+
+	return create, remove
+}
+
 func flattenDSVpcSettings(
 	s *directoryservice.DirectoryVpcSettingsDescription) []map[string]interface{} {
 	settings := make(map[string]interface{})
@@ -1568,8 +1620,9 @@ func flattenDSVpcSettings(
 		return nil
 	}
 
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
@@ -1684,11 +1737,12 @@ func flattenDSConnectSettings(
 
 	settings := make(map[string]interface{})
 
-	settings["customer_dns_ips"] = schema.NewSet(schema.HashString, flattenStringList(customerDnsIps))
-	settings["connect_ips"] = schema.NewSet(schema.HashString, flattenStringList(s.ConnectIps))
-	settings["customer_username"] = *s.CustomerUserName
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["customer_dns_ips"] = flattenStringSet(customerDnsIps)
+	settings["connect_ips"] = flattenStringSet(s.ConnectIps)
+	settings["customer_username"] = aws.StringValue(s.CustomerUserName)
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
@@ -1934,14 +1988,14 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	mts := make([]interface{}, 0)
 	m := make(map[string]interface{})
 
-	m["name"] = *ts[0].MetricName
-	m["namespace"] = *ts[0].MetricNamespace
-	m["value"] = *ts[0].MetricValue
+	m["name"] = aws.StringValue(ts[0].MetricName)
+	m["namespace"] = aws.StringValue(ts[0].MetricNamespace)
+	m["value"] = aws.StringValue(ts[0].MetricValue)
 
 	if ts[0].DefaultValue == nil {
 		m["default_value"] = ""
 	} else {
-		m["default_value"] = *ts[0].DefaultValue
+		m["default_value"] = strconv.FormatFloat(aws.Float64Value(ts[0].DefaultValue), 'f', -1, 64)
 	}
 
 	mts = append(mts, m)
@@ -2066,71 +2120,6 @@ func flattenApiGatewayThrottleSettings(settings *apigateway.ThrottleSettings) []
 }
 
 // TODO: refactor some of these helper functions and types in the terraform/helper packages
-
-// getStringPtr returns a *string version of the value taken from m, where m
-// can be a map[string]interface{} or a *schema.ResourceData. If the key isn't
-// present or is empty, getNilString returns nil.
-func getStringPtr(m interface{}, key string) *string {
-	switch m := m.(type) {
-	case map[string]interface{}:
-		v := m[key]
-
-		if v == nil {
-			return nil
-		}
-
-		s := v.(string)
-		if s == "" {
-			return nil
-		}
-
-		return &s
-
-	case *schema.ResourceData:
-		if v, ok := m.GetOk(key); ok {
-			if v == nil || v.(string) == "" {
-				return nil
-			}
-			s := v.(string)
-			return &s
-		}
-	}
-
-	return nil
-}
-
-// a convenience wrapper type for the schema.Set map[string]interface{}
-// Set operations only alter the underlying map if the value is not nil
-type setMap map[string]interface{}
-
-// SetString sets m[key] = *value only if `value != nil`
-func (s setMap) SetString(key string, value *string) {
-	if value == nil {
-		return
-	}
-
-	s[key] = *value
-}
-
-// Set assigns value to s[key] if value isn't nil
-func (s setMap) Set(key string, value interface{}) {
-	if reflect.ValueOf(value).IsNil() {
-		return
-	}
-
-	s[key] = value
-}
-
-// Map returns the raw map type for a shorter type conversion
-func (s setMap) Map() map[string]interface{} {
-	return map[string]interface{}(s)
-}
-
-// MapList returns the map[string]interface{} as a single element in a slice to
-// match the schema.Set data type used for structs.
-func (s setMap) MapList() []map[string]interface{} {
-	return []map[string]interface{}{s.Map()}
-}
 
 // Takes the result of flatmap.Expand for an array of policy attributes and
 // returns ELB API compatible objects
@@ -2530,6 +2519,10 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 		m["reply_to_email_address"] = *s.ReplyToEmailAddress
 	}
 
+	if s.From != nil {
+		m["from_email_address"] = *s.From
+	}
+
 	if s.SourceArn != nil {
 		m["source_arn"] = *s.SourceArn
 	}
@@ -2793,234 +2786,6 @@ func flattenCognitoUserPoolUserPoolAddOns(s *cognitoidentityprovider.UserPoolAdd
 	}
 
 	return []map[string]interface{}{config}
-}
-
-func flattenIoTRuleCloudWatchAlarmActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.CloudwatchAlarm
-		if v != nil {
-			result["alarm_name"] = *v.AlarmName
-			result["role_arn"] = *v.RoleArn
-			result["state_reason"] = *v.StateReason
-			result["state_value"] = *v.StateValue
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleCloudWatchMetricActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.CloudwatchMetric
-		if v != nil {
-			result["metric_name"] = *v.MetricName
-			result["role_arn"] = *v.RoleArn
-			result["metric_namespace"] = *v.MetricNamespace
-			result["metric_unit"] = *v.MetricUnit
-			result["metric_value"] = *v.MetricValue
-
-			if v.MetricTimestamp != nil {
-				result["metric_timestamp"] = *v.MetricTimestamp
-			}
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface{} {
-	items := make([]map[string]interface{}, 0, len(actions))
-
-	for _, a := range actions {
-		m := make(map[string]interface{})
-		v := a.DynamoDB
-		if v != nil {
-			m["hash_key_field"] = aws.StringValue(v.HashKeyField)
-			m["hash_key_value"] = aws.StringValue(v.HashKeyValue)
-			m["role_arn"] = aws.StringValue(v.RoleArn)
-			m["table_name"] = aws.StringValue(v.TableName)
-
-			if v.HashKeyType != nil {
-				m["hash_key_type"] = aws.StringValue(v.HashKeyType)
-			}
-
-			if v.PayloadField != nil {
-				m["payload_field"] = aws.StringValue(v.PayloadField)
-			}
-
-			if v.RangeKeyField != nil {
-				m["range_key_field"] = aws.StringValue(v.RangeKeyField)
-			}
-
-			if v.RangeKeyType != nil {
-				m["range_key_type"] = aws.StringValue(v.RangeKeyType)
-			}
-
-			if v.RangeKeyValue != nil {
-				m["range_key_value"] = aws.StringValue(v.RangeKeyValue)
-			}
-
-			items = append(items, m)
-		}
-	}
-
-	return items
-}
-
-func flattenIoTRuleElasticSearchActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Elasticsearch
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["endpoint"] = *v.Endpoint
-			result["id"] = *v.Id
-			result["index"] = *v.Index
-			result["type"] = *v.Type
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleFirehoseActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Firehose
-		if v != nil {
-			result["role_arn"] = aws.StringValue(v.RoleArn)
-			result["delivery_stream_name"] = aws.StringValue(v.DeliveryStreamName)
-			result["separator"] = aws.StringValue(v.Separator)
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleKinesisActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Kinesis
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["stream_name"] = *v.StreamName
-
-			if v.PartitionKey != nil {
-				result["partition_key"] = *v.PartitionKey
-			}
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleLambdaActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Lambda
-		if v != nil {
-			result["function_arn"] = *v.FunctionArn
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleRepublishActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Republish
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["topic"] = *v.Topic
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleS3Actions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.S3
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["bucket_name"] = *v.BucketName
-			result["key"] = *v.Key
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleSnsActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Sns
-		if v != nil {
-			result["message_format"] = *v.MessageFormat
-			result["role_arn"] = *v.RoleArn
-			result["target_arn"] = *v.TargetArn
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Sqs
-		if v != nil {
-			result["role_arn"] = aws.StringValue(v.RoleArn)
-			result["use_base64"] = aws.BoolValue(v.UseBase64)
-			result["queue_url"] = aws.StringValue(v.QueueUrl)
-
-			results = append(results, result)
-		}
-	}
-
-	return results
 }
 
 func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
@@ -3479,6 +3244,26 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 	return values
 }
 
+func expandCognitoUserPoolUsernameConfiguration(config map[string]interface{}) *cognitoidentityprovider.UsernameConfigurationType {
+	usernameConfigurationType := &cognitoidentityprovider.UsernameConfigurationType{
+		CaseSensitive: aws.Bool(config["case_sensitive"].(bool)),
+	}
+
+	return usernameConfigurationType
+}
+
+func flattenCognitoUserPoolUsernameConfiguration(u *cognitoidentityprovider.UsernameConfigurationType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if u == nil {
+		return nil
+	}
+
+	m["case_sensitive"] = *u.CaseSensitive
+
+	return []map[string]interface{}{m}
+}
+
 func expandCognitoUserPoolVerificationMessageTemplate(config map[string]interface{}) *cognitoidentityprovider.VerificationMessageTemplateType {
 	verificationMessageTemplateType := &cognitoidentityprovider.VerificationMessageTemplateType{}
 
@@ -3689,10 +3474,11 @@ func flattenWafAction(n *waf.WafAction) []map[string]interface{} {
 		return nil
 	}
 
-	m := setMap(make(map[string]interface{}))
+	result := map[string]interface{}{
+		"type": aws.StringValue(n.Type),
+	}
 
-	m.SetString("type", n.Type)
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {
@@ -4281,6 +4067,24 @@ func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []i
 	return []interface{}{m}
 }
 
+func flattenAwsDynamoDbReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescription) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"region_name": aws.StringValue(apiObject.RegionName),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
+}
+
 func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
 	d.Set("billing_mode", dynamodb.BillingModeProvisioned)
 	if table.BillingModeSummary != nil {
@@ -4392,6 +4196,11 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 		}}
 	}
 	err = d.Set("server_side_encryption", sseOptions)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("replica", flattenAwsDynamoDbReplicaDescriptions(table.Replicas))
 	if err != nil {
 		return err
 	}
@@ -4914,10 +4723,10 @@ func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterS
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
-	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
+	if vListeners, ok := mSpec["listener"].([]interface{}); ok && len(vListeners) > 0 && vListeners[0] != nil {
 		listeners := []*appmesh.VirtualRouterListener{}
 
-		for _, vListener := range vListeners.List() {
+		for _, vListener := range vListeners {
 			listener := &appmesh.VirtualRouterListener{}
 
 			mListener := vListener.(map[string]interface{})
@@ -4934,10 +4743,8 @@ func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterS
 					listener.PortMapping.Protocol = aws.String(vProtocol)
 				}
 			}
-
 			listeners = append(listeners, listener)
 		}
-
 		spec.Listeners = listeners
 	}
 
@@ -4948,27 +4755,19 @@ func flattenAppmeshVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interfac
 	if spec == nil {
 		return []interface{}{}
 	}
-
-	mSpec := map[string]interface{}{}
-
-	if spec.Listeners != nil {
-		vListeners := []interface{}{}
-
-		for _, listener := range spec.Listeners {
-			mListener := map[string]interface{}{}
-
-			if listener.PortMapping != nil {
-				mPortMapping := map[string]interface{}{
-					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
-					"protocol": aws.StringValue(listener.PortMapping.Protocol),
-				}
-				mListener["port_mapping"] = []interface{}{mPortMapping}
+	mSpec := make(map[string]interface{})
+	if spec.Listeners != nil && spec.Listeners[0] != nil {
+		// Per schema definition, set at most 1 Listener
+		listener := spec.Listeners[0]
+		mListener := make(map[string]interface{})
+		if listener.PortMapping != nil {
+			mPortMapping := map[string]interface{}{
+				"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+				"protocol": aws.StringValue(listener.PortMapping.Protocol),
 			}
-
-			vListeners = append(vListeners, mListener)
+			mListener["port_mapping"] = []interface{}{mPortMapping}
 		}
-
-		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
+		mSpec["listener"] = []interface{}{mListener}
 	}
 
 	return []interface{}{mSpec}
@@ -5006,10 +4805,10 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 		spec.Backends = backends
 	}
 
-	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
+	if vListeners, ok := mSpec["listener"].([]interface{}); ok && len(vListeners) > 0 && vListeners[0] != nil {
 		listeners := []*appmesh.Listener{}
 
-		for _, vListener := range vListeners.List() {
+		for _, vListener := range vListeners {
 			listener := &appmesh.Listener{}
 
 			mListener := vListener.(map[string]interface{})
@@ -5153,37 +4952,33 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 		mSpec["backend"] = schema.NewSet(appmeshVirtualNodeBackendHash, vBackends)
 	}
 
-	if spec.Listeners != nil {
-		vListeners := []interface{}{}
+	if spec.Listeners != nil && spec.Listeners[0] != nil {
+		// Per schema definition, set at most 1 Listener
+		listener := spec.Listeners[0]
+		mListener := map[string]interface{}{}
 
-		for _, listener := range spec.Listeners {
-			mListener := map[string]interface{}{}
-
-			if listener.HealthCheck != nil {
-				mHealthCheck := map[string]interface{}{
-					"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
-					"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
-					"path":                aws.StringValue(listener.HealthCheck.Path),
-					"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
-					"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
-					"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
-					"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
-				}
-				mListener["health_check"] = []interface{}{mHealthCheck}
+		if listener.HealthCheck != nil {
+			mHealthCheck := map[string]interface{}{
+				"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
+				"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
+				"path":                aws.StringValue(listener.HealthCheck.Path),
+				"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
+				"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
+				"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
+				"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
 			}
-
-			if listener.PortMapping != nil {
-				mPortMapping := map[string]interface{}{
-					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
-					"protocol": aws.StringValue(listener.PortMapping.Protocol),
-				}
-				mListener["port_mapping"] = []interface{}{mPortMapping}
-			}
-
-			vListeners = append(vListeners, mListener)
+			mListener["health_check"] = []interface{}{mHealthCheck}
 		}
 
-		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
+		if listener.PortMapping != nil {
+			mPortMapping := map[string]interface{}{
+				"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+				"protocol": aws.StringValue(listener.PortMapping.Protocol),
+			}
+			mListener["port_mapping"] = []interface{}{mPortMapping}
+		}
+
+		mSpec["listener"] = []interface{}{mListener}
 	}
 
 	if spec.Logging != nil && spec.Logging.AccessLog != nil && spec.Logging.AccessLog.File != nil {
@@ -5337,7 +5132,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 						weightedTarget.VirtualNode = aws.String(vVirtualNode)
 					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok && vWeight > 0 {
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 						weightedTarget.Weight = aws.Int64(int64(vWeight))
 					}
 
@@ -5441,7 +5236,7 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
 						weightedTarget.VirtualNode = aws.String(vVirtualNode)
 					}
-					if vWeight, ok := mWeightedTarget["weight"].(int); ok && vWeight > 0 {
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
 						weightedTarget.Weight = aws.Int64(int64(vWeight))
 					}
 
@@ -5566,22 +5361,6 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 	return []interface{}{mSpec}
 }
 
-func flattenAppsyncPipelineConfig(c *appsync.PipelineConfig) []interface{} {
-	if c == nil {
-		return nil
-	}
-
-	if len(c.Functions) == 0 {
-		return nil
-	}
-
-	m := map[string]interface{}{
-		"functions": flattenStringList(c.Functions),
-	}
-
-	return []interface{}{m}
-}
-
 func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
 	ipAddressRequests := []*route53resolver.IpAddressRequest{}
 
@@ -5679,4 +5458,14 @@ func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.Targ
 	}
 
 	return vTargetIps
+}
+
+func isIpv6CidrsEquals(first, second string) bool {
+	if first == "" || second == "" {
+		return false
+	}
+	_, firstMask, _ := net.ParseCIDR(first)
+	_, secondMask, _ := net.ParseCIDR(second)
+
+	return firstMask.String() == secondMask.String()
 }

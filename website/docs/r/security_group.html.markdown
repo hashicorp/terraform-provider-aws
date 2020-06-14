@@ -36,7 +36,7 @@ resource "aws_security_group" "allow_tls" {
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = aws_vpc.main.cidr_block
+    cidr_blocks = [aws_vpc.main.cidr_block]
   }
 
   egress {
@@ -78,7 +78,7 @@ with the service, and those rules may contain a cyclic dependency that prevent
 the security groups from being destroyed without removing the dependency first.
 Default `false`
 * `vpc_id` - (Optional, Forces new resource) The VPC ID.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `ingress` block supports:
 

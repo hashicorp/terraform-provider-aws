@@ -172,6 +172,7 @@ func resourceAwsEc2TrafficMirrorSessionUpdate(d *schema.ResourceData, meta inter
 
 func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	sessionId := d.Id()
 	input := &ec2.DescribeTrafficMirrorSessionsInput{
@@ -207,7 +208,7 @@ func resourceAwsEc2TrafficMirrorSessionRead(d *schema.ResourceData, meta interfa
 	d.Set("packet_length", session.PacketLength)
 	d.Set("virtual_network_id", session.VirtualNetworkId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(session.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(session.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

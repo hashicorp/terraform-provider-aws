@@ -71,6 +71,7 @@ func resourceAwsApiGatewayClientCertificateCreate(d *schema.ResourceData, meta i
 
 func resourceAwsApiGatewayClientCertificateRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).apigatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := apigateway.GetClientCertificateInput{
 		ClientCertificateId: aws.String(d.Id()),
@@ -86,7 +87,7 @@ func resourceAwsApiGatewayClientCertificateRead(d *schema.ResourceData, meta int
 	}
 	log.Printf("[DEBUG] Received API Gateway Client Certificate: %s", out)
 
-	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(out.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(out.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

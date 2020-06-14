@@ -38,7 +38,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name of the capacity provider.
 * `auto_scaling_group_provider` - (Required) Nested argument defining the provider for the ECS auto scaling group. Defined below.
-* `tags` - (Optional) Key-value mapping of resource tags.
+* `tags` - (Optional) Key-value map of resource tags.
 
 ## auto_scaling_group_provider
 

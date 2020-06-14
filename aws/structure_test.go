@@ -20,6 +20,89 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+func TestDiffStringMaps(t *testing.T) {
+	cases := []struct {
+		Old, New       map[string]interface{}
+		Create, Remove map[string]interface{}
+	}{
+		// Add
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			Create: map[string]interface{}{
+				"bar": "baz",
+			},
+			Remove: map[string]interface{}{},
+		},
+
+		// Modify
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "baz",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]interface{}{},
+			Remove: map[string]interface{}{
+				"bar": "baz",
+			},
+		},
+	}
+
+	for i, tc := range cases {
+		c, r := diffStringMaps(tc.Old, tc.New)
+		cm := pointersMapToStringList(c)
+		rm := pointersMapToStringList(r)
+		if !reflect.DeepEqual(cm, tc.Create) {
+			t.Fatalf("%d: bad create: %#v", i, cm)
+		}
+		if !reflect.DeepEqual(rm, tc.Remove) {
+			t.Fatalf("%d: bad remove: %#v", i, rm)
+		}
+	}
+}
+
 func TestExpandIPPerms(t *testing.T) {
 	hash := schema.HashString
 
