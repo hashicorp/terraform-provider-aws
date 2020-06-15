@@ -19,7 +19,6 @@ func dataSourceAwsSecretsManagerSecretRotation() *schema.Resource {
 				Type:         schema.TypeString,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 				Required:     true,
-				ForceNew:     true,
 			},
 			"rotation_enabled": {
 				Type:     schema.TypeBool,
