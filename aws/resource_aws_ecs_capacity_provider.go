@@ -132,6 +132,7 @@ func resourceAwsEcsCapacityProviderCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ecs.DescribeCapacityProvidersInput{
 		CapacityProviders: []*string{aws.String(d.Id())},
@@ -161,7 +162,7 @@ func resourceAwsEcsCapacityProviderRead(d *schema.ResourceData, meta interface{}
 	d.Set("arn", provider.CapacityProviderArn)
 	d.Set("name", provider.Name)
 
-	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(provider.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(provider.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

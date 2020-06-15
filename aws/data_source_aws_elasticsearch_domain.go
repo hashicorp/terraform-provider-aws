@@ -22,6 +22,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 			"advanced_options": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -237,7 +238,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 			"processing": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 
@@ -248,6 +249,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 
 func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}) error {
 	esconn := meta.(*AWSClient).esconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	req := &elasticsearchservice.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(d.Get("domain_name").(string)),
@@ -357,7 +359,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 		return fmt.Errorf("error listing tags for Elasticsearch Cluster (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

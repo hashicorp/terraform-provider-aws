@@ -7,7 +7,7 @@
 // appliance with cloud-based storage to provide seamless and secure integration
 // between an organization's on-premises IT environment and the AWS storage
 // infrastructure. The service enables you to securely upload data to the AWS
-// cloud for cost effective backup and rapid disaster recovery.
+// Cloud for cost effective backup and rapid disaster recovery.
 //
 // Use the following links to get started using the AWS Storage Gateway Service
 // API Reference:
