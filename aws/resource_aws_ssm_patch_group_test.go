@@ -47,7 +47,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 		}
 
 		for _, i := range resp.Mappings {
-			if *i.BaselineIdentity.BaselineId == rs.Primary.Attributes["baseline_id"] && *i.PatchGroup == rs.Primary.ID {
+			if *i.BaselineIdentity.BaselineId == rs.Primary.Attributes["baseline_id"] && fmt.Sprintf("%s:%s", *i.PatchGroup, *i.BaselineIdentity.BaselineId) == rs.Primary.ID {
 				return nil
 			}
 		}
