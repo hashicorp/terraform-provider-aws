@@ -119,7 +119,6 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.CreateProductInput{}
-	now := time.Now()
 
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
@@ -176,7 +175,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	for k, v := range paParameters["info"].(map[string]interface{}) {
 		artifactProperties.Info[k] = aws.String(v.(string))
 	}
-	input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
+	input.IdempotencyToken = aws.String(fmt.Sprintf("%s", resource.UniqueId()))
 	input.SetProvisioningArtifactParameters(&artifactProperties)
 	log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
 
