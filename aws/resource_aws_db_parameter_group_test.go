@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/test"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -91,15 +91,15 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -118,23 +118,23 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_connection",
 						"value": "utf8_unicode_ci",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "collation_server",
 						"value": "utf8_unicode_ci",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),
@@ -149,15 +149,15 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_connection"),
 					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_server"),
 					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_results",
 						"value": "utf8",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_server",
 						"value": "utf8",
 					}),
-					test.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
 						"name":  "character_set_client",
 						"value": "utf8",
 					}),

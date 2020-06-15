@@ -1,4 +1,4 @@
-package test
+package tfawsresource
 
 import (
 	"fmt"
@@ -38,6 +38,9 @@ func TestCheckTypeSetElemNestedAttrs(res, attr string, values map[string]string)
 
 		matches := make(map[string]int)
 		attrParts := strings.Split(attr, ".")
+		if attrParts[len(attrParts)-1] != sentinelIndex {
+			return fmt.Errorf("%q does not end with the special value %q", attr, sentinelIndex)
+		}
 		for stateKey, stateValue := range is.Attributes {
 			stateKeyParts := strings.Split(stateKey, ".")
 			// a Set/List item with nested attrs would have a flatmap address of
@@ -93,6 +96,9 @@ func TestCheckTypeSetElemAttr(res, attr, value string) resource.TestCheckFunc {
 		}
 
 		attrParts := strings.Split(attr, ".")
+		if attrParts[len(attrParts)-1] != sentinelIndex {
+			return fmt.Errorf("%q does not end with the special value %q", attr, sentinelIndex)
+		}
 		for stateKey, stateValue := range is.Attributes {
 			if stateValue == value {
 				stateKeyParts := strings.Split(stateKey, ".")
