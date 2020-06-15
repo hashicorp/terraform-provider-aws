@@ -61,7 +61,6 @@ func TestAccAWSDlmLifecyclePolicy_Basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 		},
-		},
 	})
 }
 
@@ -110,36 +109,6 @@ func TestAccAWSDlmLifecyclePolicy_Full(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
 				),
 			},
-		},
-	},
-	})
-}
-
-func TestAccAWSDlmLifecyclePolicy_FullWithCron(t *testing.T) {
-	resourceName := "aws_dlm_lifecycle_policy.full"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: dlmLifecyclePolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: dlmLifecyclePolicyFullConfigWithCron(rName),
-				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full"),
-					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "10"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "false"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full"),
-			),
-			},
 			{
 				Config: dlmLifecyclePolicyFullUpdateConfigWithCron(rName),
 				Check: resource.ComposeTestCheckFunc(
@@ -149,55 +118,9 @@ func TestAccAWSDlmLifecyclePolicy_FullWithCron(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full-updated"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression", "cron	(0 18 ? * WED *)"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "100"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full-updated"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "true"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
-				),
-			},
-		}
-	},
-	})
-}
-
-func TestAccAWSDlmLifecyclePolicy_FullToCron(t *testing.T) {
-	resourceName := "aws_dlm_lifecycle_policy.full"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDlm(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: dlmLifecyclePolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: dlmLifecyclePolicyFullConfig(rName),
-				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full"),
-					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "state", "ENABLED"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "10"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "false"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full"),
-			),
-			},
-			{
-				Config: dlmLifecyclePolicyFullUpdateConfigWithCron(rName),
-				Check: resource.ComposeTestCheckFunc(
-					checkDlmLifecyclePolicyExists(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "description", "tf-acc-full-updated"),
-					resource.TestCheckResourceAttrSet(resourceName, "execution_role_arn"),
-					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.resource_types.0", "VOLUME"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.name", "tf-acc-full-updated"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.create_rule.0.cron_expression","cron	(0 18 ? * WED *)"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.retain_rule.0.count", "100"),
-					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", 	"full-updated"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.tags_to_add.tf-acc-test-added", "full-updated"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.copy_tags", "true"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.target_tags.tf-acc-test", "full-updated"),
 				),
@@ -205,7 +128,6 @@ func TestAccAWSDlmLifecyclePolicy_FullToCron(t *testing.T) {
 		},
 	})
 }
-
 
 func TestAccAWSDlmLifecyclePolicy_Tags(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -531,7 +453,6 @@ resource "aws_dlm_lifecycle_policy" "full" {
 `, rName)
 }
 
-
 func dlmLifecyclePolicyFullUpdateConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "dlm_lifecycle_role" {
@@ -589,7 +510,6 @@ resource "aws_dlm_lifecycle_policy" "full" {
 }
 `, rName)
 }
-
 
 func dlmLifecyclePolicyFullUpdateConfigWithCron(rName string) string {
 	return fmt.Sprintf(`

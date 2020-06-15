@@ -70,32 +70,32 @@ func resourceAwsDlmLifecyclePolicy() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"cron_expression": {
-													Type: schema.TypeString,
-													Optional: true,
+													Type:          schema.TypeString,
+													Optional:      true,
 													ConflictsWith: []string{"policy_details.0.schedule.0.create_rule.0.interval", "policy_details.0.schedule.0.create_rule.0.interval_unit", "policy_details.0.schedule.0.create_rule.0.times"},
-													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^cron\([^\n]{11,100}\)$`), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-CronExpression"),
+													ValidateFunc:  validation.StringMatch(regexp.MustCompile(`^cron\([^\n]{11,100}\)$`), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-CronExpression"),
 												},
 												"interval": {
-													Type:         schema.TypeInt,
-													Optional:     true,
+													Type:          schema.TypeInt,
+													Optional:      true,
 													ConflictsWith: []string{"policy_details.0.schedule.0.create_rule.0.cron_expression"},
-													ValidateFunc: validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
+													ValidateFunc:  validation.IntInSlice([]int{1, 2, 3, 4, 6, 8, 12, 24}),
 												},
 												"interval_unit": {
-													Type:     schema.TypeString,
-													Optional: true,
-													Default:  dlm.IntervalUnitValuesHours,
+													Type:          schema.TypeString,
+													Optional:      true,
+													Default:       dlm.IntervalUnitValuesHours,
 													ConflictsWith: []string{"policy_details.0.schedule.0.create_rule.0.cron_expression"},
 													ValidateFunc: validation.StringInSlice([]string{
 														dlm.IntervalUnitValuesHours,
 													}, false),
 												},
 												"times": {
-													Type:     schema.TypeList,
-													Optional: true,
-													Computed: true,
+													Type:          schema.TypeList,
+													Optional:      true,
+													Computed:      true,
 													ConflictsWith: []string{"policy_details.0.schedule.0.create_rule.0.cron_expression"},
-													MaxItems: 1,
+													MaxItems:      1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
 														ValidateFunc: validation.StringMatch(regexp.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
@@ -346,8 +346,8 @@ func expandDlmCreateRule(cfg []interface{}) *dlm.CreateRule {
 	c := cfg[0].(map[string]interface{})
 	createRule := &dlm.CreateRule{
 		CronExpression: aws.String(c["cron_expression"].(string)),
-		Interval:     aws.Int64(int64(c["interval"].(int))),
-		IntervalUnit: aws.String(c["interval_unit"].(string)),
+		Interval:       aws.Int64(int64(c["interval"].(int))),
+		IntervalUnit:   aws.String(c["interval_unit"].(string)),
 	}
 	if v, ok := c["times"]; ok {
 		createRule.Times = expandStringList(v.([]interface{}))
