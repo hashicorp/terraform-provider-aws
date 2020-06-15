@@ -6198,9 +6198,10 @@ func (c *EC2) CreateTagsRequest(input *CreateTagsInput) (req *request.Request, o
 
 // CreateTags API operation for Amazon Elastic Compute Cloud.
 //
-// Adds or overwrites the specified tags for the specified Amazon EC2 resource
-// or resources. Each resource can have a maximum of 50 tags. Each tag consists
-// of a key and optional value. Tag keys must be unique per resource.
+// Adds or overwrites only the specified tags for the specified Amazon EC2 resource
+// or resources. When you specify an existing tag key, the value is overwritten
+// with the new value. Each resource can have a maximum of 50 tags. Each tag
+// consists of a key and optional value. Tag keys must be unique per resource.
 //
 // For more information about tags, see Tagging Your Resources (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Tags.html)
 // in the Amazon Elastic Compute Cloud User Guide. For more information about
@@ -16689,7 +16690,7 @@ func (c *EC2) DescribeInstanceTypesRequest(input *DescribeInstanceTypesInput) (r
 
 // DescribeInstanceTypes API operation for Amazon Elastic Compute Cloud.
 //
-// Returns a list of all instance types offered in your current AWS Region.
+// Describes the details of the instance types that are offered in a location.
 // The results can be filtered by the attributes of the instance types.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -16822,13 +16823,17 @@ func (c *EC2) DescribeInstancesRequest(input *DescribeInstancesInput) (req *requ
 
 // DescribeInstances API operation for Amazon Elastic Compute Cloud.
 //
-// Describes the specified instances or all of AWS account's instances.
+// Describes the specified instances or all instances.
 //
-// If you specify one or more instance IDs, Amazon EC2 returns information for
-// those instances. If you do not specify instance IDs, Amazon EC2 returns information
-// for all relevant instances. If you specify an instance ID that is not valid,
-// an error is returned. If you specify an instance that you do not own, it
-// is not included in the returned results.
+// If you specify instance IDs, the output includes information for only the
+// specified instances. If you specify filters, the output includes information
+// for only those instances that meet the filter criteria. If you do not specify
+// instance IDs or filters, the output includes information for all instances,
+// which can affect performance. We recommend that you use pagination to ensure
+// that the operation returns quickly and successfully.
+//
+// If you specify an instance ID that is not valid, an error is returned. If
+// you specify an instance that you do not own, it is not included in the output.
 //
 // Recently terminated instances might appear in the returned results. This
 // interval is usually less than one hour.
@@ -60344,6 +60349,24 @@ type DescribeInstanceTypesInput struct {
 	//    * current-generation - Indicates whether this instance type is the latest
 	//    generation instance type of an instance family. (true | false)
 	//
+	//    * ebs-info.ebs-optimized-info.baseline-bandwidth-in-mbps - The baseline
+	//    bandwidth performance for an EBS-optimized instance type, in Mbps.
+	//
+	//    * ebs-info.ebs-optimized-info.baseline-throughput-in-mbps - The baseline
+	//    throughput performance for an EBS-optimized instance type, in MBps.
+	//
+	//    * ebs-info.ebs-optimized-info.baseline-iops - The baseline input/output
+	//    storage operations per second for an EBS-optimized instance type.
+	//
+	//    * ebs-info.ebs-optimized-info.maximum-bandwidth-in-mbps - The maximum
+	//    bandwidth performance for an EBS-optimized instance type, in Mbps.
+	//
+	//    * ebs-info.ebs-optimized-info.maximum-throughput-in-mbps - The maximum
+	//    throughput performance for an EBS-optimized instance type, in MBps.
+	//
+	//    * ebs-info.ebs-optimized-info.maximum-iops - The maximum input/output
+	//    storage operations per second for an EBS-optimized instance type.
+	//
 	//    * ebs-info.ebs-optimized-support - Indicates whether the instance type
 	//    is EBS-optimized. (supported | unsupported | default)
 	//
@@ -60376,6 +60399,9 @@ type DescribeInstanceTypesInput struct {
 	//
 	//    * network-info.ena-support - Indicates whether Elastic Network Adapter
 	//    (ENA) is supported or required. (required | supported | unsupported)
+	//
+	//    * network-info.efa-supported - Indicates whether the instance type supports
+	//    Elastic Fabric Adapter (EFA). (true | false)
 	//
 	//    * network-info.ipv4-addresses-per-interface - The maximum number of private
 	//    IPv4 addresses per network interface.
@@ -71617,6 +71643,9 @@ func (s *EbsBlockDevice) SetVolumeType(v string) *EbsBlockDevice {
 type EbsInfo struct {
 	_ struct{} `type:"structure"`
 
+	// Describes the optimized EBS performance for the instance type.
+	EbsOptimizedInfo *EbsOptimizedInfo `locationName:"ebsOptimizedInfo" type:"structure"`
+
 	// Indicates that the instance type is Amazon EBS-optimized. For more information,
 	// see Amazon EBS-Optimized Instances (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSOptimized.html)
 	// in Amazon EC2 User Guide for Linux Instances.
@@ -71634,6 +71663,12 @@ func (s EbsInfo) String() string {
 // GoString returns the string representation
 func (s EbsInfo) GoString() string {
 	return s.String()
+}
+
+// SetEbsOptimizedInfo sets the EbsOptimizedInfo field's value.
+func (s *EbsInfo) SetEbsOptimizedInfo(v *EbsOptimizedInfo) *EbsInfo {
+	s.EbsOptimizedInfo = v
+	return s
 }
 
 // SetEbsOptimizedSupport sets the EbsOptimizedSupport field's value.
@@ -71730,6 +71765,81 @@ func (s *EbsInstanceBlockDeviceSpecification) SetDeleteOnTermination(v bool) *Eb
 // SetVolumeId sets the VolumeId field's value.
 func (s *EbsInstanceBlockDeviceSpecification) SetVolumeId(v string) *EbsInstanceBlockDeviceSpecification {
 	s.VolumeId = &v
+	return s
+}
+
+// Describes the optimized EBS performance for supported instance types.
+type EbsOptimizedInfo struct {
+	_ struct{} `type:"structure"`
+
+	// The baseline bandwidth performance for an EBS-optimized instance type, in
+	// Mbps.
+	BaselineBandwidthInMbps *int64 `locationName:"baselineBandwidthInMbps" type:"integer"`
+
+	// The baseline input/output storage operations per seconds for an EBS-optimized
+	// instance type.
+	BaselineIops *int64 `locationName:"baselineIops" type:"integer"`
+
+	// The baseline throughput performance for an EBS-optimized instance type, in
+	// MBps.
+	BaselineThroughputInMBps *float64 `locationName:"baselineThroughputInMBps" type:"double"`
+
+	// The maximum bandwidth performance for an EBS-optimized instance type, in
+	// Mbps.
+	MaximumBandwidthInMbps *int64 `locationName:"maximumBandwidthInMbps" type:"integer"`
+
+	// The maximum input/output storage operations per second for an EBS-optimized
+	// instance type.
+	MaximumIops *int64 `locationName:"maximumIops" type:"integer"`
+
+	// The maximum throughput performance for an EBS-optimized instance type, in
+	// MBps.
+	MaximumThroughputInMBps *float64 `locationName:"maximumThroughputInMBps" type:"double"`
+}
+
+// String returns the string representation
+func (s EbsOptimizedInfo) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EbsOptimizedInfo) GoString() string {
+	return s.String()
+}
+
+// SetBaselineBandwidthInMbps sets the BaselineBandwidthInMbps field's value.
+func (s *EbsOptimizedInfo) SetBaselineBandwidthInMbps(v int64) *EbsOptimizedInfo {
+	s.BaselineBandwidthInMbps = &v
+	return s
+}
+
+// SetBaselineIops sets the BaselineIops field's value.
+func (s *EbsOptimizedInfo) SetBaselineIops(v int64) *EbsOptimizedInfo {
+	s.BaselineIops = &v
+	return s
+}
+
+// SetBaselineThroughputInMBps sets the BaselineThroughputInMBps field's value.
+func (s *EbsOptimizedInfo) SetBaselineThroughputInMBps(v float64) *EbsOptimizedInfo {
+	s.BaselineThroughputInMBps = &v
+	return s
+}
+
+// SetMaximumBandwidthInMbps sets the MaximumBandwidthInMbps field's value.
+func (s *EbsOptimizedInfo) SetMaximumBandwidthInMbps(v int64) *EbsOptimizedInfo {
+	s.MaximumBandwidthInMbps = &v
+	return s
+}
+
+// SetMaximumIops sets the MaximumIops field's value.
+func (s *EbsOptimizedInfo) SetMaximumIops(v int64) *EbsOptimizedInfo {
+	s.MaximumIops = &v
+	return s
+}
+
+// SetMaximumThroughputInMBps sets the MaximumThroughputInMBps field's value.
+func (s *EbsOptimizedInfo) SetMaximumThroughputInMBps(v float64) *EbsOptimizedInfo {
+	s.MaximumThroughputInMBps = &v
 	return s
 }
 
@@ -74371,19 +74481,30 @@ func (s *FleetLaunchTemplateOverridesRequest) SetWeightedCapacity(v float64) *Fl
 	return s
 }
 
-// Describes a launch template.
+// Describes the Amazon EC2 launch template and the launch template version
+// that can be used by a Spot Fleet request to configure Amazon EC2 instances.
+// For information about launch templates, see Launching an instance from a
+// launch template (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html)
+// in the Amazon EC2 User Guide for Linux Instances.
 type FleetLaunchTemplateSpecification struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the launch template. You must specify either a template ID or a
-	// template name.
+	// The ID of the launch template. If you specify the template ID, you can't
+	// specify the template name.
 	LaunchTemplateId *string `locationName:"launchTemplateId" type:"string"`
 
-	// The name of the launch template. You must specify either a template name
-	// or a template ID.
+	// The name of the launch template. If you specify the template name, you can't
+	// specify the template ID.
 	LaunchTemplateName *string `locationName:"launchTemplateName" min:"3" type:"string"`
 
-	// The version number of the launch template. You must specify a version number.
+	// The launch template version number, $Latest, or $Default. You must specify
+	// a value, otherwise the request fails.
+	//
+	// If the value is $Latest, Amazon EC2 uses the latest version of the launch
+	// template.
+	//
+	// If the value is $Default, Amazon EC2 uses the default version of the launch
+	// template.
 	Version *string `locationName:"version" type:"string"`
 }
 
@@ -74428,19 +74549,30 @@ func (s *FleetLaunchTemplateSpecification) SetVersion(v string) *FleetLaunchTemp
 	return s
 }
 
-// The launch template to use. You must specify either the launch template ID
-// or launch template name in the request.
+// Describes the Amazon EC2 launch template and the launch template version
+// that can be used by an EC2 Fleet to configure Amazon EC2 instances. For information
+// about launch templates, see Launching an instance from a launch template
+// (https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html)
+// in the Amazon Elastic Compute Cloud User Guide.
 type FleetLaunchTemplateSpecificationRequest struct {
 	_ struct{} `type:"structure"`
 
-	// The ID of the launch template.
+	// The ID of the launch template. If you specify the template ID, you can't
+	// specify the template name.
 	LaunchTemplateId *string `type:"string"`
 
-	// The name of the launch template.
+	// The name of the launch template. If you specify the template name, you can't
+	// specify the template ID.
 	LaunchTemplateName *string `min:"3" type:"string"`
 
-	// The version number of the launch template. Note: This is a required parameter
-	// and will be updated soon.
+	// The launch template version number, $Latest, or $Default. You must specify
+	// a value, otherwise the request fails.
+	//
+	// If the value is $Latest, Amazon EC2 uses the latest version of the launch
+	// template.
+	//
+	// If the value is $Default, Amazon EC2 uses the default version of the launch
+	// template.
 	Version *string `type:"string"`
 }
 
@@ -81633,6 +81765,9 @@ type InstanceTypeInfo struct {
 	// Indicates whether the instance type is offered for spot or On-Demand.
 	SupportedUsageClasses []*string `locationName:"supportedUsageClasses" locationNameList:"item" type:"list"`
 
+	// The supported virtualization types.
+	SupportedVirtualizationTypes []*string `locationName:"supportedVirtualizationTypes" locationNameList:"item" type:"list"`
+
 	// Describes the vCPU configurations for the instance type.
 	VCpuInfo *VCpuInfo `locationName:"vCpuInfo" type:"structure"`
 }
@@ -81770,6 +81905,12 @@ func (s *InstanceTypeInfo) SetSupportedRootDeviceTypes(v []*string) *InstanceTyp
 // SetSupportedUsageClasses sets the SupportedUsageClasses field's value.
 func (s *InstanceTypeInfo) SetSupportedUsageClasses(v []*string) *InstanceTypeInfo {
 	s.SupportedUsageClasses = v
+	return s
+}
+
+// SetSupportedVirtualizationTypes sets the SupportedVirtualizationTypes field's value.
+func (s *InstanceTypeInfo) SetSupportedVirtualizationTypes(v []*string) *InstanceTypeInfo {
+	s.SupportedVirtualizationTypes = v
 	return s
 }
 
@@ -90388,6 +90529,9 @@ func (s *NetworkAclEntry) SetRuleNumber(v int64) *NetworkAclEntry {
 type NetworkInfo struct {
 	_ struct{} `type:"structure"`
 
+	// Indicates whether Elastic Fabric Adapter (EFA) is supported.
+	EfaSupported *bool `locationName:"efaSupported" type:"boolean"`
+
 	// Indicates whether Elastic Network Adapter (ENA) is supported.
 	EnaSupport *string `locationName:"enaSupport" type:"string" enum:"EnaSupport"`
 
@@ -90415,6 +90559,12 @@ func (s NetworkInfo) String() string {
 // GoString returns the string representation
 func (s NetworkInfo) GoString() string {
 	return s.String()
+}
+
+// SetEfaSupported sets the EfaSupported field's value.
+func (s *NetworkInfo) SetEfaSupported(v bool) *NetworkInfo {
+	s.EfaSupported = &v
+	return s
 }
 
 // SetEnaSupport sets the EnaSupport field's value.
@@ -92450,6 +92600,9 @@ type ProvisionByoipCidrInput struct {
 	// it is UnauthorizedOperation.
 	DryRun *bool `type:"boolean"`
 
+	// The tags to apply to the address pool.
+	PoolTagSpecifications []*TagSpecification `locationName:"PoolTagSpecification" locationNameList:"item" type:"list"`
+
 	// (IPv6 only) Indicate whether the address range will be publicly advertised
 	// to the internet.
 	//
@@ -92506,6 +92659,12 @@ func (s *ProvisionByoipCidrInput) SetDescription(v string) *ProvisionByoipCidrIn
 // SetDryRun sets the DryRun field's value.
 func (s *ProvisionByoipCidrInput) SetDryRun(v bool) *ProvisionByoipCidrInput {
 	s.DryRun = &v
+	return s
+}
+
+// SetPoolTagSpecifications sets the PoolTagSpecifications field's value.
+func (s *ProvisionByoipCidrInput) SetPoolTagSpecifications(v []*TagSpecification) *ProvisionByoipCidrInput {
+	s.PoolTagSpecifications = v
 	return s
 }
 
@@ -92617,6 +92776,11 @@ type PublicIpv4Pool struct {
 	// A description of the address pool.
 	Description *string `locationName:"description" type:"string"`
 
+	// The name of the location from which the address pool is advertised. A network
+	// border group is a unique set of Availability Zones or Local Zones from where
+	// AWS advertises public IP addresses.
+	NetworkBorderGroup *string `locationName:"networkBorderGroup" type:"string"`
+
 	// The address ranges.
 	PoolAddressRanges []*PublicIpv4PoolRange `locationName:"poolAddressRangeSet" locationNameList:"item" type:"list"`
 
@@ -92646,6 +92810,12 @@ func (s PublicIpv4Pool) GoString() string {
 // SetDescription sets the Description field's value.
 func (s *PublicIpv4Pool) SetDescription(v string) *PublicIpv4Pool {
 	s.Description = &v
+	return s
+}
+
+// SetNetworkBorderGroup sets the NetworkBorderGroup field's value.
+func (s *PublicIpv4Pool) SetNetworkBorderGroup(v string) *PublicIpv4Pool {
+	s.NetworkBorderGroup = &v
 	return s
 }
 
@@ -98351,6 +98521,8 @@ type RunInstancesInput struct {
 	// An elastic inference accelerator to associate with the instance. Elastic
 	// inference accelerators are a resource you can attach to your Amazon EC2 instances
 	// to accelerate your Deep Learning (DL) inference workloads.
+	//
+	// You cannot specify accelerators from different generations in the same request.
 	ElasticInferenceAccelerators []*ElasticInferenceAccelerator `locationName:"ElasticInferenceAccelerator" locationNameList:"item" type:"list"`
 
 	// Indicates whether an instance is enabled for hibernation. For more information,
@@ -103875,11 +104047,12 @@ type TagSpecification struct {
 
 	// The type of resource to tag. Currently, the resource types that support tagging
 	// on creation are: capacity-reservation | client-vpn-endpoint | dedicated-host
-	// | fleet | fpga-image | instance | key-pair | launch-template | | natgateway
-	// | spot-fleet-request | placement-group | snapshot | traffic-mirror-filter
-	// | traffic-mirror-session | traffic-mirror-target | transit-gateway | transit-gateway-attachment
-	// | transit-gateway-route-table | vpc-endpoint (for interface VPC endpoints)|
-	// vpc-endpoint-service (for gateway VPC endpoints) | volume | vpc-flow-log.
+	// | fleet | fpga-image | instance | ipv4pool-ec2 | ipv6pool-ec2 | key-pair
+	// | launch-template | natgateway | spot-fleet-request | placement-group | snapshot
+	// | traffic-mirror-filter | traffic-mirror-session | traffic-mirror-target
+	// | transit-gateway | transit-gateway-attachment | transit-gateway-route-table
+	// | vpc-endpoint (for interface VPC endpoints)| vpc-endpoint-service (for gateway
+	// VPC endpoints) | volume | vpc-flow-log.
 	//
 	// To tag a resource after it has been created, see CreateTags (https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateTags.html).
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
@@ -110996,6 +111169,33 @@ const (
 	// InstanceTypeR5ad24xlarge is a InstanceType enum value
 	InstanceTypeR5ad24xlarge = "r5ad.24xlarge"
 
+	// InstanceTypeR6gMetal is a InstanceType enum value
+	InstanceTypeR6gMetal = "r6g.metal"
+
+	// InstanceTypeR6gMedium is a InstanceType enum value
+	InstanceTypeR6gMedium = "r6g.medium"
+
+	// InstanceTypeR6gLarge is a InstanceType enum value
+	InstanceTypeR6gLarge = "r6g.large"
+
+	// InstanceTypeR6gXlarge is a InstanceType enum value
+	InstanceTypeR6gXlarge = "r6g.xlarge"
+
+	// InstanceTypeR6g2xlarge is a InstanceType enum value
+	InstanceTypeR6g2xlarge = "r6g.2xlarge"
+
+	// InstanceTypeR6g4xlarge is a InstanceType enum value
+	InstanceTypeR6g4xlarge = "r6g.4xlarge"
+
+	// InstanceTypeR6g8xlarge is a InstanceType enum value
+	InstanceTypeR6g8xlarge = "r6g.8xlarge"
+
+	// InstanceTypeR6g12xlarge is a InstanceType enum value
+	InstanceTypeR6g12xlarge = "r6g.12xlarge"
+
+	// InstanceTypeR6g16xlarge is a InstanceType enum value
+	InstanceTypeR6g16xlarge = "r6g.16xlarge"
+
 	// InstanceTypeX116xlarge is a InstanceType enum value
 	InstanceTypeX116xlarge = "x1.16xlarge"
 
@@ -111146,6 +111346,30 @@ const (
 	// InstanceTypeC5Metal is a InstanceType enum value
 	InstanceTypeC5Metal = "c5.metal"
 
+	// InstanceTypeC5aLarge is a InstanceType enum value
+	InstanceTypeC5aLarge = "c5a.large"
+
+	// InstanceTypeC5aXlarge is a InstanceType enum value
+	InstanceTypeC5aXlarge = "c5a.xlarge"
+
+	// InstanceTypeC5a2xlarge is a InstanceType enum value
+	InstanceTypeC5a2xlarge = "c5a.2xlarge"
+
+	// InstanceTypeC5a4xlarge is a InstanceType enum value
+	InstanceTypeC5a4xlarge = "c5a.4xlarge"
+
+	// InstanceTypeC5a8xlarge is a InstanceType enum value
+	InstanceTypeC5a8xlarge = "c5a.8xlarge"
+
+	// InstanceTypeC5a12xlarge is a InstanceType enum value
+	InstanceTypeC5a12xlarge = "c5a.12xlarge"
+
+	// InstanceTypeC5a16xlarge is a InstanceType enum value
+	InstanceTypeC5a16xlarge = "c5a.16xlarge"
+
+	// InstanceTypeC5a24xlarge is a InstanceType enum value
+	InstanceTypeC5a24xlarge = "c5a.24xlarge"
+
 	// InstanceTypeC5dLarge is a InstanceType enum value
 	InstanceTypeC5dLarge = "c5d.large"
 
@@ -111191,6 +111415,33 @@ const (
 	// InstanceTypeC5n18xlarge is a InstanceType enum value
 	InstanceTypeC5n18xlarge = "c5n.18xlarge"
 
+	// InstanceTypeC6gMetal is a InstanceType enum value
+	InstanceTypeC6gMetal = "c6g.metal"
+
+	// InstanceTypeC6gMedium is a InstanceType enum value
+	InstanceTypeC6gMedium = "c6g.medium"
+
+	// InstanceTypeC6gLarge is a InstanceType enum value
+	InstanceTypeC6gLarge = "c6g.large"
+
+	// InstanceTypeC6gXlarge is a InstanceType enum value
+	InstanceTypeC6gXlarge = "c6g.xlarge"
+
+	// InstanceTypeC6g2xlarge is a InstanceType enum value
+	InstanceTypeC6g2xlarge = "c6g.2xlarge"
+
+	// InstanceTypeC6g4xlarge is a InstanceType enum value
+	InstanceTypeC6g4xlarge = "c6g.4xlarge"
+
+	// InstanceTypeC6g8xlarge is a InstanceType enum value
+	InstanceTypeC6g8xlarge = "c6g.8xlarge"
+
+	// InstanceTypeC6g12xlarge is a InstanceType enum value
+	InstanceTypeC6g12xlarge = "c6g.12xlarge"
+
+	// InstanceTypeC6g16xlarge is a InstanceType enum value
+	InstanceTypeC6g16xlarge = "c6g.16xlarge"
+
 	// InstanceTypeCc14xlarge is a InstanceType enum value
 	InstanceTypeCc14xlarge = "cc1.4xlarge"
 
@@ -111232,6 +111483,9 @@ const (
 
 	// InstanceTypeG4dn16xlarge is a InstanceType enum value
 	InstanceTypeG4dn16xlarge = "g4dn.16xlarge"
+
+	// InstanceTypeG4dnMetal is a InstanceType enum value
+	InstanceTypeG4dnMetal = "g4dn.metal"
 
 	// InstanceTypeCg14xlarge is a InstanceType enum value
 	InstanceTypeCg14xlarge = "cg1.4xlarge"

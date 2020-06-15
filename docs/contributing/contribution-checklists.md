@@ -58,8 +58,7 @@ guidelines.
    instructions for getting a local copy of the site up and running if you'd
    like to preview your changes.
  - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
+   see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
@@ -482,8 +481,7 @@ guidelines.
    to add a new file in the appropriate place and add a link to the sidebar for
    that page.
  - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
+   see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor
