@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -374,10 +375,9 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAPIGatewayV2ApiDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2ApiDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2ApiConfig_corsConfiguration(rName),
@@ -389,12 +389,12 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_headers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_headers.2053999599", "Authorization"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_headers.*", "Authorization"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.4248514160", "GET"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.2928708052", "put"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "GET"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "put"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.89023941", "https://www.example.com"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://www.example.com"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.expose_headers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.max_age", "0"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -422,12 +422,12 @@ func TestAccAWSAPIGatewayV2Api_CorsConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_credentials", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_headers.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_methods.163128923", "*"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_methods.*", "*"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.1868318776", "HTTP://WWW.EXAMPLE.ORG"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.allow_origins.3551736600", "https://example.io"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "HTTP://WWW.EXAMPLE.ORG"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.allow_origins.*", "https://example.io"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.expose_headers.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.expose_headers.115091893", "X-Api-Id"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "cors_configuration.0.expose_headers.*", "X-Api-Id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_configuration.0.max_age", "500"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					testAccMatchResourceAttrRegionalARN(resourceName, "execution_arn", "execute-api", regexp.MustCompile(`.+`)),

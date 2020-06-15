@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -1203,10 +1204,9 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 	resourceName := "aws_s3_bucket.bucket"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSS3BucketDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSS3BucketDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSS3BucketConfigWithLifecycle(bucketName),
@@ -1217,21 +1217,31 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.days", "365"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.date", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.expiration.0.expired_object_delete_marker", "false"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.2000431762.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.2000431762.days", "30"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.2000431762.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.3601168188.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.3601168188.days", "60"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.3601168188.storage_class", "INTELLIGENT_TIERING"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.3854926587.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.3854926587.days", "90"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.3854926587.storage_class", "ONEZONE_IA"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.962205413.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.962205413.days", "120"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.962205413.storage_class", "GLACIER"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.1571523406.date", ""),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.1571523406.days", "210"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.transition.1571523406.storage_class", "DEEP_ARCHIVE"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "30",
+						"storage_class": "STANDARD_IA",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "60",
+						"storage_class": "INTELLIGENT_TIERING",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "90",
+						"storage_class": "ONEZONE_IA",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "120",
+						"storage_class": "GLACIER",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.transition.*", map[string]string{
+						"date":          "",
+						"days":          "210",
+						"storage_class": "DEEP_ARCHIVE",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.id", "id2"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.prefix", "path2/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.date", "2016-01-12"),
@@ -1239,7 +1249,9 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.expiration.0.expired_object_delete_marker", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.id", "id3"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.prefix", "path3/"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.transition.460947558.days", "0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.2.transition.*", map[string]string{
+						"days": "0",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.3.id", "id4"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.3.prefix", "path4/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.3.tags.tagKey", "tagValue"),
@@ -1247,12 +1259,16 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.id", "id5"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.tags.tagKey", "tagValue"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.tags.terraform", "hashicorp"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.transition.460947558.days", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.4.transition.460947558.storage_class", "GLACIER"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.4.transition.*", map[string]string{
+						"days":          "0",
+						"storage_class": "GLACIER",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.id", "id6"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.tags.tagKey", "tagValue"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.transition.460947558.days", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.5.transition.460947558.storage_class", "GLACIER"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.5.transition.*", map[string]string{
+						"days":          "0",
+						"storage_class": "GLACIER",
+					}),
 				),
 			},
 			{
@@ -1269,18 +1285,24 @@ func TestAccAWSS3Bucket_LifecycleBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.prefix", "path1/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.noncurrent_version_expiration.0.days", "365"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.noncurrent_version_transition.1377917700.days", "30"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.noncurrent_version_transition.1377917700.storage_class", "STANDARD_IA"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.noncurrent_version_transition.2528035817.days", "60"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.0.noncurrent_version_transition.2528035817.storage_class", "GLACIER"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.noncurrent_version_transition.*", map[string]string{
+						"days":          "30",
+						"storage_class": "STANDARD_IA",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.0.noncurrent_version_transition.*", map[string]string{
+						"days":          "60",
+						"storage_class": "GLACIER",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.id", "id2"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.prefix", "path2/"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.1.noncurrent_version_expiration.0.days", "365"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.id", "id3"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.prefix", "path3/"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.noncurrent_version_transition.3732708140.days", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lifecycle_rule.2.noncurrent_version_transition.3732708140.storage_class", "GLACIER"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "lifecycle_rule.2.noncurrent_version_transition.*", map[string]string{
+						"days":          "0",
+						"storage_class": "GLACIER",
+					}),
 				),
 			},
 			{
