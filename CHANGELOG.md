@@ -12,6 +12,7 @@ ENHANCEMENTS:
 * resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_public_dns_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_service: Add `tags` argument [GH-13750]
+* resource/aws_wafv2_ip_set: Increase `addresses` maximum amount of items limit from 50 to 10,000 to match AWS limits [GH-13698]
 
 BUG FIXES:
 
