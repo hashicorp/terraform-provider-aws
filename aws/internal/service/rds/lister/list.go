@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 )
 
-func ListAllClusterParameterGroups(conn *rds.RDS, fn func(*rds.DescribeDBClusterParameterGroupsOutput, bool) bool) error {
+func ListAllClusterParameterGroupsPages(conn *rds.RDS, fn func(*rds.DescribeDBClusterParameterGroupsOutput, bool) bool) error {
 	input := &rds.DescribeDBClusterParameterGroupsInput{}
 
 	return DescribeDBClusterParameterGroupsPages(conn, input, fn)

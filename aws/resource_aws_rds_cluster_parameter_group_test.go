@@ -38,7 +38,7 @@ func testSweepRdsClusterParameterGroups(region string) error {
 
 	var sweeperErrs *multierror.Error
 
-	err = lister.ListAllClusterParameterGroups(conn, func(page *rds.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
+	err = lister.ListAllClusterParameterGroupsPages(conn, func(page *rds.DescribeDBClusterParameterGroupsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -51,7 +51,6 @@ func testSweepRdsClusterParameterGroups(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting DB Cluster Parameter Group: %s", name)
-
 			err := deleteRDSClusterParameterGroup(conn, deleteRDSClusterParameterGroupInputFromAPIResource(dbcpg))
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete DB Cluster Parameter Group %s: %s", name, err)
