@@ -87,6 +87,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -97,6 +98,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -1512,6 +1514,23 @@ func SecurityhubListTags(conn *securityhub.SecurityHub, identifier string) (KeyV
 	return SecurityhubKeyValueTags(output.Tags), nil
 }
 
+// ServicediscoveryListTags lists servicediscovery service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ServicediscoveryListTags(conn *servicediscovery.ServiceDiscovery, identifier string) (KeyValueTags, error) {
+	input := &servicediscovery.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ServicediscoveryKeyValueTags(output.Tags), nil
+}
+
 // SfnListTags lists sfn service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1681,6 +1700,23 @@ func Wafv2ListTags(conn *wafv2.WAFV2, identifier string) (KeyValueTags, error) {
 	}
 
 	return Wafv2KeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// WorklinkListTags lists worklink service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WorklinkListTags(conn *worklink.WorkLink, identifier string) (KeyValueTags, error) {
+	input := &worklink.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return WorklinkKeyValueTags(output.Tags), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

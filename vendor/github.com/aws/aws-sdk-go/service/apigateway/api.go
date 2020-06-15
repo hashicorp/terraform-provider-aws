@@ -20043,6 +20043,9 @@ type Integration struct {
 	// milliseconds or 29 seconds.
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
 
+	// Specifies the TLS configuration for an integration.
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
+
 	// Specifies an API method integration type. The valid value is one of the following:
 	//
 	//    * AWS: for integrating the API method request with an AWS service action,
@@ -20175,6 +20178,12 @@ func (s *Integration) SetRequestTemplates(v map[string]*string) *Integration {
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *Integration) SetTimeoutInMillis(v int64) *Integration {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *Integration) SetTlsConfig(v *TlsConfig) *Integration {
+	s.TlsConfig = v
 	return s
 }
 
@@ -21280,6 +21289,8 @@ type PutIntegrationInput struct {
 	// milliseconds or 29 seconds.
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
 
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
+
 	// [Required] Specifies a put integration input's type.
 	//
 	// Type is a required field
@@ -21431,6 +21442,12 @@ func (s *PutIntegrationInput) SetRestApiId(v string) *PutIntegrationInput {
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *PutIntegrationInput) SetTimeoutInMillis(v int64) *PutIntegrationInput {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *PutIntegrationInput) SetTlsConfig(v *TlsConfig) *PutIntegrationInput {
+	s.TlsConfig = v
 	return s
 }
 
@@ -23175,6 +23192,35 @@ func (s *ThrottleSettings) SetBurstLimit(v int64) *ThrottleSettings {
 // SetRateLimit sets the RateLimit field's value.
 func (s *ThrottleSettings) SetRateLimit(v float64) *ThrottleSettings {
 	s.RateLimit = &v
+	return s
+}
+
+type TlsConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies whether API Gateway skips trust chain validation of the server
+	// certificate during the TLS handshake. Supported only for HTTP and HTTP_PROXY
+	// integrations. By default, API Gateway validates that certificates for integration
+	// endpoints are issued by a supported Certificate Authority (https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-supported-certificate-authorities-for-http-endpoints.html).
+	// If enabled, API Gateway skips trust chain validation of the server certificate.
+	// This is not recommended, but it enables you to use certificates that are
+	// signed by private Certificate Authorities, or certificates that are self-signed.
+	InsecureSkipVerification *bool `locationName:"insecureSkipVerification" type:"boolean"`
+}
+
+// String returns the string representation
+func (s TlsConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsConfig) GoString() string {
+	return s.String()
+}
+
+// SetInsecureSkipVerification sets the InsecureSkipVerification field's value.
+func (s *TlsConfig) SetInsecureSkipVerification(v bool) *TlsConfig {
+	s.InsecureSkipVerification = &v
 	return s
 }
 

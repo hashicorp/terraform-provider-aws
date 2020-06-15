@@ -1,4 +1,14 @@
 ## 2.67.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_ec2_tag` [GH-8457]
+* **New Resource:** `aws_wafv2_web_acl` [GH-12688]
+
+BUG FIXES:
+
+* resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
+
 ## 2.66.0 (June 12, 2020)
 
 FEATURES:

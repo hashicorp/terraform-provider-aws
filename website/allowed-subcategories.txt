@@ -18,6 +18,7 @@ CloudFront
 CloudHSM v2
 CloudTrail
 CloudWatch
+CodeArtifact
 CodeBuild
 CodeCommit
 CodeDeploy

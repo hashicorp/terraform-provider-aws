@@ -84,6 +84,7 @@ var sliceServiceNames = []string{
 	"secretsmanager",
 	"serverlessapplicationrepository",
 	"servicecatalog",
+	"servicediscovery",
 	"sfn",
 	"sns",
 	"ssm",
@@ -133,6 +134,7 @@ var mapServiceNames = []string{
 	"securityhub",
 	"sqs",
 	"synthetics",
+	"worklink",
 }
 
 type TemplateData struct {

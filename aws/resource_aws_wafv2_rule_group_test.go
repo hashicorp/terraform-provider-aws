@@ -518,7 +518,7 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 					computeWafv2IpSetRefStatementIndex(&v, &idx),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.#", &idx, "1"),
-					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.0.arn", &idx, "wafv2", regexp.MustCompile(`regional/ipset/.+$`)),
+					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/ipset/.+$`)),
 				),
 			},
 			{
@@ -649,7 +649,7 @@ func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.#", &idx, "1"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.field_to_match.#", &idx, "1"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.text_transformation.#", &idx, "1"),
-					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.arn", &idx, "wafv2", regexp.MustCompile(`regional/regexpatternset/.+$`)),
+					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/regexpatternset/.+$`)),
 				),
 			},
 			{
@@ -937,7 +937,7 @@ func TestAccAwsWafv2RuleGroup_XssMatchStatement(t *testing.T) {
 	})
 }
 
-func testAccMatchResourceAttrArnWithIndexesAddr(name, format string, idx *int, arnService string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+func testAccMatchResourceAttrArnWithIndexesAddr(name, format string, idx *int, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return testAccMatchResourceAttrRegionalARN(name, fmt.Sprintf(format, *idx), "wafv2", arnResourceRegexp)(s)
 	}
