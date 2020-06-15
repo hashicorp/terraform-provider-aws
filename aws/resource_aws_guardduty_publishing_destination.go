@@ -12,11 +12,6 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
 )
 
-// Constants not currently provided by the AWS Go SDK
-const (
-	guardDutyPublishingStatusFailed = "FAILED"
-)
-
 func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsGuardDutyPublishingDestinationCreate,
