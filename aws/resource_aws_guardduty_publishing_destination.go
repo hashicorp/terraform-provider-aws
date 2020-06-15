@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/guardduty/waiter"
 )
 
 // Constants not currently provided by the AWS Go SDK
@@ -38,6 +38,9 @@ func resourceAwsGuardDutyPublishingDestination() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  guardduty.DestinationTypeS3,
+				ValidateFunc: validation.StringInSlice([]string{
+					guardduty.DestinationTypeS3,
+				}, false),
 			},
 			"destination_arn": {
 				Type:         schema.TypeString,
@@ -72,37 +75,16 @@ func resourceAwsGuardDutyPublishingDestinationCreate(d *schema.ResourceData, met
 		return fmt.Errorf("Creating GuardDuty publishing destination failed: %s", err.Error())
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{guardduty.PublishingStatusPendingVerification},
-		Target:     []string{guardduty.PublishingStatusPublishing},
-		Refresh:    guardDutyPublishingDestinationRefreshStatusFunc(conn, *output.DestinationId, detectorID),
-		Timeout:    5 * time.Minute,
-		MinTimeout: 3 * time.Second,
-	}
+	_, err = waiter.PublishingDestinationCreated(conn, *output.DestinationId, detectorID)
 
-	_, err = stateConf.WaitForState()
 	if err != nil {
 		return fmt.Errorf("Error waiting for GuardDuty PublishingDestination status to be \"%s\": %s",
 			guardduty.PublishingStatusPublishing, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), *output.DestinationId))
+	d.SetId(fmt.Sprintf("%s:%s", d.Get("detector_id"), aws.StringValue(output.DestinationId)))
 
 	return resourceAwsGuardDutyPublishingDestinationRead(d, meta)
-}
-
-func guardDutyPublishingDestinationRefreshStatusFunc(conn *guardduty.GuardDuty, destinationID, detectorID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &guardduty.DescribePublishingDestinationInput{
-			DetectorId:    aws.String(detectorID),
-			DestinationId: aws.String(destinationID),
-		}
-		resp, err := conn.DescribePublishingDestination(input)
-		if err != nil {
-			return nil, guardDutyPublishingStatusFailed, err
-		}
-		return resp, *resp.Status, nil
-	}
 }
 
 func resourceAwsGuardDutyPublishingDestinationRead(d *schema.ResourceData, meta interface{}) error {
