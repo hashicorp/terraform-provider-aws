@@ -19,6 +19,7 @@ import (
 )
 
 func resourceAwsDynamoDbTable() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsDynamoDbTableCreate,
 		Read:   resourceAwsDynamoDbTableRead,

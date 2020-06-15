@@ -16,6 +16,7 @@ import (
 )
 
 func resourceAwsVpc() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsVpcCreate,
 		Read:   resourceAwsVpcRead,

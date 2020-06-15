@@ -4487,7 +4487,7 @@ type CreateProjectInput struct {
 	// in the AWS CodeBuild User Guide.
 	SourceVersion *string `locationName:"sourceVersion" type:"string"`
 
-	// A set of tags for this build project.
+	// A list of tag key and value pairs associated with this build project.
 	//
 	// These tags are available for use by AWS services that support AWS CodeBuild
 	// build project tags.
@@ -4773,6 +4773,12 @@ type CreateReportGroupInput struct {
 	// Name is a required field
 	Name *string `locationName:"name" min:"2" type:"string" required:"true"`
 
+	// A list of tag key and value pairs associated with this report group.
+	//
+	// These tags are available for use by AWS services that support AWS CodeBuild
+	// report group tags.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The type of report group.
 	//
 	// Type is a required field
@@ -4809,6 +4815,16 @@ func (s *CreateReportGroupInput) Validate() error {
 			invalidParams.AddNested("ExportConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -4825,6 +4841,12 @@ func (s *CreateReportGroupInput) SetExportConfig(v *ReportExportConfig) *CreateR
 // SetName sets the Name field's value.
 func (s *CreateReportGroupInput) SetName(v string) *CreateReportGroupInput {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateReportGroupInput) SetTags(v []*Tag) *CreateReportGroupInput {
+	s.Tags = v
 	return s
 }
 
@@ -7302,7 +7324,7 @@ type Project struct {
 	// in the AWS CodeBuild User Guide.
 	SourceVersion *string `locationName:"sourceVersion" type:"string"`
 
-	// The tags for this build project.
+	// A list of tag key and value pairs associated with this build project.
 	//
 	// These tags are available for use by AWS services that support AWS CodeBuild
 	// build project tags.
@@ -8738,6 +8760,12 @@ type ReportGroup struct {
 	// The name of a ReportGroup.
 	Name *string `locationName:"name" min:"2" type:"string"`
 
+	// A list of tag key and value pairs associated with this report group.
+	//
+	// These tags are available for use by AWS services that support AWS CodeBuild
+	// report group tags.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The type of the ReportGroup. The one valid value is TEST.
 	Type *string `locationName:"type" type:"string" enum:"ReportType"`
 }
@@ -8779,6 +8807,12 @@ func (s *ReportGroup) SetLastModified(v time.Time) *ReportGroup {
 // SetName sets the Name field's value.
 func (s *ReportGroup) SetName(v string) *ReportGroup {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ReportGroup) SetTags(v []*Tag) *ReportGroup {
+	s.Tags = v
 	return s
 }
 
@@ -9209,7 +9243,7 @@ type StartBuildInput struct {
 
 	// A unique, case sensitive identifier you provide to ensure the idempotency
 	// of the StartBuild request. The token is included in the StartBuild request
-	// and is valid for 5 minutes. If you repeat the StartBuild request with the
+	// and is valid for 12 hours. If you repeat the StartBuild request with the
 	// same token, but change a parameter, AWS CodeBuild returns a parameter mismatch
 	// error.
 	IdempotencyToken *string `locationName:"idempotencyToken" type:"string"`
@@ -9706,7 +9740,7 @@ type Tag struct {
 	Key *string `locationName:"key" min:"1" type:"string"`
 
 	// The tag's value.
-	Value *string `locationName:"value" min:"1" type:"string"`
+	Value *string `locationName:"value" type:"string"`
 }
 
 // String returns the string representation
@@ -9724,9 +9758,6 @@ func (s *Tag) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "Tag"}
 	if s.Key != nil && len(*s.Key) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
-	}
-	if s.Value != nil && len(*s.Value) < 1 {
-		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -10011,7 +10042,7 @@ type UpdateProjectInput struct {
 	// in the AWS CodeBuild User Guide.
 	SourceVersion *string `locationName:"sourceVersion" type:"string"`
 
-	// The replacement set of tags for this build project.
+	// An updated list of tag key and value pairs associated with this build project.
 	//
 	// These tags are available for use by AWS services that support AWS CodeBuild
 	// build project tags.
@@ -10284,6 +10315,12 @@ type UpdateReportGroupInput struct {
 	//
 	//    * NO_EXPORT: The report results are not exported.
 	ExportConfig *ReportExportConfig `locationName:"exportConfig" type:"structure"`
+
+	// An updated list of tag key and value pairs associated with this report group.
+	//
+	// These tags are available for use by AWS services that support AWS CodeBuild
+	// report group tags.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -10310,6 +10347,16 @@ func (s *UpdateReportGroupInput) Validate() error {
 			invalidParams.AddNested("ExportConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -10326,6 +10373,12 @@ func (s *UpdateReportGroupInput) SetArn(v string) *UpdateReportGroupInput {
 // SetExportConfig sets the ExportConfig field's value.
 func (s *UpdateReportGroupInput) SetExportConfig(v *ReportExportConfig) *UpdateReportGroupInput {
 	s.ExportConfig = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *UpdateReportGroupInput) SetTags(v []*Tag) *UpdateReportGroupInput {
+	s.Tags = v
 	return s
 }
 
@@ -10614,8 +10667,8 @@ type WebhookFilter struct {
 	// Pattern is a required field
 	Pattern *string `locationName:"pattern" type:"string" required:"true"`
 
-	// The type of webhook filter. There are six webhook filter types: EVENT, ACTOR_ACCOUNT_ID,
-	// HEAD_REF, BASE_REF, FILE_PATH, and COMMIT_MESSAGE.
+	// The type of webhook filter. There are five webhook filter types: EVENT, ACTOR_ACCOUNT_ID,
+	// HEAD_REF, BASE_REF, and FILE_PATH.
 	//
 	// EVENT
 	//
@@ -10652,18 +10705,7 @@ type WebhookFilter struct {
 	// A webhook triggers a build when the path of a changed file matches the regular
 	// expression pattern.
 	//
-	// Works with GitHub and Bitbucket events push and pull requests events. Also
-	// works with GitHub Enterprise push events, but does not work with GitHub Enterprise
-	// pull request events.
-	//
-	// COMMIT_MESSAGE
-	//
-	// A webhook triggers a build when the head commit message matches the regular
-	// expression pattern.
-	//
-	// Works with GitHub and Bitbucket events push and pull requests events. Also
-	// works with GitHub Enterprise push events, but does not work with GitHub Enterprise
-	// pull request events.
+	// Works with GitHub and GitHub Enterprise push events only.
 	//
 	// Type is a required field
 	Type *string `locationName:"type" type:"string" required:"true" enum:"WebhookFilterType"`
