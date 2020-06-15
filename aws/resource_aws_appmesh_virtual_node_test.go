@@ -24,7 +24,7 @@ func init() {
 func testSweepAppmeshVirtualNodes(region string) error {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.(*AWSClient).appmeshconn
 
@@ -79,7 +79,7 @@ func testSweepAppmeshVirtualNodes(region string) error {
 			log.Printf("[WARN] Skipping Appmesh Virtual Node sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("error retrieving Appmesh Virtual Nodes: %s", err)
+		return fmt.Errorf("error retrieving Appmesh Virtual Nodes: %w", err)
 	}
 
 	return sweeperErrs.ErrorOrNil()
@@ -202,8 +202,8 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
-						"virtual_service.client_policy.#":        "0",
 						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
 						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -240,13 +240,13 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
-						"virtual_service.client_policy.#":        "0",
 						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
 						"virtual_service.0.virtual_service_name": "servicec.simpleapp.local",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
-						"virtual_service.client_policy.#":        "0",
 						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
 						"virtual_service.0.virtual_service_name": "serviced.simpleapp.local",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
@@ -390,7 +390,7 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
 		Steps: []resource.TestStep{
-			// We need to create and active the CA before issuing a certificate.
+			// We need to create and activate the CA before issuing a certificate.
 			{
 				Config: testAccAppmeshVirtualNodeConfigRootCA(vnName),
 				Check: resource.ComposeTestCheckFunc(
@@ -406,9 +406,11 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.client_policy.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					testAccCheckAppmeshVirtualNodeTlsAcmCertificateArn(acmCertificateResourceName, "arn", &vn),
@@ -437,9 +439,11 @@ func testAccAwsAppmeshVirtualNode_tls(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.client_policy.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                      "1",
+						"virtual_service.0.client_policy.#":      "0",
+						"virtual_service.0.virtual_service_name": "servicea.simpleapp.local",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
@@ -491,17 +495,20 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.enforce", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.ports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.ports.860082431", "8443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.906924271.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                                                                     "1",
+						"virtual_service.0.client_policy.#":                                                     "1",
+						"virtual_service.0.client_policy.0.tls.#":                                               "1",
+						"virtual_service.0.client_policy.0.tls.0.enforce":                                       "true",
+						"virtual_service.0.client_policy.0.tls.0.ports.#":                                       "1",
+						"virtual_service.0.client_policy.0.tls.0.ports.860082431":                               "8443",
+						"virtual_service.0.client_policy.0.tls.0.validation.#":                                  "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.#":                          "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.#":                    "0",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.#":                   "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain": "/cert_chain.pem",
+						"virtual_service.0.virtual_service_name":                                                "servicea.simpleapp.local",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
@@ -526,18 +533,21 @@ func testAccAwsAppmeshVirtualNode_clientPolicyFile(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mesh_name", meshName),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.enforce", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.ports.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.ports.3638101695", "443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.ports.860082431", "8443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/etc/ssl/certs/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                                                                     "1",
+						"virtual_service.0.client_policy.#":                                                     "1",
+						"virtual_service.0.client_policy.0.tls.#":                                               "1",
+						"virtual_service.0.client_policy.0.tls.0.enforce":                                       "true",
+						"virtual_service.0.client_policy.0.tls.0.ports.#":                                       "2",
+						"virtual_service.0.client_policy.0.tls.0.ports.3638101695":                              "443",
+						"virtual_service.0.client_policy.0.tls.0.ports.860082431":                               "8443",
+						"virtual_service.0.client_policy.0.tls.0.validation.#":                                  "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.#":                          "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.#":                    "0",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.#":                   "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain": "/etc/ssl/certs/cert_chain.pem",
+						"virtual_service.0.virtual_service_name":                                                "servicea.simpleapp.local",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
@@ -618,19 +628,21 @@ func testAccAwsAppmeshVirtualNode_clientPolicyAcm(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "mesh_owner"),
 					resource.TestCheckResourceAttr(resourceName, "spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.enforce", "true"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.ports.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.ports.3638101695", "443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.ports.860082431", "8443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain", "/etc/ssl/certs/cert_chain.pem"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.sds.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.3920410102.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "spec.0.backend.*", map[string]string{
+						"virtual_service.#":                                                                     "1",
+						"virtual_service.0.client_policy.#":                                                     "1",
+						"virtual_service.0.client_policy.0.tls.#":                                               "1",
+						"virtual_service.0.client_policy.0.tls.0.enforce":                                       "true",
+						"virtual_service.0.client_policy.0.tls.0.ports.#":                                       "2",
+						"virtual_service.0.client_policy.0.tls.0.ports.3638101695":                              "443",
+						"virtual_service.0.client_policy.0.tls.0.ports.860082431":                               "8443",
+						"virtual_service.0.client_policy.0.tls.0.validation.#":                                  "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.#":                          "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.acm.#":                    "0",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.#":                   "1",
+						"virtual_service.0.client_policy.0.tls.0.validation.0.trust.0.file.0.certificate_chain": "/etc/ssl/certs/cert_chain.pem",
+						"virtual_service.0.virtual_service_name":                                                "servicea.simpleapp.local",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
@@ -689,7 +701,7 @@ func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.860082431", "8443"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.*", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
@@ -716,8 +728,8 @@ func testAccAwsAppmeshVirtualNode_backendDefaults(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.enforce", "true"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.3638101695", "443"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.860082431", "8443"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.*", "443"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.ports.*", "8443"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend_defaults.0.client_policy.0.tls.0.validation.0.trust.0.acm.#", "0"),
