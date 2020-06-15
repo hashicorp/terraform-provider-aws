@@ -119,28 +119,33 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 	}
 	
 	d.SetId(*resp.RecordDetail.ProvisionedProductId)
-
-    /* TODO wait for creation
-    waitForCreated := &resource.StateChangeConf{
-        Target: []string{"CREATED", servicecatalog.StatusAvailable},
-        Refresh: func() (result interface{}, state string, err error) {
-            resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
-                Id: aws.String(productId),
-            })
-            if err != nil {
-                return nil, "", err
-            }
-            return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
-        },
-        Timeout:      d.Timeout(schema.TimeoutCreate),
-        PollInterval: 3 * time.Second,
-    }
-    if _, err := waitForCreated.WaitForState(); err != nil {
-        return err
-    }
-    */
-    
+	if err := waitForServiceCatalogProvisionedProductStatus("CREATED", conn, d); err != nil {
+		return err
+	}
 	return resourceAwsServiceCatalogProvisionedProductRead(d, meta)
+}
+
+func waitForServiceCatalogProvisionedProductStatus(status string, conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
+	stateConf := &resource.StateChangeConf{
+		Target: []string{status, servicecatalog.StatusAvailable},
+		Refresh: refreshProvisionedProductStatus(conn, d.Id()),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		PollInterval: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func refreshProvisionedProductStatus(conn *servicecatalog.ServiceCatalog, id string) resource.StateRefreshFunc {
+	return func() (result interface{}, state string, err error) {
+		resp, err := conn.DescribeProvisionedProduct(&servicecatalog.DescribeProvisionedProductInput{
+			Id: aws.String(id),
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		return resp, aws.StringValue(resp.ProvisionedProductDetail.Status), nil
+	}
 }
 
 func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, meta interface{}) error {
