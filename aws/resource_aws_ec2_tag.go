@@ -41,7 +41,7 @@ func resourceAwsEc2Tag() *schema.Resource {
 }
 
 func extractResourceIDAndKeyFromEc2TagID(id string) (string, string, error) {
-	parts := strings.SplitN(id, ":", 2)
+	parts := strings.SplitN(id, ",", 2)
 
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("Invalid resource ID; cannot look up resource: %s", id)
@@ -61,7 +61,7 @@ func resourceAwsEc2TagCreate(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error creating EC2 Tag (%s) for resource (%s): %w", key, resourceID, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", resourceID, key))
+	d.SetId(fmt.Sprintf("%s,%s", resourceID, key))
 
 	return resourceAwsEc2TagRead(d, meta)
 }

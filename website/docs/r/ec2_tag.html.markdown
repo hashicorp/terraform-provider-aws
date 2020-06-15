@@ -50,12 +50,12 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - EC2 resource identifier and key, separated by a colon (`:`)
+* `id` - EC2 resource identifier and key, separated by a comma (`,`)
 
 ## Import
 
-`aws_ec2_tag` can be imported by using the EC2 resource identifier and key, separated by a colon (`:`), e.g.
+`aws_ec2_tag` can be imported by using the EC2 resource identifier and key, separated by a comma (`,`), e.g.
 
 ```
-$ terraform import aws_ec2_tag.example tgw-attach-1234567890abcdef:Name
+$ terraform import aws_ec2_tag.example tgw-attach-1234567890abcdef,Name
 ```
