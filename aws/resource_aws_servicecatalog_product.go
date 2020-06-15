@@ -24,6 +24,8 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(15 * time.Minute),
+			Update: schema.DefaultTimeout(15 * time.Minute),
+			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -117,7 +119,6 @@ func resourceAwsServiceCatalogProduct() *schema.Resource {
 func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.CreateProductInput{}
-	now := time.Now()
 
 	if v, ok := d.GetOk("name"); ok {
 		input.Name = aws.String(v.(string))
@@ -174,7 +175,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	for k, v := range paParameters["info"].(map[string]interface{}) {
 		artifactProperties.Info[k] = aws.String(v.(string))
 	}
-	input.IdempotencyToken = aws.String(fmt.Sprintf("%d", now.UnixNano()))
+	input.IdempotencyToken = aws.String(fmt.Sprintf("%s", resource.UniqueId()))
 	input.SetProvisioningArtifactParameters(&artifactProperties)
 	log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
 
@@ -182,29 +183,34 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("creating ServiceCatalog product failed: %s", err)
 	}
-	productId := aws.StringValue(resp.ProductViewDetail.ProductViewSummary.ProductId)
-
-	waitForCreated := &resource.StateChangeConf{
-		Target: []string{"CREATED", servicecatalog.StatusAvailable},
-		Refresh: func() (result interface{}, state string, err error) {
-			resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
-				Id: aws.String(productId),
-			})
-			if err != nil {
-				return nil, "", err
-			}
-			return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
-		},
-		Timeout:      d.Timeout(schema.TimeoutCreate),
-		PollInterval: 3 * time.Second,
-	}
-	if _, err := waitForCreated.WaitForState(); err != nil {
+	d.SetId(*resp.ProductViewDetail.ProductViewSummary.ProductId)
+	if err := waitForServiceCatalogProductStatus("CREATED", conn, d); err != nil {
 		return err
 	}
-
-	d.SetId(productId)
-
 	return resourceAwsServiceCatalogProductRead(d, meta)
+}
+
+func waitForServiceCatalogProductStatus(status string, conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
+	stateConf := &resource.StateChangeConf{
+		Target: []string{status, servicecatalog.StatusAvailable},
+		Refresh: refreshProductStatus(conn, d.Id()),
+		Timeout: d.Timeout(schema.TimeoutCreate),
+		PollInterval: 3 * time.Second,
+	}
+	_, err := stateConf.WaitForState()
+	return err
+}
+
+func refreshProductStatus(conn *servicecatalog.ServiceCatalog, id string) resource.StateRefreshFunc {
+	return func() (result interface{}, state string, err error) {
+		resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
+			Id: aws.String(id),
+		})
+		if err != nil {
+			return nil, "", err
+		}
+		return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
+	}
 }
 
 func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
