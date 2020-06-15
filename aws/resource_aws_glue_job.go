@@ -323,7 +323,9 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	if d.HasChanges("allocated_capacity", "command", "connections", "default_arguments", "description", "execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers", "role_arn", "security_configuration", "timeout", "worker_type") {
+	if d.HasChanges("allocated_capacity", "command", "connections", "default_arguments", "description",
+		"execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers",
+		"role_arn", "security_configuration", "timeout", "worker_type") {
 		jobUpdate := &glue.JobUpdate{
 			Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get("role_arn").(string)),

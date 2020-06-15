@@ -457,7 +457,9 @@ func resourceAwsGlueCrawlerUpdate(d *schema.ResourceData, meta interface{}) erro
 	glueConn := meta.(*AWSClient).glueconn
 	name := d.Get("name").(string)
 
-	if d.HasChanges("catalog_target", "classifiers", "configuration", "description", "dynamodb_target", "jdbc_target", "role", "s3_target", "schedule", "schema_change_policy", "security_configuration", "table_prefix") {
+	if d.HasChanges(
+		"catalog_target", "classifiers", "configuration", "description", "dynamodb_target", "jdbc_target", "role",
+		"s3_target", "schedule", "schema_change_policy", "security_configuration", "table_prefix") {
 		updateCrawlerInput, err := updateCrawlerInput(name, d)
 		if err != nil {
 			return err
