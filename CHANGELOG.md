@@ -5,6 +5,13 @@ FEATURES:
 * **New Resource:** `aws_ec2_tag` [GH-8457]
 * **New Resource:** `aws_wafv2_web_acl` [GH-12688]
 
+ENHANCEMENTS:
+
+* resource/aws_service_discovery_http_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_public_dns_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_service: Add `tags` argument [GH-13750]
+
 BUG FIXES:
 
 * resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
