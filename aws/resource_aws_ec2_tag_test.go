@@ -139,6 +139,10 @@ func testAccCheckEc2TagExists(n string) resource.TestCheckFunc {
 
 		exists, _, err := keyvaluetags.Ec2GetTag(conn, resourceID, key)
 
+		if err != nil {
+			return err
+		}
+
 		if !exists {
 			return fmt.Errorf("Tag (%s) for resource (%s) not found", key, resourceID)
 		}
