@@ -12,8 +12,8 @@ import (
 )
 
 func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
-	preset := &elastictranscoder.Preset{}
-	name := "aws_elastictranscoder_preset.test"
+	var preset elastictranscoder.Preset
+	resourceName := "aws_elastictranscoder_preset.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -22,35 +22,13 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPresetConfig(rName),
+				Config: testAccAwsElasticTranscoderPresetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckElasticTranscoderPresetExists(name, preset),
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
 				),
 			},
 			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: awsElasticTranscoderPresetConfig2(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckElasticTranscoderPresetExists(name, preset),
-				),
-			},
-			{
-				ResourceName:      name,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: awsElasticTranscoderPresetConfig3(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckElasticTranscoderPresetExists(name, preset),
-				),
-			},
-			{
-				ResourceName:      name,
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -59,8 +37,8 @@ func TestAccAWSElasticTranscoderPreset_basic(t *testing.T) {
 }
 
 func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
-	preset := &elastictranscoder.Preset{}
-	name := "aws_elastictranscoder_preset.test"
+	var preset elastictranscoder.Preset
+	resourceName := "aws_elastictranscoder_preset.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -69,12 +47,87 @@ func TestAccAWSElasticTranscoderPreset_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: awsElasticTranscoderPresetConfig(rName),
+				Config: testAccAwsElasticTranscoderPresetConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckElasticTranscoderPresetExists(name, preset),
-					testAccCheckElasticTranscoderPresetDisappears(preset),
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
+					testAccCheckElasticTranscoderPresetDisappears(&preset),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticTranscoderPreset_Description(t *testing.T) {
+	var preset elastictranscoder.Preset
+	resourceName := "aws_elastictranscoder_preset.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsElasticTranscoderPresetConfigDescription(rName, "description1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
+					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Tests all configuration blocks
+func TestAccAWSElasticTranscoderPreset_Full(t *testing.T) {
+	var preset elastictranscoder.Preset
+	resourceName := "aws_elastictranscoder_preset.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSElasticTranscoder(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckElasticTranscoderPresetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsElasticTranscoderPresetConfigFull1(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
+					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "video.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "video_codec_options.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAwsElasticTranscoderPresetConfigFull2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckElasticTranscoderPresetExists(resourceName, &preset),
+					resource.TestCheckResourceAttr(resourceName, "audio.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audio_codec_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "thumbnails.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "video.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "video_codec_options.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "video_watermarks.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -143,12 +196,11 @@ func testAccCheckElasticTranscoderPresetDestroy(s *terraform.State) error {
 	return nil
 }
 
-func awsElasticTranscoderPresetConfig(rName string) string {
+func testAccAwsElasticTranscoderPresetConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
-  container   = "mp4"
-  description = "elastic transcoder preset test 1"
-  name        = %[1]q
+  container = "mp4"
+  name      = %[1]q
 
   audio {
     audio_packing_mode = "SingleTrack"
@@ -161,12 +213,29 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
-func awsElasticTranscoderPresetConfig2(rName string) string {
+func testAccAwsElasticTranscoderPresetConfigDescription(rName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
   container   = "mp4"
-  description = "elastic transcoder preset test 2"
+  description = %[2]q
   name        = %[1]q
+
+  audio {
+    audio_packing_mode = "SingleTrack"
+    bit_rate           = 320
+    channels           = 2
+    codec              = "mp3"
+    sample_rate        = 44100
+  }
+}
+`, rName, description)
+}
+
+func testAccAwsElasticTranscoderPresetConfigFull1(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_elastictranscoder_preset" "test" {
+  container = "mp4"
+  name      = %[1]q
 
   audio {
     audio_packing_mode = "SingleTrack"
@@ -213,12 +282,11 @@ resource "aws_elastictranscoder_preset" "test" {
 `, rName)
 }
 
-func awsElasticTranscoderPresetConfig3(rName string) string {
+func testAccAwsElasticTranscoderPresetConfigFull2(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_elastictranscoder_preset" "test" {
-  container   = "mp4"
-  description = "elastic transcoder preset test 3"
-  name        = %[1]q
+  container = "mp4"
+  name      = %[1]q
 
   audio {
     audio_packing_mode = "SingleTrack"

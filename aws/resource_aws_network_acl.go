@@ -26,7 +26,7 @@ func resourceAwsNetworkAcl() *schema.Resource {
 		Delete: resourceAwsNetworkAclDelete,
 		Update: resourceAwsNetworkAclUpdate,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsNetworkAclImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -188,6 +188,7 @@ func resourceAwsNetworkAclCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.DescribeNetworkAcls(&ec2.DescribeNetworkAclsInput{
 		NetworkAclIds: []*string{aws.String(d.Id())},
@@ -229,7 +230,7 @@ func resourceAwsNetworkAclRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("vpc_id", networkAcl.VpcId)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(networkAcl.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(networkAcl.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -302,13 +303,16 @@ func resourceAwsNetworkAclUpdate(d *schema.ResourceData, meta interface{}) error
 					}
 					return fmt.Errorf("Failed to find acl association: acl %s with subnet %s: %s", d.Id(), r, err)
 				}
-				log.Printf("DEBUG] Replacing Network Acl Association (%s) with Default Network ACL ID (%s)", *association.NetworkAclAssociationId, *defaultAcl.NetworkAclId)
+				log.Printf("[DEBUG] Replacing Network Acl Association (%s) with Default Network ACL ID (%s)", *association.NetworkAclAssociationId, *defaultAcl.NetworkAclId)
 				_, err = conn.ReplaceNetworkAclAssociation(&ec2.ReplaceNetworkAclAssociationInput{
 					AssociationId: association.NetworkAclAssociationId,
 					NetworkAclId:  defaultAcl.NetworkAclId,
 				})
 				if err != nil {
-					return err
+					if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
+						continue
+					}
+					return fmt.Errorf("Error Replacing Default Network Acl Association: %s", err)
 				}
 			}
 		}

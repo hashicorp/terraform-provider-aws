@@ -76,6 +76,7 @@ func dataSourceAwsVpcEndpointService() *schema.Resource {
 
 func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	filters, filtersOk := d.GetOk("filter")
 	tags, tagsOk := d.GetOk("tags")
@@ -149,7 +150,7 @@ func dataSourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{
 	d.Set("private_dns_name", sd.PrivateDnsName)
 	d.Set("service_id", sd.ServiceId)
 	d.Set("service_type", sd.ServiceType[0].ServiceType)
-	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(sd.Tags).IgnoreAws().Map())
+	err = d.Set("tags", keyvaluetags.Ec2KeyValueTags(sd.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}

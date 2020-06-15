@@ -45,7 +45,7 @@ The following arguments are supported:
 * `ntp_servers` - (Optional) List of NTP servers to configure.
 * `netbios_name_servers` - (Optional) List of NETBIOS name servers.
 * `netbios_node_type` - (Optional) The NetBIOS node type (1, 2, 4, or 8). AWS recommends to specify 2 since broadcast and multicast are not supported in their network. For more information about these node types, see [RFC 2132](http://www.ietf.org/rfc/rfc2132.txt).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Remarks
 

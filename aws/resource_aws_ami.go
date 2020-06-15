@@ -294,6 +294,8 @@ func resourceAwsAmiCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	client := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	id := d.Id()
 
 	req := &ec2.DescribeImagesInput{
@@ -400,7 +402,7 @@ func resourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("ebs_block_device", ebsBlockDevs)
 	d.Set("ephemeral_block_device", ephemeralBlockDevs)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

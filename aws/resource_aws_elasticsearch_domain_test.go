@@ -1109,6 +1109,10 @@ resource "aws_elasticsearch_domain" "test" {
   snapshot_options {
     automated_snapshot_start_hour = %d
   }
+
+  timeouts {
+    update = "180m"
+  }
 }
 `, randInt, instanceInt, snapshotInt)
 }

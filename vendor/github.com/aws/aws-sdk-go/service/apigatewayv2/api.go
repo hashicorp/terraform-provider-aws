@@ -2459,6 +2459,93 @@ func (c *ApiGatewayV2) DeleteVpcLinkWithContext(ctx aws.Context, input *DeleteVp
 	return out, req.Send()
 }
 
+const opExportApi = "ExportApi"
+
+// ExportApiRequest generates a "aws/request.Request" representing the
+// client's request for the ExportApi operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ExportApi for more information on using the ExportApi
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ExportApiRequest method.
+//    req, resp := client.ExportApiRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ExportApi
+func (c *ApiGatewayV2) ExportApiRequest(input *ExportApiInput) (req *request.Request, output *ExportApiOutput) {
+	op := &request.Operation{
+		Name:       opExportApi,
+		HTTPMethod: "GET",
+		HTTPPath:   "/v2/apis/{apiId}/exports/{specification}",
+	}
+
+	if input == nil {
+		input = &ExportApiInput{}
+	}
+
+	output = &ExportApiOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ExportApi API operation for AmazonApiGatewayV2.
+//
+// Exports a definition of an API in a particular output format and specification.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AmazonApiGatewayV2's
+// API operation ExportApi for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. See the message field
+//   for more information.
+//
+//   * TooManyRequestsException
+//   A limit has been exceeded. See the accompanying error message for details.
+//
+//   * BadRequestException
+//   The request is not valid, for example, the input is incomplete or incorrect.
+//   See the accompanying error message for details.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/apigatewayv2-2018-11-29/ExportApi
+func (c *ApiGatewayV2) ExportApi(input *ExportApiInput) (*ExportApiOutput, error) {
+	req, out := c.ExportApiRequest(input)
+	return out, req.Send()
+}
+
+// ExportApiWithContext is the same as ExportApi with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ExportApi for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ApiGatewayV2) ExportApiWithContext(ctx aws.Context, input *ExportApiInput, opts ...request.Option) (*ExportApiOutput, error) {
+	req, out := c.ExportApiRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetApi = "GetApi"
 
 // GetApiRequest generates a "aws/request.Request" representing the
@@ -10650,6 +10737,121 @@ func (s *DomainNameConfiguration) SetSecurityPolicy(v string) *DomainNameConfigu
 	return s
 }
 
+type ExportApiInput struct {
+	_ struct{} `type:"structure"`
+
+	// ApiId is a required field
+	ApiId *string `location:"uri" locationName:"apiId" type:"string" required:"true"`
+
+	ExportVersion *string `location:"querystring" locationName:"exportVersion" type:"string"`
+
+	IncludeExtensions *bool `location:"querystring" locationName:"includeExtensions" type:"boolean"`
+
+	// OutputType is a required field
+	OutputType *string `location:"querystring" locationName:"outputType" type:"string" required:"true"`
+
+	// Specification is a required field
+	Specification *string `location:"uri" locationName:"specification" type:"string" required:"true"`
+
+	StageName *string `location:"querystring" locationName:"stageName" type:"string"`
+}
+
+// String returns the string representation
+func (s ExportApiInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportApiInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ExportApiInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ExportApiInput"}
+	if s.ApiId == nil {
+		invalidParams.Add(request.NewErrParamRequired("ApiId"))
+	}
+	if s.ApiId != nil && len(*s.ApiId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ApiId", 1))
+	}
+	if s.OutputType == nil {
+		invalidParams.Add(request.NewErrParamRequired("OutputType"))
+	}
+	if s.Specification == nil {
+		invalidParams.Add(request.NewErrParamRequired("Specification"))
+	}
+	if s.Specification != nil && len(*s.Specification) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Specification", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetApiId sets the ApiId field's value.
+func (s *ExportApiInput) SetApiId(v string) *ExportApiInput {
+	s.ApiId = &v
+	return s
+}
+
+// SetExportVersion sets the ExportVersion field's value.
+func (s *ExportApiInput) SetExportVersion(v string) *ExportApiInput {
+	s.ExportVersion = &v
+	return s
+}
+
+// SetIncludeExtensions sets the IncludeExtensions field's value.
+func (s *ExportApiInput) SetIncludeExtensions(v bool) *ExportApiInput {
+	s.IncludeExtensions = &v
+	return s
+}
+
+// SetOutputType sets the OutputType field's value.
+func (s *ExportApiInput) SetOutputType(v string) *ExportApiInput {
+	s.OutputType = &v
+	return s
+}
+
+// SetSpecification sets the Specification field's value.
+func (s *ExportApiInput) SetSpecification(v string) *ExportApiInput {
+	s.Specification = &v
+	return s
+}
+
+// SetStageName sets the StageName field's value.
+func (s *ExportApiInput) SetStageName(v string) *ExportApiInput {
+	s.StageName = &v
+	return s
+}
+
+type ExportApiOutput struct {
+	_ struct{} `type:"structure" payload:"Body"`
+
+	// Represents an exported definition of an API in a particular output format,
+	// for example, YAML. The API is serialized to the requested specification,
+	// for example, OpenAPI 3.0.
+	Body []byte `locationName:"body" type:"blob"`
+}
+
+// String returns the string representation
+func (s ExportApiOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ExportApiOutput) GoString() string {
+	return s.String()
+}
+
+// SetBody sets the Body field's value.
+func (s *ExportApiOutput) SetBody(v []byte) *ExportApiOutput {
+	s.Body = v
+	return s
+}
+
 type GetApiInput struct {
 	_ struct{} `type:"structure"`
 
@@ -13900,7 +14102,7 @@ type Integration struct {
 	// Balancer listener, Network Load Balancer listener, or AWS Cloud Map service.
 	// If you specify the ARN of an AWS Cloud Map service, API Gateway uses DiscoverInstances
 	// to identify resources. You can use query parameters to target specific resources.
-	// To learn more, see DiscoverInstances (https://alpha-docs-aws.amazon.com/cloud-map/latest/api/API_DiscoverInstances.html).
+	// To learn more, see DiscoverInstances (https://docs.aws.amazon.com/cloud-map/latest/api/API_DiscoverInstances.html).
 	// For private integrations, all resources must be owned by the same AWS account.
 	IntegrationUri *string `locationName:"integrationUri" type:"string"`
 

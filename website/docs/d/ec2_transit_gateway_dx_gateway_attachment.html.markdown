@@ -28,7 +28,7 @@ The following arguments are supported:
 * `transit_gateway_id` - (Optional) Identifier of the EC2 Transit Gateway.
 * `dx_gateway_id` - (Optional) Identifier of the Direct Connect Gateway.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match a pair on the desired Transit Gateway Direct Connect Gateway Attachment.
+* `tags` - (Optional) A map of tags, each pair of which must exactly match a pair on the desired Transit Gateway Direct Connect Gateway Attachment.
 
 ### filter Configuration Block
 

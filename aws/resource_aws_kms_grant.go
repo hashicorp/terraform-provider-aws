@@ -23,7 +23,6 @@ func resourceAwsKmsGrant() *schema.Resource {
 		Create: resourceAwsKmsGrantCreate,
 		Read:   resourceAwsKmsGrantRead,
 		Delete: resourceAwsKmsGrantDelete,
-		Exists: resourceAwsKmsGrantExists,
 		Importer: &schema.ResourceImporter{
 			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				keyId, grantId, err := decodeKmsGrantId(d.Id())
@@ -297,30 +296,6 @@ func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	err = waitForKmsGrantToBeRevoked(conn, keyId, grantId)
 
 	return err
-}
-
-func resourceAwsKmsGrantExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).kmsconn
-
-	keyId, grantId, err := decodeKmsGrantId(d.Id())
-	if err != nil {
-		return false, err
-	}
-
-	log.Printf("[DEBUG] Looking for Grant: %s", grantId)
-	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
-
-	if err != nil {
-		if isResourceNotFoundError(err) {
-			return false, nil
-		}
-		return true, err
-	}
-	if grant != nil {
-		return true, err
-	}
-
-	return false, nil
 }
 
 func getKmsGrantById(grants []*kms.GrantListEntry, grantIdentifier string) *kms.GrantListEntry {

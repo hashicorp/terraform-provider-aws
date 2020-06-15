@@ -88,6 +88,7 @@ var serviceNames = []string{
 	"mediastore",
 	"mq",
 	"neptune",
+	"networkmanager",
 	"opsworks",
 	"organizations",
 	"pinpoint",
@@ -99,6 +100,7 @@ var serviceNames = []string{
 	"route53resolver",
 	"sagemaker",
 	"securityhub",
+	"servicediscovery",
 	"sfn",
 	"sns",
 	"sqs",
@@ -109,6 +111,7 @@ var serviceNames = []string{
 	"waf",
 	"wafregional",
 	"wafv2",
+	"worklink",
 	"workspaces",
 }
 

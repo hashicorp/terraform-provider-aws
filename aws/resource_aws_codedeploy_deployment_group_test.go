@@ -19,87 +19,62 @@ import (
 
 func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
 
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.test", &group),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "app_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_group_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestMatchResourceAttr(
-						"aws_codedeploy_deployment_group.test", "service_role_arn",
-						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/tf-acc-test-.*")),
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test", "arn"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "blue_green_deployment_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "blue_green_deployment_config.#", "0"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.2916377465.key", "filterkey"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.2916377465.type", "KEY_AND_VALUE"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.2916377465.value", "filtervalue"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.2916377465.key", "filterkey"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.2916377465.type", "KEY_AND_VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.2916377465.value", "filtervalue"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "alarm_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "auto_rollback_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "trigger_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSCodeDeployDeploymentGroupModified(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.test", &group),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "app_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_group_name", "tf-acc-test-updated-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestMatchResourceAttr(
-						"aws_codedeploy_deployment_group.test", "service_role_arn",
-						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/tf-acc-test-updated-.*")),
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-updated-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test_updated", "arn"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.2369538975.key", "filterkey"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.2369538975.type", "KEY_AND_VALUE"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.2369538975.value", "anotherfiltervalue"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.2369538975.key", "filterkey"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.2369538975.type", "KEY_AND_VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.2369538975.value", "anotherfiltervalue"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "alarm_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "auto_rollback_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "trigger_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_codedeploy_deployment_group.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.test"),
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -108,88 +83,62 @@ func TestAccAWSCodeDeployDeploymentGroup_basic(t *testing.T) {
 
 func TestAccAWSCodeDeployDeploymentGroup_basic_tagSet(t *testing.T) {
 	var group codedeploy.DeploymentGroupInfo
+	resourceName := "aws_codedeploy_deployment_group.test"
 
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeDeployDeploymentGroup(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.test", &group),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "app_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_group_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestMatchResourceAttr(
-						"aws_codedeploy_deployment_group.test", "service_role_arn",
-						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/tf-acc-test-.*")),
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test", "arn"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2916377593.ec2_tag_filter.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.key", "filterkey"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.type", "KEY_AND_VALUE"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.value", "filtervalue"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2916377593.ec2_tag_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.key", "filterkey"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.type", "KEY_AND_VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2916377593.ec2_tag_filter.2916377465.value", "filtervalue"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "0"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "alarm_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "auto_rollback_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "trigger_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
 				),
 			},
 			{
 				Config: testAccAWSCodeDeployDeploymentGroupModified(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCodeDeployDeploymentGroupExists("aws_codedeploy_deployment_group.test", &group),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "app_name", "tf-acc-test-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_group_name", "tf-acc-test-updated-"+rName),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "deployment_config_name", "CodeDeployDefault.OneAtATime"),
-					resource.TestMatchResourceAttr(
-						"aws_codedeploy_deployment_group.test", "service_role_arn",
-						regexp.MustCompile("arn:aws:iam::[0-9]{12}:role/tf-acc-test-updated-.*")),
+					testAccCheckAWSCodeDeployDeploymentGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "app_name", "tf-acc-test-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_group_name", "tf-acc-test-updated-"+rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", "CodeDeployDefault.OneAtATime"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", "aws_iam_role.test_updated", "arn"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2369538847.ec2_tag_filter.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.key", "filterkey"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.type", "KEY_AND_VALUE"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.value", "anotherfiltervalue"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "ec2_tag_filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2369538847.ec2_tag_filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.key", "filterkey"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.type", "KEY_AND_VALUE"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_set.2369538847.ec2_tag_filter.2369538975.value", "anotherfiltervalue"),
+					resource.TestCheckResourceAttr(resourceName, "ec2_tag_filter.#", "0"),
 
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "alarm_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "auto_rollback_configuration.#", "0"),
-					resource.TestCheckResourceAttr(
-						"aws_codedeploy_deployment_group.test", "trigger_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "alarm_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_rollback_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger_configuration.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_codedeploy_deployment_group.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc("aws_codedeploy_deployment_group.test"),
+				ImportStateIdFunc: testAccAWSCodeDeployDeploymentGroupImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -202,9 +151,10 @@ func TestAccAWSCodeDeployDeploymentGroup_onPremiseTag(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeDeployDeploymentGroupOnPremiseTags(rName),
@@ -370,9 +320,10 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_create(t *tes
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -404,9 +355,10 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_update(t *tes
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -454,9 +406,10 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_delete(t *tes
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -496,9 +449,10 @@ func TestAccAWSCodeDeployDeploymentGroup_autoRollbackConfiguration_disable(t *te
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_auto_rollback_configuration_create(rName),
@@ -544,9 +498,10 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_create(t *testing.T)
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -580,9 +535,10 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_update(t *testing.T)
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -634,9 +590,10 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_delete(t *testing.T)
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -678,9 +635,10 @@ func TestAccAWSCodeDeployDeploymentGroup_alarmConfiguration_disable(t *testing.T
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_alarm_configuration_create(rName),
@@ -763,9 +721,10 @@ func TestAccAWSCodeDeployDeploymentGroup_deploymentStyle_create(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_deployment_style_create(rName),
@@ -891,9 +850,10 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_create(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_create(rName),
@@ -923,9 +883,10 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_update(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_create(rName),
@@ -967,9 +928,10 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_delete(t *testing.T) {
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_create(rName),
@@ -1007,9 +969,10 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_create
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_target_group_info_create(rName),
@@ -1040,9 +1003,10 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_update
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_target_group_info_create(rName),
@@ -1084,9 +1048,10 @@ func TestAccAWSCodeDeployDeploymentGroup_loadBalancerInfo_targetGroupInfo_delete
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_load_balancer_info_target_group_info_create(rName),
@@ -1124,9 +1089,10 @@ func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_cre
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_in_place_deployment_with_traffic_control_create(rName),
@@ -1163,9 +1129,10 @@ func TestAccAWSCodeDeployDeploymentGroup_inPlaceDeploymentWithTrafficControl_upd
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_in_place_deployment_with_traffic_control_create(rName),
@@ -1502,9 +1469,10 @@ func TestAccAWSCodeDeployDeploymentGroup_blueGreenDeployment_complete(t *testing
 	rName := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCodeDeployDeploymentGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: test_config_blue_green_deployment_complete(rName),
@@ -2388,7 +2356,7 @@ func testAccAWSCodeDeployDeploymentGroupModified(rName string, tagGroup bool) st
 resource "aws_codedeploy_deployment_group" "test" {
   app_name              = aws_codedeploy_app.test.name
   deployment_group_name = "tf-acc-test-updated-%[1]s"
-  service_role_arn      = aws_iam_role.test_new.arn
+  service_role_arn      = aws_iam_role.test_updated.arn
   %[2]s
 }
 
@@ -2398,7 +2366,7 @@ resource "aws_codedeploy_app" "test" {
 
 resource "aws_iam_role_policy" "test" {
   name   = "tf-acc-test-%[1]s"
-  role   = aws_iam_role.test_new.id
+  role   = aws_iam_role.test_updated.id
   policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -2425,7 +2393,7 @@ EOF
 
 }
 
-resource "aws_iam_role" "test_new" {
+resource "aws_iam_role" "test_updated" {
   name               = "tf-acc-test-updated-%[1]s"
   assume_role_policy = <<EOF
 {

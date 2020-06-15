@@ -112,7 +112,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 * `requires_compatibilities` - (Optional) A set of launch types required by the task. The valid values are `EC2` and `FARGATE`.
 * `proxy_configuration` - (Optional) The [proxy configuration](#proxy-configuration-arguments) details for the App Mesh proxy.
 * `inference_accelerator` - (Optional) Configuration block(s) with Inference Accelerators settings. Detailed below.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 #### Volume Block Arguments
 
@@ -120,7 +120,7 @@ official [Developer Guide](https://docs.aws.amazon.com/AmazonECS/latest/develope
 parameter of container definition in the `mountPoints` section.
 * `host_path` - (Optional) The path on the host container instance that is presented to the container. If not set, ECS will create a nonpersistent data volume that starts empty and is deleted after the task has finished.
 * `docker_volume_configuration` - (Optional) Used to configure a [docker volume](#docker-volume-configuration-arguments)
-* `efs_volume_configuration` - (Optional) Used to configure a [EFS volume](#efs-volume-configuration-arguments). Can be used only with an EC2 type task.
+* `efs_volume_configuration` - (Optional) Used to configure a [EFS volume](#efs-volume-configuration-arguments).
 
 #### Docker Volume Configuration Arguments
 

@@ -119,7 +119,7 @@ attribute is exported from `aws_vpc`, or manually found via the AWS Console.
 notes below on managing Subnets in the Default Network ACL
 * `ingress` - (Optional) Specifies an ingress rule. Parameters defined below.
 * `egress` - (Optional) Specifies an egress rule. Parameters defined below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Both `egress` and `ingress` support the following keys:
 
@@ -189,3 +189,11 @@ In addition to all arguments above, the following attributes are exported:
 * `owner_id` - The ID of the AWS account that owns the Default Network ACL
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html
+
+## Import
+
+Default Network ACLs can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_default_network_acl.sample acl-7aaabd18
+```

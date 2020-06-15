@@ -345,6 +345,34 @@ func TestAccAWSStorageGatewayGateway_GatewayTimezone(t *testing.T) {
 	})
 }
 
+func TestAccAWSStorageGatewayGateway_GatewayVpcEndpoint(t *testing.T) {
+	var gateway storagegateway.DescribeGatewayInformationOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_storagegateway_gateway.test"
+	vpcEndpointResourceName := "aws_vpc_endpoint.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSStorageGatewayGatewayDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSStorageGatewayGatewayConfig_GatewayVpcEndpoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSStorageGatewayGatewayExists(resourceName, &gateway),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_vpc_endpoint", vpcEndpointResourceName, "dns_entry.0.dns_name"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"activation_key", "gateway_ip_address"},
+			},
+		},
+	})
+}
+
 func TestAccAWSStorageGatewayGateway_SmbActiveDirectorySettings(t *testing.T) {
 	var gateway storagegateway.DescribeGatewayInformationOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -490,22 +518,10 @@ resource "aws_internet_gateway" "test" {
   }
 }
 
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  subnet_id      = aws_subnet.test.id
-  route_table_id = aws_route_table.test.id
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+  route_table_id         = aws_vpc.test.main_route_table_id
 }
 
 resource "aws_security_group" "test" {
@@ -556,7 +572,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = ["aws_route.test"]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true
@@ -596,7 +612,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_CACHED_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = ["aws_internet_gateway.test"]
+  depends_on = ["aws_route.test"]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_CACHED_latest.value
   associate_public_ip_address = true
@@ -682,6 +698,30 @@ resource "aws_storagegateway_gateway" "test" {
 `, rName, gatewayTimezone)
 }
 
+func testAccAWSStorageGatewayGatewayConfig_GatewayVpcEndpoint(rName string) string {
+	return testAccAWSStorageGateway_TapeAndVolumeGatewayBase(rName) + fmt.Sprintf(`
+data "aws_vpc_endpoint_service" "storagegateway" {
+  service = "storagegateway"
+}
+
+resource "aws_vpc_endpoint" "test" {
+  security_group_ids = [aws_security_group.test.id]
+  service_name       = data.aws_vpc_endpoint_service.storagegateway.service_name
+  subnet_ids         = [aws_subnet.test.id]
+  vpc_endpoint_type  = data.aws_vpc_endpoint_service.storagegateway.service_type
+  vpc_id             = aws_vpc.test.id
+}
+
+resource "aws_storagegateway_gateway" "test" {
+  gateway_ip_address   = aws_instance.test.public_ip
+  gateway_name         = %[1]q
+  gateway_timezone     = "GMT"
+  gateway_type         = "CACHED"
+  gateway_vpc_endpoint = aws_vpc_endpoint.test.dns_entry[0].dns_name
+}
+`, rName)
+}
+
 func testAccAWSStorageGatewayGatewayConfig_SmbActiveDirectorySettings(rName string) string {
 	return fmt.Sprintf(`
 # Directory Service Directories must be deployed across multiple EC2 Availability Zones
@@ -722,24 +762,10 @@ resource "aws_internet_gateway" "test" {
   }
 }
 
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_route_table_association" "test" {
-  count = 2
-
-  subnet_id      = aws_subnet.test[count.index].id
-  route_table_id = aws_route_table.test.id
+resource "aws_route" "test" {
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.test.id
+  route_table_id         = aws_vpc.test.main_route_table_id
 }
 
 resource "aws_security_group" "test" {
@@ -815,7 +841,7 @@ data "aws_ssm_parameter" "aws_service_storagegateway_ami_FILE_S3_latest" {
 }
 
 resource "aws_instance" "test" {
-  depends_on = [aws_internet_gateway.test, aws_vpc_dhcp_options_association.test]
+  depends_on = [aws_route.test, aws_vpc_dhcp_options_association.test]
 
   ami                         = data.aws_ssm_parameter.aws_service_storagegateway_ami_FILE_S3_latest.value
   associate_public_ip_address = true

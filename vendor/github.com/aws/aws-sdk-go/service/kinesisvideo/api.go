@@ -81,7 +81,7 @@ func (c *KinesisVideo) CreateSignalingChannelRequest(input *CreateSignalingChann
 //   AWS account in this region.
 //
 //   * ResourceInUseException
-//   The stream is currently not available for this operation.
+//   The signaling channel is currently not available for this operation.
 //
 //   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
@@ -183,7 +183,7 @@ func (c *KinesisVideo) CreateStreamRequest(input *CreateStreamInput) (req *reque
 //   Not implemented.
 //
 //   * ResourceInUseException
-//   The stream is currently not available for this operation.
+//   The signaling channel is currently not available for this operation.
 //
 //   * InvalidDeviceException
 //   Not implemented.
@@ -296,6 +296,9 @@ func (c *KinesisVideo) DeleteSignalingChannelRequest(input *DeleteSignalingChann
 //   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
 //   API.
 //
+//   * ResourceInUseException
+//   The signaling channel is currently not available for this operation.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DeleteSignalingChannel
 func (c *KinesisVideo) DeleteSignalingChannel(input *DeleteSignalingChannelInput) (*DeleteSignalingChannelOutput, error) {
 	req, out := c.DeleteSignalingChannelRequest(input)
@@ -402,6 +405,9 @@ func (c *KinesisVideo) DeleteStreamRequest(input *DeleteStreamInput) (req *reque
 //   latest version, use the DescribeStream (https://docs.aws.amazon.com/kinesisvideostreams/latest/dg/API_DescribeStream.html)
 //   API.
 //
+//   * ResourceInUseException
+//   The signaling channel is currently not available for this operation.
+//
 // See also, https://docs.aws.amazon.com/goto/WebAPI/kinesisvideo-2017-09-30/DeleteStream
 func (c *KinesisVideo) DeleteStream(input *DeleteStreamInput) (*DeleteStreamOutput, error) {
 	req, out := c.DeleteStreamRequest(input)
@@ -469,7 +475,8 @@ func (c *KinesisVideo) DescribeSignalingChannelRequest(input *DescribeSignalingC
 // DescribeSignalingChannel API operation for Amazon Kinesis Video Streams.
 //
 // Returns the most current information about the signaling channel. You must
-// specify either the name or the ARN of the channel that you want to describe.
+// specify either the name or the Amazon Resource Name (ARN) of the channel
+// that you want to describe.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -750,9 +757,9 @@ func (c *KinesisVideo) GetSignalingChannelEndpointRequest(input *GetSignalingCha
 // parameter, which consists of the Protocols and Role properties.
 //
 // Protocols is used to determine the communication mechanism. For example,
-// specifying WSS as the protocol, results in this API producing a secure websocket
-// endpoint, and specifying HTTPS as the protocol, results in this API generating
-// an HTTPS endpoint.
+// if you specify WSS as the protocol, this API produces a secure websocket
+// endpoint. If you specify HTTPS as the protocol, this API generates an HTTPS
+// endpoint.
 //
 // Role determines the messaging permissions. A MASTER role results in this
 // API generating an endpoint that a client can use to communicate with any
@@ -778,7 +785,7 @@ func (c *KinesisVideo) GetSignalingChannelEndpointRequest(input *GetSignalingCha
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
 //   * ResourceInUseException
-//   The stream is currently not available for this operation.
+//   The signaling channel is currently not available for this operation.
 //
 //   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
@@ -1759,7 +1766,7 @@ func (c *KinesisVideo) UpdateDataRetentionRequest(input *UpdateDataRetentionInpu
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
 //   * ResourceInUseException
-//   The stream is currently not available for this operation.
+//   The signaling channel is currently not available for this operation.
 //
 //   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
@@ -1840,8 +1847,8 @@ func (c *KinesisVideo) UpdateSignalingChannelRequest(input *UpdateSignalingChann
 // and takes time to complete.
 //
 // If the MessageTtlSeconds value is updated (either increased or reduced),
-// then it only applies to new messages sent via this channel after it's been
-// updated. Existing messages are still expire as per the previous MessageTtlSeconds
+// it only applies to new messages sent via this channel after it's been updated.
+// Existing messages are still expired as per the previous MessageTtlSeconds
 // value.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1863,7 +1870,7 @@ func (c *KinesisVideo) UpdateSignalingChannelRequest(input *UpdateSignalingChann
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
 //   * ResourceInUseException
-//   The stream is currently not available for this operation.
+//   The signaling channel is currently not available for this operation.
 //
 //   * AccessDeniedException
 //   You do not have required permissions to perform this operation.
@@ -1972,7 +1979,7 @@ func (c *KinesisVideo) UpdateStreamRequest(input *UpdateStreamInput) (req *reque
 //   Amazon Kinesis Video Streams can't find the stream that you specified.
 //
 //   * ResourceInUseException
-//   The stream is currently not available for this operation.
+//   The signaling channel is currently not available for this operation.
 //
 //   * NotAuthorizedException
 //   The caller is not authorized to perform this operation.
@@ -2177,7 +2184,7 @@ func (s *AccountStreamLimitExceededException) RequestID() string {
 type ChannelInfo struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the signaling channel.
+	// The Amazon Resource Name (ARN) of the signaling channel.
 	ChannelARN *string `min:"1" type:"string"`
 
 	// The name of the signaling channel.
@@ -2362,7 +2369,7 @@ type CreateSignalingChannelInput struct {
 	_ struct{} `type:"structure"`
 
 	// A name for the signaling channel that you are creating. It must be unique
-	// for each account and region.
+	// for each AWS account and AWS Region.
 	//
 	// ChannelName is a required field
 	ChannelName *string `min:"1" type:"string" required:"true"`
@@ -2374,7 +2381,7 @@ type CreateSignalingChannelInput struct {
 	// A structure containing the configuration for the SINGLE_MASTER channel type.
 	SingleMasterConfiguration *SingleMasterConfiguration `type:"structure"`
 
-	// A set of tags (key/value pairs) that you want to associate with this channel.
+	// A set of tags (key-value pairs) that you want to associate with this channel.
 	Tags []*Tag `type:"list"`
 }
 
@@ -2446,7 +2453,7 @@ func (s *CreateSignalingChannelInput) SetTags(v []*Tag) *CreateSignalingChannelI
 type CreateSignalingChannelOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the created channel.
+	// The Amazon Resource Name (ARN) of the created channel.
 	ChannelARN *string `min:"1" type:"string"`
 }
 
@@ -2619,14 +2626,15 @@ func (s *CreateStreamOutput) SetStreamARN(v string) *CreateStreamOutput {
 type DeleteSignalingChannelInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the signaling channel that you want to delete.
+	// The Amazon Resource Name (ARN) of the signaling channel that you want to
+	// delete.
 	//
 	// ChannelARN is a required field
 	ChannelARN *string `min:"1" type:"string" required:"true"`
 
 	// The current version of the signaling channel that you want to delete. You
 	// can obtain the current version by invoking the DescribeSignalingChannel or
-	// ListSignalingChannels APIs.
+	// ListSignalingChannels API operations.
 	CurrentVersion *string `min:"1" type:"string"`
 }
 
@@ -3047,7 +3055,8 @@ func (s *GetDataEndpointOutput) SetDataEndpoint(v string) *GetDataEndpointOutput
 type GetSignalingChannelEndpointInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the signalling channel for which you want to get an endpoint.
+	// The Amazon Resource Name (ARN) of the signalling channel for which you want
+	// to get an endpoint.
 	//
 	// ChannelARN is a required field
 	ChannelARN *string `min:"1" type:"string" required:"true"`
@@ -3489,7 +3498,8 @@ type ListTagsForResourceInput struct {
 	// request to fetch the next batch of tags.
 	NextToken *string `type:"string"`
 
-	// The ARN of the signaling channel for which you want to list tags.
+	// The Amazon Resource Name (ARN) of the signaling channel for which you want
+	// to list tags.
 	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
@@ -3752,7 +3762,7 @@ func (s *ResourceEndpointListItem) SetResourceEndpoint(v string) *ResourceEndpoi
 	return s
 }
 
-// The stream is currently not available for this operation.
+// The signaling channel is currently not available for this operation.
 type ResourceInUseException struct {
 	_            struct{}                  `type:"structure"`
 	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
@@ -4163,7 +4173,8 @@ func (s *Tag) SetValue(v string) *Tag {
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the signaling channel to which you want to add tags.
+	// The Amazon Resource Name (ARN) of the signaling channel to which you want
+	// to add tags.
 	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
@@ -4384,7 +4395,8 @@ func (s *TagsPerResourceExceededLimitException) RequestID() string {
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the signaling channel from which you want to remove tags.
+	// The Amazon Resource Name (ARN) of the signaling channel from which you want
+	// to remove tags.
 	//
 	// ResourceARN is a required field
 	ResourceARN *string `min:"1" type:"string" required:"true"`
@@ -4649,7 +4661,8 @@ func (s UpdateDataRetentionOutput) GoString() string {
 type UpdateSignalingChannelInput struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the signaling channel that you want to update.
+	// The Amazon Resource Name (ARN) of the signaling channel that you want to
+	// update.
 	//
 	// ChannelARN is a required field
 	ChannelARN *string `min:"1" type:"string" required:"true"`
@@ -4923,6 +4936,9 @@ const (
 
 	// APINameGetDashStreamingSessionUrl is a APIName enum value
 	APINameGetDashStreamingSessionUrl = "GET_DASH_STREAMING_SESSION_URL"
+
+	// APINameGetClip is a APIName enum value
+	APINameGetClip = "GET_CLIP"
 )
 
 const (

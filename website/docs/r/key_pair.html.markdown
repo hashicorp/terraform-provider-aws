@@ -34,7 +34,7 @@ The following arguments are supported:
 * `key_name` - (Optional) The name for the key pair.
 * `key_name_prefix` - (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `key_name`.
 * `public_key` - (Required) The public key material.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 ## Attributes Reference
 

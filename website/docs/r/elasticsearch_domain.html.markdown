@@ -172,7 +172,7 @@ resource "aws_elasticsearch_domain" "es" {
       "${data.aws_subnet_ids.selected.ids[1]}",
     ]
 
-    security_group_ids = ["${aws_security_group.elasticsearch.id}"]
+    security_group_ids = ["${aws_security_group.es.id}"]
   }
 
   advanced_options = {
@@ -226,7 +226,7 @@ The following arguments are supported:
 * `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
-* `tags` - (Optional) A mapping of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource
 
 **ebs_options** supports the following attributes:
 
@@ -309,6 +309,12 @@ In addition to all arguments above, the following attributes are exported:
 * `kibana_endpoint` - Domain-specific endpoint for kibana without https scheme.
 * `vpc_options.0.availability_zones` - If the domain was created inside a VPC, the names of the availability zones the configured `subnet_ids` were created inside.
 * `vpc_options.0.vpc_id` - If the domain was created inside a VPC, the ID of the VPC.
+
+## Timeouts
+
+`aws_elasticsearch_domain` provides the following [Timeouts](/docs/configuration/resources.html#operation-timeouts) configuration options:
+
+* `update` - (Optional, Default: `60m`) How long to wait for updates.
 
 ## Import
 

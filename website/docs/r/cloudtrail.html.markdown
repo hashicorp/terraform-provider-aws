@@ -158,7 +158,7 @@ The following arguments are supported:
     Defaults to `false`.
 * `kms_key_id` - (Optional) Specifies the KMS key ARN to use to encrypt the logs delivered by CloudTrail.
 * `event_selector` - (Optional) Specifies an event selector for enabling data event logging. Fields documented below. Please note the [CloudTrail limits](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/WhatIsCloudTrail-Limits.html) when configuring these.
-* `tags` - (Optional) A mapping of tags to assign to the trail
+* `tags` - (Optional) A map of tags to assign to the trail
 
 ### Event Selector Arguments
 For **event_selector** the following attributes are supported.

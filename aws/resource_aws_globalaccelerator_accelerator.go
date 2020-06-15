@@ -147,6 +147,7 @@ func resourceAwsGlobalAcceleratorAcceleratorCreate(d *schema.ResourceData, meta 
 
 func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).globalacceleratorconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	accelerator, err := resourceAwsGlobalAcceleratorAcceleratorRetrieve(conn, d.Id())
 
@@ -186,7 +187,7 @@ func resourceAwsGlobalAcceleratorAcceleratorRead(d *schema.ResourceData, meta in
 		return fmt.Errorf("error listing tags for Global Accelerator accelerator (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

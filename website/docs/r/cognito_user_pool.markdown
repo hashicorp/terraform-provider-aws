@@ -63,7 +63,7 @@ The following arguments are supported:
 * `sms_configuration` (Optional) - Configuration block for Short Message Service (SMS) settings. Detailed below. These settings apply to SMS user verification and SMS Multi-Factor Authentication (MFA). Due to Cognito API restrictions, the SMS configuration cannot be removed without recreating the Cognito User Pool. For user data safety, this resource will ignore the removal of this configuration by disabling drift detection. To force resource recreation after this configuration has been applied, see the [`taint` command](/docs/commands/taint.html).
 * `sms_verification_message` - (Optional) A string representing the SMS verification message. Conflicts with `verification_message_template` configuration block `sms_message` argument.
 * `software_token_mfa_configuration` - (Optional) Configuration block for software token Mult-Factor Authentication (MFA) settings. Detailed below.
-* `tags` - (Optional) A mapping of tags to assign to the User Pool.
+* `tags` - (Optional) A map of tags to assign to the User Pool.
 * `username_attributes` - (Optional) Specifies whether email addresses or phone numbers can be specified as usernames when a user signs up. Conflicts with `alias_attributes`.
 * `username_configuration` - (Optional) The [Username Configuration](#username-configuration).
 * `user_pool_add_ons` - (Optional) Configuration block for [user pool add-ons](#user-pool-add-ons) to enable user pool advanced security mode features.
@@ -89,9 +89,9 @@ The following arguments are supported:
 #### Email Configuration
 
   * `reply_to_email_address` (Optional) - The REPLY-TO email address.
-  * `source_arn` (Optional) - The ARN of the email source.
-  * `from_email_address` (Optional) - Sender’s email address or sender’s name with their email address (e.g. "john@smith.com" or "John Smith <john@smith.com>")
-  * `email_sending_account` (Optional) - Instruct Cognito to either use its built-in functional or Amazon SES to send out emails.
+  * `source_arn` (Optional) - The ARN of the SES verified email identity to to use. Required if `email_sending_account` is set to `DEVELOPER`.
+  * `from_email_address` (Optional) - Sender’s email address or sender’s display name with their email address (e.g. `john@example.com`, `John Smith <john@example.com>` or `\"John Smith Ph.D.\" <john@example.com>`). Escaped double quotes are required around display names that contain certain characters as specified in [RFC 5322](https://tools.ietf.org/html/rfc5322).
+  * `email_sending_account` (Optional) - The email delivery method to use. `COGNITO_DEFAULT` for the default email functionality built into Cognito or `DEVELOPER` to use your Amazon SES configuration.
 
 #### Lambda Configuration
 

@@ -96,6 +96,7 @@ func resourceAwsNatGatewayCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	// Refresh the NAT Gateway state
 	ngRaw, state, err := NGStateRefreshFunc(conn, d.Id())()
@@ -126,7 +127,7 @@ func resourceAwsNatGatewayRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("private_ip", address.PrivateIp)
 	d.Set("public_ip", address.PublicIp)
 
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(ng.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(ng.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

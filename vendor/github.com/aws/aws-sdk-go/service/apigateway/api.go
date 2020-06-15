@@ -11339,7 +11339,9 @@ func (c *APIGateway) UpdateVpcLinkWithContext(ctx aws.Context, input *UpdateVpcL
 type AccessLogSettings struct {
 	_ struct{} `type:"structure"`
 
-	// The ARN of the CloudWatch Logs log group to receive access logs.
+	// The Amazon Resource Name (ARN) of the CloudWatch Logs log group or Kinesis
+	// Data Firehose delivery stream to receive access logs. If you specify a Kinesis
+	// Data Firehose delivery stream, the stream name must begin with amazon-apigateway-.
 	DestinationArn *string `locationName:"destinationArn" type:"string"`
 
 	// A single line format of the access logs of data, as specified by selected
@@ -12073,7 +12075,8 @@ type CreateApiKeyInput struct {
 	Enabled *bool `locationName:"enabled" type:"boolean"`
 
 	// Specifies whether (true) or not (false) the key identifier is distinct from
-	// the created API key value.
+	// the created API key value. This parameter is deprecated and should not be
+	// used.
 	GenerateDistinctId *bool `locationName:"generateDistinctId" type:"boolean"`
 
 	// The name of the ApiKey.
@@ -12346,8 +12349,8 @@ type CreateBasePathMappingInput struct {
 	RestApiId *string `locationName:"restApiId" type:"string" required:"true"`
 
 	// The name of the API's stage that you want to use for this mapping. Specify
-	// '(none)' if you do not want callers to explicitly specify the stage name
-	// after any base path name.
+	// '(none)' if you want callers to explicitly specify the stage name after any
+	// base path name.
 	Stage *string `locationName:"stage" type:"string"`
 }
 
@@ -13516,8 +13519,8 @@ type CreateVpcLinkInput struct {
 	// tag value can be up to 256 characters.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
-	// [Required] The ARNs of network load balancers of the VPC targeted by the
-	// VPC link. The network load balancers must be owned by the same AWS account
+	// [Required] The ARN of the network load balancer of the VPC targeted by the
+	// VPC link. The network load balancer must be owned by the same AWS account
 	// of the API owner.
 	//
 	// TargetArns is a required field
@@ -18092,7 +18095,7 @@ func (s *GetModelTemplateInput) SetRestApiId(v string) *GetModelTemplateInput {
 type GetModelTemplateOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The Apache Velocity Template Language (VTL) (https://velocity.apache.org/engine/devel/vtl-reference-guide.html)
+	// The Apache Velocity Template Language (VTL) (https://velocity.apache.org/engine/devel/vtl-reference.html)
 	// template content used for the template resource.
 	Value *string `locationName:"value" type:"string"`
 }
@@ -19047,8 +19050,7 @@ type GetTagsInput struct {
 	// set.
 	Position *string `location:"querystring" locationName:"position" type:"string"`
 
-	// [Required] The ARN of a resource that can be tagged. The resource ARN must
-	// be URL-encoded.
+	// [Required] The ARN of a resource that can be tagged.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `location:"uri" locationName:"resource_arn" type:"string" required:"true"`
@@ -20041,6 +20043,9 @@ type Integration struct {
 	// milliseconds or 29 seconds.
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
 
+	// Specifies the TLS configuration for an integration.
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
+
 	// Specifies an API method integration type. The valid value is one of the following:
 	//
 	//    * AWS: for integrating the API method request with an AWS service action,
@@ -20173,6 +20178,12 @@ func (s *Integration) SetRequestTemplates(v map[string]*string) *Integration {
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *Integration) SetTimeoutInMillis(v int64) *Integration {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *Integration) SetTlsConfig(v *TlsConfig) *Integration {
+	s.TlsConfig = v
 	return s
 }
 
@@ -20720,7 +20731,9 @@ type MethodSetting struct {
 
 	// Specifies the logging level for this method, which affects the log entries
 	// pushed to Amazon CloudWatch Logs. The PATCH path for this setting is /{method_setting_key}/logging/loglevel,
-	// and the available levels are OFF, ERROR, and INFO.
+	// and the available levels are OFF, ERROR, and INFO. Choose ERROR to write
+	// only error-level entries to CloudWatch Logs, or choose INFO to include all
+	// ERROR events as well as extra informational events.
 	LoggingLevel *string `locationName:"loggingLevel" type:"string"`
 
 	// Specifies whether Amazon CloudWatch metrics are enabled for this method.
@@ -21276,6 +21289,8 @@ type PutIntegrationInput struct {
 	// milliseconds or 29 seconds.
 	TimeoutInMillis *int64 `locationName:"timeoutInMillis" type:"integer"`
 
+	TlsConfig *TlsConfig `locationName:"tlsConfig" type:"structure"`
+
 	// [Required] Specifies a put integration input's type.
 	//
 	// Type is a required field
@@ -21427,6 +21442,12 @@ func (s *PutIntegrationInput) SetRestApiId(v string) *PutIntegrationInput {
 // SetTimeoutInMillis sets the TimeoutInMillis field's value.
 func (s *PutIntegrationInput) SetTimeoutInMillis(v int64) *PutIntegrationInput {
 	s.TimeoutInMillis = &v
+	return s
+}
+
+// SetTlsConfig sets the TlsConfig field's value.
+func (s *PutIntegrationInput) SetTlsConfig(v *TlsConfig) *PutIntegrationInput {
+	s.TlsConfig = v
 	return s
 }
 
@@ -22666,8 +22687,7 @@ func (s *StageKey) SetStageName(v string) *StageKey {
 type TagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// [Required] The ARN of a resource that can be tagged. The resource ARN must
-	// be URL-encoded.
+	// [Required] The ARN of a resource that can be tagged.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `location:"uri" locationName:"resource_arn" type:"string" required:"true"`
@@ -23175,6 +23195,35 @@ func (s *ThrottleSettings) SetRateLimit(v float64) *ThrottleSettings {
 	return s
 }
 
+type TlsConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies whether API Gateway skips trust chain validation of the server
+	// certificate during the TLS handshake. Supported only for HTTP and HTTP_PROXY
+	// integrations. By default, API Gateway validates that certificates for integration
+	// endpoints are issued by a supported Certificate Authority (https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-supported-certificate-authorities-for-http-endpoints.html).
+	// If enabled, API Gateway skips trust chain validation of the server certificate.
+	// This is not recommended, but it enables you to use certificates that are
+	// signed by private Certificate Authorities, or certificates that are self-signed.
+	InsecureSkipVerification *bool `locationName:"insecureSkipVerification" type:"boolean"`
+}
+
+// String returns the string representation
+func (s TlsConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TlsConfig) GoString() string {
+	return s.String()
+}
+
+// SetInsecureSkipVerification sets the InsecureSkipVerification field's value.
+func (s *TlsConfig) SetInsecureSkipVerification(v bool) *TlsConfig {
+	s.InsecureSkipVerification = &v
+	return s
+}
+
 // The request has reached its throttling limit. Retry after the specified time
 // period.
 type TooManyRequestsException struct {
@@ -23294,8 +23343,7 @@ func (s *UnauthorizedException) RequestID() string {
 type UntagResourceInput struct {
 	_ struct{} `type:"structure"`
 
-	// [Required] The ARN of a resource that can be tagged. The resource ARN must
-	// be URL-encoded.
+	// [Required] The ARN of a resource that can be tagged.
 	//
 	// ResourceArn is a required field
 	ResourceArn *string `location:"uri" locationName:"resource_arn" type:"string" required:"true"`
@@ -25083,7 +25131,7 @@ func (s *UpdateVpcLinkInput) SetVpcLinkId(v string) *UpdateVpcLinkInput {
 	return s
 }
 
-// A API Gateway VPC link for a RestApi to access resources in an Amazon Virtual
+// An API Gateway VPC link for a RestApi to access resources in an Amazon Virtual
 // Private Cloud (VPC).
 //
 // To enable access to a resource in an Amazon Virtual Private Cloud through
@@ -25117,8 +25165,9 @@ type UpdateVpcLinkOutput struct {
 	// The collection of tags. Each tag element is associated with a given resource.
 	Tags map[string]*string `locationName:"tags" type:"map"`
 
-	// The ARNs of network load balancers of the VPC targeted by the VPC link. The
-	// network load balancers must be owned by the same AWS account of the API owner.
+	// The ARN of the network load balancer of the VPC targeted by the VPC link.
+	// The network load balancer must be owned by the same AWS account of the API
+	// owner.
 	TargetArns []*string `locationName:"targetArns" type:"list"`
 }
 

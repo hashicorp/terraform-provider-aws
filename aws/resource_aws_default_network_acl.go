@@ -26,6 +26,12 @@ func resourceAwsDefaultNetworkAcl() *schema.Resource {
 		Read:   resourceAwsNetworkAclRead,
 		Delete: resourceAwsDefaultNetworkAclDelete,
 		Update: resourceAwsDefaultNetworkAclUpdate,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("default_network_acl_id", d.Id())
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"vpc_id": {

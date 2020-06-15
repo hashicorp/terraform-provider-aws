@@ -1104,6 +1104,94 @@ func (c *WorkMail) DeleteResourceWithContext(ctx aws.Context, input *DeleteResou
 	return out, req.Send()
 }
 
+const opDeleteRetentionPolicy = "DeleteRetentionPolicy"
+
+// DeleteRetentionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteRetentionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteRetentionPolicy for more information on using the DeleteRetentionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteRetentionPolicyRequest method.
+//    req, resp := client.DeleteRetentionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteRetentionPolicy
+func (c *WorkMail) DeleteRetentionPolicyRequest(input *DeleteRetentionPolicyInput) (req *request.Request, output *DeleteRetentionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opDeleteRetentionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteRetentionPolicyInput{}
+	}
+
+	output = &DeleteRetentionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteRetentionPolicy API operation for Amazon WorkMail.
+//
+// Deletes the specified retention policy from the specified organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation DeleteRetentionPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/DeleteRetentionPolicy
+func (c *WorkMail) DeleteRetentionPolicy(input *DeleteRetentionPolicyInput) (*DeleteRetentionPolicyOutput, error) {
+	req, out := c.DeleteRetentionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// DeleteRetentionPolicyWithContext is the same as DeleteRetentionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteRetentionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) DeleteRetentionPolicyWithContext(ctx aws.Context, input *DeleteRetentionPolicyInput, opts ...request.Option) (*DeleteRetentionPolicyOutput, error) {
+	req, out := c.DeleteRetentionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteUser = "DeleteUser"
 
 // DeleteUserRequest generates a "aws/request.Request" representing the
@@ -1958,6 +2046,97 @@ func (c *WorkMail) GetAccessControlEffectWithContext(ctx aws.Context, input *Get
 	return out, req.Send()
 }
 
+const opGetDefaultRetentionPolicy = "GetDefaultRetentionPolicy"
+
+// GetDefaultRetentionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the GetDefaultRetentionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetDefaultRetentionPolicy for more information on using the GetDefaultRetentionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetDefaultRetentionPolicyRequest method.
+//    req, resp := client.GetDefaultRetentionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetDefaultRetentionPolicy
+func (c *WorkMail) GetDefaultRetentionPolicyRequest(input *GetDefaultRetentionPolicyInput) (req *request.Request, output *GetDefaultRetentionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opGetDefaultRetentionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetDefaultRetentionPolicyInput{}
+	}
+
+	output = &GetDefaultRetentionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetDefaultRetentionPolicy API operation for Amazon WorkMail.
+//
+// Gets the default retention policy details for the specified organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation GetDefaultRetentionPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+//   * EntityNotFoundException
+//   The identifier supplied for the user, group, or resource does not exist in
+//   your organization.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/GetDefaultRetentionPolicy
+func (c *WorkMail) GetDefaultRetentionPolicy(input *GetDefaultRetentionPolicyInput) (*GetDefaultRetentionPolicyOutput, error) {
+	req, out := c.GetDefaultRetentionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// GetDefaultRetentionPolicyWithContext is the same as GetDefaultRetentionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetDefaultRetentionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) GetDefaultRetentionPolicyWithContext(ctx aws.Context, input *GetDefaultRetentionPolicyInput, opts ...request.Option) (*GetDefaultRetentionPolicyOutput, error) {
+	req, out := c.GetDefaultRetentionPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opGetMailboxDetails = "GetMailboxDetails"
 
 // GetMailboxDetailsRequest generates a "aws/request.Request" representing the
@@ -2786,7 +2965,7 @@ func (c *WorkMail) ListOrganizationsRequest(input *ListOrganizationsInput) (req 
 
 // ListOrganizations API operation for Amazon WorkMail.
 //
-// Returns summaries of the customer's non-deleted organizations.
+// Returns summaries of the customer's organizations.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -3586,6 +3765,97 @@ func (c *WorkMail) PutMailboxPermissions(input *PutMailboxPermissionsInput) (*Pu
 // for more information on using Contexts.
 func (c *WorkMail) PutMailboxPermissionsWithContext(ctx aws.Context, input *PutMailboxPermissionsInput, opts ...request.Option) (*PutMailboxPermissionsOutput, error) {
 	req, out := c.PutMailboxPermissionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opPutRetentionPolicy = "PutRetentionPolicy"
+
+// PutRetentionPolicyRequest generates a "aws/request.Request" representing the
+// client's request for the PutRetentionPolicy operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See PutRetentionPolicy for more information on using the PutRetentionPolicy
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the PutRetentionPolicyRequest method.
+//    req, resp := client.PutRetentionPolicyRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutRetentionPolicy
+func (c *WorkMail) PutRetentionPolicyRequest(input *PutRetentionPolicyInput) (req *request.Request, output *PutRetentionPolicyOutput) {
+	op := &request.Operation{
+		Name:       opPutRetentionPolicy,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &PutRetentionPolicyInput{}
+	}
+
+	output = &PutRetentionPolicyOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// PutRetentionPolicy API operation for Amazon WorkMail.
+//
+// Puts a retention policy to the specified organization.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon WorkMail's
+// API operation PutRetentionPolicy for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidParameterException
+//   One or more of the input parameters don't match the service's restrictions.
+//
+//   * OrganizationNotFoundException
+//   An operation received a valid organization identifier that either doesn't
+//   belong or exist in the system.
+//
+//   * OrganizationStateException
+//   The organization must have a valid state (Active or Synchronizing) to perform
+//   certain operations on the organization or its members.
+//
+//   * LimitExceededException
+//   The request exceeds the limit of the resource.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/workmail-2017-10-01/PutRetentionPolicy
+func (c *WorkMail) PutRetentionPolicy(input *PutRetentionPolicyInput) (*PutRetentionPolicyOutput, error) {
+	req, out := c.PutRetentionPolicyRequest(input)
+	return out, req.Send()
+}
+
+// PutRetentionPolicyWithContext is the same as PutRetentionPolicy with the addition of
+// the ability to pass a context and additional request options.
+//
+// See PutRetentionPolicy for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *WorkMail) PutRetentionPolicyWithContext(ctx aws.Context, input *PutRetentionPolicyInput, opts ...request.Option) (*PutRetentionPolicyOutput, error) {
+	req, out := c.PutRetentionPolicyRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5071,7 +5341,9 @@ type DeleteAccessControlRuleInput struct {
 	Name *string `min:"1" type:"string" required:"true"`
 
 	// The identifier for the organization.
-	OrganizationId *string `type:"string"`
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
 }
 
 // String returns the string representation
@@ -5092,6 +5364,9 @@ func (s *DeleteAccessControlRuleInput) Validate() error {
 	}
 	if s.Name != nil && len(*s.Name) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
 	}
 
 	if invalidParams.Len() > 0 {
@@ -5436,6 +5711,75 @@ func (s DeleteResourceOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteResourceOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteRetentionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The retention policy ID.
+	//
+	// Id is a required field
+	Id *string `min:"1" type:"string" required:"true"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteRetentionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRetentionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteRetentionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteRetentionPolicyInput"}
+	if s.Id == nil {
+		invalidParams.Add(request.NewErrParamRequired("Id"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetId sets the Id field's value.
+func (s *DeleteRetentionPolicyInput) SetId(v string) *DeleteRetentionPolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *DeleteRetentionPolicyInput) SetOrganizationId(v string) *DeleteRetentionPolicyInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type DeleteRetentionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteRetentionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteRetentionPolicyOutput) GoString() string {
 	return s.String()
 }
 
@@ -6639,6 +6983,72 @@ func (s *EntityStateException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// The configuration applied to an organization's folders by its retention policy.
+type FolderConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The action to take on the folder contents at the end of the folder configuration
+	// period.
+	//
+	// Action is a required field
+	Action *string `type:"string" required:"true" enum:"RetentionAction"`
+
+	// The folder name.
+	//
+	// Name is a required field
+	Name *string `type:"string" required:"true" enum:"FolderName"`
+
+	// The period of time at which the folder configuration action is applied.
+	Period *int64 `min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s FolderConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FolderConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FolderConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FolderConfiguration"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Period != nil && *s.Period < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Period", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *FolderConfiguration) SetAction(v string) *FolderConfiguration {
+	s.Action = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *FolderConfiguration) SetName(v string) *FolderConfiguration {
+	s.Name = &v
+	return s
+}
+
+// SetPeriod sets the Period field's value.
+func (s *FolderConfiguration) SetPeriod(v int64) *FolderConfiguration {
+	s.Period = &v
+	return s
+}
+
 type GetAccessControlEffectInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6758,6 +7168,94 @@ func (s *GetAccessControlEffectOutput) SetEffect(v string) *GetAccessControlEffe
 // SetMatchedRules sets the MatchedRules field's value.
 func (s *GetAccessControlEffectOutput) SetMatchedRules(v []*string) *GetAccessControlEffectOutput {
 	s.MatchedRules = v
+	return s
+}
+
+type GetDefaultRetentionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetDefaultRetentionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDefaultRetentionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetDefaultRetentionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetDefaultRetentionPolicyInput"}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *GetDefaultRetentionPolicyInput) SetOrganizationId(v string) *GetDefaultRetentionPolicyInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type GetDefaultRetentionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The retention policy description.
+	Description *string `type:"string"`
+
+	// The retention policy folder configurations.
+	FolderConfigurations []*FolderConfiguration `type:"list"`
+
+	// The retention policy ID.
+	Id *string `min:"1" type:"string"`
+
+	// The retention policy name.
+	Name *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s GetDefaultRetentionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetDefaultRetentionPolicyOutput) GoString() string {
+	return s.String()
+}
+
+// SetDescription sets the Description field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetDescription(v string) *GetDefaultRetentionPolicyOutput {
+	s.Description = &v
+	return s
+}
+
+// SetFolderConfigurations sets the FolderConfigurations field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetFolderConfigurations(v []*FolderConfiguration) *GetDefaultRetentionPolicyOutput {
+	s.FolderConfigurations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetId(v string) *GetDefaultRetentionPolicyOutput {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *GetDefaultRetentionPolicyOutput) SetName(v string) *GetDefaultRetentionPolicyOutput {
+	s.Name = &v
 	return s
 }
 
@@ -8817,6 +9315,120 @@ func (s PutMailboxPermissionsOutput) GoString() string {
 	return s.String()
 }
 
+type PutRetentionPolicyInput struct {
+	_ struct{} `type:"structure"`
+
+	// The retention policy description.
+	Description *string `type:"string"`
+
+	// The retention policy folder configurations.
+	//
+	// FolderConfigurations is a required field
+	FolderConfigurations []*FolderConfiguration `type:"list" required:"true"`
+
+	// The retention policy ID.
+	Id *string `min:"1" type:"string"`
+
+	// The retention policy name.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The organization ID.
+	//
+	// OrganizationId is a required field
+	OrganizationId *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s PutRetentionPolicyInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutRetentionPolicyInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PutRetentionPolicyInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PutRetentionPolicyInput"}
+	if s.FolderConfigurations == nil {
+		invalidParams.Add(request.NewErrParamRequired("FolderConfigurations"))
+	}
+	if s.Id != nil && len(*s.Id) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Id", 1))
+	}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.OrganizationId == nil {
+		invalidParams.Add(request.NewErrParamRequired("OrganizationId"))
+	}
+	if s.FolderConfigurations != nil {
+		for i, v := range s.FolderConfigurations {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "FolderConfigurations", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDescription sets the Description field's value.
+func (s *PutRetentionPolicyInput) SetDescription(v string) *PutRetentionPolicyInput {
+	s.Description = &v
+	return s
+}
+
+// SetFolderConfigurations sets the FolderConfigurations field's value.
+func (s *PutRetentionPolicyInput) SetFolderConfigurations(v []*FolderConfiguration) *PutRetentionPolicyInput {
+	s.FolderConfigurations = v
+	return s
+}
+
+// SetId sets the Id field's value.
+func (s *PutRetentionPolicyInput) SetId(v string) *PutRetentionPolicyInput {
+	s.Id = &v
+	return s
+}
+
+// SetName sets the Name field's value.
+func (s *PutRetentionPolicyInput) SetName(v string) *PutRetentionPolicyInput {
+	s.Name = &v
+	return s
+}
+
+// SetOrganizationId sets the OrganizationId field's value.
+func (s *PutRetentionPolicyInput) SetOrganizationId(v string) *PutRetentionPolicyInput {
+	s.OrganizationId = &v
+	return s
+}
+
+type PutRetentionPolicyOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s PutRetentionPolicyOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PutRetentionPolicyOutput) GoString() string {
+	return s.String()
+}
+
 type RegisterToWorkMailInput struct {
 	_ struct{} `type:"structure"`
 
@@ -9862,6 +10474,23 @@ const (
 )
 
 const (
+	// FolderNameInbox is a FolderName enum value
+	FolderNameInbox = "INBOX"
+
+	// FolderNameDeletedItems is a FolderName enum value
+	FolderNameDeletedItems = "DELETED_ITEMS"
+
+	// FolderNameSentItems is a FolderName enum value
+	FolderNameSentItems = "SENT_ITEMS"
+
+	// FolderNameDrafts is a FolderName enum value
+	FolderNameDrafts = "DRAFTS"
+
+	// FolderNameJunkEmail is a FolderName enum value
+	FolderNameJunkEmail = "JUNK_EMAIL"
+)
+
+const (
 	// MemberTypeGroup is a MemberType enum value
 	MemberTypeGroup = "GROUP"
 
@@ -9886,6 +10515,17 @@ const (
 
 	// ResourceTypeEquipment is a ResourceType enum value
 	ResourceTypeEquipment = "EQUIPMENT"
+)
+
+const (
+	// RetentionActionNone is a RetentionAction enum value
+	RetentionActionNone = "NONE"
+
+	// RetentionActionDelete is a RetentionAction enum value
+	RetentionActionDelete = "DELETE"
+
+	// RetentionActionPermanentlyDelete is a RetentionAction enum value
+	RetentionActionPermanentlyDelete = "PERMANENTLY_DELETE"
 )
 
 const (

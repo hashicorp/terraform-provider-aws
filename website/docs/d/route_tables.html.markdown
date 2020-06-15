@@ -40,7 +40,7 @@ resource "aws_route" "r" {
 
 * `vpc_id` - (Optional) The VPC ID that you want to filter from.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired route tables.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,

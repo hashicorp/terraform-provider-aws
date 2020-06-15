@@ -136,7 +136,21 @@ func (c *S3Control) CreateJobRequest(input *CreateJobInput) (req *request.Reques
 
 // CreateJob API operation for AWS S3 Control.
 //
-// Creates an Amazon S3 batch operations job.
+// You can use Amazon S3 Batch Operations to perform large-scale Batch Operations
+// on Amazon S3 objects. Amazon S3 Batch Operations can execute a single operation
+// or action on lists of Amazon S3 objects that you specify. For more information,
+// see Amazon S3 Batch Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-basics.html)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+// Related actions include:
+//
+//    * DescribeJob
+//
+//    * ListJobs
+//
+//    * UpdateJobPriority
+//
+//    * UpdateJobStatus
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -377,7 +391,18 @@ func (c *S3Control) DeleteJobTaggingRequest(input *DeleteJobTaggingInput) (req *
 
 // DeleteJobTagging API operation for AWS S3 Control.
 //
-// Delete the tags on a Amazon S3 batch operations job, if any.
+// Removes the entire tag set from the specified Amazon S3 Batch Operations
+// job. To use this operation, you must have permission to perform the s3:DeleteJobTagging
+// action. For more information, see Using Job Tags (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-managing-jobs.html#batch-ops-job-tags)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+// Related actions include:
+//
+//    * CreateJob
+//
+//    * GetJobTagging
+//
+//    * PutJobTagging
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -538,8 +563,19 @@ func (c *S3Control) DescribeJobRequest(input *DescribeJobInput) (req *request.Re
 
 // DescribeJob API operation for AWS S3 Control.
 //
-// Retrieves the configuration parameters and status for a batch operations
-// job.
+// Retrieves the configuration parameters and status for a Batch Operations
+// job. For more information, see Amazon S3 Batch Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-basics.html)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+// Related actions include:
+//
+//    * CreateJob
+//
+//    * ListJobs
+//
+//    * UpdateJobPriority
+//
+//    * UpdateJobStatus
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -856,7 +892,18 @@ func (c *S3Control) GetJobTaggingRequest(input *GetJobTaggingInput) (req *reques
 
 // GetJobTagging API operation for AWS S3 Control.
 //
-// Retrieve the tags on a Amazon S3 batch operations job.
+// Returns the tags on an Amazon S3 Batch Operations job. To use this operation,
+// you must have permission to perform the s3:GetJobTagging action. For more
+// information, see Using Job Tags (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-managing-jobs.html#batch-ops-job-tags)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+// Related actions include:
+//
+//    * CreateJob
+//
+//    * PutJobTagging
+//
+//    * DeleteJobTagging
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1031,9 +1078,9 @@ func (c *S3Control) ListAccessPointsRequest(input *ListAccessPointsInput) (req *
 //
 // Returns a list of the access points currently associated with the specified
 // bucket. You can retrieve up to 1000 access points per call. If the specified
-// bucket has more than 1000 access points (or the number specified in maxResults,
-// whichever is less), then the response will include a continuation token that
-// you can use to list the additional access points.
+// bucket has more than 1,000 access points (or the number specified in maxResults,
+// whichever is less), the response will include a continuation token that you
+// can use to list the additional access points.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1167,8 +1214,20 @@ func (c *S3Control) ListJobsRequest(input *ListJobsInput) (req *request.Request,
 
 // ListJobs API operation for AWS S3 Control.
 //
-// Lists current jobs and jobs that have ended within the last 30 days for the
-// AWS account making the request.
+// Lists current Amazon S3 Batch Operations jobs and jobs that have ended within
+// the last 30 days for the AWS account making the request. For more information,
+// see Amazon S3 Batch Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-basics.html)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+// Related actions include:
+//
+//    * CreateJob
+//
+//    * DescribeJob
+//
+//    * UpdateJobPriority
+//
+//    * UpdateJobStatus
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1384,7 +1443,44 @@ func (c *S3Control) PutJobTaggingRequest(input *PutJobTaggingInput) (req *reques
 
 // PutJobTagging API operation for AWS S3 Control.
 //
-// Replace the set of tags on a Amazon S3 batch operations job.
+// Set the supplied tag-set on an Amazon S3 Batch Operations job.
+//
+// A tag is a key-value pair. You can associate Amazon S3 Batch Operations tags
+// with any job by sending a PUT request against the tagging subresource that
+// is associated with the job. To modify the existing tag set, you can either
+// replace the existing tag set entirely, or make changes within the existing
+// tag set by retrieving the existing tag set using GetJobTagging, modify that
+// tag set, and use this API action to replace the tag set with the one you
+// have modified.. For more information, see Using Job Tags (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-managing-jobs.html#batch-ops-job-tags)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+//    * If you send this request with an empty tag set, Amazon S3 deletes the
+//    existing tag set on the Batch Operations job. If you use this method,
+//    you will be charged for a Tier 1 Request (PUT). For more information,
+//    see Amazon S3 pricing (http://aws.amazon.com/s3/pricing/).
+//
+//    * For deleting existing tags for your batch operations job, DeleteJobTagging
+//    request is preferred because it achieves the same result without incurring
+//    charges.
+//
+//    * A few things to consider about using tags: Amazon S3 limits the maximum
+//    number of tags to 50 tags per job. You can associate up to 50 tags with
+//    a job as long as they have unique tag keys. A tag key can be up to 128
+//    Unicode characters in length, and tag values can be up to 256 Unicode
+//    characters in length. The key and values are case sensitive. For tagging-related
+//    restrictions related to characters and encodings, see User-Defined Tag
+//    Restrictions (https://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/allocation-tag-restrictions.html).
+//
+// To use this operation, you must have permission to perform the s3:PutJobTagging
+// action.
+//
+// Related actions include:
+//
+//    * CreateJob
+//
+//    * GetJobTagging
+//
+//    * DeleteJobTagging
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1548,7 +1644,19 @@ func (c *S3Control) UpdateJobPriorityRequest(input *UpdateJobPriorityInput) (req
 
 // UpdateJobPriority API operation for AWS S3 Control.
 //
-// Updates an existing job's priority.
+// Updates an existing Amazon S3 Batch Operations job's priority. For more information,
+// see Amazon S3 Batch Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-basics.html)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+// Related actions include:
+//
+//    * CreateJob
+//
+//    * ListJobs
+//
+//    * DescribeJob
+//
+//    * UpdateJobStatus
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1635,7 +1743,19 @@ func (c *S3Control) UpdateJobStatusRequest(input *UpdateJobStatusInput) (req *re
 // UpdateJobStatus API operation for AWS S3 Control.
 //
 // Updates the status for the specified job. Use this operation to confirm that
-// you want to run a job or to cancel an existing job.
+// you want to run a job or to cancel an existing job. For more information,
+// see Amazon S3 Batch Operations (https://docs.aws.amazon.com/AmazonS3/latest/dev/batch-ops-basics.html)
+// in the Amazon Simple Storage Service Developer Guide.
+//
+// Related actions include:
+//
+//    * CreateJob
+//
+//    * ListJobs
+//
+//    * DescribeJob
+//
+//    * UpdateJobStatus
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1691,16 +1811,16 @@ type AccessPoint struct {
 	// Name is a required field
 	Name *string `min:"3" type:"string" required:"true"`
 
-	// Indicates whether this access point allows access from the public Internet.
+	// Indicates whether this access point allows access from the public internet.
 	// If VpcConfiguration is specified for this access point, then NetworkOrigin
-	// is VPC, and the access point doesn't allow access from the public Internet.
+	// is VPC, and the access point doesn't allow access from the public internet.
 	// Otherwise, NetworkOrigin is Internet, and the access point allows access
-	// from the public Internet, subject to the access point and bucket access policies.
+	// from the public internet, subject to the access point and bucket access policies.
 	//
 	// NetworkOrigin is a required field
 	NetworkOrigin *string `type:"string" required:"true" enum:"NetworkOrigin"`
 
-	// The Virtual Private Cloud (VPC) configuration for this access point, if one
+	// The virtual private cloud (VPC) configuration for this access point, if one
 	// exists.
 	VpcConfiguration *VpcConfiguration `type:"structure"`
 }
@@ -1766,7 +1886,7 @@ type CreateAccessPointInput struct {
 	PublicAccessBlockConfiguration *PublicAccessBlockConfiguration `type:"structure"`
 
 	// If you include this field, Amazon S3 restricts access to this access point
-	// to requests from the specified Virtual Private Cloud (VPC).
+	// to requests from the specified virtual private cloud (VPC).
 	VpcConfiguration *VpcConfiguration `type:"structure"`
 }
 
@@ -1904,14 +2024,15 @@ type CreateJobInput struct {
 	// Report is a required field
 	Report *JobReport `type:"structure" required:"true"`
 
-	// The Amazon Resource Name (ARN) for the Identity and Access Management (IAM)
-	// Role that batch operations will use to execute this job's operation on each
-	// object in the manifest.
+	// The Amazon Resource Name (ARN) for the AWS Identity and Access Management
+	// (IAM) role that Batch Operations will use to execute this job's operation
+	// on each object in the manifest.
 	//
 	// RoleArn is a required field
 	RoleArn *string `min:"1" type:"string" required:"true"`
 
-	// An optional set of tags to associate with the job when it is created.
+	// A set of tags to associate with the Amazon S3 Batch Operations job. This
+	// is an optional parameter.
 	Tags []*S3Tag `type:"list"`
 }
 
@@ -2239,13 +2360,12 @@ func (s DeleteAccessPointPolicyOutput) GoString() string {
 type DeleteJobTaggingInput struct {
 	_ struct{} `locationName:"DeleteJobTaggingRequest" type:"structure"`
 
-	// The account ID for the Amazon Web Services account associated with the Amazon
-	// S3 batch operations job you want to remove tags from.
+	// The AWS account ID associated with the Amazon S3 Batch Operations job.
 	//
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
 
-	// The ID for the job whose tags you want to delete.
+	// The ID for the Amazon S3 Batch Operations job whose tags you want to delete.
 	//
 	// JobId is a required field
 	JobId *string `location:"uri" locationName:"id" min:"5" type:"string" required:"true"`
@@ -2540,11 +2660,11 @@ type GetAccessPointOutput struct {
 	// The name of the specified access point.
 	Name *string `min:"3" type:"string"`
 
-	// Indicates whether this access point allows access from the public Internet.
+	// Indicates whether this access point allows access from the public internet.
 	// If VpcConfiguration is specified for this access point, then NetworkOrigin
-	// is VPC, and the access point doesn't allow access from the public Internet.
+	// is VPC, and the access point doesn't allow access from the public internet.
 	// Otherwise, NetworkOrigin is Internet, and the access point allows access
-	// from the public Internet, subject to the access point and bucket access policies.
+	// from the public internet, subject to the access point and bucket access policies.
 	NetworkOrigin *string `type:"string" enum:"NetworkOrigin"`
 
 	// The PublicAccessBlock configuration that you want to apply to this Amazon
@@ -2554,7 +2674,7 @@ type GetAccessPointOutput struct {
 	// in the Amazon Simple Storage Service Developer Guide.
 	PublicAccessBlockConfiguration *PublicAccessBlockConfiguration `type:"structure"`
 
-	// Contains the Virtual Private Cloud (VPC) configuration for the specified
+	// Contains the virtual private cloud (VPC) configuration for the specified
 	// access point.
 	VpcConfiguration *VpcConfiguration `type:"structure"`
 }
@@ -2782,13 +2902,12 @@ func (s *GetAccessPointPolicyStatusOutput) SetPolicyStatus(v *PolicyStatus) *Get
 type GetJobTaggingInput struct {
 	_ struct{} `locationName:"GetJobTaggingRequest" type:"structure"`
 
-	// The account ID for the Amazon Web Services account associated with the Amazon
-	// S3 batch operations job you want to retrieve tags for.
+	// The AWS account ID associated with the Amazon S3 Batch Operations job.
 	//
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
 
-	// The ID for the job whose tags you want to retrieve.
+	// The ID for the Amazon S3 Batch Operations job whose tags you want to retrieve.
 	//
 	// JobId is a required field
 	JobId *string `location:"uri" locationName:"id" min:"5" type:"string" required:"true"`
@@ -2847,7 +2966,7 @@ func (s *GetJobTaggingInput) hostLabels() map[string]string {
 type GetJobTaggingOutput struct {
 	_ struct{} `type:"structure"`
 
-	// The set of tags associated with the job.
+	// The set of tags associated with the Amazon S3 Batch Operations job.
 	Tags []*S3Tag `type:"list"`
 }
 
@@ -2984,8 +3103,8 @@ type JobDescriptor struct {
 	// requested one in the Create Job request.
 	Report *JobReport `type:"structure"`
 
-	// The Amazon Resource Name (ARN) for the Identity and Access Management (IAM)
-	// Role assigned to execute the tasks for this job.
+	// The Amazon Resource Name (ARN) for the AWS Identity and Access Management
+	// (IAM) role assigned to execute the tasks for this job.
 	RoleArn *string `min:"1" type:"string"`
 
 	// The current status of the specified job.
@@ -3452,6 +3571,18 @@ type JobOperation struct {
 	// in the manifest.
 	S3PutObjectCopy *S3CopyObjectOperation `type:"structure"`
 
+	// Contains the configuration parameters for a Set Object Legal Hold operation.
+	// Amazon S3 Batch Operations passes each value through to the underlying PUT
+	// Object Legal Hold API. For more information about the parameters for this
+	// operation, see PUT Object Legal Hold (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.htmll#object-lock-legal-holds).
+	S3PutObjectLegalHold *S3SetObjectLegalHoldOperation `type:"structure"`
+
+	// Contains the configuration parameters for a Set Object Retention operation.
+	// Amazon S3 Batch Operations passes each value through to the underlying PUT
+	// Object Retention API. For more information about the parameters for this
+	// operation, see PUT Object Retention (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes).
+	S3PutObjectRetention *S3SetObjectRetentionOperation `type:"structure"`
+
 	// Directs the specified job to execute a PUT Object tagging call on each object
 	// in the manifest.
 	S3PutObjectTagging *S3SetObjectTaggingOperation `type:"structure"`
@@ -3483,6 +3614,16 @@ func (s *JobOperation) Validate() error {
 	if s.S3PutObjectCopy != nil {
 		if err := s.S3PutObjectCopy.Validate(); err != nil {
 			invalidParams.AddNested("S3PutObjectCopy", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.S3PutObjectLegalHold != nil {
+		if err := s.S3PutObjectLegalHold.Validate(); err != nil {
+			invalidParams.AddNested("S3PutObjectLegalHold", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.S3PutObjectRetention != nil {
+		if err := s.S3PutObjectRetention.Validate(); err != nil {
+			invalidParams.AddNested("S3PutObjectRetention", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.S3PutObjectTagging != nil {
@@ -3518,6 +3659,18 @@ func (s *JobOperation) SetS3PutObjectAcl(v *S3SetObjectAclOperation) *JobOperati
 // SetS3PutObjectCopy sets the S3PutObjectCopy field's value.
 func (s *JobOperation) SetS3PutObjectCopy(v *S3CopyObjectOperation) *JobOperation {
 	s.S3PutObjectCopy = v
+	return s
+}
+
+// SetS3PutObjectLegalHold sets the S3PutObjectLegalHold field's value.
+func (s *JobOperation) SetS3PutObjectLegalHold(v *S3SetObjectLegalHoldOperation) *JobOperation {
+	s.S3PutObjectLegalHold = v
+	return s
+}
+
+// SetS3PutObjectRetention sets the S3PutObjectRetention field's value.
+func (s *JobOperation) SetS3PutObjectRetention(v *S3SetObjectRetentionOperation) *JobOperation {
+	s.S3PutObjectRetention = v
 	return s
 }
 
@@ -4140,18 +4293,17 @@ func (s PutAccessPointPolicyOutput) GoString() string {
 type PutJobTaggingInput struct {
 	_ struct{} `locationName:"PutJobTaggingRequest" type:"structure" xmlURI:"http://awss3control.amazonaws.com/doc/2018-08-20/"`
 
-	// The account ID for the Amazon Web Services account associated with the Amazon
-	// S3 batch operations job you want to replace tags on.
+	// The AWS account ID associated with the Amazon S3 Batch Operations job.
 	//
 	// AccountId is a required field
 	AccountId *string `location:"header" locationName:"x-amz-account-id" type:"string" required:"true"`
 
-	// The ID for the job whose tags you want to replace.
+	// The ID for the Amazon S3 Batch Operations job whose tags you want to replace.
 	//
 	// JobId is a required field
 	JobId *string `location:"uri" locationName:"id" min:"5" type:"string" required:"true"`
 
-	// The set of tags to associate with the job.
+	// The set of tags to associate with the Amazon S3 Batch Operations job.
 	//
 	// Tags is a required field
 	Tags []*S3Tag `type:"list" required:"true"`
@@ -4422,7 +4574,7 @@ func (s *S3AccessControlPolicy) SetCannedAccessControlList(v string) *S3AccessCo
 }
 
 // Contains the configuration parameters for a PUT Copy object operation. Amazon
-// S3 batch operations passes each value through to the underlying PUT Copy
+// S3 Batch Operations passes each value through to the underlying PUT Copy
 // object API. For more information about the parameters for this operation,
 // see PUT Object - Copy (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectCOPY.html).
 type S3CopyObjectOperation struct {
@@ -4440,10 +4592,15 @@ type S3CopyObjectOperation struct {
 
 	NewObjectTagging []*S3Tag `type:"list"`
 
+	// The Legal Hold status to be applied to all objects in the Batch Operations
+	// job.
 	ObjectLockLegalHoldStatus *string `type:"string" enum:"S3ObjectLockLegalHoldStatus"`
 
+	// The Retention mode to be applied to all objects in the Batch Operations job.
 	ObjectLockMode *string `type:"string" enum:"S3ObjectLockMode"`
 
+	// The date when the applied Object Retention configuration will expire on all
+	// objects in the Batch Operations job.
 	ObjectLockRetainUntilDate *time.Time `type:"timestamp"`
 
 	RedirectLocation *string `min:"1" type:"string"`
@@ -4714,7 +4871,7 @@ func (s *S3Grantee) SetTypeIdentifier(v string) *S3Grantee {
 }
 
 // Contains the configuration parameters for an Initiate Glacier Restore job.
-// Amazon S3 batch operations passes each value through to the underlying POST
+// Amazon S3 Batch Operations passes each value through to the underlying POST
 // Object restore API. For more information about the parameters for this operation,
 // see Restoring Archives (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPOSTrestore.html#RESTObjectPOSTrestore-restore-request).
 type S3InitiateRestoreObjectOperation struct {
@@ -4744,6 +4901,45 @@ func (s *S3InitiateRestoreObjectOperation) SetExpirationInDays(v int64) *S3Initi
 // SetGlacierJobTier sets the GlacierJobTier field's value.
 func (s *S3InitiateRestoreObjectOperation) SetGlacierJobTier(v string) *S3InitiateRestoreObjectOperation {
 	s.GlacierJobTier = &v
+	return s
+}
+
+type S3ObjectLockLegalHold struct {
+	_ struct{} `type:"structure"`
+
+	// The Legal Hold status to be applied to all objects in the Batch Operations
+	// job.
+	//
+	// Status is a required field
+	Status *string `type:"string" required:"true" enum:"S3ObjectLockLegalHoldStatus"`
+}
+
+// String returns the string representation
+func (s S3ObjectLockLegalHold) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3ObjectLockLegalHold) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3ObjectLockLegalHold) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3ObjectLockLegalHold"}
+	if s.Status == nil {
+		invalidParams.Add(request.NewErrParamRequired("Status"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetStatus sets the Status field's value.
+func (s *S3ObjectLockLegalHold) SetStatus(v string) *S3ObjectLockLegalHold {
+	s.Status = &v
 	return s
 }
 
@@ -4923,8 +5119,41 @@ func (s *S3ObjectOwner) SetID(v string) *S3ObjectOwner {
 	return s
 }
 
+type S3Retention struct {
+	_ struct{} `type:"structure"`
+
+	// The Retention mode to be applied to all objects in the Batch Operations job.
+	Mode *string `type:"string" enum:"S3ObjectLockRetentionMode"`
+
+	// The date when the applied Object Retention will expire on all objects in
+	// the Batch Operations job.
+	RetainUntilDate *time.Time `type:"timestamp"`
+}
+
+// String returns the string representation
+func (s S3Retention) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3Retention) GoString() string {
+	return s.String()
+}
+
+// SetMode sets the Mode field's value.
+func (s *S3Retention) SetMode(v string) *S3Retention {
+	s.Mode = &v
+	return s
+}
+
+// SetRetainUntilDate sets the RetainUntilDate field's value.
+func (s *S3Retention) SetRetainUntilDate(v time.Time) *S3Retention {
+	s.RetainUntilDate = &v
+	return s
+}
+
 // Contains the configuration parameters for a Set Object ACL operation. Amazon
-// S3 batch operations passes each value through to the underlying PUT Object
+// S3 Batch Operations passes each value through to the underlying PUT Object
 // acl API. For more information about the parameters for this operation, see
 // PUT Object acl (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUTacl.html).
 type S3SetObjectAclOperation struct {
@@ -4964,8 +5193,109 @@ func (s *S3SetObjectAclOperation) SetAccessControlPolicy(v *S3AccessControlPolic
 	return s
 }
 
+// Contains the configuration parameters for a Set Object Legal Hold operation.
+// Amazon S3 Batch Operations passes each value through to the underlying PUT
+// Object Legal Hold API. For more information about the parameters for this
+// operation, see PUT Object Legal Hold (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.htmll#object-lock-legal-holds).
+type S3SetObjectLegalHoldOperation struct {
+	_ struct{} `type:"structure"`
+
+	// The Legal Hold contains the status to be applied to all objects in the Batch
+	// Operations job.
+	//
+	// LegalHold is a required field
+	LegalHold *S3ObjectLockLegalHold `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s S3SetObjectLegalHoldOperation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3SetObjectLegalHoldOperation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3SetObjectLegalHoldOperation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3SetObjectLegalHoldOperation"}
+	if s.LegalHold == nil {
+		invalidParams.Add(request.NewErrParamRequired("LegalHold"))
+	}
+	if s.LegalHold != nil {
+		if err := s.LegalHold.Validate(); err != nil {
+			invalidParams.AddNested("LegalHold", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetLegalHold sets the LegalHold field's value.
+func (s *S3SetObjectLegalHoldOperation) SetLegalHold(v *S3ObjectLockLegalHold) *S3SetObjectLegalHoldOperation {
+	s.LegalHold = v
+	return s
+}
+
+// Contains the configuration parameters for a Set Object Retention operation.
+// Amazon S3 Batch Operations passes each value through to the underlying PUT
+// Object Retention API. For more information about the parameters for this
+// operation, see PUT Object Retention (https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes).
+type S3SetObjectRetentionOperation struct {
+	_ struct{} `type:"structure"`
+
+	// Indicates if the operation should be applied to objects in the Batch Operations
+	// job even if they have Governance-type Object Lock in place.
+	BypassGovernanceRetention *bool `type:"boolean"`
+
+	// Amazon S3 object lock Retention contains the retention mode to be applied
+	// to all objects in the Batch Operations job.
+	//
+	// Retention is a required field
+	Retention *S3Retention `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s S3SetObjectRetentionOperation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s S3SetObjectRetentionOperation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *S3SetObjectRetentionOperation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "S3SetObjectRetentionOperation"}
+	if s.Retention == nil {
+		invalidParams.Add(request.NewErrParamRequired("Retention"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBypassGovernanceRetention sets the BypassGovernanceRetention field's value.
+func (s *S3SetObjectRetentionOperation) SetBypassGovernanceRetention(v bool) *S3SetObjectRetentionOperation {
+	s.BypassGovernanceRetention = &v
+	return s
+}
+
+// SetRetention sets the Retention field's value.
+func (s *S3SetObjectRetentionOperation) SetRetention(v *S3Retention) *S3SetObjectRetentionOperation {
+	s.Retention = v
+	return s
+}
+
 // Contains the configuration parameters for a Set Object Tagging operation.
-// Amazon S3 batch operations passes each value through to the underlying PUT
+// Amazon S3 Batch Operations passes each value through to the underlying PUT
 // Object tagging API. For more information about the parameters for this operation,
 // see PUT Object tagging (https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectPUTtagging.html).
 type S3SetObjectTaggingOperation struct {
@@ -5303,7 +5633,7 @@ func (s *UpdateJobStatusOutput) SetStatusUpdateReason(v string) *UpdateJobStatus
 	return s
 }
 
-// The Virtual Private Cloud (VPC) configuration for an access point.
+// The virtual private cloud (VPC) configuration for an access point.
 type VpcConfiguration struct {
 	_ struct{} `type:"structure"`
 
@@ -5445,6 +5775,12 @@ const (
 
 	// OperationNameS3initiateRestoreObject is a OperationName enum value
 	OperationNameS3initiateRestoreObject = "S3InitiateRestoreObject"
+
+	// OperationNameS3putObjectLegalHold is a OperationName enum value
+	OperationNameS3putObjectLegalHold = "S3PutObjectLegalHold"
+
+	// OperationNameS3putObjectRetention is a OperationName enum value
+	OperationNameS3putObjectRetention = "S3PutObjectRetention"
 )
 
 const (
@@ -5519,6 +5855,14 @@ const (
 
 	// S3ObjectLockModeGovernance is a S3ObjectLockMode enum value
 	S3ObjectLockModeGovernance = "GOVERNANCE"
+)
+
+const (
+	// S3ObjectLockRetentionModeCompliance is a S3ObjectLockRetentionMode enum value
+	S3ObjectLockRetentionModeCompliance = "COMPLIANCE"
+
+	// S3ObjectLockRetentionModeGovernance is a S3ObjectLockRetentionMode enum value
+	S3ObjectLockRetentionModeGovernance = "GOVERNANCE"
 )
 
 const (
