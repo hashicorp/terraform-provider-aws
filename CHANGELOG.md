@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ebs_volumes` [GH-13751]
 * **New Resource:** `aws_ec2_tag` [GH-8457]
 * **New Resource:** `aws_wafv2_web_acl` [GH-12688]
 
