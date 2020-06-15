@@ -40,7 +40,7 @@ func resourceAwsWafv2IPSet() *schema.Resource {
 			"addresses": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				MaxItems: 50,
+				MaxItems: 10000,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					o, n := d.GetChange("addresses")
