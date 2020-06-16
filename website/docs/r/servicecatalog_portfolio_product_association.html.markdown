@@ -1,7 +1,7 @@
 ---
 layout: "aws"
-page_title: "AWS: aws_servicecatalog_product"
-sidebar_current: "docs-aws-resource-servicecatalog-product"
+page_title: "AWS: aws_servicecatalog_portfolio_product_association"
+sidebar_current: "docs-aws-resource-servicecatalog-portfolio-product-association"
 description: |-
   Provides a resource to control the association of a Service Catalog Product with a Portfolio
 ---
@@ -13,7 +13,7 @@ Provides a resource to control the association of a Service Catalog Product with
 This is necessary for a product to be provisioned, as it must be in at least one portfolio.
 
 In most cases this is simple and straightforward. 
-However there are some pathological edge cases that can arise 
+However, there are some pathological edge cases that can arise 
 as the association is not an identifiable resource in the usual sense. 
 For instance if an association between a given portfolio and product were created twice,
 with two instances in Terraform, and then one of them is deleted, 
@@ -32,10 +32,10 @@ resource "aws_servicecatalog_portfolio_product_association" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `portfolio_id` - (Optional) XXX
-* `product_id` - (Optional) XXX
+* `portfolio_id` - The portfolio identifier
+* `product_id` - The product identifier
 
 
 ## Attributes Reference
