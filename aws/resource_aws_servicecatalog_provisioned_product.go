@@ -128,10 +128,10 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 		input.PathId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("provisioning_parameters"); ok {
-		input.ProvisioningParameters = []*servicecatalog.ProvisioningParameter{}
-		for _, param := range v.([]map[string]interface{}) {
+		input.ProvisioningParameters = make([]*servicecatalog.ProvisioningParameter, 0)
+		for _, param := range v.([]interface{}) {
 			input.ProvisioningParameters = append(input.ProvisioningParameters,
-				&servicecatalog.ProvisioningParameter{Key: aws.String(param["key"].(string)), Value: aws.String(param["value"].(string))})
+				&servicecatalog.ProvisioningParameter{Key: aws.String(param.(map[string]interface{})["key"].(string)), Value: aws.String(param.(map[string]interface{})["value"].(string))})
 		}
 	}
 	/*
@@ -148,15 +148,16 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 	}
 
 	d.SetId(*resp.RecordDetail.ProvisionedProductId)
-	if err := waitForServiceCatalogProvisionedProductStatus("CREATED", conn, d); err != nil {
+	if err := waitForServiceCatalogProvisionedProductStatus(conn, d); err != nil {
 		return err
 	}
 	return resourceAwsServiceCatalogProvisionedProductRead(d, meta)
 }
 
-func waitForServiceCatalogProvisionedProductStatus(status string, conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
+func waitForServiceCatalogProvisionedProductStatus(conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
 	stateConf := &resource.StateChangeConf{
-		Target:       []string{status, servicecatalog.StatusAvailable},
+		Pending:      []string{servicecatalog.ProvisionedProductStatusUnderChange},
+		Target:       []string{servicecatalog.ProvisionedProductStatusAvailable},
 		Refresh:      refreshProvisionedProductStatus(conn, d.Id()),
 		Timeout:      d.Timeout(schema.TimeoutCreate),
 		PollInterval: 3 * time.Second,
@@ -240,11 +241,13 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 	}
 	d.Set("outputs", aa)
 
-	//not returned (and unchanged)
+	//not returned (assume unchanged):
 	// notification_arns
 	// provisioning_parameters
 	// provisioning_preferences
 	// tags
+
+	// ignored: record.CloudWatchDashboards
 
 	return nil
 }
@@ -253,6 +256,7 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 	conn := meta.(*AWSClient).scconn
 	input := servicecatalog.UpdateProvisionedProductInput{
 		ProvisionedProductId: aws.String(d.Id()),
+		UpdateToken:          aws.String(resource.UniqueId()),
 	}
 
 	if d.HasChange("notification_arns") {
@@ -279,23 +283,29 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 		input.ProvisioningArtifactId = aws.String(v.(string))
 	}
 
-	// TODO parameters
+	if d.HasChange("provisioning_parameters") {
+		v, _ := d.GetOk("provisioning_parameters")
+		input.ProvisioningParameters = make([]*servicecatalog.UpdateProvisioningParameter, 0)
+		for _, param := range v.([]interface{}) {
+			input.ProvisioningParameters = append(input.ProvisioningParameters,
+				&servicecatalog.UpdateProvisioningParameter{Key: aws.String(param.(map[string]interface{})["key"].(string)), Value: aws.String(param.(map[string]interface{})["value"].(string))})
+		}
+	}
 
 	// TODO stack set preferences
 
-	/* TODO tags
 	if d.HasChange("tags") {
-		o, n := d.GetChange("tags")
-
-		input.AddTags = keyvaluetags.New(n).IgnoreAws().ServicecatalogTags()
-		input.RemoveTags = aws.StringSlice(keyvaluetags.New(o).IgnoreAws().Keys())
+		n, _ := d.GetOk("tags")
+		input.Tags = keyvaluetags.New(n.(map[string]interface{})).IgnoreAws().ServicecatalogTags()
 	}
-	*/
 
 	log.Printf("[DEBUG] Update Service Catalog Provisioned Product: %#v", input)
 	_, err := conn.UpdateProvisionedProduct(&input)
 	if err != nil {
 		return fmt.Errorf("Updating Service Catalog Provisioned Product '%s' failed: %s", *input.ProvisionedProductId, err.Error())
+	}
+	if err := waitForServiceCatalogProvisionedProductStatus(conn, d); err != nil {
+		return err
 	}
 	return resourceAwsServiceCatalogProvisionedProductRead(d, meta)
 }
@@ -312,5 +322,9 @@ func resourceAwsServiceCatalogProvisionedProductDelete(d *schema.ResourceData, m
 	if err != nil {
 		return fmt.Errorf("Deleting Service Catalog Provisioned Product '%s' failed: %s", *input.ProvisionedProductId, err.Error())
 	}
+	// TODO wait for deleted
+	//if err := waitForServiceCatalogProvisionedProductStatus(conn, d); err != nil {
+	//    return err
+	//}
 	return nil
 }
