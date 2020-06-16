@@ -404,7 +404,7 @@ func resourceAwsStorageGatewayGatewayRead(d *schema.ResourceData, meta interface
 func resourceAwsStorageGatewayGatewayUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
 
-	if d.HasChange("gateway_name") || d.HasChange("gateway_timezone") || d.HasChange("cloudwatch_log_group_arn") {
+	if d.HasChanges("gateway_name", "gateway_timezone", "cloudwatch_log_group_arn") {
 		input := &storagegateway.UpdateGatewayInformationInput{
 			GatewayARN:            aws.String(d.Id()),
 			GatewayName:           aws.String(d.Get("gateway_name").(string)),

@@ -492,7 +492,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		TableName: aws.String(d.Id()),
 	}
 
-	if d.HasChange("billing_mode") || d.HasChange("read_capacity") || d.HasChange("write_capacity") {
+	if d.HasChanges("billing_mode", "read_capacity", "write_capacity") {
 		hasTableUpdate = true
 
 		capacityMap := map[string]interface{}{
@@ -508,7 +508,7 @@ func resourceAwsDynamoDbTableUpdate(d *schema.ResourceData, meta interface{}) er
 		input.ProvisionedThroughput = expandDynamoDbProvisionedThroughput(capacityMap, billingMode)
 	}
 
-	if d.HasChange("stream_enabled") || d.HasChange("stream_view_type") {
+	if d.HasChanges("stream_enabled", "stream_view_type") {
 		hasTableUpdate = true
 
 		input.StreamSpecification = &dynamodb.StreamSpecification{

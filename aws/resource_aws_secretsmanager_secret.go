@@ -260,7 +260,7 @@ func resourceAwsSecretsManagerSecretRead(d *schema.ResourceData, meta interface{
 func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).secretsmanagerconn
 
-	if d.HasChange("description") || d.HasChange("kms_key_id") {
+	if d.HasChanges("description", "kms_key_id") {
 		input := &secretsmanager.UpdateSecretInput{
 			Description: aws.String(d.Get("description").(string)),
 			SecretId:    aws.String(d.Id()),
@@ -306,7 +306,7 @@ func resourceAwsSecretsManagerSecretUpdate(d *schema.ResourceData, meta interfac
 		}
 	}
 
-	if d.HasChange("rotation_lambda_arn") || d.HasChange("rotation_rules") {
+	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
 		if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 			input := &secretsmanager.RotateSecretInput{
 				RotationLambdaARN: aws.String(v.(string)),

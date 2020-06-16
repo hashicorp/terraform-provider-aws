@@ -727,7 +727,7 @@ func resourceAwsElasticSearchDomainUpdate(d *schema.ResourceData, meta interface
 		input.DomainEndpointOptions = expandESDomainEndpointOptions(d.Get("domain_endpoint_options").([]interface{}))
 	}
 
-	if d.HasChange("ebs_options") || d.HasChange("cluster_config") {
+	if d.HasChanges("ebs_options", "cluster_config") {
 		options := d.Get("ebs_options").([]interface{})
 
 		if len(options) == 1 {
