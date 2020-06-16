@@ -22,7 +22,7 @@ func init() {
 }
 
 func testSweepCloudformationStackSetInstances(region string) error {
-	conn, err := sharedCloudFormationClientForRegion(region)
+	conn, err := sharedCloudformationClientForRegion(region)
 	if err != nil {
 		return err
 	}

@@ -2,17 +2,14 @@ package aws
 
 import (
 	"fmt"
-	"log"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/cloudformation/lister"
 )
 
 func init() {
@@ -26,7 +23,7 @@ func init() {
 }
 
 // generate
-func sharedCloudFormationClientForRegion(region string) (*cloudformation.CloudFormation, error) {
+func sharedCloudformationClientForRegion(region string) (*cloudformation.CloudFormation, error) {
 	client, err := sharedClientForRegion(region)
 	if err != nil {
 		return nil, fmt.Errorf("error getting client: %s", err)
@@ -37,45 +34,6 @@ func sharedCloudFormationClientForRegion(region string) (*cloudformation.CloudFo
 // generate
 func serviceConnectionCloudFormation(client interface{}) *cloudformation.CloudFormation {
 	return client.(*AWSClient).cfconn
-}
-
-func testSweepCloudformationStackSets(region string) error {
-	conn, err := sharedCloudFormationClientForRegion(region)
-	if err != nil {
-		return err
-	}
-
-	var sweeperErrs *multierror.Error
-
-	err = lister.ListAllStackSetsPages(conn, func(page *cloudformation.ListStackSetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, stackSet := range page.Summaries {
-			name := aws.StringValue(stackSet.StackSetName)
-
-			log.Printf("[INFO] Deleting CloudFormation StackSet: %s", name)
-			err := deleteCloudFormationStackSet(conn, deleteCloudFormationStackSetInputFromAPIResource(stackSet))
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting CloudFormation StackSet (%s): %w", name, err))
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudFormation StackSet sweeper for %q: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing CloudFormation StackSets: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSCloudFormationStackSet_basic(t *testing.T) {
