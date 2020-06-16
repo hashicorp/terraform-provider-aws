@@ -336,15 +336,14 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	d.SetId(resourceAwsRouteID(d, route))
-	resourceAwsRouteSetResourceData(d, route)
 
-	return nil
+	return resourceAwsRouteRead(d, meta)
 }
 
 func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	routeTableId := d.Get("route_table_id").(string)
 
+	routeTableId := d.Get("route_table_id").(string)
 	destinationCidrBlock := d.Get("destination_cidr_block").(string)
 	destinationIpv6CidrBlock := d.Get("destination_ipv6_cidr_block").(string)
 
@@ -364,12 +363,8 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 		return nil
 	}
 
-	resourceAwsRouteSetResourceData(d, route)
-
-	return nil
-}
-
-func resourceAwsRouteSetResourceData(d *schema.ResourceData, route *ec2.Route) {
+	d.Set("destination_cidr_block", route.DestinationCidrBlock)
+	d.Set("destination_ipv6_cidr_block", route.DestinationIpv6CidrBlock)
 	d.Set("destination_prefix_list_id", route.DestinationPrefixListId)
 	d.Set("gateway_id", route.GatewayId)
 	d.Set("egress_only_gateway_id", route.EgressOnlyInternetGatewayId)
@@ -381,6 +376,8 @@ func resourceAwsRouteSetResourceData(d *schema.ResourceData, route *ec2.Route) {
 	d.Set("state", route.State)
 	d.Set("transit_gateway_id", route.TransitGatewayId)
 	d.Set("vpc_peering_connection_id", route.VpcPeeringConnectionId)
+
+	return nil
 }
 
 func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
