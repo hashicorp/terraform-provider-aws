@@ -52,29 +52,31 @@ func createResource(d *schema.ResourceData, meta interface{}) error {
 }
 
 func readResource(d *schema.ResourceData, meta interface{}) error {
-	productId, portfolioId := requiredParameters(d)
+	var productId, portfolioId string = requiredParameters(d)
+	assocId := productId + "-" + portfolioId
 	input := servicecatalog.ListPortfoliosForProductInput{
-		ProductId: aws.String(productId.(string)),
+		ProductId: aws.String(productId),
 	}
 	conn := meta.(*AWSClient).scconn
-
-	//TODO - move to a function to allow recursive or repeated calls
-	// Fetch a Page
-	//TODO - fixed - page size
-	//TODO - optional - page token
-	var products, err = conn.ListPortfoliosForProduct(&input)
-	if err != nil {
-		return fmt.Errorf("retrieving Service Catalog Associations for Product/Portfolios: %s", err.Error())
+	var portfolioDetails []*servicecatalog.PortfolioDetail
+	var pageToken = ""
+	for {
+		pageOfDetails, nextPageToken, err := fetchPage(conn, input, &pageToken)
+		if err != nil {
+			return err
+		}
+		portfolioDetails = append(pageOfDetails)
+		if nextPageToken == nil {
+			break
+		}
+		pageToken = *nextPageToken
 	}
-	//TODO - nextPageToken := products.NextPageToken
-	portfolioDetails := products.PortfolioDetails
-	//TODO - fetch additional pages
-
 	isFound := false
 	for _, portfolioDetail := range portfolioDetails {
-		if portfolioDetail.Id == portfolioId {
+		if *portfolioDetail.Id == portfolioId {
 			isFound = true
-			d.SetId(*portfolioDetail.Id)//TOFO pordict id + portfolio id
+			d.SetId(assocId)
+			break
 		}
 	}
 	if !isFound {
@@ -83,6 +85,16 @@ func readResource(d *schema.ResourceData, meta interface{}) error {
 		d.SetId("")
 	}
 	return nil
+}
+
+func fetchPage(conn *servicecatalog.ServiceCatalog, input servicecatalog.ListPortfoliosForProductInput, nextPageToken *string) ([]*servicecatalog.PortfolioDetail, *string, error) {
+	input.PageToken = nextPageToken
+	var products, err = conn.ListPortfoliosForProduct(&input)
+	if err != nil {
+		return nil, nil, fmt.Errorf("retrieving Service Catalog Associations for Product/Portfolios: %s", err.Error())
+	}
+	portfolioDetails := products.PortfolioDetails
+	return portfolioDetails, products.NextPageToken, nil
 }
 
 func updateResource(d *schema.ResourceData, meta interface{}) error {
