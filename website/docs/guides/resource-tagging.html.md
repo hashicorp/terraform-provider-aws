@@ -10,7 +10,7 @@ description: |-
 
 Many AWS services implement [resource tags](https://docs.aws.amazon.com/general/latest/gr/aws_tagging.html) as an essential part of managing components. These arbitrary key-value pairs can be utilized for billing, ownership, automation, [access control](https://docs.aws.amazon.com/IAM/latest/UserGuide/access_tags.html), and many other use cases. Given that these tags are an important aspect of successfully managing an AWS environment, the Terraform AWS Provider implements additional functionality beyond the typical one-to-one resource lifecycle management for easier and more customized implementations.
 
--> Not all AWS resources support tagging, which can differ across AWS services and even across resources within the same service. Browse the individual Terraform AWS Provider resource documentation pages for the `tags` argument, to see which support resource tagging. If the AWS API implements tagging support for a resource and its missing from the Terraform AWS Provider resource, a [feature request](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=enhancement&template=Feature_Request.md) can be submitted.
+-> Not all AWS resources support tagging, which can differ across AWS services and even across resources within the same service. Browse the individual Terraform AWS Provider resource documentation pages for the `tags` argument, to see which support resource tagging. If the AWS API implements tagging support for a resource and it is missing from the Terraform AWS Provider resource, a [feature request](https://github.com/terraform-providers/terraform-provider-aws/issues/new?labels=enhancement&template=Feature_Request.md) can be submitted.
 
 <!-- TOC depthFrom:2 -->
 
@@ -63,7 +63,7 @@ resource "aws_vpc" "example" {
 
 ## Ignoring Changes to Specific Tags
 
-Systems outside of Terraform may automatically interact with the tagging associated with AWS resources. These external systems may be for administrative purposes, such as a Configuration Management Database, or the tagging may be required functionality for those systems, such as Kubernetes. This section shows methods for prevent Terraform from showing differences for specific tags.
+Systems outside of Terraform may automatically interact with the tagging associated with AWS resources. These external systems may be for administrative purposes, such as a Configuration Management Database, or the tagging may be required functionality for those systems, such as Kubernetes. This section shows methods to prevent Terraform from showing differences for specific tags.
 
 ### Ignoring Changes in Individual Resources
 
