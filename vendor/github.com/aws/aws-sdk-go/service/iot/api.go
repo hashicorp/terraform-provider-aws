@@ -15287,6 +15287,10 @@ func (c *IoT) RemoveThingFromThingGroupRequest(input *RemoveThingFromThingGroupI
 //
 // Remove the specified thing from the specified group.
 //
+// You must specify either a thingGroupArn or a thingGroupName to identify the
+// thing group and either a thingArn or a thingName to identify the thing to
+// remove from the thing group.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -18759,11 +18763,11 @@ func (c *IoT) ValidateSecurityProfileBehaviorsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
-// Details of abort criteria to abort the job.
+// The criteria that determine when and how a job abort takes place.
 type AbortConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The list of abort criteria to define rules to abort the job.
+	// The list of criteria that determine when and how to abort the job.
 	//
 	// CriteriaList is a required field
 	CriteriaList []*AbortCriteria `locationName:"criteriaList" min:"1" type:"list" required:"true"`
@@ -18811,27 +18815,28 @@ func (s *AbortConfig) SetCriteriaList(v []*AbortCriteria) *AbortConfig {
 	return s
 }
 
-// Details of abort criteria to define rules to abort the job.
+// The criteria that determine when and how a job abort takes place.
 type AbortCriteria struct {
 	_ struct{} `type:"structure"`
 
-	// The type of abort action to initiate a job abort.
+	// The type of job action to take to initiate the job abort.
 	//
 	// Action is a required field
 	Action *string `locationName:"action" type:"string" required:"true" enum:"AbortAction"`
 
-	// The type of job execution failure to define a rule to initiate a job abort.
+	// The type of job execution failures that can initiate a job abort.
 	//
 	// FailureType is a required field
 	FailureType *string `locationName:"failureType" type:"string" required:"true" enum:"JobExecutionFailureType"`
 
-	// Minimum number of executed things before evaluating an abort rule.
+	// The minimum number of things which must receive job execution notifications
+	// before the job can be aborted.
 	//
 	// MinNumberOfExecutedThings is a required field
 	MinNumberOfExecutedThings *int64 `locationName:"minNumberOfExecutedThings" min:"1" type:"integer" required:"true"`
 
-	// The threshold as a percentage of the total number of executed things that
-	// will initiate a job abort.
+	// The minimum percentage of job execution failures that must occur to initiate
+	// the job abort.
 	//
 	// AWS IoT supports up to two digits after the decimal (for example, 10.9 and
 	// 10.99, but not 10.999).
@@ -19947,7 +19952,7 @@ type AttachPolicyInput struct {
 	// PolicyName is a required field
 	PolicyName *string `location:"uri" locationName:"policyName" min:"1" type:"string" required:"true"`
 
-	// The identity (https://docs.aws.amazon.com/iot/latest/developerguide/iot-security-identity.html)
+	// The identity (https://docs.aws.amazon.com/iot/latest/developerguide/security-iam.html)
 	// to which the policy is attached.
 	//
 	// Target is a required field
@@ -21055,9 +21060,154 @@ func (s *AuthorizerSummary) SetAuthorizerName(v string) *AuthorizerSummary {
 	return s
 }
 
+// The criteria that determine when and how a job abort takes place.
+type AwsJobAbortConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The list of criteria that determine when and how to abort the job.
+	//
+	// AbortCriteriaList is a required field
+	AbortCriteriaList []*AwsJobAbortCriteria `locationName:"abortCriteriaList" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobAbortConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobAbortConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobAbortConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobAbortConfig"}
+	if s.AbortCriteriaList == nil {
+		invalidParams.Add(request.NewErrParamRequired("AbortCriteriaList"))
+	}
+	if s.AbortCriteriaList != nil && len(s.AbortCriteriaList) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AbortCriteriaList", 1))
+	}
+	if s.AbortCriteriaList != nil {
+		for i, v := range s.AbortCriteriaList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AbortCriteriaList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAbortCriteriaList sets the AbortCriteriaList field's value.
+func (s *AwsJobAbortConfig) SetAbortCriteriaList(v []*AwsJobAbortCriteria) *AwsJobAbortConfig {
+	s.AbortCriteriaList = v
+	return s
+}
+
+// The criteria that determine when and how a job abort takes place.
+type AwsJobAbortCriteria struct {
+	_ struct{} `type:"structure"`
+
+	// The type of job action to take to initiate the job abort.
+	//
+	// Action is a required field
+	Action *string `locationName:"action" type:"string" required:"true" enum:"AwsJobAbortCriteriaAbortAction"`
+
+	// The type of job execution failures that can initiate a job abort.
+	//
+	// FailureType is a required field
+	FailureType *string `locationName:"failureType" type:"string" required:"true" enum:"AwsJobAbortCriteriaFailureType"`
+
+	// The minimum number of things which must receive job execution notifications
+	// before the job can be aborted.
+	//
+	// MinNumberOfExecutedThings is a required field
+	MinNumberOfExecutedThings *int64 `locationName:"minNumberOfExecutedThings" min:"1" type:"integer" required:"true"`
+
+	// The minimum percentage of job execution failures that must occur to initiate
+	// the job abort.
+	//
+	// AWS IoT supports up to two digits after the decimal (for example, 10.9 and
+	// 10.99, but not 10.999).
+	//
+	// ThresholdPercentage is a required field
+	ThresholdPercentage *float64 `locationName:"thresholdPercentage" type:"double" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobAbortCriteria) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobAbortCriteria) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobAbortCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobAbortCriteria"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.FailureType == nil {
+		invalidParams.Add(request.NewErrParamRequired("FailureType"))
+	}
+	if s.MinNumberOfExecutedThings == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinNumberOfExecutedThings"))
+	}
+	if s.MinNumberOfExecutedThings != nil && *s.MinNumberOfExecutedThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MinNumberOfExecutedThings", 1))
+	}
+	if s.ThresholdPercentage == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThresholdPercentage"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *AwsJobAbortCriteria) SetAction(v string) *AwsJobAbortCriteria {
+	s.Action = &v
+	return s
+}
+
+// SetFailureType sets the FailureType field's value.
+func (s *AwsJobAbortCriteria) SetFailureType(v string) *AwsJobAbortCriteria {
+	s.FailureType = &v
+	return s
+}
+
+// SetMinNumberOfExecutedThings sets the MinNumberOfExecutedThings field's value.
+func (s *AwsJobAbortCriteria) SetMinNumberOfExecutedThings(v int64) *AwsJobAbortCriteria {
+	s.MinNumberOfExecutedThings = &v
+	return s
+}
+
+// SetThresholdPercentage sets the ThresholdPercentage field's value.
+func (s *AwsJobAbortCriteria) SetThresholdPercentage(v float64) *AwsJobAbortCriteria {
+	s.ThresholdPercentage = &v
+	return s
+}
+
 // Configuration for the rollout of OTA updates.
 type AwsJobExecutionsRolloutConfig struct {
 	_ struct{} `type:"structure"`
+
+	// The rate of increase for a job rollout. This parameter allows you to define
+	// an exponential rate increase for a job rollout.
+	ExponentialRate *AwsJobExponentialRolloutRate `locationName:"exponentialRate" type:"structure"`
 
 	// The maximum number of OTA update job executions started per minute.
 	MaximumPerMinute *int64 `locationName:"maximumPerMinute" min:"1" type:"integer"`
@@ -21079,6 +21229,11 @@ func (s *AwsJobExecutionsRolloutConfig) Validate() error {
 	if s.MaximumPerMinute != nil && *s.MaximumPerMinute < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaximumPerMinute", 1))
 	}
+	if s.ExponentialRate != nil {
+		if err := s.ExponentialRate.Validate(); err != nil {
+			invalidParams.AddNested("ExponentialRate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -21086,9 +21241,97 @@ func (s *AwsJobExecutionsRolloutConfig) Validate() error {
 	return nil
 }
 
+// SetExponentialRate sets the ExponentialRate field's value.
+func (s *AwsJobExecutionsRolloutConfig) SetExponentialRate(v *AwsJobExponentialRolloutRate) *AwsJobExecutionsRolloutConfig {
+	s.ExponentialRate = v
+	return s
+}
+
 // SetMaximumPerMinute sets the MaximumPerMinute field's value.
 func (s *AwsJobExecutionsRolloutConfig) SetMaximumPerMinute(v int64) *AwsJobExecutionsRolloutConfig {
 	s.MaximumPerMinute = &v
+	return s
+}
+
+// The rate of increase for a job rollout. This parameter allows you to define
+// an exponential rate increase for a job rollout.
+type AwsJobExponentialRolloutRate struct {
+	_ struct{} `type:"structure"`
+
+	// The minimum number of things that will be notified of a pending job, per
+	// minute, at the start of the job rollout. This is the initial rate of the
+	// rollout.
+	//
+	// BaseRatePerMinute is a required field
+	BaseRatePerMinute *int64 `locationName:"baseRatePerMinute" min:"1" type:"integer" required:"true"`
+
+	// The rate of increase for a job rollout. The number of things notified is
+	// multiplied by this factor.
+	//
+	// IncrementFactor is a required field
+	IncrementFactor *float64 `locationName:"incrementFactor" type:"double" required:"true"`
+
+	// The criteria to initiate the increase in rate of rollout for a job.
+	//
+	// AWS IoT supports up to one digit after the decimal (for example, 1.5, but
+	// not 1.55).
+	//
+	// RateIncreaseCriteria is a required field
+	RateIncreaseCriteria *AwsJobRateIncreaseCriteria `locationName:"rateIncreaseCriteria" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobExponentialRolloutRate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobExponentialRolloutRate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobExponentialRolloutRate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobExponentialRolloutRate"}
+	if s.BaseRatePerMinute == nil {
+		invalidParams.Add(request.NewErrParamRequired("BaseRatePerMinute"))
+	}
+	if s.BaseRatePerMinute != nil && *s.BaseRatePerMinute < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("BaseRatePerMinute", 1))
+	}
+	if s.IncrementFactor == nil {
+		invalidParams.Add(request.NewErrParamRequired("IncrementFactor"))
+	}
+	if s.RateIncreaseCriteria == nil {
+		invalidParams.Add(request.NewErrParamRequired("RateIncreaseCriteria"))
+	}
+	if s.RateIncreaseCriteria != nil {
+		if err := s.RateIncreaseCriteria.Validate(); err != nil {
+			invalidParams.AddNested("RateIncreaseCriteria", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBaseRatePerMinute sets the BaseRatePerMinute field's value.
+func (s *AwsJobExponentialRolloutRate) SetBaseRatePerMinute(v int64) *AwsJobExponentialRolloutRate {
+	s.BaseRatePerMinute = &v
+	return s
+}
+
+// SetIncrementFactor sets the IncrementFactor field's value.
+func (s *AwsJobExponentialRolloutRate) SetIncrementFactor(v float64) *AwsJobExponentialRolloutRate {
+	s.IncrementFactor = &v
+	return s
+}
+
+// SetRateIncreaseCriteria sets the RateIncreaseCriteria field's value.
+func (s *AwsJobExponentialRolloutRate) SetRateIncreaseCriteria(v *AwsJobRateIncreaseCriteria) *AwsJobExponentialRolloutRate {
+	s.RateIncreaseCriteria = v
 	return s
 }
 
@@ -21116,6 +21359,89 @@ func (s AwsJobPresignedUrlConfig) GoString() string {
 // SetExpiresInSec sets the ExpiresInSec field's value.
 func (s *AwsJobPresignedUrlConfig) SetExpiresInSec(v int64) *AwsJobPresignedUrlConfig {
 	s.ExpiresInSec = &v
+	return s
+}
+
+// The criteria to initiate the increase in rate of rollout for a job.
+type AwsJobRateIncreaseCriteria struct {
+	_ struct{} `type:"structure"`
+
+	// When this number of things have been notified, it will initiate an increase
+	// in the rollout rate.
+	NumberOfNotifiedThings *int64 `locationName:"numberOfNotifiedThings" min:"1" type:"integer"`
+
+	// When this number of things have succeeded in their job execution, it will
+	// initiate an increase in the rollout rate.
+	NumberOfSucceededThings *int64 `locationName:"numberOfSucceededThings" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsJobRateIncreaseCriteria) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobRateIncreaseCriteria) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobRateIncreaseCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobRateIncreaseCriteria"}
+	if s.NumberOfNotifiedThings != nil && *s.NumberOfNotifiedThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NumberOfNotifiedThings", 1))
+	}
+	if s.NumberOfSucceededThings != nil && *s.NumberOfSucceededThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NumberOfSucceededThings", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNumberOfNotifiedThings sets the NumberOfNotifiedThings field's value.
+func (s *AwsJobRateIncreaseCriteria) SetNumberOfNotifiedThings(v int64) *AwsJobRateIncreaseCriteria {
+	s.NumberOfNotifiedThings = &v
+	return s
+}
+
+// SetNumberOfSucceededThings sets the NumberOfSucceededThings field's value.
+func (s *AwsJobRateIncreaseCriteria) SetNumberOfSucceededThings(v int64) *AwsJobRateIncreaseCriteria {
+	s.NumberOfSucceededThings = &v
+	return s
+}
+
+// Specifies the amount of time each device has to finish its execution of the
+// job. A timer is started when the job execution status is set to IN_PROGRESS.
+// If the job execution status is not set to another terminal state before the
+// timer expires, it will be automatically set to TIMED_OUT.
+type AwsJobTimeoutConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the amount of time, in minutes, this device has to finish execution
+	// of this job. The timeout interval can be anywhere between 1 minute and 7
+	// days (1 to 10080 minutes). The in progress timer can't be updated and will
+	// apply to all job executions for the job. Whenever a job execution remains
+	// in the IN_PROGRESS status for longer than this interval, the job execution
+	// will fail and switch to the terminal TIMED_OUT status.
+	InProgressTimeoutInMinutes *int64 `locationName:"inProgressTimeoutInMinutes" type:"long"`
+}
+
+// String returns the string representation
+func (s AwsJobTimeoutConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobTimeoutConfig) GoString() string {
+	return s.String()
+}
+
+// SetInProgressTimeoutInMinutes sets the InProgressTimeoutInMinutes field's value.
+func (s *AwsJobTimeoutConfig) SetInProgressTimeoutInMinutes(v int64) *AwsJobTimeoutConfig {
+	s.InProgressTimeoutInMinutes = &v
 	return s
 }
 
@@ -24122,11 +24448,20 @@ type CreateOTAUpdateInput struct {
 	// A list of additional OTA update parameters which are name-value pairs.
 	AdditionalParameters map[string]*string `locationName:"additionalParameters" type:"map"`
 
+	// The criteria that determine when and how a job abort takes place.
+	AwsJobAbortConfig *AwsJobAbortConfig `locationName:"awsJobAbortConfig" type:"structure"`
+
 	// Configuration for the rollout of OTA updates.
 	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
 
 	// Configuration information for pre-signed URLs.
 	AwsJobPresignedUrlConfig *AwsJobPresignedUrlConfig `locationName:"awsJobPresignedUrlConfig" type:"structure"`
+
+	// Specifies the amount of time each device has to finish its execution of the
+	// job. A timer is started when the job execution status is set to IN_PROGRESS.
+	// If the job execution status is not set to another terminal state before the
+	// timer expires, it will be automatically set to TIMED_OUT.
+	AwsJobTimeoutConfig *AwsJobTimeoutConfig `locationName:"awsJobTimeoutConfig" type:"structure"`
 
 	// The description of the OTA update.
 	Description *string `locationName:"description" type:"string"`
@@ -24146,7 +24481,8 @@ type CreateOTAUpdateInput struct {
 	// can choose the protocol.
 	Protocols []*string `locationName:"protocols" min:"1" type:"list"`
 
-	// The IAM role that allows access to the AWS IoT Jobs service.
+	// The IAM role that grants AWS IoT access to the Amazon S3, AWS IoT jobs and
+	// AWS Code Signing resources to create an OTA update job.
 	//
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
@@ -24162,7 +24498,7 @@ type CreateOTAUpdateInput struct {
 	// by all things originally in the group. Valid values: CONTINUOUS | SNAPSHOT.
 	TargetSelection *string `locationName:"targetSelection" type:"string" enum:"TargetSelection"`
 
-	// The targeted devices to receive OTA updates.
+	// The devices targeted to receive OTA updates.
 	//
 	// Targets is a required field
 	Targets []*string `locationName:"targets" min:"1" type:"list" required:"true"`
@@ -24208,6 +24544,11 @@ func (s *CreateOTAUpdateInput) Validate() error {
 	if s.Targets != nil && len(s.Targets) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Targets", 1))
 	}
+	if s.AwsJobAbortConfig != nil {
+		if err := s.AwsJobAbortConfig.Validate(); err != nil {
+			invalidParams.AddNested("AwsJobAbortConfig", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.AwsJobExecutionsRolloutConfig != nil {
 		if err := s.AwsJobExecutionsRolloutConfig.Validate(); err != nil {
 			invalidParams.AddNested("AwsJobExecutionsRolloutConfig", err.(request.ErrInvalidParams))
@@ -24246,6 +24587,12 @@ func (s *CreateOTAUpdateInput) SetAdditionalParameters(v map[string]*string) *Cr
 	return s
 }
 
+// SetAwsJobAbortConfig sets the AwsJobAbortConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobAbortConfig(v *AwsJobAbortConfig) *CreateOTAUpdateInput {
+	s.AwsJobAbortConfig = v
+	return s
+}
+
 // SetAwsJobExecutionsRolloutConfig sets the AwsJobExecutionsRolloutConfig field's value.
 func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecutionsRolloutConfig) *CreateOTAUpdateInput {
 	s.AwsJobExecutionsRolloutConfig = v
@@ -24255,6 +24602,12 @@ func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecuti
 // SetAwsJobPresignedUrlConfig sets the AwsJobPresignedUrlConfig field's value.
 func (s *CreateOTAUpdateInput) SetAwsJobPresignedUrlConfig(v *AwsJobPresignedUrlConfig) *CreateOTAUpdateInput {
 	s.AwsJobPresignedUrlConfig = v
+	return s
+}
+
+// SetAwsJobTimeoutConfig sets the AwsJobTimeoutConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobTimeoutConfig(v *AwsJobTimeoutConfig) *CreateOTAUpdateInput {
+	s.AwsJobTimeoutConfig = v
 	return s
 }
 
@@ -26928,10 +27281,10 @@ type DeleteOTAUpdateInput struct {
 	DeleteStream *bool `location:"querystring" locationName:"deleteStream" type:"boolean"`
 
 	// Specifies if the AWS Job associated with the OTA update should be deleted
-	// with the OTA update is deleted.
+	// when the OTA update is deleted.
 	ForceDeleteAWSJob *bool `location:"querystring" locationName:"forceDeleteAWSJob" type:"boolean"`
 
-	// The OTA update ID to delete.
+	// The ID of the OTA update to delete.
 	//
 	// OtaUpdateId is a required field
 	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
@@ -49553,6 +49906,25 @@ const (
 
 	// AutoRegistrationStatusDisable is a AutoRegistrationStatus enum value
 	AutoRegistrationStatusDisable = "DISABLE"
+)
+
+const (
+	// AwsJobAbortCriteriaAbortActionCancel is a AwsJobAbortCriteriaAbortAction enum value
+	AwsJobAbortCriteriaAbortActionCancel = "CANCEL"
+)
+
+const (
+	// AwsJobAbortCriteriaFailureTypeFailed is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeFailed = "FAILED"
+
+	// AwsJobAbortCriteriaFailureTypeRejected is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeRejected = "REJECTED"
+
+	// AwsJobAbortCriteriaFailureTypeTimedOut is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeTimedOut = "TIMED_OUT"
+
+	// AwsJobAbortCriteriaFailureTypeAll is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeAll = "ALL"
 )
 
 const (
