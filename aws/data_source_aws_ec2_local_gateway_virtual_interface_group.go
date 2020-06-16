@@ -30,7 +30,7 @@ func dataSourceAwsEc2LocalGatewayVirtualInterfaceGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tagsSchema(),
+			"tags": tagsSchemaComputed(),
 		},
 	}
 }
