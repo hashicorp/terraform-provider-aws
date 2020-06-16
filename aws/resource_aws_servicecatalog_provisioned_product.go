@@ -178,6 +178,30 @@ func refreshProvisionedProductStatus(conn *servicecatalog.ServiceCatalog, id str
 	}
 }
 
+func waitForServiceCatalogProvisionedProductDeletion(conn *servicecatalog.ServiceCatalog, id string) error {
+	stateConf := resource.StateChangeConf{
+		Pending:      []string{servicecatalog.ProvisionedProductStatusUnderChange},
+		Target:       []string{""},
+		Timeout:      15 * time.Minute,
+		PollInterval: 3 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeProvisionedProduct(&servicecatalog.DescribeProvisionedProductInput{
+				Id: aws.String(id),
+			})
+			if err != nil {
+				if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
+					return 42, "", nil
+				}
+				return 42, "", err
+			}
+
+			return resp, aws.StringValue(resp.ProvisionedProductDetail.Status), nil
+		},
+	}
+	_, err := stateConf.WaitForState()
+	return err
+}
+
 func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).scconn
 
@@ -322,9 +346,8 @@ func resourceAwsServiceCatalogProvisionedProductDelete(d *schema.ResourceData, m
 	if err != nil {
 		return fmt.Errorf("Deleting Service Catalog Provisioned Product '%s' failed: %s", *input.ProvisionedProductId, err.Error())
 	}
-	// TODO wait for deleted
-	//if err := waitForServiceCatalogProvisionedProductStatus(conn, d); err != nil {
-	//    return err
-	//}
+	if err := waitForServiceCatalogProvisionedProductDeletion(conn, d.Id()); err != nil {
+		return err
+	}
 	return nil
 }

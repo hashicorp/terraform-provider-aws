@@ -192,8 +192,9 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 
 func waitForServiceCatalogProductStatus(conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{servicecatalog.StatusCreating},
-		Target: []string{servicecatalog.StatusAvailable},
+		Pending: []string{servicecatalog.StatusCreating},  
+		// "CREATED" is not documented but seems to be the state it goes to
+		Target: []string{servicecatalog.StatusAvailable, "CREATED"},
 		Refresh: refreshProductStatus(conn, d.Id()),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 		PollInterval: 3 * time.Second,
@@ -212,6 +213,30 @@ func refreshProductStatus(conn *servicecatalog.ServiceCatalog, id string) resour
 		}
 		return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
 	}
+}
+
+func waitForServiceCatalogProductDeletion(conn *servicecatalog.ServiceCatalog, id string) error {
+        stateConf := resource.StateChangeConf{
+            Pending:      []string{servicecatalog.StatusCreating},
+            Target:       []string{""},
+            Timeout:      15 * time.Minute,
+            PollInterval: 3 * time.Second,
+            Refresh:      func() (interface{}, string, error) {
+                resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
+                    Id: aws.String(id),
+                })
+                if err != nil {
+                        if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
+                                return 42, "", nil
+                        }
+                        return 42, "", err
+                }
+
+                return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
+            },
+        }
+        _, err := stateConf.WaitForState()
+        return err
 }
 
 func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
@@ -379,10 +404,9 @@ func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("deleting ServiceCatalog product '%s' failed: %s", *input.Id, err)
 	}
-	// TODO wait for confirmation it's gone
-	//if err := waitForServiceCatalogProductStatus(conn, d); err != nil {
-    //    return err
-    //}
+    if err := waitForServiceCatalogProductDeletion(conn, d.Id()); err != nil {
+        return err
+    }
 	return nil
 }
 

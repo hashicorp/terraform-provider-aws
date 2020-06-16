@@ -22,6 +22,7 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 	resource.Test(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, tag1, tag2),

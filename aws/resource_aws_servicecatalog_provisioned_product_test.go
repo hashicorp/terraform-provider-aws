@@ -21,18 +21,16 @@ func TestAccAWSServiceCatalogProvisionedProduct_Basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		// TODO - CheckDestroy: ?,
+		CheckDestroy: testAccCheckServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProduct(resourceName),
 					// TODO addl checks (ones below are wrong)
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`portfolio/.+`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexp.MustCompile(`stack/.+/pp-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "description", "test-2"),
-					resource.TestCheckResourceAttr(resourceName, "provider_name", "test-3"),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", name),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -57,17 +55,39 @@ func testAccCheckProvisionedProduct(pr string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		input := servicecatalog.DescribePortfolioInput{}
+		input := servicecatalog.DescribeProvisionedProductInput{}
 		input.Id = aws.String(rs.Primary.ID)
 
-		_, err := conn.DescribePortfolio(&input)
+		_, err := conn.DescribeProvisionedProduct(&input)
 		if err != nil {
 			return err
 		}
 
-		// *dpo = *resp
 		return nil
 	}
+}
+
+func testAccCheckServiceCatalogProvisionedProductDestroy(s *terraform.State) error {
+    conn := testAccProvider.Meta().(*AWSClient).scconn
+
+    for _, rs := range s.RootModule().Resources {
+        if rs.Type != "aws_servicecatalog_provisioned_product" {
+            continue
+        }
+        input := servicecatalog.DescribeProvisionedProductInput{}
+        input.Id = aws.String(rs.Primary.ID)
+
+        _, err := conn.DescribeProvisionedProduct(&input)
+        if err != nil {
+            if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
+                return nil
+            }
+            return err
+        }
+        return fmt.Errorf("provisioned product still exists")
+    }
+
+    return nil
 }
 
 func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate(provisionedProductName string) string {
