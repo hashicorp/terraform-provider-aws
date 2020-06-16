@@ -32,10 +32,10 @@ resource "aws_servicecatalog_portfolio_product_association" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+The following arguments are supported:
 
-* `portfolio_id` - The portfolio identifier
-* `product_id` - The product identifier
+* `portfolio_id` - (Required) The portfolio identifier
+* `product_id` - (Required) The product identifier
 
 
 ## Attributes Reference
