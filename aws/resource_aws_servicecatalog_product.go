@@ -184,15 +184,16 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("creating ServiceCatalog product failed: %s", err)
 	}
 	d.SetId(*resp.ProductViewDetail.ProductViewSummary.ProductId)
-	if err := waitForServiceCatalogProductStatus("CREATED", conn, d); err != nil {
+	if err := waitForServiceCatalogProductStatus(conn, d); err != nil {
 		return err
 	}
 	return resourceAwsServiceCatalogProductRead(d, meta)
 }
 
-func waitForServiceCatalogProductStatus(status string, conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
+func waitForServiceCatalogProductStatus(conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
 	stateConf := &resource.StateChangeConf{
-		Target: []string{status, servicecatalog.StatusAvailable},
+		Pending: []string{servicecatalog.StatusCreating},
+		Target: []string{servicecatalog.StatusAvailable},
 		Refresh: refreshProductStatus(conn, d.Id()),
 		Timeout: d.Timeout(schema.TimeoutCreate),
 		PollInterval: 3 * time.Second,
@@ -345,6 +346,10 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("updating ServiceCatalog product '%s' failed: %s", *input.Id, err)
 	}
 
+    if err := waitForServiceCatalogProductStatus(conn, d); err != nil {
+        return err
+    }
+    
 	// this change is slightly more complicated as basically we need to update the provisioning artifact
 	if d.HasChange("provisioning_artifact") {
 		_, newProvisioningArtifactList := d.GetChange("provisioning_artifact")
@@ -374,6 +379,10 @@ func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("deleting ServiceCatalog product '%s' failed: %s", *input.Id, err)
 	}
+	// TODO wait for confirmation it's gone
+	//if err := waitForServiceCatalogProductStatus(conn, d); err != nil {
+    //    return err
+    //}
 	return nil
 }
 
