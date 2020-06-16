@@ -11,10 +11,10 @@ import (
 
 func resourceAwsServiceCatalogPortfolioProductAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: createResource,
-		Read: readResource,
-		Update: updateResource,
-		Delete: deleteResource,
+		Create: resourceAwsServiceCatalogPortfolioProductAssociationCreate,
+		Read:   resourceAwsServiceCatalogPortfolioProductAssociationRead,
+		Update: resourceAwsServiceCatalogPortfolioProductAssociationUpdate,
+		Delete: resourceAwsServiceCatalogPortfolioProductAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
@@ -36,8 +36,8 @@ func resourceAwsServiceCatalogPortfolioProductAssociation() *schema.Resource {
 	}
 }
 
-func createResource(d *schema.ResourceData, meta interface{}) error {
-	productId, portfolioId := requiredParameters(d)
+func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.ResourceData, meta interface{}) error {
+	productId, portfolioId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	input := servicecatalog.AssociateProductWithPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
 		ProductId: aws.String(productId),
@@ -48,11 +48,11 @@ func createResource(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("creating Service Catalog Product(%s)/Portfolio(%s) Association failed: %s",
 			productId, portfolioId, err.Error())
 	}
-	return readResource(d, meta)
+	return resourceAwsServiceCatalogPortfolioProductAssociationRead(d, meta)
 }
 
-func readResource(d *schema.ResourceData, meta interface{}) error {
-	var productId, portfolioId string = requiredParameters(d)
+func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.ResourceData, meta interface{}) error {
+	var productId, portfolioId string = resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	assocId := productId + "-" + portfolioId
 	input := servicecatalog.ListPortfoliosForProductInput{
 		ProductId: aws.String(productId),
@@ -61,7 +61,7 @@ func readResource(d *schema.ResourceData, meta interface{}) error {
 	var portfolioDetails []*servicecatalog.PortfolioDetail
 	var pageToken = ""
 	for {
-		pageOfDetails, nextPageToken, err := fetchPage(conn, input, &pageToken)
+		pageOfDetails, nextPageToken, err := resourceAwsServiceCatalogPortfolioProductAssociationListPortfoliosForProductPage(conn, input, &pageToken)
 		if err != nil {
 			return err
 		}
@@ -87,7 +87,7 @@ func readResource(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func fetchPage(conn *servicecatalog.ServiceCatalog, input servicecatalog.ListPortfoliosForProductInput, nextPageToken *string) ([]*servicecatalog.PortfolioDetail, *string, error) {
+func resourceAwsServiceCatalogPortfolioProductAssociationListPortfoliosForProductPage(conn *servicecatalog.ServiceCatalog, input servicecatalog.ListPortfoliosForProductInput, nextPageToken *string) ([]*servicecatalog.PortfolioDetail, *string, error) {
 	input.PageToken = nextPageToken
 	var products, err = conn.ListPortfoliosForProduct(&input)
 	if err != nil {
@@ -97,7 +97,7 @@ func fetchPage(conn *servicecatalog.ServiceCatalog, input servicecatalog.ListPor
 	return portfolioDetails, products.NextPageToken, nil
 }
 
-func updateResource(d *schema.ResourceData, meta interface{}) error {
+func resourceAwsServiceCatalogPortfolioProductAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 	const productIdKey = "product_id"
 	const portfolioIdKey = "portfolio_id"
 	if d.HasChange(productIdKey) || d.HasChange(portfolioIdKey) {
@@ -105,16 +105,16 @@ func updateResource(d *schema.ResourceData, meta interface{}) error {
 		oldPortfolioId, newPortfolioId := d.GetChange(portfolioIdKey)
 		d.Set(productIdKey, oldProductId)
 		d.Set(portfolioIdKey, oldPortfolioId)
-		deleteResource(d, meta)
+		resourceAwsServiceCatalogPortfolioProductAssociationDelete(d, meta)
 		d.Set(productIdKey, newProductId)
 		d.Set(portfolioIdKey, newPortfolioId)
-		createResource(d, meta)
+		resourceAwsServiceCatalogPortfolioProductAssociationCreate(d, meta)
 	}
-	return readResource(d, meta)
+	return resourceAwsServiceCatalogPortfolioProductAssociationRead(d, meta)
 }
 
-func deleteResource(d *schema.ResourceData, meta interface{}) error {
-	productId, portfolioId := requiredParameters(d)
+func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.ResourceData, meta interface{}) error {
+	productId, portfolioId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	input := servicecatalog.DisassociateProductFromPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
 		ProductId: aws.String(productId),
@@ -131,7 +131,7 @@ func deleteResource(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func requiredParameters(d *schema.ResourceData) (string, string) {
+func resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d *schema.ResourceData) (string, string) {
 	productId := d.Get("product_id").(string)
 	portfolioId := d.Get("portfolio_id").(string)
 	return productId, portfolioId
