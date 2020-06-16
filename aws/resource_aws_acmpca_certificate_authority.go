@@ -14,6 +14,7 @@ import (
 )
 
 func resourceAwsAcmpcaCertificateAuthority() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsAcmpcaCertificateAuthorityCreate,
 		Read:   resourceAwsAcmpcaCertificateAuthorityRead,

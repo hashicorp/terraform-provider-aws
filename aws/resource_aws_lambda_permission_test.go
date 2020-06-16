@@ -325,8 +325,6 @@ func TestAccAWSLambdaPermission_withQualifier(t *testing.T) {
 }
 
 func TestAccAWSLambdaPermission_disappears(t *testing.T) {
-	var statement LambdaPolicyStatement
-
 	rString := acctest.RandString(8)
 	funcName := fmt.Sprintf("tf_acc_lambda_perm_multi_%s", rString)
 	roleName := fmt.Sprintf("tf_acc_role_lambda_perm_multi_%s", rString)
@@ -343,7 +341,7 @@ func TestAccAWSLambdaPermission_disappears(t *testing.T) {
 			{
 				Config: testAccAWSLambdaPermissionConfig_multiplePerms(funcName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAWSLambdaPermissionDisappears(resourceName, &statement),
+					testAccAWSLambdaPermissionDisappears(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -541,7 +539,7 @@ func TestAccAWSLambdaPermission_withIAMRole(t *testing.T) {
 	})
 }
 
-func testAccAWSLambdaPermissionDisappears(n string, statement *LambdaPolicyStatement) resource.TestCheckFunc {
+func testAccAWSLambdaPermissionDisappears(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

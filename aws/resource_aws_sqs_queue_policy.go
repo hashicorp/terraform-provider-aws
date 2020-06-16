@@ -14,6 +14,7 @@ import (
 )
 
 func resourceAwsSqsQueuePolicy() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSqsQueuePolicyUpsert,
 		Read:   resourceAwsSqsQueuePolicyRead,

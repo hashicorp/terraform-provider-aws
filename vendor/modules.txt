@@ -25,7 +25,7 @@ github.com/apparentlymart/go-cidr/cidr
 github.com/apparentlymart/go-textseg/textseg
 # github.com/armon/go-radix v1.0.0
 github.com/armon/go-radix
-# github.com/aws/aws-sdk-go v1.30.21
+# github.com/aws/aws-sdk-go v1.32.0
 github.com/aws/aws-sdk-go/aws
 github.com/aws/aws-sdk-go/aws/arn
 github.com/aws/aws-sdk-go/aws/awserr
@@ -56,6 +56,7 @@ github.com/aws/aws-sdk-go/internal/sdkuri
 github.com/aws/aws-sdk-go/internal/shareddefaults
 github.com/aws/aws-sdk-go/internal/strings
 github.com/aws/aws-sdk-go/internal/sync/singleflight
+github.com/aws/aws-sdk-go/private/checksum
 github.com/aws/aws-sdk-go/private/protocol
 github.com/aws/aws-sdk-go/private/protocol/ec2query
 github.com/aws/aws-sdk-go/private/protocol/eventstream
@@ -95,6 +96,7 @@ github.com/aws/aws-sdk-go/service/cloudtrail
 github.com/aws/aws-sdk-go/service/cloudwatch
 github.com/aws/aws-sdk-go/service/cloudwatchevents
 github.com/aws/aws-sdk-go/service/cloudwatchlogs
+github.com/aws/aws-sdk-go/service/codeartifact
 github.com/aws/aws-sdk-go/service/codebuild
 github.com/aws/aws-sdk-go/service/codecommit
 github.com/aws/aws-sdk-go/service/codedeploy
@@ -165,6 +167,7 @@ github.com/aws/aws-sdk-go/service/mediastore
 github.com/aws/aws-sdk-go/service/mediastoredata
 github.com/aws/aws-sdk-go/service/mq
 github.com/aws/aws-sdk-go/service/neptune
+github.com/aws/aws-sdk-go/service/networkmanager
 github.com/aws/aws-sdk-go/service/opsworks
 github.com/aws/aws-sdk-go/service/organizations
 github.com/aws/aws-sdk-go/service/personalize
@@ -200,6 +203,7 @@ github.com/aws/aws-sdk-go/service/storagegateway
 github.com/aws/aws-sdk-go/service/sts
 github.com/aws/aws-sdk-go/service/sts/stsiface
 github.com/aws/aws-sdk-go/service/swf
+github.com/aws/aws-sdk-go/service/synthetics
 github.com/aws/aws-sdk-go/service/transfer
 github.com/aws/aws-sdk-go/service/waf
 github.com/aws/aws-sdk-go/service/wafregional
@@ -485,7 +489,7 @@ github.com/hashicorp/go-getter
 github.com/hashicorp/go-getter/helper/url
 # github.com/hashicorp/go-hclog v0.10.0
 github.com/hashicorp/go-hclog
-# github.com/hashicorp/go-multierror v1.0.0
+# github.com/hashicorp/go-multierror v1.1.0
 github.com/hashicorp/go-multierror
 # github.com/hashicorp/go-plugin v1.0.1
 github.com/hashicorp/go-plugin
@@ -527,7 +531,7 @@ github.com/hashicorp/logutils
 github.com/hashicorp/terraform-config-inspect/tfconfig
 # github.com/hashicorp/terraform-json v0.5.0
 github.com/hashicorp/terraform-json
-# github.com/hashicorp/terraform-plugin-sdk v1.12.0
+# github.com/hashicorp/terraform-plugin-sdk v1.13.1
 github.com/hashicorp/terraform-plugin-sdk/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/customdiff

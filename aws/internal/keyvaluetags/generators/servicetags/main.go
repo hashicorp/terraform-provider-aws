@@ -71,6 +71,7 @@ var sliceServiceNames = []string{
 	"lightsail",
 	"mediastore",
 	"neptune",
+	"networkmanager",
 	"organizations",
 	"quicksight",
 	"ram",
@@ -83,6 +84,7 @@ var sliceServiceNames = []string{
 	"secretsmanager",
 	"serverlessapplicationrepository",
 	"servicecatalog",
+	"servicediscovery",
 	"sfn",
 	"sns",
 	"ssm",
@@ -131,6 +133,8 @@ var mapServiceNames = []string{
 	"resourcegroups",
 	"securityhub",
 	"sqs",
+	"synthetics",
+	"worklink",
 }
 
 type TemplateData struct {

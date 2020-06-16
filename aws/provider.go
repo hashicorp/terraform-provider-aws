@@ -7,6 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	homedir "github.com/mitchellh/go-homedir"
+
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -209,6 +210,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ebs_snapshot":                              dataSourceAwsEbsSnapshot(),
 			"aws_ebs_snapshot_ids":                          dataSourceAwsEbsSnapshotIds(),
 			"aws_ebs_volume":                                dataSourceAwsEbsVolume(),
+			"aws_ebs_volumes":                               dataSourceAwsEbsVolumes(),
 			"aws_ec2_coip_pool":                             dataSourceAwsEc2CoipPool(),
 			"aws_ec2_coip_pools":                            dataSourceAwsEc2CoipPools(),
 			"aws_ec2_instance_type_offering":                dataSourceAwsEc2InstanceTypeOffering(),
@@ -230,6 +232,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecs_service":                               dataSourceAwsEcsService(),
 			"aws_ecs_task_definition":                       dataSourceAwsEcsTaskDefinition(),
 			"aws_customer_gateway":                          dataSourceAwsCustomerGateway(),
+			"aws_efs_access_point":                          dataSourceAwsEfsAccessPoint(),
 			"aws_efs_file_system":                           dataSourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                          dataSourceAwsEfsMountTarget(),
 			"aws_eip":                                       dataSourceAwsEip(),
@@ -333,6 +336,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_rule":                          dataSourceAwsWafRegionalRule(),
 			"aws_wafregional_rate_based_rule":               dataSourceAwsWafRegionalRateBasedRule(),
 			"aws_wafregional_web_acl":                       dataSourceAwsWafRegionalWebAcl(),
+			"aws_wafv2_ip_set":                              dataSourceAwsWafv2IPSet(),
+			"aws_wafv2_regex_pattern_set":                   dataSourceAwsWafv2RegexPatternSet(),
+			"aws_wafv2_rule_group":                          dataSourceAwsWafv2RuleGroup(),
 			"aws_workspaces_bundle":                         dataSourceAwsWorkspaceBundle(),
 
 			// Adding the Aliases for the ALB -> LB Rename
@@ -530,6 +536,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
 			"aws_ec2_fleet":                                           resourceAwsEc2Fleet(),
+			"aws_ec2_tag":                                             resourceAwsEc2Tag(),
 			"aws_ec2_traffic_mirror_filter":                           resourceAwsEc2TrafficMirrorFilter(),
 			"aws_ec2_traffic_mirror_filter_rule":                      resourceAwsEc2TrafficMirrorFilterRule(),
 			"aws_ec2_traffic_mirror_target":                           resourceAwsEc2TrafficMirrorTarget(),
@@ -550,7 +557,9 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecs_cluster":                                         resourceAwsEcsCluster(),
 			"aws_ecs_service":                                         resourceAwsEcsService(),
 			"aws_ecs_task_definition":                                 resourceAwsEcsTaskDefinition(),
+			"aws_efs_access_point":                                    resourceAwsEfsAccessPoint(),
 			"aws_efs_file_system":                                     resourceAwsEfsFileSystem(),
+			"aws_efs_file_system_policy":                              resourceAwsEfsFileSystemPolicy(),
 			"aws_efs_mount_target":                                    resourceAwsEfsMountTarget(),
 			"aws_egress_only_internet_gateway":                        resourceAwsEgressOnlyInternetGateway(),
 			"aws_eip":                                                 resourceAwsEip(),
@@ -882,6 +891,10 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafregional_xss_match_set":                           resourceAwsWafRegionalXssMatchSet(),
 			"aws_wafregional_web_acl":                                 resourceAwsWafRegionalWebAcl(),
 			"aws_wafregional_web_acl_association":                     resourceAwsWafRegionalWebAclAssociation(),
+			"aws_wafv2_ip_set":                                        resourceAwsWafv2IPSet(),
+			"aws_wafv2_regex_pattern_set":                             resourceAwsWafv2RegexPatternSet(),
+			"aws_wafv2_rule_group":                                    resourceAwsWafv2RuleGroup(),
+			"aws_wafv2_web_acl":                                       resourceAwsWafv2WebACL(),
 			"aws_worklink_fleet":                                      resourceAwsWorkLinkFleet(),
 			"aws_worklink_website_certificate_authority_association":  resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation(),
 			"aws_workspaces_directory":                                resourceAwsWorkspacesDirectory(),
@@ -1026,6 +1039,7 @@ func init() {
 		"cloudwatch",
 		"cloudwatchevents",
 		"cloudwatchlogs",
+		"codeartifact",
 		"codebuild",
 		"codecommit",
 		"codedeploy",
@@ -1095,6 +1109,7 @@ func init() {
 		"mediastoredata",
 		"mq",
 		"neptune",
+		"networkmanager",
 		"opsworks",
 		"organizations",
 		"personalize",
@@ -1129,6 +1144,7 @@ func init() {
 		"storagegateway",
 		"sts",
 		"swf",
+		"synthetics",
 		"transfer",
 		"waf",
 		"wafregional",
@@ -1167,19 +1183,23 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 	}
 	config.CredsFilename = credsPath
 
-	assumeRoleList := d.Get("assume_role").(*schema.Set).List()
+	assumeRoleList := d.Get("assume_role").([]interface{})
 	if len(assumeRoleList) == 1 {
-		assumeRole := assumeRoleList[0].(map[string]interface{})
-		config.AssumeRoleARN = assumeRole["role_arn"].(string)
-		config.AssumeRoleSessionName = assumeRole["session_name"].(string)
-		config.AssumeRoleExternalID = assumeRole["external_id"].(string)
+		if assumeRoleList[0] != nil {
+			assumeRole := assumeRoleList[0].(map[string]interface{})
+			config.AssumeRoleARN = assumeRole["role_arn"].(string)
+			config.AssumeRoleSessionName = assumeRole["session_name"].(string)
+			config.AssumeRoleExternalID = assumeRole["external_id"].(string)
 
-		if v := assumeRole["policy"].(string); v != "" {
-			config.AssumeRolePolicy = v
+			if v := assumeRole["policy"].(string); v != "" {
+				config.AssumeRolePolicy = v
+			}
+
+			log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
+				config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
+		} else {
+			log.Printf("[INFO] Empty assume_role block read from configuration")
 		}
-
-		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
-			config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
 	} else {
 		log.Printf("[INFO] No assume_role block read from configuration")
 	}
@@ -1213,7 +1233,7 @@ var awsMutexKV = mutexkv.NewMutexKV()
 
 func assumeRoleSchema() *schema.Schema {
 	return &schema.Schema{
-		Type:     schema.TypeSet,
+		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
 		Elem: &schema.Resource{
