@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"net"
 	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -232,82 +231,4 @@ func validatePorts(to int64, from int64, expected expectedPortPair) bool {
 	}
 
 	return true
-}
-
-// validateCIDRBlock validates that the specified CIDR block is valid:
-// - The CIDR block parses to an IP address and network
-// - The CIDR block is the CIDR block for the network
-func validateCIDRBlock(cidr string) error {
-	_, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
-	}
-
-	if !cidrBlocksEqual(cidr, ipnet.String()) {
-		return fmt.Errorf("%q is not a valid CIDR block; did you mean %q?", cidr, ipnet)
-	}
-
-	return nil
-}
-
-// validateIpv4CIDRBlock validates that the specified CIDR block is valid:
-// - The CIDR block parses to an IP address and network
-// - The IP address is an IPv4 address
-// - The CIDR block is the CIDR block for the network
-func validateIpv4CIDRBlock(cidr string) error {
-	ip, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
-	}
-
-	ipv4 := ip.To4()
-	if ipv4 == nil {
-		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
-	}
-
-	if !cidrBlocksEqual(cidr, ipnet.String()) {
-		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
-	}
-
-	return nil
-}
-
-// validateIpv6CIDRBlock validates that the specified CIDR block is valid:
-// - The CIDR block parses to an IP address and network
-// - The IP address is an IPv6 address
-// - The CIDR block is the CIDR block for the network
-func validateIpv6CIDRBlock(cidr string) error {
-	ip, ipnet, err := net.ParseCIDR(cidr)
-	if err != nil {
-		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
-	}
-
-	ipv4 := ip.To4()
-	if ipv4 != nil {
-		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
-	}
-
-	if !cidrBlocksEqual(cidr, ipnet.String()) {
-		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
-	}
-
-	return nil
-}
-
-// cidrBlocksEqual returns whether or not two CIDR blocks are equal:
-// - Both CIDR blocks parse to an IP address and network
-// - The string representation of the IP addresses are equal
-// - The string representation of the networks are equal
-// This function is especially useful for IPv6 CIDR blocks which have multiple valid representations.
-func cidrBlocksEqual(cidr1, cidr2 string) bool {
-	ip1, ipnet1, err := net.ParseCIDR(cidr1)
-	if err != nil {
-		return false
-	}
-	ip2, ipnet2, err := net.ParseCIDR(cidr2)
-	if err != nil {
-		return false
-	}
-
-	return ip2.String() == ip1.String() && ipnet2.String() == ipnet1.String()
 }
