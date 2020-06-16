@@ -3,18 +3,20 @@ layout: "aws"
 page_title: "AWS: aws_servicecatalog_product"
 sidebar_current: "docs-aws-resource-servicecatalog-product"
 description: |-
-  Provides a resource to create a Service Catalog Product
+  Provides a resource for a Service Catalog Product definition from which instances can be provisioned.
 ---
 
 # aws_servicecatalog_product
 
 Provides a resource to create a Service Catalog Product.
 
-Note that this is not associated to any portfolio, it has the default security/roles (no launch constraints),
+Note that this Product definition is not associated to any portfolio, 
+it has the default security/roles (no launch constraints),
 and it only creates the very first Provisioning Artifact that comes along with the product being created.
-It is necessary to create an `aws_servicecatalog_portfolio_product_association` to link this to a portfolio 
-before it can be provisioned.
-It is also common to create launch constraints and additional provisioning artifacts. 
+It is necessary to create an `aws_servicecatalog_portfolio_product_association` 
+to link this to a portfolio before it can be provisioned.
+It is also common but not necessary to create launch constraints and additional provisioning artifacts
+to govern the usage of this Product. 
 
 ## Example Usage
 
@@ -90,7 +92,7 @@ resource "aws_servicecatalog_product" "minimal_test_new_template" {
 The following arguments are supported:
 
 * `description` - (Optional) The description of the product.
-* `destributor` - (Optional) The distributor of the product.
+* `distributor` - (Optional) The distributor of the product.
 * `name` - (Required) The name of the product.
 * `owner` - (Required) The owner of the product.
 * `product_type` - (Required) The type of product. Valid values: `CLOUD_FORMATION_TEMPLATE` or `MARKETPLACE`
