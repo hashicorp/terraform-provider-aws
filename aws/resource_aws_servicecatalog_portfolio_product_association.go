@@ -6,6 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
+    "strings"
 	"time"
 )
 
@@ -53,7 +54,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.Resour
 
 func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	var productId, portfolioId string = resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
-	assocId := productId + "-" + portfolioId
+	assocId := productId + "--" + portfolioId
 	input := servicecatalog.ListPortfoliosForProductInput{
 		ProductId: aws.String(productId),
 	}
@@ -84,6 +85,8 @@ func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.Resource
 			productId, portfolioId)
 		d.SetId("")
 	}
+	d.Set("product_id", productId)
+	d.Set("portfolio_id", portfolioId)
 	return nil
 }
 
@@ -119,9 +122,6 @@ func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.Resour
 		PortfolioId: aws.String(portfolioId),
 		ProductId: aws.String(productId),
 	}
-	if v, ok := d.GetOk("accept_language"); ok {
-		input.AcceptLanguage = aws.String(v.(string))
-	}
 	conn := meta.(*AWSClient).scconn
 	_, err := conn.DisassociateProductFromPortfolio(&input)
 	if err != nil {
@@ -132,7 +132,16 @@ func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.Resour
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d *schema.ResourceData) (string, string) {
-	productId := d.Get("product_id").(string)
-	portfolioId := d.Get("portfolio_id").(string)
-	return productId, portfolioId
+    if productId, ok := d.GetOk("product_id"); ok {
+	    portfolioId := d.Get("portfolio_id").(string)
+	    return productId.(string), portfolioId
+    }
+    return parseServiceCatalogPortfolioProductAssociationResourceId(d.Id())
+}
+
+func parseServiceCatalogPortfolioProductAssociationResourceId(id string) (string, string) {
+    s := strings.Split(id, "--")
+    productId := s[0]
+    portfolioId := s[1]
+    return productId, portfolioId
 }

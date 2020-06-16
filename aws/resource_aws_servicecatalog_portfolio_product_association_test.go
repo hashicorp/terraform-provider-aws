@@ -3,31 +3,27 @@ package aws
 import (
 	"fmt"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"log"
-	"strings"
 	"testing"
 )
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_Basic(t *testing.T) {
-	productId := resource.UniqueId()
-	portfolioName := resource.UniqueId()[16:]
-	log.Printf("length: %d", len(portfolioName))
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: testAccCheckServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(productId, portfolioName),
+				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(),
 				Check: testAccCheckAssociation(),
 			},
-			//{
-			//	ResourceName: "association",
-			//	ImportState: true,
-			//	ImportStateVerify: true,
-			//},
+			{
+				ResourceName: "aws_servicecatalog_portfolio_product_association.association",
+				ImportState: true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -56,56 +52,21 @@ func testAccCheckAssociation() resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(productId string, portfolioName string) string {
-	//TODO: do I need to create both the portfolio and product first?
-	template := fmt.Sprintf(`
-data "aws_region" "current" { }
+func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic() string {
+    portfolio_cfg := testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm_automated_test");
+    
+    arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
+    arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
+    arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
+    p_tag1 := "FooKey = \"bar\""
+    p_tag2 := "BarKey = \"foo\""
+    product_cfg := testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, p_tag1, p_tag2)
 
-resource "aws_s3_bucket" "bucket" {
-  bucket        = "%s"
-  region        = "${data.aws_region.current.name}"
-  acl           = "private"
-  force_destroy = true
-}
-
-resource "aws_s3_bucket_object" "template1" {
-  bucket  = "${aws_s3_bucket.bucket.id}"
-  key     = "test_templates_for_terraform_sc_dev1.json"
-  content = <<EOF
-{
-  "AWSTemplateFormatVersion": "2010-09-09",
-  "Description": "Test CF teamplate for Service Catalog terraform dev",
-  "Resources": {
-    "Empty": {
-      "Type": "AWS::CloudFormation::WaitConditionHandle"
-    }
-  }
-}
-EOF
-}
-resource "aws_servicecatalog_portfolio" "portfolio" {
-  name = "%s"
-  provider_name = "testing"
-}
-resource "aws_servicecatalog_product" "product" {
-  name                = "product"
-  owner               = "testing"
-  product_type        = "CLOUD_FORMATION_TEMPLATE"
-  provisioning_artifact {
-    description = "description"
-    name        = "artifact-name"
-    info = {
-      LoadTemplateFromURL = "https://s3.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template1.key}"
-    }
-  }
-}
+    return portfolio_cfg + "\n" + product_cfg + "\n" + fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio_product_association" "association" {
-  portfolio_id = aws_servicecatalog_portfolio.portfolio.id
-  product_id = aws_servicecatalog_product.product.id
-}
-`, resource.UniqueId(), portfolioName)
-	log.Print(template)
-	return template
+    portfolio_id = aws_servicecatalog_portfolio.test.id
+    product_id = aws_servicecatalog_product.test.id
+}`)
 }
 
 func testAccCheckServiceCatalogPortfolioProductAssociationDestroy(s *terraform.State) error {
@@ -130,11 +91,4 @@ func testAccCheckServiceCatalogPortfolioProductAssociationDestroy(s *terraform.S
 		}
 	}
 	return nil
-}
-
-func parseServiceCatalogPortfolioProductAssociationResourceId(id string) (string, string) {
-	s := strings.Split(id, "-")
-	productId := s[0]
-	portfolioId := s[1]
-	return productId, portfolioId
 }

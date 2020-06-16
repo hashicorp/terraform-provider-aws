@@ -27,7 +27,6 @@ func TestAccAWSServiceCatalogProvisionedProduct_Basic(t *testing.T) {
 				Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProduct(resourceName),
-					// TODO addl checks (ones below are wrong)
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexp.MustCompile(`stack/.+/pp-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", name),
@@ -91,33 +90,15 @@ func testAccCheckServiceCatalogProvisionedProductDestroy(s *terraform.State) err
 }
 
 func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate(provisionedProductName string) string {
-
     return fmt.Sprintf(`
-resource "aws_servicecatalog_provisioned_product" "test" {
+resource "aws_servicecatalog_provisioned_product" "test" {    
     provisioned_product_name = "%s"
     product_id = "prod-lgqvxr6phzrzk"
     provisioning_artifact_id = "pa-5bddiphhjdsoy"
-}
-`, provisionedProductName)
+}`, provisionedProductName) 
 
-    // TODO test should create the portfolio etc as below, but we need portfolio_product_association for that
-    
-/*
-
-    portfolio_cfg := testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm_automated_test_portfolio");
-    
-    arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
-    arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
-    arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
-    p_tag1 := "FooKey = \"bar\""
-    p_tag2 := "BarKey = \"foo\""
-    product_cfg := testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, p_tag1, p_tag2)
-
-    return portfolio_cfg + "\n" + product_cfg + "\n" + fmt.Sprintf(`
-resource "aws_servicecatalog_portfolio_product_association" "association" {
-    portfolio_id = aws_servicecatalog_portfolio.test.id
-    product_id = aws_servicecatalog_product.test.id
-}
+/* TODO use a new product -- but we need a launch path 
+    return testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic() + "\n" + fmt.Sprintf(`
 
 resource "aws_servicecatalog_provisioned_product" "test" {
     provisioned_product_name = "%s"
