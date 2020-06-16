@@ -19,6 +19,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 
@@ -49,6 +50,48 @@ provider "aws" {
   # ... other configuration ...
 
   version = "~> 3.0"
+}
+```
+
+## Data Source: aws_availability_zones
+
+### blacklisted_names Attribute Removal
+
+Switch your Terraform configuration to the `skip_names` attribute instead.
+
+For example, given this previous configuration:
+
+```hcl
+data "aws_availability_zones" "example" {
+  blacklisted_names = ["us-west-2d"]
+}
+```
+
+An updated configuration:
+
+```hcl
+data "aws_availability_zones" "example" {
+  skip_names = ["us-west-2d"]
+}
+```
+
+### blacklisted_zone_ids Attribute Removal
+
+Switch your Terraform configuration to the `skip_zone_ids` attribute instead.
+
+For example, given this previous configuration:
+
+```hcl
+data "aws_availability_zones" "example" {
+  blacklisted_zone_ids = ["usw2-az4"]
+}
+```
+
+An updated configuration:
+
+```hcl
+data "aws_availability_zones" "example" {
+  skip_zone_ids = ["usw2-az4"]
 }
 ```
 
