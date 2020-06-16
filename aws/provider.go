@@ -1112,6 +1112,7 @@ func init() {
 		"networkmanager",
 		"opsworks",
 		"organizations",
+		"outposts",
 		"personalize",
 		"pinpoint",
 		"pricing",

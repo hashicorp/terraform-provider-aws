@@ -170,6 +170,7 @@ github.com/aws/aws-sdk-go/service/neptune
 github.com/aws/aws-sdk-go/service/networkmanager
 github.com/aws/aws-sdk-go/service/opsworks
 github.com/aws/aws-sdk-go/service/organizations
+github.com/aws/aws-sdk-go/service/outposts
 github.com/aws/aws-sdk-go/service/personalize
 github.com/aws/aws-sdk-go/service/pinpoint
 github.com/aws/aws-sdk-go/service/pricing

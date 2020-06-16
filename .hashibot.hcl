@@ -398,6 +398,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/organizations" = [
       "aws_organizations_",
     ],
+    "service/outposts" = [
+      "aws_outposts_",
+    ],
     "service/personalize" = [
       "aws_personalize_",
     ],
@@ -1076,6 +1079,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/organizations" = [
       "**/*_organizations_*",
       "**/organizations_*"
+    ]
+    "service/outposts" = [
+      "**/*_outposts_*",
+      "**/outposts_*"
     ]
     "service/pinpoint" = [
       "**/*_pinpoint_*",
