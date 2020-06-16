@@ -287,6 +287,8 @@ func Provider() terraform.ResourceProvider {
 			"aws_network_interfaces":                         dataSourceAwsNetworkInterfaces(),
 			"aws_organizations_organization":                 dataSourceAwsOrganizationsOrganization(),
 			"aws_organizations_organizational_units":         dataSourceAwsOrganizationsOrganizationalUnits(),
+			"aws_outposts_outpost":                           dataSourceAwsOutpostsOutpost(),
+			"aws_outposts_outposts":                          dataSourceAwsOutpostsOutposts(),
 			"aws_partition":                                  dataSourceAwsPartition(),
 			"aws_prefix_list":                                dataSourceAwsPrefixList(),
 			"aws_pricing_product":                            dataSourceAwsPricingProduct(),
