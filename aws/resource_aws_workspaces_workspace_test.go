@@ -372,7 +372,7 @@ resource "aws_workspaces_workspace" "test" {
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
-  
+
   workspace_properties {
     # NOTE: Compute type and volume size update not allowed within 6 hours after creation.
     running_mode = "AUTO_STOP"
@@ -394,13 +394,13 @@ resource "aws_workspaces_workspace" "test" {
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
-  user_name = "Administrator" 
+  user_name = "Administrator"
 
   workspace_properties {
     # NOTE: Compute type and volume size update not allowed within 6 hours after creation.
     running_mode = "ALWAYS_ON"
   }
-  
+
   tags = {
     TerraformProviderAwsTest = true
   }
@@ -432,8 +432,8 @@ resource "aws_workspaces_workspace" "test" {
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
-  user_name = "Administrator" 
- 
+  user_name = "Administrator"
+
   workspace_properties {
     root_volume_size_gib = 90
     user_volume_size_gib = 50
@@ -454,8 +454,8 @@ resource "aws_workspaces_workspace" "test" {
 
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
-  user_name = "Administrator" 
- 
+  user_name = "Administrator"
+
   workspace_properties {
     root_volume_size_gib = 80
     user_volume_size_gib = 60
@@ -468,7 +468,7 @@ resource "aws_workspaces_workspace" "test" {
 `)
 }
 
-func TestExpandWorkspaceProperties(t *testing.T) {
+func TestExpandWorkspacePropertiesForAutoStop(t *testing.T) {
 	cases := []struct {
 		input    []interface{}
 		expected *workspaces.WorkspaceProperties
@@ -495,6 +495,44 @@ func TestExpandWorkspaceProperties(t *testing.T) {
 				RunningMode:                         aws.String(workspaces.RunningModeAutoStop),
 				RunningModeAutoStopTimeoutInMinutes: aws.Int64(60),
 				UserVolumeSizeGib:                   aws.Int64(10),
+			},
+		},
+	}
+
+	for _, c := range cases {
+		actual := expandWorkspaceProperties(c.input)
+		if !reflect.DeepEqual(actual, c.expected) {
+			t.Fatalf("expected\n\n%#+v\n\ngot\n\n%#+v", c.expected, actual)
+		}
+	}
+}
+
+func TestExpandWorkspacePropertiesForAlwaysOn(t *testing.T) {
+	cases := []struct {
+		input    []interface{}
+		expected *workspaces.WorkspaceProperties
+	}{
+		// Empty
+		{
+			input:    []interface{}{},
+			expected: nil,
+		},
+		// Full
+		{
+			input: []interface{}{
+				map[string]interface{}{
+					"compute_type_name":                         workspaces.ComputeValue,
+					"root_volume_size_gib":                      80,
+					"running_mode":                              workspaces.RunningModeAlwaysOn,
+					"running_mode_auto_stop_timeout_in_minutes": 60,
+					"user_volume_size_gib":                      10,
+				},
+			},
+			expected: &workspaces.WorkspaceProperties{
+				ComputeTypeName:   aws.String(workspaces.ComputeValue),
+				RootVolumeSizeGib: aws.Int64(80),
+				RunningMode:       aws.String(workspaces.RunningModeAlwaysOn),
+				UserVolumeSizeGib: aws.Int64(10),
 			},
 		},
 	}
