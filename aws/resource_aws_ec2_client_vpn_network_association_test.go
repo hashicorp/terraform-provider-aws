@@ -150,8 +150,8 @@ func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
 	return testAccEc2ClientVpnNetworkAssociationConfigAcmCertificateBase() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  skip_zone_ids = ["usw2-az4"]
+  state         = "available"
 
   filter {
     name   = "opt-in-status"

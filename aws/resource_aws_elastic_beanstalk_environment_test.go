@@ -725,8 +725,8 @@ data "aws_availability_zones" "available" {
   # Default instance type of t2.micro is not available in this Availability Zone
   # The failure will occur during Elastic Beanstalk CloudFormation Template handling
   # after waiting upwards of one hour to initialize the Auto Scaling Group.
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  skip_zone_ids = ["usw2-az4"]
+  state         = "available"
 
   filter {
     name   = "opt-in-status"

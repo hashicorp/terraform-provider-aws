@@ -322,8 +322,8 @@ func testAccAWSAppautoscalingTargetEmrClusterConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # The requested instance type m3.xlarge is not supported in the requested availability zone.
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  skip_zone_ids = ["usw2-az4"]
+  state         = "available"
 
   filter {
     name   = "opt-in-status"

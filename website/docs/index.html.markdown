@@ -190,12 +190,12 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   experiencing transient failures. The delay between the subsequent API
   calls increases exponentially.
 
-* `allowed_account_ids` - (Optional) List of allowed, white listed, AWS
+* `allowed_account_ids` - (Optional) List of allowed AWS
   account IDs to prevent you from mistakenly using an incorrect one (and
   potentially end up destroying a live environment). Conflicts with
   `forbidden_account_ids`.
 
-* `forbidden_account_ids` - (Optional) List of forbidden, blacklisted,
+* `forbidden_account_ids` - (Optional) List of forbidden
   AWS account IDs to prevent you mistakenly using a wrong one (and
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.

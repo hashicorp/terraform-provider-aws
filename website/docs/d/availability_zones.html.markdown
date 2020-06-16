@@ -73,9 +73,11 @@ data "aws_availability_zones" "example" {
 The following arguments are supported:
 
 * `all_availability_zones` - (Optional) Set to `true` to include all Availability Zones and Local Zones regardless of your opt in status.
-* `blacklisted_names` - (Optional) List of blacklisted Availability Zone names.
-* `blacklisted_zone_ids` - (Optional) List of blacklisted Availability Zone IDs.
+* `blacklisted_names` - (Optional, **DEPRECATED**) List of Availability Zone names to skip. Use `skip_names` instead.
+* `blacklisted_zone_ids` - (Optional, **DEPRECATED**) List of Availability Zone IDs to skip. Use `skip_zone_ids` instead.
 * `filter` - (Optional) Configuration block(s) for filtering. Detailed below.
+* `skip_names` - (Optional) List of Availability Zone names to skip.
+* `skip_zone_ids` - (Optional) List of Availability Zone IDs to skip.
 * `state` - (Optional) Allows to filter list of Availability Zones based on their
 current state. Can be either `"available"`, `"information"`, `"impaired"` or
 `"unavailable"`. By default the list includes a complete set of Availability Zones

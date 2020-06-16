@@ -1107,8 +1107,8 @@ resource "aws_elasticache_replication_group" "test" {
 var testAccAWSElasticacheReplicationGroupRedisClusterInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  blacklisted_zone_ids = ["use1-az1"]
-  state                = "available"
+  skip_zone_ids = ["use1-az1"]
+  state         = "available"
 
   filter {
     name   = "opt-in-status"
@@ -1544,8 +1544,8 @@ func testAccAWSElasticacheReplicationGroupConfig_NumberCacheClusters(rName strin
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: Specified node type cache.m3.medium is not available in AZ us-east-1b.
-  blacklisted_zone_ids = ["use1-az1"]
-  state                = "available"
+  skip_zone_ids = ["use1-az1"]
+  state         = "available"
 
   filter {
     name   = "opt-in-status"

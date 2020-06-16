@@ -241,8 +241,8 @@ func testAccAWSLBTargetGroupAttachmentConfigInstanceBase() string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # t2.micro instance type is not available in these Availability Zones
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  skip_zone_ids = ["usw2-az4"]
+  state         = "available"
 
   filter {
     name   = "opt-in-status"

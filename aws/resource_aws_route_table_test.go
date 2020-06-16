@@ -857,8 +857,8 @@ func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  skip_zone_ids = ["usw2-az4"]
+  state         = "available"
 
   filter {
     name   = "opt-in-status"
