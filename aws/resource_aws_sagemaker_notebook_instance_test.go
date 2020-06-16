@@ -368,6 +368,42 @@ func testAccCheckAWSSagemakerNotebookDirectInternetAccess(notebook *sagemaker.De
 	}
 }
 
+func TestAccAWSSagemakerNotebookInstance_default_code_repository(t *testing.T) {
+	var notebook sagemaker.DescribeNotebookInstanceOutput
+	notebookName := resource.PrefixedUniqueId(sagemakerTestAccSagemakerNotebookInstanceResourceNamePrefix)
+	var resourceName = "aws_sagemaker_notebook_instance.foo"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSagemakerNotebookInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(notebookName, "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSagemakerNotebookInstanceExists(resourceName, &notebook),
+					testAccCheckAWSSagemakerNotebookDefaultCodeRepository(&notebook, "https://github.com/terraform-providers/terraform-provider-aws.git"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAWSSagemakerNotebookDefaultCodeRepository(notebook *sagemaker.DescribeNotebookInstanceOutput, expected string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		defaultCodeRepository := notebook.DefaultCodeRepository
+		if *defaultCodeRepository != expected {
+			return fmt.Errorf("default_code_repository setting is incorrect: %s", *notebook.DefaultCodeRepository)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSSagemakerNotebookInstanceTags(notebook *sagemaker.DescribeNotebookInstanceOutput, key string, value string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).sagemakerconn
@@ -592,4 +628,54 @@ resource "aws_subnet" "sagemaker" {
   }
 }
 `, notebookName, directInternetAccess)
+}
+
+func testAccAWSSagemakerNotebookInstanceConfigDefaultCodeRepository(notebookName string, defaultCodeRepository string) string {
+	return fmt.Sprintf(`
+resource "aws_sagemaker_notebook_instance" "foo" {
+	name = %[1]q
+	role_arn = aws_iam_role.foo.arn
+	instance_type = "ml.t2.medium"
+	security_groups = [aws_security_group.test.id]
+	subnet_id = aws_subnet.sagemaker.id
+	default_code_repository = %[2]q
+}
+
+resource "aws_iam_role" "foo" {
+	name = %[1]q
+	path = "/"
+	assume_role_policy = data.aws_iam_policy_document.assume_role.json
+}
+
+data "aws_iam_policy_document" "assume_role" {
+	statement {
+		actions = [ "sts:AssumeRole" ]
+		principals {
+			type = "Service"
+			identifiers = [ "sagemaker.amazonaws.com" ]
+		}
+	}
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-sagemaker-notebook-instance-default-code-repository"
+  }
+}
+
+resource "aws_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "sagemaker" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = "10.0.0.0/24"
+
+  tags = {
+    Name = "tf-acc-test-sagemaker-notebook-instance-default-code-repository"
+  }
+}
+`, notebookName, defaultCodeRepository)
 }
