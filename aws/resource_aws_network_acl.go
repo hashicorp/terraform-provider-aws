@@ -449,12 +449,17 @@ func updateNetworkAclEntries(d *schema.ResourceData, entryType string, conn *ec2
 				}
 			}
 
-			if add.CidrBlock != nil && aws.StringValue(add.CidrBlock) != "" {
-				// AWS mutates the CIDR block into a network implied by the IP and
-				// mask provided. This results in hashing inconsistencies between
-				// the local config file and the state returned by the API. Error
-				// if the user provides a CIDR block with an inappropriate mask
-				if err := validateCIDRBlock(aws.StringValue(add.CidrBlock)); err != nil {
+			// AWS mutates the CIDR block into a network implied by the IP and
+			// mask provided. This results in hashing inconsistencies between
+			// the local config file and the state returned by the API. Error
+			// if the user provides a CIDR block with an inappropriate mask
+			if cidrBlock := aws.StringValue(add.CidrBlock); cidrBlock != "" {
+				if err := validateIpv4CIDRBlock(cidrBlock); err != nil {
+					return err
+				}
+			}
+			if ipv6CidrBlock := aws.StringValue(add.Ipv6CidrBlock); ipv6CidrBlock != "" {
+				if err := validateIpv6CIDRBlock(ipv6CidrBlock); err != nil {
 					return err
 				}
 			}
