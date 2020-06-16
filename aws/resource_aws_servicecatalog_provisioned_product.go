@@ -158,7 +158,7 @@ func waitForServiceCatalogProvisionedProductStatus(conn *servicecatalog.ServiceC
 	stateConf := &resource.StateChangeConf{
 		Pending:      []string{servicecatalog.ProvisionedProductStatusUnderChange},
 		Target:       []string{servicecatalog.ProvisionedProductStatusAvailable},
-		Refresh:      refreshProvisionedProductStatus(conn, d.Id()),
+		Refresh:      refreshProvisionedProductStatus(conn, d),
 		Timeout:      d.Timeout(schema.TimeoutCreate),
 		PollInterval: 3 * time.Second,
 	}
@@ -166,12 +166,15 @@ func waitForServiceCatalogProvisionedProductStatus(conn *servicecatalog.ServiceC
 	return err
 }
 
-func refreshProvisionedProductStatus(conn *servicecatalog.ServiceCatalog, id string) resource.StateRefreshFunc {
+func refreshProvisionedProductStatus(conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) resource.StateRefreshFunc {
 	return func() (result interface{}, state string, err error) {
 		resp, err := conn.DescribeProvisionedProduct(&servicecatalog.DescribeProvisionedProductInput{
-			Id: aws.String(id),
+			Id: aws.String(d.Id()),
 		})
 		if err != nil {
+		    // to help debug if there's a problem
+            d.Set("status", resp.ProvisionedProductDetail.Status)
+            d.Set("status_message", resp.ProvisionedProductDetail.StatusMessage)		    
 			return nil, "", err
 		}
 		return resp, aws.StringValue(resp.ProvisionedProductDetail.Status), nil
@@ -232,7 +235,6 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 	d.Set("id", detail.Id)
 	d.Set("arn", detail.Arn)
 	d.Set("created_time", detail.CreatedTime.Format(time.RFC3339))
-	d.Set("status", detail.Status)
 	d.Set("provisioned_product_name", detail.Name)
 	d.Set("product_id", detail.ProductId)
 	d.Set("provisioning_artifact_id", detail.ProvisioningArtifactId)

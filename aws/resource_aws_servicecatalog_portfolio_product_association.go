@@ -38,7 +38,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociation() *schema.Resource {
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	productId, portfolioId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	_, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	input := servicecatalog.AssociateProductWithPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
 		ProductId: aws.String(productId),
@@ -53,8 +53,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.Resour
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	var productId, portfolioId string = resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
-	assocId := productId + "--" + portfolioId
+	id, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	input := servicecatalog.ListPortfoliosForProductInput{
 		ProductId: aws.String(productId),
 	}
@@ -76,12 +75,12 @@ func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.Resource
 	for _, portfolioDetail := range portfolioDetails {
 		if *portfolioDetail.Id == portfolioId {
 			isFound = true
-			d.SetId(assocId)
+			d.SetId(id)
 			break
 		}
 	}
 	if !isFound {
-		log.Printf("[WARN] Service Catalog Product(%s)/Portfolio(%s Association not found, removing from state",
+		log.Printf("[WARN] Service Catalog Product(%s)/Portfolio(%s) Association not found, removing from state",
 			productId, portfolioId)
 		d.SetId("")
 	}
@@ -92,12 +91,12 @@ func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.Resource
 
 func resourceAwsServiceCatalogPortfolioProductAssociationListPortfoliosForProductPage(conn *servicecatalog.ServiceCatalog, input servicecatalog.ListPortfoliosForProductInput, nextPageToken *string) ([]*servicecatalog.PortfolioDetail, *string, error) {
 	input.PageToken = nextPageToken
-	var products, err = conn.ListPortfoliosForProduct(&input)
+	var page, err = conn.ListPortfoliosForProduct(&input)
 	if err != nil {
 		return nil, nil, fmt.Errorf("retrieving Service Catalog Associations for Product/Portfolios: %s", err.Error())
 	}
-	portfolioDetails := products.PortfolioDetails
-	return portfolioDetails, products.NextPageToken, nil
+	portfolioDetails := page.PortfolioDetails
+	return portfolioDetails, page.NextPageToken, nil
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -117,7 +116,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationUpdate(d *schema.Resour
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	productId, portfolioId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	_, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	input := servicecatalog.DisassociateProductFromPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
 		ProductId: aws.String(productId),
@@ -131,17 +130,18 @@ func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.Resour
 	return nil
 }
 
-func resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d *schema.ResourceData) (string, string) {
+func resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d *schema.ResourceData) (string, string, string) {
     if productId, ok := d.GetOk("product_id"); ok {
 	    portfolioId := d.Get("portfolio_id").(string)
-	    return productId.(string), portfolioId
+	    id := portfolioId + "--" + productId.(string);
+	    return id, portfolioId, productId.(string)
     }
     return parseServiceCatalogPortfolioProductAssociationResourceId(d.Id())
 }
 
-func parseServiceCatalogPortfolioProductAssociationResourceId(id string) (string, string) {
-    s := strings.Split(id, "--")
-    productId := s[0]
-    portfolioId := s[1]
-    return productId, portfolioId
+func parseServiceCatalogPortfolioProductAssociationResourceId(id string) (string, string, string) {
+    s := strings.SplitN(id, "--", 2)
+    portfolioId := s[0]
+    productId := s[1]
+    return id, portfolioId, productId
 }

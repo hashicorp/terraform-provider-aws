@@ -17,7 +17,7 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(),
-				Check: testAccCheckAssociation(),
+				Check: testAccCheckAwsServiceCatalogPortfolioProductAssociation(),
 			},
 			{
 				ResourceName: "aws_servicecatalog_portfolio_product_association.association",
@@ -28,14 +28,38 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAssociation() resource.TestCheckFunc {
+func testAccCheckServiceCatalogPortfolioProductAssociationDestroy(s *terraform.State) error {
+    conn := testAccProvider.Meta().(*AWSClient).scconn
+    for _, rs := range s.RootModule().Resources {
+        if rs.Type != "aws_servicecatalog_portfolio_product_association" {
+            continue // not our monkey
+        }
+        _, productId, portfolioId := parseServiceCatalogPortfolioProductAssociationResourceId(rs.Primary.ID)
+        input := servicecatalog.ListPortfoliosForProductInput{ProductId: &productId}
+        portfolios, err := conn.ListPortfoliosForProduct(&input)
+        if err != nil {
+            if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
+                return nil // not found for product is good
+            }
+            return err // some other unexpected error
+        }
+        for _, portfolioDetail := range portfolios.PortfolioDetails {
+            if *portfolioDetail.Id == portfolioId {
+                return fmt.Errorf("expected AWS Service Catalog Portfolio Product Association to be gone, but it was still found")
+            }
+        }
+    }
+    return nil
+}
+
+func testAccCheckAwsServiceCatalogPortfolioProductAssociation() resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).scconn
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_portfolio_product_association" {
 				continue // not our monkey
 			}
-			productId, portfolioId := parseServiceCatalogPortfolioProductAssociationResourceId(rs.Primary.ID)
+			_, portfolioId, productId := parseServiceCatalogPortfolioProductAssociationResourceId(rs.Primary.ID)
 			input := servicecatalog.ListPortfoliosForProductInput{ProductId: &productId}
 			portfolios, err := conn.ListPortfoliosForProduct(&input)
 			if err != nil {
@@ -67,28 +91,4 @@ resource "aws_servicecatalog_portfolio_product_association" "association" {
     portfolio_id = aws_servicecatalog_portfolio.test.id
     product_id = aws_servicecatalog_product.test.id
 }`)
-}
-
-func testAccCheckServiceCatalogPortfolioProductAssociationDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).scconn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_servicecatalog_portfolio_product_association" {
-			continue // not our monkey
-		}
-		productId, portfolioId := parseServiceCatalogPortfolioProductAssociationResourceId(rs.Primary.ID)
-		input := servicecatalog.ListPortfoliosForProductInput{ProductId: &productId}
-		portfolios, err := conn.ListPortfoliosForProduct(&input)
-		if err != nil {
-			if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
-				return nil // not found for product is good
-			}
-			return err // some other unexpected error
-		}
-		for _, portfolioDetail := range portfolios.PortfolioDetails {
-			if *portfolioDetail.Id == portfolioId {
-				return fmt.Errorf("expected AWs Service Catalog Portfolio Product Association to be gone, but it was still found")
-			}
-		}
-	}
-	return nil
 }
