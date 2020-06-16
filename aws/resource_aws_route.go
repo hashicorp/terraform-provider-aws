@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 // How long to sleep if a limit-exceeded event happens
@@ -52,20 +53,24 @@ func resourceAwsRoute() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"destination_cidr_block": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validateIpv4CIDRNetworkAddress,
-				ExactlyOneOf: []string{"destination_cidr_block", "destination_ipv6_cidr_block"},
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringIsEmpty,
+					validateIpv4CIDRNetworkAddress,
+				),
 			},
 
 			"destination_ipv6_cidr_block": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     validateIpv6CIDRNetworkAddress,
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringIsEmpty,
+					validateIpv6CIDRNetworkAddress,
+				),
 				DiffSuppressFunc: suppressEqualCIDRBlockDiffs,
-				ExactlyOneOf:     []string{"destination_cidr_block", "destination_ipv6_cidr_block"},
 			},
 
 			"destination_prefix_list_id": {
