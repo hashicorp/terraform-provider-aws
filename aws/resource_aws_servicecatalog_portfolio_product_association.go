@@ -39,8 +39,8 @@ func resourceAwsServiceCatalogPortfolioProductAssociation() *schema.Resource {
 func createResource(d *schema.ResourceData, meta interface{}) error {
 	productId, portfolioId := requiredParameters(d)
 	input := servicecatalog.AssociateProductWithPortfolioInput{
-		PortfolioId: aws.String(portfolioId.(string)),
-		ProductId: aws.String(productId.(string)),
+		PortfolioId: aws.String(portfolioId),
+		ProductId: aws.String(productId),
 	}
 	conn := meta.(*AWSClient).scconn
 	_, err := conn.AssociateProductWithPortfolio(&input)
@@ -104,8 +104,8 @@ func updateResource(d *schema.ResourceData, meta interface{}) error {
 func deleteResource(d *schema.ResourceData, meta interface{}) error {
 	productId, portfolioId := requiredParameters(d)
 	input := servicecatalog.DisassociateProductFromPortfolioInput{
-		PortfolioId: aws.String(portfolioId.(string)),
-		ProductId: aws.String(productId.(string)),
+		PortfolioId: aws.String(portfolioId),
+		ProductId: aws.String(productId),
 	}
 	if v, ok := d.GetOk("accept_language"); ok {
 		input.AcceptLanguage = aws.String(v.(string))
@@ -119,8 +119,8 @@ func deleteResource(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func requiredParameters(d *schema.ResourceData) (interface{}, interface{}) {
-	productId := d.Get("product_id")
-	portfolioId := d.Get("portfolio_id")
+func requiredParameters(d *schema.ResourceData) (string, string) {
+	productId := d.Get("product_id").(string)
+	portfolioId := d.Get("portfolio_id").(string)
 	return productId, portfolioId
 }
