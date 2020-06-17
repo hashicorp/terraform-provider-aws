@@ -16,6 +16,7 @@ ENHANCEMENTS:
 
 
 * data-source/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
+* data-source/aws_internet_gateway: Add `arn` attribute [GH-13614]
 * resource/aws_cloudwatch_log_stream: Support resource import [GH-13697]
 * resource/aws_devicefarm_project: Support resource import [GH-13020]
 * resource/aws_ec2_traffic_mirror_target: Add `arn` attribute [GH-13649]
@@ -26,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
 * resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute [GH-13756]
 * resource/aws_guardduty_threatintelset: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_internet_gateway: Add `arn` attribute [GH-13614]
 * resource/aws_key_pair: Add `arn` attribute [GH-13648]
 * resource/aws_service_discovery_http_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
