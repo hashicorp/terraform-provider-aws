@@ -285,8 +285,12 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("destination_cidr_block"); ok {
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), v.(string), "")
-			if err == nil && route != nil {
-				return nil
+			if err == nil {
+				if route != nil {
+					return nil
+				} else {
+					err = errors.New("Route not found")
+				}
 			}
 
 			return resource.RetryableError(err)
@@ -305,8 +309,12 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), "", v.(string))
-			if err == nil && route != nil {
-				return nil
+			if err == nil {
+				if route != nil {
+					return nil
+				} else {
+					err = errors.New("Route not found")
+				}
 			}
 
 			return resource.RetryableError(err)

@@ -38,6 +38,11 @@ func testSweepCloudTrails(region string) error {
 		for _, trail := range page.Trails {
 			name := aws.StringValue(trail.Name)
 
+			if name == "AWSMacieTrail-DO-NOT-EDIT" {
+				log.Printf("[INFO] Skipping AWSMacieTrail-DO-NOT-EDIT for Macie Classic, which is not automatically recreated by the service")
+				continue
+			}
+
 			output, err := conn.DescribeTrails(&cloudtrail.DescribeTrailsInput{
 				TrailNameList: aws.StringSlice([]string{name}),
 			})

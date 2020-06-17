@@ -43,6 +43,7 @@ func resourceAwsElasticBeanstalkOptionSetting() *schema.Resource {
 }
 
 func resourceAwsElasticBeanstalkEnvironment() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsElasticBeanstalkEnvironmentCreate,
 		Read:   resourceAwsElasticBeanstalkEnvironmentRead,

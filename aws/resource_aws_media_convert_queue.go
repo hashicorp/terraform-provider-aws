@@ -174,7 +174,7 @@ func resourceAwsMediaConvertQueueUpdate(d *schema.ResourceData, meta interface{}
 		return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
 	}
 
-	if d.HasChange("description") || d.HasChange("reservation_plan_settings") || d.HasChange("status") {
+	if d.HasChanges("description", "reservation_plan_settings", "status") {
 
 		updateOpts := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),

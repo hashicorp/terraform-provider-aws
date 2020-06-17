@@ -132,7 +132,7 @@ func resourceAwsRamResourceShareRead(d *schema.ResourceData, meta interface{}) e
 func resourceAwsRamResourceShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ramconn
 
-	if d.HasChange("name") || d.HasChange("allow_external_principals") {
+	if d.HasChanges("name", "allow_external_principals") {
 		request := &ram.UpdateResourceShareInput{
 			ResourceShareArn:        aws.String(d.Id()),
 			Name:                    aws.String(d.Get("name").(string)),

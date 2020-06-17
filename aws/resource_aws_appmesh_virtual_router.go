@@ -14,6 +14,7 @@ import (
 )
 
 func resourceAwsAppmeshVirtualRouter() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsAppmeshVirtualRouterCreate,
 		Read:   resourceAwsAppmeshVirtualRouterRead,

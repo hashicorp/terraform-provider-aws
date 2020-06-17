@@ -4,11 +4,8 @@
 
 # Terraform Provider for AWS 
 
-[![Build Status][travis-badge]][travis]
 [![Forums][discuss-badge]][discuss]
 
-[travis-badge]: https://api.travis-ci.org/terraform-providers/terraform-provider-aws.svg?branch=master
-[travis]: https://travis-ci.org/github/terraform-providers/terraform-provider-aws
 [discuss-badge]: https://img.shields.io/badge/discuss-terraform--aws-623CE4.svg?style=flat
 [discuss]: https://discuss.hashicorp.com/c/terraform-providers/tf-aws/
 

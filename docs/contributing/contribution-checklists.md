@@ -39,7 +39,7 @@ contributor because you can work within existing code and tests to get a feel
 for what to do.
 
 In addition to the below checklist, please see the [Common Review
-Items](#common-review-items) sections for more specific coding and testing
+Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing
 guidelines.
 
  - [ ] __Acceptance test coverage of new behavior__: Existing resources each
@@ -58,8 +58,7 @@ guidelines.
    instructions for getting a local copy of the site up and running if you'd
    like to preview your changes.
  - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
+   see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor additions__: Create a separate PR if you are updating the vendor
@@ -72,7 +71,7 @@ Adding import support for Terraform resources will allow existing infrastructure
 
 Comprehensive code examples and information about resource import support can be found in the [Extending Terraform documentation](https://www.terraform.io/docs/extend/resources/import.html).
 
-In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](#common-review-items) sections for more specific coding and testing guidelines.
+In addition to the below checklist and the items noted in the Extending Terraform documentation, please see the [Common Review Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing guidelines.
 
 - [ ] _Resource Code Implementation_: In the resource code (e.g. `aws/resource_aws_service_thing.go`), implementation of `Importer` `State` function
 - [ ] _Resource Acceptance Testing Implementation_: In the resource acceptance testing (e.g. `aws/resource_aws_service_thing_test.go`), implementation of `TestStep`s with `ImportState: true`
@@ -446,7 +445,7 @@ interacts with upstream APIs. There are plenty of examples to draw from in the
 existing resources, but you still get to implement something completely new.
 
 In addition to the below checklist, please see the [Common Review
-Items](#common-review-items) sections for more specific coding and testing
+Items](pullrequest-submission-and-lifecycle.md#common-review-items) sections for more specific coding and testing
 guidelines.
 
  - [ ] __Minimal LOC__: It's difficult for both the reviewer and author to go
@@ -482,8 +481,7 @@ guidelines.
    to add a new file in the appropriate place and add a link to the sidebar for
    that page.
  - [ ] __Well-formed Code__: Do your best to follow existing conventions you
-   see in the codebase, and ensure your code is formatted with `go fmt`. (The
-   Travis CI build will fail if `go fmt` has not been run on incoming code.)
+   see in the codebase, and ensure your code is formatted with `go fmt`.
    The PR reviewers can help out on this front, and may provide comments with
    suggestions on how to improve the code.
  - [ ] __Vendor updates__: Create a separate PR if you are adding to the vendor

@@ -932,7 +932,7 @@ func resourceAwsEcsServiceUpdate(d *schema.ResourceData, meta interface{}) error
 			input.DesiredCount = aws.Int64(int64(d.Get("desired_count").(int)))
 		}
 
-		if d.HasChange("deployment_maximum_percent") || d.HasChange("deployment_minimum_healthy_percent") {
+		if d.HasChanges("deployment_maximum_percent", "deployment_minimum_healthy_percent") {
 			updateService = true
 			input.DeploymentConfiguration = &ecs.DeploymentConfiguration{
 				MaximumPercent:        aws.Int64(int64(d.Get("deployment_maximum_percent").(int))),

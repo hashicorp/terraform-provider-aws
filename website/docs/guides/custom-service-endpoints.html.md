@@ -79,6 +79,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>cloudwatch</code></li>
   <li><code>cloudwatchevents</code></li>
   <li><code>cloudwatchlogs</code></li>
+  <li><code>codeartifact</code></li>
   <li><code>codebuild</code></li>
   <li><code>codecommit</code></li>
   <li><code>codedeploy</code></li>
@@ -152,6 +153,7 @@ The Terraform AWS Provider allows the following endpoints to be customized:
   <li><code>networkmanager</code></li>
   <li><code>opsworks</code></li>
   <li><code>organizations</code></li>
+  <li><code>outposts</code></li>
   <li><code>personalize</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pricing</code></li>
