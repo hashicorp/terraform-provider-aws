@@ -41,5 +41,5 @@ In addition to all arguments above, the following attributes are exported:
 DeviceFarm Projects can be imported by their arn:
 
 ```
-$ terraform import aws_devicefarm_project.example arn:aws:devicefarm:us-west-2:476956259333:project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+$ terraform import aws_devicefarm_project.example arn:aws:devicefarm:us-west-2:123456789012:project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
