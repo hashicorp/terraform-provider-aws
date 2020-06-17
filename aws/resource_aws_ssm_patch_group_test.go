@@ -47,7 +47,7 @@ func testAccCheckAWSSSMPatchGroupExists(n string) resource.TestCheckFunc {
 		}
 
 		for _, i := range resp.Mappings {
-			if *i.BaselineIdentity.BaselineId == rs.Primary.Attributes["baseline_id"] && fmt.Sprintf("%s:%s", *i.PatchGroup, *i.BaselineIdentity.BaselineId) == rs.Primary.ID {
+			if testAccAWSSSMPatchGroupStateCompare(i, rs) {
 				return nil
 			}
 		}
@@ -75,7 +75,7 @@ func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
 		}
 
 		for _, i := range resp.Mappings {
-			if *i.BaselineIdentity.BaselineId == rs.Primary.Attributes["baseline_id"] && *i.PatchGroup == rs.Primary.ID {
+			if testAccAWSSSMPatchGroupStateCompare(i, rs) {
 				return fmt.Errorf("Expected AWS SSM Patch Group to be gone, but was still found")
 			}
 		}
@@ -98,4 +98,15 @@ resource "aws_ssm_patch_group" "patchgroup" {
   patch_group = "patch-group"
 }
 `, rName)
+}
+
+func testAccAWSSSMPatchGroupStateCompare(mapping *ssm.PatchGroupPatchBaselineMapping, rs *terraform.ResourceState) bool {
+	id := fmt.Sprintf("%s:%s", *mapping.PatchGroup, *mapping.BaselineIdentity.BaselineId)
+
+	if *mapping.BaselineIdentity.BaselineId == rs.Primary.Attributes["baseline_id"] && id == rs.Primary.ID {
+
+		return true
+	}
+
+	return false
 }
