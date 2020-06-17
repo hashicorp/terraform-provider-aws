@@ -9,7 +9,7 @@ require (
 	github.com/bflad/tfproviderlint v0.14.0
 	github.com/client9/misspell v0.3.4
 	github.com/golangci/golangci-lint v1.26.0
-	github.com/hashicorp/aws-sdk-go-base v0.4.0
+	github.com/hashicorp/aws-sdk-go-base v0.5.0
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/hashicorp/go-multierror v1.1.0
 	github.com/hashicorp/go-version v1.2.0
