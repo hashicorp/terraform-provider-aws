@@ -7,6 +7,7 @@ import (
 // ServiceCheckDestroyIgnoreError determines additional CheckDestroy error handling.
 //
 // Use this to ignore errors returned by the list tags API for missing parent resources.
+// For generator simplicity, AWS Go SDK service specific constants are not available.
 //
 // This handling should be in the form of:
 // if CONDITIONAL {
@@ -14,6 +15,12 @@ import (
 // }
 func ServiceCheckDestroyIgnoreError(serviceName string) string {
 	switch serviceName {
+	case "dynamodb":
+		return `
+if isAWSErr(err, "ResourceNotFoundException", "") {
+	continue
+}
+`
 	case "ecs":
 		return `
 if isAWSErr(err, "InvalidParameterException", "The specified cluster is inactive. Specify an active cluster and try again.") {
