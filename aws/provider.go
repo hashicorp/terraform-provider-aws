@@ -538,6 +538,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_capacity_reservation":                            resourceAwsEc2CapacityReservation(),
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
+			"aws_ec2_local_gateway_route_table_vpc_association":       resourceAwsEc2LocalGatewayRouteTableVpcAssociation(),
 			"aws_ec2_fleet":                                           resourceAwsEc2Fleet(),
 			"aws_ec2_tag":                                             resourceAwsEc2Tag(),
 			"aws_ec2_traffic_mirror_filter":                           resourceAwsEc2TrafficMirrorFilter(),
