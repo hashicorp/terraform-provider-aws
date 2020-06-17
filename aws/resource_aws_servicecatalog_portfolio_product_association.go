@@ -58,27 +58,24 @@ func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.Resource
 		ProductId: aws.String(productId),
 	}
 	conn := meta.(*AWSClient).scconn
-	var portfolioDetails []*servicecatalog.PortfolioDetail
 	var pageToken = ""
-	//TODO: scan each page of results for match then bail out of loop on first match
+	isFound := false
 	for {
 		pageOfDetails, nextPageToken, err := resourceAwsServiceCatalogPortfolioProductAssociationListPortfoliosForProductPage(conn, input, &pageToken)
 		if err != nil {
 			return err
 		}
-		portfolioDetails = append(pageOfDetails)
-		if nextPageToken == nil {
+		for _, portfolioDetail := range pageOfDetails {
+			if *portfolioDetail.Id == portfolioId {
+				isFound = true
+				d.SetId(id)
+				break
+			}
+		}
+		if nextPageToken == nil || isFound {
 			break
 		}
 		pageToken = *nextPageToken
-	}
-	isFound := false
-	for _, portfolioDetail := range portfolioDetails {
-		if *portfolioDetail.Id == portfolioId {
-			isFound = true
-			d.SetId(id)
-			break
-		}
 	}
 	if !isFound {
 		log.Printf("[WARN] Service Catalog Product(%s)/Portfolio(%s) Association not found, removing from state",
