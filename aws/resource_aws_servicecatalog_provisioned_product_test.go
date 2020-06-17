@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"log"
     "regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -41,11 +42,6 @@ func TestAccAWSServiceCatalogProvisionedProduct_Basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", "tfm-sc-test-pp-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -112,7 +108,8 @@ resource "aws_iam_role_policy" "test_sc" {
       {
         "Action": [
           "servicecatalog:*",
-          "cloudformation:*"
+          "cloudformation:*",
+          "s3:*"
         ],
         "Effect": "Allow",
         "Resource": "*"
@@ -133,7 +130,7 @@ func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1(salt
 
 func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate2(salt string) string {
     provisionedProductName := "tfm-sc-test-pp-"+salt
-    return testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1(salt) +
+    x := testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1(salt) +
         fmt.Sprintf(`
 
 provider "aws" {
@@ -157,4 +154,6 @@ resource "aws_servicecatalog_provisioned_product" "test" {
       aws_servicecatalog_portfolio_principal_association.association,
     ]
 }`, provisionedProductName)
+    log.Printf("[DEBUG] provision-product test using configuration:\n" + x)
+    return x
 }
