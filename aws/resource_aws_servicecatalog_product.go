@@ -176,7 +176,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	for k, v := range paParameters["info"].(map[string]interface{}) {
 		artifactProperties.Info[k] = aws.String(v.(string))
 	}
-	input.IdempotencyToken = aws.String(fmt.Sprintf("%s", resource.UniqueId()))
+	input.IdempotencyToken = aws.String(resource.UniqueId())
 	input.SetProvisioningArtifactParameters(&artifactProperties)
 	log.Printf("[DEBUG] Creating Service Catalog Product: %s %s", input, artifactProperties)
 

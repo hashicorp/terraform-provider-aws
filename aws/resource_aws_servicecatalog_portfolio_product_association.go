@@ -103,10 +103,16 @@ func resourceAwsServiceCatalogPortfolioProductAssociationUpdate(d *schema.Resour
 		oldPortfolioId, newPortfolioId := d.GetChange("portfolio_id")
 		d.Set("product_id", oldProductId.(string))
 		d.Set("portfolio_id", oldPortfolioId.(string))
-		resourceAwsServiceCatalogPortfolioProductAssociationDelete(d, meta)
+		err := resourceAwsServiceCatalogPortfolioProductAssociationDelete(d, meta)
+		if err != nil {
+			return fmt.Errorf("failed to delete association %s as part of update: %s", d.Id(), err.Error())
+		}
 		d.Set("product_id", newProductId.(string))
 		d.Set("portfolio_id", newPortfolioId.(string))
-		resourceAwsServiceCatalogPortfolioProductAssociationCreate(d, meta)
+		err = resourceAwsServiceCatalogPortfolioProductAssociationCreate(d, meta)
+		if err != nil {
+			return fmt.Errorf("failed to re-create association %s as part of update: %s", d.Id(), err.Error())
+		}
 	}
 	return resourceAwsServiceCatalogPortfolioProductAssociationRead(d, meta)
 }
