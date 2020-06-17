@@ -23,6 +23,8 @@ ENHANCEMENTS:
 * resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
 * resource/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
 * resource/aws_efs_mount_target: Add plan time validation for `ip_address` argument [GH-13650]
+* resource_aws_elasticsearch_domain: Add support for elasticsearch warm storage [GH-12668]
+* resource_aws_elasticsearch_domain: Add plan time validation for `cloudwatch_log_group_arn`, `role_arn`, and `ebs_options.volume_type` [GH-12668]
 * resource/aws_flow_log: Add `arn` attribute [GH-13656]
 * resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
 * resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute [GH-13756]
