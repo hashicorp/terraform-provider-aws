@@ -34,9 +34,9 @@ func resourceAwsCustomerGateway() *schema.Resource {
 			},
 
 			"ip_address": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
 				ValidateFunc: validation.Any(
 					validation.StringIsEmpty,
 					validation.IsIPv4Address,
@@ -92,14 +92,15 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 
 	// Store the ID
 	customerGateway := resp.CustomerGateway
-	d.SetId(*customerGateway.CustomerGatewayId)
-	log.Printf("[INFO] Customer gateway ID: %s", *customerGateway.CustomerGatewayId)
+	cgId := aws.StringValue(customerGateway.CustomerGatewayId)
+	d.SetId(cgId)
+	log.Printf("[INFO] Customer gateway ID: %s", cgId)
 
 	// Wait for the CustomerGateway to be available.
 	stateConf := &resource.StateChangeConf{
 		Pending:    []string{"pending"},
 		Target:     []string{"available"},
-		Refresh:    customerGatewayRefreshFunc(conn, *customerGateway.CustomerGatewayId),
+		Refresh:    customerGatewayRefreshFunc(conn, cgId),
 		Timeout:    10 * time.Minute,
 		Delay:      10 * time.Second,
 		MinTimeout: 3 * time.Second,
@@ -108,8 +109,7 @@ func resourceAwsCustomerGatewayCreate(d *schema.ResourceData, meta interface{}) 
 	_, stateErr := stateConf.WaitForState()
 	if stateErr != nil {
 		return fmt.Errorf(
-			"Error waiting for customer gateway (%s) to become ready: %s",
-			*customerGateway.CustomerGatewayId, err)
+			"Error waiting for customer gateway (%s) to become ready: %s", cgId, err)
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -174,7 +174,7 @@ func resourceAwsCustomerGatewayExists(vpnType, ipAddress string, bgpAsn int, con
 		return false, err
 	}
 
-	if len(resp.CustomerGateways) > 0 && *resp.CustomerGateways[0].State != "deleted" {
+	if len(resp.CustomerGateways) > 0 && aws.StringValue(resp.CustomerGateways[0].State) != "deleted" {
 		return true, nil
 	}
 
@@ -208,7 +208,7 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("Error finding CustomerGateway: %s", d.Id())
 	}
 
-	if *resp.CustomerGateways[0].State == "deleted" {
+	if aws.StringValue(resp.CustomerGateways[0].State) == "deleted" {
 		log.Printf("[INFO] Customer Gateway is in `deleted` state: %s", d.Id())
 		d.SetId("")
 		return nil
@@ -223,7 +223,7 @@ func resourceAwsCustomerGatewayRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if aws.StringValue(customerGateway.BgpAsn) != "" {
-		val, err := strconv.ParseInt(*customerGateway.BgpAsn, 0, 0)
+		val, err := strconv.ParseInt(aws.StringValue(customerGateway.BgpAsn), 0, 0)
 		if err != nil {
 			return fmt.Errorf("error parsing bgp_asn: %s", err)
 		}
@@ -318,9 +318,10 @@ func checkGatewayDeleteResponse(resp *ec2.DescribeCustomerGatewaysOutput, id str
 		return fmt.Errorf("Error finding CustomerGateway for delete: %s", id)
 	}
 
-	switch *resp.CustomerGateways[0].State {
+	cgState := aws.StringValue(resp.CustomerGateways[0].State)
+	switch cgState {
 	case "pending", "available", "deleting":
-		return fmt.Errorf("Gateway (%s) in state (%s), retrying", id, *resp.CustomerGateways[0].State)
+		return fmt.Errorf("Gateway (%s) in state (%s), retrying", id, cgState)
 	case "deleted":
 		return nil
 	default:

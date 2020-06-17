@@ -165,7 +165,7 @@ func testAccCheckCustomerGatewayDestroy(s *terraform.State) error {
 				return fmt.Errorf("Customer gateway still exists: %v", resp.CustomerGateways)
 			}
 
-			if *resp.CustomerGateways[0].State == "deleted" {
+			if aws.StringValue(resp.CustomerGateways[0].State) == "deleted" {
 				continue
 			}
 		}
