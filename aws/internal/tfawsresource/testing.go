@@ -41,6 +41,18 @@ func TestCheckTypeSetElemNestedAttrs(res, attr string, values map[string]string)
 		if attrParts[len(attrParts)-1] != sentinelIndex {
 			return fmt.Errorf("%q does not end with the special value %q", attr, sentinelIndex)
 		}
+		// account for cases where the user is trying to see if the value is unset/empty
+		// there may be ambiguous scenarios where a field was deliberately unset vs set
+		// to the empty string, this will match both, which may be a false positive.
+		var matchCount int
+		for _, v := range values {
+			if v != "" {
+				matchCount++
+			}
+		}
+		if matchCount == 0 {
+			return fmt.Errorf("%#v has no non-empty values", values)
+		}
 		for stateKey, stateValue := range is.Attributes {
 			stateKeyParts := strings.Split(stateKey, ".")
 			// a Set/List item with nested attrs would have a flatmap address of
@@ -61,11 +73,11 @@ func TestCheckTypeSetElemNestedAttrs(res, attr string, values map[string]string)
 			if !pathMatch {
 				continue
 			}
-			elementId := stateKeyParts[len(attrParts)-1]
+			id := stateKeyParts[len(attrParts)-1]
 			nestedAttr := strings.Join(stateKeyParts[len(attrParts):], ".")
 			if v, keyExists := values[nestedAttr]; keyExists && v == stateValue {
-				matches[elementId] = matches[elementId] + 1
-				if matches[elementId] == len(values) {
+				matches[id] = matches[id] + 1
+				if matches[id] == matchCount {
 					return nil
 				}
 			}
