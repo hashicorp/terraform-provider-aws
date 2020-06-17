@@ -99,6 +99,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupAttributes(&group, randName),
 					testAccMatchResourceAttrRegionalARN("aws_autoscaling_group.bar", "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
 					tfawsresource.TestCheckTypeSetElemAttr("aws_autoscaling_group.bar", "availability_zones.*", "us-west-2a"),
+					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 0, 0, nil),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "default_cooldown", "300"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "4"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
@@ -126,6 +127,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "termination_policies.1", "ClosestToNextInstanceHour"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "max_instance_lifetime", "0"),
+					resource.TestCheckNoResourceAttr("aws_autoscaling_group.bar", "instance_refresh.#"),
 				),
 			},
 			{
@@ -147,6 +149,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					testAccCheckAWSLaunchConfigurationExists("aws_launch_configuration.new", &lc),
+					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 0, 0, nil),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "desired_capacity", "5"),
 					resource.TestCheckResourceAttr(
@@ -4249,4 +4252,362 @@ resource "aws_autoscaling_group" "test" {
   }
 }
 `, rName)
+}
+
+func TestAccAWSAutoScalingGroup_InstanceRefresh_Enabled(t *testing.T) {
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				// check that an instance refresh isn't started by a new asg
+				Config: testAccAwsAutoScalingGroup_InstanceRefresh_Enabled("Alpha", true, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "min_size", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "1"),
+					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 0, 0, nil),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.instance_warmup_seconds", "-1"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.min_healthy_percentage", "90"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_delete",
+					"wait_for_capacity_timeout",
+					"instance_refresh",
+				},
+			},
+			{
+				// check that changing asg size doesn't trigger a refresh
+				Config: testAccAwsAutoScalingGroup_InstanceRefresh_Enabled("Alpha", false, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "min_size", "2"),
+					resource.TestCheckResourceAttr(resourceName, "max_size", "4"),
+					resource.TestCheckResourceAttr(resourceName, "desired_capacity", "2"),
+					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 0, 0, nil),
+				),
+			},
+			{
+				// check that changing propagated tags triggers a refresh
+				Config: testAccAwsAutoScalingGroup_InstanceRefresh_Enabled("Bravo", false, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.instance_warmup_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.min_healthy_percentage", "50"),
+					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.strategy", "Rolling"),
+					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 1, 0, []string{
+						autoscaling.InstanceRefreshStatusPending,
+						autoscaling.InstanceRefreshStatusInProgress,
+					}),
+				),
+			},
+			{
+				// check that an active refresh is cancelled in favour of a new one
+				Config: testAccAwsAutoScalingGroup_InstanceRefresh_Enabled("Charlie", false, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 2, 1, []string{
+						autoscaling.InstanceRefreshStatusCancelled,
+					}),
+					testAccCheckAutoscalingLatestInstanceRefreshState(&group, 2, 0, []string{
+						autoscaling.InstanceRefreshStatusPending,
+						autoscaling.InstanceRefreshStatusInProgress,
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccAwsAutoScalingGroup_InstanceRefresh_Enabled(
+	tagValue string,
+	defaults bool,
+	sizeFactor int,
+) string {
+	preference := ``
+	if !defaults {
+		preference = `
+    min_healthy_percentage  = 50
+    instance_warmup_seconds = 10`
+	}
+
+	return fmt.Sprintf(`
+locals {
+  size_factor = %[3]d
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  state = "available"
+  
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = "t3.nano"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = [data.aws_availability_zones.current.names[0]]
+  max_size             = 2 * local.size_factor
+  min_size             = 1 * local.size_factor
+  desired_capacity     = 1 * local.size_factor
+  launch_configuration = "${aws_launch_configuration.test.name}"
+
+  tag {
+    key                 = "Test"
+    value               = %[1]q
+    propagate_at_launch = true
+  }
+
+  instance_refresh {
+    strategy = "Rolling"
+%[2]s
+  }
+}
+`,
+		tagValue,
+		preference,
+		sizeFactor)
+}
+
+func TestAccAWSAutoScalingGroup_InstanceRefresh_Triggers(t *testing.T) {
+	// note: propagated tags have been implicitly checked
+	//        by TestAccAWSAutoScalingGroup_InstanceRefresh_Enabled
+
+	matrix := []struct {
+		AvailabilityZoneCount   int
+		SubnetCount             int
+		InstanceType            string
+		UseLaunchConfiguration  bool
+		UseLaunchTemplate       bool
+		UseMixedInstancesPolicy bool
+		UsePlacementGroup       bool
+		ExpectRefreshCount      int
+	}{
+		{2, 0, "t3.nano", true, false, false, false, 0},  // create asg
+		{1, 0, "t3.nano", true, false, false, false, 1},  // drop 1 subnet
+		{0, 2, "t3.nano", true, false, false, false, 2},  // add 2 vpcs, drop subnets
+		{0, 1, "t3.nano", true, false, false, false, 3},  // drop 1 vpc
+		{0, 1, "t3.nano", false, true, false, false, 4},  // drop launch config, add template
+		{0, 1, "t3.micro", false, true, false, false, 5}, // update template
+		{0, 1, "t3.micro", false, false, true, false, 6}, // drop template, add mixed policy
+		{0, 1, "t3.nano", false, false, true, false, 7},  // update mixed policy
+		{0, 1, "t3.nano", false, false, true, true, 8},   // use placement group
+	}
+
+	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.test"
+	placementGroupName := fmt.Sprintf("tf-test-%s", acctest.RandString(8))
+
+	steps := make([]resource.TestStep, len(matrix))
+	for i, test := range matrix {
+		steps[i] = resource.TestStep{
+			Config: testAccAwsAutoScalingGroup_InstanceRefresh_Triggers(
+				test.AvailabilityZoneCount,
+				test.SubnetCount,
+				test.InstanceType,
+				test.UseLaunchConfiguration,
+				test.UseLaunchTemplate,
+				test.UseMixedInstancesPolicy,
+				test.UsePlacementGroup,
+				placementGroupName,
+			),
+			Check: resource.ComposeTestCheckFunc(
+				testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+				testAccCheckAutoscalingLatestInstanceRefreshState(&group, test.ExpectRefreshCount, 0, nil),
+			),
+		}
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
+		Steps:        steps,
+	})
+}
+
+func testAccAwsAutoScalingGroup_InstanceRefresh_Triggers(
+	availabilityZoneCount int,
+	subnetCount int,
+	instanceType string,
+	useLaunchConfiguration bool,
+	useLaunchTemplate bool,
+	useMixedInstancesPolicy bool,
+	usePlacementGroup bool,
+	placementGroupName string,
+) string {
+	return fmt.Sprintf(`
+locals {
+  availability_zone_count    = %[1]d
+  subnet_count               = %[2]d
+  instance_type              = %[3]q
+  use_launch_configuration   = %[4]v
+  use_launch_template        = %[5]v
+  use_mixed_instances_policy = %[6]v
+  use_placement_group        = %[7]v
+  placement_group_name       = %[8]q
+}
+
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+data "aws_availability_zones" "current" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_default_subnet" "current" {
+  count             = length(data.aws_availability_zones.current.names)
+  availability_zone = data.aws_availability_zones.current.names[count.index]
+}
+
+resource "aws_launch_configuration" "test" {
+  image_id      = "${data.aws_ami.test.id}"
+  instance_type = local.instance_type
+}
+
+resource "aws_launch_template" "test" {
+  image_id               = data.aws_ami.test.image_id
+  instance_type          = local.instance_type
+}
+
+resource "aws_placement_group" "test" {
+  name     = local.placement_group_name
+  strategy = "cluster"
+}
+
+resource "aws_autoscaling_group" "test" {
+  availability_zones   = local.availability_zone_count > 0 ? slice(data.aws_availability_zones.current.names, 0, local.availability_zone_count) : null
+  max_size             = 1
+  min_size             = 1
+  desired_capacity     = 1
+  launch_configuration = local.use_launch_configuration ? aws_launch_configuration.test.name : null
+  vpc_zone_identifier  = local.subnet_count > 0 ? slice(aws_default_subnet.current.*.id, 0, local.subnet_count) : null
+  placement_group      = local.use_placement_group ? aws_placement_group.test.name : null
+
+  dynamic "launch_template" {
+    for_each = local.use_launch_template ? [1] : []
+    content {
+      id      = aws_launch_template.test.id
+      version = aws_launch_template.test.latest_version
+    }
+  }
+
+  dynamic "mixed_instances_policy" {
+    for_each = local.use_mixed_instances_policy ? [1] : []
+    content {
+      launch_template {
+        launch_template_specification {
+          launch_template_id = aws_launch_template.test.id
+          version            = aws_launch_template.test.latest_version
+        }
+      }
+    }
+  }
+
+  instance_refresh {
+    strategy = "Rolling"
+  }
+}
+`,
+		availabilityZoneCount,
+		subnetCount,
+		instanceType,
+		useLaunchConfiguration,
+		useLaunchTemplate,
+		useMixedInstancesPolicy,
+		usePlacementGroup,
+		placementGroupName,
+	)
+}
+
+// testAccCheckAutoscalingLatestInstanceRefreshState checks the Instance Refreshes
+// of an Auto-Scaling Group.
+//
+// Use length to set the number of refreshes (of any state) that are expected.
+//
+// Use the offset parameter to choose the instance refresh to check. Offset 0
+// is the latest refresh, with negative offsets yielding successive elements.
+// When length is 0, this argument has no effect.
+//
+// When length is greater than 0 and acceptedStatuses is non-nil, expect the
+// refresh at the given offset to have one of the given accepted statuses.
+func testAccCheckAutoscalingLatestInstanceRefreshState(
+	group *autoscaling.Group,
+	length int,
+	offset int,
+	acceptedStatuses []string,
+) resource.TestCheckFunc {
+	return func(state *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).autoscalingconn
+		name := aws.StringValue(group.AutoScalingGroupName)
+		input := autoscaling.DescribeInstanceRefreshesInput{
+			AutoScalingGroupName: aws.String(name),
+		}
+
+		output, err := conn.DescribeInstanceRefreshes(&input)
+		switch {
+		case err != nil:
+			return err
+		case len(output.InstanceRefreshes) != length:
+			return fmt.Errorf("expected %d instance refreshes, but found %d", length, len(output.InstanceRefreshes))
+		}
+
+		switch {
+		case length == 0:
+			return nil
+		case len(acceptedStatuses) == 0:
+			return nil
+		}
+
+		status := aws.StringValue(output.InstanceRefreshes[offset].Status)
+		for _, acceptedStatus := range acceptedStatuses {
+			if status == acceptedStatus {
+				return nil
+			}
+		}
+
+		return fmt.Errorf(
+			"expected status of refresh at offset %d to be one of %s, got %s",
+			offset,
+			strings.Join(acceptedStatuses, " or "),
+			status)
+	}
 }

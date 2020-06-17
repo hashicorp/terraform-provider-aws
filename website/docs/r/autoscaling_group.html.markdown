@@ -123,7 +123,7 @@ resource "aws_autoscaling_group" "example" {
 }
 ```
 
-## Interpolated tags
+### Interpolated tags
 
 ```hcl
 variable "extra_tags" {
@@ -155,6 +155,42 @@ resource "aws_autoscaling_group" "bar" {
     ),
     var.extra_tags)
   }"]
+}
+```
+
+### Automatically refresh all instances after the group is updated
+
+```hcl
+data "aws_ami" "example" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+resource "aws_launch_template" "example" {
+  image_id      = "${data.aws_ami.example.id}"
+  instance_type = "t3.nano"
+}
+
+resource "aws_autoscaling_group" "example" {
+  availability_zones = ["us-east-1a"]
+  desired_capacity   = 1
+  max_size           = 2
+  min_size           = 1
+
+  launch_template {
+    id      = "${aws_launch_template.example.id}"
+    version = "${aws_launch_template.example.latest_version}"
+  }
+
+  instance_refresh {
+    strategy               = "Rolling"
+    min_healthy_percentage = 50
+  }
 }
 ```
 
@@ -221,6 +257,9 @@ Note that if you suspend either the `Launch` or `Terminate` process types, it ca
    during scale in events.
 * `service_linked_role_arn` (Optional) The ARN of the service-linked role that the ASG will use to call other AWS services
 * `max_instance_lifetime` (Optional) The maximum amount of time, in seconds, that an instance can be in service, values must be either equal to 0 or between 604800 and 31536000 seconds.
+* `instance_refresh` - (Optional) If this block is configured, start an
+   [Instance Refresh](https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html)
+   when this autoscaling group is updated. Defined below.
 
 ### launch_template
 
@@ -287,6 +326,25 @@ This allows the construction of dynamic lists of tags which is not possible usin
 `tag` and `tags` are mutually exclusive, only one of them can be specified.
 
 ~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. To ignore the removal of these automatic tags, see the [`ignore_tags` provider configuration](https://www.terraform.io/docs/providers/aws/index.html#ignore_tags) or the [`ignore_changes` lifecycle argument for Terraform resources](https://www.terraform.io/docs/configuration/resources.html#ignore_changes).
+
+### instance_refresh
+
+This configuration block supports the following:
+
+* `instance_warmup_seconds` - (Optional) The number of seconds until a newly launched 
+  instance is configured and ready to use. Default behavior (set with `-1` or `null`)
+  is to match the autoscaling group's health check grace period.
+* `min_healthy_percentage` - (Optional) The amount of capacity in the Auto Scaling group
+  that must remain healthy during an instance refresh to allow the operation to continue,
+  as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
+* `strategy` - (Required) The strategy to use for instance refresh. The only allowed 
+  value is `"Rolling"`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
+  
+~> **NOTE:** A refresh is only started when any of the following autoscaling group properties change: `launch_configuration`, `launch_template`, `mixed_instances_policy`, `vpc_zone_identifier`, `availability_zones`, `placement_group`, or any `tag` or `tags` configured to propagate at launch.
+
+~> **NOTE:** Autoscaling groups support up to one active instance refresh at a time. When this resource is updated, any existing refresh is cancelled.
+
+~> **NOTE:** Depending on health check settings and group size, an instance refresh may take a long time or fail. This resource does not wait for the instance refresh to complete.
 
 ## Attributes Reference
 

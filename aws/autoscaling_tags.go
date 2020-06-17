@@ -51,8 +51,12 @@ func autoscalingTagToHash(v interface{}) int {
 }
 
 // setTags is a helper to set the tags for a resource. It expects the
-// tags field to be named "tag"
-func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) error {
+// tags field to be named "tag".
+//
+// When the return value requiresPropagation is true, instances of the
+// ASG should be refreshed in order for the changed or removed tags to
+// fully take effect.
+func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) (requiresPropagation bool, err error) {
 	resourceID := d.Get("name").(string)
 	var createTags, removeTags []*autoscaling.Tag
 
@@ -63,17 +67,17 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 
 		old, err := autoscalingTagsFromMap(o, resourceID)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		new, err := autoscalingTagsFromMap(n, resourceID)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		c, r, err := diffAutoscalingTags(old, new, resourceID)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		createTags = append(createTags, c...)
@@ -82,17 +86,17 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 		oraw, nraw = d.GetChange("tags")
 		old, err = autoscalingTagsFromList(oraw.(*schema.Set).List(), resourceID)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		new, err = autoscalingTagsFromList(nraw.(*schema.Set).List(), resourceID)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		c, r, err = diffAutoscalingTags(old, new, resourceID)
 		if err != nil {
-			return err
+			return false, err
 		}
 
 		createTags = append(createTags, c...)
@@ -108,7 +112,13 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 		}
 
 		if _, err := conn.DeleteTags(&remove); err != nil {
-			return err
+			return false, err
+		}
+
+		for _, tag := range removeTags {
+			if aws.BoolValue(tag.PropagateAtLaunch) {
+				requiresPropagation = true
+			}
 		}
 	}
 
@@ -120,11 +130,17 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 		}
 
 		if _, err := conn.CreateOrUpdateTags(&create); err != nil {
-			return err
+			return false, err
+		}
+
+		for _, tag := range createTags {
+			if aws.BoolValue(tag.PropagateAtLaunch) {
+				requiresPropagation = true
+			}
 		}
 	}
 
-	return nil
+	return requiresPropagation, nil
 }
 
 // diffTags takes our tags locally and the ones remotely and returns
