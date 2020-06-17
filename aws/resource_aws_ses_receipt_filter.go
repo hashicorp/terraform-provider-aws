@@ -3,10 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsSesReceiptFilter() *schema.Resource {
@@ -19,22 +22,37 @@ func resourceAwsSesReceiptFilter() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z][0-9A-Za-z-_]{1,62}[0-9a-zA-Z]$`),
+					"This value can only contain ASCII letters, Start and end with a letter or number,"+
+						" and Contain less than 64 characters"),
 			},
 
 			"cidr": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.IsCIDR,
+					validation.IsIPv4Address,
+				),
 			},
 
 			"policy": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					ses.ReceiptFilterPolicyBlock,
+					ses.ReceiptFilterPolicyAllow,
+				}, false),
 			},
 		},
 	}
@@ -75,20 +93,32 @@ func resourceAwsSesReceiptFilterRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	found := false
-	for _, element := range response.Filters {
-		if *element.Name == d.Id() {
-			d.Set("cidr", element.IpFilter.Cidr)
-			d.Set("policy", element.IpFilter.Policy)
-			d.Set("name", element.Name)
-			found = true
-		}
-	}
-
-	if !found {
+	if len(response.Filters) == 0 {
 		log.Printf("[WARN] SES Receipt Filter (%s) not found", d.Id())
 		d.SetId("")
+		return nil
 	}
+
+	filter := response.Filters[0]
+
+	if aws.StringValue(filter.Name) != d.Id() {
+		log.Printf("[WARN] SES Receipt Filter (%s) not found", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("cidr", filter.IpFilter.Cidr)
+	d.Set("policy", filter.IpFilter.Policy)
+	d.Set("name", filter.Name)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ses",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("receipt-filter/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	return nil
 }
