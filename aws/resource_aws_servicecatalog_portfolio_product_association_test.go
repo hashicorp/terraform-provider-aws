@@ -10,13 +10,14 @@ import (
 )
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_Basic(t *testing.T) {
+    salt := acctest.RandString(5)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		CheckDestroy: testAccCheckServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(),
+				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt),
 				Check: testAccCheckAwsServiceCatalogPortfolioProductAssociation(),
 			},
 			{
@@ -76,12 +77,12 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociation() resource.TestChe
 	}
 }
 
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic() string {
+func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt string) string {
     portfolio_cfg := testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm_automated_test");
     
-    arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
-    arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
-    arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
+    arbitraryBucketName := fmt.Sprintf("bucket-%s", salt)
+    arbitraryProductName := fmt.Sprintf("product-%s", salt)
+    arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", salt)
     p_tag1 := "FooKey = \"bar\""
     p_tag2 := "BarKey = \"foo\""
     product_cfg := testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, p_tag1, p_tag2)

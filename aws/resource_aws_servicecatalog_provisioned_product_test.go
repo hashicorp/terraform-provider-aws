@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
+    "regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"testing"
@@ -16,23 +17,28 @@ import (
 
 func TestAccAWSServiceCatalogProvisionedProduct_Basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
-	name := acctest.RandString(5)
+	salt := acctest.RandString(5)
+	var providers []*schema.Provider
 	
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
+		// need multiple independent providers for assume-role not to leak
+        ProviderFactories: testAccProviderFactories(&providers),
 		CheckDestroy: testAccCheckServiceCatalogProvisionedProductDestroy,
 		Steps: []resource.TestStep{
 		    {
-		        Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1(),
+		        Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1(salt),
 		    },
 			{
-				Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate2(name),
+                // provisioning with assume_role needs to be run in a second step 
+                // because a provider can only assume a role existing before its definition
+                // see https://github.com/hashicorp/terraform/issues/2430
+				Config: testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate2(salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProduct(resourceName),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "servicecatalog", regexp.MustCompile(`stack/.+/pp-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", name),
+					resource.TestCheckResourceAttr(resourceName, "provisioned_product_name", "tfm-sc-test-pp-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -92,19 +98,8 @@ func testAccCheckServiceCatalogProvisionedProductDestroy(s *terraform.State) err
     return nil
 }
 
-func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate3(provisionedProductName string) string {
+func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplatePolicy() string {
     return fmt.Sprintf(`
-resource "aws_servicecatalog_provisioned_product" "test" {    
-    provisioned_product_name = "%s"
-    product_id = "prod-lgqvxr6phzrzk"
-    provisioning_artifact_id = "pa-5bddiphhjdsoy"
-}`, provisionedProductName) 
-}
-
-func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1() string {
-    return testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic() + "\n" +
-        testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigRoleAndAssociation() + "\n" + 
-        fmt.Sprintf(`
 
 resource "aws_iam_role_policy" "test_sc" {
   name = "test_policy"
@@ -117,7 +112,7 @@ resource "aws_iam_role_policy" "test_sc" {
       {
         "Action": [
           "servicecatalog:*",
-          "cloudformation:CreateStack"
+          "cloudformation:*"
         ],
         "Effect": "Allow",
         "Resource": "*"
@@ -129,19 +124,28 @@ resource "aws_iam_role_policy" "test_sc" {
 `)
 }
 
-func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate2(provisionedProductName string) string {
-    // needs to be run in a second step due to https://github.com/hashicorp/terraform/issues/2430
-    // (we can't have "depends_on" in a provider)
-    return testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1() + fmt.Sprintf(`
-    
+func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1(salt string) string {
+    return testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationConfigRole(salt) +
+        testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplatePolicy() +
+        testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationConfigAssociation() +
+        testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt)
+}
+
+func testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate2(salt string) string {
+    provisionedProductName := "tfm-sc-test-pp-"+salt
+    return testAccCheckAwsServiceCatalogProvisionedProductResourceConfigTemplate1(salt) +
+        fmt.Sprintf(`
+
 provider "aws" {
-  alias          = "product-allowed-role"
+  alias               = "product-allowed-role"
   assume_role {
     role_arn          = aws_iam_role.tfm-sc-tester.arn
     session_name      = "tfm-sc-testing"
+    external_id       = "tfm-sc-testing"
   }
 }
 
+`) + fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
     provider = aws.product-allowed-role
     provisioned_product_name = "%s"
@@ -152,6 +156,5 @@ resource "aws_servicecatalog_provisioned_product" "test" {
       aws_servicecatalog_portfolio_product_association.association,
       aws_servicecatalog_portfolio_principal_association.association,
     ]
-}
-`, provisionedProductName)
+}`, provisionedProductName)
 }
