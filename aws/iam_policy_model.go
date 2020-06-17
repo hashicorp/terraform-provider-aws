@@ -38,6 +38,39 @@ type IAMPolicyStatementCondition struct {
 type IAMPolicyStatementPrincipalSet []IAMPolicyStatementPrincipal
 type IAMPolicyStatementConditionSet []IAMPolicyStatementCondition
 
+func parseIAMPolicyDoc(b []byte) (*IAMPolicyDoc, error) {
+	doc := &IAMPolicyDoc{}
+	if err := json.Unmarshal(b, &doc); err != nil {
+		return nil, err
+	}
+
+	return doc, nil
+}
+
+func serializeIAMPolicyDoc(doc *IAMPolicyDoc) (string, error) {
+	b, err := json.Marshal(&doc)
+	if err != nil {
+		return "", err
+	}
+
+	return string(b), nil
+}
+
+func normalizeIAMPolicyDoc(policy string) (string, error) {
+	doc, err := parseIAMPolicyDoc([]byte(policy))
+	if err != nil {
+		return "", err
+	}
+
+	for _, s := range doc.Statements {
+		s.Principals.normalize()
+		s.NotPrincipals.normalize()
+		s.Conditions.normalize()
+	}
+
+	return serializeIAMPolicyDoc(doc)
+}
+
 func (s *IAMPolicyDoc) Merge(newDoc *IAMPolicyDoc) {
 	// adopt newDoc's Id
 	if len(newDoc.Id) > 0 {
@@ -158,6 +191,16 @@ func (ps *IAMPolicyStatementPrincipalSet) UnmarshalJSON(b []byte) error {
 	return nil
 }
 
+func (ps *IAMPolicyStatementPrincipalSet) normalize() {
+	for _, p := range *ps {
+		switch i := p.Identifiers.(type) {
+		case []string:
+			sort.Strings(i)
+		default:
+		}
+	}
+}
+
 func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 	raw := map[string]map[string]interface{}{}
 
@@ -207,6 +250,16 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 
 	*cs = out
 	return nil
+}
+
+func (cs *IAMPolicyStatementConditionSet) normalize() {
+	for _, c := range *cs {
+		switch i := c.Values.(type) {
+		case []string:
+			sort.Strings(i)
+		default:
+		}
+	}
 }
 
 func iamPolicyDecodeConfigStringList(lI []interface{}) interface{} {

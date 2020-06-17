@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -88,20 +87,25 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Default:  30,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				StateFunc: func(v interface{}) string {
+					policy, _ := normalizeIAMPolicyDoc(v.(string))
+					return policy
+				},
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"redrive_policy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsJSON,
+				Type:     schema.TypeString,
+				Optional: true,
 				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
+					policy, _ := normalizeIAMPolicyDoc(v.(string))
+					return policy
 				},
+				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
+				ValidateFunc:     validation.StringIsJSON,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -388,6 +392,10 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := queueAttributes[sqs.QueueAttributeNamePolicy]; ok {
+			v, err = normalizeIAMPolicyDoc(v)
+			if err != nil {
+				return fmt.Errorf("error normalizing queue policy: %s", err)
+			}
 			d.Set("policy", v)
 		}
 
@@ -402,6 +410,10 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		if v, ok := queueAttributes[sqs.QueueAttributeNameRedrivePolicy]; ok {
+			v, err = normalizeIAMPolicyDoc(v)
+			if err != nil {
+				return fmt.Errorf("error normalizing queue redrive policy: %s", err)
+			}
 			d.Set("redrive_policy", v)
 		}
 

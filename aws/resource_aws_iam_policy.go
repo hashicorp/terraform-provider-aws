@@ -37,8 +37,12 @@ func resourceAwsIamPolicy() *schema.Resource {
 				ForceNew: true,
 			},
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
+				Type:     schema.TypeString,
+				Required: true,
+				StateFunc: func(v interface{}) string {
+					policy, _ := normalizeIAMPolicyDoc(v.(string))
+					return policy
+				},
 				ValidateFunc:     validateIAMPolicyJson,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
@@ -191,6 +195,11 @@ func resourceAwsIamPolicyRead(d *schema.ResourceData, meta interface{}) error {
 		policy, err = url.QueryUnescape(aws.StringValue(getPolicyVersionResponse.PolicyVersion.Document))
 		if err != nil {
 			return fmt.Errorf("error parsing policy: %s", err)
+		}
+
+		policy, err = normalizeIAMPolicyDoc(policy)
+		if err != nil {
+			return fmt.Errorf("error normalizing IAM policy: %s", err)
 		}
 	}
 

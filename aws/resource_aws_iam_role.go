@@ -84,8 +84,12 @@ func resourceAwsIamRole() *schema.Resource {
 			},
 
 			"assume_role_policy": {
-				Type:             schema.TypeString,
-				Required:         true,
+				Type:     schema.TypeString,
+				Required: true,
+				StateFunc: func(v interface{}) string {
+					policy, _ := normalizeIAMPolicyDoc(v.(string))
+					return policy
+				},
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 				ValidateFunc:     validation.StringIsJSON,
 			},
@@ -220,11 +224,15 @@ func resourceAwsIamRoleRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
-	assumRolePolicy, err := url.QueryUnescape(*role.AssumeRolePolicyDocument)
+	assumeRolePolicy, err := url.QueryUnescape(*role.AssumeRolePolicyDocument)
 	if err != nil {
 		return err
 	}
-	if err := d.Set("assume_role_policy", assumRolePolicy); err != nil {
+	assumeRolePolicy, err = normalizeIAMPolicyDoc(assumeRolePolicy)
+	if err != nil {
+		return fmt.Errorf("error normalizing assume role policy: %s", err)
+	}
+	if err := d.Set("assume_role_policy", assumeRolePolicy); err != nil {
 		return err
 	}
 	return nil

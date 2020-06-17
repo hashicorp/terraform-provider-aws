@@ -31,8 +31,12 @@ func resourceAwsS3BucketPolicy() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
+				Type:     schema.TypeString,
+				Required: true,
+				StateFunc: func(v interface{}) string {
+					policy, _ := normalizeIAMPolicyDoc(v.(string))
+					return policy
+				},
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
@@ -85,7 +89,7 @@ func resourceAwsS3BucketPolicyRead(d *schema.ResourceData, meta interface{}) err
 
 	v := ""
 	if err == nil && pol.Policy != nil {
-		v = *pol.Policy
+		v, _ = normalizeIAMPolicyDoc(*pol.Policy)
 	}
 	if err := d.Set("policy", v); err != nil {
 		return err

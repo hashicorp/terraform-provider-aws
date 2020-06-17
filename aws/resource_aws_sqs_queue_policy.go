@@ -34,8 +34,12 @@ func resourceAwsSqsQueuePolicy() *schema.Resource {
 			},
 
 			"policy": {
-				Type:             schema.TypeString,
-				Required:         true,
+				Type:     schema.TypeString,
+				Required: true,
+				StateFunc: func(v interface{}) string {
+					policy, _ := normalizeIAMPolicyDoc(v.(string))
+					return policy
+				},
 				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
@@ -136,7 +140,11 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 
 	policy, ok := out.Attributes[sqs.QueueAttributeNamePolicy]
 	if ok {
-		d.Set("policy", policy)
+		normalizedPolicy, err := normalizeIAMPolicyDoc(*policy)
+		if err != nil {
+			return fmt.Errorf("error normalizing queue policy: %s", err)
+		}
+		d.Set("policy", normalizedPolicy)
 	} else {
 		d.Set("policy", "")
 	}
