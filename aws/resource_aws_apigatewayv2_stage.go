@@ -99,7 +99,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 							}, false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Not set for HTTP APIs.
-								if old == "" && new == apigatewayv2.LoggingLevelOff {
+								if d.Id() != "" && old == "" && new == apigatewayv2.LoggingLevelOff {
 									return true
 								}
 								return false
@@ -166,7 +166,7 @@ func resourceAwsApiGatewayV2Stage() *schema.Resource {
 							}, false),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// Not set for HTTP APIs.
-								if old == "" && new == apigatewayv2.LoggingLevelOff {
+								if d.Id() != "" && old == "" && new == apigatewayv2.LoggingLevelOff {
 									return true
 								}
 								return false
