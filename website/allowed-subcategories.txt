@@ -76,6 +76,7 @@ MediaStore
 Neptune
 OpsWorks
 Organizations
+Outposts
 Pinpoint
 Pricing
 Quantum Ledger Database (QLDB)

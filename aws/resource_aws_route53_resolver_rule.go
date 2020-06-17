@@ -189,7 +189,7 @@ func resourceAwsRoute53ResolverRuleRead(d *schema.ResourceData, meta interface{}
 func resourceAwsRoute53ResolverRuleUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).route53resolverconn
 
-	if d.HasChange("name") || d.HasChange("resolver_endpoint_id") || d.HasChange("target_ip") {
+	if d.HasChanges("name", "resolver_endpoint_id", "target_ip") {
 		req := &route53resolver.UpdateResolverRuleInput{
 			ResolverRuleId: aws.String(d.Id()),
 			Config:         &route53resolver.ResolverRuleConfig{},

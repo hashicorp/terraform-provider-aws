@@ -2,19 +2,26 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_ebs_volumes` [GH-13751]
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_group` [GH-13767]
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_groups` [GH-13767]
+* **New Data Source:** `aws_wafv2_web_acl` [GH-12791]
 * **New Resource:** `aws_ec2_tag` [GH-8457]
 * **New Resource:** `aws_wafv2_web_acl` [GH-12688]
 
 ENHANCEMENTS:
 
+* resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
 * resource/aws_service_discovery_http_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_public_dns_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_service: Add `tags` argument [GH-13750]
+* resource/aws_wafv2_ip_set: Increase `addresses` maximum amount of items limit from 50 to 10,000 to match AWS limits [GH-13698]
 
 BUG FIXES:
 
 * resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
+* resource/aws_route: Ensure retries occur on read after creation if route not found for EC2 eventual consistency [GH-13747]
 
 ## 2.66.0 (June 12, 2020)
 

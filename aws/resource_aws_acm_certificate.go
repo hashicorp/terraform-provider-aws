@@ -309,7 +309,7 @@ func resourceAwsAcmCertificateValidationMethod(certificate *acm.CertificateDetai
 func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
 	acmconn := meta.(*AWSClient).acmconn
 
-	if d.HasChange("private_key") || d.HasChange("certificate_body") || d.HasChange("certificate_chain") {
+	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
 		_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
 		if err != nil {
 			return fmt.Errorf("Error updating certificate: %s", err)

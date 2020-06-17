@@ -342,7 +342,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		return err
 	}
 
-	if d.HasChange("labels") || d.HasChange("scaling_config") {
+	if d.HasChanges("labels", "scaling_config") {
 		oldLabelsRaw, newLabelsRaw := d.GetChange("labels")
 
 		input := &eks.UpdateNodegroupConfigInput{
@@ -374,7 +374,7 @@ func resourceAwsEksNodeGroupUpdate(d *schema.ResourceData, meta interface{}) err
 		}
 	}
 
-	if d.HasChange("release_version") || d.HasChange("version") {
+	if d.HasChanges("release_version", "version") {
 		input := &eks.UpdateNodegroupVersionInput{
 			ClientRequestToken: aws.String(resource.UniqueId()),
 			ClusterName:        aws.String(clusterName),

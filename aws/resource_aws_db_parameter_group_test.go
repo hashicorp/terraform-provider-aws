@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -79,10 +80,9 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 	groupName := fmt.Sprintf("parameter-group-test-terraform-%d", acctest.RandInt())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSDBParameterGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBParameterGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDBParameterGroupConfig(groupName),
@@ -91,12 +91,18 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.name", "character_set_results"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.value", "utf8"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.name", "character_set_server"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.value", "utf8"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.name", "character_set_client"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.value", "utf8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_results",
+						"value": "utf8",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_server",
+						"value": "utf8",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_client",
+						"value": "utf8",
+					}),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("pg:%s$", groupName))),
 				),
 			},
@@ -112,16 +118,26 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					resource.TestCheckResourceAttr(resourceName, "name", groupName),
 					resource.TestCheckResourceAttr(resourceName, "family", "mysql5.6"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.1706463059.name", "collation_connection"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.1706463059.value", "utf8_unicode_ci"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.name", "character_set_results"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.1708034931.value", "utf8"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.name", "character_set_server"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2421266705.value", "utf8"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2475805061.name", "collation_server"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2475805061.value", "utf8_unicode_ci"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.name", "character_set_client"),
-					resource.TestCheckResourceAttr(resourceName, "parameter.2478663599.value", "utf8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "collation_connection",
+						"value": "utf8_unicode_ci",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_results",
+						"value": "utf8",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_server",
+						"value": "utf8",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "collation_server",
+						"value": "utf8_unicode_ci",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_client",
+						"value": "utf8",
+					}),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(fmt.Sprintf("pg:%s$", groupName))),
 				),
 			},
@@ -132,8 +148,19 @@ func TestAccAWSDBParameterGroup_basic(t *testing.T) {
 					testAccCheckAWSDBParameterGroupAttributes(&v, groupName),
 					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_connection"),
 					testAccCheckAWSDBParameterNotUserDefined(resourceName, "collation_server"),
-					resource.TestCheckNoResourceAttr(resourceName, "parameter.2475805061.value"),
-					resource.TestCheckNoResourceAttr(resourceName, "parameter.1706463059.value"),
+					resource.TestCheckResourceAttr(resourceName, "parameter.#", "3"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_results",
+						"value": "utf8",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_server",
+						"value": "utf8",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "character_set_client",
+						"value": "utf8",
+					}),
 				),
 			},
 		},

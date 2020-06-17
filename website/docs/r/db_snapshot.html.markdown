@@ -62,6 +62,12 @@ In addition to all arguments above, the following attributes are exported:
 * `storage_type` - Specifies the storage type associated with DB snapshot.
 * `vpc_id` - Specifies the storage type associated with DB snapshot.
 
+## Timeouts
+
+`aws_db_snapshot` provides the following [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
+
+- `read` - (Default `20 minutes`)  Length of time to wait for the snapshot to become available
+
 ## Import
 
 `aws_db_snapshot` can be imported by using the snapshot identifier, e.g.

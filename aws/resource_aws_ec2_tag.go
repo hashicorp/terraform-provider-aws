@@ -5,8 +5,6 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -74,39 +72,13 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 		return err
 	}
 
-	input := &ec2.DescribeTagsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name:   aws.String("resource-id"),
-				Values: []*string{aws.String(resourceID)},
-			},
-			{
-				Name:   aws.String("key"),
-				Values: []*string{aws.String(key)},
-			},
-		},
-	}
-
-	output, err := conn.DescribeTags(input)
+	exists, value, err := keyvaluetags.Ec2GetTag(conn, resourceID, key)
 
 	if err != nil {
 		return fmt.Errorf("error reading EC2 Tag (%s) for resource (%s): %w", key, resourceID, err)
 	}
 
-	if output == nil {
-		return fmt.Errorf("error reading EC2 Tag (%s) for resource (%s): empty response", key, resourceID)
-	}
-
-	var tag *ec2.TagDescription
-
-	for _, outputTag := range output.Tags {
-		if aws.StringValue(outputTag.Key) == key {
-			tag = outputTag
-			break
-		}
-	}
-
-	if tag == nil {
+	if !exists {
 		log.Printf("[WARN] EC2 Tag (%s) for resource (%s) not found, removing from state", key, resourceID)
 		d.SetId("")
 		return nil
@@ -114,7 +86,7 @@ func resourceAwsEc2TagRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.Set("key", key)
 	d.Set("resource_id", resourceID)
-	d.Set("value", tag.Value)
+	d.Set("value", value)
 
 	return nil
 }
