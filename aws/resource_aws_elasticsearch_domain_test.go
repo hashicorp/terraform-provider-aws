@@ -190,11 +190,12 @@ func TestAccAWSElasticSearchDomain_warm(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfigWarm(rName, true, 6),
+				Config: testAccESDomainConfigWarm(rName, "ultrawarm1.medium.elasticsearch", true, 6),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "6"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.elasticsearch"),
 				),
 			},
 			{
@@ -204,11 +205,21 @@ func TestAccAWSElasticSearchDomain_warm(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccESDomainConfigWarm(rName, true, 7),
+				Config: testAccESDomainConfigWarm(rName, "ultrawarm1.medium.elasticsearch", true, 7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.elasticsearch"),
+				),
+			},
+			{
+				Config: testAccESDomainConfigWarm(rName, "ultrawarm1.large.elasticsearch", true, 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "7"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.large.elasticsearch"),
 				),
 			},
 		},
@@ -1101,7 +1112,7 @@ resource "aws_elasticsearch_domain" "test" {
 `, rName, zoneAwarenessEnabled)
 }
 
-func testAccESDomainConfigWarm(rName string, enabled bool, count int) string {
+func testAccESDomainConfigWarm(rName, warmType string, enabled bool, warmCnt int) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
   domain_name           = %[1]q
@@ -1114,9 +1125,9 @@ resource "aws_elasticsearch_domain" "test" {
     dedicated_master_enabled = true
     dedicated_master_count   = "3"
     dedicated_master_type    = "c5.large.elasticsearch"
-    warm_enabled             = %t
-    warm_count               = %d
-    warm_type                = "ultrawarm1.medium.elasticsearch"
+    warm_enabled             = %[2]t
+    warm_count               = %[3]d
+    warm_type                = %[4]q
 
     zone_awareness_config {
       availability_zone_count = 3
@@ -1128,7 +1139,7 @@ resource "aws_elasticsearch_domain" "test" {
     volume_size = 10
   }
 }
-`, rName, enabled, count)
+`, rName, enabled, warmCnt, warmType)
 }
 
 func testAccESDomainConfig_WithDedicatedClusterMaster(randInt int, enabled bool) string {
