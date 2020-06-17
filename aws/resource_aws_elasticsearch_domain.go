@@ -247,7 +247,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"warm_count": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IntBetween(2, 45),
+							ValidateFunc: validation.IntBetween(2, 150),
 						},
 						"warm_type": {
 							Type:     schema.TypeString,
@@ -255,6 +255,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								elasticsearch.ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch,
 								elasticsearch.ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch,
+								"ultrawarm1.xlarge.elasticsearch",
 							}, false),
 						},
 					},
