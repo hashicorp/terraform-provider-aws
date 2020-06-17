@@ -219,6 +219,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_local_gateways":                         dataSourceAwsEc2LocalGateways(),
 			"aws_ec2_local_gateway_route_table":              dataSourceAwsEc2LocalGatewayRouteTable(),
 			"aws_ec2_local_gateway_route_tables":             dataSourceAwsEc2LocalGatewayRouteTables(),
+			"aws_ec2_local_gateway_virtual_interface":        dataSourceAwsEc2LocalGatewayVirtualInterface(),
 			"aws_ec2_local_gateway_virtual_interface_group":  dataSourceAwsEc2LocalGatewayVirtualInterfaceGroup(),
 			"aws_ec2_local_gateway_virtual_interface_groups": dataSourceAwsEc2LocalGatewayVirtualInterfaceGroups(),
 			"aws_ec2_transit_gateway":                        dataSourceAwsEc2TransitGateway(),
