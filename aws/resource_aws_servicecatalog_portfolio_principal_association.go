@@ -78,26 +78,24 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d *schema.Resour
 		PortfolioId: aws.String(portfolioId),
 	}
 	conn := meta.(*AWSClient).scconn
-	var principals []*servicecatalog.Principal
 	var pageToken = ""
+	isFound := false
 	for {
 		pageOfDetails, nextPageToken, err := resourceAwsServiceCatalogPortfolioPrincipalAssociationListPrincipalsForPortfolioPage(conn, input, &pageToken)
 		if err != nil {
 			return err
 		}
-		principals = append(pageOfDetails)
-		if nextPageToken == nil {
+		for _, principal := range pageOfDetails {
+			if *principal.PrincipalARN == principalArn {
+				isFound = true
+				d.SetId(id)
+				break
+			}
+		}
+		if nextPageToken == nil || isFound {
 			break
 		}
 		pageToken = *nextPageToken
-	}
-	isFound := false
-	for _, principal := range principals {
-		if *principal.PrincipalARN == principalArn {
-			isFound = true
-			d.SetId(id)
-			break
-		}
 	}
 	if !isFound {
 		log.Printf("[WARN] Service Catalog Principal(%s)/Portfolio(%s) Association not found, removing from state",
