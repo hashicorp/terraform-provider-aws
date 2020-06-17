@@ -67,7 +67,7 @@ func TestGetResourceId(t *testing.T) {
 			}
 
 			if gotIdentifier != testCase.ExpectedIdentifier {
-				t.Errorf("got identifier %s, expected identifer %s", gotIdentifier, testCase.ExpectedIdentifier)
+				t.Errorf("got identifier %s, expected identifier %s", gotIdentifier, testCase.ExpectedIdentifier)
 			}
 
 			if gotKey != testCase.ExpectedKey {
