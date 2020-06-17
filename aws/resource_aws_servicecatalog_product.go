@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsServiceCatalogProduct() *schema.Resource {
@@ -255,7 +256,10 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	}
 
 	d.Set("product_arn", resp.ProductViewDetail.ProductARN)
-	d.Set("tags", tagsToMapServiceCatalog(resp.Tags))
+	err = d.Set("tags", tagsToMapServiceCatalog(keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map()))
+	if err != nil {
+		return fmt.Errorf("invalid tags read on ServiceCatalog product '%s': %s", d.Id(), err)
+	}
 
 	product := resp.ProductViewDetail.ProductViewSummary
 	d.Set("has_default_path", aws.BoolValue(product.HasDefaultPath))
@@ -377,7 +381,7 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 
 	// this change is slightly more complicated as basically we need to update the provisioning artifact
 	if d.HasChange("provisioning_artifact") {
-		_, newProvisioningArtifactList := d.GetChange("provisioning_artifact")
+		newProvisioningArtifactList := d.Get("provisioning_artifact")
 		newProvisioningArtifact := (newProvisioningArtifactList.([]interface{}))[0].(map[string]interface{})
 		paId := newProvisioningArtifact["id"].(string)
 		_, err := conn.UpdateProvisioningArtifact(&servicecatalog.UpdateProvisioningArtifactInput{
@@ -435,11 +439,10 @@ func tagsFromMapServiceCatalog(m map[string]interface{}) []*servicecatalog.Tag {
 }
 
 // tagsToMap turns the list of tags into a map.
-func tagsToMapServiceCatalog(ts []*servicecatalog.Tag) map[string]string {
+func tagsToMapServiceCatalog(ts map[string]string) map[string]string {
 	result := make(map[string]string)
-	for _, t := range ts {
-		result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
+	for k, v := range ts {
+		result[aws.StringValue(&k)] = aws.StringValue(&v)
 	}
-
 	return result
 }

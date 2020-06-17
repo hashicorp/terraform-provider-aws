@@ -62,15 +62,18 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 			"provisioning_parameters": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeMap},
+				Elem: &schema.Schema{
+					Type: schema.TypeMap,
+					Elem: schema.TypeString,
+				},
 			},
 			/*
-			// TODO stack set preferences
-			"provisioning_preferences": {
-                Type:     schema.TypeMap,
-                Optional: true,
-                Elem:     <various>
-			},
+						// TODO stack set preferences
+						"provisioning_preferences": {
+			                Type:     schema.TypeMap,
+			                Optional: true,
+			                Elem:     <various>
+						},
 			*/
 			"tags": tagsSchema(),
 
@@ -85,12 +88,18 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 			"outputs": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeMap},
+				Elem: &schema.Schema{
+					Type: schema.TypeMap,
+					Elem: schema.TypeString,
+				},
 			},
 			"record_errors": {
 				Type:     schema.TypeList,
 				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeMap},
+				Elem: &schema.Schema{
+					Type: schema.TypeMap,
+					Elem: schema.TypeString,
+				},
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -255,7 +264,10 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 		bb["description"] = aws.StringValue(b.Description)
 		aa = append(aa, bb)
 	}
-	d.Set("record_errors", aa)
+	err = d.Set("record_errors", aa)
+	if err != nil {
+		return fmt.Errorf("invalid errors read on ServiceCatalog provisioned product '%s': %s", d.Id(), err)
+	}
 
 	aa = make([]map[string]string, 0)
 	for _, b := range record.RecordOutputs {
@@ -265,7 +277,10 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 		bb["output_value"] = aws.StringValue(b.OutputValue)
 		aa = append(aa, bb)
 	}
-	d.Set("outputs", aa)
+	err = d.Set("outputs", aa)
+	if err != nil {
+		return fmt.Errorf("invalid outputs read on ServiceCatalog provisioned product '%s': %s", d.Id(), err)
+	}
 
 	//not returned (assume unchanged):
 	// notification_arns

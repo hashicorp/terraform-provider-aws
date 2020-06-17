@@ -118,16 +118,14 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationListPrincipalsForPort
 }
 
 func resourceAwsServiceCatalogPortfolioPrincipalAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	const principalArnKey = "principal_arn"
-	const portfolioIdKey = "portfolio_id"
-	if d.HasChange(principalArnKey) || d.HasChange(portfolioIdKey) {
-		oldPrincipalArn, newPrincipalArn := d.GetChange(principalArnKey)
-		oldPortfolioId, newPortfolioId := d.GetChange(portfolioIdKey)
-		d.Set(principalArnKey, oldPrincipalArn)
-		d.Set(portfolioIdKey, oldPortfolioId)
+	if d.HasChanges("principal_arn", "portfolio_id") {
+		oldPrincipalArn, newPrincipalArn := d.GetChange("principal_arn")
+		oldPortfolioId, newPortfolioId := d.GetChange("portfolio_id")
+		d.Set("principal_arn", oldPrincipalArn.(string))
+		d.Set("portfolio_id", oldPortfolioId.(string))
 		resourceAwsServiceCatalogPortfolioPrincipalAssociationDelete(d, meta)
-		d.Set(principalArnKey, newPrincipalArn)
-		d.Set(portfolioIdKey, newPortfolioId)
+		d.Set("principal_arn", newPrincipalArn.(string))
+		d.Set("portfolio_id", newPortfolioId.(string))
 		resourceAwsServiceCatalogPortfolioPrincipalAssociationCreate(d, meta)
 	}
 	return resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d, meta)

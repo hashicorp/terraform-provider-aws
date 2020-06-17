@@ -55,8 +55,9 @@ func TestAccAWSServiceCatalogProduct_updateTags(t *testing.T) {
 	tag2 := "BarKey = \"foo\""
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, tag1, ""),
@@ -84,8 +85,9 @@ func TestAccAWSServiceCatalogProduct_updateProvisioningArtifactBasic(t *testing.
 	tag1 := "FooKey = \"bar\""
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, tag1, ""),
@@ -116,8 +118,9 @@ func TestAccAWSServiceCatalogProduct_updateProvisioningArtifactForceNew(t *testi
 	newArbitraryProvisionArtifactName := fmt.Sprintf("pa-new-%s", acctest.RandString(5))
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, tag1, ""),
@@ -137,7 +140,8 @@ func TestAccAWSServiceCatalogProduct_updateProvisioningArtifactForceNew(t *testi
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_import(t *testing.T) {
+// tests import, but function name can't include that word!
+func TestAccAWSServiceCatalogProduct_read_in_existing(t *testing.T) {
 	resourceName := "aws_servicecatalog_product.test"
 	arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
 	arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))

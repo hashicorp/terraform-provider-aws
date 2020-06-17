@@ -98,16 +98,14 @@ func resourceAwsServiceCatalogPortfolioProductAssociationListPortfoliosForProduc
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	const productIdKey = "product_id"
-	const portfolioIdKey = "portfolio_id"
-	if d.HasChange(productIdKey) || d.HasChange(portfolioIdKey) {
-		oldProductId, newProductId := d.GetChange(productIdKey)
-		oldPortfolioId, newPortfolioId := d.GetChange(portfolioIdKey)
-		d.Set(productIdKey, oldProductId)
-		d.Set(portfolioIdKey, oldPortfolioId)
+	if d.HasChanges("product_id", "portfolio_id") {
+		oldProductId, newProductId := d.GetChange("product_id")
+		oldPortfolioId, newPortfolioId := d.GetChange("portfolio_id")
+		d.Set("product_id", oldProductId.(string))
+		d.Set("portfolio_id", oldPortfolioId.(string))
 		resourceAwsServiceCatalogPortfolioProductAssociationDelete(d, meta)
-		d.Set(productIdKey, newProductId)
-		d.Set(portfolioIdKey, newPortfolioId)
+		d.Set("product_id", newProductId.(string))
+		d.Set("portfolio_id", newPortfolioId.(string))
 		resourceAwsServiceCatalogPortfolioProductAssociationCreate(d, meta)
 	}
 	return resourceAwsServiceCatalogPortfolioProductAssociationRead(d, meta)
