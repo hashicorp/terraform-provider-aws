@@ -271,6 +271,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_guardduty_threatintelset` resource](/docs/providers/aws/r/guardduty_threatintelset.html)
   - [`aws_instance` data source](/docs/providers/aws/d/instance.html)
   - [`aws_instance` resource](/docs/providers/aws/r/instance.html)
+  - [`aws_key_pair` resource](/docs/providers/aws/r/key_pair.html)  
   - [`aws_launch_template` data source](/docs/providers/aws/d/launch_template.html)
   - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
   - [`aws_redshift_cluster` resource](/docs/providers/aws/r/redshift_cluster.html)
