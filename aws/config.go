@@ -35,6 +35,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 	"github.com/aws/aws-sdk-go/service/cloudwatchevents"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go/service/codeartifact"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/aws/aws-sdk-go/service/codecommit"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
@@ -108,6 +109,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
+	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/personalize"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/pricing"
@@ -212,6 +214,7 @@ type AWSClient struct {
 	cloudwatchconn                      *cloudwatch.CloudWatch
 	cloudwatcheventsconn                *cloudwatchevents.CloudWatchEvents
 	cloudwatchlogsconn                  *cloudwatchlogs.CloudWatchLogs
+	codeartifactconn                    *codeartifact.CodeArtifact
 	codebuildconn                       *codebuild.CodeBuild
 	codecommitconn                      *codecommit.CodeCommit
 	codedeployconn                      *codedeploy.CodeDeploy
@@ -288,6 +291,7 @@ type AWSClient struct {
 	networkmanagerconn                  *networkmanager.NetworkManager
 	opsworksconn                        *opsworks.OpsWorks
 	organizationsconn                   *organizations.Organizations
+	outpostsconn                        *outposts.Outposts
 	partition                           string
 	personalizeconn                     *personalize.Personalize
 	pinpointconn                        *pinpoint.Pinpoint
@@ -433,6 +437,7 @@ func (c *Config) Client() (interface{}, error) {
 		cloudwatchconn:                      cloudwatch.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatch"])})),
 		cloudwatcheventsconn:                cloudwatchevents.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchevents"])})),
 		cloudwatchlogsconn:                  cloudwatchlogs.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["cloudwatchlogs"])})),
+		codeartifactconn:                    codeartifact.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codeartifact"])})),
 		codebuildconn:                       codebuild.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codebuild"])})),
 		codecommitconn:                      codecommit.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codecommit"])})),
 		codedeployconn:                      codedeploy.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["codedeploy"])})),
@@ -507,6 +512,7 @@ func (c *Config) Client() (interface{}, error) {
 		networkmanagerconn:                  networkmanager.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["networkmanager"])})),
 		opsworksconn:                        opsworks.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["opsworks"])})),
 		organizationsconn:                   organizations.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["organizations"])})),
+		outpostsconn:                        outposts.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["outposts"])})),
 		partition:                           partition,
 		personalizeconn:                     personalize.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["personalize"])})),
 		pinpointconn:                        pinpoint.New(sess.Copy(&aws.Config{Endpoint: aws.String(c.Endpoints["pinpoint"])})),
@@ -720,7 +726,8 @@ func (c *Config) Client() (interface{}, error) {
 			r.Retryable = aws.Bool(true)
 		}
 
-		if r.Operation.Name == "CreateIPSet" || r.Operation.Name == "CreateRegexPatternSet" || r.Operation.Name == "CreateRuleGroup" {
+		if r.Operation.Name == "CreateIPSet" || r.Operation.Name == "CreateRegexPatternSet" ||
+			r.Operation.Name == "CreateRuleGroup" || r.Operation.Name == "CreateWebACL" {
 			// WAFv2 supports tag on create which can result in the below error codes according to the documentation
 			if isAWSErr(r.Error, wafv2.ErrCodeWAFTagOperationException, "Retry your request") {
 				r.Retryable = aws.Bool(true)

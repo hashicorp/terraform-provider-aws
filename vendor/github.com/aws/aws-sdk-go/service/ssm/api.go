@@ -452,10 +452,8 @@ func (c *SSM) CreateAssociationRequest(input *CreateAssociationInput) (req *requ
 // Associates the specified Systems Manager document with the specified instances
 // or targets.
 //
-// When you associate a document with one or more instances using instance IDs
-// or tags, SSM Agent running on the instance processes the document and configures
-// the instance as specified.
-//
+// When you associate a document with one or more instances, SSM Agent running
+// on the instance processes the document and configures the instance as specified.
 // If you associate a document with an instance that already has an associated
 // document, the system returns the AssociationAlreadyExists exception.
 //
@@ -12610,6 +12608,12 @@ func (s *AssociationAlreadyExists) RequestID() string {
 type AssociationDescription struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// The association ID.
 	AssociationId *string `type:"string"`
 
@@ -12714,6 +12718,12 @@ func (s AssociationDescription) String() string {
 // GoString returns the string representation
 func (s AssociationDescription) GoString() string {
 	return s.String()
+}
+
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *AssociationDescription) SetApplyOnlyAtCronInterval(v bool) *AssociationDescription {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -13503,6 +13513,12 @@ func (s *AssociationStatus) SetName(v string) *AssociationStatus {
 type AssociationVersionInfo struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// The ID created by the system when the association was created.
 	AssociationId *string `type:"string"`
 
@@ -13590,6 +13606,12 @@ func (s AssociationVersionInfo) String() string {
 // GoString returns the string representation
 func (s AssociationVersionInfo) GoString() string {
 	return s.String()
+}
+
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *AssociationVersionInfo) SetApplyOnlyAtCronInterval(v bool) *AssociationVersionInfo {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.
@@ -16348,6 +16370,12 @@ func (s *CreateAssociationBatchOutput) SetSuccessful(v []*AssociationDescription
 type CreateAssociationBatchRequestEntry struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
 
@@ -16489,6 +16517,12 @@ func (s *CreateAssociationBatchRequestEntry) Validate() error {
 	return nil
 }
 
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *CreateAssociationBatchRequestEntry) SetApplyOnlyAtCronInterval(v bool) *CreateAssociationBatchRequestEntry {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
+}
+
 // SetAssociationName sets the AssociationName field's value.
 func (s *CreateAssociationBatchRequestEntry) SetAssociationName(v string) *CreateAssociationBatchRequestEntry {
 	s.AssociationName = &v
@@ -16569,6 +16603,12 @@ func (s *CreateAssociationBatchRequestEntry) SetTargets(v []*Target) *CreateAsso
 
 type CreateAssociationInput struct {
 	_ struct{} `type:"structure"`
+
+	// By default, when you create a new associations, the system runs it immediately
+	// after it is created and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// create it.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
 
 	// Specify a descriptive name for the association.
 	AssociationName *string `type:"string"`
@@ -16723,6 +16763,12 @@ func (s *CreateAssociationInput) Validate() error {
 	return nil
 }
 
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *CreateAssociationInput) SetApplyOnlyAtCronInterval(v bool) *CreateAssociationInput {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
+}
+
 // SetAssociationName sets the AssociationName field's value.
 func (s *CreateAssociationInput) SetAssociationName(v string) *CreateAssociationInput {
 	s.AssociationName = &v
@@ -16858,7 +16904,7 @@ type CreateDocumentInput struct {
 	// You can't use the following strings as document name prefixes. These are
 	// reserved by AWS for use as document name prefixes:
 	//
-	//    * aws
+	//    * aws-
 	//
 	//    * amazon
 	//
@@ -37706,9 +37752,9 @@ type PutParameterInput struct {
 	//    * aws:ec2:image
 	//
 	// When you create a String parameter and specify aws:ec2:image, Systems Manager
-	// validates the parameter value you provide against that data type. The required
-	// format is ami-12345abcdeEXAMPLE. For more information, see Native parameter
-	// support for Amazon Machine Image IDs (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html)
+	// validates the parameter value is in the required format, such as ami-12345abcdeEXAMPLE,
+	// and that the specified AMI is available in your AWS account. For more information,
+	// see Native parameter support for Amazon Machine Image IDs (http://docs.aws.amazon.com/systems-manager/latest/userguide/parameter-store-ec2-aliases.html)
 	// in the AWS Systems Manager User Guide.
 	DataType *string `type:"string"`
 
@@ -42864,6 +42910,18 @@ func (s *UnsupportedPlatformType) RequestID() string {
 type UpdateAssociationInput struct {
 	_ struct{} `type:"structure"`
 
+	// By default, when you update an association, the system runs it immediately
+	// after it is updated and then according to the schedule you specified. Specify
+	// this option if you don't want an association to run immediately after you
+	// update it.
+	//
+	// Also, if you specified this option when you created the association, you
+	// can reset it. To do so, specify the no-apply-only-at-cron-interval parameter
+	// when you update the association from the command line. This parameter forces
+	// the association to run immediately after updating it and according to the
+	// interval specified.
+	ApplyOnlyAtCronInterval *bool `type:"boolean"`
+
 	// The ID of the association you want to update.
 	//
 	// AssociationId is a required field
@@ -43009,6 +43067,12 @@ func (s *UpdateAssociationInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetApplyOnlyAtCronInterval sets the ApplyOnlyAtCronInterval field's value.
+func (s *UpdateAssociationInput) SetApplyOnlyAtCronInterval(v bool) *UpdateAssociationInput {
+	s.ApplyOnlyAtCronInterval = &v
+	return s
 }
 
 // SetAssociationId sets the AssociationId field's value.

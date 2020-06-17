@@ -154,6 +154,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/cloudwatchlogs" = [
       "aws_cloudwatch_log_",
     ],
+    "service/codeartifact" = [
+      "aws_codeartifact_",
+    ],
     "service/codebuild" = [
       "aws_codebuild_",
     ],
@@ -395,6 +398,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/organizations" = [
       "aws_organizations_",
     ],
+    "service/outposts" = [
+      "aws_outposts_",
+    ],
     "service/personalize" = [
       "aws_personalize_",
     ],
@@ -576,7 +582,6 @@ behavior "pull_request_path_labeler" "service_labels" {
       ".gometalinter.json",
       ".markdownlinkcheck.json",
       ".markdownlint.yml",
-      ".travis.yml",
       "staticcheck.conf"
     ]
     # label services
@@ -703,6 +708,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/cloudwatchlogs" = [
       "**/*_cloudwatch_log_*",
       "**/cloudwatch_log_*"
+    ]
+    "service/codeartifact" = [
+      "**/*_codeartifact_*",
+      "**/codeartifact_*"
     ]
     "service/codebuild" = [
       "**/*_codebuild_*",
@@ -1070,6 +1079,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/organizations" = [
       "**/*_organizations_*",
       "**/organizations_*"
+    ]
+    "service/outposts" = [
+      "**/*_outposts_*",
+      "**/outposts_*"
     ]
     "service/pinpoint" = [
       "**/*_pinpoint_*",

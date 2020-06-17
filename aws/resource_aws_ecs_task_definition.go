@@ -17,6 +17,7 @@ import (
 )
 
 func resourceAwsEcsTaskDefinition() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsEcsTaskDefinitionCreate,
 		Read:   resourceAwsEcsTaskDefinitionRead,
@@ -369,10 +370,7 @@ func resourceAwsEcsTaskDefinitionCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.GetOk("volume"); ok {
-		volumes, err := expandEcsVolumes(v.(*schema.Set).List())
-		if err != nil {
-			return err
-		}
+		volumes := expandEcsVolumes(v.(*schema.Set).List())
 		input.Volumes = volumes
 	}
 

@@ -1,16 +1,47 @@
-## 2.66.0 (Unreleased)
+## 2.67.0 (Unreleased)
 
 FEATURES:
 
-* **New Resource:** `aws_wafv2_rule_group` [GH-12677]
+* **New Data Source:** `aws_ebs_volumes` [GH-13751]
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_group` [GH-13767]
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_groups` [GH-13767]
+* **New Data Source:** `aws_wafv2_web_acl` [GH-12791]
+* **New Resource:** `aws_ec2_local_gateway_route` [GH-13768]
+* **New Resource:** `aws_ec2_local_gateway_route_table_vpc_association` [GH-13765]
+* **New Resource:** `aws_ec2_tag` [GH-8457]
+* **New Resource:** `aws_wafv2_web_acl` [GH-12688]
+
+ENHANCEMENTS:
+
+* resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
+* resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_guardduty_threatintelset: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_service_discovery_http_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_public_dns_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_service: Add `tags` argument [GH-13750]
+* resource/aws_wafv2_ip_set: Increase `addresses` maximum amount of items limit from 50 to 10,000 to match AWS limits [GH-13698]
 
 BUG FIXES:
 
-* resource/aws_autoscaling_group: Allow `on_demand_base_capacity` to be set to 0 [GH-13623] 
-* resource/aws_autoscaling_group: Add `Computed` field to `instances_distribution` and it's sub-fields `on_demand_allocation_strategy`, `on_demand_base_capacity`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  [GH-13623]
-* resource/aws_autoscaling_group: Remove `Default` field from `instances_distribution` sub-fields `on_demand_allocation_strategy`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  [GH-13623]
-* resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties [GH-13634]
-* resource/aws_instance: Continue supporting empty string (`""`) `private_ip` argument [GH-13640]
+* resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
+* resource/aws_route: Ensure retries occur on read after creation if route not found for EC2 eventual consistency [GH-13747]
+
+## 2.66.0 (June 12, 2020)
+
+FEATURES:
+
+* **New Data Source:** `aws_wafv2_rule_group` ([#12790](https://github.com/terraform-providers/terraform-provider-aws/issues/12790))
+* **New Resource:** `aws_wafv2_rule_group` ([#12677](https://github.com/terraform-providers/terraform-provider-aws/issues/12677))
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Allow `on_demand_base_capacity` to be set to 0 [[#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623)] 
+* resource/aws_autoscaling_group: Add `Computed` field to `instances_distribution` and it's sub-fields `on_demand_allocation_strategy`, `on_demand_base_capacity`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  ([#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623))
+* resource/aws_autoscaling_group: Remove `Default` field from `instances_distribution` sub-fields `on_demand_allocation_strategy`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  ([#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623))
+* resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties ([#13634](https://github.com/terraform-providers/terraform-provider-aws/issues/13634))
+* resource/aws_instance: Continue supporting empty string (`""`) `private_ip` argument ([#13640](https://github.com/terraform-providers/terraform-provider-aws/issues/13640))
 
 ## 2.65.0 (June 04, 2020)
 

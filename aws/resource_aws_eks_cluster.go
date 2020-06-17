@@ -406,7 +406,7 @@ func resourceAwsEksClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("vpc_config.0.endpoint_private_access") || d.HasChange("vpc_config.0.endpoint_public_access") || d.HasChange("vpc_config.0.public_access_cidrs") {
+	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
 		input := &eks.UpdateClusterConfigInput{
 			Name:               aws.String(d.Id()),
 			ResourcesVpcConfig: expandEksVpcConfigUpdateRequest(d.Get("vpc_config").([]interface{})),

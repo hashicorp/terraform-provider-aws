@@ -285,7 +285,7 @@ func resourceAwsEMRInstanceGroupUpdate(d *schema.ResourceData, meta interface{})
 	conn := meta.(*AWSClient).emrconn
 
 	log.Printf("[DEBUG] Modify EMR task group")
-	if d.HasChange("instance_count") || d.HasChange("configurations_json") {
+	if d.HasChanges("instance_count", "configurations_json") {
 		instanceGroupModifyConfig := emr.InstanceGroupModifyConfig{
 			InstanceGroupId: aws.String(d.Id()),
 		}

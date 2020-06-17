@@ -102,7 +102,7 @@ func resourceAwsIamGroupReadResult(d *schema.ResourceData, group *iam.Group) err
 }
 
 func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("name") || d.HasChange("path") {
+	if d.HasChanges("name", "path") {
 		iamconn := meta.(*AWSClient).iamconn
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")

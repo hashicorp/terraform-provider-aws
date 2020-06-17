@@ -56,7 +56,7 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 	resourceID := d.Get("name").(string)
 	var createTags, removeTags []*autoscaling.Tag
 
-	if d.HasChange("tag") || d.HasChange("tags") {
+	if d.HasChanges("tag", "tags") {
 		oraw, nraw := d.GetChange("tag")
 		o := setToMapByKey(oraw.(*schema.Set))
 		n := setToMapByKey(nraw.(*schema.Set))
