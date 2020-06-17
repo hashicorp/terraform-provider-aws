@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_ecs_tag
 
-Manages an individual ECS resource tag. This resource should only be used in cases where ECS resources are created outside Terraform (e.g. Clusters created by Batch Compute Environments).
+Manages an individual ECS resource tag. This resource should only be used in cases where ECS resources are created outside Terraform (e.g. ECS Clusters implicitly created by Batch Compute Environments).
 
 ~> **NOTE:** This tagging resource should not be combined with the Terraform resource for managing the parent resource. For example, using `aws_ecs_cluster` and `aws_ecs_tag` to manage tags of the same ECS Cluster will cause a perpetual difference where the `aws_ecs_cluster` resource will try to remove the tag being added by the `aws_ecs_tag` resource.
 
@@ -17,14 +17,16 @@ Manages an individual ECS resource tag. This resource should only be used in cas
 ## Example Usage
 
 ```hcl
-resource "aws_ecs_cluster" "example" {
-  name = "example"
+resource "aws_batch_compute_environment" "example" {
+  compute_environment_name = "example"
+  service_role             = "${aws_iam_role.example.arn}"
+  type                     = "UNMANAGED"
 }
 
 resource "aws_ec2_tag" "example" {
-  resource_arn = "${aws_ecs_cluster.example.arn}"
-  key         = "Name"
-  value       = "Hello World"
+  resource_arn = "${aws_batch_compute_environment.example.ecs_cluster_arn}"
+  key          = "Name"
+  value        = "Hello World"
 }
 ```
 
