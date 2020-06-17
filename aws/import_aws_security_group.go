@@ -44,10 +44,7 @@ func resourceAwsSecurityGroupImportState(
 	}
 	for ruleType, perms := range permMap {
 		for _, perm := range perms {
-			ds, err := resourceAwsSecurityGroupImportStatePerm(sg, ruleType, perm)
-			if err != nil {
-				return nil, err
-			}
+			ds := resourceAwsSecurityGroupImportStatePerm(sg, ruleType, perm)
 			results = append(results, ds...)
 		}
 	}
@@ -55,7 +52,7 @@ func resourceAwsSecurityGroupImportState(
 	return results, nil
 }
 
-func resourceAwsSecurityGroupImportStatePerm(sg *ec2.SecurityGroup, ruleType string, perm *ec2.IpPermission) ([]*schema.ResourceData, error) {
+func resourceAwsSecurityGroupImportStatePerm(sg *ec2.SecurityGroup, ruleType string, perm *ec2.IpPermission) []*schema.ResourceData {
 	/*
 	   Create a separate Security Group Rule for:
 	   * The collection of IpRanges (cidr_blocks)
@@ -128,7 +125,7 @@ func resourceAwsSecurityGroupImportStatePerm(sg *ec2.SecurityGroup, ruleType str
 		result = append(result, r)
 	}
 
-	return result, nil
+	return result
 }
 
 func resourceAwsSecurityGroupImportStatePermPair(sg *ec2.SecurityGroup, ruleType string, perm *ec2.IpPermission) *schema.ResourceData {
