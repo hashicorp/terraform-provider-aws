@@ -2341,8 +2341,8 @@ func (s *Summary) SetTargetIdType(v string) *Summary {
 }
 
 // The metadata that you apply to AWS resources to help you categorize and organize
-// them. Each tag consists of a key and an optional value, both of which you
-// define. For more information, see Tagging AWS Resources (http://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)
+// them. Each tag consists of a key and a value, both of which you define. For
+// more information, see Tagging AWS Resources (http://docs.aws.amazon.com/general/latest/gr/aws_tagging.html)
 // in the AWS General Reference.
 type Tag struct {
 	_ struct{} `type:"structure"`
@@ -2353,8 +2353,8 @@ type Tag struct {
 	// Key is a required field
 	Key *string `min:"1" type:"string" required:"true"`
 
-	// The optional part of a key-value pair that make up a tag. A value acts as
-	// a descriptor within a tag category (key).
+	// One part of a key-value pair that make up a tag. A value acts as a descriptor
+	// within a tag category (key). The value can be empty or null.
 	//
 	// Value is a required field
 	Value *string `type:"string" required:"true"`
@@ -2391,8 +2391,8 @@ type TagFilter struct {
 	// that acts like a category for more specific tag values.
 	Key *string `min:"1" type:"string"`
 
-	// The optional part of a key-value pair that make up a tag. A value acts as
-	// a descriptor within a tag category (key).
+	// One part of a key-value pair that make up a tag. A value acts as a descriptor
+	// within a tag category (key). The value can be empty or null.
 	Values []*string `type:"list"`
 }
 
@@ -2435,9 +2435,8 @@ type TagResourcesInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of ARNs. An ARN (Amazon Resource Name) uniquely identifies a resource.
-	// You can specify a minimum of 1 and a maximum of 20 ARNs (resources) to tag.
-	// An ARN can be set to a maximum of 1600 characters. For more information,
-	// see Amazon Resource Names (ARNs) and AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html)
+	// For more information, see Amazon Resource Names (ARNs) and AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html)
 	// in the AWS General Reference.
 	//
 	// ResourceARNList is a required field
@@ -2580,9 +2579,8 @@ type UntagResourcesInput struct {
 	_ struct{} `type:"structure"`
 
 	// A list of ARNs. An ARN (Amazon Resource Name) uniquely identifies a resource.
-	// You can specify a minimum of 1 and a maximum of 20 ARNs (resources) to untag.
-	// An ARN can be set to a maximum of 1600 characters. For more information,
-	// see Amazon Resource Names (ARNs) and AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html)
+	// For more information, see Amazon Resource Names (ARNs) and AWS Service Namespaces
+	// (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html)
 	// in the AWS General Reference.
 	//
 	// ResourceARNList is a required field

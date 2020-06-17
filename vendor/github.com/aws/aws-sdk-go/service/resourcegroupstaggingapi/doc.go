@@ -169,6 +169,8 @@
 //
 //    * AWS IoT 1-Click
 //
+//    * AWS IoT Things Graph
+//
 //    * AWS Key Management Service
 //
 //    * Amazon Kinesis
@@ -219,6 +221,8 @@
 //
 //    * AWS Service Catalog
 //
+//    * Amazon Simple Email Service (SES)
+//
 //    * Amazon Simple Notification Service (SNS)
 //
 //    * Amazon Simple Queue Service (SQS)
@@ -232,6 +236,8 @@
 //    * AWS Systems Manager
 //
 //    * AWS Transfer for SFTP
+//
+//    * AWS WAF Regional
 //
 //    * Amazon VPC
 //
