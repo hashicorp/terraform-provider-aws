@@ -612,10 +612,7 @@ func TestExpandElasticacheParameters(t *testing.T) {
 			"apply_method": "immediate",
 		},
 	}
-	parameters, err := expandElastiCacheParameters(expanded)
-	if err != nil {
-		t.Fatalf("bad: %#v", err)
-	}
+	parameters := expandElastiCacheParameters(expanded)
 
 	expected := &elasticache.ParameterNameValue{
 		ParameterName:  aws.String("activerehashing"),
