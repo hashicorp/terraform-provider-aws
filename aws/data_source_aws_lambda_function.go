@@ -42,16 +42,16 @@ func dataSourceAwsLambdaFunction() *schema.Resource {
 			},
 			"file_system_config": {
 				Type:     schema.TypeList,
-				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"arn": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 						"local_mount_path": {
 							Type:     schema.TypeString,
-							Required: true,
+							Computed: true,
 						},
 					},
 				},
