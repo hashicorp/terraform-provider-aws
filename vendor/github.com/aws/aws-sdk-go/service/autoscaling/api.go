@@ -475,6 +475,101 @@ func (c *AutoScaling) BatchPutScheduledUpdateGroupActionWithContext(ctx aws.Cont
 	return out, req.Send()
 }
 
+const opCancelInstanceRefresh = "CancelInstanceRefresh"
+
+// CancelInstanceRefreshRequest generates a "aws/request.Request" representing the
+// client's request for the CancelInstanceRefresh operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CancelInstanceRefresh for more information on using the CancelInstanceRefresh
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CancelInstanceRefreshRequest method.
+//    req, resp := client.CancelInstanceRefreshRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01/CancelInstanceRefresh
+func (c *AutoScaling) CancelInstanceRefreshRequest(input *CancelInstanceRefreshInput) (req *request.Request, output *CancelInstanceRefreshOutput) {
+	op := &request.Operation{
+		Name:       opCancelInstanceRefresh,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &CancelInstanceRefreshInput{}
+	}
+
+	output = &CancelInstanceRefreshOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CancelInstanceRefresh API operation for Auto Scaling.
+//
+// Cancels an instance refresh operation in progress. Cancellation does not
+// roll back any replacements that have already been completed, but it prevents
+// new replacements from being started.
+//
+// For more information, see Replacing Auto Scaling Instances Based on an Instance
+// Refresh (https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Auto Scaling's
+// API operation CancelInstanceRefresh for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeLimitExceededFault "LimitExceeded"
+//   You have already reached a limit for your Amazon EC2 Auto Scaling resources
+//   (for example, Auto Scaling groups, launch configurations, or lifecycle hooks).
+//   For more information, see DescribeAccountLimits (https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_DescribeAccountLimits.html)
+//   in the Amazon EC2 Auto Scaling API Reference.
+//
+//   * ErrCodeResourceContentionFault "ResourceContention"
+//   You already have a pending update to an Amazon EC2 Auto Scaling resource
+//   (for example, an Auto Scaling group, instance, or load balancer).
+//
+//   * ErrCodeActiveInstanceRefreshNotFoundFault "ActiveInstanceRefreshNotFound"
+//   The request failed because an active instance refresh for the specified Auto
+//   Scaling group was not found.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01/CancelInstanceRefresh
+func (c *AutoScaling) CancelInstanceRefresh(input *CancelInstanceRefreshInput) (*CancelInstanceRefreshOutput, error) {
+	req, out := c.CancelInstanceRefreshRequest(input)
+	return out, req.Send()
+}
+
+// CancelInstanceRefreshWithContext is the same as CancelInstanceRefresh with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CancelInstanceRefresh for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AutoScaling) CancelInstanceRefreshWithContext(ctx aws.Context, input *CancelInstanceRefreshInput, opts ...request.Option) (*CancelInstanceRefreshOutput, error) {
+	req, out := c.CancelInstanceRefreshRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opCompleteLifecycleAction = "CompleteLifecycleAction"
 
 // CompleteLifecycleActionRequest generates a "aws/request.Request" representing the
@@ -2028,6 +2123,107 @@ func (c *AutoScaling) DescribeAutoScalingNotificationTypes(input *DescribeAutoSc
 // for more information on using Contexts.
 func (c *AutoScaling) DescribeAutoScalingNotificationTypesWithContext(ctx aws.Context, input *DescribeAutoScalingNotificationTypesInput, opts ...request.Option) (*DescribeAutoScalingNotificationTypesOutput, error) {
 	req, out := c.DescribeAutoScalingNotificationTypesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDescribeInstanceRefreshes = "DescribeInstanceRefreshes"
+
+// DescribeInstanceRefreshesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeInstanceRefreshes operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeInstanceRefreshes for more information on using the DescribeInstanceRefreshes
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeInstanceRefreshesRequest method.
+//    req, resp := client.DescribeInstanceRefreshesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01/DescribeInstanceRefreshes
+func (c *AutoScaling) DescribeInstanceRefreshesRequest(input *DescribeInstanceRefreshesInput) (req *request.Request, output *DescribeInstanceRefreshesOutput) {
+	op := &request.Operation{
+		Name:       opDescribeInstanceRefreshes,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DescribeInstanceRefreshesInput{}
+	}
+
+	output = &DescribeInstanceRefreshesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeInstanceRefreshes API operation for Auto Scaling.
+//
+// Describes one or more instance refreshes.
+//
+// You can determine the status of a request by looking at the Status parameter.
+// The following are the possible statuses:
+//
+//    * Pending - The request was created, but the operation has not started.
+//
+//    * InProgress - The operation is in progress.
+//
+//    * Successful - The operation completed successfully.
+//
+//    * Failed - The operation failed to complete. You can troubleshoot using
+//    the status reason and the scaling activities.
+//
+//    * Cancelling - An ongoing operation is being cancelled. Cancellation does
+//    not roll back any replacements that have already been completed, but it
+//    prevents new replacements from being started.
+//
+//    * Cancelled - The operation is cancelled.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Auto Scaling's
+// API operation DescribeInstanceRefreshes for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeInvalidNextToken "InvalidNextToken"
+//   The NextToken value is not valid.
+//
+//   * ErrCodeResourceContentionFault "ResourceContention"
+//   You already have a pending update to an Amazon EC2 Auto Scaling resource
+//   (for example, an Auto Scaling group, instance, or load balancer).
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01/DescribeInstanceRefreshes
+func (c *AutoScaling) DescribeInstanceRefreshes(input *DescribeInstanceRefreshesInput) (*DescribeInstanceRefreshesOutput, error) {
+	req, out := c.DescribeInstanceRefreshesRequest(input)
+	return out, req.Send()
+}
+
+// DescribeInstanceRefreshesWithContext is the same as DescribeInstanceRefreshes with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeInstanceRefreshes for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AutoScaling) DescribeInstanceRefreshesWithContext(ctx aws.Context, input *DescribeInstanceRefreshesInput, opts ...request.Option) (*DescribeInstanceRefreshesOutput, error) {
+	req, out := c.DescribeInstanceRefreshesRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -5040,6 +5236,107 @@ func (c *AutoScaling) SetInstanceProtectionWithContext(ctx aws.Context, input *S
 	return out, req.Send()
 }
 
+const opStartInstanceRefresh = "StartInstanceRefresh"
+
+// StartInstanceRefreshRequest generates a "aws/request.Request" representing the
+// client's request for the StartInstanceRefresh operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StartInstanceRefresh for more information on using the StartInstanceRefresh
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StartInstanceRefreshRequest method.
+//    req, resp := client.StartInstanceRefreshRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01/StartInstanceRefresh
+func (c *AutoScaling) StartInstanceRefreshRequest(input *StartInstanceRefreshInput) (req *request.Request, output *StartInstanceRefreshOutput) {
+	op := &request.Operation{
+		Name:       opStartInstanceRefresh,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StartInstanceRefreshInput{}
+	}
+
+	output = &StartInstanceRefreshOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// StartInstanceRefresh API operation for Auto Scaling.
+//
+// Starts a new instance refresh operation, which triggers a rolling replacement
+// of all previously launched instances in the Auto Scaling group with a new
+// group of instances.
+//
+// If successful, this call creates a new instance refresh request with a unique
+// ID that you can use to track its progress. To query its status, call the
+// DescribeInstanceRefreshes API. To describe the instance refreshes that have
+// already run, call the DescribeInstanceRefreshes API. To cancel an active
+// instance refresh operation, use the CancelInstanceRefresh API.
+//
+// For more information, see Replacing Auto Scaling Instances Based on an Instance
+// Refresh (https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Auto Scaling's
+// API operation StartInstanceRefresh for usage and error information.
+//
+// Returned Error Codes:
+//   * ErrCodeLimitExceededFault "LimitExceeded"
+//   You have already reached a limit for your Amazon EC2 Auto Scaling resources
+//   (for example, Auto Scaling groups, launch configurations, or lifecycle hooks).
+//   For more information, see DescribeAccountLimits (https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_DescribeAccountLimits.html)
+//   in the Amazon EC2 Auto Scaling API Reference.
+//
+//   * ErrCodeResourceContentionFault "ResourceContention"
+//   You already have a pending update to an Amazon EC2 Auto Scaling resource
+//   (for example, an Auto Scaling group, instance, or load balancer).
+//
+//   * ErrCodeInstanceRefreshInProgressFault "InstanceRefreshInProgress"
+//   The request failed because an active instance refresh operation already exists
+//   for the specified Auto Scaling group.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/autoscaling-2011-01-01/StartInstanceRefresh
+func (c *AutoScaling) StartInstanceRefresh(input *StartInstanceRefreshInput) (*StartInstanceRefreshOutput, error) {
+	req, out := c.StartInstanceRefreshRequest(input)
+	return out, req.Send()
+}
+
+// StartInstanceRefreshWithContext is the same as StartInstanceRefresh with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StartInstanceRefresh for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *AutoScaling) StartInstanceRefreshWithContext(ctx aws.Context, input *StartInstanceRefreshInput, opts ...request.Option) (*StartInstanceRefreshOutput, error) {
+	req, out := c.StartInstanceRefreshRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opSuspendProcesses = "SuspendProcesses"
 
 // SuspendProcessesRequest generates a "aws/request.Request" representing the
@@ -5991,6 +6288,70 @@ func (s *BlockDeviceMapping) SetNoDevice(v bool) *BlockDeviceMapping {
 // SetVirtualName sets the VirtualName field's value.
 func (s *BlockDeviceMapping) SetVirtualName(v string) *BlockDeviceMapping {
 	s.VirtualName = &v
+	return s
+}
+
+type CancelInstanceRefreshInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Auto Scaling group.
+	//
+	// AutoScalingGroupName is a required field
+	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s CancelInstanceRefreshInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelInstanceRefreshInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CancelInstanceRefreshInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CancelInstanceRefreshInput"}
+	if s.AutoScalingGroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AutoScalingGroupName"))
+	}
+	if s.AutoScalingGroupName != nil && len(*s.AutoScalingGroupName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AutoScalingGroupName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAutoScalingGroupName sets the AutoScalingGroupName field's value.
+func (s *CancelInstanceRefreshInput) SetAutoScalingGroupName(v string) *CancelInstanceRefreshInput {
+	s.AutoScalingGroupName = &v
+	return s
+}
+
+type CancelInstanceRefreshOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The instance refresh ID.
+	InstanceRefreshId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s CancelInstanceRefreshOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CancelInstanceRefreshOutput) GoString() string {
+	return s.String()
+}
+
+// SetInstanceRefreshId sets the InstanceRefreshId field's value.
+func (s *CancelInstanceRefreshOutput) SetInstanceRefreshId(v string) *CancelInstanceRefreshOutput {
+	s.InstanceRefreshId = &v
 	return s
 }
 
@@ -7848,6 +8209,114 @@ func (s DescribeAutoScalingNotificationTypesOutput) GoString() string {
 // SetAutoScalingNotificationTypes sets the AutoScalingNotificationTypes field's value.
 func (s *DescribeAutoScalingNotificationTypesOutput) SetAutoScalingNotificationTypes(v []*string) *DescribeAutoScalingNotificationTypesOutput {
 	s.AutoScalingNotificationTypes = v
+	return s
+}
+
+type DescribeInstanceRefreshesInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Auto Scaling group.
+	//
+	// AutoScalingGroupName is a required field
+	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
+
+	// One or more instance refresh IDs.
+	InstanceRefreshIds []*string `type:"list"`
+
+	// The maximum number of items to return with this call. The default value is
+	// 50 and the maximum value is 100.
+	MaxRecords *int64 `type:"integer"`
+
+	// The token for the next set of items to return. (You received this token from
+	// a previous call.)
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeInstanceRefreshesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInstanceRefreshesInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeInstanceRefreshesInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeInstanceRefreshesInput"}
+	if s.AutoScalingGroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AutoScalingGroupName"))
+	}
+	if s.AutoScalingGroupName != nil && len(*s.AutoScalingGroupName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AutoScalingGroupName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAutoScalingGroupName sets the AutoScalingGroupName field's value.
+func (s *DescribeInstanceRefreshesInput) SetAutoScalingGroupName(v string) *DescribeInstanceRefreshesInput {
+	s.AutoScalingGroupName = &v
+	return s
+}
+
+// SetInstanceRefreshIds sets the InstanceRefreshIds field's value.
+func (s *DescribeInstanceRefreshesInput) SetInstanceRefreshIds(v []*string) *DescribeInstanceRefreshesInput {
+	s.InstanceRefreshIds = v
+	return s
+}
+
+// SetMaxRecords sets the MaxRecords field's value.
+func (s *DescribeInstanceRefreshesInput) SetMaxRecords(v int64) *DescribeInstanceRefreshesInput {
+	s.MaxRecords = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInstanceRefreshesInput) SetNextToken(v string) *DescribeInstanceRefreshesInput {
+	s.NextToken = &v
+	return s
+}
+
+type DescribeInstanceRefreshesOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The instance refreshes for the specified group.
+	//
+	// For more information, see Replacing Auto Scaling Instances Based on an Instance
+	// Refresh (https://docs.aws.amazon.com/autoscaling/ec2/userguide/asg-instance-refresh.html).
+	InstanceRefreshes []*InstanceRefresh `type:"list"`
+
+	// A string that indicates that the response contains more items than can be
+	// returned in a single response. To receive additional items, specify this
+	// string for the NextToken value when requesting the next set of items. This
+	// value is null when there are no more items to return.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeInstanceRefreshesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInstanceRefreshesOutput) GoString() string {
+	return s.String()
+}
+
+// SetInstanceRefreshes sets the InstanceRefreshes field's value.
+func (s *DescribeInstanceRefreshesOutput) SetInstanceRefreshes(v []*InstanceRefresh) *DescribeInstanceRefreshesOutput {
+	s.InstanceRefreshes = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInstanceRefreshesOutput) SetNextToken(v string) *DescribeInstanceRefreshesOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -10382,7 +10851,114 @@ func (s *InstanceMonitoring) SetEnabled(v bool) *InstanceMonitoring {
 	return s
 }
 
-// Describes an instances distribution for an Auto Scaling group with MixedInstancesPolicy.
+// Describes an instance refresh for an Auto Scaling group.
+type InstanceRefresh struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Auto Scaling group.
+	AutoScalingGroupName *string `min:"1" type:"string"`
+
+	// The date and time at which the instance refresh ended.
+	EndTime *time.Time `type:"timestamp"`
+
+	// The instance refresh ID.
+	InstanceRefreshId *string `min:"1" type:"string"`
+
+	// The number of instances remaining to update before the instance refresh is
+	// complete.
+	InstancesToUpdate *int64 `type:"integer"`
+
+	// The percentage of the instance refresh that is complete. For each instance
+	// replacement, Amazon EC2 Auto Scaling tracks the instance's health status
+	// and warm-up time. When the instance's health status changes to healthy and
+	// the specified warm-up time passes, the instance is considered updated and
+	// added to the percentage complete.
+	PercentageComplete *int64 `type:"integer"`
+
+	// The date and time at which the instance refresh began.
+	StartTime *time.Time `type:"timestamp"`
+
+	// The current status for the instance refresh operation:
+	//
+	//    * Pending - The request was created, but the operation has not started.
+	//
+	//    * InProgress - The operation is in progress.
+	//
+	//    * Successful - The operation completed successfully.
+	//
+	//    * Failed - The operation failed to complete. You can troubleshoot using
+	//    the status reason and the scaling activities.
+	//
+	//    * Cancelling - An ongoing operation is being cancelled. Cancellation does
+	//    not roll back any replacements that have already been completed, but it
+	//    prevents new replacements from being started.
+	//
+	//    * Cancelled - The operation is cancelled.
+	Status *string `type:"string" enum:"InstanceRefreshStatus"`
+
+	// Provides more details about the current status of the instance refresh.
+	StatusReason *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s InstanceRefresh) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InstanceRefresh) GoString() string {
+	return s.String()
+}
+
+// SetAutoScalingGroupName sets the AutoScalingGroupName field's value.
+func (s *InstanceRefresh) SetAutoScalingGroupName(v string) *InstanceRefresh {
+	s.AutoScalingGroupName = &v
+	return s
+}
+
+// SetEndTime sets the EndTime field's value.
+func (s *InstanceRefresh) SetEndTime(v time.Time) *InstanceRefresh {
+	s.EndTime = &v
+	return s
+}
+
+// SetInstanceRefreshId sets the InstanceRefreshId field's value.
+func (s *InstanceRefresh) SetInstanceRefreshId(v string) *InstanceRefresh {
+	s.InstanceRefreshId = &v
+	return s
+}
+
+// SetInstancesToUpdate sets the InstancesToUpdate field's value.
+func (s *InstanceRefresh) SetInstancesToUpdate(v int64) *InstanceRefresh {
+	s.InstancesToUpdate = &v
+	return s
+}
+
+// SetPercentageComplete sets the PercentageComplete field's value.
+func (s *InstanceRefresh) SetPercentageComplete(v int64) *InstanceRefresh {
+	s.PercentageComplete = &v
+	return s
+}
+
+// SetStartTime sets the StartTime field's value.
+func (s *InstanceRefresh) SetStartTime(v time.Time) *InstanceRefresh {
+	s.StartTime = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *InstanceRefresh) SetStatus(v string) *InstanceRefresh {
+	s.Status = &v
+	return s
+}
+
+// SetStatusReason sets the StatusReason field's value.
+func (s *InstanceRefresh) SetStatusReason(v string) *InstanceRefresh {
+	s.StatusReason = &v
+	return s
+}
+
+// Describes an instances distribution for an Auto Scaling group with a MixedInstancesPolicy.
 //
 // The instances distribution specifies the distribution of On-Demand Instances
 // and Spot Instances, the maximum price to pay for Spot Instances, and how
@@ -11636,7 +12212,9 @@ type PredefinedMetricSpecification struct {
 	// a resource label unless the metric type is ALBRequestCountPerTarget and there
 	// is a target group attached to the Auto Scaling group.
 	//
-	// The format is app/load-balancer-name/load-balancer-id/targetgroup/target-group-name/target-group-id
+	// Elastic Load Balancing sends data about your load balancers to Amazon CloudWatch.
+	// CloudWatch collects the data and specifies the format to use to access the
+	// data. The format is app/load-balancer-name/load-balancer-id/targetgroup/target-group-name/target-group-id
 	// , where
 	//
 	//    * app/load-balancer-name/load-balancer-id is the final portion of the
@@ -11644,6 +12222,12 @@ type PredefinedMetricSpecification struct {
 	//
 	//    * targetgroup/target-group-name/target-group-id is the final portion of
 	//    the target group ARN.
+	//
+	// To find the ARN for an Application Load Balancer, use the DescribeLoadBalancers
+	// (https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeLoadBalancers.html)
+	// API operation. To find the ARN for the target group, use the DescribeTargetGroups
+	// (https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTargetGroups.html)
+	// API operation.
 	ResourceLabel *string `min:"1" type:"string"`
 }
 
@@ -11705,6 +12289,8 @@ type ProcessType struct {
 	//    * AZRebalance
 	//
 	//    * HealthCheck
+	//
+	//    * InstanceRefresh
 	//
 	//    * ReplaceUnhealthy
 	//
@@ -12506,6 +13092,48 @@ func (s RecordLifecycleActionHeartbeatOutput) GoString() string {
 	return s.String()
 }
 
+// Describes information used to start an instance refresh.
+type RefreshPreferences struct {
+	_ struct{} `type:"structure"`
+
+	// The number of seconds until a newly launched instance is configured and ready
+	// to use. During this time, Amazon EC2 Auto Scaling does not immediately move
+	// on to the next replacement. The default is to use the value specified for
+	// the health check grace period for the group.
+	//
+	// Note: While warming up, a newly launched instance is not counted toward the
+	// aggregated metrics of the Auto Scaling group.
+	InstanceWarmup *int64 `type:"integer"`
+
+	// The amount of capacity in the Auto Scaling group that must remain healthy
+	// during an instance refresh to allow the operation to continue, as a percentage
+	// of the desired capacity of the Auto Scaling group (rounded up to the nearest
+	// integer). The default is 90.
+	MinHealthyPercentage *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s RefreshPreferences) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RefreshPreferences) GoString() string {
+	return s.String()
+}
+
+// SetInstanceWarmup sets the InstanceWarmup field's value.
+func (s *RefreshPreferences) SetInstanceWarmup(v int64) *RefreshPreferences {
+	s.InstanceWarmup = &v
+	return s
+}
+
+// SetMinHealthyPercentage sets the MinHealthyPercentage field's value.
+func (s *RefreshPreferences) SetMinHealthyPercentage(v int64) *RefreshPreferences {
+	s.MinHealthyPercentage = &v
+	return s
+}
+
 type ResumeProcessesOutput struct {
 	_ struct{} `type:"structure"`
 }
@@ -12688,24 +13316,27 @@ type ScalingProcessQuery struct {
 	// AutoScalingGroupName is a required field
 	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
 
-	// One or more of the following processes. If you omit this parameter, all processes
-	// are specified.
+	// One or more of the following processes:
 	//
 	//    * Launch
 	//
 	//    * Terminate
 	//
-	//    * HealthCheck
-	//
-	//    * ReplaceUnhealthy
-	//
-	//    * AZRebalance
+	//    * AddToLoadBalancer
 	//
 	//    * AlarmNotification
 	//
+	//    * AZRebalance
+	//
+	//    * HealthCheck
+	//
+	//    * InstanceRefresh
+	//
+	//    * ReplaceUnhealthy
+	//
 	//    * ScheduledActions
 	//
-	//    * AddToLoadBalancer
+	// If you omit this parameter, all processes are specified.
 	ScalingProcesses []*string `type:"list"`
 }
 
@@ -13230,6 +13861,94 @@ func (s SetInstanceProtectionOutput) String() string {
 // GoString returns the string representation
 func (s SetInstanceProtectionOutput) GoString() string {
 	return s.String()
+}
+
+type StartInstanceRefreshInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the Auto Scaling group.
+	//
+	// AutoScalingGroupName is a required field
+	AutoScalingGroupName *string `min:"1" type:"string" required:"true"`
+
+	// Set of preferences associated with the instance refresh request.
+	Preferences *RefreshPreferences `type:"structure"`
+
+	// The strategy to use for the instance refresh. The only valid value is Rolling.
+	//
+	// A rolling update is an update that is applied to all instances in an Auto
+	// Scaling group until all instances have been updated. A rolling update can
+	// fail due to failed health checks or if instances are on standby or are protected
+	// from scale-in. If the rolling update process fails, any instances that were
+	// already replaced are not rolled back to their previous configuration.
+	Strategy *string `type:"string" enum:"RefreshStrategy"`
+}
+
+// String returns the string representation
+func (s StartInstanceRefreshInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartInstanceRefreshInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StartInstanceRefreshInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StartInstanceRefreshInput"}
+	if s.AutoScalingGroupName == nil {
+		invalidParams.Add(request.NewErrParamRequired("AutoScalingGroupName"))
+	}
+	if s.AutoScalingGroupName != nil && len(*s.AutoScalingGroupName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AutoScalingGroupName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAutoScalingGroupName sets the AutoScalingGroupName field's value.
+func (s *StartInstanceRefreshInput) SetAutoScalingGroupName(v string) *StartInstanceRefreshInput {
+	s.AutoScalingGroupName = &v
+	return s
+}
+
+// SetPreferences sets the Preferences field's value.
+func (s *StartInstanceRefreshInput) SetPreferences(v *RefreshPreferences) *StartInstanceRefreshInput {
+	s.Preferences = v
+	return s
+}
+
+// SetStrategy sets the Strategy field's value.
+func (s *StartInstanceRefreshInput) SetStrategy(v string) *StartInstanceRefreshInput {
+	s.Strategy = &v
+	return s
+}
+
+type StartInstanceRefreshOutput struct {
+	_ struct{} `type:"structure"`
+
+	// A unique ID for tracking the progress of the request.
+	InstanceRefreshId *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s StartInstanceRefreshOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StartInstanceRefreshOutput) GoString() string {
+	return s.String()
+}
+
+// SetInstanceRefreshId sets the InstanceRefreshId field's value.
+func (s *StartInstanceRefreshOutput) SetInstanceRefreshId(v string) *StartInstanceRefreshOutput {
+	s.InstanceRefreshId = &v
+	return s
 }
 
 // Describes information used to create a step adjustment for a step scaling
@@ -13983,6 +14702,26 @@ func (s UpdateAutoScalingGroupOutput) GoString() string {
 }
 
 const (
+	// InstanceRefreshStatusPending is a InstanceRefreshStatus enum value
+	InstanceRefreshStatusPending = "Pending"
+
+	// InstanceRefreshStatusInProgress is a InstanceRefreshStatus enum value
+	InstanceRefreshStatusInProgress = "InProgress"
+
+	// InstanceRefreshStatusSuccessful is a InstanceRefreshStatus enum value
+	InstanceRefreshStatusSuccessful = "Successful"
+
+	// InstanceRefreshStatusFailed is a InstanceRefreshStatus enum value
+	InstanceRefreshStatusFailed = "Failed"
+
+	// InstanceRefreshStatusCancelling is a InstanceRefreshStatus enum value
+	InstanceRefreshStatusCancelling = "Cancelling"
+
+	// InstanceRefreshStatusCancelled is a InstanceRefreshStatus enum value
+	InstanceRefreshStatusCancelled = "Cancelled"
+)
+
+const (
 	// LifecycleStatePending is a LifecycleState enum value
 	LifecycleStatePending = "Pending"
 
@@ -14052,6 +14791,11 @@ const (
 
 	// MetricTypeAlbrequestCountPerTarget is a MetricType enum value
 	MetricTypeAlbrequestCountPerTarget = "ALBRequestCountPerTarget"
+)
+
+const (
+	// RefreshStrategyRolling is a RefreshStrategy enum value
+	RefreshStrategyRolling = "Rolling"
 )
 
 const (
