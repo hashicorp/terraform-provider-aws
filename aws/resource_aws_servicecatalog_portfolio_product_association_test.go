@@ -78,7 +78,7 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociation() resource.TestChe
 }
 
 func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt string) string {
-	portfolio_cfg := testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm_automated_test")
+	portfolio_cfg := testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm-test")
 
 	arbitraryBucketName := fmt.Sprintf("bucket-%s", salt)
 	arbitraryProductName := fmt.Sprintf("product-%s", salt)

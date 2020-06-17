@@ -78,7 +78,7 @@ func testAccCheckServiceCatalogPortfolioPrincipalAssociationDestroy(s *terraform
 }
 
 func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationConfigBasic(salt string) string {
-	return testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm_automated_test-"+salt) + "\n" +
+	return testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm-test-"+salt) + "\n" +
 		testAccCheckAwsServiceCatalogPortfolioPrincipalAssociationConfigRoleAndAssociation(salt)
 }
 
