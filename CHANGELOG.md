@@ -14,6 +14,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_cloudwatch_log_stream: Support resource import [GH-13697]
 * resource/aws_devicefarm_project: Support resource import [GH-13020]
 * resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
 * resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
