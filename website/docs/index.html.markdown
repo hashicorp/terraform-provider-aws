@@ -260,6 +260,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
   - [`aws_elb` data source](/docs/providers/aws/d/elb.html)
   - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+  - [`aws_flow_log` resource](/docs/providers/aws/r/flow_log.html)  
   - [`aws_glue_connection` resource](/docs/providers/aws/r/glue_connection.html)
   - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
   - [`aws_glue_job` resource](/docs/providers/aws/r/glue_job.html)
