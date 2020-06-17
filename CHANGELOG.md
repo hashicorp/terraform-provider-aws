@@ -27,6 +27,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_cloudfront_origin_access_identity: Properly trigger resource recreation when deleted outside Terraform [GH-13081]
 * resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
 * resource/aws_route: Ensure retries occur on read after creation if route not found for EC2 eventual consistency [GH-13747]
 
