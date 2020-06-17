@@ -282,7 +282,7 @@ func resourceAwsWafWebAclRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsWafWebAclUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafconn
 
-	if d.HasChange("default_action") || d.HasChange("rules") {
+	if d.HasChanges("default_action", "rules") {
 		o, n := d.GetChange("rules")
 		oldR, newR := o.(*schema.Set).List(), n.(*schema.Set).List()
 

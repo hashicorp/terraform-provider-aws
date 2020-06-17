@@ -1551,6 +1551,10 @@ func (c *CognitoIdentityProvider) AdminLinkProviderForUserRequest(input *AdminLi
 //   account. This exception tells user that an account with this email or phone
 //   already exists.
 //
+//   * LimitExceededException
+//   This exception is thrown when a user exceeds the limit for a requested AWS
+//   resource.
+//
 //   * InternalErrorException
 //   This exception is thrown when Amazon Cognito encounters an internal error.
 //
@@ -12912,7 +12916,7 @@ type AdminInitiateAuthInput struct {
 	//
 	//    * For CUSTOM_AUTH: USERNAME (required), SECRET_HASH (if app client is
 	//    configured with client secret), DEVICE_KEY
-	AuthParameters map[string]*string `type:"map"`
+	AuthParameters map[string]*string `type:"map" sensitive:"true"`
 
 	// The app client ID.
 	//
@@ -20691,7 +20695,7 @@ type InitiateAuthInput struct {
 	//
 	//    * For CUSTOM_AUTH: USERNAME (required), SECRET_HASH (if app client is
 	//    configured with client secret), DEVICE_KEY
-	AuthParameters map[string]*string `type:"map"`
+	AuthParameters map[string]*string `type:"map" sensitive:"true"`
 
 	// The app client ID.
 	//

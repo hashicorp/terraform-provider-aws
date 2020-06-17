@@ -1,16 +1,85 @@
-## 2.65.0 (Unreleased)
+## 2.67.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_ebs_volumes` [GH-13751]
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface` [GH-13770]
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_group` [GH-13767]
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_groups` [GH-13767]
+* **New Data Source:** `aws_wafv2_web_acl` [GH-12791]
+* **New Resource:** `aws_ec2_local_gateway_route` [GH-13768]
+* **New Resource:** `aws_ec2_local_gateway_route_table_vpc_association` [GH-13765]
+* **New Resource:** `aws_ec2_tag` [GH-8457]
+* **New Resource:** `aws_wafv2_web_acl` [GH-12688]
 
 ENHANCEMENTS:
 
-* resource/aws_directory_servicedirectory: add `availability_zones` attribute to `vpc_settings` block [GH-12654]
-* resource/aws_directory_servicedirectory: add `availability_zones` attribute to `connect_settings` block [GH-12654]
-* resource/aws_directory_servicedirectory: add plan time validation to `customer_dns_ips` in `connect_settings` block [GH-12654]
+
+* data-source/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
+* resource/aws_cloudwatch_log_stream: Support resource import [GH-13697]
+* resource/aws_devicefarm_project: Support resource import [GH-13020]
+* resource/aws_ec2_traffic_mirror_target: Add `arn` attribute [GH-13649]
+* resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
+* resource/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
+* resource/aws_efs_mount_target: Add plan time validation for `ip_address` argument [GH-13650]
+* resource/aws_flow_log: Add `arn` attribute [GH-13656]
+* resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_guardduty_threatintelset: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_key_pair: Add `arn` attribute [GH-13648]
+* resource/aws_service_discovery_http_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_public_dns_namespace: Add `tags` argument [GH-13750]
+* resource/aws_service_discovery_service: Add `tags` argument [GH-13750]
+* resource/aws_wafv2_ip_set: Increase `addresses` maximum amount of items limit from 50 to 10,000 to match AWS limits [GH-13698]
 
 BUG FIXES:
 
-* resource/aws_apigatewayv2_stage: Prevent perpetual plan differences with `default_route_settings.logging_level` argument for HTTP APIs [GH-12904]
-* resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [GH-13589] 
-* resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [GH-12024] 
+* resource/aws_cloudfront_origin_access_identity: Properly trigger resource recreation when deleted outside Terraform [GH-13081]
+* resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
+* resource/aws_route: Ensure retries occur on read after creation if route not found for EC2 eventual consistency [GH-13747]
+
+## 2.66.0 (June 12, 2020)
+
+FEATURES:
+
+* **New Data Source:** `aws_wafv2_rule_group` ([#12790](https://github.com/terraform-providers/terraform-provider-aws/issues/12790))
+* **New Resource:** `aws_wafv2_rule_group` ([#12677](https://github.com/terraform-providers/terraform-provider-aws/issues/12677))
+
+BUG FIXES:
+
+* resource/aws_autoscaling_group: Allow `on_demand_base_capacity` to be set to 0 [[#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623)] 
+* resource/aws_autoscaling_group: Add `Computed` field to `instances_distribution` and it's sub-fields `on_demand_allocation_strategy`, `on_demand_base_capacity`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  ([#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623))
+* resource/aws_autoscaling_group: Remove `Default` field from `instances_distribution` sub-fields `on_demand_allocation_strategy`, `on_demand_percentage_above_base_capacity`, and `spot_allocation_strategy`  ([#13623](https://github.com/terraform-providers/terraform-provider-aws/issues/13623))
+* resource/aws_batch_job_definition: Prevent differences when no `command` is specified in container properties ([#13634](https://github.com/terraform-providers/terraform-provider-aws/issues/13634))
+* resource/aws_instance: Continue supporting empty string (`""`) `private_ip` argument ([#13640](https://github.com/terraform-providers/terraform-provider-aws/issues/13640))
+
+## 2.65.0 (June 04, 2020)
+
+ENHANCEMENTS:
+
+* resource/aws_acm_certificate: Add `status` attribute ([#13513](https://github.com/terraform-providers/terraform-provider-aws/issues/13513))
+* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `vpc_settings` block ([#12654](https://github.com/terraform-providers/terraform-provider-aws/issues/12654))
+* resource/aws_directory_servicedirectory: Add `availability_zones` attribute to `connect_settings` block ([#12654](https://github.com/terraform-providers/terraform-provider-aws/issues/12654))
+* resource/aws_directory_servicedirectory: Add plan time validation to `customer_dns_ips` in `connect_settings` block ([#12654](https://github.com/terraform-providers/terraform-provider-aws/issues/12654))
+* resource/aws_ec2_client_vpn_endpoint: Add `arn` attribute and plan time validation to `root_certificate_chain_arn` (in `authentication_options` block), `client_cidr_block`, and `server_certificate_arn` [[#13601](https://github.com/terraform-providers/terraform-provider-aws/issues/13601)] 
+* resource/aws_instance: Add plan time validation to `volume_type`(in `ebs_block_device` and `root_block_device` blocks), `private_ip`, `ipv6_addresses`, and `tenancy` ([#13033](https://github.com/terraform-providers/terraform-provider-aws/issues/13033))
+* resource/aws_lb_listener_rule: Add support for multiple, weighted target groups in `forward` rules ([#12574](https://github.com/terraform-providers/terraform-provider-aws/issues/12574))
+* resource/aws_lb_listener: Add support for multiple, weighted target groups in default actions ([#12574](https://github.com/terraform-providers/terraform-provider-aws/issues/12574))
+* resource/aws_workspaces_ip_group: Add plan-time validation for `rules.source` ([#13178](https://github.com/terraform-providers/terraform-provider-aws/issues/13178))
+
+BUG FIXES:
+
+* resource/aws_acm_certificate: Detect `AMAZON_ISSUED` type `validation_method` value directly from API response instead of custom logic ([#13513](https://github.com/terraform-providers/terraform-provider-aws/issues/13513))
+* resource/aws_acm_certificate: Increase deletion retries from 10 minutes to 20 minutes (better support API Gateway Custom Domain deletion) ([#13513](https://github.com/terraform-providers/terraform-provider-aws/issues/13513))
+* resource/aws_apigatewayv2_stage: Prevent perpetual plan differences with `default_route_settings.logging_level` argument for HTTP APIs ([#12904](https://github.com/terraform-providers/terraform-provider-aws/issues/12904))
+* resource/aws_appmesh_route: Allow configuration of `spec` `http_route` `action` `weighted_target` `weight` argument to be 0 ([#13539](https://github.com/terraform-providers/terraform-provider-aws/issues/13539))
+* resource/aws_autoscaling_group: Prevent crash with `tags` argument containing boolean values in Terraform 0.11 and earlier ([#13604](https://github.com/terraform-providers/terraform-provider-aws/issues/13604))
+* resource/aws_dynamodb_table: Prevent multiple replica creation/deletion errors ([#13523](https://github.com/terraform-providers/terraform-provider-aws/issues/13523))
+* resource/aws_instance: Prevent perpetual plan differences, forcing replacement, with `ebs_block_device` configuration blocks [[#13589](https://github.com/terraform-providers/terraform-provider-aws/issues/13589)] 
+* resource/aws_kinesis_firehose_delivery_stream: Correctly set `kinesis_source_configuration` during import to prevent resource recreation ([#13536](https://github.com/terraform-providers/terraform-provider-aws/issues/13536))
+* resource/aws_ses_configuration_set: Prevent `Provider produced inconsistent result after apply` errors during creation or import [[#12024](https://github.com/terraform-providers/terraform-provider-aws/issues/12024)] 
+* resource/aws_workspaces_ip_group: Remove resource from state if deleted outside of Terraform ([#13178](https://github.com/terraform-providers/terraform-provider-aws/issues/13178))
 
 ## 2.64.0 (May 28, 2020)
 

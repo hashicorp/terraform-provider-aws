@@ -234,10 +234,7 @@ func resourceAwsApiGatewayMethodUpdate(d *schema.ResourceData, meta interface{})
 				parameters[k] = value
 			}
 		}
-		ops, err := expandApiGatewayMethodParametersOperations(d, "request_parameters", "requestParameters")
-		if err != nil {
-			return err
-		}
+		ops := expandApiGatewayMethodParametersOperations(d, "request_parameters", "requestParameters")
 		operations = append(operations, ops...)
 	}
 

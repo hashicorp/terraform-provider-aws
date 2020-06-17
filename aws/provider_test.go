@@ -395,6 +395,14 @@ func testAccGetAlternateRegion() string {
 	return v
 }
 
+func testAccGetThirdRegion() string {
+	v := os.Getenv("AWS_THIRD_REGION")
+	if v == "" {
+		return "us-east-2"
+	}
+	return v
+}
+
 func testAccGetPartition() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		return partition.ID()
@@ -416,6 +424,13 @@ func testAccGetAlternateRegionPartition() string {
 	return "aws"
 }
 
+func testAccGetThirdRegionPartition() string {
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetThirdRegion()); ok {
+		return partition.ID()
+	}
+	return "aws"
+}
+
 func testAccAlternateAccountPreCheck(t *testing.T) {
 	if os.Getenv("AWS_ALTERNATE_PROFILE") == "" && os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID") == "" {
 		t.Fatal("AWS_ALTERNATE_ACCESS_KEY_ID or AWS_ALTERNATE_PROFILE must be set for acceptance tests")
@@ -426,6 +441,7 @@ func testAccAlternateAccountPreCheck(t *testing.T) {
 	}
 }
 
+// Deprecated: Use testAccMultipleRegionPreCheck instead
 func testAccAlternateRegionPreCheck(t *testing.T) {
 	if testAccGetRegion() == testAccGetAlternateRegion() {
 		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
@@ -464,6 +480,37 @@ func testAccPartitionHasServicePreCheck(serviceId string, t *testing.T) {
 	}
 }
 
+func testAccMultipleRegionPreCheck(t *testing.T, regions int) {
+	if testAccGetRegion() == testAccGetAlternateRegion() {
+		t.Fatal("AWS_DEFAULT_REGION and AWS_ALTERNATE_REGION must be set to different values for acceptance tests")
+	}
+
+	if testAccGetPartition() != testAccGetAlternateRegionPartition() {
+		t.Fatalf("AWS_ALTERNATE_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetAlternateRegionPartition(), testAccGetPartition())
+	}
+
+	if regions >= 3 {
+		if testAccGetRegion() == testAccGetThirdRegion() {
+			t.Fatal("AWS_DEFAULT_REGION and AWS_THIRD_REGION must be set to different values for acceptance tests")
+		}
+
+		if testAccGetAlternateRegion() == testAccGetThirdRegion() {
+			t.Fatal("AWS_ALTERNATE_REGION and AWS_THIRD_REGION must be set to different values for acceptance tests")
+		}
+
+		if testAccGetPartition() != testAccGetThirdRegionPartition() {
+			t.Fatalf("AWS_THIRD_REGION partition (%s) does not match AWS_DEFAULT_REGION partition (%s)", testAccGetThirdRegionPartition(), testAccGetPartition())
+		}
+	}
+
+	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
+		if len(partition.Regions()) < regions {
+			t.Skipf("skipping tests; partition includes %d regions, %d expected", len(partition.Regions()), regions)
+		}
+	}
+}
+
+// Deprecated: Use testAccMultipleRegionPreCheck instead.
 func testAccMultipleRegionsPreCheck(t *testing.T) {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), testAccGetRegion()); ok {
 		if len(partition.Regions()) < 2 {
@@ -549,6 +596,7 @@ provider "aws" {
 `, os.Getenv("AWS_ALTERNATE_ACCESS_KEY_ID"), os.Getenv("AWS_ALTERNATE_PROFILE"), testAccGetAlternateRegion(), os.Getenv("AWS_ALTERNATE_SECRET_ACCESS_KEY"))
 }
 
+// Deprecated: Use testAccMultipleRegionProviderConfig instead
 func testAccAlternateRegionProviderConfig() string {
 	//lintignore:AT004
 	return fmt.Sprintf(`
@@ -557,6 +605,30 @@ provider "aws" {
   region = %[1]q
 }
 `, testAccGetAlternateRegion())
+}
+
+func testAccMultipleRegionProviderConfig(regions int) string {
+	var config strings.Builder
+
+	//lintignore:AT004
+	fmt.Fprintf(&config, `
+provider "aws" {
+  alias  = "alternate"
+  region = %[1]q
+}
+`, testAccGetAlternateRegion())
+
+	if regions >= 3 {
+		//lintignore:AT004
+		fmt.Fprintf(&config, `
+provider "aws" {
+  alias  = "third"
+  region = %[1]q
+}
+`, testAccGetThirdRegion())
+	}
+
+	return config.String()
 }
 
 func testAccProviderConfigIgnoreTagsKeyPrefixes1(keyPrefix1 string) string {

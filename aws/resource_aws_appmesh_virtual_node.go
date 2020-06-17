@@ -16,6 +16,7 @@ import (
 )
 
 func resourceAwsAppmeshVirtualNode() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsAppmeshVirtualNodeCreate,
 		Read:   resourceAwsAppmeshVirtualNodeRead,
