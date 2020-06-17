@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Catalog"
 layout: "aws"
 page_title: "AWS: aws_servicecatalog_portfolio_principal_association"
-sidebar_current: "docs-aws-resource-servicecatalog-portfolio-principal-association"
 description: |-
   Provides a resource to control the association of an IAM Principal with a Service Catalog Portfolio
 ---

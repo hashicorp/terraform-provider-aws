@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Catalog"
 layout: "aws"
 page_title: "AWS: aws_servicecatalog_portfolio_product_association"
-sidebar_current: "docs-aws-resource-servicecatalog-portfolio-product-association"
 description: |-
   Provides a resource to control the association of a Service Catalog Product with a Portfolio
 ---

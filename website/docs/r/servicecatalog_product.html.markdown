@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Catalog"
 layout: "aws"
 page_title: "AWS: aws_servicecatalog_product"
-sidebar_current: "docs-aws-resource-servicecatalog-product"
 description: |-
   Provides a resource for a Service Catalog Product definition from which instances can be provisioned.
 ---
