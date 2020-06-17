@@ -18,6 +18,7 @@ ENHANCEMENTS:
 * data-source/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
 * resource/aws_cloudwatch_log_stream: Support resource import [GH-13697]
 * resource/aws_devicefarm_project: Support resource import [GH-13020]
+* resource/aws_ec2_traffic_mirror_target: Add `arn` attribute [GH-13649]
 * resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
 * resource/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
 * resource/aws_efs_mount_target: Add plan time validation for `ip_address` argument [GH-13650]
