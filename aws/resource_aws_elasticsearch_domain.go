@@ -75,14 +75,9 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if !regexp.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"%q must start with a lowercase alphabet and be at least 3 and no more than 28 characters long. Valid characters are a-z (lowercase letters), 0-9, and - (hyphen).", k))
-					}
-					return
-				},
+				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z][0-9a-z\-]{2,27}$`),
+					"must start with a lowercase alphabet and be at least 3 and no more than 28 characters long."+
+						" Valid characters are a-z (lowercase letters), 0-9, and - (hyphen)."),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -146,6 +141,11 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								elasticsearch.VolumeTypeStandard,
+								elasticsearch.VolumeTypeGp2,
+								elasticsearch.VolumeTypeIo1,
+							}, false),
 						},
 					},
 				},
