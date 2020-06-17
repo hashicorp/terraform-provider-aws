@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
-    "strings"
+	"strings"
 	"time"
 )
 
@@ -26,11 +26,11 @@ func resourceAwsServiceCatalogPortfolioProductAssociation() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"portfolio_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"product_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
@@ -41,7 +41,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.Resour
 	_, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	input := servicecatalog.AssociateProductWithPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
-		ProductId: aws.String(productId),
+		ProductId:   aws.String(productId),
 	}
 	conn := meta.(*AWSClient).scconn
 	_, err := conn.AssociateProductWithPortfolio(&input)
@@ -117,7 +117,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.Resour
 	_, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
 	input := servicecatalog.DisassociateProductFromPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
-		ProductId: aws.String(productId),
+		ProductId:   aws.String(productId),
 	}
 	conn := meta.(*AWSClient).scconn
 	_, err := conn.DisassociateProductFromPortfolio(&input)
@@ -129,17 +129,17 @@ func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.Resour
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d *schema.ResourceData) (string, string, string) {
-    if productId, ok := d.GetOk("product_id"); ok {
-	    portfolioId := d.Get("portfolio_id").(string)
-	    id := portfolioId + "--" + productId.(string);
-	    return id, portfolioId, productId.(string)
-    }
-    return parseServiceCatalogPortfolioProductAssociationResourceId(d.Id())
+	if productId, ok := d.GetOk("product_id"); ok {
+		portfolioId := d.Get("portfolio_id").(string)
+		id := portfolioId + "--" + productId.(string)
+		return id, portfolioId, productId.(string)
+	}
+	return parseServiceCatalogPortfolioProductAssociationResourceId(d.Id())
 }
 
 func parseServiceCatalogPortfolioProductAssociationResourceId(id string) (string, string, string) {
-    s := strings.SplitN(id, "--", 2)
-    portfolioId := s[0]
-    productId := s[1]
-    return id, portfolioId, productId
+	s := strings.SplitN(id, "--", 2)
+	portfolioId := s[0]
+	productId := s[1]
+	return id, portfolioId, productId
 }

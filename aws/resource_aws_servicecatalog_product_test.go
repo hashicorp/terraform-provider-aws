@@ -20,8 +20,8 @@ func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
 	tag2 := "BarKey = \"foo\""
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{

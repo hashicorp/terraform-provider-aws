@@ -7,7 +7,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
-    "strings"
+	"strings"
 	"time"
 )
 
@@ -27,11 +27,11 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociation() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"portfolio_id": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 			"principal_arn": {
-				Type: schema.TypeString,
+				Type:     schema.TypeString,
 				Required: true,
 			},
 		},
@@ -41,8 +41,8 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociation() *schema.Resource {
 func resourceAwsServiceCatalogPortfolioPrincipalAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	_, portfolioId, principalArn := resourceAwsServiceCatalogPortfolioPrincipalAssociationRequiredParameters(d)
 	input := servicecatalog.AssociatePrincipalWithPortfolioInput{
-		PortfolioId: aws.String(portfolioId),
-		PrincipalARN: aws.String(principalArn),
+		PortfolioId:   aws.String(portfolioId),
+		PrincipalARN:  aws.String(principalArn),
 		PrincipalType: aws.String("IAM"),
 	}
 	conn := meta.(*AWSClient).scconn
@@ -51,25 +51,25 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationCreate(d *schema.Reso
 		return fmt.Errorf("creating Service Catalog Principal(%s)/Portfolio(%s) Association failed: %s",
 			principalArn, portfolioId, err.Error())
 	}
-	
-    stateConf := resource.StateChangeConf{
-        Pending:      []string{servicecatalog.StatusCreating},
-        Target:       []string{servicecatalog.StatusAvailable},
-        Timeout:      1 * time.Minute,
-        PollInterval: 3 * time.Second,
-        Refresh: func() (interface{}, string, error) {
-            err := resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d, meta)
-            if err != nil {
-                return 42, "", err
-            }
-            if d.Id() != "" {
-                return 42, servicecatalog.StatusAvailable, err
-            }
-            return 0, servicecatalog.StatusCreating, err
-        },
-    }
-    _, err = stateConf.WaitForState()
-    return err
+
+	stateConf := resource.StateChangeConf{
+		Pending:      []string{servicecatalog.StatusCreating},
+		Target:       []string{servicecatalog.StatusAvailable},
+		Timeout:      1 * time.Minute,
+		PollInterval: 3 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			err := resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d, meta)
+			if err != nil {
+				return 42, "", err
+			}
+			if d.Id() != "" {
+				return 42, servicecatalog.StatusAvailable, err
+			}
+			return 0, servicecatalog.StatusCreating, err
+		},
+	}
+	_, err = stateConf.WaitForState()
+	return err
 }
 
 func resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {
@@ -136,7 +136,7 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationUpdate(d *schema.Reso
 func resourceAwsServiceCatalogPortfolioPrincipalAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	_, portfolioId, principalArn := resourceAwsServiceCatalogPortfolioPrincipalAssociationRequiredParameters(d)
 	input := servicecatalog.DisassociatePrincipalFromPortfolioInput{
-		PortfolioId: aws.String(portfolioId),
+		PortfolioId:  aws.String(portfolioId),
 		PrincipalARN: aws.String(principalArn),
 	}
 	conn := meta.(*AWSClient).scconn
@@ -149,17 +149,17 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationDelete(d *schema.Reso
 }
 
 func resourceAwsServiceCatalogPortfolioPrincipalAssociationRequiredParameters(d *schema.ResourceData) (string, string, string) {
-    if principalArn, ok := d.GetOk("principal_arn"); ok {
-	    portfolioId := d.Get("portfolio_id").(string)
-	    id := portfolioId + "--" + principalArn.(string);
-	    return id, portfolioId, principalArn.(string)
-    }
-    return parseServiceCatalogPortfolioPrincipalAssociationResourceId(d.Id())
+	if principalArn, ok := d.GetOk("principal_arn"); ok {
+		portfolioId := d.Get("portfolio_id").(string)
+		id := portfolioId + "--" + principalArn.(string)
+		return id, portfolioId, principalArn.(string)
+	}
+	return parseServiceCatalogPortfolioPrincipalAssociationResourceId(d.Id())
 }
 
 func parseServiceCatalogPortfolioPrincipalAssociationResourceId(id string) (string, string, string) {
-    s := strings.SplitN(id, "--", 2)
-    portfolioId := s[0]
-    principalArn := s[1]
-    return id, portfolioId, principalArn
+	s := strings.SplitN(id, "--", 2)
+	portfolioId := s[0]
+	principalArn := s[1]
+	return id, portfolioId, principalArn
 }

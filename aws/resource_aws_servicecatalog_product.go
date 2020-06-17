@@ -192,11 +192,11 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 
 func waitForServiceCatalogProductStatus(conn *servicecatalog.ServiceCatalog, d *schema.ResourceData) error {
 	stateConf := &resource.StateChangeConf{
-		Pending: []string{servicecatalog.StatusCreating},  
+		Pending: []string{servicecatalog.StatusCreating},
 		// "CREATED" is not documented but seems to be the state it goes to
-		Target: []string{servicecatalog.StatusAvailable, "CREATED"},
-		Refresh: refreshProductStatus(conn, d.Id()),
-		Timeout: d.Timeout(schema.TimeoutCreate),
+		Target:       []string{servicecatalog.StatusAvailable, "CREATED"},
+		Refresh:      refreshProductStatus(conn, d.Id()),
+		Timeout:      d.Timeout(schema.TimeoutCreate),
 		PollInterval: 3 * time.Second,
 	}
 	_, err := stateConf.WaitForState()
@@ -216,27 +216,27 @@ func refreshProductStatus(conn *servicecatalog.ServiceCatalog, id string) resour
 }
 
 func waitForServiceCatalogProductDeletion(conn *servicecatalog.ServiceCatalog, id string) error {
-        stateConf := resource.StateChangeConf{
-            Pending:      []string{servicecatalog.StatusCreating},
-            Target:       []string{""},
-            Timeout:      15 * time.Minute,
-            PollInterval: 3 * time.Second,
-            Refresh:      func() (interface{}, string, error) {
-                resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
-                    Id: aws.String(id),
-                })
-                if err != nil {
-                        if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
-                                return 42, "", nil
-                        }
-                        return 42, "", err
-                }
+	stateConf := resource.StateChangeConf{
+		Pending:      []string{servicecatalog.StatusCreating},
+		Target:       []string{""},
+		Timeout:      15 * time.Minute,
+		PollInterval: 3 * time.Second,
+		Refresh: func() (interface{}, string, error) {
+			resp, err := conn.DescribeProductAsAdmin(&servicecatalog.DescribeProductAsAdminInput{
+				Id: aws.String(id),
+			})
+			if err != nil {
+				if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
+					return 42, "", nil
+				}
+				return 42, "", err
+			}
 
-                return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
-            },
-        }
-        _, err := stateConf.WaitForState()
-        return err
+			return resp, aws.StringValue(resp.ProductViewDetail.Status), nil
+		},
+	}
+	_, err := stateConf.WaitForState()
+	return err
 }
 
 func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface{}) error {
@@ -298,10 +298,10 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 	if err := d.Set("provisioning_artifact", provisioningArtifactList); err != nil {
 		return fmt.Errorf("setting ProvisioningArtifact for product '%s' failed: %s", d.Id(), err)
 	}
-	
-    // TODO budgets
-    // TODO tag options
-    // TODO launch paths? (from describe product) -- probably not needed
+
+	// TODO budgets
+	// TODO tag options
+	// TODO launch paths? (from describe product) -- probably not needed
 
 	return nil
 }
@@ -371,10 +371,10 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 		return fmt.Errorf("updating ServiceCatalog product '%s' failed: %s", *input.Id, err)
 	}
 
-    if err := waitForServiceCatalogProductStatus(conn, d); err != nil {
-        return err
-    }
-    
+	if err := waitForServiceCatalogProductStatus(conn, d); err != nil {
+		return err
+	}
+
 	// this change is slightly more complicated as basically we need to update the provisioning artifact
 	if d.HasChange("provisioning_artifact") {
 		_, newProvisioningArtifactList := d.GetChange("provisioning_artifact")
@@ -383,8 +383,8 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 		_, err := conn.UpdateProvisioningArtifact(&servicecatalog.UpdateProvisioningArtifactInput{
 			ProductId:              aws.String(d.Id()),
 			ProvisioningArtifactId: aws.String(paId),
-			Name:        aws.String(newProvisioningArtifact["name"].(string)),
-			Description: aws.String(newProvisioningArtifact["description"].(string)),
+			Name:                   aws.String(newProvisioningArtifact["name"].(string)),
+			Description:            aws.String(newProvisioningArtifact["description"].(string)),
 		})
 		if err != nil {
 			return fmt.Errorf("unable to update provisioning artifact %s for product %s due to %s", d.Id(), paId, err)
@@ -404,9 +404,9 @@ func resourceAwsServiceCatalogProductDelete(d *schema.ResourceData, meta interfa
 	if err != nil {
 		return fmt.Errorf("deleting ServiceCatalog product '%s' failed: %s", *input.Id, err)
 	}
-    if err := waitForServiceCatalogProductDeletion(conn, d.Id()); err != nil {
-        return err
-    }
+	if err := waitForServiceCatalogProductDeletion(conn, d.Id()); err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -422,24 +422,24 @@ func replaceProvisioningArtifactParametersKey(m map[string]*string, replacedKey,
 
 // tagsFromMap returns the tags for the given map of data.
 func tagsFromMapServiceCatalog(m map[string]interface{}) []*servicecatalog.Tag {
-    result := make([]*servicecatalog.Tag, 0, len(m))
-    for k, v := range m {
-        t := &servicecatalog.Tag{
-            Key:   aws.String(k),
-            Value: aws.String(v.(string)),
-        }
-        result = append(result, t)
-    }
+	result := make([]*servicecatalog.Tag, 0, len(m))
+	for k, v := range m {
+		t := &servicecatalog.Tag{
+			Key:   aws.String(k),
+			Value: aws.String(v.(string)),
+		}
+		result = append(result, t)
+	}
 
-    return result
+	return result
 }
 
 // tagsToMap turns the list of tags into a map.
 func tagsToMapServiceCatalog(ts []*servicecatalog.Tag) map[string]string {
-    result := make(map[string]string)
-    for _, t := range ts {
-        result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
-    }
+	result := make(map[string]string)
+	for _, t := range ts {
+		result[aws.StringValue(t.Key)] = aws.StringValue(t.Value)
+	}
 
-    return result
+	return result
 }

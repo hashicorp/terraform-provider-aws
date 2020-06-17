@@ -172,9 +172,9 @@ func refreshProvisionedProductStatus(conn *servicecatalog.ServiceCatalog, d *sch
 			Id: aws.String(d.Id()),
 		})
 		if err != nil {
-		    // to help debug if there's a problem
-            d.Set("status", resp.ProvisionedProductDetail.Status)
-            d.Set("status_message", resp.ProvisionedProductDetail.StatusMessage)		    
+			// to help debug if there's a problem
+			d.Set("status", resp.ProvisionedProductDetail.Status)
+			d.Set("status_message", resp.ProvisionedProductDetail.StatusMessage)
 			return nil, "", err
 		}
 		return resp, aws.StringValue(resp.ProvisionedProductDetail.Status), nil
