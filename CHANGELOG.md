@@ -12,6 +12,9 @@ FEATURES:
 ENHANCEMENTS:
 
 * resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
+* resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute [GH-13756]
+* resource/aws_guardduty_threatintelset: Add `tags` argument and `arn` attribute [GH-13756]
 * resource/aws_service_discovery_http_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
 * resource/aws_service_discovery_public_dns_namespace: Add `tags` argument [GH-13750]
