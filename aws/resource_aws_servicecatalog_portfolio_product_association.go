@@ -60,6 +60,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.Resource
 	conn := meta.(*AWSClient).scconn
 	var portfolioDetails []*servicecatalog.PortfolioDetail
 	var pageToken = ""
+	//TODO: scan each page of results for match then bail out of loop on first match
 	for {
 		pageOfDetails, nextPageToken, err := resourceAwsServiceCatalogPortfolioProductAssociationListPortfoliosForProductPage(conn, input, &pageToken)
 		if err != nil {
