@@ -10,11 +10,14 @@ description: |-
 
 Provides a resource to create a Service Catalog Product.
 
-Note that this Product definition is not associated to any portfolio, 
-it has the default security/roles (no launch constraints),
+Note that the way AWS Service Catalog works,
+this Product definition is not associated to any portfolio, 
+it has no launch constraints,
 and it only creates the very first Provisioning Artifact that comes along with the product being created.
 It is necessary to create an `aws_servicecatalog_portfolio_product_association` 
-to link this to a portfolio before it can be provisioned.
+to link this to a portfolio before it can be provisioned,
+and for that portfolio to have an `aws_servicecatalog_portfolio_principal_association` explicitly 
+opting-in those principals (users, groups, roles) which can access it.
 It is also common but not necessary to create launch constraints and additional provisioning artifacts
 to govern the usage of this Product. 
 

@@ -65,12 +65,12 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeMap},
 			},
 			/*
-							// TODO stack set prefs
-							"provisioning_preferences": {
-				                Type:     schema.TypeMap,
-				                Optional: true,
-				                Elem:     <various>
-							},
+			// TODO stack set preferences
+			"provisioning_preferences": {
+                Type:     schema.TypeMap,
+                Optional: true,
+                Elem:     <various>
+			},
 			*/
 			"tags": tagsSchema(),
 
