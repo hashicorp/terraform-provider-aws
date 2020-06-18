@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"log"
-	"os"
 	"regexp"
 	"testing"
 	"time"
@@ -299,29 +298,20 @@ func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 
 func TestAccAWSSubnet_outpost(t *testing.T) {
 	var v ec2.Subnet
+	outpostDataSourceName := "data.aws_outposts_outpost.test"
 	resourceName := "aws_subnet.test"
 
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubnetConfigOutpost(outpostArn),
+				Config: testAccSubnetConfigOutpost(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						resourceName, &v),
-					resource.TestCheckResourceAttr(
-						resourceName, "outpost_arn", outpostArn),
+					testAccCheckSubnetExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
 				),
 			},
 			{
@@ -554,11 +544,12 @@ resource "aws_subnet" "test" {
 }
 `
 
-func testAccSubnetConfigOutpost(outpostArn string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
-  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
-  blacklisted_zone_ids = ["usw2-az4"]
+func testAccSubnetConfigOutpost() string {
+	return `
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
 
 resource "aws_vpc" "test" {
@@ -569,13 +560,14 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
-  availability_zone       = "${data.aws_availability_zones.current.names[0]}"
-  outpost_arn = "%s"
+  availability_zone = data.aws_outposts_outpost.test.availability_zone
+  cidr_block        = "10.1.1.0/24"
+  outpost_arn       = data.aws_outposts_outpost.test.arn
+  vpc_id            = aws_vpc.test.id
+
   tags = {
     Name = "tf-acc-subnet-outpost"
   }
 }
-`, outpostArn)
+`
 }
