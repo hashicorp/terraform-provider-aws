@@ -105,8 +105,6 @@ resource "aws_lambda_function" "example" {
 
 # EFS file system
 resource "aws_efs_file_system" "efs_for_lambda" {
-  creation_token = "lambda-file-system"
-
   tags = {
     Name = "efs_for_lambda"
   }

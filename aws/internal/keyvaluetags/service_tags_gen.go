@@ -1120,14 +1120,28 @@ func (tags KeyValueTags) Ec2Tags() []*ec2.Tag {
 }
 
 // Ec2KeyValueTags creates KeyValueTags from ec2 service tags.
-func Ec2KeyValueTags(tags []*ec2.Tag) KeyValueTags {
-	m := make(map[string]*string, len(tags))
+// Accepts []*ec2.Tag and []*ec2.TagDescription.
+func Ec2KeyValueTags(tags interface{}) KeyValueTags {
+	switch tags := tags.(type) {
+	case []*ec2.Tag:
+		m := make(map[string]*string, len(tags))
 
-	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		for _, tag := range tags {
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
+
+		return New(m)
+	case []*ec2.TagDescription:
+		m := make(map[string]*string, len(tags))
+
+		for _, tag := range tags {
+			m[aws.StringValue(tag.Key)] = tag.Value
+		}
+
+		return New(m)
+	default:
+		return New(nil)
 	}
-
-	return New(m)
 }
 
 // EcrTags returns ecr service tags.

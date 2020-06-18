@@ -454,7 +454,7 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandElastiCacheParameters(configured []interface{}) ([]*elasticache.ParameterNameValue, error) {
+func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
 	parameters := make([]*elasticache.ParameterNameValue, 0, len(configured))
 
 	// Loop over our configured parameters and create
@@ -470,7 +470,7 @@ func expandElastiCacheParameters(configured []interface{}) ([]*elasticache.Param
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 // Takes the result of flatmap.Expand for an array of parameters and
@@ -1238,98 +1238,6 @@ func expandTxtEntry(s string) string {
 	}
 	return s
 }
-
-func expandESClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
-	config := elasticsearch.ElasticsearchClusterConfig{}
-
-	if v, ok := m["dedicated_master_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["dedicated_master_count"]; ok && v.(int) > 0 {
-				config.DedicatedMasterCount = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["dedicated_master_type"]; ok && v.(string) != "" {
-				config.DedicatedMasterType = aws.String(v.(string))
-			}
-		}
-	}
-
-	if v, ok := m["instance_count"]; ok {
-		config.InstanceCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["instance_type"]; ok {
-		config.InstanceType = aws.String(v.(string))
-	}
-
-	if v, ok := m["zone_awareness_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.ZoneAwarenessEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["zone_awareness_config"]; ok {
-				config.ZoneAwarenessConfig = expandElasticsearchZoneAwarenessConfig(v.([]interface{}))
-			}
-		}
-	}
-
-	return &config
-}
-
-func expandElasticsearchZoneAwarenessConfig(l []interface{}) *elasticsearch.ZoneAwarenessConfig {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-
-	m := l[0].(map[string]interface{})
-
-	zoneAwarenessConfig := &elasticsearch.ZoneAwarenessConfig{}
-
-	if v, ok := m["availability_zone_count"]; ok && v.(int) > 0 {
-		zoneAwarenessConfig.AvailabilityZoneCount = aws.Int64(int64(v.(int)))
-	}
-
-	return zoneAwarenessConfig
-}
-
-func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{
-		"zone_awareness_config":  flattenElasticsearchZoneAwarenessConfig(c.ZoneAwarenessConfig),
-		"zone_awareness_enabled": aws.BoolValue(c.ZoneAwarenessEnabled),
-	}
-
-	if c.DedicatedMasterCount != nil {
-		m["dedicated_master_count"] = *c.DedicatedMasterCount
-	}
-	if c.DedicatedMasterEnabled != nil {
-		m["dedicated_master_enabled"] = *c.DedicatedMasterEnabled
-	}
-	if c.DedicatedMasterType != nil {
-		m["dedicated_master_type"] = *c.DedicatedMasterType
-	}
-	if c.InstanceCount != nil {
-		m["instance_count"] = *c.InstanceCount
-	}
-	if c.InstanceType != nil {
-		m["instance_type"] = *c.InstanceType
-	}
-
-	return []map[string]interface{}{m}
-}
-
-func flattenElasticsearchZoneAwarenessConfig(zoneAwarenessConfig *elasticsearch.ZoneAwarenessConfig) []interface{} {
-	if zoneAwarenessConfig == nil {
-		return []interface{}{}
-	}
-
-	m := map[string]interface{}{
-		"availability_zone_count": aws.Int64Value(zoneAwarenessConfig.AvailabilityZoneCount),
-	}
-
-	return []interface{}{m}
-}
-
 func expandESCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 	options := &elasticsearch.CognitoOptions{
 		Enabled: aws.Bool(false),

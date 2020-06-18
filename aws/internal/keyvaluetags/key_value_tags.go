@@ -1,5 +1,6 @@
 //go:generate go run -tags generate generators/servicetags/main.go
 //go:generate go run -tags generate generators/listtags/main.go
+//go:generate go run -tags generate generators/gettag/main.go
 //go:generate go run -tags generate generators/createtags/main.go
 //go:generate go run -tags generate generators/updatetags/main.go
 
@@ -136,6 +137,28 @@ func (tags KeyValueTags) Ignore(ignoreTags KeyValueTags) KeyValueTags {
 	}
 
 	return result
+}
+
+// KeyExists returns true if a tag key exists.
+// If the key is not found, returns nil.
+// Use KeyExists to determine if key is present.
+func (tags KeyValueTags) KeyExists(key string) bool {
+	if _, ok := tags[key]; ok {
+		return true
+	}
+
+	return false
+}
+
+// KeyValue returns a tag key value.
+// If the key is not found, returns nil.
+// Use KeyExists to determine if key is present.
+func (tags KeyValueTags) KeyValue(key string) *string {
+	if v, ok := tags[key]; ok {
+		return v
+	}
+
+	return nil
 }
 
 // Keys returns tag keys.

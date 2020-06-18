@@ -137,6 +137,18 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"warm_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"warm_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
