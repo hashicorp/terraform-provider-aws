@@ -130,7 +130,7 @@ func resourceAwsSecretsManagerSecretRotationUpdate(d *schema.ResourceData, meta 
 	conn := meta.(*AWSClient).secretsmanagerconn
 	secretID := d.Get("secret_id").(string)
 
-	if d.HasChanges("rotation_lambda_arn, "rotation_rules") {
+	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
 		if v, ok := d.GetOk("rotation_lambda_arn"); ok && v.(string) != "" {
 			input := &secretsmanager.RotateSecretInput{
 				RotationLambdaARN: aws.String(v.(string)),
