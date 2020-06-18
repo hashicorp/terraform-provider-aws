@@ -22,14 +22,16 @@ func dataSourceAwsOutpostsSite() *schema.Resource {
 				Computed: true,
 			},
 			"id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"id", "name"},
 			},
 		},
 	}

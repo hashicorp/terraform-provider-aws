@@ -22,6 +22,6 @@ There are no arguments available for this data source.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+The following attributes are exported:
 
 * `ids` - Set of Outposts Site identifiers.
