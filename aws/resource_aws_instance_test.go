@@ -3474,6 +3474,10 @@ data "aws_outposts_outpost" "test" {
   id = tolist(data.aws_outposts_outposts.test.ids)[0]
 }
 
+data "aws_outposts_outpost_instance_types" "test" {
+  arn = data.aws_outposts_outpost.test.arn
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 }
@@ -3487,7 +3491,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = "m5.4xlarge" # Lookup would require new aws_outposts_outpost_instance_type(s) data source
+  instance_type = tolist(data.aws_outposts_outpost_instance_types.test.instance_types)[0]
   subnet_id     = aws_subnet.test.id
 
   root_block_device {
