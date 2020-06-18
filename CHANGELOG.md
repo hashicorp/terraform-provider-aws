@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * data-source/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
 * data-source/aws_internet_gateway: Add `arn` attribute [GH-13614]
 * data-source/aws_lambda_function: Add `file_system_config` attribute [GH-13782]
+* data-source/aws_workspaces_bundle: Add `name` and `owner` as search crieria [GH-12497]
 * resource/aws_ec2_capacity_reservation: Add `arn` attribute and support for Linux SQL Server values in `instance_platform` argument [GH-13607]
 * resource/aws_cloudwatch_log_stream: Support resource import [GH-13697]
 * resource/aws_default_vpc_dhcp_options: Add `arn` attribute [GH-13606]
