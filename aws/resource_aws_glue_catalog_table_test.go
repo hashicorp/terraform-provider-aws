@@ -724,9 +724,9 @@ func testAccCheckGlueCatalogTableExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Glue Table Found")
 		}
 
-		if *out.Table.Name != resourceName {
+		if aws.StringValue(out.Table.Name) != resourceName {
 			return fmt.Errorf("Glue Table Mismatch - existing: %q, state: %q",
-				*out.Table.Name, resourceName)
+				aws.StringValue(out.Table.Name), resourceName)
 		}
 
 		return nil
