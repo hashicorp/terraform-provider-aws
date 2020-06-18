@@ -244,7 +244,7 @@ func resourceAwsBudgetsBudgetCreate(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("create budget failed: %v", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", accountID, *budget.BudgetName))
+	d.SetId(fmt.Sprintf("%s:%s", accountID, aws.StringValue(budget.BudgetName)))
 
 	notificationsRaw := d.Get("notification").(*schema.Set).List()
 	notifications, subscribers := expandBudgetNotificationsUnmarshal(notificationsRaw)

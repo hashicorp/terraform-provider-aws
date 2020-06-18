@@ -93,7 +93,7 @@ func TestAccAWSBudgetsBudget_basic(t *testing.T) {
 				Config: testAccAWSBudgetsBudgetConfig_BasicDefaults(configBasicDefaults, costFilterKey),
 				Check: resource.ComposeTestCheckFunc(
 					testAccAWSBudgetsBudgetExists(resourceName, configBasicDefaults),
-					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "budgetservice", regexp.MustCompile(`budget/.+`)),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "budgetservice", fmt.Sprintf(`budget/%s`, rName)),
 					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(*configBasicDefaults.BudgetName)),
 					resource.TestCheckResourceAttr(resourceName, "budget_type", *configBasicDefaults.BudgetType),
 					resource.TestCheckResourceAttr(resourceName, "limit_amount", *configBasicDefaults.BudgetLimit.Amount),
@@ -326,8 +326,9 @@ func testAccAWSBudgetsBudgetExists(resourceName string, config budgets.Budget) r
 			return fmt.Errorf("No budget returned %v in %v", b.Budget, b)
 		}
 
-		if *b.Budget.BudgetLimit.Amount != *config.BudgetLimit.Amount {
-			return fmt.Errorf("budget limit incorrectly set %v != %v", *config.BudgetLimit.Amount, *b.Budget.BudgetLimit.Amount)
+		if aws.StringValue(b.Budget.BudgetLimit.Amount) != aws.StringValue(config.BudgetLimit.Amount) {
+			return fmt.Errorf("budget limit incorrectly set %v != %v", aws.StringValue(config.BudgetLimit.Amount),
+				aws.StringValue(b.Budget.BudgetLimit.Amount))
 		}
 
 		if err := testAccAWSBudgetsBudgetCheckCostTypes(config, *b.Budget.CostTypes); err != nil {
