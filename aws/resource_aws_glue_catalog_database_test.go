@@ -204,9 +204,9 @@ func testAccCheckGlueCatalogDatabaseExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No Glue Database Found")
 		}
 
-		if *out.Database.Name != dbName {
+		if aws.StringValue(out.Database.Name) != dbName {
 			return fmt.Errorf("Glue Database Mismatch - existing: %q, state: %q",
-				*out.Database.Name, dbName)
+				aws.StringValue(out.Database.Name), dbName)
 		}
 
 		return nil
