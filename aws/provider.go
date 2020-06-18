@@ -805,6 +805,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_securityhub_product_subscription":                    resourceAwsSecurityHubProductSubscription(),
 			"aws_securityhub_standards_subscription":                  resourceAwsSecurityHubStandardsSubscription(),
 			"aws_servicecatalog_portfolio":                            resourceAwsServiceCatalogPortfolio(),
+			"aws_servicecatalog_portfolio_principal_association":      resourceAwsServiceCatalogPortfolioPrincipalAssociation(),
 			"aws_servicecatalog_portfolio_product_association":        resourceAwsServiceCatalogPortfolioProductAssociation(),
 			"aws_servicecatalog_product":                              resourceAwsServiceCatalogProduct(),
 			"aws_service_discovery_http_namespace":                    resourceAwsServiceDiscoveryHttpNamespace(),
