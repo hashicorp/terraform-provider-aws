@@ -3,15 +3,13 @@ package aws
 import (
 	"fmt"
 	"regexp"
+	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-
-	"testing"
 )
 
 func TestAccAWSServiceCatalogPortfolio_Basic(t *testing.T) {
