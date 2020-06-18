@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"regexp"
 	"testing"
 
@@ -11,19 +10,10 @@ import (
 )
 
 func TestAccDataSourceAwsEc2LocalGatewayVirtualInterface_Filter(t *testing.T) {
-	// Hide Outposts testing behind consistent environment variable
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -43,19 +33,10 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterface_Filter(t *testing.T) {
 }
 
 func TestAccDataSourceAwsEc2LocalGatewayVirtualInterface_Id(t *testing.T) {
-	// Hide Outposts testing behind consistent environment variable
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -75,21 +56,12 @@ func TestAccDataSourceAwsEc2LocalGatewayVirtualInterface_Id(t *testing.T) {
 }
 
 func TestAccDataSourceAwsEc2LocalGatewayVirtualInterface_Tags(t *testing.T) {
-	// Hide Outposts testing behind consistent environment variable
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	sourceDataSourceName := "data.aws_ec2_local_gateway_virtual_interface.source"
 	dataSourceName := "data.aws_ec2_local_gateway_virtual_interface.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
