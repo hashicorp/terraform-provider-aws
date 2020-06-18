@@ -279,7 +279,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_key_pair` resource](/docs/providers/aws/r/key_pair.html)
   - [`aws_launch_template` data source](/docs/providers/aws/d/launch_template.html)
   - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
-  - [`aws_network_acl` resource](/docs/providers/aws/r/launch_template.html)  
+  - [`aws_network_acl` resource](/docs/providers/aws/r/network_acl.html)  
   - [`aws_redshift_cluster` resource](/docs/providers/aws/r/redshift_cluster.html)
   - [`aws_redshift_event_subscription` resource](/docs/providers/aws/r/redshift_event_subscription.html)
   - [`aws_redshift_parameter_group` resource](/docs/providers/aws/r/redshift_parameter_group.html)
