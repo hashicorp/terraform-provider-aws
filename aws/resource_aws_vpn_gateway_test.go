@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 	"time"
 
@@ -73,8 +74,8 @@ func testSweepVPNGateways(region string) error {
 			}
 
 			stateConf := &resource.StateChangeConf{
-				Pending: []string{"attached", "detaching"},
-				Target:  []string{"detached"},
+				Pending: []string{ec2.AttachmentStatusAttached, ec2.AttachmentStatusDetaching},
+				Target:  []string{ec2.AttachmentStatusDetached},
 				Refresh: vpnGatewayAttachmentStateRefresh(conn, aws.StringValue(vpcAttachment.VpcId), aws.StringValue(vpng.VpnGatewayId)),
 				Timeout: 10 * time.Minute,
 			}
@@ -134,8 +135,8 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists(
-						resourceName, &v),
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpn-gateway/vgw-.+`)),
 				),
 			},
 			{
@@ -146,8 +147,7 @@ func TestAccAWSVpnGateway_basic(t *testing.T) {
 			{
 				Config: testAccVpnGatewayConfigChangeVPC,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists(
-						resourceName, &v2),
+					testAccCheckVpnGatewayExists(resourceName, &v2),
 					testNotEqual,
 				),
 			},
@@ -209,6 +209,7 @@ func TestAccAWSVpnGateway_withAmazonSideAsnSetToState(t *testing.T) {
 
 func TestAccAWSVpnGateway_disappears(t *testing.T) {
 	var v ec2.VpnGateway
+	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -218,8 +219,8 @@ func TestAccAWSVpnGateway_disappears(t *testing.T) {
 			{
 				Config: testAccVpnGatewayConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.test", &v),
-					testAccAWSVpnGatewayDisappears(&v),
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpnGateway(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -388,50 +389,6 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccAWSVpnGatewayDisappears(gateway *ec2.VpnGateway) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		_, err := conn.DetachVpnGateway(&ec2.DetachVpnGatewayInput{
-			VpnGatewayId: gateway.VpnGatewayId,
-			VpcId:        gateway.VpcAttachments[0].VpcId,
-		})
-		if err != nil {
-			return err
-		}
-
-		opts := &ec2.DeleteVpnGatewayInput{
-			VpnGatewayId: gateway.VpnGatewayId,
-		}
-		if _, err := conn.DeleteVpnGateway(opts); err != nil {
-			return err
-		}
-		return resource.Retry(40*time.Minute, func() *resource.RetryError {
-			opts := &ec2.DescribeVpnGatewaysInput{
-				VpnGatewayIds: []*string{gateway.VpnGatewayId},
-			}
-			resp, err := conn.DescribeVpnGateways(opts)
-			if err != nil {
-				cgw, ok := err.(awserr.Error)
-				if ok && cgw.Code() == "InvalidVpnGatewayID.NotFound" {
-					return nil
-				}
-				if ok && cgw.Code() == "IncorrectState" {
-					return resource.RetryableError(fmt.Errorf(
-						"Waiting for VPN Gateway to be in the correct state: %v", gateway.VpnGatewayId))
-				}
-				return resource.NonRetryableError(
-					fmt.Errorf("Error retrieving VPN Gateway: %s", err))
-			}
-			if *resp.VpnGateways[0].State == "deleted" {
-				return nil
-			}
-			return resource.RetryableError(fmt.Errorf(
-				"Waiting for VPN Gateway: %v", gateway.VpnGatewayId))
-		})
-	}
 }
 
 func testAccCheckVpnGatewayDestroy(s *terraform.State) error {
