@@ -82,7 +82,7 @@ func resourceAwsNetworkAcl() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ec2.RuleActionAllow,
 								ec2.RuleActionDeny,
-							}, false),
+							}, true),
 						},
 						"protocol": {
 							Type:     schema.TypeString,
@@ -141,7 +141,7 @@ func resourceAwsNetworkAcl() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								ec2.RuleActionAllow,
 								ec2.RuleActionDeny,
-							}, false),
+							}, true),
 						},
 						"protocol": {
 							Type:     schema.TypeString,
