@@ -6,6 +6,7 @@ FEATURES:
 * **New Data Source:** `aws_ec2_local_gateway_virtual_interface` [GH-13770]
 * **New Data Source:** `aws_ec2_local_gateway_virtual_interface_group` [GH-13767]
 * **New Data Source:** `aws_ec2_local_gateway_virtual_interface_groups` [GH-13767]
+* **New Data Source:** `aws_ecr_authorization_token` [GH-12395]
 * **New Data Source:** `aws_outposts_outpost` [GH-13777]
 * **New Data Source:** `aws_outposts_outposts` [GH-13777]
 * **New Data Source:** `aws_wafv2_web_acl` [GH-12791]
