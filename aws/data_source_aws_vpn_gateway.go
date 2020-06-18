@@ -132,5 +132,7 @@ func dataSourceAwsVpnGatewayRead(d *schema.ResourceData, meta interface{}) error
 		Resource:  fmt.Sprintf("vpn-gateway/%s", d.Id()),
 	}.String()
 
+	d.Set("arn", arn)
+
 	return nil
 }
