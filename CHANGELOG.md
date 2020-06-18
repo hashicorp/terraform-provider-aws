@@ -1,5 +1,10 @@
 ## 2.67.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_secretsmanager_secret: The `rotation_*` attributes have been deprecated in favor of the new `aws_secretsmanager_secret_rotation` data source. [GH-9487]
+* resource/aws_secretsmanager_secret: The `rotation_*` arguments have been deprecated in favor of the new `aws_secretsmanager_secret_rotation` resource. The new resource, which fixes workflow issues, prevents the existing resource from showing changes when attempting to remove rotation. Removal must be done with the new resource or manually. [GH-9487]
+
 FEATURES:
 
 * **New Data Source:** `aws_ebs_volumes` [GH-13751]
@@ -13,11 +18,13 @@ FEATURES:
 * **New Data Source:** `aws_outposts_outposts` [GH-13777]
 * **New Data Source:** `aws_outposts_site` [GH-13825]
 * **New Data Source:** `aws_outposts_sites` [GH-13825]
+* **New Data Source:** `aws_secretsmanager_secret_rotation` [GH-9487]
 * **New Data Source:** `aws_wafv2_web_acl` [GH-12791]
 * **New Guide:** [Resource Tagging](https://terraform.io/docs/providers/aws/guides/resource-tagging.html) [GH-13779]
 * **New Resource:** `aws_ec2_local_gateway_route` [GH-13768]
 * **New Resource:** `aws_ec2_local_gateway_route_table_vpc_association` [GH-13765]
 * **New Resource:** `aws_ec2_tag` [GH-8457]
+* **New Resource:** `aws_secretsmanager_secret_rotation` [GH-9487]
 * **New Resource:** `aws_wafv2_web_acl` [GH-12688]
 * **New Resource:** `aws_wafv2_web_acl_association` [GH-12698]
 
