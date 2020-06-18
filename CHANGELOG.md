@@ -28,6 +28,7 @@ ENHANCEMENTS:
 * resource_aws_elasticsearch_domain: Add support for elasticsearch warm storage [GH-12668]
 * resource_aws_elasticsearch_domain: Add plan time validation for `cloudwatch_log_group_arn`, `role_arn`, and `ebs_options.volume_type` [GH-12668]
 * resource/aws_flow_log: Add `arn` attribute [GH-13656]
+* resource/aws_glue_catalog_table: Add `arn` attribute [GH-13456]
 * resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
 * resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute [GH-13756]
 * resource/aws_guardduty_threatintelset: Add `tags` argument and `arn` attribute [GH-13756]
