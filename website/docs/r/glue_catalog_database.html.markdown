@@ -33,7 +33,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - Catalog ID and name of the database
-* `arn` - The ARN of the Glue Connection.
+* `arn` - The ARN of the Glue Catalog Database.
 
 ## Import
 
