@@ -992,10 +992,9 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupWithHookConfig(randName),
