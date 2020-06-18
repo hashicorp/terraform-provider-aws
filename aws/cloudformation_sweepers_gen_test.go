@@ -25,11 +25,11 @@ func testSweepCloudformationStackSets(region string) error {
 			return !lastPage
 		}
 
-		for _, stackSet := range page.Summaries {
-			name := aws.StringValue(stackSet.StackSetName)
+		for _, r := range page.Summaries {
+			name := aws.StringValue(r.StackSetName)
 
 			log.Printf("[INFO] Deleting Cloudformation StackSet: %s", name)
-			err := deleteCloudFormationStackSet(conn, deleteCloudFormationStackSetInputFromAPIResource(stackSet))
+			err := deleteCloudformationStackSet(conn, deleteCloudformationStackSetInputFromAPIResource(r))
 			if err != nil {
 				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error deleting Cloudformation StackSet (%s): %w", name, err))
 				continue

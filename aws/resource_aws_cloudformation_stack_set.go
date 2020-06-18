@@ -251,11 +251,11 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 	conn := meta.(*AWSClient).cfconn
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet: %s", d.Id())
-	input, err := deleteCloudFormationStackSetInputFromResourceData(d)
+	input, err := deleteCloudformationStackSetInputFromResourceData(d)
 	if err != nil {
 		return err
 	}
-	err = deleteCloudFormationStackSet(conn, input)
+	err = deleteCloudformationStackSet(conn, input)
 	if err != nil {
 		return fmt.Errorf("error deleting CloudFormation StackSet (%s): %s", d.Id(), err)
 	}
@@ -263,19 +263,19 @@ func resourceAwsCloudFormationStackSetDelete(d *schema.ResourceData, meta interf
 	return nil
 }
 
-func deleteCloudFormationStackSetInputFromResourceData(d *schema.ResourceData) (*cloudformation.DeleteStackSetInput, error) {
+func deleteCloudformationStackSetInputFromResourceData(d *schema.ResourceData) (*cloudformation.DeleteStackSetInput, error) {
 	return &cloudformation.DeleteStackSetInput{
 		StackSetName: aws.String(d.Id()),
 	}, nil
 }
 
-func deleteCloudFormationStackSetInputFromAPIResource(r *cloudformation.StackSetSummary) *cloudformation.DeleteStackSetInput {
+func deleteCloudformationStackSetInputFromAPIResource(r *cloudformation.StackSetSummary) *cloudformation.DeleteStackSetInput {
 	return &cloudformation.DeleteStackSetInput{
 		StackSetName: r.StackSetName,
 	}
 }
 
-func deleteCloudFormationStackSet(conn *cloudformation.CloudFormation, input *cloudformation.DeleteStackSetInput) error {
+func deleteCloudformationStackSet(conn *cloudformation.CloudFormation, input *cloudformation.DeleteStackSetInput) error {
 	_, err := conn.DeleteStackSet(input)
 	if isAWSErr(err, cloudformation.ErrCodeStackSetNotFoundException, "") {
 		return nil
