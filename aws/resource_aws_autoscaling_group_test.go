@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -86,10 +87,9 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupConfig(randName),
@@ -98,7 +98,7 @@ func TestAccAWSAutoScalingGroup_basic(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupHealthyCapacity(&group, 2),
 					testAccCheckAWSAutoScalingGroupAttributes(&group, randName),
 					testAccMatchResourceAttrRegionalARN("aws_autoscaling_group.bar", "arn", "autoscaling", regexp.MustCompile(`autoScalingGroup:.+`)),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "availability_zones.2487133097", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_autoscaling_group.bar", "availability_zones.*", "us-west-2a"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "default_cooldown", "300"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "desired_capacity", "4"),
 					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "enabled_metrics.#", "0"),
@@ -381,10 +381,9 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 	var group autoscaling.Group
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithAZ,
@@ -392,8 +391,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "availability_zones.2487133097", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_autoscaling_group.bar", "availability_zones.*", "us-west-2a"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "0"),
 				),
@@ -419,8 +417,7 @@ func TestAccAWSAutoScalingGroup_VpcUpdates(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupAttributesVPCZoneIdentifier(&group),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "availability_zones.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "availability_zones.2487133097", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemAttr("aws_autoscaling_group.bar", "availability_zones.*", "us-west-2a"),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "vpc_zone_identifier.#", "1"),
 				),
@@ -995,10 +992,9 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupWithHookConfig(randName),
@@ -1007,10 +1003,11 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 					testAccCheckAWSAutoScalingGroupHealthyCapacity(&group, 2),
 					resource.TestCheckResourceAttr(
 						"aws_autoscaling_group.bar", "initial_lifecycle_hook.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.default_result", "CONTINUE"),
-					resource.TestCheckResourceAttr(
-						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name", "launching"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_autoscaling_group.bar", "initial_lifecycle_hook.*", map[string]string{
+						"default_result": "CONTINUE",
+						"name":           "launching",
+					}),
+					// TODO: TypeSet hash
 					testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(
 						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name"),
 				),
@@ -2136,10 +2133,9 @@ func TestAccAWSAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 	randName := fmt.Sprintf("terraform-test-%s", acctest.RandString(10))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAutoScalingGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAutoScalingGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAutoScalingGroupPartitionConfig(randName),
