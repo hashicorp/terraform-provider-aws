@@ -14,7 +14,7 @@ func TestAccDataSourceAwsVpnGateway_unattached(t *testing.T) {
 	dataSourceNameById := "data.aws_vpn_gateway.test_by_id"
 	dataSourceNameByTags := "data.aws_vpn_gateway.test_by_tags"
 	dataSourceNameByAsn := "data.aws_vpn_gateway.test_by_amazon_side_asn"
-	resourceName := "aws_vpn_gateway.unattached"
+	resourceName := "aws_vpn_gateway.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
