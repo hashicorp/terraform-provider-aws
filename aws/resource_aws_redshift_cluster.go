@@ -683,7 +683,7 @@ func resourceAwsRedshiftClusterUpdate(d *schema.ResourceData, meta interface{}) 
 
 	// If the cluster type, node type, or number of nodes changed, then the AWS API expects all three
 	// items to be sent over
-	if d.HasChange("cluster_type") || d.HasChange("node_type") || d.HasChange("number_of_nodes") {
+	if d.HasChanges("cluster_type", "node_type", "number_of_nodes") {
 		req.ClusterType = aws.String(d.Get("cluster_type").(string))
 		req.NodeType = aws.String(d.Get("node_type").(string))
 		if v := d.Get("number_of_nodes").(int); v > 1 {

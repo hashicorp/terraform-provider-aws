@@ -537,7 +537,7 @@ func resourceAwsMskClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("enhanced_monitoring") || d.HasChange("open_monitoring") || d.HasChange("logging_info") {
+	if d.HasChanges("enhanced_monitoring", "open_monitoring", "logging_info") {
 		input := &kafka.UpdateMonitoringInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
