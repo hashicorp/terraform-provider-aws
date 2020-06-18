@@ -2,13 +2,14 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"strings"
+	"time"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"log"
-	"strings"
-	"time"
 )
 
 func resourceAwsServiceCatalogPortfolioPrincipalAssociation() *schema.Resource {
@@ -31,8 +32,9 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociation() *schema.Resource {
 				Required: true,
 			},
 			"principal_arn": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validateArn,
 			},
 		},
 	}
@@ -43,7 +45,7 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationCreate(d *schema.Reso
 	input := servicecatalog.AssociatePrincipalWithPortfolioInput{
 		PortfolioId:   aws.String(portfolioId),
 		PrincipalARN:  aws.String(principalArn),
-		PrincipalType: aws.String("IAM"),
+		PrincipalType: aws.String(servicecatalog.PrincipalTypeIam),
 	}
 	conn := meta.(*AWSClient).scconn
 	_, err := conn.AssociatePrincipalWithPortfolio(&input)
@@ -86,7 +88,7 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d *schema.Resour
 			return err
 		}
 		for _, principal := range pageOfDetails {
-			if *principal.PrincipalARN == principalArn {
+			if aws.StringValue(principal.PrincipalARN) == principalArn {
 				isFound = true
 				d.SetId(id)
 				break
@@ -95,7 +97,7 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d *schema.Resour
 		if nextPageToken == nil || isFound {
 			break
 		}
-		pageToken = *nextPageToken
+		pageToken = aws.StringValue(nextPageToken)
 	}
 	if !isFound {
 		log.Printf("[WARN] Service Catalog Principal(%s)/Portfolio(%s) Association not found, removing from state",

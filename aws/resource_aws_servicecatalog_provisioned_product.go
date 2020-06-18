@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -36,7 +35,10 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeList,
 				ForceNew: true,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
+				},
 			},
 			"path_id": {
 				Type:         schema.TypeString,
@@ -225,7 +227,7 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 	resp, err := conn.DescribeProvisionedProduct(&input)
 
 	if err != nil {
-		if scErr, ok := err.(awserr.Error); ok && scErr.Code() == "ResourceNotFoundException" {
+		if isAWSErr(err, servicecatalog.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Service Catalog Provisioned Product %q not found, removing from state", d.Id())
 			d.SetId("")
 			return nil

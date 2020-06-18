@@ -2,12 +2,13 @@ package aws
 
 import (
 	"fmt"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"log"
 	"strings"
 	"time"
+
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsServiceCatalogPortfolioProductAssociation() *schema.Resource {
@@ -66,7 +67,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.Resource
 			return err
 		}
 		for _, portfolioDetail := range pageOfDetails {
-			if *portfolioDetail.Id == portfolioId {
+			if aws.StringValue(portfolioDetail.Id) == portfolioId {
 				isFound = true
 				d.SetId(id)
 				break
@@ -75,7 +76,7 @@ func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.Resource
 		if nextPageToken == nil || isFound {
 			break
 		}
-		pageToken = *nextPageToken
+		pageToken = aws.StringValue(nextPageToken)
 	}
 	if !isFound {
 		log.Printf("[WARN] Service Catalog Product(%s)/Portfolio(%s) Association not found, removing from state",

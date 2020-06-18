@@ -2,11 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 )
 
 func TestAccAWSServiceCatalogPortfolioProductAssociation_Basic(t *testing.T) {
@@ -17,7 +19,7 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt),
+				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic("test_product", salt),
 				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociation(),
 			},
 			{
@@ -45,7 +47,7 @@ func testAccCheckServiceCatalogPortfolioProductAssociationDestroy(s *terraform.S
 			return err // some other unexpected error
 		}
 		for _, portfolioDetail := range portfolios.PortfolioDetails {
-			if *portfolioDetail.Id == portfolioId {
+			if aws.StringValue(portfolioDetail.Id) == portfolioId {
 				return fmt.Errorf("expected AWS Service Catalog Portfolio Product Association to be gone, but it was still found")
 			}
 		}
@@ -67,7 +69,7 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociation() resource.TestChe
 				return err
 			}
 			for _, portfolioDetail := range portfolios.PortfolioDetails {
-				if *portfolioDetail.Id == portfolioId {
+				if aws.StringValue(portfolioDetail.Id) == portfolioId {
 					return nil //is good
 				}
 			}
@@ -77,7 +79,7 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociation() resource.TestChe
 	}
 }
 
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt string) string {
+func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(productName, salt string) string {
 	portfolio_cfg := testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic("tfm-test")
 
 	arbitraryBucketName := fmt.Sprintf("bucket-%s", salt)
@@ -85,11 +87,12 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt st
 	arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", salt)
 	p_tag1 := "FooKey = \"bar\""
 	p_tag2 := "BarKey = \"foo\""
-	product_cfg := testAccCheckAwsServiceCatalogProductResourceConfigTemplate(arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, p_tag1, p_tag2)
+	productResourceFqn := "aws_servicecatalog_product." + productName
+	productCfg := testAccCheckAwsServiceCatalogProductResourceConfigTemplate(productResourceFqn, arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, p_tag1, p_tag2)
 
-	return portfolio_cfg + "\n" + product_cfg + "\n" + fmt.Sprintf(`
+	return portfolio_cfg + "\n" + productCfg + "\n" + fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio_product_association" "association" {
     portfolio_id = aws_servicecatalog_portfolio.test.id
-    product_id = aws_servicecatalog_product.test.id
-}`)
+    product_id = %s.id
+}`, productResourceFqn)
 }

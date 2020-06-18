@@ -2,11 +2,13 @@ package aws
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"testing"
 )
 
 func TestAccAWSServiceCatalogPortfolioPrincipalAssociation_Basic(t *testing.T) {
@@ -43,7 +45,7 @@ func testAccCheckAwsServiceCatalogPortfolioPrincipalAssociation() resource.TestC
 				return err
 			}
 			for _, principalDetail := range page.Principals {
-				if *principalDetail.PrincipalARN == principalArn {
+				if aws.StringValue(principalDetail.PrincipalARN) == principalArn {
 					return nil //is good
 				}
 			}
@@ -69,7 +71,7 @@ func testAccCheckServiceCatalogPortfolioPrincipalAssociationDestroy(s *terraform
 			return err // some other unexpected error
 		}
 		for _, principalDetail := range page.Principals {
-			if *principalDetail.PrincipalARN == principalArn {
+			if aws.StringValue(principalDetail.PrincipalARN) == principalArn {
 				return fmt.Errorf("expected AWS Service Catalog Portfolio Principal Association to be gone, but it was still found")
 			}
 		}
