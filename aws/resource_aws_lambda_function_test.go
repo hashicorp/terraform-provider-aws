@@ -1977,9 +1977,14 @@ func baseAccAWSLambdaConfig(policyName, roleName, sgName string) string {
 data "aws_partition" "current" {}
 
 data "aws_availability_zones" "available" {
-  state = "available"
-}
-
+	state = "available"
+  
+	filter {
+	  name   = "opt-in-status"
+	  values = ["opt-in-not-required"]
+	}
+  }
+  
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "%s"
   role = "${aws_iam_role.iam_for_lambda.id}"
@@ -2069,6 +2074,8 @@ resource "aws_subnet" "subnet_for_lambda" {
   }
 }
 
+# This is defined here, rather than only in test cases where it's needed is to
+# prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
   vpc_id     = "${aws_vpc.vpc_for_lambda.id}"
   cidr_block = "10.0.2.0/24"
@@ -2302,8 +2309,6 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaFileSystemConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
-	creation_token = "lambda-file-system"
-	
 	tags = {
     	Name = "efs_for_lambda"
   	}
@@ -2338,7 +2343,7 @@ resource "aws_lambda_function" "test" {
     function_name = "%s"
     publish = true
     role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "lambdatest.handler"
+    handler = "exports.example"
     runtime = "nodejs12.x"
 
     vpc_config {
@@ -2360,8 +2365,6 @@ resource "aws_lambda_function" "test" {
 func testAccAWSLambdaFileSystemUpdateConfig(funcName, policyName, roleName, sgName string) string {
 	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
 resource "aws_efs_file_system" "efs_for_lambda" {
-	creation_token = "lambda-file-system"
-	
 	tags = {
     	Name = "efs_for_lambda"
   	}
@@ -2396,7 +2399,7 @@ resource "aws_lambda_function" "test" {
     function_name = "%s"
     publish = true
     role = "${aws_iam_role.iam_for_lambda.arn}"
-    handler = "lambdatest.handler"
+    handler = "exports.example"
     runtime = "nodejs12.x"
 
     vpc_config {
@@ -2708,17 +2711,8 @@ resource "aws_lambda_function" "test" {
     runtime = "nodejs12.x"
 
     vpc_config {
-        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_2.id}"]
+        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_az2.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}", "${aws_security_group.sg_for_lambda_2.id}"]
-    }
-}
-
-resource "aws_subnet" "subnet_for_lambda_2" {
-    vpc_id = "${aws_vpc.vpc_for_lambda.id}"
-    cidr_block = "10.0.2.0/24"
-
-  tags = {
-        Name = "tf-acc-lambda-function-2"
     }
 }
 

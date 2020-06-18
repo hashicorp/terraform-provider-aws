@@ -438,8 +438,6 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_efs_file_system" "efs_for_lambda" {
-	creation_token = "lambda-file-system"
-	
 	tags = {
     	Name = "efs_for_lambda"
   	}
