@@ -30,9 +30,12 @@ func resourceAwsSesReceiptFilter() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z][0-9A-Za-z-_]{1,62}[0-9a-zA-Z]$`),
-					"This value can only contain ASCII letters, Start and end with a letter or number,"+
-						" and Contain less than 64 characters"),
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z]`), "must begin with a alphanumeric character"),
+					validation.StringMatch(regexp.MustCompile(`[0-9a-zA-Z]$`), "must end with a alphanumeric character"),
+				),
 			},
 
 			"cidr": {
@@ -93,15 +96,16 @@ func resourceAwsSesReceiptFilterRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	if len(response.Filters) == 0 {
-		log.Printf("[WARN] SES Receipt Filter (%s) not found", d.Id())
-		d.SetId("")
-		return nil
+	var filter *ses.ReceiptFilter
+
+	for _, responseFilter := range response.Filters {
+		if aws.StringValue(responseFilter.Name) == d.Id() {
+			filter = responseFilter
+			break
+		}
 	}
 
-	filter := response.Filters[0]
-
-	if aws.StringValue(filter.Name) != d.Id() {
+	if filter == nil {
 		log.Printf("[WARN] SES Receipt Filter (%s) not found", d.Id())
 		d.SetId("")
 		return nil
