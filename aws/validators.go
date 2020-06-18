@@ -273,6 +273,10 @@ func validateDocDBIdentifier(v interface{}, k string) (ws []string, errors []err
 		errors = append(errors, fmt.Errorf(
 			"%q cannot end with a hyphen", k))
 	}
+	if len(value) > 63 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 63 characters", k))
+	}
 	return
 }
 
@@ -1954,6 +1958,8 @@ func validateCognitoRoles(v map[string]interface{}) (errors []error) {
 func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
 		"1Gbps",
+		"2Gbps",
+		"5Gbps",
 		"10Gbps",
 		"50Mbps",
 		"100Mbps",

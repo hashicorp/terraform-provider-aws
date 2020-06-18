@@ -37,4 +37,4 @@ data "aws_api_gateway_rest_api" "my_rest_api" {
 * `minimum_compression_size` - Minimum response size to compress for the REST API.
 * `policy` - JSON formatted policy document that controls access to the API Gateway.
 * `root_resource_id` - Set to the ID of the API Gateway Resource on the found REST API where the route matches '/'.
-* `tags` - Key-value mapping of resource tags.
+* `tags` - Key-value map of resource tags.

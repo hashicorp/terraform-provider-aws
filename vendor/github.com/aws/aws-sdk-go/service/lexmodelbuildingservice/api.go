@@ -3726,6 +3726,97 @@ func (c *LexModelBuildingService) GetUtterancesViewWithContext(ctx aws.Context, 
 	return out, req.Send()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/ListTagsForResource
+func (c *LexModelBuildingService) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "GET",
+		HTTPPath:   "/tags/{resourceArn}",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Amazon Lex Model Building Service.
+//
+// Gets a list of tags associated with the specified resource. Only bots, bot
+// aliases, and bot channels can have tags associated with them.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lex Model Building Service's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. Check the resource and
+//   try again.
+//
+//   * BadRequestException
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and try again.
+//
+//   * InternalFailureException
+//   An internal Amazon Lex error occurred. Try your request again.
+//
+//   * LimitExceededException
+//   The request exceeded a limit. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/ListTagsForResource
+func (c *LexModelBuildingService) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *LexModelBuildingService) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPutBot = "PutBot"
 
 // PutBotRequest generates a "aws/request.Request" representing the
@@ -4262,11 +4353,200 @@ func (c *LexModelBuildingService) StartImportWithContext(ctx aws.Context, input 
 	return out, req.Send()
 }
 
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/TagResource
+func (c *LexModelBuildingService) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/tags/{resourceArn}",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Amazon Lex Model Building Service.
+//
+// Adds the specified tags to the specified resource. If a tag key already exists,
+// the existing value is replaced with the new value.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lex Model Building Service's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. Check the resource and
+//   try again.
+//
+//   * BadRequestException
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and try again.
+//
+//   * ConflictException
+//   There was a conflict processing the request. Try your request again.
+//
+//   * InternalFailureException
+//   An internal Amazon Lex error occurred. Try your request again.
+//
+//   * LimitExceededException
+//   The request exceeded a limit. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/TagResource
+func (c *LexModelBuildingService) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *LexModelBuildingService) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/UntagResource
+func (c *LexModelBuildingService) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/tags/{resourceArn}",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Amazon Lex Model Building Service.
+//
+// Removes tags from a bot, bot alias or bot channel.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Lex Model Building Service's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Types:
+//   * NotFoundException
+//   The resource specified in the request was not found. Check the resource and
+//   try again.
+//
+//   * BadRequestException
+//   The request is not well formed. For example, a value is invalid or a required
+//   field is missing. Check the field values, and try again.
+//
+//   * ConflictException
+//   There was a conflict processing the request. Try your request again.
+//
+//   * InternalFailureException
+//   An internal Amazon Lex error occurred. Try your request again.
+//
+//   * LimitExceededException
+//   The request exceeded a limit. Try your request again.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/lex-models-2017-04-19/UntagResource
+func (c *LexModelBuildingService) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *LexModelBuildingService) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 // The request is not well formed. For example, a value is invalid or a required
 // field is missing. Check the field values, and try again.
 type BadRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4283,17 +4563,17 @@ func (s BadRequestException) GoString() string {
 
 func newErrorBadRequestException(v protocol.ResponseMetadata) error {
 	return &BadRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s BadRequestException) Code() string {
+func (s *BadRequestException) Code() string {
 	return "BadRequestException"
 }
 
 // Message returns the exception's message.
-func (s BadRequestException) Message() string {
+func (s *BadRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4301,22 +4581,22 @@ func (s BadRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s BadRequestException) OrigErr() error {
+func (s *BadRequestException) OrigErr() error {
 	return nil
 }
 
-func (s BadRequestException) Error() string {
+func (s *BadRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s BadRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *BadRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s BadRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *BadRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides information about a bot alias.
@@ -4745,8 +5025,8 @@ func (s *CodeHook) SetUri(v string) *CodeHook {
 
 // There was a conflict processing the request. Try your request again.
 type ConflictException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -4763,17 +5043,17 @@ func (s ConflictException) GoString() string {
 
 func newErrorConflictException(v protocol.ResponseMetadata) error {
 	return &ConflictException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ConflictException) Code() string {
+func (s *ConflictException) Code() string {
 	return "ConflictException"
 }
 
 // Message returns the exception's message.
-func (s ConflictException) Message() string {
+func (s *ConflictException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4781,22 +5061,22 @@ func (s ConflictException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ConflictException) OrigErr() error {
+func (s *ConflictException) OrigErr() error {
 	return nil
 }
 
-func (s ConflictException) Error() string {
+func (s *ConflictException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ConflictException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ConflictException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Provides the settings needed for conversation logs.
@@ -5233,6 +5513,10 @@ type CreateIntentVersionOutput struct {
 	// Describes how the intent is fulfilled.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information, if any, for connectin an Amazon Kendra index with
+	// the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The date that the intent was updated.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
 
@@ -5312,6 +5596,12 @@ func (s *CreateIntentVersionOutput) SetFollowUpPrompt(v *FollowUpPrompt) *Create
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *CreateIntentVersionOutput) SetFulfillmentActivity(v *FulfillmentActivity) *CreateIntentVersionOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *CreateIntentVersionOutput) SetKendraConfiguration(v *KendraConfiguration) *CreateIntentVersionOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -8045,6 +8335,10 @@ type GetIntentOutput struct {
 	// Describes how the intent is fulfilled. For more information, see PutIntent.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information, if any, to connect to an Amazon Kendra index with
+	// the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and the last updated date are the same.
 	LastUpdatedDate *time.Time `locationName:"lastUpdatedDate" type:"timestamp"`
@@ -8124,6 +8418,12 @@ func (s *GetIntentOutput) SetFollowUpPrompt(v *FollowUpPrompt) *GetIntentOutput 
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *GetIntentOutput) SetFulfillmentActivity(v *FulfillmentActivity) *GetIntentOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *GetIntentOutput) SetKendraConfiguration(v *KendraConfiguration) *GetIntentOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -8962,8 +9262,8 @@ func (s *IntentMetadata) SetVersion(v string) *IntentMetadata {
 
 // An internal Amazon Lex error occurred. Try your request again.
 type InternalFailureException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -8980,17 +9280,17 @@ func (s InternalFailureException) GoString() string {
 
 func newErrorInternalFailureException(v protocol.ResponseMetadata) error {
 	return &InternalFailureException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InternalFailureException) Code() string {
+func (s *InternalFailureException) Code() string {
 	return "InternalFailureException"
 }
 
 // Message returns the exception's message.
-func (s InternalFailureException) Message() string {
+func (s *InternalFailureException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -8998,28 +9298,109 @@ func (s InternalFailureException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InternalFailureException) OrigErr() error {
+func (s *InternalFailureException) OrigErr() error {
 	return nil
 }
 
-func (s InternalFailureException) Error() string {
+func (s *InternalFailureException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InternalFailureException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InternalFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InternalFailureException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InternalFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Provides configuration information for the AMAZON.KendraSearchIntent intent.
+// When you use this intent, Amazon Lex searches the specified Amazon Kendra
+// index and returns documents from the index that match the user's utterance.
+// For more information, see AMAZON.KendraSearchIntent (http://docs.aws.amazon.com/lex/latest/dg/built-in-intent-kendra-search.html).
+type KendraConfiguration struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Amazon Kendra index that you want the
+	// AMAZON.KendraSearchIntent intent to search. The index must be in the same
+	// account and Region as the Amazon Lex bot. If the Amazon Kendra index does
+	// not exist, you get an exception when you call the PutIntent operation.
+	//
+	// KendraIndex is a required field
+	KendraIndex *string `locationName:"kendraIndex" min:"20" type:"string" required:"true"`
+
+	// A query filter that Amazon Lex sends to Amazon Kendra to filter the response
+	// from the query. The filter is in the format defined by Amazon Kendra. For
+	// more information, see Filtering queries (http://docs.aws.amazon.com/kendra/latest/dg/filtering.html).
+	//
+	// You can override this filter string with a new filter string at runtime.
+	QueryFilterString *string `locationName:"queryFilterString" type:"string"`
+
+	// The Amazon Resource Name (ARN) of an IAM role that has permission to search
+	// the Amazon Kendra index. The role must be in the same account and Region
+	// as the Amazon Lex bot. If the role does not exist, you get an exception when
+	// you call the PutIntent operation.
+	//
+	// Role is a required field
+	Role *string `locationName:"role" min:"20" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s KendraConfiguration) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s KendraConfiguration) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *KendraConfiguration) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "KendraConfiguration"}
+	if s.KendraIndex == nil {
+		invalidParams.Add(request.NewErrParamRequired("KendraIndex"))
+	}
+	if s.KendraIndex != nil && len(*s.KendraIndex) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("KendraIndex", 20))
+	}
+	if s.Role == nil {
+		invalidParams.Add(request.NewErrParamRequired("Role"))
+	}
+	if s.Role != nil && len(*s.Role) < 20 {
+		invalidParams.Add(request.NewErrParamMinLen("Role", 20))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKendraIndex sets the KendraIndex field's value.
+func (s *KendraConfiguration) SetKendraIndex(v string) *KendraConfiguration {
+	s.KendraIndex = &v
+	return s
+}
+
+// SetQueryFilterString sets the QueryFilterString field's value.
+func (s *KendraConfiguration) SetQueryFilterString(v string) *KendraConfiguration {
+	s.QueryFilterString = &v
+	return s
+}
+
+// SetRole sets the Role field's value.
+func (s *KendraConfiguration) SetRole(v string) *KendraConfiguration {
+	s.Role = &v
+	return s
 }
 
 // The request exceeded a limit. Try your request again.
 type LimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 
@@ -9038,17 +9419,17 @@ func (s LimitExceededException) GoString() string {
 
 func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
 	return &LimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s LimitExceededException) Code() string {
+func (s *LimitExceededException) Code() string {
 	return "LimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s LimitExceededException) Message() string {
+func (s *LimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9056,22 +9437,86 @@ func (s LimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s LimitExceededException) OrigErr() error {
+func (s *LimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s LimitExceededException) Error() string {
+func (s *LimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s LimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s LimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource to get a list of tags for.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resourceArn" min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The tags associated with a resource.
+	Tags []*Tag `locationName:"tags" type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
 }
 
 // Settings used to configure delivery mode and destination for conversation
@@ -9299,8 +9744,8 @@ func (s *Message) SetGroupNumber(v int64) *Message {
 // The resource specified in the request was not found. Check the resource and
 // try again.
 type NotFoundException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9317,17 +9762,17 @@ func (s NotFoundException) GoString() string {
 
 func newErrorNotFoundException(v protocol.ResponseMetadata) error {
 	return &NotFoundException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s NotFoundException) Code() string {
+func (s *NotFoundException) Code() string {
 	return "NotFoundException"
 }
 
 // Message returns the exception's message.
-func (s NotFoundException) Message() string {
+func (s *NotFoundException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9335,29 +9780,29 @@ func (s NotFoundException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s NotFoundException) OrigErr() error {
+func (s *NotFoundException) OrigErr() error {
 	return nil
 }
 
-func (s NotFoundException) Error() string {
+func (s *NotFoundException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s NotFoundException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *NotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s NotFoundException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *NotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // The checksum of the resource that you are trying to change does not match
 // the checksum in the request. Check the resource's checksum and try again.
 type PreconditionFailedException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"message" type:"string"`
 }
@@ -9374,17 +9819,17 @@ func (s PreconditionFailedException) GoString() string {
 
 func newErrorPreconditionFailedException(v protocol.ResponseMetadata) error {
 	return &PreconditionFailedException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s PreconditionFailedException) Code() string {
+func (s *PreconditionFailedException) Code() string {
 	return "PreconditionFailedException"
 }
 
 // Message returns the exception's message.
-func (s PreconditionFailedException) Message() string {
+func (s *PreconditionFailedException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -9392,22 +9837,22 @@ func (s PreconditionFailedException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s PreconditionFailedException) OrigErr() error {
+func (s *PreconditionFailedException) OrigErr() error {
 	return nil
 }
 
-func (s PreconditionFailedException) Error() string {
+func (s *PreconditionFailedException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s PreconditionFailedException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *PreconditionFailedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s PreconditionFailedException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *PreconditionFailedException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Obtains information from the user. To define a prompt, provide one or more
@@ -9532,6 +9977,11 @@ type PutBotAliasInput struct {
 	//
 	// Name is a required field
 	Name *string `location:"uri" locationName:"name" min:"1" type:"string" required:"true"`
+
+	// A list of tags to add to the bot alias. You can only add tags when you create
+	// an alias, you can't use the PutBotAlias operation to update the tags on a
+	// bot alias. To update tags, use the TagResource operation.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -9568,6 +10018,16 @@ func (s *PutBotAliasInput) Validate() error {
 	if s.ConversationLogs != nil {
 		if err := s.ConversationLogs.Validate(); err != nil {
 			invalidParams.AddNested("ConversationLogs", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -9613,6 +10073,12 @@ func (s *PutBotAliasInput) SetName(v string) *PutBotAliasInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *PutBotAliasInput) SetTags(v []*Tag) *PutBotAliasInput {
+	s.Tags = v
+	return s
+}
+
 type PutBotAliasOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -9641,6 +10107,9 @@ type PutBotAliasOutput struct {
 
 	// The name of the alias.
 	Name *string `locationName:"name" min:"1" type:"string"`
+
+	// A list of tags associated with a bot.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -9698,6 +10167,12 @@ func (s *PutBotAliasOutput) SetLastUpdatedDate(v time.Time) *PutBotAliasOutput {
 // SetName sets the Name field's value.
 func (s *PutBotAliasOutput) SetName(v string) *PutBotAliasOutput {
 	s.Name = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PutBotAliasOutput) SetTags(v []*Tag) *PutBotAliasOutput {
+	s.Tags = v
 	return s
 }
 
@@ -9850,6 +10325,11 @@ type PutBotInput struct {
 	// If you don't specify this value, the default value is BUILD.
 	ProcessBehavior *string `locationName:"processBehavior" type:"string" enum:"ProcessBehavior"`
 
+	// A list of tags to add to the bot. You can only add tags when you create a
+	// bot, you can't use the PutBot operation to update the tags on a bot. To update
+	// tags, use the TagResource operation.
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The Amazon Polly voice ID that you want Amazon Lex to use for voice interactions
 	// with the user. The locale configured for the voice must match the locale
 	// of the bot. For more information, see Voices in Amazon Polly (https://docs.aws.amazon.com/polly/latest/dg/voicelist.html)
@@ -9902,6 +10382,16 @@ func (s *PutBotInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Intents", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -9981,6 +10471,12 @@ func (s *PutBotInput) SetName(v string) *PutBotInput {
 // SetProcessBehavior sets the ProcessBehavior field's value.
 func (s *PutBotInput) SetProcessBehavior(v string) *PutBotInput {
 	s.ProcessBehavior = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *PutBotInput) SetTags(v []*Tag) *PutBotInput {
+	s.Tags = v
 	return s
 }
 
@@ -10081,6 +10577,9 @@ type PutBotOutput struct {
 	//
 	// When the bot is in the READY state you can test and publish the bot.
 	Status *string `locationName:"status" type:"string" enum:"Status"`
+
+	// A list of tags associated with the bot.
+	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The version of the bot. For a new bot, the version is always $LATEST.
 	Version *string `locationName:"version" min:"1" type:"string"`
@@ -10190,6 +10689,12 @@ func (s *PutBotOutput) SetStatus(v string) *PutBotOutput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *PutBotOutput) SetTags(v []*Tag) *PutBotOutput {
+	s.Tags = v
+	return s
+}
+
 // SetVersion sets the Version field's value.
 func (s *PutBotOutput) SetVersion(v string) *PutBotOutput {
 	s.Version = &v
@@ -10289,6 +10794,11 @@ type PutIntentInput struct {
 	// process the intent (for example, place an order with a pizzeria).
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
 
+	// Configuration information required to use the AMAZON.KendraSearchIntent intent
+	// to connect to an Amazon Kendra index. For more information, see AMAZON.KendraSearchIntent
+	// (http://docs.aws.amazon.com/lex/latest/dg/built-in-intent-kendra-search.html).
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
+
 	// The name of the intent. The name is not case sensitive.
 	//
 	// The name can't match a built-in intent name, or a built-in intent name with
@@ -10370,6 +10880,11 @@ func (s *PutIntentInput) Validate() error {
 			invalidParams.AddNested("FulfillmentActivity", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.KendraConfiguration != nil {
+		if err := s.KendraConfiguration.Validate(); err != nil {
+			invalidParams.AddNested("KendraConfiguration", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.RejectionStatement != nil {
 		if err := s.RejectionStatement.Validate(); err != nil {
 			invalidParams.AddNested("RejectionStatement", err.(request.ErrInvalidParams))
@@ -10440,6 +10955,12 @@ func (s *PutIntentInput) SetFulfillmentActivity(v *FulfillmentActivity) *PutInte
 	return s
 }
 
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *PutIntentInput) SetKendraConfiguration(v *KendraConfiguration) *PutIntentInput {
+	s.KendraConfiguration = v
+	return s
+}
+
 // SetName sets the Name field's value.
 func (s *PutIntentInput) SetName(v string) *PutIntentInput {
 	s.Name = &v
@@ -10507,6 +11028,10 @@ type PutIntentOutput struct {
 	// the intent after the user provides all of the information required by the
 	// intent.
 	FulfillmentActivity *FulfillmentActivity `locationName:"fulfillmentActivity" type:"structure"`
+
+	// Configuration information, if any, required to connect to an Amazon Kendra
+	// index and use the AMAZON.KendraSearchIntent intent.
+	KendraConfiguration *KendraConfiguration `locationName:"kendraConfiguration" type:"structure"`
 
 	// The date that the intent was updated. When you create a resource, the creation
 	// date and last update dates are the same.
@@ -10593,6 +11118,12 @@ func (s *PutIntentOutput) SetFollowUpPrompt(v *FollowUpPrompt) *PutIntentOutput 
 // SetFulfillmentActivity sets the FulfillmentActivity field's value.
 func (s *PutIntentOutput) SetFulfillmentActivity(v *FulfillmentActivity) *PutIntentOutput {
 	s.FulfillmentActivity = v
+	return s
+}
+
+// SetKendraConfiguration sets the KendraConfiguration field's value.
+func (s *PutIntentOutput) SetKendraConfiguration(v *KendraConfiguration) *PutIntentOutput {
+	s.KendraConfiguration = v
 	return s
 }
 
@@ -10938,8 +11469,8 @@ func (s *PutSlotTypeOutput) SetVersion(v string) *PutSlotTypeOutput {
 //
 // "name": string, "version": string } }
 type ResourceInUseException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	// Describes the resource that refers to the resource that you are attempting
 	// to delete. This object is returned as part of the ResourceInUseException
@@ -10963,17 +11494,17 @@ func (s ResourceInUseException) GoString() string {
 
 func newErrorResourceInUseException(v protocol.ResponseMetadata) error {
 	return &ResourceInUseException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ResourceInUseException) Code() string {
+func (s *ResourceInUseException) Code() string {
 	return "ResourceInUseException"
 }
 
 // Message returns the exception's message.
-func (s ResourceInUseException) Message() string {
+func (s *ResourceInUseException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -10981,22 +11512,22 @@ func (s ResourceInUseException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ResourceInUseException) OrigErr() error {
+func (s *ResourceInUseException) OrigErr() error {
 	return nil
 }
 
-func (s ResourceInUseException) Error() string {
+func (s *ResourceInUseException) Error() string {
 	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ResourceInUseException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ResourceInUseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ResourceInUseException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ResourceInUseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Describes the resource that refers to the resource that you are attempting
@@ -11055,12 +11586,12 @@ type Slot struct {
 	// (https://docs.aws.amazon.com/lex/latest/dg/how-obfuscate.html).
 	ObfuscationSetting *string `locationName:"obfuscationSetting" type:"string" enum:"ObfuscationSetting"`
 
-	// Directs Lex the order in which to elicit this slot value from the user. For
-	// example, if the intent has two slots with priorities 1 and 2, AWS Lex first
-	// elicits a value for the slot with priority 1.
+	// Directs Amazon Lex the order in which to elicit this slot value from the
+	// user. For example, if the intent has two slots with priorities 1 and 2, AWS
+	// Amazon Lex first elicits a value for the slot with priority 1.
 	//
-	// If multiple slots share the same priority, the order in which Lex elicits
-	// values is arbitrary.
+	// If multiple slots share the same priority, the order in which Amazon Lex
+	// elicits values is arbitrary.
 	Priority *int64 `locationName:"priority" type:"integer"`
 
 	// A set of possible responses for the slot type used by text-based clients.
@@ -11387,6 +11918,10 @@ type StartImportInput struct {
 	//
 	// ResourceType is a required field
 	ResourceType *string `locationName:"resourceType" type:"string" required:"true" enum:"ResourceType"`
+
+	// A list of tags to add to the imported bot. You can only add tags when you
+	// import a bot, you can't add tags to an intent or slot type.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -11410,6 +11945,16 @@ func (s *StartImportInput) Validate() error {
 	}
 	if s.ResourceType == nil {
 		invalidParams.Add(request.NewErrParamRequired("ResourceType"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -11436,6 +11981,12 @@ func (s *StartImportInput) SetResourceType(v string) *StartImportInput {
 	return s
 }
 
+// SetTags sets the Tags field's value.
+func (s *StartImportInput) SetTags(v []*Tag) *StartImportInput {
+	s.Tags = v
+	return s
+}
+
 type StartImportOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11457,6 +12008,9 @@ type StartImportOutput struct {
 
 	// The type of resource to import.
 	ResourceType *string `locationName:"resourceType" type:"string" enum:"ResourceType"`
+
+	// A list of tags added to the imported bot.
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -11502,6 +12056,12 @@ func (s *StartImportOutput) SetName(v string) *StartImportOutput {
 // SetResourceType sets the ResourceType field's value.
 func (s *StartImportOutput) SetResourceType(v string) *StartImportOutput {
 	s.ResourceType = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *StartImportOutput) SetTags(v []*Tag) *StartImportOutput {
+	s.Tags = v
 	return s
 }
 
@@ -11571,6 +12131,215 @@ func (s *Statement) SetMessages(v []*Message) *Statement {
 func (s *Statement) SetResponseCard(v string) *Statement {
 	s.ResponseCard = &v
 	return s
+}
+
+// A list of key/value pairs that identify a bot, bot alias, or bot channel.
+// Tag keys and values can consist of Unicode letters, digits, white space,
+// and any of the following symbols: _ . : / = + - @.
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// The key for the tag. Keys are not case-sensitive and must be unique.
+	//
+	// Key is a required field
+	Key *string `locationName:"key" min:"1" type:"string" required:"true"`
+
+	// The value associated with a key. The value may be an empty string but it
+	// can't be null.
+	//
+	// Value is a required field
+	Value *string `locationName:"value" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the bot, bot alias, or bot channel to tag.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resourceArn" min:"1" type:"string" required:"true"`
+
+	// A list of tag keys to add to the resource. If a tag key already exists, the
+	// existing value is replaced with the new value.
+	//
+	// Tags is a required field
+	Tags []*Tag `locationName:"tags" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*Tag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource to remove the tags from.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `location:"uri" locationName:"resourceArn" min:"1" type:"string" required:"true"`
+
+	// A list of tag keys to remove from the resource. If a tag key does not exist
+	// on the resource, it is ignored.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `location:"querystring" locationName:"tagKeys" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
 }
 
 // Provides information about a single utterance that was made to your bot.

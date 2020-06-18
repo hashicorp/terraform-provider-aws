@@ -67,6 +67,7 @@ func resourceAwsGlueJob() *schema.Resource {
 			"default_arguments": {
 				Type:     schema.TypeMap,
 				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -240,6 +241,7 @@ func resourceAwsGlueJobCreate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &glue.GetJobInput{
 		JobName: aws.String(d.Id()),
@@ -300,7 +302,7 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error listing tags for Glue Job (%s): %s", jobARN, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -321,21 +323,9 @@ func resourceAwsGlueJobRead(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsGlueJobUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	if d.HasChange("allocated_capacity") ||
-		d.HasChange("command") ||
-		d.HasChange("connections") ||
-		d.HasChange("default_arguments") ||
-		d.HasChange("description") ||
-		d.HasChange("execution_property") ||
-		d.HasChange("glue_version") ||
-		d.HasChange("max_capacity") ||
-		d.HasChange("max_retries") ||
-		d.HasChange("notification_property") ||
-		d.HasChange("number_of_workers") ||
-		d.HasChange("role_arn") ||
-		d.HasChange("security_configuration") ||
-		d.HasChange("timeout") ||
-		d.HasChange("worker_type") {
+	if d.HasChanges("allocated_capacity", "command", "connections", "default_arguments", "description",
+		"execution_property", "glue_version", "max_capacity", "max_retries", "notification_property", "number_of_workers",
+		"role_arn", "security_configuration", "timeout", "worker_type") {
 		jobUpdate := &glue.JobUpdate{
 			Command: expandGlueJobCommand(d.Get("command").([]interface{})),
 			Role:    aws.String(d.Get("role_arn").(string)),

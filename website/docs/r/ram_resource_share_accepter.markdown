@@ -33,7 +33,7 @@ resource "aws_ram_resource_share" "sender_share" {
   allow_external_principals = true
 
   tags = {
-	  Name = "tf-test-resource-share"
+    Name = "tf-test-resource-share"
   }
 }
 
