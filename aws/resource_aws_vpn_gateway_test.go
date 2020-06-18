@@ -367,11 +367,11 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 		CheckDestroy:  testAccCheckVpnGatewayDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckVpnGatewayConfigTags,
+				Config: testAccCheckVpnGatewayConfigTags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-vpn-gateway-tags"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -380,11 +380,20 @@ func TestAccAWSVpnGateway_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckVpnGatewayConfigTagsUpdate,
+				Config: testAccCheckVpnGatewayConfigTags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVpnGatewayExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccCheckVpnGatewayConfigTags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpnGatewayExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", "terraform-testacc-vpn-gateway-tags-updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -482,9 +491,6 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpn_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
-  tags = {
-    Name = "terraform-testacc-vpn-gateway-basic"
-  }
 }
 `
 
@@ -504,7 +510,8 @@ resource "aws_vpn_gateway" "test" {
 }
 `
 
-const testAccCheckVpnGatewayConfigTags = `
+func testAccCheckVpnGatewayConfigTags1(tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
   tags = {
@@ -514,13 +521,16 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpn_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
+
   tags = {
-    Name = "terraform-testacc-vpn-gateway-tags"
+    %[1]q = %[2]q
   }
 }
-`
+`, tagKey1, tagValue1)
+}
 
-const testAccCheckVpnGatewayConfigTagsUpdate = `
+func testAccCheckVpnGatewayConfigTags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
   tags = {
@@ -530,11 +540,14 @@ resource "aws_vpc" "test" {
 
 resource "aws_vpn_gateway" "test" {
   vpc_id = "${aws_vpc.test.id}"
+
   tags = {
-    Name = "terraform-testacc-vpn-gateway-tags-updated"
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 }
-`
+`, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 const testAccCheckVpnGatewayConfigReattach = `
 resource "aws_vpc" "test" {
