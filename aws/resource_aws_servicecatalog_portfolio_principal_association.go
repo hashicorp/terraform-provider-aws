@@ -42,6 +42,9 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociation() *schema.Resource {
 
 func resourceAwsServiceCatalogPortfolioPrincipalAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 	_, portfolioId, principalArn, err := resourceAwsServiceCatalogPortfolioPrincipalAssociationRequiredParameters(d)
+	if err != nil {
+		return err
+	}
 	input := servicecatalog.AssociatePrincipalWithPortfolioInput{
 		PortfolioId:   aws.String(portfolioId),
 		PrincipalARN:  aws.String(principalArn),

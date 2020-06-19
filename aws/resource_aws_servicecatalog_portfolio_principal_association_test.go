@@ -220,7 +220,7 @@ func testAccCheckServiceCatalogPortfolioPrincipalAssociationDestroy(s *terraform
 		if err != nil {
 			return err
 		}
-		testAccCheckServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(&portfolioId, principalArn)
+		return testAccCheckServiceCatalogPortfolioPrincipalAssociationNotPresentInAws(&portfolioId, principalArn)
 	}
 	return nil
 }
