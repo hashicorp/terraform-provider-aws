@@ -946,7 +946,7 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, statu
 		if *conf.Enabled != enabled {
 			return fmt.Errorf(
 				"AdvancedSecurityOptions.Enabled not set properly. Given: %t, Expected: %t",
-				*conf.Enabled,
+				aws.BoolValue(conf.Enabled),
 				enabled,
 			)
 		}

@@ -84,11 +84,13 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"master_user_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"master_user_arn": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validateArn,
 									},
 									"master_user_name": {
 										Type:     schema.TypeString,
