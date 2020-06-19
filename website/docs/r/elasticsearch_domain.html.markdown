@@ -229,7 +229,7 @@ The following arguments are supported:
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
 * `tags` - (Optional) A mapping of tags to assign to the resource
 
-**advanced_security_options** supports the following attributes:
+The **advanced_security_options** block supports the following attributes:
 
 * `enabled` - (Required) Whether advanced security is enabled
 * `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. If not set, defaults to `false` by the AWS API.
