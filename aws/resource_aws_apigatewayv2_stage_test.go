@@ -30,6 +30,7 @@ func TestAccAWSAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "api_protocol_type", "WEBSOCKET"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
@@ -75,6 +76,7 @@ func TestAccAWSAPIGatewayV2Stage_basicHttp(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "api_protocol_type", "HTTP"),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
