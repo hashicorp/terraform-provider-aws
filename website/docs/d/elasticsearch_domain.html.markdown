@@ -31,7 +31,7 @@ The following attributes are exported:
 
 * `access_policies` – The policy document attached to the domain.
 * `advanced_options` - Key-value string pairs to specify advanced configuration options.
-* `advanced_security_options` - Status of the Elasticsearch domain's advanced security options.
+* `advanced_security_options` - Status of the Elasticsearch domain's advanced security options. The block consists of the following attributes:
   * `enabled` - Whether advanced security is enabled.
   * `internal_user_database_enabled` - Whether the internal user database is enabled.
 * `arn` – The Amazon Resource Name (ARN) of the domain.
