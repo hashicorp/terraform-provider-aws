@@ -18,7 +18,7 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 	}
 
 	if v, ok := group["master_user_options"].([]interface{}); ok {
-		if len(v) > 0 {
+		if len(v) > 0 && v[0] != nil {
 			muo := elasticsearch.MasterUserOptions{}
 			masterUserOptions := v[0].(map[string]interface{})
 

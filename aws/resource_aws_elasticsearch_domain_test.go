@@ -430,7 +430,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) 
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_AdvancedSecurityOptions(ri, true),
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsUserDb(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, &domain),
@@ -462,7 +462,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_AdvancedSecurityOptions(ri, false),
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsIAM(ri),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, false, &domain),
@@ -951,10 +951,10 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, statu
 			)
 		}
 
-		if *conf.InternalUserDatabaseEnabled != userDbEnabled {
+		if aws.BoolValue(conf.InternalUserDatabaseEnabled) != userDbEnabled {
 			return fmt.Errorf(
 				"AdvancedSecurityOptions.InternalUserDatabaseEnabled not set properly. Given: %t, Expected: %t",
-				*conf.InternalUserDatabaseEnabled,
+				aws.BoolValue(conf.InternalUserDatabaseEnabled),
 				userDbEnabled,
 			)
 		}
@@ -1680,13 +1680,9 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt)
 }
 
-func testAccESDomainConfig_AdvancedSecurityOptions(randInt int, userDb bool) string {
-	var user string
-	var options string
-
-	if userDb {
-		user = ""
-		options = `
+func testAccESDomainConfig_AdvancedSecurityOptionsUserDb(randInt int) string {
+	var user = ""
+	var options = `
 advanced_security_options {
 	enabled = true
 	internal_user_database_enabled = true
@@ -1695,12 +1691,47 @@ advanced_security_options {
 		master_user_password = "Barbarbarbar1!"
 	}
 }`
-	} else {
-		user = fmt.Sprintf(`
+
+	return fmt.Sprintf(`
+%s
+
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "tf-test-%d"
+  elasticsearch_version = "7.1"
+
+  cluster_config {
+    instance_type = "r5.large.elasticsearch"
+  }
+
+	%s
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, user, randInt, options)
+}
+
+func testAccESDomainConfig_AdvancedSecurityOptionsIAM(randInt int) string {
+	var user = fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
 	name = "esmasteruser%d"
 }`, randInt)
-		options = `
+	var options = `
 advanced_security_options {
 	enabled = true
 	internal_user_database_enabled = false
@@ -1708,7 +1739,6 @@ advanced_security_options {
 		master_user_arn = "${aws_iam_user.es_master_user.arn}"
 	}
 }`
-	}
 
 	return fmt.Sprintf(`
 %s

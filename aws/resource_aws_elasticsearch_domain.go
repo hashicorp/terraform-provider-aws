@@ -69,6 +69,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 			"advanced_security_options": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -680,10 +681,14 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 
 	// Use AdvancedSecurityOptions from resource if possible
 	// because DescribeElasticsearchDomainConfig does not return MasterUserOptions
-	if len(d.Get("advanced_security_options").([]interface{})) == 0 {
-		err = d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions))
-		if err != nil {
-			return err
+	if ds.AdvancedSecurityOptions != nil {
+		if _, ok := d.GetOk("advanced_security_options"); ok {
+			d.Set("advanced_security_options.0.enabled", ds.AdvancedSecurityOptions.Enabled)
+			d.Set("advanced_security_options.0.internal_user_database_enabled", ds.AdvancedSecurityOptions.InternalUserDatabaseEnabled)
+		} else {
+			if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
+				fmt.Errorf("error setting advanced_security_options: %s", err)
+			}
 		}
 	}
 
