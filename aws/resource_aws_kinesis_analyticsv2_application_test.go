@@ -275,7 +275,7 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisStream(t *testing.T) {
 							"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_stream.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.parallelism.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.schema.#",
-							"application_configuration.0.sql_application_configuration.0.input.%s.record_columns.#",
+							"application_configuration.0.sql_application_configuration.0.input.%s.record_column.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.record_format.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.schema.0.record_format.0.mapping_parameters.0.json.#",
 						}, []string{
@@ -461,7 +461,7 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsMultiple(t *testing.T) {
 				Config: step,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.#", "2"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "2"),
 				),
 			},
 			{
@@ -538,11 +538,20 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.schema.0.record_format_type", "JSON"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
+					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+						[]string{
+							"application_configuration.0.sql_application_configuration.0.output.%s.name",
+							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
+							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
+							"application_configuration.0.sql_application_configuration.0.output.%s.schema.0.record_format_type",
+						},
+						[]string{
+							"test_name",
+							"1",
+							"1",
+							"JSON",
+						}),
 				),
 			},
 			{
@@ -550,12 +559,30 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.name", "test_name2"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttrPair(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.kinesis_stream.0.resource_arn", "aws_kinesis_stream.test", "arn"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.schema.0.record_format_type", "CSV"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
+					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+						[]string{
+							"application_configuration.0.sql_application_configuration.0.output.%s.name",
+							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
+							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
+							"application_configuration.0.sql_application_configuration.0.output.%s.schema.0.record_format_type",
+						},
+						[]string{
+							"test_name2",
+							"1",
+							"1",
+							"CSV",
+						}),
+					testUnknownSetIdPair(resName, "application_configuration.0.sql_application_configuration.0.output",
+						[]string{
+							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.0.resource_arn",
+						},
+						[]string{
+							"aws_kinesis_stream.test",
+						},
+						[]string{
+							"arn",
+						}),
 				),
 			},
 			{
@@ -673,7 +700,7 @@ func TestAccAWSKinesisAnalyticsV2Application_referenceDataSource(t *testing.T) {
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.#", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.0.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.0.schema.0.record_columns.#", "1"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.0.schema.0.record_column.#", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.0.schema.0.record_format.#", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.reference_data_sources.0.schema.0.record_format.0.mapping_parameters.0.json.#", "1"),
 				),

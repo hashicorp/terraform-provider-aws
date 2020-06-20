@@ -1324,11 +1324,6 @@ func createApplicationV2UpdateOpts(d *schema.ResourceData) (*kinesisanalyticsv2.
 
 	runtime := d.Get("runtime").(string)
 
-	oldConfig, newConfig := d.GetChange("application_configuration")
-	fmt.Printf("old: %+v\n\nnew: %+v\n\n", oldConfig, newConfig)
-	oldFlinkConfig, newFlinkConfig := d.GetChange("application_configuration.0.flink_application_configuration")
-	fmt.Printf("old flink cofig: %+v\n\nnew flink config: %+v\n\n", oldFlinkConfig, newFlinkConfig)
-
 	return &kinesisanalyticsv2.UpdateApplicationInput{
 		ApplicationConfigurationUpdate: createKinesisAnalyticsV2ApplicationUpdateOpts(
 			runtime, d),
@@ -1346,6 +1341,7 @@ func createKinesisAnalyticsV2SqlUpdateOpts(d *schema.ResourceData) *kinesisanaly
 	oldConfigIfc, _ := d.GetChange("application_configuration.0.sql_application_configuration")
 	oldConfig := oldConfigIfc.([]interface{})
 	var hasOldInputs, hasOldOutputs bool
+
 	if len(oldConfig) > 0 {
 		hasOldInputs = len(oldConfig[0].(map[string]interface{})["input"].(*schema.Set).List()) > 0
 		hasOldOutputs = len(oldConfig[0].(map[string]interface{})["output"].(*schema.Set).List()) > 0
@@ -1357,7 +1353,8 @@ func createKinesisAnalyticsV2SqlUpdateOpts(d *schema.ResourceData) *kinesisanaly
 	}
 	if hasOldOutputs {
 		if oConf := sc["output"].(*schema.Set).List(); len(oConf) > 0 {
-			outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsV2OutputUpdate(oConf[0].(map[string]interface{}))}
+			outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsV2OutputUpdate(
+				oldConfig[0].(map[string]interface{})["output"].(*schema.Set).List()[0].(map[string]interface{}), oConf[0].(map[string]interface{}))}
 		}
 	}
 	rConf := sc["reference_data_sources"].([]interface{})
@@ -1444,8 +1441,8 @@ func createKinesisAnalyticsV2ApplicationUpdateOpts(runtime string, d *schema.Res
 }
 
 func createKinesisAnalyticsV2ApplicationCodeConfigurationUpdateOpts(d *schema.ResourceData) *kinesisanalyticsv2.ApplicationCodeConfigurationUpdate {
-	if !d.HasChange("application_configuration.0.application_code_configuration.code_content") &&
-		!d.HasChange("application_configuration.0.application_code_configuration.code_content_type") {
+	if !d.HasChange("application_configuration.0.application_code_configuration.0.code_content") &&
+		!d.HasChange("application_configuration.0.application_code_configuration.0.code_content_type") {
 		return nil
 	}
 
@@ -1711,13 +1708,13 @@ func expandKinesisAnalyticsV2InputUpdate(vL map[string]interface{}) *kinesisanal
 	return inputUpdate
 }
 
-func expandKinesisAnalyticsV2OutputUpdate(vL map[string]interface{}) *kinesisanalyticsv2.OutputUpdate {
+func expandKinesisAnalyticsV2OutputUpdate(oldOutput map[string]interface{}, newOutput map[string]interface{}) *kinesisanalyticsv2.OutputUpdate {
 	outputUpdate := &kinesisanalyticsv2.OutputUpdate{
-		OutputId:   aws.String(vL["id"].(string)),
-		NameUpdate: aws.String(vL["name"].(string)),
+		OutputId:   aws.String(oldOutput["id"].(string)),
+		NameUpdate: aws.String(newOutput["name"].(string)),
 	}
 
-	if v := vL["kinesis_firehose"].([]interface{}); len(v) > 0 {
+	if v := newOutput["kinesis_firehose"].([]interface{}); len(v) > 0 {
 		kf := v[0].(map[string]interface{})
 		kfou := &kinesisanalyticsv2.KinesisFirehoseOutputUpdate{
 			ResourceARNUpdate: aws.String(kf["resource_arn"].(string)),
@@ -1725,7 +1722,7 @@ func expandKinesisAnalyticsV2OutputUpdate(vL map[string]interface{}) *kinesisana
 		outputUpdate.KinesisFirehoseOutputUpdate = kfou
 	}
 
-	if v := vL["kinesis_stream"].([]interface{}); len(v) > 0 {
+	if v := newOutput["kinesis_stream"].([]interface{}); len(v) > 0 {
 		ks := v[0].(map[string]interface{})
 		ksou := &kinesisanalyticsv2.KinesisStreamsOutputUpdate{
 			ResourceARNUpdate: aws.String(ks["resource_arn"].(string)),
@@ -1733,7 +1730,7 @@ func expandKinesisAnalyticsV2OutputUpdate(vL map[string]interface{}) *kinesisana
 		outputUpdate.KinesisStreamsOutputUpdate = ksou
 	}
 
-	if v := vL["lambda"].([]interface{}); len(v) > 0 {
+	if v := newOutput["lambda"].([]interface{}); len(v) > 0 {
 		l := v[0].(map[string]interface{})
 		lou := &kinesisanalyticsv2.LambdaOutputUpdate{
 			ResourceARNUpdate: aws.String(l["resource_arn"].(string)),
@@ -1741,7 +1738,7 @@ func expandKinesisAnalyticsV2OutputUpdate(vL map[string]interface{}) *kinesisana
 		outputUpdate.LambdaOutputUpdate = lou
 	}
 
-	if v := vL["schema"].([]interface{}); len(v) > 0 {
+	if v := newOutput["schema"].([]interface{}); len(v) > 0 {
 		ds := v[0].(map[string]interface{})
 		dsu := &kinesisanalyticsv2.DestinationSchema{
 			RecordFormatType: aws.String(ds["record_format_type"].(string)),
