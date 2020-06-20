@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -185,6 +186,14 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "12345"),
 				),
+			},
+			{
+				Config:      testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(name, "test comment update", 60, "$INVALID"),
+				ExpectError: regexp.MustCompile(`(see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowRunCommandParameters.html)`),
+			},
+			{
+				Config:      testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(name, "test comment update", 60, "1.2"),
+				ExpectError: regexp.MustCompile(`(see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowRunCommandParameters.html)`),
 			},
 			{
 				ResourceName:      resourceName,
