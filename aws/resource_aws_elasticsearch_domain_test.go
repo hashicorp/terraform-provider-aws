@@ -420,8 +420,7 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 
 func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	ri := acctest.RandInt()
-	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	domainName := acctest.RandomWithPrefix("tf-test")
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -430,7 +429,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) 
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_AdvancedSecurityOptionsUserDb(ri),
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsUserDb(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, true, &domain),
@@ -439,7 +438,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) 
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     resourceId,
+				ImportStateId:     domainName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -452,8 +451,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) 
 
 func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
-	ri := acctest.RandInt()
-	resourceId := fmt.Sprintf("tf-test-%d", ri)
+	domainName := acctest.RandomWithPrefix("tf-test")
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -462,7 +460,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfig_AdvancedSecurityOptionsIAM(ri),
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsIAM(domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					testAccCheckAdvancedSecurityOptions(true, false, &domain),
@@ -471,7 +469,7 @@ func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     resourceId,
+				ImportStateId:     domainName,
 				ImportStateVerify: true,
 				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
 				ImportStateVerifyIgnore: []string{
@@ -943,7 +941,7 @@ func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, statu
 	return func(s *terraform.State) error {
 		conf := status.AdvancedSecurityOptions
 
-		if *conf.Enabled != enabled {
+		if aws.BoolValue(conf.Enabled) != enabled {
 			return fmt.Errorf(
 				"AdvancedSecurityOptions.Enabled not set properly. Given: %t, Expected: %t",
 				aws.BoolValue(conf.Enabled),
@@ -1680,30 +1678,24 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt)
 }
 
-func testAccESDomainConfig_AdvancedSecurityOptionsUserDb(randInt int) string {
-	var user = ""
-	var options = `
-advanced_security_options {
+func testAccESDomainConfig_AdvancedSecurityOptionsUserDb(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "%s"
+  elasticsearch_version = "7.1"
+
+  cluster_config {
+    instance_type = "r5.large.elasticsearch"
+  }
+
+  advanced_security_options {
 	enabled = true
 	internal_user_database_enabled = true
 	master_user_options {
-		master_user_name = "testmasteruser"
-		master_user_password = "Barbarbarbar1!"
+      master_user_name = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
 	}
-}`
-
-	return fmt.Sprintf(`
-%s
-
-resource "aws_elasticsearch_domain" "test" {
-  domain_name           = "tf-test-%d"
-  elasticsearch_version = "7.1"
-
-  cluster_config {
-    instance_type = "r5.large.elasticsearch"
   }
-
-	%s
 
   encrypt_at_rest {
     enabled = true
@@ -1723,35 +1715,30 @@ resource "aws_elasticsearch_domain" "test" {
     volume_size = 10
   }
 }
-`, user, randInt, options)
+`, domainName)
 }
 
-func testAccESDomainConfig_AdvancedSecurityOptionsIAM(randInt int) string {
-	var user = fmt.Sprintf(`
+func testAccESDomainConfig_AdvancedSecurityOptionsIAM(domainName string) string {
+	return fmt.Sprintf(`
 resource "aws_iam_user" "es_master_user" {
-	name = "esmasteruser%d"
-}`, randInt)
-	var options = `
-advanced_security_options {
+	name = "%s"
+}
+
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "%s"
+  elasticsearch_version = "7.1"
+
+  cluster_config {
+    instance_type = "r5.large.elasticsearch"
+  }
+
+  advanced_security_options {
 	enabled = true
 	internal_user_database_enabled = false
 	master_user_options {
-		master_user_arn = "${aws_iam_user.es_master_user.arn}"
+      master_user_arn = "${aws_iam_user.es_master_user.arn}"
 	}
-}`
-
-	return fmt.Sprintf(`
-%s
-
-resource "aws_elasticsearch_domain" "test" {
-  domain_name           = "tf-test-%d"
-  elasticsearch_version = "7.1"
-
-  cluster_config {
-    instance_type = "r5.large.elasticsearch"
   }
-
-	%s
 
   encrypt_at_rest {
     enabled = true
@@ -1771,7 +1758,7 @@ resource "aws_elasticsearch_domain" "test" {
     volume_size = 10
   }
 }
-`, user, randInt, options)
+`, acctest.RandomWithPrefix("es-master-user"), domainName)
 }
 
 func testAccESDomainConfig_LogPublishingOptions(randInt int) string {
