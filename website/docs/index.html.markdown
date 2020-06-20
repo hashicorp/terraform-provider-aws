@@ -200,7 +200,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   potentially end up destroying a live environment). Conflicts with
   `allowed_account_ids`.
 
-* `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except `aws_autoscaling_group`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations.
+* `ignore_tags` - (Optional) Configuration block with resource tag settings to ignore across all resources handled by this provider (except `aws_autoscaling_group` and any individual service tag resources such as `aws_ec2_tag`) for situations where external systems are managing certain resource tags. Arguments to the configuration block are described below in the `ignore_tags` Configuration Block section. See the [Terraform multiple provider instances documentation](/docs/configuration/providers.html#alias-multiple-provider-instances) for more information about additional provider configurations.
 
 * `insecure` - (Optional) Explicitly allow the provider to
   perform "insecure" SSL requests. If omitted, default value is `false`.
@@ -232,6 +232,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_cognito_identity_pool` resource](/docs/providers/aws/r/cognito_identity_pool.html)
   - [`aws_cognito_user_pool` resource](/docs/providers/aws/r/cognito_user_pool.html)
   - [`aws_cognito_user_pools` data source](/docs/providers/aws/d/cognito_user_pools.html)
+  - [`aws_default_vpc_dhcp_options`](/docs/providers/aws/r/default_vpc_dhcp_options.html)
   - [`aws_dms_event_subscription` resource](/docs/providers/aws/r/dms_event_subscription.html)
   - [`aws_dms_replication_subnet_group` resource](/docs/providers/aws/r/dms_replication_subnet_group.html)
   - [`aws_dx_connection` resource](/docs/providers/aws/r/dx_connection.html)
@@ -246,7 +247,9 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_dx_public_virtual_interface` resource](/docs/providers/aws/r/dx_public_virtual_interface.html)
   - [`aws_dx_transit_virtual_interface` resource](/docs/providers/aws/r/dx_transit_virtual_interface.html)
   - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
-  - [`aws_ec2_client_vpn_endpoint` resource](/docs/providers/aws/r/ec2_client_vpn_endpoint.html)  
+  - [`aws_ec2_capacity_reservation` resource](/docs/providers/aws/r/ec2_capacity_reservation.html)
+  - [`aws_ec2_client_vpn_endpoint` resource](/docs/providers/aws/r/ec2_client_vpn_endpoint.html)
+  - [`aws_ec2_traffic_mirror_target` resource](/docs/providers/aws/r/ec2_traffic_mirror_target.html)
   - [`aws_ecs_capacity_provider` resource (import)](/docs/providers/aws/r/ecs_capacity_provider.html)
   - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
   - [`aws_ecs_service` resource (import)](/docs/providers/aws/r/ecs_service.html)
@@ -260,12 +263,20 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
   - [`aws_elb` data source](/docs/providers/aws/d/elb.html)
   - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+  - [`aws_flow_log` resource](/docs/providers/aws/r/flow_log.html) 
+  - [`aws_glue_catalog_table` resource](/docs/providers/aws/r/glue_catalog_table.html)   
   - [`aws_glue_connection` resource](/docs/providers/aws/r/glue_connection.html)
   - [`aws_glue_crawler` resource](/docs/providers/aws/r/glue_crawler.html)
   - [`aws_glue_job` resource](/docs/providers/aws/r/glue_job.html)
   - [`aws_glue_trigger` resource](/docs/providers/aws/r/glue_trigger.html)
+  - [`aws_guardduty_detector` resource](/docs/providers/aws/r/guardduty_detector.html)
+  - [`aws_guardduty_ipset` resource](/docs/providers/aws/r/guardduty_ipset.html)
+  - [`aws_guardduty_threatintelset` resource](/docs/providers/aws/r/guardduty_threatintelset.html)
   - [`aws_instance` data source](/docs/providers/aws/d/instance.html)
   - [`aws_instance` resource](/docs/providers/aws/r/instance.html)
+  - [`aws_internet_gateway` data source](/docs/providers/aws/d/internet_gateway.html)
+  - [`aws_internet_gateway` resource](/docs/providers/aws/r/internet_gateway.html)
+  - [`aws_key_pair` resource](/docs/providers/aws/r/key_pair.html)
   - [`aws_launch_template` data source](/docs/providers/aws/d/launch_template.html)
   - [`aws_launch_template` resource](/docs/providers/aws/r/launch_template.html)
   - [`aws_redshift_cluster` resource](/docs/providers/aws/r/redshift_cluster.html)
@@ -284,6 +295,8 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_ssm_parameter` resource](/docs/providers/aws/r/ssm_parameter.html)
   - [`aws_vpc` data source](/docs/providers/aws/d/vpc.html)
   - [`aws_vpc` resource](/docs/providers/aws/r/vpc.html)
+  - [`aws_vpc_dhcp_options` data source](/docs/providers/aws/d/vpc_dhcp_options.html)
+  - [`aws_vpc_dhcp_options` resource](/docs/providers/aws/r/vpc_dhcp_options.html)  
   - [`aws_waf_geo_match_set` resource](/docs/providers/aws/r/waf_geo_match_set.html)
   - [`aws_waf_ipset` resource](/docs/providers/aws/r/waf_ipset.html)
   - [`aws_waf_rate_based_rule` resource](/docs/providers/aws/r/waf_rate_based_rule.html)

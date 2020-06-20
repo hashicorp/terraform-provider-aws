@@ -3801,9 +3801,7 @@ type ExportServerSideEncryption struct {
 	// The Amazon Resource Name (ARN) of the the AWS KMS key you want to use to
 	// encrypt the Amazon S3 objects. This parameter is required if you choose aws:kms
 	// as an encryption type.
-	//
-	// KmsKeyArn is a required field
-	KmsKeyArn *string `type:"string" required:"true"`
+	KmsKeyArn *string `type:"string"`
 
 	// The type of server side encryption used for encrypting the objects in Amazon
 	// S3.
@@ -3825,9 +3823,6 @@ func (s ExportServerSideEncryption) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *ExportServerSideEncryption) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "ExportServerSideEncryption"}
-	if s.KmsKeyArn == nil {
-		invalidParams.Add(request.NewErrParamRequired("KmsKeyArn"))
-	}
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}

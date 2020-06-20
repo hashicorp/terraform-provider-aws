@@ -32,6 +32,10 @@ Incoming issues are classified using labels. These are assigned either by automa
 
 ### Pull Request Review Process
 
+Throughout the review process our first priority is to interact with contributors with kindness, empathy and in accordance with the [Guidelines](https://www.hashicorp.com/community-guidelines) and [Principles](https://www.hashicorp.com/our-principles/) of Hashicorp. 
+
+Our contributors are often working within the provider as a hobby, or not in their main line of work so we need to give adequate time for response. By default this is two weeks, but it is worth considering taking on the work to complete the PR ourselves if the administrative effort of waiting for a response is greater than just resolving the issues ourselves (Don't wait two weeks, or add a context shift for yourself and the contributor to fix a typo). As long as we use their commits, contributions will be recorded by Github and as always ensure to thank the contributor for their work. Roadmap items are another area where we would consider taking on the work ourselves more quickly in order to meet the commitments made to our users.
+
 Notes for each type of pull request are (or will be) available in subsections below.
 
 - If you plan to be responsible for the pull request through the merge/closure process, assign it to yourself
@@ -42,11 +46,11 @@ Notes for each type of pull request are (or will be) available in subsections be
 This pull request appears to be related to/solve #1234, so I have edited the pull request description to denote the issue reference.
 ```
 
-- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#checklists-for-contribution)
+- Review the contents of the pull request and ensure the change follows the relevant section of the [Contributing Guide](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/contribution-checklists.md)
 - If the change is not acceptable, leave a long form comment about the reasoning and close the pull request
 - If the change is acceptable with modifications, leave a pull request review marked using the `Request Changes` option (for maintainer pull requests with minor modification requests, giving feedback with the `Approve` option is recommended so they do not need to wait for another round of review)
 - If the author is unresponsive for changes (by default we give two weeks), determine importance and level of effort to finish the pull request yourself including their commits or close the pull request
-- Run relevant acceptance testing ([locally](https://github.com/terraform-providers/terraform-provider-aws/blob/master/.github/CONTRIBUTING.md#running-an-acceptance-test) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
+- Run relevant acceptance testing ([locally](https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/running-and-writing-acceptance-tests.md) or in TeamCity) against AWS Commercial and AWS GovCloud (US) to ensure no new failures are being introduced
 - Approve the pull request with a comment outlining what steps you took that ensure the change is acceptable, e.g. acceptance testing output
 
 ``````markdown
@@ -87,7 +91,6 @@ gox -os='linux darwin windows freebsd openbsd solaris' -arch='386 amd64 arm' -os
 - Update `docs/DEVELOPMENT.md`
 - Update `.github/workflows/*.yml`
 - Update `.go-version`
-- Update `.travis.yml`
 - Update `CHANGELOG.md` detailing the update and mention any notes practitioners need to be aware of.
 
 See [#9992](https://github.com/terraform-providers/terraform-provider-aws/issues/9992) / [#10206](https://github.com/terraform-providers/terraform-provider-aws/pull/10206)  for a recent example.
@@ -389,12 +392,10 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_CODEBUILD_GITHUB_SOURCE_LOCATION` | GitHub source URL for CodeBuild testing. CodeBuild must have access to this repository via OAuth or Source Credentials. Defaults to `https://github.com/hashibot-test/aws-test.git`. |
 | `AWS_COGNITO_USER_POOL_DOMAIN_CERTIFICATE_ARN` | Amazon Resource Name of ACM Certificate in `us-east-1` for Cognito User Pool Domain Name testing. |
 | `AWS_COGNITO_USER_POOL_DOMAIN_ROOT_DOMAIN` | Root domain name to use with Cognito User Pool Domain testing. |
-| `AWS_COIP_POOL_ID` | Identifier for EC2 Customer-Owned Pool related testing. Requires `AWS_OUTPOST_ARN`. |
 | `AWS_DEFAULT_REGION` | Primary AWS region for tests. Defaults to `us-west-2`. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `AWS_GUARDDUTY_MEMBER_EMAIL` | Email address for GuardDuty Member testing. **DEPRECATED:** It may be possible to use a placeholder email address instead. |
-| `AWS_OUTPOST_ARN` | Amazon Resource Name of Outpost for Outposts related testing. |
 | `DX_CONNECTION_ID` | Identifier for Direct Connect Connection testing. |
 | `DX_VIRTUAL_INTERFACE_ID` | Identifier for Direct Connect Virtual Interface testing. |
 | `EC2_SECURITY_GROUP_RULES_PER_GROUP_LIMIT` | EC2 Quota for Rules per Security Group. Defaults to 50. **DEPRECATED:** Can be augmented or replaced with Service Quotas lookup. |
