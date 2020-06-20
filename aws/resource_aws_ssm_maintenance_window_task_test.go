@@ -166,22 +166,24 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(name, "test comment", 30),
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(name, "test comment", 30, "$LATEST"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", serviceRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment"),
-					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "30"),
+          resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "30"),
+          resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "$LATEST"),
 				),
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(name, "test comment update", 60),
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(name, "test comment update", 60, "1.2.3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment update"),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "60"),
-					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, "id"),
+          resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, "id"),
+          resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "1.2.3"),
 				),
 			},
 			{
@@ -663,7 +665,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 `, rName, rInt)
 }
 
-func testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(rName, comment string, timeoutSeconds int) string {
+func testAccAWSSSMMaintenanceWindowTaskRunCommandConfig(rName, comment string, timeoutSeconds int, version string) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 
 resource "aws_ssm_maintenance_window_task" "test" {
@@ -683,6 +685,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
       comment             = "%[2]s"
       document_hash       = "${sha256("COMMAND")}"
       document_hash_type  = "Sha256"
+      document_version    = "%[4]s"
       service_role_arn    = "${aws_iam_role.test.arn}"
       timeout_seconds     = %[3]d
       parameter {
@@ -693,10 +696,10 @@ resource "aws_ssm_maintenance_window_task" "test" {
   }
 }
 
-`, rName, comment, timeoutSeconds)
+`, rName, comment, timeoutSeconds, version)
 }
 
-func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int) string {
+func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int, version string,) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 resource "aws_s3_bucket" "foo" {
     bucket = "tf-s3-%[1]s"
@@ -721,6 +724,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
     comment                = "%[2]s"
       document_hash        = "${sha256("COMMAND")}"
       document_hash_type   = "Sha256"
+      document_version     = "%[4]s"
       service_role_arn     = "${aws_iam_role.test.arn}"
       timeout_seconds      = %[3]d
       output_s3_bucket     = "${aws_s3_bucket.foo.id}"
@@ -734,7 +738,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 }
 
 
-`, rName, comment, timeoutSeconds)
+`, rName, comment, timeoutSeconds, version)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskStepFunctionConfig(rName string) string {
