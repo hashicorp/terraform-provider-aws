@@ -374,7 +374,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 	})
 }
 
-func TestAccAWSVpcEndpoint_removed(t *testing.T) {
+func TestAccAWSVpcEndpoint_disappears(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -388,25 +388,12 @@ func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 				Config: testAccVpcEndpointConfig_gatewayWithoutRouteTableOrPolicyOrTags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcEndpointExists(resourceName, &endpoint),
-					testAccCheckVpcEndpointDisappears(&endpoint),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpcEndpoint(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func testAccCheckVpcEndpointDisappears(endpoint *ec2.VpcEndpoint) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		input := &ec2.DeleteVpcEndpointsInput{
-			VpcEndpointIds: []*string{endpoint.VpcEndpointId},
-		}
-
-		_, err := conn.DeleteVpcEndpoints(input)
-
-		return err
-	}
 }
 
 func testAccCheckVpcEndpointDestroy(s *terraform.State) error {
