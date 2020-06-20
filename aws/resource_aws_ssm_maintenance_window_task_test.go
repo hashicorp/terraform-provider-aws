@@ -172,8 +172,8 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", serviceRoleResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment"),
-          resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "30"),
-          resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "$LATEST"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "30"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "$LATEST"),
 				),
 			},
 			{
@@ -182,8 +182,8 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment update"),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "60"),
-          resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, "id"),
-          resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "1.2.3"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "1.2.3"),
 				),
 			},
 			{
@@ -699,7 +699,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 `, rName, comment, timeoutSeconds, version)
 }
 
-func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int, version string,) string {
+func testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(rName, comment string, timeoutSeconds int, version string) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 resource "aws_s3_bucket" "foo" {
     bucket = "tf-s3-%[1]s"
