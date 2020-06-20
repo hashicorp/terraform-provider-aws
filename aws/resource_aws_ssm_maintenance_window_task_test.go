@@ -177,13 +177,13 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParameters(t *te
 				),
 			},
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(name, "test comment update", 60, "1.2.3"),
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandConfigUpdate(name, "test comment update", 60, "12345"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.comment", "test comment update"),
 					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.timeout_seconds", "60"),
 					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.output_s3_bucket", s3BucketResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "1.2.3"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.document_version", "12345"),
 				),
 			},
 			{

@@ -228,10 +228,11 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 											ssm.DocumentHashTypeSha1,
 										}, false),
 									},
+
 									"document_version": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowAutomationParameters.html"),
+										ValidateFunc: validation.StringMatch(regexp.MustCompile("([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)"), "see https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_MaintenanceWindowRunCommandParameters.html"),
 									},
 
 									"notification_config": {

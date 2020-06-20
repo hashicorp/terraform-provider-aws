@@ -87,6 +87,7 @@ resource "aws_ssm_maintenance_window_task" "example" {
 
   task_invocation_parameters {
     run_command_parameters {
+      document_version     = "$DEFAULT"
       output_s3_bucket     = "${aws_s3_bucket.example.bucket}"
       output_s3_key_prefix = "output"
       service_role_arn     = "${aws_iam_role.example.arn}"
@@ -171,7 +172,7 @@ The following arguments are supported:
 
 `automation_parameters` supports the following:
 
-* `document_version` - (Optional) The version of an Automation document to use during task execution.
+* `document_version` - (Optional) The version of an Automation document to use during task execution. Valid values: `$DEFAULT`, `$LATEST`, or a specific version number
 * `parameter` - (Optional) The parameters for the RUN_COMMAND task execution. Documented below.
 
 `lambda_parameters` supports the following:
@@ -185,6 +186,7 @@ The following arguments are supported:
 * `comment` - (Optional) Information about the command(s) to execute.
 * `document_hash` - (Optional) The SHA-256 or SHA-1 hash created by the system when the document was created. SHA-1 hashes have been deprecated.
 * `document_hash_type` - (Optional) SHA-256 or SHA-1. SHA-1 hashes have been deprecated. Valid values: `Sha256` and `Sha1`
+* `document_version` - (Optional) The version of a document to use during task execution. Valid values: `$DEFAULT`, `$LATEST`, or a specific version number
 * `notification_config` - (Optional) Configurations for sending notifications about command status changes on a per-instance basis. Documented below.
 * `output_s3_bucket` - (Optional) The name of the Amazon S3 bucket.
 * `output_s3_key_prefix` - (Optional) The Amazon S3 bucket subfolder.
