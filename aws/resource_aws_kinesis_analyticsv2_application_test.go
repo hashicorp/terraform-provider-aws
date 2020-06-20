@@ -490,7 +490,7 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.#", "0"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "0"),
 				),
 			},
 			{
@@ -498,10 +498,18 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsAdd(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.outputs.0.schema.#", "1"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
+					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+						[]string{
+							"application_configuration.0.sql_application_configuration.0.output.%s.name",
+							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
+							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
+						},
+						[]string{
+							"test_name",
+							"1",
+							"1",
+						}),
 				),
 			},
 			{
