@@ -1427,7 +1427,7 @@ func createKinesisAnalyticsV2ApplicationUpdateOpts(runtime string, d *schema.Res
 	}
 
 	var applicationUpdate *kinesisanalyticsv2.ApplicationConfigurationUpdate
-	if sqlUpdate != nil || flinkUpdate != nil || propertyGroupsUpdate != nil || snapshotUpdate != nil {
+	if codeConfigUpdate != nil || snapshotUpdate != nil || propertyGroupsUpdate != nil || flinkUpdate != nil || sqlUpdate != nil {
 		applicationUpdate = &kinesisanalyticsv2.ApplicationConfigurationUpdate{
 			ApplicationCodeConfigurationUpdate:     codeConfigUpdate,
 			ApplicationSnapshotConfigurationUpdate: snapshotUpdate,

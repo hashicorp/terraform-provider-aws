@@ -60,7 +60,7 @@ func TestAccAWSKinesisAnalyticsV2Application_update(t *testing.T) {
 				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_update(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resName, "version", "2"),
-					resource.TestCheckResourceAttr(resName, "code", "testCode2\n"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.application_code_configuration.0.code_content.1260035000.text_content", "testCode2\n"),
 				),
 			},
 			{
@@ -422,10 +422,18 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsKinesisStream(t *testing.T) 
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.953763325.name", "test_name"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.953763325.kinesis_stream.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.953763325.schema.#", "1"),
-					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.953763325.schema.0.record_format_type", "JSON"),
+					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+						[]string{
+							"application_configuration.0.sql_application_configuration.0.output.%s.name",
+							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
+							"application_configuration.0.sql_application_configuration.0.output.%s.schema.#",
+						},
+						[]string{
+							"test_name",
+							"1",
+							"1",
+							"JSON",
+						}),
 				),
 			},
 			{
@@ -615,9 +623,19 @@ func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Create(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.outputs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.outputs.0.lambda.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "application_configuration.0.sql_application_configuration.0.outputs.0.lambda.0.resource_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
+					testUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
+						[]string{
+							"application_configuration.0.sql_application_configuration.0.output.%s.lambda.#",
+						},
+						[]string{
+							"1",
+						}),
+					testUnknownSetIdPair(resourceName, "application_configuration.0.sql_application_configuration.0.output",
+						[]string{"application_configuration.0.sql_application_configuration.0.output.%s.lambda.0.resource_arn"},
+						[]string{lambdaFunctionResourceName},
+						[]string{"arn"},
+					),
 				),
 			},
 			{
