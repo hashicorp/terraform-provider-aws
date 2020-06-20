@@ -330,8 +330,8 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsAdd(t *testing.T) {
 							"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_stream.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.parallelism.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.schema.#",
-							"application_configuration.0.sql_application_configuration.0.input.%s.record_columns.#",
-							"application_configuration.0.sql_application_configuration.0.input.%s.record_format.#",
+							"application_configuration.0.sql_application_configuration.0.input.%s.schema.0.record_column.#",
+							"application_configuration.0.sql_application_configuration.0.input.%s.schema.0.record_format.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.schema.0.record_format.0.mapping_parameters.0.json.#",
 						}, []string{
 							"test_prefix",

@@ -891,6 +891,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 		if err != nil {
 			return err
 		}
+		fmt.Printf("application update: %+v\n\n", applicationUpdate)
 
 		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{}) {
 			updateApplicationOpts.SetApplicationConfigurationUpdate(applicationUpdate.ApplicationConfigurationUpdate)
@@ -899,6 +900,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 			if updateErr != nil {
 				return updateErr
 			}
+			fmt.Printf("updating version for application update\n")
 			version = version + 1
 		}
 
@@ -972,6 +974,7 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				if err != nil {
 					return fmt.Errorf("Unable to add application inputs: %s", err)
 				}
+				fmt.Printf("adding version for new inputs\n")
 				version = version + 1
 			}
 			if len(oldOutputs) == 0 && len(newOutputs) > 0 {
@@ -1348,12 +1351,12 @@ func createKinesisAnalyticsV2SqlUpdateOpts(d *schema.ResourceData) *kinesisanaly
 		hasOldOutputs = len(oldConfig[0].(map[string]interface{})["output"].(*schema.Set).List()) > 0
 	}
 	if hasOldInputs {
-		if iConf, ok := sc["inputs"].([]interface{}); ok && len(iConf) > 0 {
+		if iConf := sc["input"].(*schema.Set).List(); len(iConf) > 0 {
 			inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsV2InputUpdate(iConf[0].(map[string]interface{}))}
 		}
 	}
 	if hasOldOutputs {
-		if oConf, ok := sc["outputs"].([]interface{}); ok && len(oConf) > 0 {
+		if oConf := sc["output"].(*schema.Set).List(); len(oConf) > 0 {
 			outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsV2OutputUpdate(oConf[0].(map[string]interface{}))}
 		}
 	}
@@ -1389,6 +1392,7 @@ func createKinesisAnalyticsV2SqlUpdateOpts(d *schema.ResourceData) *kinesisanaly
 			ReferenceDataSourceUpdates: referenceDataUpdate,
 		}
 	}
+	fmt.Printf("Sql update:%+v\n\n\n", sqlUpdate)
 	return sqlUpdate
 }
 
@@ -1440,9 +1444,11 @@ func createKinesisAnalyticsV2ApplicationUpdateOpts(runtime string, d *schema.Res
 }
 
 func createKinesisAnalyticsV2ApplicationCodeConfigurationUpdateOpts(d *schema.ResourceData) *kinesisanalyticsv2.ApplicationCodeConfigurationUpdate {
-	if !d.HasChange("application_configuration.0.application_code_configuration") {
+	if !d.HasChange("application_configuration.0.application_code_configuration.code_content") &&
+		!d.HasChange("application_configuration.0.application_code_configuration.code_content_type") {
 		return nil
 	}
+
 	codeConfigUpdate := &kinesisanalyticsv2.ApplicationCodeConfigurationUpdate{}
 	codeConfig := d.Get("application_configuration.0.application_code_configuration").([]interface{})
 	if len(codeConfig) == 0 {
