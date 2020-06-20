@@ -42,6 +42,7 @@ func TestAccAWSEc2TrafficMirrorSession_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "session_number", strconv.Itoa(session)),
 					resource.TestMatchResourceAttr(resourceName, "virtual_network_id", regexp.MustCompile(`\d+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-session/tms-.+`)),
 				),
 			},
 			// update of description, packet length and VNI
@@ -142,7 +143,7 @@ func TestAccAWSEc2TrafficMirrorSession_disappears(t *testing.T) {
 				Config: testAccTrafficMirrorSessionConfig(rName, session),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorSessionExists(resourceName, &v),
-					testAccCheckAWSEc2TrafficMirrorSessionDisappears(&v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2TrafficMirrorSession(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
