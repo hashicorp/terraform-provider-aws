@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -11,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -84,7 +84,7 @@ func testSweepEc2VpcEndpoints(region string) error {
 func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := acctest.RandomWithPrefix("tf-testacc-vpce")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -105,6 +105,7 @@ func TestAccAWSVpcEndpoint_gatewayBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -121,7 +122,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicyAndTags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_vpc_endpoint.test"
 	resourceNameRt := "aws_route_table.test"
-	rName := acctest.RandomWithPrefix("tf-testacc-vpce")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -146,6 +147,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicyAndTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -165,6 +167,7 @@ func TestAccAWSVpcEndpoint_gatewayWithRouteTableAndPolicyAndTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -210,7 +213,7 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 }
 `
 	resourceName := "aws_vpc_endpoint.test"
-	rName := acctest.RandomWithPrefix("tf-testacc-vpce")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -241,7 +244,7 @@ func TestAccAWSVpcEndpoint_gatewayPolicy(t *testing.T) {
 func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := acctest.RandomWithPrefix("tf-testacc-vpce")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -263,6 +266,7 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -277,7 +281,7 @@ func TestAccAWSVpcEndpoint_interfaceBasic(t *testing.T) {
 func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := acctest.RandomWithPrefix("tf-testacc-vpce")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -300,6 +304,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -317,6 +322,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -331,7 +337,7 @@ func TestAccAWSVpcEndpoint_interfaceWithSubnetAndSecurityGroup(t *testing.T) {
 func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := acctest.RandomWithPrefix("tf-acc-vpce")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -355,6 +361,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-endpoint/vpce-.+`)),
 				),
 			},
 			{
@@ -370,7 +377,7 @@ func TestAccAWSVpcEndpoint_interfaceNonAWSService(t *testing.T) {
 func TestAccAWSVpcEndpoint_removed(t *testing.T) {
 	var endpoint ec2.VpcEndpoint
 	resourceName := "aws_vpc_endpoint.test"
-	rName := acctest.RandomWithPrefix("tf-testacc-vpce")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

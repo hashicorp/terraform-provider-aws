@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -26,6 +27,10 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_accept": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -214,6 +219,15 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	vpce := vpceRaw.(*ec2.VpcEndpoint)
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
 
 	serviceName := aws.StringValue(vpce.ServiceName)
 	d.Set("service_name", serviceName)
