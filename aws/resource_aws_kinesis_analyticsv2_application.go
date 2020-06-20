@@ -933,8 +933,8 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				version = version + 1
 			}
 		}
-		if d.HasChange("sql_application_configuration") {
-			oldConf, newConf := d.GetChange("sql_application_configuration")
+		if d.HasChange("application_configuration.0.sql_application_configuration") {
+			oldConf, newConf := d.GetChange("application_configuration.0.sql_application_configuration")
 			o := oldConf.([]interface{})[0].(map[string]interface{})
 			n := newConf.([]interface{})[0].(map[string]interface{})
 			oldInputs := o["input"].(*schema.Set).List()
@@ -1340,12 +1340,12 @@ func createKinesisAnalyticsV2SqlUpdateOpts(d *schema.ResourceData) *kinesisanaly
 	var referenceDataUpdate []*kinesisanalyticsv2.ReferenceDataSourceUpdate
 
 	sc := d.Get("application_configuration.0.sql_application_configuration").([]interface{})[0].(map[string]interface{})
-	oldConfigIfc, _ := d.GetChange("sql_application_configuration")
+	oldConfigIfc, _ := d.GetChange("application_configuration.0.sql_application_configuration")
 	oldConfig := oldConfigIfc.([]interface{})
 	var hasOldInputs, hasOldOutputs bool
 	if len(oldConfig) > 0 {
-		hasOldInputs = len(oldConfig[0].(map[string]interface{})["inputs"].([]interface{})) > 0
-		hasOldOutputs = len(oldConfig[0].(map[string]interface{})["outputs"].([]interface{})) > 0
+		hasOldInputs = len(oldConfig[0].(map[string]interface{})["input"].(*schema.Set).List()) > 0
+		hasOldOutputs = len(oldConfig[0].(map[string]interface{})["output"].(*schema.Set).List()) > 0
 	}
 	if hasOldInputs {
 		if iConf, ok := sc["inputs"].([]interface{}); ok && len(iConf) > 0 {
