@@ -2,9 +2,9 @@ package aws
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -96,9 +96,10 @@ func resourceAwsSsmParameter() *schema.Resource {
 			},
 			"tags": tagsSchema(),
 			"policies": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringIsJSON,
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: suppressEquivalentJsonDiffs,
 			},
 		},
 
@@ -154,7 +155,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 
 	param := resp.Parameter
-	name := *param.Name
+	name := aws.StringValue(param.Name)
 	d.Set("name", name)
 	d.Set("type", param.Type)
 	d.Set("value", param.Value)
@@ -189,7 +190,7 @@ func resourceAwsSsmParameterRead(d *schema.ResourceData, meta interface{}) error
 	}
 	d.Set("allowed_pattern", detail.AllowedPattern)
 	d.Set("data_type", detail.DataType)
-	d.Set("policies", flattenAwsSsmParameter(detail.Policies))
+	d.Set("policies", flattenAwsSsmParameterPolicies(detail.Policies))
 
 	tags, err := keyvaluetags.SsmListTags(conn, name, ssm.ResourceTypeForTaggingParameter)
 
@@ -224,10 +225,11 @@ func resourceAwsSsmParameterDelete(d *schema.ResourceData, meta interface{}) err
 func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ssmconn
 
-	log.Printf("[INFO] Creating SSM Parameter: %s", d.Get("name").(string))
+	ssmParamName := d.Get("name").(string)
+	log.Printf("[INFO] Creating SSM Parameter: %s", ssmParamName)
 
 	paramInput := &ssm.PutParameterInput{
-		Name:           aws.String(d.Get("name").(string)),
+		Name:           aws.String(ssmParamName),
 		Type:           aws.String(d.Get("type").(string)),
 		Tier:           aws.String(d.Get("tier").(string)),
 		Value:          aws.String(d.Get("value").(string)),
@@ -244,20 +246,18 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		paramInput.Description = aws.String(n.(string))
 	}
 
-	if d.HasChange("policies") {
-		_, n := d.GetChange("policies")
-		if n != "" {
-			paramInput.Policies = aws.String(n.(string))
-		} else {
-			paramInput.Policies = aws.String("[]")
-		}
+	v, ok := d.GetOk("policies")
+	if ok {
+		paramInput.Policies = aws.String(v.(string))
+	} else {
+		paramInput.Policies = aws.String("[{}]")
 	}
 
 	if keyID, ok := d.GetOk("key_id"); ok && d.Get("type").(string) == ssm.ParameterTypeSecureString {
 		paramInput.SetKeyId(keyID.(string))
 	}
 
-	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", d.Get("name"))
+	log.Printf("[DEBUG] Waiting for SSM Parameter %v to be updated", ssmParamName)
 	_, err := conn.PutParameter(paramInput)
 
 	if isAWSErr(err, "ValidationException", "Tier is not supported") {
@@ -269,16 +269,15 @@ func resourceAwsSsmParameterPut(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error creating SSM parameter: %s", err)
 	}
 
-	name := d.Get("name").(string)
 	if d.HasChange("tags") {
 		o, n := d.GetChange("tags")
 
-		if err := keyvaluetags.SsmUpdateTags(conn, name, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
-			return fmt.Errorf("error updating SSM Parameter (%s) tags: %s", name, err)
+		if err := keyvaluetags.SsmUpdateTags(conn, ssmParamName, ssm.ResourceTypeForTaggingParameter, o, n); err != nil {
+			return fmt.Errorf("error updating SSM Parameter (%s) tags: %s", ssmParamName, err)
 		}
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(ssmParamName)
 
 	return resourceAwsSsmParameterRead(d, meta)
 }
@@ -294,18 +293,16 @@ func shouldUpdateSsmParameter(d *schema.ResourceData) bool {
 	return !d.IsNewResource()
 }
 
-func flattenAwsSsmParameter(policies []*ssm.ParameterInlinePolicy) string {
+func flattenAwsSsmParameterPolicies(policies []*ssm.ParameterInlinePolicy) string {
 	if len(policies) == 0 {
 		return ""
 	}
 
-	jsonRes := make([]string, len(policies))
+	strPolicies := make([]string, 0)
 
 	for _, policy := range policies {
-		jsonRes = append(jsonRes, aws.StringValue(policy.PolicyText))
+		strPolicies = append(strPolicies, aws.StringValue(policy.PolicyText))
 	}
 
-	policiesJSON, _ := json.Marshal(jsonRes)
-
-	return string(policiesJSON)
+	return fmt.Sprintf("[%s]", strings.Join(strPolicies, ","))
 }
