@@ -182,17 +182,6 @@ func testAccCheckAWSEc2TrafficMirrorSessionExists(name string, session *ec2.Traf
 	}
 }
 
-func testAccCheckAWSEc2TrafficMirrorSessionDisappears(session *ec2.TrafficMirrorSession) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, err := conn.DeleteTrafficMirrorSession(&ec2.DeleteTrafficMirrorSessionInput{
-			TrafficMirrorSessionId: session.TrafficMirrorSessionId,
-		})
-
-		return err
-	}
-}
-
 func testAccTrafficMirrorSessionConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "azs" {
