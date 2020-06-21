@@ -854,6 +854,9 @@ func testAccCheckKinesisAnalyticsV2ApplicationDisappears(desc *kinesisanalyticsv
 			CreateTimestamp: desc.CreateTimestamp,
 		}
 		_, err := conn.DeleteApplication(deleteInput)
+		if err != nil {
+			return err
+		}
 		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
 			resp, err := conn.DescribeApplication(describeOpts)
 			if err == nil {
@@ -1861,47 +1864,6 @@ resource "aws_kinesis_analyticsv2_application" "test" {
   }
 }
 `, rInt, rInt, tag1, tag2, tag3),
-	)
-}
-
-func testAccKinesisAnalyticsV2ApplicationWithConfigConflict(rInt int) string {
-	return composeConfig(
-		testAccKinesisAnalyticsV2ApplicationConfigBase(rInt),
-		fmt.Sprintf(`
-data "aws_iam_policy_document" "assume_role_policy" {
-  statement {
-    effect  = "Allow"
-    actions = ["sts:AssumeRole"]
-
-    principals {
-      type        = "Service"
-      identifiers = ["kinesisanalytics.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "kinesis_analyticsv2_application" {
-  name               = "tf-acc-test-%d-kinesis"
-  assume_role_policy = "${data.aws_iam_policy_document.assume_role_policy.json}"
-}
-
-resource "aws_kinesis_analyticsv2_application" "test" {
-  name                   = "testAcc-%d"
-  runtime                = "SQL-1_0"
-  service_execution_role = "${aws_iam_role.kinesis_analyticsv2_application.arn}"
-
-  application_configuration {
-    application_code_configuration {
-      code_content {
-        text_content = "testCode\n"
-      }
-      code_content_type      = "PLAINTEXT"
-    }
-    flink_application_configuration {}
-    sql_application_configuration {}
-  }
-}
-`, rInt, rInt),
 	)
 }
 
