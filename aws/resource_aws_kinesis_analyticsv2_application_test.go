@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
@@ -28,7 +27,7 @@ func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
-					resource.TestCheckResourceAttr(resName, "code", "testCode\n"),
+					resource.TestCheckResourceAttr(resName, "application_configuration.0.application_code_configuration.0.code_content.1466184697.text_content", "testCode\n"),
 				),
 			},
 			{
@@ -275,8 +274,8 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisStream(t *testing.T) {
 							"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_stream.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.parallelism.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.schema.#",
-							"application_configuration.0.sql_application_configuration.0.input.%s.record_column.#",
-							"application_configuration.0.sql_application_configuration.0.input.%s.record_format.#",
+							"application_configuration.0.sql_application_configuration.0.input.%s.schema.0.record_column.#",
+							"application_configuration.0.sql_application_configuration.0.input.%s.schema.0.record_format.#",
 							"application_configuration.0.sql_application_configuration.0.input.%s.schema.0.record_format.0.mapping_parameters.0.json.#",
 						}, []string{
 							"test_prefix",
@@ -807,20 +806,20 @@ func TestAccAWSKinesisAnalyticsV2Application_tags(t *testing.T) {
 	})
 }
 
-func TestAccAWSKinesisAnalyticsV2Application_SQLConflictsWithFlinkConfig(t *testing.T) {
-	rInt := acctest.RandInt()
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccKinesisAnalyticsV2ApplicationWithConfigConflict(rInt),
-				ExpectError: regexp.MustCompile("[.]*conflicts with[.]*"),
-			},
-		},
-	})
-}
+// func TestAccAWSKinesisAnalyticsV2Application_SQLConflictsWithFlinkConfig(t *testing.T) {
+// 	rInt := acctest.RandInt()
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+// 		Providers:    testAccProviders,
+// 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config:      testAccKinesisAnalyticsV2ApplicationWithConfigConflict(rInt),
+// 				ExpectError: regexp.MustCompile("[.]*conflicts with[.]*"),
+// 			},
+// 		},
+// 	})
+// }
 
 func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
