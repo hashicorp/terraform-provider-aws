@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -34,6 +35,10 @@ func resourceAwsVpcEndpointService() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"availability_zones": {
 				Type:     schema.TypeSet,
@@ -137,12 +142,17 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 		return nil
 	}
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc-endpoint-service/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	svcCfg := svcCfgRaw.(*ec2.ServiceConfiguration)
 	d.Set("acceptance_required", svcCfg.AcceptanceRequired)
-	err = d.Set("network_load_balancer_arns", flattenStringSet(svcCfg.NetworkLoadBalancerArns))
-	if err != nil {
-		return fmt.Errorf("error setting network_load_balancer_arns: %s", err)
-	}
 	err = d.Set("availability_zones", flattenStringSet(svcCfg.AvailabilityZones))
 	if err != nil {
 		return fmt.Errorf("error setting availability_zones: %s", err)
@@ -152,6 +162,10 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 		return fmt.Errorf("error setting base_endpoint_dns_names: %s", err)
 	}
 	d.Set("manages_vpc_endpoints", svcCfg.ManagesVpcEndpoints)
+	err = d.Set("network_load_balancer_arns", flattenStringSet(svcCfg.NetworkLoadBalancerArns))
+	if err != nil {
+		return fmt.Errorf("error setting network_load_balancer_arns: %s", err)
+	}
 	d.Set("private_dns_name", svcCfg.PrivateDnsName)
 	d.Set("service_name", svcCfg.ServiceName)
 	d.Set("service_type", svcCfg.ServiceType[0].ServiceType)
