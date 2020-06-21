@@ -154,7 +154,8 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 										ValidateFunc: validateKinesisAnalyticsV2CodeContentType,
 									},
 									"code_content": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
+										MaxItems: 1,
 										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -163,7 +164,8 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 													Optional: true,
 												},
 												"s3_content_location": {
-													Type:     schema.TypeMap,
+													Type:     schema.TypeList,
+													MaxItems: 1,
 													Optional: true,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
@@ -326,7 +328,7 @@ func resourceAwsKinesisAnalyticsV2Application() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"input": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Optional: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -936,9 +938,9 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 			oldConf, newConf := d.GetChange("application_configuration.0.sql_application_configuration")
 			o := oldConf.([]interface{})[0].(map[string]interface{})
 			n := newConf.([]interface{})[0].(map[string]interface{})
-			oldInputs := o["input"].(*schema.Set).List()
+			oldInputs := o["input"].([]interface{})
 			oldOutputs := o["output"].(*schema.Set).List()
-			newInputs := n["input"].(*schema.Set).List()
+			newInputs := n["input"].([]interface{})
 			newOutputs := n["output"].(*schema.Set).List()
 
 			if len(oldInputs) == 0 && len(newInputs) > 0 {
@@ -1338,18 +1340,18 @@ func createKinesisAnalyticsV2SqlUpdateOpts(d *schema.ResourceData) *kinesisanaly
 	var hasOldInputs, hasOldOutputs bool
 
 	if len(oldConfig) > 0 {
-		hasOldInputs = len(oldConfig[0].(map[string]interface{})["input"].(*schema.Set).List()) > 0
+		hasOldInputs = len(oldConfig[0].(map[string]interface{})["input"].([]interface{})) > 0
 		hasOldOutputs = len(oldConfig[0].(map[string]interface{})["output"].(*schema.Set).List()) > 0
 	}
 	if hasOldInputs {
-		if iConf := sc["input"].(*schema.Set).List(); len(iConf) > 0 {
+		if iConf := sc["input"].([]interface{}); len(iConf) > 0 {
 			inputsUpdate = []*kinesisanalyticsv2.InputUpdate{expandKinesisAnalyticsV2InputUpdate(iConf[0].(map[string]interface{}))}
 		}
 	}
 	if hasOldOutputs {
 		if oConf := sc["output"].(*schema.Set).List(); len(oConf) > 0 {
-			outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{expandKinesisAnalyticsV2OutputUpdate(
-				oldConfig[0].(map[string]interface{})["output"].(*schema.Set).List()[0].(map[string]interface{}), oConf[0].(map[string]interface{}))}
+			outputsUpdate = []*kinesisanalyticsv2.OutputUpdate{
+				expandKinesisAnalyticsV2OutputUpdate(oldConfig[0].(map[string]interface{})["output"].(*schema.Set).List()[0].(map[string]interface{}), oConf[0].(map[string]interface{}))}
 		}
 	}
 	rConf := sc["reference_data_sources"].([]interface{})
@@ -1753,7 +1755,7 @@ func expandKinesisAnalyticsV2CloudwatchLoggingOptionUpdate(clo map[string]interf
 func expandKinesisAnalayticsV2SqlApplicationConfiguration(appConfig map[string]interface{}) *kinesisanalyticsv2.SqlApplicationConfiguration {
 	sqlApplicationConfiguration := &kinesisanalyticsv2.SqlApplicationConfiguration{}
 	if appConfig["input"] != nil {
-		if v := appConfig["input"].(*schema.Set).List(); len(v) > 0 {
+		if v := appConfig["input"].([]interface{}); len(v) > 0 {
 			i := v[0].(map[string]interface{})
 			inputs := expandKinesisAnalyticsV2Input(i)
 			sqlApplicationConfiguration.Inputs = []*kinesisanalyticsv2.Input{inputs}
@@ -1861,11 +1863,9 @@ func flattenKinesisAnalyticsV2ApplicationCodeConfiguration(codeConfig *kinesisan
 			if locDesc.ObjectVersion != nil {
 				locationDescription["object_version"] = *locDesc.ObjectVersion
 			}
-			codeContent["s3_content_location"] = locationDescription
+			codeContent["s3_content_location"] = []interface{}{locationDescription}
 		}
-		appCodeConfig["code_content"] = schema.NewSet(resourceKinesisAnalyticsV2ApplicationCodeContentConfigurationHash, []interface{}{
-			codeContent,
-		})
+		appCodeConfig["code_content"] = []interface{}{codeContent}
 	}
 
 	return []interface{}{appCodeConfig}
@@ -1880,7 +1880,7 @@ func expandKinesisAnalyticsV2ApplicationCodeConfiguration(conf []interface{}) *k
 
 	var codeContent *kinesisanalyticsv2.CodeContent
 	if v, ok := codeConfig["code_content"]; ok && v != nil {
-		codeContent = expandKinesisAnalyticsV2CodeContent(v.(*schema.Set))
+		codeContent = expandKinesisAnalyticsV2CodeContent(v.([]interface{}))
 	}
 
 	return &kinesisanalyticsv2.ApplicationCodeConfiguration{
@@ -1889,16 +1889,16 @@ func expandKinesisAnalyticsV2ApplicationCodeConfiguration(conf []interface{}) *k
 	}
 }
 
-func expandKinesisAnalyticsV2CodeContent(s *schema.Set) *kinesisanalyticsv2.CodeContent {
+func expandKinesisAnalyticsV2CodeContent(cc []interface{}) *kinesisanalyticsv2.CodeContent {
 	var s3ContentLocation *kinesisanalyticsv2.S3ContentLocation
 	var textContent *string
-	for _, v := range s.List() {
+	for _, v := range cc {
 		m := v.(map[string]interface{})
 		if tc, ok := m["text_content"]; ok && tc != "" {
 			textContent = aws.String(tc.(string))
 		}
-		if loc, ok := m["s3_content_location"]; ok {
-			locMap := loc.(map[string]interface{})
+		if loc, ok := m["s3_content_location"].([]interface{}); ok && len(loc) > 0 {
+			locMap := loc[0].(map[string]interface{})
 			if len(locMap) > 0 {
 				var objectVersion *string
 				// Object version is optional
@@ -2013,9 +2013,9 @@ func flattenKinesisAnalyticsV2CloudwatchLoggingOptions(options []*kinesisanalyti
 	return s
 }
 
-func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescription) *schema.Set {
+func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescription) []interface{} {
 	if len(inputs) == 0 {
-		return schema.NewSet(resourceKinesisAnalyticsV2ApplicationInputHash, nil)
+		return []interface{}{}
 	}
 	id := inputs[0]
 
@@ -2136,12 +2136,13 @@ func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescripti
 		}
 	}
 
-	return schema.NewSet(resourceKinesisAnalyticsV2ApplicationInputHash, []interface{}{input})
+	return []interface{}{input}
 }
 
 func flattenKinesisAnalyticsV2Outputs(outputs []*kinesisanalyticsv2.OutputDescription) *schema.Set {
 	s := []interface{}{}
-
+	{
+	}
 	for _, o := range outputs {
 		output := map[string]interface{}{
 			"id":   aws.StringValue(o.OutputId),
@@ -2329,7 +2330,7 @@ func resourceKinesisAnalyticsV2ApplicationCodeContentConfigurationHash(v interfa
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
 	}
 	if v, ok := m["s3_content_location"]; ok {
-		m := v.(map[string]interface{})
+		m := v.([]interface{})[0].(map[string]interface{})
 		buf.WriteString(fmt.Sprintf("%s-", m["bucket_arn"].(string)))
 		buf.WriteString(fmt.Sprintf("%s-", m["file_key"].(string)))
 		if ov, ok := m["object_version"]; ok {
@@ -2433,57 +2434,6 @@ func resourceKinesisAnalyticsV2ApplicationRecordColumnHash(v interface{}) int {
 	}
 	if v, ok := m["sql_type"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-
-	return hashcode.String(buf.String())
-}
-
-func resourceKinesisAnalyticsV2ApplicationInputHash(v interface{}) int {
-	var buf bytes.Buffer
-
-	m := v.(map[string]interface{})
-
-	if kf, ok := m["kinesis_firehose"]; ok {
-		val := kf.([]interface{})[0].(map[string]interface{})
-		buf.WriteString(fmt.Sprintf("%s-", val["resource_arn"].(string)))
-	}
-
-	if ks, ok := m["kinesis_stream"]; ok {
-		val := ks.([]interface{})[0].(map[string]interface{})
-		buf.WriteString(fmt.Sprintf("%s-", val["resource_arn"].(string)))
-	}
-
-	if l, ok := m["lambda"]; ok {
-		val := l.([]interface{})[0].(map[string]interface{})
-		buf.WriteString(fmt.Sprintf("%s-", val["resource_arn"].(string)))
-	}
-
-	if s, ok := m["schema"]; ok {
-		val := s.([]interface{})[0].(map[string]interface{})
-		if rft, ok := val["record_format_type"]; ok {
-			buf.WriteString(fmt.Sprintf("%s-", rft.(string)))
-		}
-		cols := val["record_column"].(*schema.Set).List()
-		names := []string{}
-		// sort by record column name
-		for _, rc := range cols {
-			rcMap := rc.(map[string]interface{})
-			names = append(names, rcMap["name"].(string))
-		}
-		sort.Strings(names)
-		sortedCols := []interface{}{}
-		for _, name := range names {
-			for _, rc := range cols {
-				rcMap := rc.(map[string]interface{})
-				if rcMap["name"] == name {
-					sortedCols = append(sortedCols, rc)
-				}
-			}
-		}
-		for _, rc := range sortedCols {
-			col := rc.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%d-", resourceKinesisAnalyticsV2ApplicationRecordColumnHash(col)))
-		}
 	}
 
 	return hashcode.String(buf.String())
