@@ -766,7 +766,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationCreate(d *schema.ResourceData, meta
 		cloudwatchLoggingOptions = []*kinesisanalyticsv2.CloudWatchLoggingOption{expandKinesisAnalyticsV2CloudwatchLoggingOption(clo)}
 	}
 
-	fmt.Printf("app config: %+v\n\n", appConfig)
 	createOpts := &kinesisanalyticsv2.CreateApplicationInput{
 		RuntimeEnvironment:       aws.String(runtime),
 		ApplicationName:          aws.String(name),
@@ -891,7 +890,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 		if err != nil {
 			return err
 		}
-		fmt.Printf("application update: %+v\n\n", applicationUpdate)
 
 		if !reflect.DeepEqual(applicationUpdate, &kinesisanalyticsv2.UpdateApplicationInput{}) {
 			updateApplicationOpts.SetApplicationConfigurationUpdate(applicationUpdate.ApplicationConfigurationUpdate)
@@ -900,7 +898,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 			if updateErr != nil {
 				return updateErr
 			}
-			fmt.Printf("updating version for application update\n")
 			version = version + 1
 		}
 
@@ -974,7 +971,6 @@ func resourceAwsKinesisAnalyticsV2ApplicationUpdate(d *schema.ResourceData, meta
 				if err != nil {
 					return fmt.Errorf("Unable to add application inputs: %s", err)
 				}
-				fmt.Printf("adding version for new inputs\n")
 				version = version + 1
 			}
 			if len(oldOutputs) == 0 && len(newOutputs) > 0 {
@@ -1084,7 +1080,6 @@ func expandKinesisAnalyticsV2ApplicationConfiguration(runtime string, conf []int
 	if v, ok := c["application_code_configuration"]; ok {
 		codeConfig = expandKinesisAnalyticsV2ApplicationCodeConfiguration(v.([]interface{}))
 	}
-	fmt.Printf("application code configuration: %+v\n\n", codeConfig)
 
 	var environmentProperties *kinesisanalyticsv2.EnvironmentProperties
 	if v, ok := c["environment_properties"]; ok {
@@ -1389,7 +1384,6 @@ func createKinesisAnalyticsV2SqlUpdateOpts(d *schema.ResourceData) *kinesisanaly
 			ReferenceDataSourceUpdates: referenceDataUpdate,
 		}
 	}
-	fmt.Printf("Sql update:%+v\n\n\n", sqlUpdate)
 	return sqlUpdate
 }
 
@@ -1461,7 +1455,6 @@ func createKinesisAnalyticsV2ApplicationCodeConfigurationUpdateOpts(d *schema.Re
 			ObjectVersionUpdate: cc.CodeContent.S3ContentLocation.ObjectVersion,
 		}
 	}
-	fmt.Printf("code content: %+v\n\n\n", cc)
 
 	return &kinesisanalyticsv2.ApplicationCodeConfigurationUpdate{
 		CodeContentTypeUpdate: cc.CodeContentType,
@@ -1808,7 +1801,6 @@ func flattenKinesisAnalyticsV2ApplicationConfiguration(runtime string, appConfig
 	// ApplicationCodeConfiguration is required
 	ret["application_code_configuration"] = flattenKinesisAnalyticsV2ApplicationCodeConfiguration(appConfig.ApplicationCodeConfigurationDescription)
 
-	fmt.Printf("sql config: %+v\n\n", appConfig.SqlApplicationConfigurationDescription)
 	if runtime == kinesisanalyticsv2.RuntimeEnvironmentSql10 {
 		ret["sql_application_configuration"] = flattenSqlApplicationConfigurationDescription(appConfig.SqlApplicationConfigurationDescription)
 	} else if runtimeIsFlink(runtime) {
@@ -1820,7 +1812,6 @@ func flattenKinesisAnalyticsV2ApplicationConfiguration(runtime string, appConfig
 	if appConfig.ApplicationSnapshotConfigurationDescription != nil {
 		ret["application_snapshot_configuration"] = flattenKinesisAnalyticsV2SnapshotConfiguration(appConfig.ApplicationSnapshotConfigurationDescription)
 	}
-	fmt.Printf("flattenKinesisAnalyticsV2ApplicationConfiguration ret: %+v\n\n", ret)
 
 	return []interface{}{ret}
 }
@@ -1876,7 +1867,6 @@ func flattenKinesisAnalyticsV2ApplicationCodeConfiguration(codeConfig *kinesisan
 			codeContent,
 		})
 	}
-	fmt.Printf("flatten app code config: %+v\n", appCodeConfig)
 
 	return []interface{}{appCodeConfig}
 }
@@ -1910,7 +1900,6 @@ func expandKinesisAnalyticsV2CodeContent(s *schema.Set) *kinesisanalyticsv2.Code
 		if loc, ok := m["s3_content_location"]; ok {
 			locMap := loc.(map[string]interface{})
 			if len(locMap) > 0 {
-				fmt.Printf("loc map: %+v\n\n", locMap)
 				var objectVersion *string
 				// Object version is optional
 				if v, ok := locMap["object_version"]; ok {
