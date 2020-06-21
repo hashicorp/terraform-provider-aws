@@ -183,7 +183,7 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisFirehose(t *testing.T)
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input", []string{"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_firehose.#"}, []string{"1"}),
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input", []string{"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_firehose.#"}, []string{"1"}),
 				),
 			},
 			{
@@ -291,7 +291,7 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsKinesisStream(t *testing.T) {
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input",
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.input.%s.name_prefix",
 							"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_stream.#",
@@ -346,7 +346,7 @@ func TestAccAWSKinesisAnalyticsV2Application_inputsAdd(t *testing.T) {
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input",
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.input.%s.name_prefix",
 							"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_stream.#",
@@ -393,7 +393,7 @@ func TestAccAWSKineissAnalyticsV2Application_inputsUpdateKinesisStream(t *testin
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.input.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input",
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.input",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.input.%s.name_prefix",
 							"application_configuration.0.sql_application_configuration.0.input.%s.kinesis_stream.#",
@@ -444,7 +444,7 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsKinesisStream(t *testing.T) 
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.output.%s.name",
 							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
@@ -521,7 +521,7 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsAdd(t *testing.T) {
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.output.%s.name",
 							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
@@ -561,7 +561,7 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &before),
 					resource.TestCheckResourceAttr(resName, "version", "1"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.output.%s.name",
 							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
@@ -582,7 +582,7 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &after),
 					resource.TestCheckResourceAttr(resName, "version", "2"),
 					resource.TestCheckResourceAttr(resName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.output.%s.name",
 							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.#",
@@ -595,7 +595,7 @@ func TestAccAWSKinesisAnalyticsV2Application_outputsUpdateKinesisStream(t *testi
 							"1",
 							"CSV",
 						}),
-					testUnknownSetIdPair(resName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrPairUnknownSetId(resName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.output.%s.kinesis_stream.0.resource_arn",
 						},
@@ -641,14 +641,14 @@ func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Add(t *testing.T) {
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application2),
 					resource.TestCheckResourceAttr(resourceName, "version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.output.%s.lambda.#",
 						},
 						[]string{
 							"1",
 						}),
-					testUnknownSetIdPair(resourceName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrPairUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{"application_configuration.0.sql_application_configuration.0.output.%s.lambda.0.resource_arn"},
 						[]string{lambdaFunctionResourceName},
 						[]string{"arn"},
@@ -681,14 +681,14 @@ func TestAccAWSKinesisAnalyticsV2Application_Outputs_Lambda_Create(t *testing.T)
 					testAccCheckKinesisAnalyticsV2ApplicationExists(resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "application_configuration.0.sql_application_configuration.0.output.#", "1"),
-					testUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{
 							"application_configuration.0.sql_application_configuration.0.output.%s.lambda.#",
 						},
 						[]string{
 							"1",
 						}),
-					testUnknownSetIdPair(resourceName, "application_configuration.0.sql_application_configuration.0.output",
+					testCheckResourceAttrPairUnknownSetId(resourceName, "application_configuration.0.sql_application_configuration.0.output",
 						[]string{"application_configuration.0.sql_application_configuration.0.output.%s.lambda.0.resource_arn"},
 						[]string{lambdaFunctionResourceName},
 						[]string{"arn"},
@@ -1934,13 +1934,12 @@ resource "aws_kinesis_analyticsv2_application" "test" {
 	)
 }
 
-func testUnknownSetId(resourceName, parentResource string, testResources []string, expectedVals []string) resource.TestCheckFunc {
+func testCheckResourceAttrUnknownSetId(resourceName, parentResource string, testResources []string, expectedVals []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		setId, err := getSetId(s, resourceName, parentResource)
 		if err != nil {
 			return err
 		}
-		fmt.Printf("set ID: %+v\n", setId)
 		for i, r := range testResources {
 			if err := resource.TestCheckResourceAttr(resourceName, fmt.Sprintf(r, setId), expectedVals[i])(s); err != nil {
 				return err
@@ -1950,7 +1949,7 @@ func testUnknownSetId(resourceName, parentResource string, testResources []strin
 	}
 }
 
-func testUnknownSetIdPair(resourceName, parentResource string, namesFirst, keysSecond,
+func testCheckResourceAttrPairUnknownSetId(resourceName, parentResource string, namesFirst, keysSecond,
 	namesSecond []string) resource.TestCheckFunc {
 
 	return func(s *terraform.State) error {
@@ -1958,7 +1957,6 @@ func testUnknownSetIdPair(resourceName, parentResource string, namesFirst, keysS
 		if err != nil {
 			return err
 		}
-		fmt.Printf("set ID: %+v\n", setId)
 		for i, name := range namesFirst {
 			if err := resource.TestCheckResourceAttrPair(resourceName, fmt.Sprintf(name, setId),
 				keysSecond[i], namesSecond[i])(s); err != nil {

@@ -1817,7 +1817,7 @@ func flattenKinesisAnalyticsV2ApplicationConfiguration(runtime string, appConfig
 }
 
 func flattenKinesisAnalyticsV2SnapshotConfiguration(snapshotConfig *kinesisanalyticsv2.ApplicationSnapshotConfigurationDescription) *schema.Set {
-	return schema.NewSet(resourceSnapshotConfigurationHash, []interface{}{map[string]interface{}{
+	return schema.NewSet(resourceKinesisAnalyticsV2ApplicationSnapshotConfigurationHash, []interface{}{map[string]interface{}{
 		"snapshots_enabled": aws.BoolValue(snapshotConfig.SnapshotsEnabled),
 	}})
 }
@@ -1830,7 +1830,7 @@ func flattenKinesisAnalyticsV2EnvironmentProperties(envProps *kinesisanalyticsv2
 			"property_map":      flattenPropertyMap(group.PropertyMap),
 		})
 	}
-	set := schema.NewSet(resourcePropertyGroupHash, items)
+	set := schema.NewSet(resourceKinesisAnalyticsV2ApplicationPropertyGroupHash, items)
 	return []interface{}{map[string]interface{}{"property_group": set}}
 }
 
@@ -1863,7 +1863,7 @@ func flattenKinesisAnalyticsV2ApplicationCodeConfiguration(codeConfig *kinesisan
 			}
 			codeContent["s3_content_location"] = locationDescription
 		}
-		appCodeConfig["code_content"] = schema.NewSet(resourceCodeContentConfigurationHash, []interface{}{
+		appCodeConfig["code_content"] = schema.NewSet(resourceKinesisAnalyticsV2ApplicationCodeContentConfigurationHash, []interface{}{
 			codeContent,
 		})
 	}
@@ -1960,7 +1960,7 @@ func flattenFlinkApplicationConfigurationDescription(flinkApplicationConfig *kin
 }
 
 func flattenCheckpointConfiguration(checkpointConfiguration *kinesisanalyticsv2.CheckpointConfigurationDescription) *schema.Set {
-	return schema.NewSet(resourceCheckpointConfigurationHash, []interface{}{map[string]interface{}{
+	return schema.NewSet(resourceKinesisAnalyticsV2ApplicationCheckpointConfigurationHash, []interface{}{map[string]interface{}{
 		"checkpoint_interval":           aws.Int64Value(checkpointConfiguration.CheckpointInterval),
 		"checkpointing_enabled":         aws.BoolValue(checkpointConfiguration.CheckpointingEnabled),
 		"configuration_type":            aws.StringValue(checkpointConfiguration.ConfigurationType),
@@ -1969,7 +1969,7 @@ func flattenCheckpointConfiguration(checkpointConfiguration *kinesisanalyticsv2.
 }
 
 func flattenMonitoringConfiguration(monitoringConfiguration *kinesisanalyticsv2.MonitoringConfigurationDescription) *schema.Set {
-	return schema.NewSet(resourceMonitoringConfigurationHash, []interface{}{map[string]interface{}{
+	return schema.NewSet(resourceKinesisAnalyticsV2ApplicationMonitoringConfigurationHash, []interface{}{map[string]interface{}{
 		"configuration_type": aws.StringValue(monitoringConfiguration.ConfigurationType),
 		"log_level":          aws.StringValue(monitoringConfiguration.LogLevel),
 		"metrics_level":      aws.StringValue(monitoringConfiguration.MetricsLevel),
@@ -1977,7 +1977,7 @@ func flattenMonitoringConfiguration(monitoringConfiguration *kinesisanalyticsv2.
 }
 
 func flattenParallelismConfiguration(parallelismConfiguration *kinesisanalyticsv2.ParallelismConfigurationDescription) *schema.Set {
-	return schema.NewSet(resourceParallelismConfigurationHash, []interface{}{map[string]interface{}{
+	return schema.NewSet(resourceKinesisAnalyticsV2ApplicationParallelismConfigurationHash, []interface{}{map[string]interface{}{
 		"autoscaling_enabled": aws.BoolValue(parallelismConfiguration.AutoScalingEnabled),
 		"configuration_type":  aws.StringValue(parallelismConfiguration.ConfigurationType),
 		"parallelism":         aws.Int64Value(parallelismConfiguration.Parallelism),
@@ -2015,7 +2015,7 @@ func flattenKinesisAnalyticsV2CloudwatchLoggingOptions(options []*kinesisanalyti
 
 func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescription) *schema.Set {
 	if len(inputs) == 0 {
-		return schema.NewSet(resourceInputHash, nil)
+		return schema.NewSet(resourceKinesisAnalyticsV2ApplicationInputHash, nil)
 	}
 	id := inputs[0]
 
@@ -2070,7 +2070,7 @@ func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescripti
 			}
 			rcs = append(rcs, rcM)
 		}
-		ss["record_column"] = schema.NewSet(resourceRecordColumnHash, rcs)
+		ss["record_column"] = schema.NewSet(resourceKinesisAnalyticsV2ApplicationRecordColumnHash, rcs)
 
 		if inputSchema.RecordFormat != nil {
 			rf := inputSchema.RecordFormat
@@ -2136,7 +2136,7 @@ func flattenKinesisAnalyticsV2Inputs(inputs []*kinesisanalyticsv2.InputDescripti
 		}
 	}
 
-	return schema.NewSet(resourceInputHash, []interface{}{input})
+	return schema.NewSet(resourceKinesisAnalyticsV2ApplicationInputHash, []interface{}{input})
 }
 
 func flattenKinesisAnalyticsV2Outputs(outputs []*kinesisanalyticsv2.OutputDescription) *schema.Set {
@@ -2183,7 +2183,7 @@ func flattenKinesisAnalyticsV2Outputs(outputs []*kinesisanalyticsv2.OutputDescri
 		s = append(s, output)
 	}
 
-	return schema.NewSet(resourceOutputHash, s)
+	return schema.NewSet(resourceKinesisAnalyticsV2ApplicationOutputHash, s)
 }
 
 func flattenKinesisAnalyticsV2ReferenceDataSources(dataSources []*kinesisanalyticsv2.ReferenceDataSourceDescription) []interface{} {
@@ -2220,7 +2220,7 @@ func flattenKinesisAnalyticsV2ReferenceDataSources(dataSources []*kinesisanalyti
 					}
 					rcs = append(rcs, rcM)
 				}
-				ss["record_column"] = schema.NewSet(resourceRecordColumnHash, rcs)
+				ss["record_column"] = schema.NewSet(resourceKinesisAnalyticsV2ApplicationRecordColumnHash, rcs)
 
 				if rs.RecordFormat != nil {
 					rf := rs.RecordFormat
@@ -2311,7 +2311,7 @@ func runtimeIsFlink(runtime string) bool {
 		runtime == kinesisanalyticsv2.RuntimeEnvironmentFlink18
 }
 
-func resourceSnapshotConfigurationHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationSnapshotConfigurationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	if v, ok := m["snapshots_enabled"]; ok {
@@ -2320,7 +2320,7 @@ func resourceSnapshotConfigurationHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourceCodeContentConfigurationHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationCodeContentConfigurationHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	m := v.(map[string]interface{})
@@ -2339,7 +2339,7 @@ func resourceCodeContentConfigurationHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourcePropertyGroupHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationPropertyGroupHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	m := v.(map[string]interface{})
@@ -2364,7 +2364,7 @@ func resourcePropertyGroupHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourceCheckpointConfigurationHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationCheckpointConfigurationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -2384,7 +2384,7 @@ func resourceCheckpointConfigurationHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourceMonitoringConfigurationHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationMonitoringConfigurationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -2401,7 +2401,7 @@ func resourceMonitoringConfigurationHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourceParallelismConfigurationHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationParallelismConfigurationHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -2421,7 +2421,7 @@ func resourceParallelismConfigurationHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourceRecordColumnHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationRecordColumnHash(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 
@@ -2438,7 +2438,7 @@ func resourceRecordColumnHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
-func resourceInputHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationInputHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	m := v.(map[string]interface{})
@@ -2482,14 +2482,14 @@ func resourceInputHash(v interface{}) int {
 		}
 		for _, rc := range sortedCols {
 			col := rc.(map[string]interface{})
-			buf.WriteString(fmt.Sprintf("%d-", resourceRecordColumnHash(col)))
+			buf.WriteString(fmt.Sprintf("%d-", resourceKinesisAnalyticsV2ApplicationRecordColumnHash(col)))
 		}
 	}
 
 	return hashcode.String(buf.String())
 }
 
-func resourceOutputHash(v interface{}) int {
+func resourceKinesisAnalyticsV2ApplicationOutputHash(v interface{}) int {
 	var buf bytes.Buffer
 
 	m := v.(map[string]interface{})
