@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
@@ -34,6 +35,28 @@ func TestAccAWSKinesisAnalyticsV2Application_basic(t *testing.T) {
 				ResourceName:      resName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSKinesisAnalyticsV2Application_disappears(t *testing.T) {
+	var application kinesisanalyticsv2.ApplicationDetail
+	resName := "aws_kinesis_analyticsv2_application.test"
+	rInt := acctest.RandInt()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKinesisAnalyticsV2Application_prereq(rInt) + testAccKinesisAnalyticsV2Application_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKinesisAnalyticsV2ApplicationExists(resName, &application),
+					testAccCheckKinesisAnalyticsV2ApplicationDisappears(&application),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -806,21 +829,6 @@ func TestAccAWSKinesisAnalyticsV2Application_tags(t *testing.T) {
 	})
 }
 
-// func TestAccAWSKinesisAnalyticsV2Application_SQLConflictsWithFlinkConfig(t *testing.T) {
-// 	rInt := acctest.RandInt()
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSKinesisAnalyticsV2(t) },
-// 		Providers:    testAccProviders,
-// 		CheckDestroy: testAccCheckKinesisAnalyticsV2ApplicationDestroy,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config:      testAccKinesisAnalyticsV2ApplicationWithConfigConflict(rInt),
-// 				ExpectError: regexp.MustCompile("[.]*conflicts with[.]*"),
-// 			},
-// 		},
-// 	})
-// }
-
 func testAccCheckKinesisAnalyticsV2ApplicationDestroy(s *terraform.State) error {
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_kinesis_analyticsv2_application" {
@@ -850,7 +858,6 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, application *kine
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No Kinesis Analytics Application ID is set")
 		}
-		fmt.Printf("state: %+v\n\n", rs.Primary)
 
 		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
 		describeOpts := &kinesisanalyticsv2.DescribeApplicationInput{
@@ -865,6 +872,33 @@ func testAccCheckKinesisAnalyticsV2ApplicationExists(n string, application *kine
 
 		return nil
 	}
+}
+
+func testAccCheckKinesisAnalyticsV2ApplicationDisappears(desc *kinesisanalyticsv2.ApplicationDetail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		conn := testAccProvider.Meta().(*AWSClient).kinesisanalyticsv2conn
+		describeOpts := &kinesisanalyticsv2.DescribeApplicationInput{
+			ApplicationName: desc.ApplicationName,
+		}
+		deleteInput := &kinesisanalyticsv2.DeleteApplicationInput{
+			ApplicationName: desc.ApplicationName,
+			CreateTimestamp: desc.CreateTimestamp,
+		}
+		_, err := conn.DeleteApplication(deleteInput)
+		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
+			resp, err := conn.DescribeApplication(describeOpts)
+			if err == nil {
+				if resp.ApplicationDetail != nil && *resp.ApplicationDetail.ApplicationStatus == kinesisanalyticsv2.ApplicationStatusDeleting {
+					return resource.RetryableError(fmt.Errorf("Application still exists"))
+				}
+			}
+			return nil
+		})
+
+		return err
+	}
+
 }
 
 func testAccPreCheckAWSKinesisAnalyticsV2(t *testing.T) {
