@@ -11,7 +11,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 )
 
 const (
