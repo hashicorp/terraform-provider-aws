@@ -107,7 +107,7 @@ func resourceAwsGlueCatalogDatabaseUpdate(d *schema.ResourceData, meta interface
 
 	dbUpdateInput.DatabaseInput = dbInput
 
-	if d.HasChange("description") || d.HasChange("location_uri") || d.HasChange("parameters") {
+	if d.HasChanges("description", "location_uri", "parameters") {
 		if _, err := glueconn.UpdateDatabase(dbUpdateInput); err != nil {
 			return err
 		}

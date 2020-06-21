@@ -14,6 +14,7 @@ import (
 )
 
 func resourceAwsSubnet() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSubnetCreate,
 		Read:   resourceAwsSubnetRead,
@@ -398,7 +399,7 @@ func resourceAwsSubnetDelete(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if _, err := wait.WaitForState(); err != nil {
-		return fmt.Errorf("Error deleting subnet: %s", err)
+		return fmt.Errorf("error deleting subnet (%s): %s", d.Id(), err)
 	}
 
 	return nil

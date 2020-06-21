@@ -15,6 +15,7 @@ import (
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsCloudFrontDistributionCreate,
 		Read:   resourceAwsCloudFrontDistributionRead,
@@ -68,13 +69,13 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"forwarded_values": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cookies": {
-										Type:     schema.TypeSet,
+										Type:     schema.TypeList,
 										Required: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
@@ -704,6 +705,7 @@ func resourceAwsCloudFrontDistribution() *schema.Resource {
 			"active_trusted_signers": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,

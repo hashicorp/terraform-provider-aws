@@ -82,6 +82,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
@@ -96,16 +97,19 @@ import (
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/aws/aws-sdk-go/service/swf"
+	"github.com/aws/aws-sdk-go/service/synthetics"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -268,6 +272,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(mq.New)
 	case "neptune":
 		funcType = reflect.TypeOf(neptune.New)
+	case "networkmanager":
+		funcType = reflect.TypeOf(networkmanager.New)
 	case "opsworks":
 		funcType = reflect.TypeOf(opsworks.New)
 	case "organizations":
@@ -296,6 +302,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(secretsmanager.New)
 	case "securityhub":
 		funcType = reflect.TypeOf(securityhub.New)
+	case "servicediscovery":
+		funcType = reflect.TypeOf(servicediscovery.New)
 	case "sfn":
 		funcType = reflect.TypeOf(sfn.New)
 	case "sns":
@@ -308,6 +316,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(storagegateway.New)
 	case "swf":
 		funcType = reflect.TypeOf(swf.New)
+	case "synthetics":
+		funcType = reflect.TypeOf(synthetics.New)
 	case "transfer":
 		funcType = reflect.TypeOf(transfer.New)
 	case "waf":
@@ -316,6 +326,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(wafregional.New)
 	case "wafv2":
 		funcType = reflect.TypeOf(wafv2.New)
+	case "worklink":
+		funcType = reflect.TypeOf(worklink.New)
 	case "workspaces":
 		funcType = reflect.TypeOf(workspaces.New)
 	default:
@@ -348,6 +360,8 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	case "dynamodb":
 		return "ListTagsOfResource"
+	case "ec2":
+		return "DescribeTags"
 	case "efs":
 		return "DescribeTags"
 	case "elasticsearchservice":
@@ -386,6 +400,17 @@ func ServiceListTagsFunction(serviceName string) string {
 		return "DescribeTags"
 	default:
 		return "ListTagsForResource"
+	}
+}
+
+// ServiceListTagsInputFilterIdentifierName determines the service list tag filter identifier field.
+// This causes the implementation to use the Filters field with the Input struct.
+func ServiceListTagsInputFilterIdentifierName(serviceName string) string {
+	switch serviceName {
+	case "ec2":
+		return "resource-id"
+	default:
+		return ""
 	}
 }
 
@@ -461,6 +486,8 @@ func ServiceListTagsOutputTagsField(serviceName string) string {
 	case "mediaconvert":
 		return "ResourceTags.Tags"
 	case "neptune":
+		return "TagList"
+	case "networkmanager":
 		return "TagList"
 	case "pinpoint":
 		return "TagsModel.Tags"
@@ -684,6 +711,8 @@ func ServiceTagInputIdentifierField(serviceName string) string {
 		return "ResourceId"
 	case "secretsmanager":
 		return "SecretId"
+	case "servicediscovery":
+		return "ResourceARN"
 	case "sqs":
 		return "QueueUrl"
 	case "ssm":
@@ -799,6 +828,17 @@ func ServiceTagType(serviceName string) string {
 		return "ResourceTag"
 	default:
 		return "Tag"
+	}
+}
+
+// ServiceTagType2 determines if the service tagging has a second tag type.
+// The two types must be equivalent.
+func ServiceTagType2(serviceName string) string {
+	switch serviceName {
+	case "ec2":
+		return "TagDescription"
+	default:
+		return ""
 	}
 }
 
