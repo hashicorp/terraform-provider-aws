@@ -193,35 +193,36 @@ func resourceAwsVpcEndpointServiceRead(d *schema.ResourceData, meta interface{})
 func resourceAwsVpcEndpointServiceUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	svcId := d.Id()
+	if d.HasChanges("acceptance_required", "network_load_balancer_arns") {
+		modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
+			ServiceId: aws.String(d.Id()),
+		}
 
-	modifyCfgReq := &ec2.ModifyVpcEndpointServiceConfigurationInput{
-		ServiceId: aws.String(svcId),
-	}
-	modifyCfg := false
-	if d.HasChange("acceptance_required") {
-		modifyCfgReq.AcceptanceRequired = aws.Bool(d.Get("acceptance_required").(bool))
-		modifyCfg = true
-	}
-	if setVpcEndpointServiceUpdateLists(d, "network_load_balancer_arns",
-		&modifyCfgReq.AddNetworkLoadBalancerArns, &modifyCfgReq.RemoveNetworkLoadBalancerArns) {
-		modifyCfg = true
-	}
-	if modifyCfg {
+		if d.HasChange("acceptance_required") {
+			modifyCfgReq.AcceptanceRequired = aws.Bool(d.Get("acceptance_required").(bool))
+		}
+
+		setVpcEndpointServiceUpdateLists(d, "network_load_balancer_arns",
+			&modifyCfgReq.AddNetworkLoadBalancerArns, &modifyCfgReq.RemoveNetworkLoadBalancerArns)
+
 		log.Printf("[DEBUG] Modifying VPC Endpoint Service configuration: %#v", modifyCfgReq)
 		if _, err := conn.ModifyVpcEndpointServiceConfiguration(modifyCfgReq); err != nil {
 			return fmt.Errorf("Error modifying VPC Endpoint Service configuration: %s", err.Error())
 		}
+
 		if err := vpcEndpointServiceWaitUntilAvailable(d, conn); err != nil {
 			return err
 		}
 	}
 
-	modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
-		ServiceId: aws.String(svcId),
-	}
-	if setVpcEndpointServiceUpdateLists(d, "allowed_principals",
-		&modifyPermReq.AddAllowedPrincipals, &modifyPermReq.RemoveAllowedPrincipals) {
+	if d.HasChange("allowed_principals") {
+		modifyPermReq := &ec2.ModifyVpcEndpointServicePermissionsInput{
+			ServiceId: aws.String(d.Id()),
+		}
+
+		setVpcEndpointServiceUpdateLists(d, "allowed_principals",
+			&modifyPermReq.AddAllowedPrincipals, &modifyPermReq.RemoveAllowedPrincipals)
+
 		log.Printf("[DEBUG] Modifying VPC Endpoint Service permissions: %#v", modifyPermReq)
 		if _, err := conn.ModifyVpcEndpointServicePermissions(modifyPermReq); err != nil {
 			return fmt.Errorf("Error modifying VPC Endpoint Service permissions: %s", err.Error())
