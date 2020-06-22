@@ -317,26 +317,22 @@ func waitForVpcEndpointServiceDeletion(conn *ec2.EC2, serviceID string) error {
 	return err
 }
 
-func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) bool {
-	if !d.HasChange(key) {
-		return false
+func setVpcEndpointServiceUpdateLists(d *schema.ResourceData, key string, a, r *[]*string) {
+	if d.HasChange(key) {
+		o, n := d.GetChange(key)
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		add := expandStringList(ns.Difference(os).List())
+		if len(add) > 0 {
+			*a = add
+		}
+
+		remove := expandStringList(os.Difference(ns).List())
+		if len(remove) > 0 {
+			*r = remove
+		}
 	}
-
-	o, n := d.GetChange(key)
-	os := o.(*schema.Set)
-	ns := n.(*schema.Set)
-
-	add := expandStringList(ns.Difference(os).List())
-	if len(add) > 0 {
-		*a = add
-	}
-
-	remove := expandStringList(os.Difference(ns).List())
-	if len(remove) > 0 {
-		*r = remove
-	}
-
-	return true
 }
 
 func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) *schema.Set {
