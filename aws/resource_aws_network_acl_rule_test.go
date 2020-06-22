@@ -102,7 +102,7 @@ func TestAccAWSNetworkAclRule_disappears_NetworkAcl(t *testing.T) {
 				Config: testAccAWSNetworkAclRuleBasicConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					testAccCheckAWSNetworkAclDisappears(&networkAcl),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkAcl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -115,6 +116,7 @@ func TestAccAWSNetworkAcl_basic(t *testing.T) {
 				Config: testAccAWSNetworkAclEgressNIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-acl/acl-.+`)),
 				),
 			},
 			{
@@ -139,7 +141,7 @@ func TestAccAWSNetworkAcl_disappears(t *testing.T) {
 				Config: testAccAWSNetworkAclEgressNIngressConfig,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSNetworkAclExists(resourceName, &networkAcl),
-					testAccCheckAWSNetworkAclDisappears(&networkAcl),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsNetworkAcl(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -733,20 +735,6 @@ func testAccCheckAWSNetworkAclDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSNetworkAclDisappears(networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		input := &ec2.DeleteNetworkAclInput{
-			NetworkAclId: networkAcl.NetworkAclId,
-		}
-
-		_, err := conn.DeleteNetworkAcl(input)
-
-		return err
-	}
 }
 
 func testAccCheckAWSNetworkAclExists(n string, networkAcl *ec2.NetworkAcl) resource.TestCheckFunc {
