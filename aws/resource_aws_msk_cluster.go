@@ -11,7 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/msk/waiter"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/waiter"
 )
 
 func resourceAwsMskCluster() *schema.Resource {
