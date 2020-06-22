@@ -250,6 +250,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_ebs_volume` data source](/docs/providers/aws/d/ebs_volume.html)
   - [`aws_ec2_capacity_reservation` resource](/docs/providers/aws/r/ec2_capacity_reservation.html)
   - [`aws_ec2_client_vpn_endpoint` resource](/docs/providers/aws/r/ec2_client_vpn_endpoint.html)
+  - [`aws_ec2_traffic_mirror_session` resource](/docs/providers/aws/r/ec2_traffic_mirror_session.html)  
   - [`aws_ec2_traffic_mirror_target` resource](/docs/providers/aws/r/ec2_traffic_mirror_target.html)
   - [`aws_ecs_capacity_provider` resource (import)](/docs/providers/aws/r/ecs_capacity_provider.html)
   - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
