@@ -5,69 +5,13 @@ import (
 	"log"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
 )
-
-func expandConfigRemediationConfigurationParameters(configured *schema.Set) map[string]*configservice.RemediationParameterValue {
-	var staticValues []*string
-	results := make(map[string]*configservice.RemediationParameterValue)
-
-	emptyString := ""
-
-	for _, item := range configured.List() {
-		detail := item.(map[string]interface{})
-		rpv := configservice.RemediationParameterValue{}
-
-		if resourceValue, ok := detail["resource_value"].(string); ok {
-			rv := configservice.ResourceValue{
-				Value: &emptyString,
-			}
-			rpv.ResourceValue = &rv
-			results[resourceValue] = &rpv
-		}
-		if staticValue, ok := detail["static_value"].(map[string]string); ok {
-			value := staticValue["value"]
-			staticValues = make([]*string, 0)
-			staticValues = append(staticValues, &value)
-			sv := configservice.StaticValue{
-				Values: staticValues,
-			}
-			rpv.StaticValue = &sv
-			results[staticValue["key"]] = &rpv
-		}
-	}
-
-	return results
-}
-
-func flattenRemediationConfigurations(c []*configservice.RemediationConfiguration) []map[string]interface{} {
-	configurations := make([]map[string]interface{}, 0)
-
-	for _, bd := range c {
-		if bd.ConfigRuleName != nil && bd.Parameters != nil {
-			configuration := make(map[string]interface{})
-			configuration["config_rule_name"] = *bd.ConfigRuleName
-			configuration["parameters"] = flattenRemediationConfigurationParameters(bd.Parameters)
-			configuration["resource_type"] = *bd.ResourceType
-			configuration["target_id"] = *bd.TargetId
-			configuration["target_type"] = *bd.TargetType
-			configuration["target_version"] = *bd.TargetVersion
-
-			configurations = append(configurations, configuration)
-		}
-	}
-
-	if len(configurations) > 0 {
-		return configurations
-	}
-
-	return nil
-}
 
 func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 	return &schema.Resource{
@@ -81,6 +25,10 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"config_rule_name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -107,38 +55,77 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"parameters": {
+			"parameter": {
 				Type:     schema.TypeSet,
 				MaxItems: 25,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"name": {
+							Type: schema.TypeString,
+							Required: true,
+						},
 						"resource_value": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(0, 256),
 						},
 						"static_value": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeString,
 							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"key": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
 						},
 					},
 				},
 			},
 		},
 	}
+}
+
+func expandConfigRemediationConfigurationParameters(configured *schema.Set) (map[string]*configservice.RemediationParameterValue, error) {
+	results := make(map[string]*configservice.RemediationParameterValue)
+
+	for _, item := range configured.List() {
+		detail := item.(map[string]interface{})
+		rpv := configservice.RemediationParameterValue{}
+		resourceName, ok := detail["name"].(string)
+		if ok {
+			results[resourceName] = &rpv
+		} else {
+			return nil, fmt.Errorf("Could not extract name from parameter.")
+		}
+		if resourceValue, ok := detail["resource_value"].(string); ok && len(resourceValue) > 0 {
+			rpv.ResourceValue = &configservice.ResourceValue{
+        Value: &resourceValue,
+			}
+		} else if staticValue, ok := detail["static_value"].(string); ok && len(staticValue) > 0 {
+			rpv.StaticValue = &configservice.StaticValue{
+				Values: []*string{&staticValue},
+			}
+		} else {
+			return nil, fmt.Errorf("Parameter '%s' needs one of resource_value or static_value", resourceName)
+		}
+	}
+
+	return results, nil
+}
+
+func flattenRemediationConfigurationParameters(parameters map[string]*configservice.RemediationParameterValue) []interface{} {
+	var items []interface{}
+
+	for key, value := range parameters {
+		item := make(map[string]interface{})
+		item["name"] = key
+		if value.ResourceValue != nil {
+			item["resource_value"] = *value.ResourceValue.Value
+		}
+		if value.StaticValue != nil &&  len(value.StaticValue.Values) > 0 {
+			item["static_value"] = *value.StaticValue.Values[0]
+		}
+
+		items = append(items, item)
+	}
+
+	return items
 }
 
 func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta interface{}) error {
@@ -149,10 +136,13 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 		ConfigRuleName: aws.String(name),
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
-		remediationConfigurationInput.Parameters = expandConfigRemediationConfigurationParameters(v.(*schema.Set))
+	if v, ok := d.GetOk("parameter"); ok {
+		params, err := expandConfigRemediationConfigurationParameters(v.(*schema.Set))
+		if err != nil {
+			return err
+		}
+		remediationConfigurationInput.Parameters = params
 	}
-
 	if v, ok := d.GetOk("resource_type"); ok {
 		remediationConfigurationInput.ResourceType = aws.String(v.(string))
 	}
@@ -170,24 +160,23 @@ func resourceAwsConfigRemediationConfigurationPut(d *schema.ResourceData, meta i
 		RemediationConfigurations: []*configservice.RemediationConfiguration{&remediationConfigurationInput},
 	}
 	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", input)
-	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
-		_, err := conn.PutRemediationConfigurations(&input)
-		if err != nil {
-			if isAWSErr(err, configservice.ErrCodeInsufficientPermissionsException, "") {
-				// IAM is eventually consistent
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(fmt.Errorf("Failed to create AWSConfig remediation configuration: %s", err))
-		}
-
-		return nil
-	})
+	_, err := conn.PutRemediationConfigurations(&input)
 	if err != nil {
 		return err
 	}
 
+	remediationConfigurationOutput, err := conn.DescribeRemediationConfigurations(&configservice.DescribeRemediationConfigurationsInput{
+		ConfigRuleNames: []*string{&name},
+	})
+	if err != nil {
+		return err
+	}
+	if len(remediationConfigurationOutput.RemediationConfigurations) != 1 {
+		return fmt.Errorf("Could not read configuration for %s.", name)
+	}
+
 	d.SetId(name)
+	d.Set("arn", remediationConfigurationOutput.RemediationConfigurations[0].Arn)
 
 	log.Printf("[DEBUG] AWSConfig config remediation configuration for rule %q created", name)
 
@@ -217,8 +206,15 @@ func resourceAwsConfigRemediationConfigurationRead(d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
 
-	remediationConfigurations := out.RemediationConfigurations
-	d.Set("remediationConfigurations", flattenRemediationConfigurations(remediationConfigurations))
+	remediationConfiguration := out.RemediationConfigurations[0]
+	d.Set("arn", remediationConfiguration.Arn)
+	d.Set("config_rule_name", remediationConfiguration.ConfigRuleName)
+	d.Set("resource_type", remediationConfiguration.ResourceType)
+	d.Set("target_id", remediationConfiguration.TargetId)
+	d.Set("target_type", remediationConfiguration.TargetType)
+	d.Set("target_version", remediationConfiguration.TargetVersion)
+	d.Set("parameter", flattenRemediationConfigurationParameters(remediationConfiguration.Parameters))
+	d.SetId(*remediationConfiguration.ConfigRuleName)
 
 	return nil
 }

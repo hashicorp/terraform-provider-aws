@@ -2300,28 +2300,6 @@ func flattenApiGatewayUsageApiStages(s []*apigateway.ApiStage) []map[string]inte
 	return nil
 }
 
-func flattenRemediationConfigurationParameters(parameters map[string]*configservice.RemediationParameterValue) []interface{} {
-	var items []interface{}
-
-	for key, value := range parameters {
-		item := make(map[string]interface{})
-
-		if value.ResourceValue != nil {
-			item["resource_value"] = key
-		}
-		if value.StaticValue != nil {
-			trueValue := value.StaticValue.Values[0]
-			subItem := make(map[string]*string)
-			subItem[key] = trueValue
-			item["static_value"] = subItem
-		}
-
-		items = append(items, item)
-	}
-
-	return items
-}
-
 func flattenApiGatewayUsagePlanThrottling(s *apigateway.ThrottleSettings) []map[string]interface{} {
 	settings := make(map[string]interface{})
 

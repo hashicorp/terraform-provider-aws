@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccConfigRemediationConfiguration_basic(t *testing.T) {
@@ -95,8 +95,8 @@ func testAccCheckConfigRemediationConfigurationDestroy(s *terraform.State) error
 
 func testAccConfigRemediationConfigurationConfig_basic(randInt int) string {
 	return fmt.Sprintf(`
-resource "aws_config_remediation_configuration" "foo" {
-	config_rule_name = "${aws_config_config_rule.foo.name}"
+resource "aws_config_remediation_configuration" "test" {
+	config_rule_name = aws_config_config_rule.test.name
 
 	resource_type = ""
 	target_id = "SSM_DOCUMENT"
@@ -106,44 +106,44 @@ resource "aws_config_remediation_configuration" "foo" {
 	parameter {
 		resource_value = "Message"
 	}
-	
+
 	parameter {
 		static_value {
 			key   = "TopicArn"
-			value = "${aws_sns_topic.foo.arn}"
+			value = aws_sns_topic.test.arn
 		}
 	}
-	
+
 	parameter {
 		static_value {
 			key   = "AutomationAssumeRole"
-			value = "${aws_iam_role.r.arn}"
+			value = aws_iam_role.test.arn
 		}
 	}
 }
 
-resource "aws_sns_topic" "foo" {
+resource "aws_sns_topic" "test" {
   name = "sns_topic_name"
 }
 
-resource "aws_config_config_rule" "foo" {
-  name = "tf-acc-test-%d"
+resource "aws_config_config_rule" "test" {
+  name = "tf-acc-test"
 
   source {
     owner             = "AWS"
     source_identifier = "S3_BUCKET_VERSIONING_ENABLED"
   }
 
-  depends_on = ["aws_config_configuration_recorder.foo"]
+  depends_on = [aws_config_configuration_recorder.test]
 }
 
-resource "aws_config_configuration_recorder" "foo" {
-  name     = "tf-acc-test-%d"
-  role_arn = "${aws_iam_role.r.arn}"
+resource "aws_config_configuration_recorder" "test" {
+  name     = "tf-acc-test"
+  role_arn = aws_iam_role.r.arn
 }
 
-resource "aws_iam_role" "r" {
-  name = "tf-acc-test-awsconfig-%d"
+resource "aws_iam_role" "test" {
+  name = "tf-acc-test-awsconfig"
 
   assume_role_policy = <<EOF
 {
@@ -162,9 +162,9 @@ resource "aws_iam_role" "r" {
 EOF
 }
 
-resource "aws_iam_role_policy" "p" {
+resource "aws_iam_role_policy" "test" {
   name = "tf-acc-test-awsconfig-%d"
-  role = "${aws_iam_role.r.id}"
+  role = aws_iam_role.test.id
 
   policy = <<EOF
 {
