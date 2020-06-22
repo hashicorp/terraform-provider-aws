@@ -21,7 +21,7 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
 				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId, &productId),
 			},
 			{
@@ -42,7 +42,7 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_disappears(t *testing.T
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId, &productId),
 					testAccCheckAwsServiceCatalogPortfolioProductAssociationDisappears(),
@@ -66,11 +66,11 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Portfolio_update(t *tes
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
 				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId1, &productId1),
 			},
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt2, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt2, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt2, salt, &portfolioId2, &productId2),
 					func(s *terraform.State) error {
@@ -98,11 +98,11 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_Product_update(t *testi
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
 				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId1, &productId1),
 			},
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt, salt2),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt2, &portfolioId2, &productId2),
 					func(s *terraform.State) error {
@@ -130,11 +130,11 @@ func TestAccAWSServiceCatalogPortfolioProductAssociation_update_all(t *testing.T
 		CheckDestroy: testAccCheckAwsServiceCatalogPortfolioProductAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt, salt),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt, salt),
 				Check:  testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt, salt, &portfolioId1, &productId1),
 			},
 			{
-				Config: testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(salt2, salt2),
+				Config: testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(salt2, salt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogPortfolioProductAssociationExists(salt2, salt2, &portfolioId2, &productId2),
 					func(s *terraform.State) error {
@@ -265,10 +265,10 @@ func testAccCheckAwsServiceCatalogPortfolioProductAssociationNotPresentInAws(por
 	}
 }
 
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigBasic(portfolioSalt, productSalt string) string {
+func testAccAWSServiceCatalogPortfolioProductAssociationConfig_basic(portfolioSalt, productSalt string) string {
 	return composeConfig(
-		testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigPortfolio(portfolioSalt),
-		testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigProduct(productSalt),
+		testAccAWSServiceCatalogPortfolioProductAssociationConfig_portfolio(portfolioSalt),
+		testAccAWSServiceCatalogPortfolioProductAssociationConfig_product(productSalt),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio_product_association" "test" {
     portfolio_id = aws_servicecatalog_portfolio.test-%s.id
@@ -277,8 +277,8 @@ resource "aws_servicecatalog_portfolio_product_association" "test" {
 `, portfolioSalt, productSalt))
 }
 
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigPortfolio(salt string) string {
-	// based on testAccCheckAwsServiceCatalogPortfolioResourceConfigBasic
+func testAccAWSServiceCatalogPortfolioProductAssociationConfig_portfolio(salt string) string {
+	// based on testAccAWSServiceCatalogPortfolioConfig_basic
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test-%s" {
   name          = "%s"
@@ -288,8 +288,8 @@ resource "aws_servicecatalog_portfolio" "test-%s" {
 `, salt, "tfm-test-"+salt)
 }
 
-func testAccCheckAwsServiceCatalogPortfolioProductAssociationConfigProduct(salt string) string {
-	// based on testAccCheckAwsServiceCatalogProductResourceConfigTemplate
+func testAccAWSServiceCatalogPortfolioProductAssociationConfig_product(salt string) string {
+	// based on testAccAWSServiceCatalogProductResourceConfig_basic
 	resourceName := "aws_servicecatalog_product.test-" + salt
 
 	thisResourceParts := strings.Split(resourceName, ".")
