@@ -45,9 +45,12 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the Service Catalog Provisioned Product.
 * `created_time` - The UTC time stamp of the creation time.
 * `outputs` - Information about the product created as the result of a request. For example, the output for a CloudFormation-backed product that creates an S3 bucket may include the S3 bucket URL. This is a list of objects containing `description`, `output_key`, and `output_value`. 
-* `record_errors` - The errors that occurred. This is a list of objects containing a `code` and `description`.
-* `status` -  The status of the provisioned product. The supported values are `CREATED | IN_PROGRESS | IN_PROGRESS_IN_ERROR | SUCCEEDED | FAILED`.
-* `updated_time` - The time when the record was last updated.
+* `last_record_id` -  The ID of the last record read. Records provide a history of provsioned product activity.
+* `last_record_status` -  The status reported by the last record read. The supported values are `CREATED | IN_PROGRESS | IN_PROGRESS_IN_ERROR | SUCCEEDED | FAILED`. This can sometimes be useful along with `last_record_type` to give more context to the provisioned product `status` and `status_message` attributes.
+* `last_record_type` -  The type of the last record read. The supported values are `PROVISION_PRODUCT | UPDATE_PROVISIONED_PRODUCT | TERMINATE_PROVISIONED_PRODUCT`.
+* `status` -  The status of the provisioned product. The supported values are `AVAILABLE | UNDER_CHANGE | TAINTED | ERROR | PLAN_IN_PROGRESS`.
+* `status_message` -  The current status message of the provisioned product.
+* `updated_time` - The time when the provisioned product (and record) was last updated.
 
 ## Import
 

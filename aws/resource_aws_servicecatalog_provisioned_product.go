@@ -44,21 +44,25 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"product_id": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"provisioned_product_name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"provisioning_artifact_id": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"provisioning_parameters": {
@@ -77,7 +81,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					Elem:     <various>
 				},
 			*/
-			"tags": tagsSchema(),
+			"tags": tagsSchemaForceNew(),
 
 			"arn": {
 				Type:     schema.TypeString,
@@ -87,7 +91,7 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"outputs": {
+			"last_record_errors": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -95,7 +99,19 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 					Elem: schema.TypeString,
 				},
 			},
-			"record_errors": {
+			"last_record_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_record_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_record_type": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"outputs": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -256,8 +272,9 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 
 	// from DescribeRecord
 	d.Set("path_id", record.RecordDetail.PathId)
-	d.Set("last_record_type", record.RecordDetail.RecordType)
 	d.Set("updated_time", record.RecordDetail.UpdatedTime.Format(time.RFC3339))
+	d.Set("last_record_type", record.RecordDetail.RecordType)
+	d.Set("last_record_status", record.RecordDetail.Status)
 
 	aa := make([]map[string]string, 0)
 	for _, b := range record.RecordDetail.RecordErrors {
@@ -266,7 +283,7 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 		bb["description"] = aws.StringValue(b.Description)
 		aa = append(aa, bb)
 	}
-	err = d.Set("record_errors", aa)
+	err = d.Set("last_record_errors", aa)
 	if err != nil {
 		return fmt.Errorf("invalid errors read on ServiceCatalog provisioned product '%s': %s", d.Id(), err)
 	}
@@ -360,8 +377,21 @@ func resourceAwsServiceCatalogProvisionedProductDelete(d *schema.ResourceData, m
 		TerminateToken:       aws.String(resource.UniqueId()),
 	}
 
+	// not available on servicecatalog, but returned here if under change
+	errCodeValidationException := "ValidationException"
+
 	log.Printf("[DEBUG] Delete Service Catalog Provisioned Product: %#v", input)
-	_, err := conn.TerminateProvisionedProduct(&input)
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+		_, err := conn.TerminateProvisionedProduct(&input)
+		if err != nil {
+			if isAWSErr(err, servicecatalog.ErrCodeResourceInUseException, "") || isAWSErr(err, errCodeValidationException, "") {
+				// delay and retry, other things eg associations might still be getting deleted
+				return resource.RetryableError(err)
+			}
+			return resource.NonRetryableError(err)
+		}
+		return nil
+	})
 	if err != nil {
 		return fmt.Errorf("Deleting Service Catalog Provisioned Product '%s' failed: %s", *input.ProvisionedProductId, err.Error())
 	}

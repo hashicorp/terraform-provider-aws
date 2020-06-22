@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
@@ -106,16 +107,15 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(salt, "key1=\"value1updated\" key2=\"value2\""),
+				Config: testAccAWSServiceCatalogProvisionedProductConfig_step2(salt, "key1=\"value1updated\" \n key2=\"value2\""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsServiceCatalogProvisionedProductExists(resourceName, &describeProvisionedProductOutput2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					func(s *terraform.State) error {
-						if *describeProvisionedProductOutput1.ProvisionedProductDetail.Id != *describeProvisionedProductOutput2.ProvisionedProductDetail.Id {
-							return fmt.Errorf("Provisioned product ID has changed from %s to %s, but it should not have been re-created",
-								*describeProvisionedProductOutput1.ProvisionedProductDetail.Id, *describeProvisionedProductOutput2.ProvisionedProductDetail.Id)
+						if *describeProvisionedProductOutput1.ProvisionedProductDetail.Id == *describeProvisionedProductOutput2.ProvisionedProductDetail.Id {
+							return fmt.Errorf("Provisioned product ID should have changed as tags ForceNew")
 						}
 						return nil
 					},
@@ -128,9 +128,8 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 					func(s *terraform.State) error {
-						if *describeProvisionedProductOutput1.ProvisionedProductDetail.Id != *describeProvisionedProductOutput3.ProvisionedProductDetail.Id {
-							return fmt.Errorf("Provisioned product ID has changed from %s to %s, but it should not have been re-created",
-								*describeProvisionedProductOutput1.ProvisionedProductDetail.Id, *describeProvisionedProductOutput3.ProvisionedProductDetail.Id)
+						if *describeProvisionedProductOutput2.ProvisionedProductDetail.Id == *describeProvisionedProductOutput3.ProvisionedProductDetail.Id {
+							return fmt.Errorf("Provisioned product ID should have changed as tags ForceNew")
 						}
 						return nil
 					},
@@ -139,6 +138,8 @@ func TestAccAWSServiceCatalogProvisionedProduct_tags(t *testing.T) {
 		},
 	})
 }
+
+// TODO parameters test
 
 func testAccCheckAwsServiceCatalogProvisionedProductExists(pr string, describeProvisionedProductOutput *servicecatalog.DescribeProvisionedProductOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -185,9 +186,24 @@ func testAccCheckAwsServiceCatalogProvisionedProductDisappears(describeProvision
 		input := servicecatalog.TerminateProvisionedProductInput{
 			ProvisionedProductId: describeProvisionedProductOutput.ProvisionedProductDetail.Id,
 		}
-		_, err := conn.TerminateProvisionedProduct(&input)
+		// not available on servicecatalog, but returned here if under change
+		errCodeValidationException := "ValidationException"
+		err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+			_, err := conn.TerminateProvisionedProduct(&input)
+			if err != nil {
+				if isAWSErr(err, servicecatalog.ErrCodeResourceInUseException, "") || isAWSErr(err, errCodeValidationException, "") {
+					// delay and retry, other things eg associations might still be getting deleted
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
+			}
+			return nil
+		})
 		if err != nil {
 			return fmt.Errorf("could not terminate provisioned product: %s", err)
+		}
+		if err := waitForServiceCatalogProvisionedProductDeletion(conn, aws.StringValue(describeProvisionedProductOutput.ProvisionedProductDetail.Id)); err != nil {
+			return err
 		}
 		return nil
 	}
