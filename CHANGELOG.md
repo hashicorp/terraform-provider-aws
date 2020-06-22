@@ -1,4 +1,9 @@
 ## 2.68.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_wafv2_web_acl: Prevent unexpected `UpdateWebACL` API errors on tags only updates [GH-13871]
+
 ## 2.67.0 (June 19, 2020)
 
 NOTES:
