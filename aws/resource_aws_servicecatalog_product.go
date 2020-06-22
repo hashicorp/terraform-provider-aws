@@ -354,10 +354,11 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 		addTags := make(map[string]interface{})
 		for k, v1 := range oldTags.(map[string]interface{}) {
 			v2, ok := (newTags.(map[string]interface{}))[k]
+			kk := k // copy, as &k is changing
 			if !ok {
-				removeTags = append(removeTags, &k)
+				removeTags = append(removeTags, &kk)
 			} else if v2 != v1 {
-				removeTags = append(removeTags, &k)
+				removeTags = append(removeTags, &kk)
 				addTags[k] = v2
 			}
 		}
