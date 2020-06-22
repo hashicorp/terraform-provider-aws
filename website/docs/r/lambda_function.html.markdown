@@ -76,6 +76,7 @@ resource "aws_lambda_function" "example" {
   layers = ["${aws_lambda_layer_version.example.arn}"]
 }
 ```
+
 ### Lambda File Systems
 
 Lambda File Systems allow you to connect an Amazon Elastic File System (EFS) file system to a Lambda function to share data across function invocations, access existing data including large files, and save function state. 
@@ -91,13 +92,13 @@ resource "aws_lambda_function" "example" {
     # Local mount path inside the lambda function. Must start with '/mnt/'.
     local_mount_path = "/mnt/efs"
   }
-  
+
   vpc_config {
     # Every subnet should be able to reach an EFS mount target in the same Availability Zone. Cross-AZ mounts are not permitted.
-    subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
+    subnet_ids         = ["${aws_subnet.subnet_for_lambda.id}"]
     security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
   }
-  
+
   # Explicitly declare dependency on EFS mount target. 
   # When creating or updating Lambda functions, mount target must be in 'available' lifecycle state.
   depends_on = [aws_efs_mount_target.alpha]
@@ -112,8 +113,8 @@ resource "aws_efs_file_system" "efs_for_lambda" {
 
 # Mount target connects the file system to the subnet
 resource "aws_efs_mount_target" "alpha" {
-  file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
-  subnet_id      = "${aws_subnet.subnet_for_lambda.id}"
+  file_system_id  = "${aws_efs_file_system.efs_for_lambda.id}"
+  subnet_id       = "${aws_subnet.subnet_for_lambda.id}"
   security_groups = ["${aws_security_group.sg_for_lambda.id}"]
 }
 
@@ -124,9 +125,9 @@ resource "aws_efs_access_point" "access_point_for_lambda" {
   root_directory {
     path = "/lambda"
     creation_info {
-        owner_gid   = 1000
-        owner_uid   = 1000
-        permissions = "777"
+      owner_gid   = 1000
+      owner_uid   = 1000
+      permissions = "777"
     }
   }
 

@@ -117,8 +117,8 @@ Health Check (`health_check`) supports the following:
 * `unhealthy_threshold` - (Required) The number of checks before the instance is declared unhealthy.
 * `target` - (Required) The target of the check. Valid pattern is "${PROTOCOL}:${PORT}${PATH}", where PROTOCOL
   values are:
-  * `HTTP`, `HTTPS` - PORT and PATH are required
-  * `TCP`, `SSL` - PORT is required, PATH is not supported
+    * `HTTP`, `HTTPS` - PORT and PATH are required
+    * `TCP`, `SSL` - PORT is required, PATH is not supported
 * `interval` - (Required) The interval between checks.
 * `timeout` - (Required) The length of time before the check times out.
 
