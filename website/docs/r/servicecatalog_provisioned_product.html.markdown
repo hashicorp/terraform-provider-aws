@@ -34,8 +34,8 @@ The following arguments are supported:
 * `product_id` - (Required) The product identifier
 * `provisioned_product_name` (Required) A user-friendly name for the provisioned product. This value must be unique for the AWS account and cannot be updated after the product is provisioned.
 * `provisioning_artifact_id` (Required) The identifier of the provisioning artifact.
-* `provisioning_parameters` (Optional) Parameters specified by the administrator that are required for provisioning the product. This object should be a list of objects each with `key` and `value` set.
-* `provisioning_preferences` - (Optional) An object that contains information about the provisioning preferences for a stack set. [WIP]
+* `provisioning_parameters` (Optional) Parameters specified by the administrator that are required for provisioning the product. This object should be a map of the parameter key to the parameter value.
+* `provisioning_preferences` - (Optional) An object that contains information about the provisioning preferences for a stack set. [Not yet supported.]
 * `tags` - (Optional) Tags to apply to the provisioned product.
 
 ## Attributes Reference
@@ -44,7 +44,7 @@ In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Service Catalog Provisioned Product.
 * `created_time` - The UTC time stamp of the creation time.
-* `outputs` - Information about the product created as the result of a request. For example, the output for a CloudFormation-backed product that creates an S3 bucket may include the S3 bucket URL. This is a list of objects containing `description`, `output_key`, and `output_value`. 
+* `outputs` - Information about the product created as the result of a request. For example, the output for a CloudFormation-backed product that creates an S3 bucket may include the S3 bucket URL. This is a map of output keys to their value (different to the AWS return type but allowing references to values in Terraform).
 * `last_record_id` -  The ID of the last record read. Records provide a history of provsioned product activity.
 * `last_record_status` -  The status reported by the last record read. The supported values are `CREATED | IN_PROGRESS | IN_PROGRESS_IN_ERROR | SUCCEEDED | FAILED`. This can sometimes be useful along with `last_record_type` to give more context to the provisioned product `status` and `status_message` attributes.
 * `last_record_type` -  The type of the last record read. The supported values are `PROVISION_PRODUCT | UPDATE_PROVISIONED_PRODUCT | TERMINATE_PROVISIONED_PRODUCT`.

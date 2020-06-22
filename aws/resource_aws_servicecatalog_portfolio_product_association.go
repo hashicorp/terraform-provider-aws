@@ -53,7 +53,11 @@ func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.Resour
 		return fmt.Errorf("creating Service Catalog Product(%s)/Portfolio(%s) Association failed: %s",
 			productId, portfolioId, err.Error())
 	}
-	return resourceAwsServiceCatalogPortfolioProductAssociationRead(d, meta)
+	result := resourceAwsServiceCatalogPortfolioProductAssociationRead(d, meta)
+	// even after one successful read, the eventual consistency can regress, so delay a bit more before
+	// reporting this as created to prevent dependencies (eg products being provisioned) running too early
+	time.Sleep(time.Second * 5)
+	return result
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.ResourceData, meta interface{}) error {

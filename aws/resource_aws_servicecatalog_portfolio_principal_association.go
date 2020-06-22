@@ -57,7 +57,11 @@ func resourceAwsServiceCatalogPortfolioPrincipalAssociationCreate(d *schema.Reso
 			principalArn, portfolioId, err.Error())
 	}
 
-	return resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d, meta)
+	result := resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d, meta)
+	// even after one successful read, the eventual consistency can regress, so delay a bit more before
+	// reporting this as created to prevent dependencies (eg products being provisioned) running too early
+	time.Sleep(time.Second * 5)
+	return result
 }
 
 func resourceAwsServiceCatalogPortfolioPrincipalAssociationRead(d *schema.ResourceData, meta interface{}) error {

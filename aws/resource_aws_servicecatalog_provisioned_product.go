@@ -66,12 +66,9 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"provisioning_parameters": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeMap,
 				Optional: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Elem: schema.TypeString,
-				},
+				Elem:     schema.TypeString,
 			},
 			/*
 				// TODO stack set preferences
@@ -112,12 +109,9 @@ func resourceAwsServiceCatalogProvisionedProduct() *schema.Resource {
 				Computed: true,
 			},
 			"outputs": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeMap,
 				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeMap,
-					Elem: schema.TypeString,
-				},
+				Elem:     schema.TypeString,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -156,13 +150,13 @@ func resourceAwsServiceCatalogProvisionedProductCreate(d *schema.ResourceData, m
 	}
 	if v, ok := d.GetOk("provisioning_parameters"); ok {
 		input.ProvisioningParameters = make([]*servicecatalog.ProvisioningParameter, 0)
-		for _, param := range v.([]interface{}) {
+		for k, vv := range v.(map[string]interface{}) {
 			input.ProvisioningParameters = append(input.ProvisioningParameters,
-				&servicecatalog.ProvisioningParameter{Key: aws.String(param.(map[string]interface{})["key"].(string)), Value: aws.String(param.(map[string]interface{})["value"].(string))})
+				&servicecatalog.ProvisioningParameter{Key: aws.String(k), Value: aws.String(vv.(string))})
 		}
 	}
 	/*
-	   // TODO stack set prefs
+	   // TODO stack set prefs - and update docs
 	   if v, ok := d.GetOk("provisioning_preferences"); ok {
 	       input.Description = aws.String(v.(string))
 	   }
@@ -276,32 +270,28 @@ func resourceAwsServiceCatalogProvisionedProductRead(d *schema.ResourceData, met
 	d.Set("last_record_type", record.RecordDetail.RecordType)
 	d.Set("last_record_status", record.RecordDetail.Status)
 
-	aa := make([]map[string]string, 0)
+	recordErrors := make([]map[string]string, 0)
 	for _, b := range record.RecordDetail.RecordErrors {
 		bb := make(map[string]string)
 		bb["code"] = aws.StringValue(b.Code)
 		bb["description"] = aws.StringValue(b.Description)
-		aa = append(aa, bb)
+		recordErrors = append(recordErrors, bb)
 	}
-	err = d.Set("last_record_errors", aa)
+	err = d.Set("last_record_errors", recordErrors)
 	if err != nil {
 		return fmt.Errorf("invalid errors read on ServiceCatalog provisioned product '%s': %s", d.Id(), err)
 	}
 
-	aa = make([]map[string]string, 0)
+	outputs := make(map[string]string)
 	for _, b := range record.RecordOutputs {
-		bb := make(map[string]string)
-		bb["description"] = aws.StringValue(b.Description)
-		bb["output_key"] = aws.StringValue(b.OutputKey)
-		bb["output_value"] = aws.StringValue(b.OutputValue)
-		aa = append(aa, bb)
+		outputs[aws.StringValue(b.OutputKey)] = aws.StringValue(b.OutputValue)
 	}
-	err = d.Set("outputs", aa)
+	err = d.Set("outputs", outputs)
 	if err != nil {
 		return fmt.Errorf("invalid outputs read on ServiceCatalog provisioned product '%s': %s", d.Id(), err)
 	}
 
-	//not returned (assume unchanged):
+	//not returned (they should be what we set):
 	// notification_arns
 	// provisioning_parameters
 	// provisioning_preferences
@@ -346,9 +336,9 @@ func resourceAwsServiceCatalogProvisionedProductUpdate(d *schema.ResourceData, m
 	if d.HasChange("provisioning_parameters") {
 		v, _ := d.GetOk("provisioning_parameters")
 		input.ProvisioningParameters = make([]*servicecatalog.UpdateProvisioningParameter, 0)
-		for _, param := range v.([]interface{}) {
+		for k, vv := range v.(map[string]interface{}) {
 			input.ProvisioningParameters = append(input.ProvisioningParameters,
-				&servicecatalog.UpdateProvisioningParameter{Key: aws.String(param.(map[string]interface{})["key"].(string)), Value: aws.String(param.(map[string]interface{})["value"].(string))})
+				&servicecatalog.UpdateProvisioningParameter{Key: aws.String(k), Value: aws.String(vv.(string))})
 		}
 	}
 
