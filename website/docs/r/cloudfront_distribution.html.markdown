@@ -251,7 +251,7 @@ of several sub-resources - these resources are laid out below.
     requests, the Id of the AWS WAF web ACL that is associated with the
     distribution. The WAF Web ACL must exist in the WAF Global (CloudFront)
     region and the credentials configuring this argument must have
-    `waf:GetWebACL` permissions assigned.
+    `waf:GetWebACL` permissions assigned. If using WAFv2, provide the ARN of the web ACL.
 
   * `retain_on_delete` (Optional) - Disables the distribution instead of
     deleting it when destroying the resource through Terraform. If this is set,
