@@ -289,6 +289,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_ses_domain_identity` resource](/docs/providers/aws/r/ses_domain_identity.html)
   - [`aws_ses_domain_identity_verification` resource](/docs/providers/aws/r/ses_domain_identity_verification.html)
   - [`aws_ses_email_identity` resource](/docs/providers/aws/r/ses_email_identity.html)
+  - [`aws_ses_receipt_filter` resource](/docs/providers/aws/r/ses_receipt_filter.html)  
   - [`aws_ssm_document` data source](/docs/providers/aws/d/ssm_document.html)
   - [`aws_ssm_document` resource](/docs/providers/aws/r/ssm_document.html)
   - [`aws_ssm_parameter` data source](/docs/providers/aws/d/ssm_parameter.html)
