@@ -1,4 +1,15 @@
 ## 2.68.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_default_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
+* resource/aws_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
+* resource/aws_ses_receipt_filter: Add `arn` attribute and plan-time validations for all arguments [GH-13811]
+
+BUG FIXES:
+
+* resource/aws_wafv2_web_acl: Prevent unexpected `UpdateWebACL` API errors on tags only updates [GH-13871]
+
 ## 2.67.0 (June 19, 2020)
 
 NOTES:
