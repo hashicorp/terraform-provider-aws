@@ -300,7 +300,7 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
 
 	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
-		return fmt.Errorf("error setting advanced_security_options: %s", err)
+		return fmt.Errorf("error setting advanced_security_options: %w", err)
 	}
 
 	if err := d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions)); err != nil {

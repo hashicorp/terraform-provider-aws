@@ -687,7 +687,7 @@ func resourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface{}
 			d.Set("advanced_security_options.0.internal_user_database_enabled", ds.AdvancedSecurityOptions.InternalUserDatabaseEnabled)
 		} else {
 			if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
-				return fmt.Errorf("error setting advanced_security_options: %s", err)
+				return fmt.Errorf("error setting advanced_security_options: %w", err)
 			}
 		}
 	}
