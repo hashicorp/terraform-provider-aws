@@ -995,27 +995,41 @@ func flattenMskLoggingInfoBrokerLogsS3(e *kafka.S3) []map[string]interface{} {
 func resourceAwsMskClusterDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kafkaconn
 
-	log.Printf("[DEBUG] Deleting MSK cluster: %q", d.Id())
-	return deleteMskCluster(conn, d.Id())
+	log.Printf("[DEBUG] Deleting Msk cluster: %q", d.Id())
+	input, err := deleteKafkaClusterInputFromResourceData(d)
+	if err != nil {
+		return fmt.Errorf("error deleting Msk cluster (%s): %w", d.Id(), err)
+	}
+	return deleteKafkaCluster(conn, input)
 }
 
-func deleteMskCluster(conn *kafka.Kafka, arn string) error {
-	_, err := conn.DeleteCluster(&kafka.DeleteClusterInput{
-		ClusterArn: aws.String(arn),
-	})
+func deleteKafkaClusterInputFromResourceData(d *schema.ResourceData) (*kafka.DeleteClusterInput, error) {
+	return &kafka.DeleteClusterInput{
+		ClusterArn: aws.String(d.Id()),
+	}, nil
+}
+
+func deleteKafkaClusterInputFromAPIResource(r *kafka.ClusterInfo) *kafka.DeleteClusterInput {
+	return &kafka.DeleteClusterInput{
+		ClusterArn: r.ClusterArn,
+	}
+}
+
+func deleteKafkaCluster(conn *kafka.Kafka, input *kafka.DeleteClusterInput) error {
+	_, err := conn.DeleteCluster(input)
 	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error deleting Msk cluster (%s): %w", arn, err)
+		return err
 	}
 
-	_, err = waiter.ClusterDeleted(conn, arn)
+	_, err = waiter.ClusterDeleted(conn, aws.StringValue(input.ClusterArn))
 	if isAWSErr(err, kafka.ErrCodeNotFoundException, "") {
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("error waiting to delete Msk cluster (%s): %w", arn, err)
+		return err
 	}
 	return nil
 }

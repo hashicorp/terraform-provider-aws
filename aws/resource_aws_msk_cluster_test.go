@@ -1,3 +1,5 @@
+//go:generate go run internal/service/kafka/generators/sweepers/main.go
+
 package aws
 
 import (
@@ -9,57 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/kafka/lister"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_msk_cluster", &resource.Sweeper{
 		Name: "aws_msk_cluster",
-		F:    testSweepMskClusters,
+		F:    testSweepKafkaClusters,
 	})
-}
-
-func testSweepMskClusters(region string) error {
-	conn, err := sharedKafkaClientForRegion(region)
-	if err != nil {
-		return err
-	}
-
-	var sweeperErrs *multierror.Error
-
-	err = lister.ListAllClusterPages(conn, func(page *kafka.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, cluster := range page.ClusterInfoList {
-			log.Printf("[INFO] Deleting Msk cluster: %s", aws.StringValue(cluster.ClusterName))
-			err := deleteMskCluster(conn, aws.StringValue(cluster.ClusterArn))
-			if err != nil {
-				log.Printf("[ERROR] %s", err)
-				sweeperErrs = multierror.Append(sweeperErrs, err)
-				continue
-			}
-		}
-
-		return !lastPage
-	})
-
-	if testSweepSkipSweepError(err) {
-		log.Printf("[WARN] Skipping MSK Cluster sweeper for %q: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing MSK Clusters: %w", err))
-	}
-
-	return sweeperErrs.ErrorOrNil()
 }
 
 // generate
