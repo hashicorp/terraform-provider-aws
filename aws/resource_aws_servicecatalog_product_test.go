@@ -12,13 +12,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-// TODO basic test with no tags
-// TODO other tests with tags (update) - all tests - as per https://github.com/terraform-providers/terraform-provider-aws/blob/master/docs/contributing/contribution-checklists.md#resource-tagging-acceptance-testing-implementation
-// TODO import test (all tests)
-func TestAccAWSServiceCatalogProduct_Basic(t *testing.T) {
-	arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
-	arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
-	arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
+func TestAccAWSServiceCatalogProduct_basic(t *testing.T) {
+	salt := acctest.RandString(5)
 	resourceName := "aws_servicecatalog_product.test"
 	var describeProductOutput servicecatalog.DescribeProductAsAdminOutput
 
@@ -28,15 +23,10 @@ func TestAccAWSServiceCatalogProduct_Basic(t *testing.T) {
 		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, "", ""),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, "", "", salt, salt, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput),
-
-					testAccCheckServiceCatalogProductStandardFields(resourceName, describeProductOutput, arbitraryProductName),
-
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.0.name", arbitraryProvisionArtifactName),
-					resource.TestCheckResourceAttrSet(resourceName, "provisioning_artifact.0.description"),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput, "product-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -49,10 +39,30 @@ func TestAccAWSServiceCatalogProduct_Basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_Tags(t *testing.T) {
-	arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
-	arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
-	arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
+func TestAccAWSServiceCatalogProduct_disappears(t *testing.T) {
+	salt := acctest.RandString(5)
+	resourceName := "aws_servicecatalog_product.test"
+	var describeProductOutput servicecatalog.DescribeProductAsAdminOutput
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, "", "", salt, salt, salt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput),
+					testAccCheckServiceCatalogProductDisappears(&describeProductOutput),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSServiceCatalogProduct_tags(t *testing.T) {
+	salt := acctest.RandString(5)
 	tag1key := "FooKey"
 	tag1value := "bar"
 	tag1valueB := "bar2"
@@ -71,44 +81,43 @@ func TestAccAWSServiceCatalogProduct_Tags(t *testing.T) {
 		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, tag1, ""),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, tag1, "", salt, salt, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput1),
-					testAccCheckServiceCatalogProductStandardFields(resourceName, describeProductOutput1, arbitraryProductName),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput1, "product-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+tag1key, tag1value),
 				),
 			},
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, tag1B, tag2),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, tag1B, tag2, salt, salt, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput2),
-					testAccCheckServiceCatalogProductStandardFields(resourceName, describeProductOutput2, arbitraryProductName),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput2, "product-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+tag1key, tag1valueB),
 					resource.TestCheckResourceAttr(resourceName, "tags."+tag2key, tag2value),
+					testAccCheckServiceCatalogProductNotRecreated(&describeProductOutput1, &describeProductOutput2),
 				),
 			},
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, "", tag2),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, "", tag2, salt, salt, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput3),
-					testAccCheckServiceCatalogProductStandardFields(resourceName, describeProductOutput3, arbitraryProductName),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput3, "product-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+tag2key, tag2value),
+					testAccCheckServiceCatalogProductNotRecreated(&describeProductOutput2, &describeProductOutput3),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSServiceCatalogProduct_updateProvisioningArtifactBasic(t *testing.T) {
-	arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
-	arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
-	arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
+func TestAccAWSServiceCatalogProduct_ProvisioningArtifact_updateInPlace(t *testing.T) {
+	salt := acctest.RandString(5)
+	salt2 := acctest.RandString(5)
 	resourceName := "aws_servicecatalog_product.test"
-
-	newArbitraryProvisionArtifactName := fmt.Sprintf("pa-new-%s", acctest.RandString(5))
 
 	var describeProductOutput1, describeProductOutput2 servicecatalog.DescribeProductAsAdminOutput
 
@@ -118,19 +127,22 @@ func TestAccAWSServiceCatalogProduct_updateProvisioningArtifactBasic(t *testing.
 		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, "", ""),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, "", "", salt, salt, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput1),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput1, "product-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.0.name", arbitraryProvisionArtifactName),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.0.name", "pa-"+salt),
 				),
 			},
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, arbitraryBucketName, arbitraryProductName, newArbitraryProvisionArtifactName, "", ""),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, "", "", salt, salt, salt2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput2),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput2, "product-"+salt),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.0.name", newArbitraryProvisionArtifactName),
+					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact.0.name", "pa-"+salt2),
+					testAccCheckServiceCatalogProductNotRecreated(&describeProductOutput1, &describeProductOutput2),
 				),
 			},
 		},
@@ -138,13 +150,10 @@ func TestAccAWSServiceCatalogProduct_updateProvisioningArtifactBasic(t *testing.
 }
 
 // update the LoadFromTemplateURL to force recreating new Product
-func TestAccAWSServiceCatalogProduct_updateSourceBucketForceNew(t *testing.T) {
-	arbitraryProductName := fmt.Sprintf("product-%s", acctest.RandString(5))
-	arbitraryProvisionArtifactName := fmt.Sprintf("pa-%s", acctest.RandString(5))
-	arbitraryBucketName := fmt.Sprintf("bucket-%s", acctest.RandString(16))
+func TestAccAWSServiceCatalogProduct_Bucket_updateForcesNew(t *testing.T) {
+	salt := acctest.RandString(5)
+	salt2 := acctest.RandString(5)
 	resourceName := "aws_servicecatalog_product.test"
-
-	newArbitraryBucketName := fmt.Sprintf("bucket-new-%s", acctest.RandString(16))
 
 	var describeProductOutput1, describeProductOutput2 servicecatalog.DescribeProductAsAdminOutput
 
@@ -154,15 +163,18 @@ func TestAccAWSServiceCatalogProduct_updateSourceBucketForceNew(t *testing.T) {
 		CheckDestroy: testAccCheckServiceCatalogProductDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, arbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, "", ""),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, "", "", salt, salt, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput1),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput1, "product-"+salt),
 				),
 			},
 			{
-				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, newArbitraryBucketName, arbitraryProductName, arbitraryProvisionArtifactName, "", ""),
+				Config: testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, "", "", salt, salt2, salt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceCatalogProductExists(resourceName, &describeProductOutput2),
+					testAccCheckServiceCatalogProductStandardFields(resourceName, &describeProductOutput2, "product-"+salt),
+					testAccCheckServiceCatalogProductHasBeenRecreated(&describeProductOutput1, &describeProductOutput2),
 				),
 			},
 		},
@@ -187,7 +199,7 @@ func testAccCheckServiceCatalogProductExists(resourceName string, describeProduc
 	}
 }
 
-func testAccCheckServiceCatalogProductStandardFields(resourceName string, describeProductOutput servicecatalog.DescribeProductAsAdminOutput, expectedProductName string) resource.TestCheckFunc {
+func testAccCheckServiceCatalogProductStandardFields(resourceName string, describeProductOutput *servicecatalog.DescribeProductAsAdminOutput, expectedProductName string) resource.TestCheckFunc {
 	return resource.ComposeTestCheckFunc(
 		resource.TestCheckResourceAttr(resourceName, "name", expectedProductName),
 		resource.TestCheckResourceAttrSet(resourceName, "description"),
@@ -197,7 +209,47 @@ func testAccCheckServiceCatalogProductStandardFields(resourceName string, descri
 		resource.TestCheckResourceAttrSet(resourceName, "support_description"),
 		resource.TestCheckResourceAttrSet(resourceName, "support_email"),
 		resource.TestCheckResourceAttrSet(resourceName, "support_url"),
+		func(s *terraform.State) error {
+			if *describeProductOutput.ProductViewDetail.ProductViewSummary.Name != expectedProductName {
+				return fmt.Errorf("resource '%s' does not have expected name: '%s' vs '%s'", resourceName, *describeProductOutput.ProductViewDetail.ProductViewSummary.Name, expectedProductName)
+			}
+			return nil
+		},
 	)
+}
+
+func testAccCheckServiceCatalogProductHasBeenRecreated(describeProductOutput1, describeProductOutput2 *servicecatalog.DescribeProductAsAdminOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *describeProductOutput1.ProductViewDetail.ProductARN == *describeProductOutput2.ProductViewDetail.ProductARN {
+			return fmt.Errorf("Product ARN has not changed from %s, but it should have been re-created",
+				*describeProductOutput1.ProductViewDetail.ProductARN)
+		}
+		return nil
+	}
+}
+
+func testAccCheckServiceCatalogProductNotRecreated(describeProductOutput1, describeProductOutput2 *servicecatalog.DescribeProductAsAdminOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *describeProductOutput1.ProductViewDetail.ProductARN != *describeProductOutput2.ProductViewDetail.ProductARN {
+			return fmt.Errorf("Product ARN has changed from %s to %s, but it should not have been re-created",
+				*describeProductOutput1.ProductViewDetail.ProductARN, *describeProductOutput2.ProductViewDetail.ProductARN)
+		}
+		return nil
+	}
+}
+
+func testAccCheckServiceCatalogProductDisappears(describeProductOutput *servicecatalog.DescribeProductAsAdminOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).scconn
+		input := servicecatalog.DeleteProductInput{
+			Id: describeProductOutput.ProductViewDetail.ProductViewSummary.ProductId,
+		}
+		_, err := conn.DeleteProduct(&input)
+		if err != nil {
+			return fmt.Errorf("could not delete product: %s", err)
+		}
+		return nil
+	}
 }
 
 func testAccCheckServiceCatalogProductDestroy(s *terraform.State) error {
@@ -209,6 +261,10 @@ func testAccCheckServiceCatalogProductDestroy(s *terraform.State) error {
 		}
 		count++
 		rs = rsi
+	}
+	if count == 0 {
+		// disappears test
+		return nil
 	}
 	if count != 1 {
 		return fmt.Errorf("product count mismatch, found %d, expected 1", count)
@@ -229,12 +285,13 @@ func testAccCheckServiceCatalogProductDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, bucketName, productName, provisioningArtifactName, tag1, tag2 string) string {
+func testAccCheckAwsServiceCatalogProductResourceConfigTemplate(resourceName, tag1, tag2, productSalt, bucketSalt, paSalt string) string {
 	thisResourceParts := strings.Split(resourceName, ".")
 	return fmt.Sprintf(`
 data "aws_region" "current" {}	
+
 resource "aws_s3_bucket" "bucket" {
-  bucket        = "%s"
+  bucket        = "bucket-%[6]s"
   region        = data.aws_region.current.name
   acl           = "private"
   force_destroy = true
@@ -256,10 +313,10 @@ resource "aws_s3_bucket_object" "template1" {
 EOF
 }
 
-resource "%s" "%s" {
+resource "%[1]s" "%[2]s" {
   description         = "arbitrary product description"
   distributor         = "arbitrary distributor"
-  name                = "%s"
+  name                = "product-%[5]s"
   owner               = "arbitrary owner"
   product_type        = "CLOUD_FORMATION_TEMPLATE"
   support_description = "arbitrary support description"
@@ -268,15 +325,16 @@ resource "%s" "%s" {
 
   provisioning_artifact {
     description = "arbitrary description"
-    name        = "%s"
+    name        = "pa-%[7]s"
     info = {
       LoadTemplateFromURL = "https://s3.amazonaws.com/${aws_s3_bucket.bucket.id}/${aws_s3_bucket_object.template1.key}"
     }
   }
 
   tags = {
-     %s
-     %s
+     %[3]s
+     %[4]s
   }
-}`, bucketName, thisResourceParts[0], thisResourceParts[1], productName, provisioningArtifactName, tag1, tag2)
+}
+`, thisResourceParts[0], thisResourceParts[1], tag1, tag2, productSalt, bucketSalt, paSalt)
 }

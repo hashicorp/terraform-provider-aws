@@ -15,37 +15,40 @@ func resourceAwsServiceCatalogPortfolioProductAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsServiceCatalogPortfolioProductAssociationCreate,
 		Read:   resourceAwsServiceCatalogPortfolioProductAssociationRead,
-		Update: resourceAwsServiceCatalogPortfolioProductAssociationUpdate,
 		Delete: resourceAwsServiceCatalogPortfolioProductAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
 		},
 		Schema: map[string]*schema.Schema{
 			"portfolio_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"product_id": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 		},
 	}
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	_, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	_, portfolioId, productId, err := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	if err != nil {
+		return err
+	}
 	input := servicecatalog.AssociateProductWithPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
 		ProductId:   aws.String(productId),
 	}
 	conn := meta.(*AWSClient).scconn
-	_, err := conn.AssociateProductWithPortfolio(&input)
+	_, err = conn.AssociateProductWithPortfolio(&input)
 	if err != nil {
 		return fmt.Errorf("creating Service Catalog Product(%s)/Portfolio(%s) Association failed: %s",
 			productId, portfolioId, err.Error())
@@ -54,7 +57,10 @@ func resourceAwsServiceCatalogPortfolioProductAssociationCreate(d *schema.Resour
 }
 
 func resourceAwsServiceCatalogPortfolioProductAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	id, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	id, portfolioId, productId, err := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	if err != nil {
+		return err
+	}
 	input := servicecatalog.ListPortfoliosForProductInput{
 		ProductId: aws.String(productId),
 	}
@@ -98,34 +104,17 @@ func resourceAwsServiceCatalogPortfolioProductAssociationListPortfoliosForProduc
 	return portfolioDetails, page.NextPageToken, nil
 }
 
-func resourceAwsServiceCatalogPortfolioProductAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChanges("product_id", "portfolio_id") {
-		oldProductId, newProductId := d.GetChange("product_id")
-		oldPortfolioId, newPortfolioId := d.GetChange("portfolio_id")
-		d.Set("product_id", oldProductId.(string))
-		d.Set("portfolio_id", oldPortfolioId.(string))
-		err := resourceAwsServiceCatalogPortfolioProductAssociationDelete(d, meta)
-		if err != nil {
-			return fmt.Errorf("failed to delete association %s as part of update: %s", d.Id(), err.Error())
-		}
-		d.Set("product_id", newProductId.(string))
-		d.Set("portfolio_id", newPortfolioId.(string))
-		err = resourceAwsServiceCatalogPortfolioProductAssociationCreate(d, meta)
-		if err != nil {
-			return fmt.Errorf("failed to re-create association %s as part of update: %s", d.Id(), err.Error())
-		}
-	}
-	return resourceAwsServiceCatalogPortfolioProductAssociationRead(d, meta)
-}
-
 func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	_, portfolioId, productId := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	_, portfolioId, productId, err := resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d)
+	if err != nil {
+		return err
+	}
 	input := servicecatalog.DisassociateProductFromPortfolioInput{
 		PortfolioId: aws.String(portfolioId),
 		ProductId:   aws.String(productId),
 	}
 	conn := meta.(*AWSClient).scconn
-	_, err := conn.DisassociateProductFromPortfolio(&input)
+	_, err = conn.DisassociateProductFromPortfolio(&input)
 	if err != nil {
 		return fmt.Errorf("deleting Service Catalog Product(%s)/Portfolio(%s) Association failed: %s",
 			productId, portfolioId, err.Error())
@@ -133,18 +122,29 @@ func resourceAwsServiceCatalogPortfolioProductAssociationDelete(d *schema.Resour
 	return nil
 }
 
-func resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d *schema.ResourceData) (string, string, string) {
-	if productId, ok := d.GetOk("product_id"); ok {
-		portfolioId := d.Get("portfolio_id").(string)
-		id := portfolioId + "--" + productId.(string)
-		return id, portfolioId, productId.(string)
+func resourceAwsServiceCatalogPortfolioProductAssociationRequiredParameters(d *schema.ResourceData) (string, string, string, error) {
+	// ":" recommended as separator where multiple fields needed to uniquely identify and import, based on https://www.terraform.io/docs/extend/resources/import.html#importer-state-function
+	// (as in this case where AWS doesn't treat this association as a first class resource; it has no AWS identifier)
+	// this is not a valid "identifier" character according to https://www.terraform.io/docs/configuration/syntax.html#identifiers
+	// but that does not seem to apply to this internal "id"
+	productId, ok := d.GetOk("product_id")
+	portfolioId, ok2 := d.GetOk("portfolio_id")
+	if ok && ok2 {
+		id := portfolioId.(string) + ":" + productId.(string)
+		return id, portfolioId.(string), productId.(string), nil
+	} else if ok || ok2 {
+		return "", "", "", fmt.Errorf("Invalid state - product_id and portfolio_id must both be set or neither set to infer from ID")
+	} else if d.Id() != "" {
+		return parseServiceCatalogPortfolioProductAssociationResourceId(d.Id())
+	} else {
+		return "", "", "", fmt.Errorf("Invalid state - product_id and portfolio_id must be set, or ID set to import")
 	}
-	return parseServiceCatalogPortfolioProductAssociationResourceId(d.Id())
 }
 
-func parseServiceCatalogPortfolioProductAssociationResourceId(id string) (string, string, string) {
-	s := strings.SplitN(id, "--", 2)
-	portfolioId := s[0]
-	productId := s[1]
-	return id, portfolioId, productId
+func parseServiceCatalogPortfolioProductAssociationResourceId(id string) (string, string, string, error) {
+	s := strings.SplitN(id, ":", 2)
+	if len(s) != 2 {
+		return "", "", "", fmt.Errorf("Invalid ID '%s' - should be of format <portfolio_id>:<product-id>", id)
+	}
+	return id, s[0], s[1], nil
 }

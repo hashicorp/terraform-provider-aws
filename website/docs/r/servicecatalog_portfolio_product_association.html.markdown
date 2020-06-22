@@ -42,7 +42,7 @@ The following arguments are supported:
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - A generated ID to represent this association, of the form `${portfolio_id}--${product_id}`.
+* `id` - A generated ID to represent this association, of the form `${portfolio_id}:${product_id}`.
 
 
 ## Import
@@ -51,5 +51,5 @@ Service Catalog Portfolio-Product Associations can be imported using the ID cons
 from the portfolio and product ids, e.g.
 
 ```
-$ terraform import aws_servicecatalog_portfolio_product_association.test port-01234567890abc--prod-abcdefghijklm
+$ terraform import aws_servicecatalog_portfolio_product_association.test port-01234567890abc:prod-abcdefghijklm
 ```

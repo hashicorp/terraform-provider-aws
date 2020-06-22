@@ -126,5 +126,5 @@ In addition to all arguments above, the following attributes are exported:
 Service Catalog Products can be imported using the service catalog product id, e.g.
 
 ```
-$ terraform import aws_servicecatalog_product.test p-12344321
+$ terraform import aws_servicecatalog_product.test prod-a1b2c3d4e5f6g
 ```
