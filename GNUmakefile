@@ -14,6 +14,7 @@ build: fmtcheck
 gen:
 	rm -f aws/internal/keyvaluetags/*_gen.go
 	rm -f aws/internal/service/**/lister/*_gen.go
+	rm -f aws/gen_*_test.go
 	go generate ./...
 
 sweep:

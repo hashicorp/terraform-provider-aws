@@ -1,3 +1,5 @@
+//go:generate go run internal/service/cloudformation/generators/sweepers/main.go
+
 package aws
 
 import (
