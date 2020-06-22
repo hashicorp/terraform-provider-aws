@@ -232,7 +232,7 @@ The following arguments are supported:
 The **advanced_security_options** block supports the following attributes:
 
 * `enabled` - (Required) Whether advanced security is enabled
-* `internal_user_database_enabled` - (Optional) Whether the internal user database is enabled. If not set, defaults to `false` by the AWS API.
+* `internal_user_database_enabled` - (Optional, Default: false) Whether the internal user database is enabled. If not set, defaults to `false` by the AWS API.
 * `master_user_options` - (Optional) Credentials for the master user: username and password, or ARN
   * `master_user_arn` - (Optional) ARN for the master user. Only specify if `internal_user_database_enabled` is not set or set to `false`)
   * `master_user_name` - (Optional) The master user's username, which is stored in the Amazon Elasticsearch Service domain's internal database. Only specify if `internal_user_database_enabled` is set to `true`.

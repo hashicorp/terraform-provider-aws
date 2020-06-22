@@ -81,6 +81,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"internal_user_database_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Default:  false,
 						},
 						"master_user_options": {
 							Type:     schema.TypeList,
