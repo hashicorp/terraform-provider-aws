@@ -10,11 +10,6 @@ description: |-
 
 Provides a resource to create a Service Catalog Portfolio.
 
-Note that the portfolio cannot be used by any users unless there is 
-an `aws_servicecatalog_portfolio_principal_association` explicitly granting access,
-and it will be empty until at least one `aws_servicecatalog_portfolio_product_association` is created.  
-
-
 ## Example Usage
 
 ```hcl
