@@ -62,7 +62,7 @@ func resourceAwsConfigRemediationConfiguration() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type: schema.TypeString,
+							Type:     schema.TypeString,
 							Required: true,
 						},
 						"resource_value": {
@@ -95,7 +95,7 @@ func expandConfigRemediationConfigurationParameters(configured *schema.Set) (map
 		}
 		if resourceValue, ok := detail["resource_value"].(string); ok && len(resourceValue) > 0 {
 			rpv.ResourceValue = &configservice.ResourceValue{
-        Value: &resourceValue,
+				Value: &resourceValue,
 			}
 		} else if staticValue, ok := detail["static_value"].(string); ok && len(staticValue) > 0 {
 			rpv.StaticValue = &configservice.StaticValue{
@@ -118,7 +118,7 @@ func flattenRemediationConfigurationParameters(parameters map[string]*configserv
 		if value.ResourceValue != nil {
 			item["resource_value"] = *value.ResourceValue.Value
 		}
-		if value.StaticValue != nil &&  len(value.StaticValue.Values) > 0 {
+		if value.StaticValue != nil && len(value.StaticValue.Values) > 0 {
 			item["static_value"] = *value.StaticValue.Values[0]
 		}
 

@@ -110,7 +110,7 @@ resource "aws_config_remediation_configuration" "test" {
 	parameter {
 		static_value {
 			key   = "TopicArn"
-			value = aws_sns_topic.test.arn
+		f	value = aws_sns_topic.test.arn
 		}
 	}
 
@@ -127,7 +127,7 @@ resource "aws_sns_topic" "test" {
 }
 
 resource "aws_config_config_rule" "test" {
-  name = "tf-acc-test"
+  name = "tf-acc-test-%d"
 
   source {
     owner             = "AWS"
@@ -138,12 +138,12 @@ resource "aws_config_config_rule" "test" {
 }
 
 resource "aws_config_configuration_recorder" "test" {
-  name     = "tf-acc-test"
+  name     = "tf-acc-test-%d"
   role_arn = aws_iam_role.r.arn
 }
 
 resource "aws_iam_role" "test" {
-  name = "tf-acc-test-awsconfig"
+  name = "tf-acc-test-awsconfig-%d"
 
   assume_role_policy = <<EOF
 {
