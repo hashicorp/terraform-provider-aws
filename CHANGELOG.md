@@ -14,6 +14,7 @@ ENHANCEMENTS:
 * resource/aws_ec2_traffic_mirror_session: Add `arn` attribute [GH-13849]
 * resource/aws_glue_catalog_database: Add `arn` attribute [GH-13452]
 * resource/aws_iot_policy: Support resource import [GH-13707]
+* resource/aws_iot_topic_rule: Add `error_action` configuration block [GH-11922]
 * resource/aws_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
 * resource/aws_placement_group: Add `arn` attribute [GH-13838]
 * resource/aws_ses_receipt_filter: Add `arn` attribute and plan-time validations for all arguments [GH-13811]
