@@ -304,6 +304,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_vpc_dhcp_options` data source](/docs/providers/aws/d/vpc_dhcp_options.html)
   - [`aws_vpc_dhcp_options` resource](/docs/providers/aws/r/vpc_dhcp_options.html)
   - [`aws_vpc_endpoint` data source](/docs/providers/aws/d/vpc_endpoint.html)
+  - [`aws_vpc_endpoint` resource](/docs/providers/aws/r/vpc_endpoint.html)
   - [`aws_waf_geo_match_set` resource](/docs/providers/aws/r/waf_geo_match_set.html)
   - [`aws_waf_ipset` resource](/docs/providers/aws/r/waf_ipset.html)
   - [`aws_waf_rate_based_rule` resource](/docs/providers/aws/r/waf_rate_based_rule.html)
