@@ -17,29 +17,6 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", acctest.RandString(7))
 	resourceName := "aws_ebs_snapshot.test"
 
-	deleteSnapshot := func() {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		resp, err := conn.DescribeSnapshots(&ec2.DescribeSnapshotsInput{
-			Filters: []*ec2.Filter{
-				{
-					Name:   aws.String("tag:Name"),
-					Values: []*string{aws.String(rName)},
-				},
-			},
-		})
-		if err != nil {
-			t.Fatalf("Error fetching snapshot: %s", err)
-		}
-		if len(resp.Snapshots) == 0 {
-			t.Fatalf("No snapshot exists with tag:Name = %s", rName)
-		}
-		snapshotId := resp.Snapshots[0].SnapshotId
-		_, err = conn.DeleteSnapshot(&ec2.DeleteSnapshotInput{SnapshotId: snapshotId})
-		if err != nil {
-			t.Fatalf("Error deleting snapshot %s with tag:Name = %s: %s", *snapshotId, rName, err)
-		}
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -49,17 +26,8 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 				Config: testAccAwsEbsSnapshotConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
-				),
-			},
-			{
-				PreConfig: deleteSnapshot,
-				Config:    testAccAwsEbsSnapshotConfigBasic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -148,6 +116,28 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 	})
 }
 
+func TestAccAWSEBSSnapshot_disappears(t *testing.T) {
+	var v ec2.Snapshot
+	rName := fmt.Sprintf("tf-acc-ebs-snapshot-basic-%s", acctest.RandString(7))
+	resourceName := "aws_ebs_snapshot.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEbsSnapshotDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsEbsSnapshotConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEbsSnapshot(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSnapshotExists(n string, v *ec2.Snapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -209,14 +199,14 @@ data "aws_region" "current" {}
 resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_region.current.name}a"
   size              = 1
-}
-
-resource "aws_ebs_snapshot" "test" {
-  volume_id = "${aws_ebs_volume.test.id}"
 
   tags = {
     Name = "%s"
   }
+}
+
+resource "aws_ebs_snapshot" "test" {
+  volume_id = "${aws_ebs_volume.test.id}"
 
   timeouts {
 	create = "10m"
