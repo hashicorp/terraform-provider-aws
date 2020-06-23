@@ -20,6 +20,7 @@ ENHANCEMENTS:
 * resource/aws_placement_group: Add `arn` attribute [GH-13838]
 * resource/aws_ses_receipt_filter: Add `arn` attribute and plan-time validations for all arguments [GH-13811]
 * resource/aws_vpc_endpoint: Add `arn` attribute [GH-13853]
+* resource/aws_vpc_endpoint_service: Add `arn` attribute [GH-13858]
 * resource/aws_vpn_gateway: Add `arn` attribute [GH-13827]
 
 BUG FIXES:
