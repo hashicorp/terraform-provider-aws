@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDbClusterSnapshotDataSource_DbClusterSnapshotIdentifier(t *testing.T) {
@@ -38,6 +38,7 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterSnapshotIdentifier(t *testin
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "storage_encrypted", resourceName, "storage_encrypted"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 				),
 			},
 		},
@@ -73,6 +74,7 @@ func TestAccAWSDbClusterSnapshotDataSource_DbClusterIdentifier(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "storage_encrypted", resourceName, "storage_encrypted"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 				),
 			},
 		},
@@ -116,7 +118,14 @@ func testAccCheckAwsDbClusterSnapshotDataSourceExists(dataSourceName string) res
 
 func testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterSnapshotIdentifier(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
@@ -154,17 +163,27 @@ resource "aws_rds_cluster" "test" {
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = "${aws_rds_cluster.test.id}"
   db_cluster_snapshot_identifier = %q
+  tags = {
+    Name = %q
+  }
 }
 
 data "aws_db_cluster_snapshot" "test" {
   db_cluster_snapshot_identifier = "${aws_db_cluster_snapshot.test.id}"
 }
-`, rName, rName, rName, rName, rName)
+`, rName, rName, rName, rName, rName, rName)
 }
 
 func testAccCheckAwsDbClusterSnapshotDataSourceConfig_DbClusterIdentifier(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"
@@ -202,17 +221,27 @@ resource "aws_rds_cluster" "test" {
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = "${aws_rds_cluster.test.id}"
   db_cluster_snapshot_identifier = %q
+  tags = {
+    Name = %q
+  }
 }
 
 data "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier = "${aws_db_cluster_snapshot.test.db_cluster_identifier}"
 }
-`, rName, rName, rName, rName, rName)
+`, rName, rName, rName, rName, rName, rName)
 }
 
 func testAccCheckAwsDbClusterSnapshotDataSourceConfig_MostRecent(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "192.168.0.0/16"

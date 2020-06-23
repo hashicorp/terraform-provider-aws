@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -56,7 +56,7 @@ func testSweepDataSyncAgents(region string) error {
 
 			_, err := conn.DeleteAgent(input)
 
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if isAWSErr(err, "InvalidRequestException", "does not exist") {
 				continue
 			}
 
@@ -219,7 +219,7 @@ func testAccCheckAWSDataSyncAgentDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeAgent(input)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
 

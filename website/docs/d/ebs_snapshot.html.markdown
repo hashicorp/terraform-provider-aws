@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot"
-sidebar_current: "docs-aws-datasource-ebs-snapshot"
 description: |-
   Get information on an EBS Snapshot.
 ---
@@ -61,6 +61,6 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
 * `state` - The snapshot state.
-* `tags` - A mapping of tags for the resource.
+* `tags` - A map of tags for the resource.
 
 [1]: http://docs.aws.amazon.com/cli/latest/reference/ec2/describe-snapshots.html

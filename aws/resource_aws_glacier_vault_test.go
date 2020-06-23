@@ -2,21 +2,81 @@ package aws
 
 import (
 	"fmt"
-	"reflect"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/glacier"
-
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSGlacierVault_importBasic(t *testing.T) {
-	resourceName := "aws_glacier_vault.full"
+func init() {
+	resource.AddTestSweepers("aws_glacier_vault", &resource.Sweeper{
+		Name: "aws_glacier_vault",
+		F:    testSweepGlacierVaults,
+	})
+}
+
+func testSweepGlacierVaults(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).glacierconn
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListVaultsPages(&glacier.ListVaultsInput{}, func(page *glacier.ListVaultsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, vault := range page.VaultList {
+			name := aws.StringValue(vault.VaultName)
+
+			// First attempt to delete the vault's notification configuration in case the vault deletion fails.
+			log.Printf("[INFO] Deleting Glacier Vault (%s) Notifications", name)
+			_, err := conn.DeleteVaultNotifications(&glacier.DeleteVaultNotificationsInput{
+				VaultName: aws.String(name),
+			})
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Glacier Vault (%s) Notifications: %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting Glacier Vault: %s", name)
+			_, err = conn.DeleteVault(&glacier.DeleteVaultInput{
+				VaultName: aws.String(name),
+			})
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Glacier Vault (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Glacier Vaults sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Glacier Vaults: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func TestAccAWSGlacierVault_basic(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_glacier_vault.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,9 +84,11 @@ func TestAccAWSGlacierVault_importBasic(t *testing.T) {
 		CheckDestroy: testAccCheckGlacierVaultDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGlacierVault_full(rInt),
+				Config: testAccGlacierVault_basic(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGlacierVaultExists(resourceName),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -36,25 +98,10 @@ func TestAccAWSGlacierVault_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSGlacierVault_basic(t *testing.T) {
-	rInt := acctest.RandInt()
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckGlacierVaultDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGlacierVault_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists("aws_glacier_vault.test"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSGlacierVault_full(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_glacier_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -63,8 +110,13 @@ func TestAccAWSGlacierVault_full(t *testing.T) {
 			{
 				Config: testAccGlacierVault_full(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
+					testAccCheckGlacierVaultExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -72,6 +124,8 @@ func TestAccAWSGlacierVault_full(t *testing.T) {
 
 func TestAccAWSGlacierVault_RemoveNotifications(t *testing.T) {
 	rInt := acctest.RandInt()
+	resourceName := "aws_glacier_vault.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -80,69 +134,23 @@ func TestAccAWSGlacierVault_RemoveNotifications(t *testing.T) {
 			{
 				Config: testAccGlacierVault_full(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
+					testAccCheckGlacierVaultExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccGlacierVault_withoutNotification(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckGlacierVaultExists("aws_glacier_vault.full"),
-					testAccCheckVaultNotificationsMissing("aws_glacier_vault.full"),
+					testAccCheckGlacierVaultExists(resourceName),
+					testAccCheckVaultNotificationsMissing(resourceName),
 				),
 			},
 		},
 	})
-}
-
-func TestDiffGlacierVaultTags(t *testing.T) {
-	cases := []struct {
-		Old, New map[string]interface{}
-		Create   map[string]string
-		Remove   []string
-	}{
-		// Basic add/remove
-		{
-			Old: map[string]interface{}{
-				"foo": "bar",
-			},
-			New: map[string]interface{}{
-				"bar": "baz",
-			},
-			Create: map[string]string{
-				"bar": "baz",
-			},
-			Remove: []string{
-				"foo",
-			},
-		},
-
-		// Modify
-		{
-			Old: map[string]interface{}{
-				"foo": "bar",
-			},
-			New: map[string]interface{}{
-				"foo": "baz",
-			},
-			Create: map[string]string{
-				"foo": "baz",
-			},
-			Remove: []string{
-				"foo",
-			},
-		},
-	}
-
-	for i, tc := range cases {
-		c, r := diffGlacierVaultTags(mapGlacierVaultTags(tc.Old), mapGlacierVaultTags(tc.New))
-
-		if !reflect.DeepEqual(c, tc.Create) {
-			t.Fatalf("%d: bad create: %#v", i, c)
-		}
-		if !reflect.DeepEqual(r, tc.Remove) {
-			t.Fatalf("%d: bad remove: %#v", i, r)
-		}
-	}
 }
 
 func testAccCheckGlacierVaultExists(name string) resource.TestCheckFunc {
@@ -245,7 +253,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
   name = "glacier-sns-topic-%d"
 }
 
-resource "aws_glacier_vault" "full" {
+resource "aws_glacier_vault" "test" {
   name = "my_test_vault_%d"
 
   notification {
@@ -266,7 +274,7 @@ resource "aws_sns_topic" "aws_sns_topic" {
   name = "glacier-sns-topic-%d"
 }
 
-resource "aws_glacier_vault" "full" {
+resource "aws_glacier_vault" "test" {
   name = "my_test_vault_%d"
 
   tags = {

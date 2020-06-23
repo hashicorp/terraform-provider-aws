@@ -15,6 +15,7 @@ const (
 	OutFormatCheckstyle        = "checkstyle"
 	OutFormatCodeClimate       = "code-climate"
 	OutFormatJunitXML          = "junit-xml"
+	OutFormatGithubActions     = "github-actions"
 )
 
 var OutFormats = []string{
@@ -25,9 +26,11 @@ var OutFormats = []string{
 	OutFormatCheckstyle,
 	OutFormatCodeClimate,
 	OutFormatJunitXML,
+	OutFormatGithubActions,
 }
 
 type ExcludePattern struct {
+	ID      string
 	Pattern string
 	Linter  string
 	Why     string
@@ -35,53 +38,63 @@ type ExcludePattern struct {
 
 var DefaultExcludePatterns = []ExcludePattern{
 	{
+		ID: "EXC0001",
 		Pattern: "Error return value of .((os\\.)?std(out|err)\\..*|.*Close" +
 			"|.*Flush|os\\.Remove(All)?|.*printf?|os\\.(Un)?Setenv). is not checked",
 		Linter: "errcheck",
 		Why:    "Almost all programs ignore errors on these functions and in most cases it's ok",
 	},
 	{
+		ID: "EXC0002",
 		Pattern: "(comment on exported (method|function|type|const)|" +
 			"should have( a package)? comment|comment should be of the form)",
 		Linter: "golint",
 		Why:    "Annoying issue about not having a comment. The rare codebase has such comments",
 	},
 	{
+		ID:      "EXC0003",
 		Pattern: "func name will be used as test\\.Test.* by other packages, and that stutters; consider calling this",
 		Linter:  "golint",
 		Why:     "False positive when tests are defined in package 'test'",
 	},
 	{
+		ID:      "EXC0004",
 		Pattern: "(possible misuse of unsafe.Pointer|should have signature)",
 		Linter:  "govet",
 		Why:     "Common false positives",
 	},
 	{
+		ID:      "EXC0005",
 		Pattern: "ineffective break statement. Did you mean to break out of the outer loop",
 		Linter:  "staticcheck",
 		Why:     "Developers tend to write in C-style with an explicit 'break' in a 'switch', so it's ok to ignore",
 	},
 	{
+		ID:      "EXC0006",
 		Pattern: "Use of unsafe calls should be audited",
 		Linter:  "gosec",
 		Why:     "Too many false-positives on 'unsafe' usage",
 	},
 	{
+		ID:      "EXC0007",
 		Pattern: "Subprocess launch(ed with variable|ing should be audited)",
 		Linter:  "gosec",
 		Why:     "Too many false-positives for parametrized shell calls",
 	},
 	{
-		Pattern: "G104",
+		ID:      "EXC0008",
+		Pattern: "(G104|G307)",
 		Linter:  "gosec",
 		Why:     "Duplicated errcheck checks",
 	},
 	{
+		ID:      "EXC0009",
 		Pattern: "(Expect directory permissions to be 0750 or less|Expect file permissions to be 0600 or less)",
 		Linter:  "gosec",
 		Why:     "Too many issues in popular repos",
 	},
 	{
+		ID:      "EXC0010",
 		Pattern: "Potential file inclusion via variable",
 		Linter:  "gosec",
 		Why:     "False positive is triggered by 'src, err := ioutil.ReadFile(filename)'",
@@ -89,9 +102,20 @@ var DefaultExcludePatterns = []ExcludePattern{
 }
 
 func GetDefaultExcludePatternsStrings() []string {
+	return GetExcludePatternsStrings(nil)
+}
+
+func GetExcludePatternsStrings(include []string) []string {
+	includeMap := make(map[string]bool, len(include))
+	for _, inc := range include {
+		includeMap[inc] = true
+	}
+
 	var ret []string
 	for _, p := range DefaultExcludePatterns {
-		ret = append(ret, p.Pattern)
+		if !includeMap[p.ID] {
+			ret = append(ret, p.Pattern)
+		}
 	}
 
 	return ret
@@ -102,6 +126,7 @@ type Run struct {
 	Silent              bool
 	CPUProfilePath      string
 	MemProfilePath      string
+	TracePath           string
 	Concurrency         int
 	PrintResourcesUsage bool `mapstructure:"print-resources-usage"`
 
@@ -115,11 +140,16 @@ type Run struct {
 
 	ExitCodeIfIssuesFound int  `mapstructure:"issues-exit-code"`
 	AnalyzeTests          bool `mapstructure:"tests"`
-	Deadline              time.Duration
-	PrintVersion          bool
 
-	SkipFiles []string `mapstructure:"skip-files"`
-	SkipDirs  []string `mapstructure:"skip-dirs"`
+	// Deprecated: Deadline exists for historical compatibility
+	// and should not be used. To set run timeout use Timeout instead.
+	Deadline time.Duration
+	Timeout  time.Duration
+
+	PrintVersion       bool
+	SkipFiles          []string `mapstructure:"skip-files"`
+	SkipDirs           []string `mapstructure:"skip-dirs"`
+	UseDefaultSkipDirs bool     `mapstructure:"skip-dirs-use-default"`
 }
 
 type LintersSettings struct {
@@ -152,10 +182,14 @@ type LintersSettings struct {
 		MinStringLen        int `mapstructure:"min-len"`
 		MinOccurrencesCount int `mapstructure:"min-occurrences"`
 	}
+	Gomnd struct {
+		Settings map[string]map[string]interface{}
+	}
 	Depguard struct {
-		ListType      string `mapstructure:"list-type"`
-		Packages      []string
-		IncludeGoRoot bool `mapstructure:"include-go-root"`
+		ListType                 string `mapstructure:"list-type"`
+		Packages                 []string
+		IncludeGoRoot            bool              `mapstructure:"include-go-root"`
+		PackagesWithErrorMessage map[string]string `mapstructure:"packages-with-error-message"`
 	}
 	Misspell struct {
 		Locale      string
@@ -164,18 +198,69 @@ type LintersSettings struct {
 	Unused struct {
 		CheckExported bool `mapstructure:"check-exported"`
 	}
+	Funlen struct {
+		Lines      int
+		Statements int
+	}
+	Whitespace struct {
+		MultiIf   bool `mapstructure:"multi-if"`
+		MultiFunc bool `mapstructure:"multi-func"`
+	}
+	RowsErrCheck struct {
+		Packages []string
+	}
+	Gomodguard struct {
+		Allowed struct {
+			Modules []string `mapstructure:"modules"`
+			Domains []string `mapstructure:"domains"`
+		} `mapstructure:"allowed"`
+		Blocked struct {
+			Modules []map[string]struct {
+				Recommendations []string `mapstructure:"recommendations"`
+				Reason          string   `mapstructure:"reason"`
+			} `mapstructure:"modules"`
+		} `mapstructure:"blocked"`
+	}
 
-	Lll      LllSettings
-	Unparam  UnparamSettings
-	Nakedret NakedretSettings
-	Prealloc PreallocSettings
-	Errcheck ErrcheckSettings
-	Gocritic GocriticSettings
+	WSL         WSLSettings
+	Lll         LllSettings
+	Unparam     UnparamSettings
+	Nakedret    NakedretSettings
+	Prealloc    PreallocSettings
+	Errcheck    ErrcheckSettings
+	Gocritic    GocriticSettings
+	Godox       GodoxSettings
+	Dogsled     DogsledSettings
+	Gocognit    GocognitSettings
+	Godot       GodotSettings
+	Testpackage TestpackageSettings
+	Nestif      NestifSettings
+	NoLintLint  NoLintLintSettings
+
+	Custom map[string]CustomLinterSettings
 }
 
 type GovetSettings struct {
 	CheckShadowing bool `mapstructure:"check-shadowing"`
 	Settings       map[string]map[string]interface{}
+
+	Enable     []string
+	Disable    []string
+	EnableAll  bool `mapstructure:"enable-all"`
+	DisableAll bool `mapstructure:"disable-all"`
+}
+
+func (cfg GovetSettings) Validate() error {
+	if cfg.EnableAll && cfg.DisableAll {
+		return errors.New("enable-all and disable-all can't be combined")
+	}
+	if cfg.EnableAll && len(cfg.Enable) != 0 {
+		return errors.New("enable-all and enable can't be combined")
+	}
+	if cfg.DisableAll && len(cfg.Disable) != 0 {
+		return errors.New("disable-all and disable can't be combined")
+	}
+	return nil
 }
 
 type ErrcheckSettings struct {
@@ -205,6 +290,49 @@ type PreallocSettings struct {
 	ForLoops   bool `mapstructure:"for-loops"`
 }
 
+type GodoxSettings struct {
+	Keywords []string
+}
+
+type DogsledSettings struct {
+	MaxBlankIdentifiers int `mapstructure:"max-blank-identifiers"`
+}
+
+type GocognitSettings struct {
+	MinComplexity int `mapstructure:"min-complexity"`
+}
+
+type WSLSettings struct {
+	StrictAppend                     bool `mapstructure:"strict-append"`
+	AllowAssignAndCallCuddle         bool `mapstructure:"allow-assign-and-call"`
+	AllowMultiLineAssignCuddle       bool `mapstructure:"allow-multiline-assign"`
+	AllowCuddleDeclaration           bool `mapstructure:"allow-cuddle-declarations"`
+	AllowTrailingComment             bool `mapstructure:"allow-trailing-comment"`
+	AllowSeparatedLeadingComment     bool `mapstructure:"allow-separated-leading-comment"`
+	ForceCuddleErrCheckAndAssign     bool `mapstructure:"force-err-cuddling"`
+	ForceCaseTrailingWhitespaceLimit int  `mapstructure:"force-case-trailing-whitespace"`
+}
+
+type GodotSettings struct {
+	CheckAll bool `mapstructure:"check-all"`
+}
+
+type NoLintLintSettings struct {
+	RequireExplanation bool     `mapstructure:"require-explanation"`
+	AllowLeadingSpace  bool     `mapstructure:"allow-leading-space"`
+	RequireSpecific    bool     `mapstructure:"require-specific"`
+	AllowNoExplanation []string `mapstructure:"allow-no-explanation"`
+	AllowUnused        bool     `mapstructure:"allow-unused"`
+}
+
+type TestpackageSettings struct {
+	SkipRegexp string `mapstructure:"skip-regexp"`
+}
+
+type NestifSettings struct {
+	MinComplexity int `mapstructure:"min-complexity"`
+}
+
 var defaultLintersSettings = LintersSettings{
 	Lll: LllSettings{
 		LineLength: 120,
@@ -224,6 +352,43 @@ var defaultLintersSettings = LintersSettings{
 	Gocritic: GocriticSettings{
 		SettingsPerCheck: map[string]GocriticCheckSettings{},
 	},
+	Godox: GodoxSettings{
+		Keywords: []string{},
+	},
+	Dogsled: DogsledSettings{
+		MaxBlankIdentifiers: 2,
+	},
+	Gocognit: GocognitSettings{
+		MinComplexity: 30,
+	},
+	WSL: WSLSettings{
+		StrictAppend:                     true,
+		AllowAssignAndCallCuddle:         true,
+		AllowMultiLineAssignCuddle:       true,
+		AllowCuddleDeclaration:           false,
+		AllowTrailingComment:             false,
+		AllowSeparatedLeadingComment:     false,
+		ForceCuddleErrCheckAndAssign:     false,
+		ForceCaseTrailingWhitespaceLimit: 0,
+	},
+	NoLintLint: NoLintLintSettings{
+		RequireExplanation: false,
+		AllowLeadingSpace:  true,
+		RequireSpecific:    false,
+		AllowUnused:        false,
+	},
+	Testpackage: TestpackageSettings{
+		SkipRegexp: `(export|internal)_test\.go`,
+	},
+	Nestif: NestifSettings{
+		MinComplexity: 5,
+	},
+}
+
+type CustomLinterSettings struct {
+	Path        string
+	Description string
+	OriginalURL string `mapstructure:"original-url"`
 }
 
 type Linters struct {
@@ -274,16 +439,19 @@ func (e ExcludeRule) Validate() error {
 	if e.Source != "" {
 		nonBlank++
 	}
-	if nonBlank < 2 {
+	const minConditionsCount = 2
+	if nonBlank < minConditionsCount {
 		return errors.New("at least 2 of (text, source, path, linters) should be set")
 	}
 	return nil
 }
 
 type Issues struct {
-	ExcludePatterns    []string      `mapstructure:"exclude"`
-	ExcludeRules       []ExcludeRule `mapstructure:"exclude-rules"`
-	UseDefaultExcludes bool          `mapstructure:"exclude-use-default"`
+	IncludeDefaultExcludes []string      `mapstructure:"include"`
+	ExcludeCaseSensitive   bool          `mapstructure:"exclude-case-sensitive"`
+	ExcludePatterns        []string      `mapstructure:"exclude"`
+	ExcludeRules           []ExcludeRule `mapstructure:"exclude-rules"`
+	UseDefaultExcludes     bool          `mapstructure:"exclude-use-default"`
 
 	MaxIssuesPerLinter int `mapstructure:"max-issues-per-linter"`
 	MaxSameIssues      int `mapstructure:"max-same-issues"`
@@ -295,7 +463,7 @@ type Issues struct {
 	NeedFix bool `mapstructure:"fix"`
 }
 
-type Config struct { //nolint:maligned
+type Config struct {
 	Run Run
 
 	Output struct {
@@ -303,6 +471,7 @@ type Config struct { //nolint:maligned
 		Color               string
 		PrintIssuedLine     bool `mapstructure:"print-issued-lines"`
 		PrintLinterName     bool `mapstructure:"print-linter-name"`
+		UniqByLine          bool `mapstructure:"uniq-by-line"`
 		PrintWelcomeMessage bool `mapstructure:"print-welcome"`
 	}
 

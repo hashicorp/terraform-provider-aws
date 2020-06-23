@@ -1,7 +1,7 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_gateway"
-sidebar_current: "docs-aws-datasource-dx-gateway"
 description: |-
   Retrieve information about a Direct Connect Gateway
 ---

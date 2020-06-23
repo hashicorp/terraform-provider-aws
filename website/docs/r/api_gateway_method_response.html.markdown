@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_method_response"
-sidebar_current: "docs-aws-resource-api-gateway-method-response"
 description: |-
   Provides an HTTP Method Response for an API Gateway Resource.
 ---

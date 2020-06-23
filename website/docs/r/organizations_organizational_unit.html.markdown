@@ -1,7 +1,7 @@
 ---
+subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_organizational_unit"
-sidebar_current: "docs-aws-resource-organizations-organizational-unit"
 description: |-
   Provides a resource to create an organizational unit.
 ---

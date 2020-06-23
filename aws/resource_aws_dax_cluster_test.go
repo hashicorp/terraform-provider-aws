@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -58,9 +58,11 @@ func testSweepDAXClusters(region string) error {
 	return nil
 }
 
-func TestAccAWSDAXCluster_importBasic(t *testing.T) {
-	resourceName := "aws_dax_cluster.test"
+func TestAccAWSDAXCluster_basic(t *testing.T) {
+	var dc dax.Cluster
 	rString := acctest.RandString(10)
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_dax_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
@@ -69,8 +71,38 @@ func TestAccAWSDAXCluster_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDAXClusterConfig(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
+					resource.TestMatchResourceAttr(
+						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(
+						resourceName, "node_type", "dax.t2.small"),
+					resource.TestCheckResourceAttr(
+						resourceName, "replication_factor", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "description", "test cluster"),
+					resource.TestMatchResourceAttr(
+						resourceName, "parameter_group_name", regexp.MustCompile(`^default.dax`)),
+					resource.TestMatchResourceAttr(
+						resourceName, "maintenance_window", regexp.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
+					resource.TestCheckResourceAttr(
+						resourceName, "subnet_group_name", "default"),
+					resource.TestMatchResourceAttr(
+						resourceName, "nodes.0.id", regexp.MustCompile(`^tf-[\w-]+$`)),
+					resource.TestMatchResourceAttr(
+						resourceName, "configuration_endpoint", regexp.MustCompile(`:\d+$`)),
+					resource.TestCheckResourceAttrSet(
+						resourceName, "cluster_address"),
+					resource.TestMatchResourceAttr(
+						resourceName, "port", regexp.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttr(
+						resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(
+						resourceName, "server_side_encryption.0.enabled", "false"),
+				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -80,57 +112,11 @@ func TestAccAWSDAXCluster_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSDAXCluster_basic(t *testing.T) {
-	var dc dax.Cluster
-	rString := acctest.RandString(10)
-	iamRoleResourceName := "aws_iam_role.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDAXClusterDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDAXClusterConfig(rString),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
-					testAccMatchResourceAttrRegionalARN("aws_dax_cluster.test", "arn", "dax", regexp.MustCompile("cache/.+")),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
-					resource.TestCheckResourceAttrPair("aws_dax_cluster.test", "iam_role_arn", iamRoleResourceName, "arn"),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "node_type", "dax.t2.small"),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "replication_factor", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "description", "test cluster"),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "parameter_group_name", regexp.MustCompile(`^default.dax`)),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "maintenance_window", regexp.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "subnet_group_name", "default"),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "nodes.0.id", regexp.MustCompile(`^tf-[\w-]+$`)),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "configuration_endpoint", regexp.MustCompile(`:\d+$`)),
-					resource.TestCheckResourceAttrSet(
-						"aws_dax_cluster.test", "cluster_address"),
-					resource.TestMatchResourceAttr(
-						"aws_dax_cluster.test", "port", regexp.MustCompile(`^\d+$`)),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "server_side_encryption.0.enabled", "false"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDAXCluster_resize(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
@@ -139,25 +125,30 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 			{
 				Config: testAccAWSDAXClusterConfigResize_singleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
+					testAccCheckAWSDAXClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "replication_factor", "1"),
+						resourceName, "replication_factor", "1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSDAXClusterConfigResize_multiNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
+					testAccCheckAWSDAXClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "replication_factor", "2"),
+						resourceName, "replication_factor", "2"),
 				),
 			},
 			{
 				Config: testAccAWSDAXClusterConfigResize_singleNode(rString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
+					testAccCheckAWSDAXClusterExists(resourceName, &dc),
 					resource.TestCheckResourceAttr(
-						"aws_dax_cluster.test", "replication_factor", "1"),
+						resourceName, "replication_factor", "1"),
 				),
 			},
 		},
@@ -167,6 +158,8 @@ func TestAccAWSDAXCluster_resize(t *testing.T) {
 func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
@@ -175,10 +168,15 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 			{
 				Config: testAccAWSDAXClusterConfigWithEncryption(rString, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
-					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.0.enabled", "false"),
+					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Ensure it shows no difference when removing server_side_encryption configuration
 			{
@@ -193,6 +191,8 @@ func TestAccAWSDAXCluster_encryption_disabled(t *testing.T) {
 func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 	var dc dax.Cluster
 	rString := acctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
@@ -201,10 +201,15 @@ func TestAccAWSDAXCluster_encryption_enabled(t *testing.T) {
 			{
 				Config: testAccAWSDAXClusterConfigWithEncryption(rString, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDAXClusterExists("aws_dax_cluster.test", &dc),
-					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.#", "1"),
-					resource.TestCheckResourceAttr("aws_dax_cluster.test", "server_side_encryption.0.enabled", "true"),
+					testAccCheckAWSDAXClusterExists(resourceName, &dc),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			// Ensure it shows a difference when removing server_side_encryption configuration
 			{

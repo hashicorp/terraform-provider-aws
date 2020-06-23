@@ -1,7 +1,7 @@
 ---
+subcategory: "AppMesh"
 layout: "aws"
 page_title: "AWS: aws_appmesh_mesh"
-sidebar_current: "docs-aws-resource-appmesh-mesh"
 description: |-
   Provides an AWS App Mesh service mesh resource.
 ---
@@ -40,7 +40,7 @@ The following arguments are supported:
 
 * `name` - (Required) The name to use for the service mesh.
 * `spec` - (Optional) The service mesh specification to apply.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `spec` object supports the following:
 

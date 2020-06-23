@@ -1,7 +1,7 @@
 ---
+subcategory: "Inspector"
 layout: "aws"
 page_title: "AWS: aws_inspector_rules_packages"
-sidebar_current: "docs-aws-datasource-inspector-rules-packages"
 description: |-
     Provides a list of AWS Inspector Rules packages which can be used by AWS Inspector.
 ---

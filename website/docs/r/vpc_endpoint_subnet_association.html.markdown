@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_subnet_association"
-sidebar_current: "docs-aws-resource-vpc-endpoint-subnet-association"
 description: |-
   Provides a resource to create an association between a VPC endpoint and a subnet.
 ---

@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
@@ -28,6 +28,7 @@ func TestAccAWSLightsailStaticIpAttachment_basic(t *testing.T) {
 				Config: testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceName, keypairName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailStaticIpAttachmentExists("aws_lightsail_static_ip_attachment.test", &staticIp),
+					resource.TestCheckResourceAttrSet("aws_lightsail_static_ip_attachment.test", "ip_address"),
 				),
 			},
 		},
@@ -137,6 +138,11 @@ func testAccAWSLightsailStaticIpAttachmentConfig_basic(staticIpName, instanceNam
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_lightsail_static_ip_attachment" "test" {

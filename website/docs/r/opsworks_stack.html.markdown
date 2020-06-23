@@ -1,7 +1,7 @@
 ---
+subcategory: "OpsWorks"
 layout: "aws"
 page_title: "AWS: aws_opsworks_stack"
-sidebar_current: "docs-aws-resource-opsworks-stack"
 description: |-
   Provides an OpsWorks stack resource.
 ---
@@ -60,7 +60,7 @@ The following arguments are supported:
 * `hostname_theme` - (Optional) Keyword representing the naming scheme that will be used for instance hostnames
   within this stack.
 * `manage_berkshelf` - (Optional) Boolean value controlling whether Opsworks will run Berkshelf for this stack.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `use_custom_cookbooks` - (Optional) Boolean value controlling whether the custom cookbook settings are
   enabled.
 * `use_opsworks_security_groups` - (Optional) Boolean value controlling whether the standard OpsWorks
@@ -73,8 +73,8 @@ The `custom_cookbooks_source` block supports the following arguments:
 * `type` - (Required) The type of source to use. For example, "archive".
 * `url` - (Required) The URL where the cookbooks resource can be found.
 * `username` - (Optional) Username to use when authenticating to the source.
-* `password` - (Optional) Password to use when authenticating to the source.
-* `ssh_key` - (Optional) SSH key to use when authenticating to the source.
+* `password` - (Optional) Password to use when authenticating to the source. Terraform cannot perform drift detection of this configuration.
+* `ssh_key` - (Optional) SSH key to use when authenticating to the source. Terraform cannot perform drift detection of this configuration.
 * `revision` - (Optional) For sources that are version-aware, the revision to use.
 
 ## Attributes Reference

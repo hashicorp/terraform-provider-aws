@@ -6,7 +6,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsS3BucketImportState(
@@ -33,7 +33,7 @@ func resourceAwsS3BucketImportState(
 	pData.SetId(d.Id())
 	pData.SetType("aws_s3_bucket_policy")
 	pData.Set("bucket", d.Id())
-	pData.Set("policy", pol)
+	pData.Set("policy", pol.Policy)
 	results = append(results, pData)
 
 	return results, nil

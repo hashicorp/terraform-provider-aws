@@ -3,12 +3,12 @@ package aws
 import (
 	"bytes"
 	"fmt"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsDynamoDbTable() *schema.Resource {
@@ -140,16 +140,11 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 			"stream_view_type": {
 				Type:     schema.TypeString,
 				Computed: true,
-				StateFunc: func(v interface{}) string {
-					value := v.(string)
-					return strings.ToUpper(value)
-				},
 			},
 			"tags": tagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeSet,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_name": {
@@ -167,6 +162,18 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"replica": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region_name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"server_side_encryption": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -176,6 +183,10 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"kms_key_arn": {
+							Type:     schema.TypeString,
 							Computed: true,
 						},
 					},
@@ -188,7 +199,6 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 			"point_in_time_recovery": {
 				Type:     schema.TypeList,
 				Computed: true,
-				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"enabled": {
@@ -204,6 +214,7 @@ func dataSourceAwsDynamoDbTable() *schema.Resource {
 
 func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).dynamodbconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	result, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(d.Get("name").(string)),
@@ -230,11 +241,15 @@ func dataSourceAwsDynamoDbTableRead(d *schema.ResourceData, meta interface{}) er
 		return fmt.Errorf("error setting ttl: %s", err)
 	}
 
-	tags, err := readDynamoDbTableTags(d.Get("arn").(string), conn)
-	if err != nil {
-		return err
+	tags, err := keyvaluetags.DynamodbListTags(conn, d.Get("arn").(string))
+
+	if err != nil && !isAWSErr(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") {
+		return fmt.Errorf("error listing tags for DynamoDB Table (%s): %s", d.Get("arn").(string), err)
 	}
-	d.Set("tags", tags)
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	pitrOut, err := conn.DescribeContinuousBackups(&dynamodb.DescribeContinuousBackupsInput{
 		TableName: aws.String(d.Id()),

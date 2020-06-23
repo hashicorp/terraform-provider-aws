@@ -1,7 +1,7 @@
 ---
+subcategory: "WorkLink"
 layout: "aws"
 page_title: "AWS: aws_worklink_fleet"
-sidebar_current: "docs-aws-resource-worklink-fleet"
 description: |-
   Provides a AWS WorkLink Fleet resource.
 ---

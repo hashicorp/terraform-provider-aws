@@ -59,7 +59,7 @@ func (c *FMS) AssociateAdminAccountRequest(input *AssociateAdminAccountInput) (r
 // AssociateAdminAccount API operation for Firewall Management Service.
 //
 // Sets the AWS Firewall Manager administrator account. AWS Firewall Manager
-// must be associated with the master account your AWS organization or associated
+// must be associated with the master account of your AWS organization or associated
 // with a member account that has the appropriate permissions. If the account
 // ID that you submit is not an AWS Organizations master account, AWS Firewall
 // Manager will set the appropriate permissions for the given member account.
@@ -74,19 +74,19 @@ func (c *FMS) AssociateAdminAccountRequest(input *AssociateAdminAccountInput) (r
 // See the AWS API reference guide for Firewall Management Service's
 // API operation AssociateAdminAccount for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+// Returned Error Types:
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The parameters of the request were invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -168,16 +168,16 @@ func (c *FMS) DeleteNotificationChannelRequest(input *DeleteNotificationChannelI
 // See the AWS API reference guide for Firewall Management Service's
 // API operation DeleteNotificationChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -257,16 +257,16 @@ func (c *FMS) DeletePolicyRequest(input *DeletePolicyInput) (req *request.Reques
 // See the AWS API reference guide for Firewall Management Service's
 // API operation DeletePolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -339,7 +339,7 @@ func (c *FMS) DisassociateAdminAccountRequest(input *DisassociateAdminAccountInp
 //
 // Disassociates the account that has been set as the AWS Firewall Manager administrator
 // account. To set a different account as the administrator account, you must
-// submit an AssociateAdminAccount request .
+// submit an AssociateAdminAccount request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -348,16 +348,16 @@ func (c *FMS) DisassociateAdminAccountRequest(input *DisassociateAdminAccountInp
 // See the AWS API reference guide for Firewall Management Service's
 // API operation DisassociateAdminAccount for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+// Returned Error Types:
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -437,16 +437,16 @@ func (c *FMS) GetAdminAccountRequest(input *GetAdminAccountInput) (req *request.
 // See the AWS API reference guide for Firewall Management Service's
 // API operation GetAdminAccount for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+// Returned Error Types:
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -518,8 +518,11 @@ func (c *FMS) GetComplianceDetailRequest(input *GetComplianceDetailInput) (req *
 //
 // Returns detailed compliance information about the specified member account.
 // Details include resources that are in and out of compliance with the specified
-// policy. Resources are considered non-compliant if the specified policy has
-// not been applied to them.
+// policy. Resources are considered noncompliant for AWS WAF and Shield Advanced
+// policies if the specified policy has not been applied to them. Resources
+// are considered noncompliant for security group policies if they are in scope
+// of the policy, they violate one or more of the policy rules, and remediation
+// is disabled or not possible.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -528,11 +531,11 @@ func (c *FMS) GetComplianceDetailRequest(input *GetComplianceDetailInput) (req *
 // See the AWS API reference guide for Firewall Management Service's
 // API operation GetComplianceDetail for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -602,8 +605,8 @@ func (c *FMS) GetNotificationChannelRequest(input *GetNotificationChannelInput) 
 
 // GetNotificationChannel API operation for Firewall Management Service.
 //
-// Returns information about the Amazon Simple Notification Service (SNS) topic
-// that is used to record AWS Firewall Manager SNS logs.
+// Information about the Amazon Simple Notification Service (SNS) topic that
+// is used to record AWS Firewall Manager SNS logs.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -612,16 +615,16 @@ func (c *FMS) GetNotificationChannelRequest(input *GetNotificationChannelInput) 
 // See the AWS API reference guide for Firewall Management Service's
 // API operation GetNotificationChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -700,20 +703,20 @@ func (c *FMS) GetPolicyRequest(input *GetPolicyInput) (req *request.Request, out
 // See the AWS API reference guide for Firewall Management Service's
 // API operation GetPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidTypeException "InvalidTypeException"
+//   * InvalidTypeException
 //   The value of the Type parameter is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/GetPolicy
@@ -783,7 +786,8 @@ func (c *FMS) GetProtectionStatusRequest(input *GetProtectionStatusInput) (req *
 // GetProtectionStatus API operation for Firewall Management Service.
 //
 // If you created a Shield Advanced policy, returns policy-level attack summary
-// information in the event of a potential DDoS attack.
+// information in the event of a potential DDoS attack. Other policy types are
+// currently unsupported.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -792,14 +796,14 @@ func (c *FMS) GetProtectionStatusRequest(input *GetProtectionStatusInput) (req *
 // See the AWS API reference guide for Firewall Management Service's
 // API operation GetProtectionStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeInvalidInputException "InvalidInputException"
+// Returned Error Types:
+//   * InvalidInputException
 //   The parameters of the request were invalid.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -886,11 +890,11 @@ func (c *FMS) ListComplianceStatusRequest(input *ListComplianceStatusInput) (req
 // See the AWS API reference guide for Firewall Management Service's
 // API operation ListComplianceStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -959,10 +963,12 @@ func (c *FMS) ListComplianceStatusPagesWithContext(ctx aws.Context, input *ListC
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListComplianceStatusOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListComplianceStatusOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1029,11 +1035,11 @@ func (c *FMS) ListMemberAccountsRequest(input *ListMemberAccountsInput) (req *re
 // See the AWS API reference guide for Firewall Management Service's
 // API operation ListMemberAccounts for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -1102,10 +1108,12 @@ func (c *FMS) ListMemberAccountsPagesWithContext(ctx aws.Context, input *ListMem
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListMemberAccountsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1168,22 +1176,22 @@ func (c *FMS) ListPoliciesRequest(input *ListPoliciesInput) (req *request.Reques
 // See the AWS API reference guide for Firewall Management Service's
 // API operation ListPolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   policy objects that you can create for an AWS account. For more information,
 //   see Firewall Manager Limits (https://docs.aws.amazon.com/waf/latest/developerguide/fms-limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -1252,11 +1260,104 @@ func (c *FMS) ListPoliciesPagesWithContext(ctx aws.Context, input *ListPoliciesI
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListPoliciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/ListTagsForResource
+func (c *FMS) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for Firewall Management Service.
+//
+// Retrieves the list of tags for the specified AWS resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Firewall Management Service's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource was not found.
+//
+//   * InvalidOperationException
+//   The operation failed because there was nothing to do. For example, you might
+//   have submitted an AssociateAdminAccount request, but the account ID that
+//   you submitted was already set as the AWS Firewall Manager administrator.
+//
+//   * InternalErrorException
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * InvalidInputException
+//   The parameters of the request were invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/ListTagsForResource
+func (c *FMS) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *FMS) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opPutNotificationChannel = "PutNotificationChannel"
@@ -1314,16 +1415,16 @@ func (c *FMS) PutNotificationChannelRequest(input *PutNotificationChannelInput) 
 // See the AWS API reference guide for Firewall Management Service's
 // API operation PutNotificationChannel for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
@@ -1395,16 +1496,26 @@ func (c *FMS) PutPolicyRequest(input *PutPolicyInput) (req *request.Request, out
 //
 // Creates an AWS Firewall Manager policy.
 //
-// Firewall Manager provides two types of policies: A Shield Advanced policy,
-// which applies Shield Advanced protection to specified accounts and resources,
-// or a WAF policy, which contains a rule group and defines which resources
-// are to be protected by that rule group. A policy is specific to either WAF
-// or Shield Advanced. If you want to enforce both WAF rules and Shield Advanced
-// protection across accounts, you can create multiple policies. You can create
-// one or more policies for WAF rules, and one or more policies for Shield Advanced.
+// Firewall Manager provides the following types of policies:
+//
+//    * A Shield Advanced policy, which applies Shield Advanced protection to
+//    specified accounts and resources
+//
+//    * An AWS WAF policy (type WAFV2), which defines rule groups to run first
+//    in the corresponding AWS WAF web ACL and rule groups to run last in the
+//    web ACL.
+//
+//    * An AWS WAF Classic policy (type WAF), which defines a rule group.
+//
+//    * A security group policy, which manages VPC security groups across your
+//    AWS organization.
+//
+// Each policy is specific to one of the types. If you want to enforce more
+// than one policy type across accounts, create multiple policies. You can create
+// multiple policies for each type.
 //
 // You must be subscribed to Shield Advanced to create a Shield Advanced policy.
-// For more information on subscribing to Shield Advanced, see CreateSubscription
+// For more information about subscribing to Shield Advanced, see CreateSubscription
 // (https://docs.aws.amazon.com/waf/latest/DDOSAPIReference/API_CreateSubscription.html).
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -1414,29 +1525,29 @@ func (c *FMS) PutPolicyRequest(input *PutPolicyInput) (req *request.Request, out
 // See the AWS API reference guide for Firewall Management Service's
 // API operation PutPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   The specified resource was not found.
 //
-//   * ErrCodeInvalidOperationException "InvalidOperationException"
+//   * InvalidOperationException
 //   The operation failed because there was nothing to do. For example, you might
 //   have submitted an AssociateAdminAccount request, but the account ID that
 //   you submitted was already set as the AWS Firewall Manager administrator.
 //
-//   * ErrCodeInvalidInputException "InvalidInputException"
+//   * InvalidInputException
 //   The parameters of the request were invalid.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   The operation exceeds a resource limit, for example, the maximum number of
 //   policy objects that you can create for an AWS account. For more information,
 //   see Firewall Manager Limits (https://docs.aws.amazon.com/waf/latest/developerguide/fms-limits.html)
 //   in the AWS WAF Developer Guide.
 //
-//   * ErrCodeInternalErrorException "InternalErrorException"
+//   * InternalErrorException
 //   The operation failed because of a system problem, even though the request
 //   was valid. Retry your request.
 //
-//   * ErrCodeInvalidTypeException "InvalidTypeException"
+//   * InvalidTypeException
 //   The value of the Type parameter is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/PutPolicy
@@ -1456,6 +1567,196 @@ func (c *FMS) PutPolicy(input *PutPolicyInput) (*PutPolicyOutput, error) {
 // for more information on using Contexts.
 func (c *FMS) PutPolicyWithContext(ctx aws.Context, input *PutPolicyInput, opts ...request.Option) (*PutPolicyOutput, error) {
 	req, out := c.PutPolicyRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/TagResource
+func (c *FMS) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for Firewall Management Service.
+//
+// Adds one or more tags to an AWS resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Firewall Management Service's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource was not found.
+//
+//   * InvalidOperationException
+//   The operation failed because there was nothing to do. For example, you might
+//   have submitted an AssociateAdminAccount request, but the account ID that
+//   you submitted was already set as the AWS Firewall Manager administrator.
+//
+//   * InternalErrorException
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * InvalidInputException
+//   The parameters of the request were invalid.
+//
+//   * LimitExceededException
+//   The operation exceeds a resource limit, for example, the maximum number of
+//   policy objects that you can create for an AWS account. For more information,
+//   see Firewall Manager Limits (https://docs.aws.amazon.com/waf/latest/developerguide/fms-limits.html)
+//   in the AWS WAF Developer Guide.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/TagResource
+func (c *FMS) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *FMS) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/UntagResource
+func (c *FMS) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for Firewall Management Service.
+//
+// Removes one or more tags from an AWS resource.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Firewall Management Service's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   The specified resource was not found.
+//
+//   * InvalidOperationException
+//   The operation failed because there was nothing to do. For example, you might
+//   have submitted an AssociateAdminAccount request, but the account ID that
+//   you submitted was already set as the AWS Firewall Manager administrator.
+//
+//   * InternalErrorException
+//   The operation failed because of a system problem, even though the request
+//   was valid. Retry your request.
+//
+//   * InvalidInputException
+//   The parameters of the request were invalid.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/fms-2018-01-01/UntagResource
+func (c *FMS) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *FMS) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -1526,8 +1827,8 @@ type ComplianceViolator struct {
 	// The resource ID.
 	ResourceId *string `min:"1" type:"string"`
 
-	// The resource type. This is in the format shown in AWS Resource Types Reference
-	// (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
+	// The resource type. This is in the format shown in the AWS Resource Types
+	// Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
 	// For example: AWS::ElasticLoadBalancingV2::LoadBalancer or AWS::CloudFront::Distribution.
 	ResourceType *string `min:"1" type:"string"`
 
@@ -1594,21 +1895,31 @@ func (s DeleteNotificationChannelOutput) GoString() string {
 type DeletePolicyInput struct {
 	_ struct{} `type:"structure"`
 
-	// If True, the request will also perform a clean-up process that will:
+	// If True, the request performs cleanup according to the policy type.
 	//
-	//    * Delete rule groups created by AWS Firewall Manager
+	// For AWS WAF and Shield Advanced policies, the cleanup does the following:
 	//
-	//    * Remove web ACLs from in-scope resources
+	//    * Deletes rule groups created by AWS Firewall Manager
 	//
-	//    * Delete web ACLs that contain no rules or rule groups
+	//    * Removes web ACLs from in-scope resources
 	//
-	// After the cleanup, in-scope resources will no longer be protected by web
-	// ACLs in this policy. Protection of out-of-scope resources will remain unchanged.
-	// Scope is determined by tags and accounts associated with the policy. When
-	// creating the policy, if you specified that only resources in specific accounts
-	// or with specific tags be protected by the policy, those resources are in-scope.
-	// All others are out of scope. If you did not specify tags or accounts, all
-	// resources are in-scope.
+	//    * Deletes web ACLs that contain no rules or rule groups
+	//
+	// For security group policies, the cleanup does the following for each security
+	// group in the policy:
+	//
+	//    * Disassociates the security group from in-scope resources
+	//
+	//    * Deletes the security group if it was created through Firewall Manager
+	//    and if it's no longer associated with any resources through another policy
+	//
+	// After the cleanup, in-scope resources are no longer protected by web ACLs
+	// in this policy. Protection of out-of-scope resources remains unchanged. Scope
+	// is determined by tags that you create and accounts that you associate with
+	// the policy. When creating the policy, if you specify that only resources
+	// in specific accounts or with specific tags are in scope of the policy, those
+	// accounts and resources are handled by the policy. All others are out of scope.
+	// If you don't specify tags or accounts, all resources are in scope.
 	DeleteAllPolicyResources *bool `type:"boolean"`
 
 	// The ID of the policy that you want to delete. PolicyId is returned by PutPolicy
@@ -1699,20 +2010,23 @@ func (s DisassociateAdminAccountOutput) GoString() string {
 }
 
 // Describes the compliance status for the account. An account is considered
-// non-compliant if it includes resources that are not protected by the specified
-// policy.
+// noncompliant if it includes resources that are not protected by the specified
+// policy or that don't comply with the policy.
 type EvaluationResult struct {
 	_ struct{} `type:"structure"`
 
 	// Describes an AWS account's compliance with the AWS Firewall Manager policy.
 	ComplianceStatus *string `type:"string" enum:"PolicyComplianceStatusType"`
 
-	// Indicates that over 100 resources are non-compliant with the AWS Firewall
+	// Indicates that over 100 resources are noncompliant with the AWS Firewall
 	// Manager policy.
 	EvaluationLimitExceeded *bool `type:"boolean"`
 
-	// Number of resources that are non-compliant with the specified policy. A resource
-	// is considered non-compliant if it is not associated with the specified policy.
+	// The number of resources that are noncompliant with the specified policy.
+	// For AWS WAF and Shield Advanced policies, a resource is considered noncompliant
+	// if it is not associated with the policy. For security group policies, a resource
+	// is considered noncompliant if it doesn't comply with the rules of the policy
+	// and remediation is disabled or not possible.
 	ViolatorCount *int64 `type:"long"`
 }
 
@@ -1997,7 +2311,7 @@ type GetProtectionStatusInput struct {
 	_ struct{} `type:"structure"`
 
 	// The end of the time period to query for the attacks. This is a timestamp
-	// type. The sample request above indicates a number type because the default
+	// type. The request syntax listing indicates a number type because the default
 	// used by AWS Firewall Manager is Unix time in seconds. However, any valid
 	// timestamp format is allowed.
 	EndTime *time.Time `type:"timestamp"`
@@ -2014,8 +2328,8 @@ type GetProtectionStatusInput struct {
 
 	// If you specify a value for MaxResults and you have more objects than the
 	// number that you specify for MaxResults, AWS Firewall Manager returns a NextToken
-	// value in the response that allows you to list another group of objects. For
-	// the second and subsequent GetProtectionStatus requests, specify the value
+	// value in the response, which you can use to retrieve another group of objects.
+	// For the second and subsequent GetProtectionStatus requests, specify the value
 	// of NextToken from the previous response to get information about another
 	// batch of objects.
 	NextToken *string `min:"1" type:"string"`
@@ -2026,7 +2340,7 @@ type GetProtectionStatusInput struct {
 	PolicyId *string `min:"36" type:"string" required:"true"`
 
 	// The start of the time period to query for the attacks. This is a timestamp
-	// type. The sample request above indicates a number type because the default
+	// type. The request syntax listing indicates a number type because the default
 	// used by AWS Firewall Manager is Unix time in seconds. However, any valid
 	// timestamp format is allowed.
 	StartTime *time.Time `type:"timestamp"`
@@ -2121,8 +2435,7 @@ type GetProtectionStatusOutput struct {
 	//
 	//    * End time of the attack (ongoing attacks will not have an end time)
 	//
-	// The details are in JSON format. An example is shown in the Examples section
-	// below.
+	// The details are in JSON format.
 	Data *string `type:"string"`
 
 	// If you have more objects than the number that you specified for MaxResults
@@ -2173,6 +2486,292 @@ func (s *GetProtectionStatusOutput) SetNextToken(v string) *GetProtectionStatusO
 func (s *GetProtectionStatusOutput) SetServiceType(v string) *GetProtectionStatusOutput {
 	s.ServiceType = &v
 	return s
+}
+
+// The operation failed because of a system problem, even though the request
+// was valid. Retry your request.
+type InternalErrorException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalErrorException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalErrorException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalErrorException(v protocol.ResponseMetadata) error {
+	return &InternalErrorException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalErrorException) Code() string {
+	return "InternalErrorException"
+}
+
+// Message returns the exception's message.
+func (s *InternalErrorException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalErrorException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalErrorException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalErrorException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalErrorException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The parameters of the request were invalid.
+type InvalidInputException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidInputException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidInputException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidInputException(v protocol.ResponseMetadata) error {
+	return &InvalidInputException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidInputException) Code() string {
+	return "InvalidInputException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidInputException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidInputException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidInputException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidInputException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidInputException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The operation failed because there was nothing to do. For example, you might
+// have submitted an AssociateAdminAccount request, but the account ID that
+// you submitted was already set as the AWS Firewall Manager administrator.
+type InvalidOperationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidOperationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidOperationException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidOperationException(v protocol.ResponseMetadata) error {
+	return &InvalidOperationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidOperationException) Code() string {
+	return "InvalidOperationException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidOperationException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidOperationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidOperationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidOperationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The value of the Type parameter is invalid.
+type InvalidTypeException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidTypeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTypeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTypeException(v protocol.ResponseMetadata) error {
+	return &InvalidTypeException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidTypeException) Code() string {
+	return "InvalidTypeException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidTypeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidTypeException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidTypeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidTypeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidTypeException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The operation exceeds a resource limit, for example, the maximum number of
+// policy objects that you can create for an AWS account. For more information,
+// see Firewall Manager Limits (https://docs.aws.amazon.com/waf/latest/developerguide/fms-limits.html)
+// in the AWS WAF Developer Guide.
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 type ListComplianceStatusInput struct {
@@ -2468,34 +3067,130 @@ func (s *ListPoliciesOutput) SetPolicyList(v []*PolicySummary) *ListPoliciesOutp
 	return s
 }
 
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource to return tags for. The Firewall
+	// Manager policy is the only AWS resource that supports tagging, so this ARN
+	// is a policy ARN..
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *ListTagsForResourceInput) SetResourceArn(v string) *ListTagsForResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The tags associated with the resource.
+	TagList []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetTagList sets the TagList field's value.
+func (s *ListTagsForResourceOutput) SetTagList(v []*Tag) *ListTagsForResourceOutput {
+	s.TagList = v
+	return s
+}
+
 // An AWS Firewall Manager policy.
 type Policy struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies the AWS account IDs to exclude from the policy. The IncludeMap
-	// values are evaluated first, with all the appropriate account IDs added to
-	// the policy. Then the accounts listed in ExcludeMap are removed, resulting
-	// in the final list of accounts to add to the policy.
+	// Specifies the AWS account IDs and AWS Organizations organizational units
+	// (OUs) to exclude from the policy. Specifying an OU is the equivalent of specifying
+	// all accounts in the OU and in any of its child OUs, including any child OUs
+	// and accounts that are added at a later time.
 	//
-	// The key to the map is ACCOUNT. For example, a valid ExcludeMap would be {“ACCOUNT”
-	// : [“accountID1”, “accountID2”]}.
+	// You can specify inclusions or exclusions, but not both. If you specify an
+	// IncludeMap, AWS Firewall Manager applies the policy to all accounts specified
+	// by the IncludeMap, and does not evaluate any ExcludeMap specifications. If
+	// you do not specify an IncludeMap, then Firewall Manager applies the policy
+	// to all accounts except for those specified by the ExcludeMap.
+	//
+	// You can specify account IDs, OUs, or a combination:
+	//
+	//    * Specify account IDs by setting the key to ACCOUNT. For example, the
+	//    following is a valid map: {“ACCOUNT” : [“accountID1”, “accountID2”]}.
+	//
+	//    * Specify OUs by setting the key to ORG_UNIT. For example, the following
+	//    is a valid map: {“ORG_UNIT” : [“ouid111”, “ouid112”]}.
+	//
+	//    * Specify accounts and OUs together in a single map, separated with a
+	//    comma. For example, the following is a valid map: {“ACCOUNT” : [“accountID1”,
+	//    “accountID2”], “ORG_UNIT” : [“ouid111”, “ouid112”]}.
 	ExcludeMap map[string][]*string `type:"map"`
 
 	// If set to True, resources with the tags that are specified in the ResourceTag
-	// array are not protected by the policy. If set to False, and the ResourceTag
-	// array is not null, only resources with the specified tags are associated
-	// with the policy.
+	// array are not in scope of the policy. If set to False, and the ResourceTag
+	// array is not null, only resources with the specified tags are in scope of
+	// the policy.
 	//
 	// ExcludeResourceTags is a required field
 	ExcludeResourceTags *bool `type:"boolean" required:"true"`
 
-	// Specifies the AWS account IDs to include in the policy. If IncludeMap is
-	// null, all accounts in the organization in AWS Organizations are included
-	// in the policy. If IncludeMap is not null, only values listed in IncludeMap
-	// are included in the policy.
+	// Specifies the AWS account IDs and AWS Organizations organizational units
+	// (OUs) to include in the policy. Specifying an OU is the equivalent of specifying
+	// all accounts in the OU and in any of its child OUs, including any child OUs
+	// and accounts that are added at a later time.
 	//
-	// The key to the map is ACCOUNT. For example, a valid IncludeMap would be {“ACCOUNT”
-	// : [“accountID1”, “accountID2”]}.
+	// You can specify inclusions or exclusions, but not both. If you specify an
+	// IncludeMap, AWS Firewall Manager applies the policy to all accounts specified
+	// by the IncludeMap, and does not evaluate any ExcludeMap specifications. If
+	// you do not specify an IncludeMap, then Firewall Manager applies the policy
+	// to all accounts except for those specified by the ExcludeMap.
+	//
+	// You can specify account IDs, OUs, or a combination:
+	//
+	//    * Specify account IDs by setting the key to ACCOUNT. For example, the
+	//    following is a valid map: {“ACCOUNT” : [“accountID1”, “accountID2”]}.
+	//
+	//    * Specify OUs by setting the key to ORG_UNIT. For example, the following
+	//    is a valid map: {“ORG_UNIT” : [“ouid111”, “ouid112”]}.
+	//
+	//    * Specify accounts and OUs together in a single map, separated with a
+	//    comma. For example, the following is a valid map: {“ACCOUNT” : [“accountID1”,
+	//    “accountID2”], “ORG_UNIT” : [“ouid111”, “ouid112”]}.
 	IncludeMap map[string][]*string `type:"map"`
 
 	// The ID of the AWS Firewall Manager policy.
@@ -2520,9 +3215,14 @@ type Policy struct {
 	// An array of ResourceTag objects.
 	ResourceTags []*ResourceTag `type:"list"`
 
-	// The type of resource to protect with the policy. This is in the format shown
-	// in AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
-	// For example: AWS::ElasticLoadBalancingV2::LoadBalancer or AWS::CloudFront::Distribution.
+	// The type of resource protected by or in scope of the policy. This is in the
+	// format shown in the AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
+	// For AWS WAF and Shield Advanced, examples include AWS::ElasticLoadBalancingV2::LoadBalancer
+	// and AWS::CloudFront::Distribution. For a security group common policy, valid
+	// values are AWS::EC2::NetworkInterface and AWS::EC2::Instance. For a security
+	// group content audit policy, valid values are AWS::EC2::SecurityGroup, AWS::EC2::NetworkInterface,
+	// and AWS::EC2::Instance. For a security group usage audit policy, the value
+	// is AWS::EC2::SecurityGroup.
 	//
 	// ResourceType is a required field
 	ResourceType *string `min:"1" type:"string" required:"true"`
@@ -2664,24 +3364,24 @@ func (s *Policy) SetSecurityServicePolicyData(v *SecurityServicePolicyData) *Pol
 	return s
 }
 
-// Describes the non-compliant resources in a member account for a specific
-// AWS Firewall Manager policy. A maximum of 100 entries are displayed. If more
-// than 100 resources are non-compliant, EvaluationLimitExceeded is set to True.
+// Describes the noncompliant resources in a member account for a specific AWS
+// Firewall Manager policy. A maximum of 100 entries are displayed. If more
+// than 100 resources are noncompliant, EvaluationLimitExceeded is set to True.
 type PolicyComplianceDetail struct {
 	_ struct{} `type:"structure"`
 
-	// Indicates if over 100 resources are non-compliant with the AWS Firewall Manager
+	// Indicates if over 100 resources are noncompliant with the AWS Firewall Manager
 	// policy.
 	EvaluationLimitExceeded *bool `type:"boolean"`
 
-	// A time stamp that indicates when the returned information should be considered
-	// out-of-date.
+	// A timestamp that indicates when the returned information should be considered
+	// out of date.
 	ExpiredAt *time.Time `type:"timestamp"`
 
 	// Details about problems with dependent services, such as AWS WAF or AWS Config,
-	// that are causing a resource to be non-compliant. The details include the
-	// name of the dependent service and the error message received that indicates
-	// the problem with the service.
+	// that are causing a resource to be noncompliant. The details include the name
+	// of the dependent service and the error message received that indicates the
+	// problem with the service.
 	IssueInfoMap map[string]*string `type:"map"`
 
 	// The AWS account ID.
@@ -2693,7 +3393,8 @@ type PolicyComplianceDetail struct {
 	// The AWS account that created the AWS Firewall Manager policy.
 	PolicyOwner *string `min:"1" type:"string"`
 
-	// An array of resources that are not protected by the policy.
+	// An array of resources that aren't protected by the AWS WAF or Shield Advanced
+	// policy or that aren't in compliance with the security group policy.
 	Violators []*ComplianceViolator `type:"list"`
 }
 
@@ -2750,8 +3451,9 @@ func (s *PolicyComplianceDetail) SetViolators(v []*ComplianceViolator) *PolicyCo
 }
 
 // Indicates whether the account is compliant with the specified policy. An
-// account is considered non-compliant if it includes resources that are not
-// protected by the policy.
+// account is considered noncompliant if it includes resources that are not
+// protected by the policy, for AWS WAF and Shield Advanced policies, or that
+// are noncompliant with the policy, for security group policies.
 type PolicyComplianceStatus struct {
 	_ struct{} `type:"structure"`
 
@@ -2759,12 +3461,12 @@ type PolicyComplianceStatus struct {
 	EvaluationResults []*EvaluationResult `type:"list"`
 
 	// Details about problems with dependent services, such as AWS WAF or AWS Config,
-	// that are causing a resource to be non-compliant. The details include the
-	// name of the dependent service and the error message received that indicates
-	// the problem with the service.
+	// that are causing a resource to be noncompliant. The details include the name
+	// of the dependent service and the error message received that indicates the
+	// problem with the service.
 	IssueInfoMap map[string]*string `type:"map"`
 
-	// Time stamp of the last update to the EvaluationResult objects.
+	// Timestamp of the last update to the EvaluationResult objects.
 	LastUpdated *time.Time `type:"timestamp"`
 
 	// The member account ID.
@@ -2848,14 +3550,19 @@ type PolicySummary struct {
 	// Indicates if the policy should be automatically applied to new resources.
 	RemediationEnabled *bool `type:"boolean"`
 
-	// The type of resource to protect with the policy. This is in the format shown
-	// in AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
-	// For example: AWS::ElasticLoadBalancingV2::LoadBalancer or AWS::CloudFront::Distribution.
+	// The type of resource protected by or in scope of the policy. This is in the
+	// format shown in the AWS Resource Types Reference (https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html).
+	// For AWS WAF and Shield Advanced, examples include AWS::ElasticLoadBalancingV2::LoadBalancer
+	// and AWS::CloudFront::Distribution. For a security group common policy, valid
+	// values are AWS::EC2::NetworkInterface and AWS::EC2::Instance. For a security
+	// group content audit policy, valid values are AWS::EC2::SecurityGroup, AWS::EC2::NetworkInterface,
+	// and AWS::EC2::Instance. For a security group usage audit policy, the value
+	// is AWS::EC2::SecurityGroup.
 	ResourceType *string `min:"1" type:"string"`
 
 	// The service that the policy is using to protect the resources. This specifies
-	// the type of policy that is created, either a WAF policy or Shield Advanced
-	// policy.
+	// the type of policy that is created, either an AWS WAF policy, a Shield Advanced
+	// policy, or a security group policy.
 	SecurityServiceType *string `type:"string" enum:"SecurityServiceType"`
 }
 
@@ -2986,6 +3693,9 @@ type PutPolicyInput struct {
 	//
 	// Policy is a required field
 	Policy *Policy `type:"structure" required:"true"`
+
+	// The tags to add to the AWS resource.
+	TagList []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -3009,6 +3719,16 @@ func (s *PutPolicyInput) Validate() error {
 			invalidParams.AddNested("Policy", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.TagList != nil {
+		for i, v := range s.TagList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TagList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -3019,6 +3739,12 @@ func (s *PutPolicyInput) Validate() error {
 // SetPolicy sets the Policy field's value.
 func (s *PutPolicyInput) SetPolicy(v *Policy) *PutPolicyInput {
 	s.Policy = v
+	return s
+}
+
+// SetTagList sets the TagList field's value.
+func (s *PutPolicyInput) SetTagList(v []*Tag) *PutPolicyInput {
+	s.TagList = v
 	return s
 }
 
@@ -3054,14 +3780,70 @@ func (s *PutPolicyOutput) SetPolicyArn(v string) *PutPolicyOutput {
 	return s
 }
 
+// The specified resource was not found.
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The resource tags that AWS Firewall Manager uses to determine if a particular
-// resource should be included or excluded from protection by the AWS Firewall
-// Manager policy. Tags enable you to categorize your AWS resources in different
-// ways, for example, by purpose, owner, or environment. Each tag consists of
-// a key and an optional value, both of which you define. Tags are combined
-// with an "OR." That is, if you add more than one tag, if any of the tags matches,
-// the resource is considered a match for the include or exclude. Working with
-// Tag Editor (https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/tag-editor.html).
+// resource should be included or excluded from the AWS Firewall Manager policy.
+// Tags enable you to categorize your AWS resources in different ways, for example,
+// by purpose, owner, or environment. Each tag consists of a key and an optional
+// value. Firewall Manager combines the tags with "AND" so that, if you add
+// more than one tag to a policy scope, a resource must have all the specified
+// tags to be included or excluded. For more information, see Working with Tag
+// Editor (https://docs.aws.amazon.com/awsconsolehelpdocs/latest/gsg/tag-editor.html).
 type ResourceTag struct {
 	_ struct{} `type:"structure"`
 
@@ -3116,19 +3898,36 @@ func (s *ResourceTag) SetValue(v string) *ResourceTag {
 type SecurityServicePolicyData struct {
 	_ struct{} `type:"structure"`
 
-	// Details about the service. This contains WAF data in JSON format, as shown
-	// in the following example:
+	// Details about the service that are specific to the service type, in JSON
+	// format. For service type SHIELD_ADVANCED, this is an empty string.
 	//
-	// ManagedServiceData": "{\"type\": \"WAF\", \"ruleGroups\": [{\"id\": \"12345678-1bcd-9012-efga-0987654321ab\",
-	// \"overrideAction\" : {\"type\": \"COUNT\"}}], \"defaultAction\": {\"type\":
-	// \"BLOCK\"}}
+	//    * Example: WAFV2 "ManagedServiceData": "{\"type\":\"WAFV2\",\"defaultAction\":{\"type\":\"ALLOW\"},\"preProcessRuleGroups\":[{\"managedRuleGroupIdentifier\":null,\"ruleGroupArn\":\"rulegrouparn\",\"overrideAction\":{\"type\":\"COUNT\"},\"excludedRules\":[{\"name\":\"EntityName\"}],\"ruleGroupType\":\"RuleGroup\"}],\"postProcessRuleGroups\":[{\"managedRuleGroupIdentifier\":{\"managedRuleGroupName\":\"AWSManagedRulesAdminProtectionRuleSet\",\"vendor\":\"AWS\"},\"ruleGroupArn\":\"rulegrouparn\",\"overrideAction\":{\"type\":\"NONE\"},\"excludedRules\":[],\"ruleGroupType\":\"ManagedRuleGroup\"}],\"overrideCustomerWebACLAssociation\":false}"
 	//
-	// If this is a Shield Advanced policy, this string will be empty.
+	//    * Example: WAF Classic "ManagedServiceData": "{\"type\": \"WAF\", \"ruleGroups\":
+	//    [{\"id\": \"12345678-1bcd-9012-efga-0987654321ab\", \"overrideAction\"
+	//    : {\"type\": \"COUNT\"}}], \"defaultAction\": {\"type\": \"BLOCK\"}}
+	//
+	//    * Example: SECURITY_GROUPS_COMMON "SecurityServicePolicyData":{"Type":"SECURITY_GROUPS_COMMON","ManagedServiceData":"{\"type\":\"SECURITY_GROUPS_COMMON\",\"revertManualSecurityGroupChanges\":false,\"exclusiveResourceSecurityGroupManagement\":false,
+	//    \"applyToAllEC2InstanceENIs\":false,\"securityGroups\":[{\"id\":\" sg-000e55995d61a06bd\"}]}"},"RemediationEnabled":false,"ResourceType":"AWS::EC2::NetworkInterface"}
+	//
+	//    * Example: SECURITY_GROUPS_CONTENT_AUDIT "SecurityServicePolicyData":{"Type":"SECURITY_GROUPS_CONTENT_AUDIT","ManagedServiceData":"{\"type\":\"SECURITY_GROUPS_CONTENT_AUDIT\",\"securityGroups\":[{\"id\":\"
+	//    sg-000e55995d61a06bd \"}],\"securityGroupAction\":{\"type\":\"ALLOW\"}}"},"RemediationEnabled":false,"ResourceType":"AWS::EC2::NetworkInterface"}
+	//    The security group action for content audit can be ALLOW or DENY. For
+	//    ALLOW, all in-scope security group rules must be within the allowed range
+	//    of the policy's security group rules. For DENY, all in-scope security
+	//    group rules must not contain a value or a range that matches a rule value
+	//    or range in the policy security group.
+	//
+	//    * Example: SECURITY_GROUPS_USAGE_AUDIT "SecurityServicePolicyData":{"Type":"SECURITY_GROUPS_USAGE_AUDIT","ManagedServiceData":"{\"type\":\"SECURITY_GROUPS_USAGE_AUDIT\",\"deleteUnusedSecurityGroups\":true,\"coalesceRedundantSecurityGroups\":true}"},"RemediationEnabled":false,"Resou
+	//    rceType":"AWS::EC2::SecurityGroup"}
 	ManagedServiceData *string `min:"1" type:"string"`
 
 	// The service that the policy is using to protect the resources. This specifies
-	// the type of policy that is created, either a WAF policy or Shield Advanced
-	// policy.
+	// the type of policy that is created, either an AWS WAF policy, a Shield Advanced
+	// policy, or a security group policy. For security group policies, Firewall
+	// Manager supports one security group for each common policy and for each content
+	// audit policy. This is an adjustable limit that you can increase by contacting
+	// AWS Support.
 	//
 	// Type is a required field
 	Type *string `type:"string" required:"true" enum:"SecurityServiceType"`
@@ -3172,6 +3971,219 @@ func (s *SecurityServicePolicyData) SetType(v string) *SecurityServicePolicyData
 	return s
 }
 
+// A collection of key:value pairs associated with an AWS resource. The key:value
+// pair can be anything you define. Typically, the tag key represents a category
+// (such as "environment") and the tag value represents a specific value within
+// that category (such as "test," "development," or "production"). You can add
+// up to 50 tags to each AWS resource.
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// Part of the key:value pair that defines a tag. You can use a tag key to describe
+	// a category of information, such as "customer." Tag keys are case-sensitive.
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// Part of the key:value pair that defines a tag. You can use a tag value to
+	// describe a specific value within a category, such as "companyA" or "companyB."
+	// Tag values are case-sensitive.
+	//
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource. The Firewall Manager policy
+	// is the only AWS resource that supports tagging, so this ARN is a policy ARN.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+
+	// The tags to add to the resource.
+	//
+	// TagList is a required field
+	TagList []*Tag `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagList == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagList"))
+	}
+	if s.TagList != nil {
+		for i, v := range s.TagList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "TagList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *TagResourceInput) SetResourceArn(v string) *TagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagList sets the TagList field's value.
+func (s *TagResourceInput) SetTagList(v []*Tag) *TagResourceInput {
+	s.TagList = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the resource. The Firewall Manager policy
+	// is the only AWS resource that supports tagging, so this ARN is a policy ARN.
+	//
+	// ResourceArn is a required field
+	ResourceArn *string `min:"1" type:"string" required:"true"`
+
+	// The keys of the tags to remove from the resource.
+	//
+	// TagKeys is a required field
+	TagKeys []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceArn"))
+	}
+	if s.ResourceArn != nil && len(*s.ResourceArn) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceArn", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceArn sets the ResourceArn field's value.
+func (s *UntagResourceInput) SetResourceArn(v string) *UntagResourceInput {
+	s.ResourceArn = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 const (
 	// AccountRoleStatusReady is a AccountRoleStatus enum value
 	AccountRoleStatusReady = "READY"
@@ -3192,6 +4204,9 @@ const (
 const (
 	// CustomerPolicyScopeIdTypeAccount is a CustomerPolicyScopeIdType enum value
 	CustomerPolicyScopeIdTypeAccount = "ACCOUNT"
+
+	// CustomerPolicyScopeIdTypeOrgUnit is a CustomerPolicyScopeIdType enum value
+	CustomerPolicyScopeIdTypeOrgUnit = "ORG_UNIT"
 )
 
 const (
@@ -3203,6 +4218,9 @@ const (
 
 	// DependentServiceNameAwsshieldAdvanced is a DependentServiceName enum value
 	DependentServiceNameAwsshieldAdvanced = "AWSSHIELD_ADVANCED"
+
+	// DependentServiceNameAwsvpc is a DependentServiceName enum value
+	DependentServiceNameAwsvpc = "AWSVPC"
 )
 
 const (
@@ -3217,8 +4235,20 @@ const (
 	// SecurityServiceTypeWaf is a SecurityServiceType enum value
 	SecurityServiceTypeWaf = "WAF"
 
+	// SecurityServiceTypeWafv2 is a SecurityServiceType enum value
+	SecurityServiceTypeWafv2 = "WAFV2"
+
 	// SecurityServiceTypeShieldAdvanced is a SecurityServiceType enum value
 	SecurityServiceTypeShieldAdvanced = "SHIELD_ADVANCED"
+
+	// SecurityServiceTypeSecurityGroupsCommon is a SecurityServiceType enum value
+	SecurityServiceTypeSecurityGroupsCommon = "SECURITY_GROUPS_COMMON"
+
+	// SecurityServiceTypeSecurityGroupsContentAudit is a SecurityServiceType enum value
+	SecurityServiceTypeSecurityGroupsContentAudit = "SECURITY_GROUPS_CONTENT_AUDIT"
+
+	// SecurityServiceTypeSecurityGroupsUsageAudit is a SecurityServiceType enum value
+	SecurityServiceTypeSecurityGroupsUsageAudit = "SECURITY_GROUPS_USAGE_AUDIT"
 )
 
 const (
@@ -3233,4 +4263,19 @@ const (
 
 	// ViolationReasonResourceMissingShieldProtection is a ViolationReason enum value
 	ViolationReasonResourceMissingShieldProtection = "RESOURCE_MISSING_SHIELD_PROTECTION"
+
+	// ViolationReasonResourceMissingWebAclOrShieldProtection is a ViolationReason enum value
+	ViolationReasonResourceMissingWebAclOrShieldProtection = "RESOURCE_MISSING_WEB_ACL_OR_SHIELD_PROTECTION"
+
+	// ViolationReasonResourceMissingSecurityGroup is a ViolationReason enum value
+	ViolationReasonResourceMissingSecurityGroup = "RESOURCE_MISSING_SECURITY_GROUP"
+
+	// ViolationReasonResourceViolatesAuditSecurityGroup is a ViolationReason enum value
+	ViolationReasonResourceViolatesAuditSecurityGroup = "RESOURCE_VIOLATES_AUDIT_SECURITY_GROUP"
+
+	// ViolationReasonSecurityGroupUnused is a ViolationReason enum value
+	ViolationReasonSecurityGroupUnused = "SECURITY_GROUP_UNUSED"
+
+	// ViolationReasonSecurityGroupRedundant is a ViolationReason enum value
+	ViolationReasonSecurityGroupRedundant = "SECURITY_GROUP_REDUNDANT"
 )

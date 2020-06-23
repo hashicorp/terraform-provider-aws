@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -20,6 +20,7 @@ func init() {
 		Dependencies: []string{
 			"aws_dx_gateway_association",
 			"aws_ec2_transit_gateway_vpc_attachment",
+			"aws_ec2_transit_gateway_peering_attachment",
 			"aws_vpn_connection",
 		},
 	})

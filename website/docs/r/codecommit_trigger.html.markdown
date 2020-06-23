@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeCommit"
 layout: "aws"
 page_title: "AWS: aws_codecommit_trigger"
-sidebar_current: "docs-aws-resource-codecommit-trigger"
 description: |-
   Provides a CodeCommit Trigger Resource.
 ---
@@ -9,10 +9,6 @@ description: |-
 # Resource: aws_codecommit_trigger
 
 Provides a CodeCommit Trigger Resource.
-
-~> **NOTE on CodeCommit**: The CodeCommit is not yet rolled out
-in all regions - available regions are listed
-[the AWS Docs](https://docs.aws.amazon.com/general/latest/gr/rande.html#codecommit_region).
 
 ## Example Usage
 

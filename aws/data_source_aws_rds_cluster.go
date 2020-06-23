@@ -3,11 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsRdsCluster() *schema.Resource {
@@ -29,6 +29,11 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 				Set:      schema.HashString,
+			},
+
+			"backtrack_window": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 
 			"backup_retention_period": {
@@ -119,12 +124,6 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
-				},
 			},
 
 			"port": {
@@ -166,6 +165,7 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 
 func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	dbClusterIdentifier := d.Get("cluster_identifier").(string)
 
@@ -201,7 +201,8 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting availability_zones: %s", err)
 	}
 
-	d.Set("arn", dbc.DBClusterArn)
+	arn := dbc.DBClusterArn
+	d.Set("arn", arn)
 	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
 	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
 	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
@@ -263,9 +264,14 @@ func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
 	}
 
-	// Fetch and save tags
-	if err := saveTagsRDS(conn, d, aws.StringValue(dbc.DBClusterArn)); err != nil {
-		log.Printf("[WARN] Failed to save tags for RDS Cluster (%s): %s", aws.StringValue(dbc.DBClusterIdentifier), err)
+	tags, err := keyvaluetags.RdsListTags(conn, *arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", *arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil

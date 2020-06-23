@@ -117,6 +117,18 @@ const (
 	// of clusters per customer.
 	ErrCodeClusterQuotaForCustomerExceededFault = "ClusterQuotaForCustomerExceeded"
 
+	// ErrCodeGlobalReplicationGroupAlreadyExistsFault for service response error code
+	// "GlobalReplicationGroupAlreadyExistsFault".
+	//
+	// The Global Datastore name already exists.
+	ErrCodeGlobalReplicationGroupAlreadyExistsFault = "GlobalReplicationGroupAlreadyExistsFault"
+
+	// ErrCodeGlobalReplicationGroupNotFoundFault for service response error code
+	// "GlobalReplicationGroupNotFoundFault".
+	//
+	// The Global Datastore does not exist
+	ErrCodeGlobalReplicationGroupNotFoundFault = "GlobalReplicationGroupNotFoundFault"
+
 	// ErrCodeInsufficientCacheClusterCapacityFault for service response error code
 	// "InsufficientCacheClusterCapacity".
 	//
@@ -149,6 +161,18 @@ const (
 	//
 	// The current state of the cache security group does not allow deletion.
 	ErrCodeInvalidCacheSecurityGroupStateFault = "InvalidCacheSecurityGroupState"
+
+	// ErrCodeInvalidGlobalReplicationGroupStateFault for service response error code
+	// "InvalidGlobalReplicationGroupState".
+	//
+	// The Global Datastore is not available or in primary-only state.
+	ErrCodeInvalidGlobalReplicationGroupStateFault = "InvalidGlobalReplicationGroupState"
+
+	// ErrCodeInvalidKMSKeyFault for service response error code
+	// "InvalidKMSKeyFault".
+	//
+	// The KMS key supplied is not valid.
+	ErrCodeInvalidKMSKeyFault = "InvalidKMSKeyFault"
 
 	// ErrCodeInvalidParameterCombinationException for service response error code
 	// "InvalidParameterCombination".
@@ -229,11 +253,23 @@ const (
 	// The specified replication group already exists.
 	ErrCodeReplicationGroupAlreadyExistsFault = "ReplicationGroupAlreadyExists"
 
+	// ErrCodeReplicationGroupAlreadyUnderMigrationFault for service response error code
+	// "ReplicationGroupAlreadyUnderMigrationFault".
+	//
+	// The targeted replication group is not available.
+	ErrCodeReplicationGroupAlreadyUnderMigrationFault = "ReplicationGroupAlreadyUnderMigrationFault"
+
 	// ErrCodeReplicationGroupNotFoundFault for service response error code
 	// "ReplicationGroupNotFoundFault".
 	//
 	// The specified replication group does not exist.
 	ErrCodeReplicationGroupNotFoundFault = "ReplicationGroupNotFoundFault"
+
+	// ErrCodeReplicationGroupNotUnderMigrationFault for service response error code
+	// "ReplicationGroupNotUnderMigrationFault".
+	//
+	// The designated replication group is not available for data migration.
+	ErrCodeReplicationGroupNotUnderMigrationFault = "ReplicationGroupNotUnderMigrationFault"
 
 	// ErrCodeReservedCacheNodeAlreadyExistsFault for service response error code
 	// "ReservedCacheNodeAlreadyExists".

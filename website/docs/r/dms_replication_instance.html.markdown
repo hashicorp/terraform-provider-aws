@@ -1,7 +1,7 @@
 ---
+subcategory: "Database Migration Service (DMS)"
 layout: "aws"
 page_title: "AWS: aws_dms_replication_instance"
-sidebar_current: "docs-aws-resource-dms-replication-instance"
 description: |-
   Provides a DMS (Data Migration Service) replication instance resource.
 ---
@@ -67,7 +67,7 @@ resource "aws_dms_replication_instance" "test" {
   apply_immediately            = true
   auto_minor_version_upgrade   = true
   availability_zone            = "us-west-2c"
-  engine_version               = "1.9.0"
+  engine_version               = "3.1.4"
   kms_key_arn                  = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
   multi_az                     = false
   preferred_maintenance_window = "sun:10:30-sun:14:30"
@@ -114,7 +114,7 @@ The following arguments are supported:
     - Cannot contain two consecutive hyphens.
 
 * `replication_subnet_group_id` - (Optional) A subnet group to associate with the replication instance.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 
 ## Attributes Reference
@@ -125,7 +125,6 @@ In addition to all arguments above, the following attributes are exported:
 * `replication_instance_private_ips` -  A list of the private IP addresses of the replication instance.
 * `replication_instance_public_ips` - A list of the public IP addresses of the replication instance.
 
-<a id="timeouts"></a>
 ## Timeouts
 
 `aws_dms_replication_instance` provides the following

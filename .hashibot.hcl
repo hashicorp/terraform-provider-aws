@@ -1,3 +1,45 @@
+poll "closed_issue_locker" "locker" {
+  schedule             = "0 10 17 * * *"
+  closed_for           = "720h" # 30 days
+  max_issues           = 500
+  sleep_between_issues = "5s"
+
+  message = <<-EOF
+    I'm going to lock this issue because it has been closed for _30 days_ ⏳. This helps our maintainers find and focus on the active issues.
+
+    If you feel this issue should be reopened, we encourage creating a new issue linking back to this one for added context. Thanks!
+  EOF
+}
+
+behavior "deprecated_import_commenter" "hashicorp_terraform" {
+  import_regexp = "github.com/hashicorp/terraform/"
+  marker_label  = "terraform-plugin-sdk-migration"
+
+  message = <<-EOF
+    Hello, and thank you for your contribution!
+
+    This project recently migrated to the [standalone Terraform Plugin SDK](https://www.terraform.io/docs/extend/plugin-sdk.html). While the migration helps speed up future feature requests and bug fixes to the Terraform AWS Provider's interface with Terraform, it has the unfortunate consequence of requiring minor changes to pull requests created using the old SDK.
+
+    This pull request appears to include the Go import path `${var.import_path}`, which was from the older SDK. The newer SDK uses import paths beginning with `github.com/hashicorp/terraform-plugin-sdk/`.
+
+    To resolve this situation without losing any existing work, you may be able to Git rebase your branch against the current master branch (example below); replacing any remaining old import paths with the newer ones.
+
+    ```console
+    $ git fetch --all
+    $ git rebase origin/master
+    ```
+
+    Another option is to create a new branch from the current master with the same code changes (replacing the import paths), submit a new pull request, and close this existing pull request.
+
+    We apologize for this inconvenience and appreciate your effort. Thank you for contributing and helping make the Terraform AWS Provider better for everyone.
+  EOF
+}
+
+behavior "opened_pull_request_labeler" "triage" {
+  labels             = ["needs-triage"]
+  skip_collaborators = true
+}
+
 queued_behavior "release_commenter" "releases" {
   repo_prefix = "terraform-provider-"
 
@@ -22,6 +64,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
   regexp = "(\\* ?`?|- ?`?|data \"|resource \")aws_(\\w+)"
 
   label_map = {
+    "service/accessanalyzer" = [
+      "aws_accessanalyzer_",
+    ],
     "service/acm" = [
       "aws_acm_",
     ],
@@ -40,6 +85,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/apigatewayv2" = [
       "aws_api_gateway_v2_",
+      "aws_apigatewayv2_",
     ],
     "service/applicationautoscaling" = [
       "aws_appautoscaling_",
@@ -69,6 +115,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/autoscalingplans" = [
       "aws_autoscalingplans_",
     ],
+    "service/backup" = [
+      "aws_backup_",
+    ],
     "service/batch" = [
       "aws_batch_",
     ],
@@ -94,7 +143,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_cloudsearch_",
     ],
     "service/cloudtrail" = [
-      "aws_cloudtrail_",
+      "aws_cloudtrail",
     ],
     "service/cloudwatch" = [
       "aws_cloudwatch_([^e]|e[^v]|ev[^e]|eve[^n]|even[^t]|event[^_]|[^l]|l[^o]|lo[^g]|log[^_])",
@@ -104,6 +153,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/cloudwatchlogs" = [
       "aws_cloudwatch_log_",
+    ],
+    "service/codeartifact" = [
+      "aws_codeartifact_",
     ],
     "service/codebuild" = [
       "aws_codebuild_",
@@ -120,6 +172,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/codestar" = [
       "aws_codestar_",
     ],
+    "service/codestarnotifications" = [
+      "aws_codestarnotifications_",
+    ],
     "service/cognito" = [
       "aws_cognito_",
     ],
@@ -128,6 +183,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/databasemigrationservice" = [
       "aws_dms_",
+    ],
+    "service/dataexchange" = [
+      "aws_dataexchange_",
     ],
     "service/datapipeline" = [
       "aws_datapipeline_",
@@ -150,6 +208,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/dlm" = [
       "aws_dlm_",
     ],
+    "service/docdb" = [
+      "aws_docdb_",
+    ],
     "service/dynamodb" = [
       "aws_dynamodb_",
     ],
@@ -170,8 +231,11 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_main_route_table_association",
       "aws_network_interface",
       "aws_placement_group",
+      "aws_prefix_list",
       "aws_spot",
       "aws_route(\"|`|$)",
+      "aws_vpn_",
+      "aws_volume_attachment",
     ],
     "service/ecr" = [
       "aws_ecr_",
@@ -219,6 +283,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/fms" = [
       "aws_fms_",
     ],
+    "service/forecast" = [
+      "aws_forecast_",
+    ],
     "service/fsx" = [
       "aws_fsx_",
     ],
@@ -243,11 +310,20 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/iam" = [
       "aws_iam_",
     ],
+    "service/imagebuilder" = [
+      "aws_imagebuilder_",
+    ],
     "service/inspector" = [
       "aws_inspector_",
     ],
     "service/iot" = [
       "aws_iot_",
+    ],
+    "service/iotanalytics" = [
+      "aws_iotanalytics_",
+    ],
+    "service/iotevents" = [
+      "aws_iotevents_",
     ],
     "service/kafka" = [
       "aws_msk_",
@@ -257,7 +333,10 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_kinesis_([^f]|f[^i]|fi[^r]|fir[^e]|fire[^h]|fireh[^o]|fireho[^s]|firehos[^e]|firehose[^_])",
     ],
     "service/kinesisanalytics" = [
-      "aws_kinesisanalytics_",
+      "aws_kinesis_analytics_",
+    ],
+    "service/kinesisanalyticsv2" = [
+      "aws_kinesisanalyticsv2_",
     ],
     "service/kms" = [
       "aws_kms_",
@@ -279,6 +358,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/macie" = [
       "aws_macie_",
+    ],
+    "service/marketplacecatalog" = [
+      "aws_marketplace_catalog_",
     ],
     "service/mediaconnect" = [
       "aws_media_connect_",
@@ -307,11 +389,20 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/neptune" = [
       "aws_neptune_",
     ],
+    "service/networkmanager" = [
+      "aws_networkmanager_",
+    ],
     "service/opsworks" = [
       "aws_opsworks_",
     ],
     "service/organizations" = [
       "aws_organizations_",
+    ],
+    "service/outposts" = [
+      "aws_outposts_",
+    ],
+    "service/personalize" = [
+      "aws_personalize_",
     ],
     "service/pinpoint" = [
       "aws_pinpoint_",
@@ -321,6 +412,12 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     ],
     "service/pricing" = [
       "aws_pricing_",
+    ],
+    "service/qldb" = [
+      "aws_qldb_",
+    ],
+    "service/quicksight" = [
+      "aws_quicksight_",
     ],
     "service/ram" = [
       "aws_ram_",
@@ -343,7 +440,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_route53_([^d]|d[^o]|do[^m]|dom[^a]|doma[^i]|domai[^n]|domain[^s]|domains[^_]|[^r]|r[^e]|re[^s]|res[^o]|reso[^l]|resol[^v]|resolv[^e]|resolve[^r]|resolver[^_])",
     ],
     "service/route53domains" = [
-      "aws_route53_domains_",
+      "aws_route53domains_",
     ],
     "service/route53resolver" = [
       "aws_route53_resolver_",
@@ -406,6 +503,9 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
     "service/swf" = [
       "aws_swf_",
     ],
+    "service/synthetics" = [
+      "aws_synthetics_",
+    ],
     "service/transfer" = [
       "aws_transfer_",
     ],
@@ -413,8 +513,14 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_waf_",
       "aws_wafregional_",
     ],
+    "service/wafv2" = [
+      "aws_wafv2_",
+    ],
     "service/workdocs" = [
       "aws_workdocs_",
+    ],
+    "service/worklink" = [
+      "aws_worklink_",
     ],
     "service/workmail" = [
       "aws_workmail_",
@@ -432,6 +538,11 @@ behavior "pull_request_path_labeler" "service_labels" {
   label_map = {
     # label provider related changes
     "provider" = [
+      "*.md",
+      ".github/**/*",
+      ".gitignore",
+      ".go-version",
+      ".hashibot.hcl",
       "aws/auth_helpers.go",
       "aws/awserr.go",
       "aws/config.go",
@@ -439,30 +550,52 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_ip_ranges*",
       "aws/*_aws_partition*",
       "aws/*_aws_region*",
+      "aws/internal/flatmap/*",
+      "aws/internal/keyvaluetags/*",
+      "aws/internal/naming/*",
       "aws/provider.go",
       "aws/utils.go",
+      "docs/*.md",
+      "docs/contributing/**/*",
+      "GNUmakefile",
+      "infrastructure/**/*",
+      "main.go",
+      "renovate.json",
       "website/docs/index.html.markdown",
       "website/**/arn*",
       "website/**/ip_ranges*",
       "website/**/partition*",
       "website/**/region*"
     ]
-    # label test related changes
+    "documentation" = [
+      "docs/**/*",
+      "*.md",
+    ]
+    "examples" = [
+      "examples/**/*",
+    ]
     "tests" = [
       "**/*_test.go",
+      "**/testdata/**/*",
+      "**/test-fixtures/**/*",
+      ".github/workflows/*",
       ".gometalinter.json",
-      ".travis.yml"
+      ".markdownlinkcheck.json",
+      ".markdownlint.yml",
+      "staticcheck.conf"
     ]
     # label services
+    "service/accessanalyzer" = [
+      "**/*_accessanalyzer_*",
+      "**/accessanalyzer_*"
+    ]
     "service/acm" = [
       "**/*_acm_*",
-      "**/acm_*",
-      "aws/tagsACM*"
+      "**/acm_*"
     ]
     "service/acmpca" = [
       "**/*_acmpca_*",
-      "**/acmpca_*",
-      "aws/tagsACMPCA*"
+      "**/acmpca_*"
     ]
     "service/alexaforbusiness" = [
       "**/*_alexaforbusiness_*",
@@ -474,13 +607,15 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/apigateway" = [
       "**/*_api_gateway_[^v][^2][^_]*",
+      "**/*_api_gateway_vpc_link*",
       "**/api_gateway_[^v][^2][^_]*",
-      "aws/tags_apigateway[^v][^2]*"
+      "**/api_gateway_vpc_link*"
     ]
     "service/apigatewayv2" = [
       "**/*_api_gateway_v2_*",
+      "**/*_apigatewayv2_*",
       "**/api_gateway_v2_*",
-      "aws/tags_apigatewayv2*"
+      "**/apigatewayv2_*"
     ]
     "service/applicationautoscaling" = [
       "**/*_appautoscaling_*",
@@ -507,7 +642,7 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/appsync_*"
     ]
     "service/athena" = [
-      "service/athena",
+      "**/*_athena_*",
       "**/athena_*"
     ]
     "service/autoscaling" = [
@@ -519,6 +654,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/autoscalingplans" = [
       "**/*_autoscalingplans_*",
       "**/autoscalingplans_*"
+    ]
+    "service/backup" = [
+      "**/*backup_*",
+      "**/backup_*"
     ]
     "service/batch" = [
       "**/*_batch_*",
@@ -542,8 +681,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/cloudfront" = [
       "**/*_cloudfront_*",
-      "**/cloudfront_*",
-      "aws/tagsCloudFront*"
+      "**/cloudfront_*"
     ]
     "service/cloudhsmv2" = [
       "**/*_cloudhsm_v2_*",
@@ -554,9 +692,8 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/cloudsearch_*"
     ]
     "service/cloudtrail" = [
-      "**/*_cloudtrail_*",
-      "**/cloudtrail_*",
-      "aws/tagsCloudtrail*"
+      "**/*_cloudtrail*",
+      "**/cloudtrail*"
     ]
     "service/cloudwatch" = [
       "**/*_cloudwatch_dashboard*",
@@ -572,10 +709,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_cloudwatch_log_*",
       "**/cloudwatch_log_*"
     ]
+    "service/codeartifact" = [
+      "**/*_codeartifact_*",
+      "**/codeartifact_*"
+    ]
     "service/codebuild" = [
       "**/*_codebuild_*",
-      "**/codebuild_*",
-      "aws/tagsCodeBuild*"
+      "**/codebuild_*"
     ]
     "service/codecommit" = [
       "**/*_codecommit_*",
@@ -593,18 +733,33 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_codestar_*",
       "**/codestar_*"
     ]
+    "service/codestarnotifications" = [
+      "**/*_codestarnotifications_*",
+      "**/codestarnotifications_*"
+    ]
     "service/cognito" = [
       "**/*_cognito_*",
-      "**/_cognito_*"
+      "**/cognito_*"
+    ]
+    "service/comprehend" = [
+      "**/*_comprehend_*",
+      "**/comprehend_*"
     ]
     "service/configservice" = [
       "aws/*_aws_config_*",
       "website/**/config_*"
     ]
+    "service/costandusagereportservice" = [
+      "aws/*_aws_cur_*",
+      "website/**/cur_*"
+    ]
     "service/databasemigrationservice" = [
       "**/*_dms_*",
-      "**/dms_*",
-      "aws/tags_dms*"
+      "**/dms_*"
+    ]
+    "service/dataexchange" = [
+      "**/*_dataexchange_*",
+      "**/dataexchange_*",
     ]
     "service/datapipeline" = [
       "**/*_datapipeline_*",
@@ -616,8 +771,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/dax" = [
       "**/*_dax_*",
-      "**/dax_*",
-      "aws/tagsDAX*"
+      "**/dax_*"
     ]
     "service/devicefarm" = [
       "**/*_devicefarm_*",
@@ -625,17 +779,19 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/directconnect" = [
       "**/*_dx_*",
-      "**/dx_*",
-      "aws/tagsDX*"
+      "**/dx_*"
     ]
     "service/directoryservice" = [
       "**/*_directory_service_*",
-      "**/directory_service_*",
-      "aws/tagsDS*"
+      "**/directory_service_*"
     ]
     "service/dlm" = [
       "**/*_dlm_*",
       "**/dlm_*"
+    ]
+    "service/docdb" = [
+      "**/*_docdb_*",
+      "**/docdb_*"
     ]
     "service/dynamodb" = [
       "**/*_dynamodb_*",
@@ -666,13 +822,16 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_network_acl*",
       "aws/*_aws_network_interface*",
       "aws/*_aws_placement_group*",
+      "aws/*_aws_prefix_list*",
       "aws/*_aws_route_table*",
       "aws/*_aws_route.*",
       "aws/*_aws_security_group*",
+      "aws/*_aws_snapshot_create_volume_permission*",
       "aws/*_aws_spot*",
       "aws/*_aws_subnet*",
       "aws/*_aws_vpc*",
       "aws/*_aws_vpn*",
+      "aws/*_aws_volume_attachment*",
       "website/**/availability_zone*",
       "website/**/customer_gateway*",
       "website/**/default_network_acl*",
@@ -693,13 +852,16 @@ behavior "pull_request_path_labeler" "service_labels" {
       "website/**/network_acl*",
       "website/**/network_interface*",
       "website/**/placement_group*",
+      "website/**/prefix_list*",
       "website/**/route_table*",
       "website/**/route.*",
       "website/**/security_group*",
+      "website/**/snapshot_create_volume_permission*",
       "website/**/spot_*",
-      "website/**/subnet.*",
+      "website/**/subnet*",
       "website/**/vpc*",
-      "website/**/vpn*"
+      "website/**/vpn*",
+      "website/**/volume_attachment*"
     ]
     "service/ecr" = [
       "**/*_ecr_*",
@@ -711,26 +873,25 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/efs" = [
       "**/*_efs_*",
-      "**/efs_*",
-      "aws/tagsEFS*"
+      "**/efs_*"
     ]
     "service/eks" = [
       "**/*_eks_*",
       "**/eks_*"
     ]
     "service/elastic-transcoder" = [
+      "**/*_elastictranscoder_*",
+      "**/elastictranscoder_*",
       "**/*_elastic_transcoder_*",
       "**/elastic_transcoder_*"
     ]
     "service/elasticache" = [
       "**/*_elasticache_*",
-      "**/elasticache_*",
-      "aws/tagsEC*"
+      "**/elasticache_*"
     ]
     "service/elasticbeanstalk" = [
       "**/*_elastic_beanstalk_*",
-      "**/elastic_beanstalk_*",
-      "aws/tagsBeanstalk*"
+      "**/elastic_beanstalk_*"
     ]
     "service/elasticsearch" = [
       "**/*_elasticsearch_*",
@@ -742,12 +903,13 @@ behavior "pull_request_path_labeler" "service_labels" {
       "aws/*_aws_elb*",
       "aws/*_aws_lb_cookie_stickiness_policy*",
       "aws/*_aws_lb_ssl_negotiation_policy*",
+      "aws/*_aws_load_balancer*",
       "aws/*_aws_proxy_protocol_policy*",
-      "aws/tagsELB*",
       "website/**/app_cookie_stickiness_policy*",
       "website/**/elb*",
       "website/**/lb_cookie_stickiness_policy*",
       "website/**/lb_ssl_negotiation_policy*",
+      "website/**/load_balancer*",
       "website/**/proxy_protocol_policy*"
     ]
     "service/elbv2" = [
@@ -802,14 +964,25 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_iam_*",
       "**/iam_*"
     ]
+    "service/imagebuilder" = [
+      "**/*_imagebuilder_*",
+      "**/imagebuilder_*"
+    ]
     "service/inspector" = [
       "**/*_inspector_*",
-      "**/inspector_*",
-      "aws/tagsInspector*"
+      "**/inspector_*"
     ]
     "service/iot" = [
       "**/*_iot_*",
       "**/iot_*"
+    ]
+    "service/iotanalytics" = [
+      "**/*_iotanalytics_*",
+      "**/iotanalytics_*"
+    ]
+    "service/iotevents" = [
+      "**/*_iotevents_*",
+      "**/iotevents_*"
     ]
     "service/kafka" = [
       "**/*_msk_*",
@@ -817,22 +990,23 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/kinesis" = [
       "aws/*_aws_kinesis_stream*",
-      "aws/tags_kinesis*",
       "website/kinesis_stream*"
     ]
     "service/kinesisanalytics" = [
-      "**/*_kinesisanalytics_*",
-      "**/kinesisanalytics_*"
+      "**/*_kinesis_analytics_*",
+      "**/kinesis_analytics_*"
+    ]
+    "service/kinesisanalyticsv2" = [
+      "**/*_kinesisanalyticsv2_*",
+      "**/kinesisanalyticsv2_*"
     ]
     "service/kms" = [
       "**/*_kms_*",
-      "**/kms_*",
-      "aws/tagsKMS*"
+      "**/kms_*"
     ]
     "service/lambda" = [
       "**/*_lambda_*",
-      "**/lambda_*",
-      "aws/tagsLambda*"
+      "**/lambda_*"
     ]
     "service/lexmodelbuildingservice" = [
       "**/*_lex_*",
@@ -853,6 +1027,10 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/macie" = [
       "**/*_macie_*",
       "**/macie_*"
+    ]
+    "service/marketplacecatalog" = [
+      "**/*_marketplace_catalog_*",
+      "**/marketplace_catalog_*"
     ]
     "service/mediaconnect" = [
       "**/*_media_connect_*",
@@ -888,17 +1066,23 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/neptune" = [
       "**/*_neptune_*",
-      "**/neptune_*",
-      "aws/tagsNeptune*"
+      "**/neptune_*"
+    ]
+    "service/networkmanager" = [
+      "**/*_networkmanager_*",
+      "**/networkmanager_*"
     ]
     "service/opsworks" = [
       "**/*_opsworks_*",
-      "**/opsworks_*",
-      "aws/tagsOpsworks*"
+      "**/opsworks_*"
     ]
     "service/organizations" = [
       "**/*_organizations_*",
       "**/organizations_*"
+    ]
+    "service/outposts" = [
+      "**/*_outposts_*",
+      "**/outposts_*"
     ]
     "service/pinpoint" = [
       "**/*_pinpoint_*",
@@ -912,6 +1096,14 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_pricing_*",
       "**/pricing_*"
     ]
+    "service/qldb" = [
+      "**/*_qldb_*",
+      "**/qldb_*"
+    ]
+    "service/quicksight" = [
+      "**/*_quicksight_*",
+      "**/quicksight_*"
+    ]
     "service/ram" = [
       "**/*_ram_*",
       "**/ram_*"
@@ -919,18 +1111,20 @@ behavior "pull_request_path_labeler" "service_labels" {
     "service/rds" = [
       "aws/*_aws_db_*",
       "aws/*_aws_rds_*",
-      "aws/tagsRDS*",
       "website/**/db_*",
       "website/**/rds_*"
     ]
     "service/redshift" = [
       "**/*_redshift_*",
-      "**/redshift_*",
-      "aws/tagsRedshift*"
+      "**/redshift_*"
     ]
     "service/resourcegroups" = [
       "**/*_resourcegroups_*",
       "**/resourcegroups_*"
+    ]
+    "service/robomaker" = [
+      "**/*_robomaker_*",
+      "**/robomaker_*",
     ]
     "service/route53" = [
       "**/*_route53_delegation_set*",
@@ -942,16 +1136,15 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/route53_health_check*",
       "**/route53_query_log*",
       "**/route53_record*",
-      "**/route53_zone*",
-      "aws/tags_route53*"
-    ]
-    "service/robomaker" = [
-      "**/*_robomaker_*",
-      "**/robomaker_*",
+      "**/route53_zone*"
     ]
     "service/route53domains" = [
-      "**/*_route53_domains_*",
-      "**/route53_domains_*"
+      "**/*_route53domains_*",
+      "**/route53domains_*"
+    ]
+    "service/route53resolver" = [
+      "**/*_route53_resolver_*",
+      "**/route53_resolver_*"
     ]
     "service/s3" = [
       "**/*_s3_bucket*",
@@ -969,8 +1162,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/secretsmanager" = [
       "**/*_secretsmanager_*",
-      "**/secretsmanager_*",
-      "aws/tagsSecretsManager*"
+      "**/secretsmanager_*"
     ]
     "service/securityhub" = [
       "**/*_securityhub_*",
@@ -990,8 +1182,7 @@ behavior "pull_request_path_labeler" "service_labels" {
     ]
     "service/ses" = [
       "**/*_ses_*",
-      "**/ses_*",
-      "aws/tagsSSM*"
+      "**/ses_*"
     ]
     "service/sfn" = [
       "**/*_sfn_*",
@@ -1033,6 +1224,10 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_swf_*",
       "**/swf_*"
     ]
+    "service/synthetics" = [
+      "**/*_synthetics_*",
+      "**/synthetics_*"
+    ]
     "service/transfer" = [
       "**/*_transfer_*",
       "**/transfer_*"
@@ -1043,9 +1238,17 @@ behavior "pull_request_path_labeler" "service_labels" {
       "**/*_wafregional_*",
       "**/wafregional_*"
     ]
+    "service/wafv2" = [
+      "**/*_wafv2_*",
+      "**/wafv2_*",
+    ]
     "service/workdocs" = [
       "**/*_workdocs_*",
       "**/workdocs_*"
+    ]
+    "service/worklink" = [
+      "**/*_worklink_*",
+      "**/worklink_*"
     ]
     "service/workmail" = [
       "**/*_workmail_*",

@@ -1,14 +1,14 @@
 ---
+subcategory: "EFS"
 layout: "aws"
 page_title: "AWS: aws_efs_file_system"
-sidebar_current: "docs-aws-datasource-efs-file-system"
 description: |-
-  Provides an Elastic File System (EFS) data source.
+  Provides an Elastic File System (EFS) File System data source.
 ---
 
 # Data Source: aws_efs_file_system
 
-Provides information about an Elastic File System (EFS).
+Provides information about an Elastic File System (EFS) File System.
 
 ## Example Usage
 
@@ -35,8 +35,12 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - Amazon Resource Name of the file system.
-* `performance_mode` - The PerformanceMode of the file system.
-* `tags` - The list of tags assigned to the file system.
+* `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
 * `encrypted` - Whether EFS is encrypted.
 * `kms_key_id` - The ARN for the KMS encryption key.
-* `dns_name` - The DNS name for the filesystem per [documented convention](http://docs.aws.amazon.com/efs/latest/ug/mounting-fs-mount-cmd-dns-name.html).
+* `lifecycle_policy` - A file system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object.
+* `performance_mode` - The file system performance mode.
+* `provisioned_throughput_in_mibps` - The throughput, measured in MiB/s, that you want to provision for the file system.
+* `tags` -A map of tags to assign to the file system.
+* `throughput_mode` - Throughput mode for the file system.
+* `size_in_bytes` - The current byte count used by the file system.

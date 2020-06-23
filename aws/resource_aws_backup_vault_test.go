@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsBackupVault_basic(t *testing.T) {
@@ -105,6 +105,28 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupVault_disappears(t *testing.T) {
+	var vault backup.DescribeBackupVaultOutput
+
+	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupVaultConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

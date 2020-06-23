@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
@@ -18,7 +18,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -37,7 +37,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
@@ -134,8 +134,31 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 	}
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
+func testAccEc2ClientVpnNetworkAssociationConfigAcmCertificateBase() string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+
 	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+}
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
+}
+
+func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
+	return testAccEc2ClientVpnNetworkAssociationConfigAcmCertificateBase() + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -145,6 +168,7 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
+  availability_zone       = data.aws_availability_zones.available.names[0]
   cidr_block              = "10.1.1.0/24"
   vpc_id                  = "${aws_vpc.test.id}"
   map_public_ip_on_launch = true
@@ -154,41 +178,14 @@ resource "aws_subnet" "test" {
   }
 }
 
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-
-resource "aws_acm_certificate" "cert" {
-  private_key      = "${tls_private_key.example.private_key_pem}"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-}
-
 resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.cert.arn}"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
   client_cidr_block      = "10.0.0.0/16"
 
   authentication_options {
     type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.cert.arn}"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
   }
 
   connection_log_options {

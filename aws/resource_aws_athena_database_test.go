@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAthenaDatabase_basic(t *testing.T) {
@@ -136,7 +136,7 @@ func testAccCheckAWSAthenaDatabaseDestroy(s *terraform.State) error {
 		}
 
 		rInt := acctest.RandInt()
-		bucketName := fmt.Sprintf("tf-athena-db-%d", rInt)
+		bucketName := fmt.Sprintf("tf-test-athena-db-%d", rInt)
 		_, err := s3conn.CreateBucket(&s3.CreateBucketInput{
 			Bucket: aws.String(bucketName),
 		})
@@ -333,7 +333,7 @@ func testAccAthenaDatabaseFindBucketName(s *terraform.State, dbName string) (buc
 func testAccAthenaDatabaseConfig(randInt int, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-athena-db-%[1]d"
+  bucket        = "tf-test-athena-db-%[1]d"
   force_destroy = true
 }
 
@@ -352,7 +352,7 @@ resource "aws_kms_key" "hoge" {
 }
 
 resource "aws_s3_bucket" "hoge" {
-  bucket        = "tf-athena-db-%[1]d"
+  bucket        = "tf-test-athena-db-%[1]d"
   force_destroy = true
 
   server_side_encryption_configuration {

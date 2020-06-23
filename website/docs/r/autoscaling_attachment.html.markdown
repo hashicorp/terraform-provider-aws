@@ -1,7 +1,7 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_attachment"
-sidebar_current: "docs-aws-resource-autoscaling-attachment"
 description: |-
   Provides an AutoScaling Group Attachment resource.
 ---

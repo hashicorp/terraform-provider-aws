@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAPIGatewayGatewayResponse_basic(t *testing.T) {
@@ -64,7 +64,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 			return fmt.Errorf("No API Gateway Gateway Response ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetGatewayResponseInput{
 			RestApiId:    aws.String(s.RootModule().Resources["aws_api_gateway_rest_api.main"].Primary.ID),
@@ -82,7 +82,7 @@ func testAccCheckAWSAPIGatewayGatewayResponseExists(n string, res *apigateway.Up
 }
 
 func testAccCheckAWSAPIGatewayGatewayResponseDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_gateway_response" {

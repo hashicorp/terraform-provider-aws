@@ -7,9 +7,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAutoscalingGroups_basic(t *testing.T) {
@@ -92,7 +92,14 @@ data "aws_ami" "test_ami" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_launch_configuration" "foobar" {
   image_id      = "${data.aws_ami.test_ami.id}"
@@ -167,7 +174,14 @@ data "aws_ami" "test_ami" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_launch_configuration" "foobar" {
   image_id      = "${data.aws_ami.test_ami.id}"

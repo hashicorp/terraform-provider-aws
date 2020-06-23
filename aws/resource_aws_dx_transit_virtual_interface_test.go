@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsDxTransitVirtualInterface(t *testing.T) {
@@ -54,6 +54,7 @@ func testAccAwsDxTransitVirtualInterface_basic(t *testing.T) {
 					testAccCheckAwsDxTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
@@ -74,6 +75,7 @@ func testAccAwsDxTransitVirtualInterface_basic(t *testing.T) {
 					testAccCheckAwsDxTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
@@ -124,6 +126,7 @@ func testAccAwsDxTransitVirtualInterface_Tags(t *testing.T) {
 					testAccCheckAwsDxTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
@@ -147,6 +150,7 @@ func testAccAwsDxTransitVirtualInterface_Tags(t *testing.T) {
 					testAccCheckAwsDxTransitVirtualInterfaceExists(resourceName, &vif),
 					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
 					resource.TestCheckResourceAttrSet(resourceName, "amazon_address"),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
 					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
 					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),

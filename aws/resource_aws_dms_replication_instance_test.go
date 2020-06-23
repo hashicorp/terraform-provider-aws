@@ -2,16 +2,80 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	gversion "github.com/hashicorp/go-version"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_dms_replication_instance", &resource.Sweeper{
+		Name: "aws_dms_replication_instance",
+		F:    testSweepDmsReplicationInstances,
+	})
+}
+
+func testSweepDmsReplicationInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).dmsconn
+
+	err = conn.DescribeReplicationInstancesPages(&dms.DescribeReplicationInstancesInput{}, func(page *dms.DescribeReplicationInstancesOutput, lastPage bool) bool {
+		for _, instance := range page.ReplicationInstances {
+			arn := aws.StringValue(instance.ReplicationInstanceArn)
+			input := &dms.DeleteReplicationInstanceInput{
+				ReplicationInstanceArn: instance.ReplicationInstanceArn,
+			}
+
+			log.Printf("[INFO] Deleting DMS Replication Instance: %s", arn)
+			_, err := conn.DeleteReplicationInstance(input)
+
+			if isAWSErr(err, dms.ErrCodeResourceNotFoundFault, "") {
+				continue
+			}
+
+			if err != nil {
+				log.Printf("[ERROR] Error deleting DMS Replication Instance (%s): %s", arn, err)
+				continue
+			}
+
+			stateConf := &resource.StateChangeConf{
+				Pending:    []string{"deleting"},
+				Target:     []string{},
+				Refresh:    resourceAwsDmsReplicationInstanceStateRefreshFunc(conn, aws.StringValue(instance.ReplicationInstanceIdentifier)),
+				Timeout:    30 * time.Minute,
+				MinTimeout: 10 * time.Second,
+				Delay:      30 * time.Second,
+			}
+
+			if _, err := stateConf.WaitForState(); err != nil {
+				log.Printf("[ERROR] Error waiting for DMS Replication Instance (%s) deletion: %s", arn, err)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping DMS Replication Instance sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("Error retrieving DMS Replication Instances: %s", err)
+	}
+
+	return nil
+}
 
 func TestAccAWSDmsReplicationInstance_Basic(t *testing.T) {
 	// NOTE: Using larger dms.c4.large here for AWS GovCloud (US) support
@@ -620,7 +684,14 @@ resource "aws_dms_replication_instance" "test" {
 
 func testAccAWSDmsReplicationInstanceConfig_AvailabilityZone(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_partition" "current" {}
 
@@ -714,7 +785,14 @@ resource "aws_dms_replication_instance" "test" {
 
 func testAccAWSDmsReplicationInstanceConfig_ReplicationSubnetGroupId(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_partition" "current" {}
 
@@ -788,7 +866,14 @@ resource "aws_dms_replication_instance" "test" {
 
 func testAccAWSDmsReplicationInstanceConfig_VpcSecurityGroupIds(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 data "aws_partition" "current" {}
 

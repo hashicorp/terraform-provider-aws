@@ -1,7 +1,7 @@
 ---
+subcategory: "WorkLink"
 layout: "aws"
 page_title: "AWS: aws_worklink_website_certificate_authority_association"
-sidebar_current: "docs-aws-resource-worklink-website-certificate-authority-association"
 description: |-
   Provides a AWS WorkLink Website Certificate Authority Association resource.
 ---

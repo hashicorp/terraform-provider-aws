@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsOpsworksPermission() *schema.Resource {
@@ -116,8 +116,8 @@ func resourceAwsOpsworksSetPermission(d *schema.ResourceData, meta interface{}) 
 		StackId:    aws.String(d.Get("stack_id").(string)),
 	}
 
-	if v, ok := d.GetOk("level"); ok {
-		req.Level = aws.String(v.(string))
+	if d.HasChange("level") {
+		req.Level = aws.String(d.Get("level").(string))
 	}
 
 	err := resource.Retry(2*time.Minute, func() *resource.RetryError {

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCallerIdentity_basic(t *testing.T) {
@@ -15,23 +15,6 @@ func TestAccAWSCallerIdentity_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsCallerIdentityConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
-				),
-			},
-		},
-	})
-}
-
-// Protects against a panic in the AWS Provider configuration.
-// See https://github.com/terraform-providers/terraform-provider-aws/pull/1227
-func TestAccAWSCallerIdentity_basic_panic(t *testing.T) {
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCheckAwsCallerIdentityConfig_basic_panic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsCallerIdentityAccountId("data.aws_caller_identity.current"),
 				),
@@ -70,13 +53,4 @@ func testAccCheckAwsCallerIdentityAccountId(n string) resource.TestCheckFunc {
 
 const testAccCheckAwsCallerIdentityConfig_basic = `
 data "aws_caller_identity" "current" { }
-`
-
-const testAccCheckAwsCallerIdentityConfig_basic_panic = `
-provider "aws" {
-  assume_role {
-  }
-}
-
-data "aws_caller_identity" "current" {}
 `

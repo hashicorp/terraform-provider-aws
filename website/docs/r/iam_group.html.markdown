@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_group"
-sidebar_current: "docs-aws-resource-iam-group"
 description: |-
   Provides an IAM group.
 ---

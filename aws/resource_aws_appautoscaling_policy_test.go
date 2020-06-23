@@ -5,12 +5,13 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
@@ -27,6 +28,11 @@ func TestValidateAppautoscalingPolicyImportInput(t *testing.T) {
 		{
 			input:         "dynamodb/table/tableName/dynamodb:table:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName",
 			expected:      []string{"dynamodb", "table/tableName", "dynamodb:table:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName"},
+			errorExpected: false,
+		},
+		{
+			input:         "dynamodb/table/tableName/index/indexName/dynamodb:index:ReadCapacityUnits/DynamoDBReadCapacityUtilization:table/tableName/index/indexName",
+			expected:      []string{"dynamodb", "table/tableName/index/indexName", "dynamodb:index:ReadCapacityUnits", "DynamoDBReadCapacityUtilization:table/tableName/index/indexName"},
 			errorExpected: false,
 		},
 		{
@@ -78,9 +84,10 @@ func TestAccAWSAppautoScalingPolicy_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSAppautoscalingPolicyDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppautoscalingPolicyConfig(rName),
@@ -138,9 +145,10 @@ func TestAccAWSAppautoScalingPolicy_scaleOutAndIn(t *testing.T) {
 	randPolicyNamePrefix := fmt.Sprintf("terraform-test-foobar-%s", acctest.RandString(5))
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSAppautoscalingPolicyDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAppautoscalingPolicyScaleOutAndInConfig(randClusterName, randPolicyNamePrefix),
@@ -203,6 +211,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -210,7 +219,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAppautoscalingPolicySpotFleetRequestConfig(randPolicyName),
+				Config: testAccAWSAppautoscalingPolicySpotFleetRequestConfig(randPolicyName, validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAppautoscalingPolicyExists("aws_appautoscaling_policy.test", &policy),
 					resource.TestCheckResourceAttr("aws_appautoscaling_policy.test", "name", randPolicyName),
@@ -230,7 +239,7 @@ func TestAccAWSAppautoScalingPolicy_spotFleetRequest(t *testing.T) {
 
 // TODO: Add test for CustomizedMetricSpecification
 // The field doesn't seem to be accessible for common AWS customers (yet?)
-func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
+func TestAccAWSAppautoScalingPolicy_dynamodb_table(t *testing.T) {
 	var policy applicationautoscaling.ScalingPolicy
 
 	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", acctest.RandString(5))
@@ -254,6 +263,37 @@ func TestAccAWSAppautoScalingPolicy_dynamoDb(t *testing.T) {
 				ResourceName:      "aws_appautoscaling_policy.dynamo_test",
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc("aws_appautoscaling_policy.dynamo_test"),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppautoScalingPolicy_dynamodb_index(t *testing.T) {
+	var policy applicationautoscaling.ScalingPolicy
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	appautoscalingTargetResourceName := "aws_appautoscaling_target.test"
+	resourceName := "aws_appautoscaling_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAppautoscalingPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAppautoscalingPolicyDynamoDBIndex(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAppautoscalingPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s/index/GameTitleIndex", rName)),
+					resource.TestCheckResourceAttr(resourceName, "policy_type", "TargetTrackingScaling"),
+					resource.TestCheckResourceAttrPair(resourceName, "service_namespace", appautoscalingTargetResourceName, "service_namespace"),
+					resource.TestCheckResourceAttrPair(resourceName, "scalable_dimension", appautoscalingTargetResourceName, "scalable_dimension"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSAppautoscalingPolicyImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -497,9 +537,25 @@ resource "aws_appautoscaling_policy" "test" {
 `, rName)
 }
 
-func testAccAWSAppautoscalingPolicySpotFleetRequestConfig(
-	randPolicyName string) string {
+func testAccAWSAppautoscalingPolicySpotFleetRequestConfig(randPolicyName, validUntil string) string {
 	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "fleet_role" {
   assume_role_policy = <<EOF
 {
@@ -509,8 +565,8 @@ resource "aws_iam_role" "fleet_role" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
+          "spotfleet.${data.aws_partition.current.dns_suffix}",
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -522,19 +578,19 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
   role       = "${aws_iam_role.fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.fleet_role.arn}"
   spot_price                          = "0.005"
   target_capacity                     = 2
-  valid_until                         = "2019-11-04T20:44:20Z"
+  valid_until                         = %[2]q
   terminate_instances_with_expiration = true
 
   launch_specification {
     instance_type = "m3.medium"
-    ami           = "ami-d06a90b0"
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   }
 }
 
@@ -563,7 +619,7 @@ resource "aws_appautoscaling_policy" "test" {
     }
   }
 }
-`, randPolicyName)
+`, randPolicyName, validUntil)
 }
 
 func testAccAWSAppautoscalingPolicyDynamoDB(
@@ -609,6 +665,69 @@ resource "aws_appautoscaling_policy" "dynamo_test" {
   depends_on = ["aws_appautoscaling_target.dynamo_test"]
 }
 `, randPolicyName)
+}
+
+func testAccAWSAppautoscalingPolicyDynamoDBIndex(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%[1]s"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "UserId"
+  range_key      = "GameTitle"
+
+  attribute {
+    name = "UserId"
+    type = "S"
+  }
+
+  attribute {
+    name = "GameTitle"
+    type = "S"
+  }
+
+  attribute {
+    name = "TopScore"
+    type = "N"
+  }
+
+  global_secondary_index {
+    name               = "GameTitleIndex"
+    hash_key           = "GameTitle"
+    range_key          = "TopScore"
+    write_capacity     = 1
+    read_capacity      = 1
+    projection_type    = "INCLUDE"
+    non_key_attributes = ["UserId"]
+  }
+}
+
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.test.name}/index/GameTitleIndex"
+  scalable_dimension = "dynamodb:index:WriteCapacityUnits"
+  min_capacity       = 1
+  max_capacity       = 10
+}
+
+resource "aws_appautoscaling_policy" "test" {
+  name               = "DynamoDBWriteCapacityUtilization:${aws_appautoscaling_target.test.resource_id}"
+  policy_type        = "TargetTrackingScaling"
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+
+  target_tracking_scaling_policy_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBWriteCapacityUtilization"
+    }
+
+    scale_in_cooldown  = 10
+    scale_out_cooldown = 10
+    target_value       = 70
+  }
+}
+`, rName)
 }
 
 func testAccAWSAppautoscalingPolicy_multiplePoliciesSameName(tableName1, tableName2, namePrefix string) string {

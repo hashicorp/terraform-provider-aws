@@ -12,19 +12,25 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	"github.com/hashicorp/vault/helper/pgpkeys"
 )
 
 func TestGenerateIAMPassword(t *testing.T) {
-	p := generateIAMPassword(6)
+	p, err := generateIAMPassword(6)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	if len(p) != 6 {
 		t.Fatalf("expected a 6 character password, got: %q", p)
 	}
 
-	p = generateIAMPassword(128)
+	p, err = generateIAMPassword(128)
+	if err != nil {
+		t.Fatalf(err.Error())
+	}
 	if len(p) != 128 {
 		t.Fatalf("expected a 128 character password, got: %q", p)
 	}
@@ -257,9 +263,13 @@ func testDecryptPasswordAndTest(nProfile, nAccessKey, key string) resource.TestC
 
 		return resource.Retry(2*time.Minute, func() *resource.RetryError {
 			iamAsCreatedUser := iam.New(iamAsCreatedUserSession)
+			newPassword, err := generateIAMPassword(20)
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
 			_, err = iamAsCreatedUser.ChangePassword(&iam.ChangePasswordInput{
 				OldPassword: aws.String(decryptedPassword.String()),
-				NewPassword: aws.String(generateIAMPassword(20)),
+				NewPassword: aws.String(newPassword),
 			})
 			if err != nil {
 				// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.

@@ -7,10 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -163,8 +163,9 @@ func TestAccAwsDxGatewayAssociationProposal_basicTransitGateway(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckAwsDxGatewayAssociationProposalDestroy,
+		ProviderFactories:   testAccProviderFactories(&providers),
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationProposalDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationProposalConfig_basicTransitGateway(rName, rBgpAsn),

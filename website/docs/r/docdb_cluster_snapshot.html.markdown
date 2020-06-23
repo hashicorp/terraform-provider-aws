@@ -1,7 +1,7 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_cluster_snapshot"
-sidebar_current: "docs-aws-resource-docdb-cluster-snapshot"
 description: |-
   Manages a DocDB database cluster snapshot.
 ---

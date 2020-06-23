@@ -2,21 +2,87 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appmesh"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_appmesh_virtual_node", &resource.Sweeper{
+		Name: "aws_appmesh_virtual_node",
+		F:    testSweepAppmeshVirtualNodes,
+	})
+}
+
+func testSweepAppmeshVirtualNodes(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).appmeshconn
+
+	err = conn.ListMeshesPages(&appmesh.ListMeshesInput{}, func(page *appmesh.ListMeshesOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, mesh := range page.Meshes {
+			listVirtualNodesInput := &appmesh.ListVirtualNodesInput{
+				MeshName: mesh.MeshName,
+			}
+			meshName := aws.StringValue(mesh.MeshName)
+
+			err := conn.ListVirtualNodesPages(listVirtualNodesInput, func(page *appmesh.ListVirtualNodesOutput, isLast bool) bool {
+				if page == nil {
+					return !isLast
+				}
+
+				for _, virtualNode := range page.VirtualNodes {
+					input := &appmesh.DeleteVirtualNodeInput{
+						MeshName:        mesh.MeshName,
+						VirtualNodeName: virtualNode.VirtualNodeName,
+					}
+					virtualNodeName := aws.StringValue(virtualNode.VirtualNodeName)
+
+					log.Printf("[INFO] Deleting Appmesh Mesh (%s) Virtual Node: %s", meshName, virtualNodeName)
+					_, err := conn.DeleteVirtualNode(input)
+
+					if err != nil {
+						log.Printf("[ERROR] Error deleting Appmesh Mesh (%s) Virtual Node (%s): %s", meshName, virtualNodeName, err)
+					}
+				}
+
+				return !isLast
+			})
+
+			if err != nil {
+				log.Printf("[ERROR] Error retrieving Appmesh Mesh (%s) Virtual Nodes: %s", meshName, err)
+			}
+		}
+
+		return !isLast
+	})
+	if err != nil {
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Appmesh Virtual Node sweep for %s: %s", region, err)
+			return nil
+		}
+		return fmt.Errorf("error retrieving Appmesh Virtual Nodes: %s", err)
+	}
+
+	return nil
+}
 
 func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -36,7 +102,7 @@ func testAccAwsAppmeshVirtualNode_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualNode/%s", meshName, vnName))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -53,9 +119,10 @@ func testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
 	nsResourceName := "aws_service_discovery_http_namespace.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
-	rName := fmt.Sprintf("tf-testacc-appmeshvn-%s", acctest.RandStringFromCharSet(11, acctest.CharSetAlphaNum))
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
+	// Avoid 'config is invalid: last character of "name" must be a letter' for aws_service_discovery_http_namespace.
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(20, acctest.CharSetAlpha))
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -105,13 +172,14 @@ func testAccAwsAppmeshVirtualNode_cloudMapServiceDiscovery(t *testing.T) {
 func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAppmeshVirtualNodeDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAppmeshVirtualNodeDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppmeshVirtualNodeConfig_listenerHealthChecks(meshName, vnName),
@@ -124,24 +192,24 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2622272660.virtual_service.0.virtual_service_name", "servicea.simpleapp.local"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.0.healthy_threshold", "3"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.0.interval_millis", "5000"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.0.path", "/ping"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.0.port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.0.protocol", "http"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.0.timeout_millis", "2000"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.health_check.0.unhealthy_threshold", "5"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.port_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.port_mapping.0.port", "8080"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.433446196.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.healthy_threshold", "3"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.interval_millis", "5000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.path", "/ping"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.timeout_millis", "2000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "5"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualNode/%s", meshName, vnName))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -157,23 +225,23 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2025248115.virtual_service.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.backend.2025248115.virtual_service.0.virtual_service_name", "serviced.simpleapp.local"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.health_check.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.health_check.0.healthy_threshold", "4"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.health_check.0.interval_millis", "7000"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.health_check.0.port", "8081"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.health_check.0.protocol", "tcp"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.health_check.0.timeout_millis", "3000"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.health_check.0.unhealthy_threshold", "9"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.port_mapping.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.port_mapping.0.port", "8081"),
-					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.3446683576.port_mapping.0.protocol", "http"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.healthy_threshold", "4"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.interval_millis", "7000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.protocol", "tcp"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.timeout_millis", "3000"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.health_check.0.unhealthy_threshold", "9"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.port", "8081"),
+					resource.TestCheckResourceAttr(resourceName, "spec.0.listener.0.port_mapping.0.protocol", "http"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.logging.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "spec.0.service_discovery.0.dns.0.hostname", "serviceb1.simpleapp.local"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_updated_date"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:appmesh:[^:]+:\\d{12}:mesh/%s/virtualNode/%s", meshName, vnName))),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "appmesh", fmt.Sprintf("mesh/%s/virtualNode/%s", meshName, vnName)),
 				),
 			},
 			{
@@ -189,8 +257,8 @@ func testAccAwsAppmeshVirtualNode_listenerHealthChecks(t *testing.T) {
 func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -235,8 +303,8 @@ func testAccAwsAppmeshVirtualNode_logging(t *testing.T) {
 func testAccAwsAppmeshVirtualNode_tags(t *testing.T) {
 	var vn appmesh.VirtualNodeData
 	resourceName := "aws_appmesh_virtual_node.test"
-	meshName := fmt.Sprintf("tf-test-mesh-%d", acctest.RandInt())
-	vnName := fmt.Sprintf("tf-test-node-%d", acctest.RandInt())
+	meshName := acctest.RandomWithPrefix("tf-acc-test")
+	vnName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

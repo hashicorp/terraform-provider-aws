@@ -1,7 +1,7 @@
 ---
+subcategory: "RAM"
 layout: "aws"
 page_title: "AWS: aws_ram_resource_association"
-sidebar_current: "docs-aws-resource-ram-resource-association"
 description: |-
   Manages a Resource Access Manager (RAM) Resource Association.
 ---

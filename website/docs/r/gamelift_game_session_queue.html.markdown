@@ -1,7 +1,7 @@
 ---
+subcategory: "Gamelift"
 layout: "aws"
 page_title: "AWS: aws_gamelift_game_session_queue"
-sidebar_current: "docs-aws-resource-gamelift-session-queue"
 description: |-
   Provides a Gamelift Game Session Queue resource.
 ---
@@ -42,6 +42,7 @@ The following arguments are supported:
 * `timeout_in_seconds` - (Required) Maximum time a game session request can remain in the queue.
 * `destinations` - (Optional) List of fleet/alias ARNs used by session queue for placing game sessions.
 * `player_latency_policy` - (Optional) One or more policies used to choose fleet based on player latency. See below.
+* `tags` - (Optional) Key-value map of resource tags
 
 ### Nested Fields
 

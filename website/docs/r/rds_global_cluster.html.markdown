@@ -1,18 +1,16 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_rds_global_cluster"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-x"
 description: |-
-  Manages a RDS Global Cluster
+  Manages an RDS Global Cluster
 ---
 
 # Resource: aws_rds_global_cluster
 
-Manages a RDS Global Cluster, which is an Aurora global database spread across multiple regions. The global database contains a single primary cluster with read-write capability, and a read-only secondary cluster that receives data from the primary cluster through high-speed replication performed by the Aurora storage subsystem.
+Manages an RDS Global Cluster, which is an Aurora global database spread across multiple regions. The global database contains a single primary cluster with read-write capability, and a read-only secondary cluster that receives data from the primary cluster through high-speed replication performed by the Aurora storage subsystem.
 
 More information about Aurora global databases can be found in the [Aurora User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database.html#aurora-global-database-creating).
-
-~> **NOTE:** RDS only supports the `aurora` engine (MySQL 5.6 compatible) for Global Clusters at this time.
 
 ## Example Usage
 
@@ -69,11 +67,12 @@ resource "aws_rds_cluster_instance" "secondary" {
 
 The following arguments are supported:
 
-*  `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
+* `global_cluster_identifier` - (Required, Forces new resources) The global cluster identifier.
 * `database_name` - (Optional, Forces new resources) Name for an automatically created database on cluster creation.
 * `deletion_protection` - (Optional) If the Global Cluster should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
-* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Valid values: `aurora`. Defaults to `aurora`.
+* `engine` - (Optional, Forces new resources) Name of the database engine to be used for this DB cluster. Valid values: `aurora`, `aurora-mysql`, `aurora-postgresql`. Defaults to `aurora`.
 * `engine_version` - (Optional, Forces new resources) Engine version of the Aurora global database.
+  * **NOTE:** When the engine is set to `aurora-mysql`, an engine version compatible with global database is required. The earliest available version is `5.7.mysql_aurora.2.06.0`.
 * `storage_encrypted` - (Optional, Forces new resources) Specifies whether the DB cluster is encrypted. The default is `false`.
 
 ## Attribute Reference

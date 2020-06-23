@@ -9,10 +9,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -547,6 +547,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -583,6 +588,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -620,6 +630,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -659,6 +674,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 data "aws_organizations_organization" "test" {}
@@ -721,6 +741,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -759,6 +784,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -797,6 +827,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -837,6 +872,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -878,6 +918,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -919,6 +964,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -956,6 +1006,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {

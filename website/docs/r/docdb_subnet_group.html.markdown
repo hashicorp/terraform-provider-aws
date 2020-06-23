@@ -1,7 +1,7 @@
 ---
+subcategory: "DocumentDB"
 layout: "aws"
 page_title: "AWS: aws_docdb_subnet_group"
-sidebar_current: "docs-aws-resource-docdb-subnet-group"
 description: |-
   Provides an DocumentDB subnet group resource.
 ---
@@ -31,7 +31,7 @@ The following arguments are supported:
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `description` - (Optional) The description of the docDB subnet group. Defaults to "Managed by Terraform".
 * `subnet_ids` - (Required) A list of VPC subnet IDs.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

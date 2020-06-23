@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "Terraform AWS Provider Version 3 Upgrade Guide"
-sidebar_current: "docs-aws-guide-version-3-upgrade"
 description: |-
   Terraform AWS Provider Version 3 Upgrade Guide
 ---
@@ -19,6 +19,7 @@ Upgrade topics:
 <!-- TOC depthFrom:2 depthTo:2 -->
 
 - [Provider Version Configuration](#provider-version-configuration)
+- [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 
 <!-- /TOC -->
@@ -48,6 +49,32 @@ provider "aws" {
   # ... other configuration ...
 
   version = "~> 3.0"
+}
+```
+
+## Data Source: aws_lambda_invocation
+
+### result_map Attribute Removal
+
+Switch your Terraform configuration to the `result` attribute with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html) instead.
+
+For example, given this previous configuration:
+
+```hcl
+# In Terraform 0.11 and earlier, the result_map attribute can be used
+# to convert a result JSON string to a map of string keys to string values.
+output "lambda_result" {
+  value = "${data.aws_lambda_invocation.example.result_map["key1"]}"
+}
+```
+
+An updated configuration:
+
+```hcl
+# In Terraform 0.12 and later, the jsondecode() function can be used
+# to convert a result JSON string to native Terraform types.
+output "lambda_result" {
+  value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
 
@@ -181,6 +208,39 @@ resource "aws_emr_cluster" "example" {
 
   master_instance_group {
     instance_type = "m4.large"
+  }
+}
+```
+
+## Resource: aws_lb_listener_rule
+
+### condition.field and condition.values Arguments Removal
+
+Switch your Terraform configuration to use the `host_header` or `path_pattern` configuration block instead.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_lb_listener_rule" "example" {
+  # ... other configuration ...
+
+  condition {
+    field  = "path-pattern"
+    values = ["/static/*"]
+  }
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_lb_listener_rule" "example" {
+  # ... other configuration ...
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
   }
 }
 ```

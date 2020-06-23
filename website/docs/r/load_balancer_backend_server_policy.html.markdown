@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_load_balancer_backend_server_policy"
-sidebar_current: "docs-aws-resource-load-balancer-backend-server-policy"
 description: |-
   Attaches a load balancer policy to an ELB backend server.
 ---

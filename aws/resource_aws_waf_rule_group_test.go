@@ -3,20 +3,24 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
 	resource.AddTestSweepers("aws_waf_rule_group", &resource.Sweeper{
 		Name: "aws_waf_rule_group",
 		F:    testSweepWafRuleGroups,
+		Dependencies: []string{
+			"aws_waf_web_acl",
+		},
 	})
 }
 
@@ -69,9 +73,10 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 	resourceName := "aws_waf_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafRuleGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRuleGroupConfig(ruleName, groupName),
@@ -85,6 +90,7 @@ func TestAccAWSWafRuleGroup_basic(t *testing.T) {
 					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.action.0.type", &idx, "COUNT"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.priority", &idx, "50"),
 					testCheckResourceAttrWithIndexesAddr(resourceName, "activated_rule.%d.type", &idx, waf.WafRuleTypeRegular),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "waf", regexp.MustCompile(`rulegroup/.+`)),
 				),
 			},
 			{
@@ -171,9 +177,10 @@ func TestAccAWSWafRuleGroup_changeActivatedRules(t *testing.T) {
 	resourceName := "aws_waf_rule_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafRuleGroupDestroy,
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafRuleGroupDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRuleGroupConfig(ruleName1, groupName),
@@ -247,6 +254,56 @@ func computeWafActivatedRuleWithRuleId(rule *waf.Rule, actionType string, priori
 	}
 }
 
+func TestAccAWSWafRuleGroup_Tags(t *testing.T) {
+	var group waf.RuleGroup
+	groupName := fmt.Sprintf("test%s", acctest.RandString(5))
+	resourceName := "aws_waf_rule_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSWaf(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafWebAclDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRuleGroupConfigTags1(groupName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccAWSWafRuleGroupConfigTags2(groupName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSWafRuleGroupConfigTags1(groupName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 	var group waf.RuleGroup
 	groupName := fmt.Sprintf("test%s", acctest.RandString(5))
@@ -261,10 +318,8 @@ func TestAccAWSWafRuleGroup_noActivatedRules(t *testing.T) {
 				Config: testAccAWSWafRuleGroupConfig_noActivatedRules(groupName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSWafRuleGroupExists(resourceName, &group),
-					resource.TestCheckResourceAttr(
-						resourceName, "name", groupName),
-					resource.TestCheckResourceAttr(
-						resourceName, "activated_rule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", groupName),
+					resource.TestCheckResourceAttr(resourceName, "activated_rule.#", "0"),
 				),
 			},
 		},
@@ -334,7 +389,7 @@ func testAccCheckAWSWafRuleGroupDestroy(s *terraform.State) error {
 			}
 		}
 
-		if isAWSErr(err, "WAFNonexistentItemException", "") {
+		if isAWSErr(err, waf.ErrCodeNonexistentItemException, "") {
 			return nil
 		}
 
@@ -454,4 +509,31 @@ resource "aws_waf_rule_group" "test" {
   metric_name = "%[1]s"
 }
 `, groupName)
+}
+
+func testAccAWSWafRuleGroupConfigTags1(gName, tag1Key, tag1Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rule_group" "test" {
+  name        = "%[1]s"
+  metric_name = "%[1]s"
+
+  tags = {
+	%q = %q
+  }
+}
+`, gName, tag1Key, tag1Value)
+}
+
+func testAccAWSWafRuleGroupConfigTags2(gName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return fmt.Sprintf(`
+resource "aws_waf_rule_group" "test" {
+  name        = "%[1]s"
+  metric_name = "%[1]s"
+
+  tags = {
+	%q = %q
+	%q = %q
+  }
+}
+`, gName, tag1Key, tag1Value, tag2Key, tag2Value)
 }

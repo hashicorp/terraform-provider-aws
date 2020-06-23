@@ -1,7 +1,7 @@
 ---
+subcategory: "ElasticSearch"
 layout: "aws"
 page_title: "AWS: aws_elasticsearch_domain"
-sidebar_current: "docs-aws-resource-elasticsearch-domain"
 description: |-
   Provides an Elasticsearch Domain Policy.
 ---

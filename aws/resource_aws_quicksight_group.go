@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
@@ -82,7 +82,7 @@ func resourceAwsQuickSightGroupCreate(d *schema.ResourceData, meta interface{}) 
 
 	resp, err := conn.CreateGroup(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating Quick Sight Group: %s", err)
+		return fmt.Errorf("Error creating QuickSight Group: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.Group.GroupName)))
@@ -106,12 +106,12 @@ func resourceAwsQuickSightGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	resp, err := conn.DescribeGroup(descOpts)
 	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Quick Sight Group %s is already gone", d.Id())
+		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing Quick Sight Group (%s): %s", d.Id(), err)
+		return fmt.Errorf("Error describing QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.Group.Arn)
@@ -143,12 +143,12 @@ func resourceAwsQuickSightGroupUpdate(d *schema.ResourceData, meta interface{}) 
 
 	_, err = conn.UpdateGroup(updateOpts)
 	if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
-		log.Printf("[WARN] Quick Sight Group %s is already gone", d.Id())
+		log.Printf("[WARN] QuickSight Group %s is already gone", d.Id())
 		d.SetId("")
 		return nil
 	}
 	if err != nil {
-		return fmt.Errorf("Error updating Quick Sight Group %s: %s", d.Id(), err)
+		return fmt.Errorf("Error updating QuickSight Group %s: %s", d.Id(), err)
 	}
 
 	return resourceAwsQuickSightGroupRead(d, meta)
@@ -172,7 +172,7 @@ func resourceAwsQuickSightGroupDelete(d *schema.ResourceData, meta interface{}) 
 		if isAWSErr(err, quicksight.ErrCodeResourceNotFoundException, "") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting Quick Sight Group %s: %s", d.Id(), err)
+		return fmt.Errorf("Error deleting QuickSight Group %s: %s", d.Id(), err)
 	}
 
 	return nil

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc_endpoint_service"
-sidebar_current: "docs-aws-resource-vpc-endpoint-service"
 description: |-
   Provides a VPC Endpoint Service resource.
 ---
@@ -48,7 +48,7 @@ The following arguments are supported:
 * `acceptance_required` - (Required) Whether or not VPC endpoint connection requests to the service must be accepted by the service owner - `true` or `false`.
 * `network_load_balancer_arns` - (Required) The ARNs of one or more Network Load Balancers for the endpoint service.
 * `allowed_principals` - (Optional) The ARNs of one or more principals allowed to discover the endpoint service.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 

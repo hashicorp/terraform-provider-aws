@@ -1,7 +1,7 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_layer_version"
-sidebar_current: "docs-aws-resource-lambda-layer-version"
 description: |-
   Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse shared bits of code across multiple lambda functions.
 ---
@@ -61,8 +61,10 @@ large files efficiently.
 
 ## Import
 
-Lambda Layers can be imported using `layer_name` and `version` together.
+Lambda Layers can be imported using `arn`.
 
 ```
-$ terraform import aws_lambda_layer_version.test_layer layer-name:1
+$ terraform import \
+    aws_lambda_layer_version.test_layer \
+    arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```

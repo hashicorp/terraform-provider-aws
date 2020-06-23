@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -233,6 +233,58 @@ func TestAccAWSRdsGlobalCluster_EngineVersion_Aurora(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRdsGlobalClusterExists(resourceName, &globalCluster1),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.6.10a"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRdsGlobalCluster_EngineVersion_AuroraMySQL(t *testing.T) {
+	var globalCluster1 rds.GlobalCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_global_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRdsGlobalClusterConfigEngineVersion(rName, "aurora-mysql", "5.7.mysql_aurora.2.07.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRdsGlobalClusterExists(resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.7.mysql_aurora.2.07.1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRdsGlobalCluster_EngineVersion_AuroraPostgresql(t *testing.T) {
+	var globalCluster1 rds.GlobalCluster
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_rds_global_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSRdsGlobalCluster(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRdsGlobalClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRdsGlobalClusterConfigEngineVersion(rName, "aurora-postgresql", "10.11"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRdsGlobalClusterExists(resourceName, &globalCluster1),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "10.11"),
 				),
 			},
 			{

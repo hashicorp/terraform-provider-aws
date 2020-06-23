@@ -1,7 +1,7 @@
 ---
+subcategory: "CodePipeline"
 layout: "aws"
 page_title: "AWS: aws_codepipeline_webhook"
-sidebar_current: "docs-aws-resource-codepipeline-webhook"
 description: |-
   Provides a CodePipeline Webhook
 ---
@@ -115,7 +115,7 @@ The following arguments are supported:
 * `filter` (Required) One or more `filter` blocks. Filter blocks are documented below.
 * `target_action` - (Required) The name of the action in a pipeline you want to connect to the webhook. The action must be from the source (first) stage of the pipeline.
 * `target_pipeline` - (Required) The name of the pipeline.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 An `authentication_configuration` block supports the following arguments:
 

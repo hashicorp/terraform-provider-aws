@@ -6,36 +6,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-func TestAccAWSDxLag_importBasic(t *testing.T) {
-	resourceName := "aws_dx_lag.hoge"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxLagDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDxLagConfig(acctest.RandString(5)),
-			},
-
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
-			},
-		},
-	})
-}
 
 func TestAccAWSDxLag_basic(t *testing.T) {
 	lagName1 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
 	lagName2 := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
+	resourceName := "aws_dx_lag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -45,21 +24,27 @@ func TestAccAWSDxLag_basic(t *testing.T) {
 			{
 				Config: testAccDxLagConfig(lagName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName1),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "connections_bandwidth", "1Gbps"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "location", "EqSe2"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
+					testAccCheckAwsDxLagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", lagName1),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "location", "EqSe2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccDxLagConfig(lagName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName2),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "connections_bandwidth", "1Gbps"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "location", "EqSe2"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
+					testAccCheckAwsDxLagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", lagName2),
+					resource.TestCheckResourceAttr(resourceName, "connections_bandwidth", "1Gbps"),
+					resource.TestCheckResourceAttr(resourceName, "location", "EqSe2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -68,6 +53,7 @@ func TestAccAWSDxLag_basic(t *testing.T) {
 
 func TestAccAWSDxLag_tags(t *testing.T) {
 	lagName := fmt.Sprintf("tf-dx-lag-%s", acctest.RandString(5))
+	resourceName := "aws_dx_lag.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -77,27 +63,33 @@ func TestAccAWSDxLag_tags(t *testing.T) {
 			{
 				Config: testAccDxLagConfig_tags(lagName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.Usage", "original"),
+					testAccCheckAwsDxLagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", lagName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccDxLagConfig_tagsChanged(lagName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.Usage", "changed"),
+					testAccCheckAwsDxLagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", lagName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
 			},
 			{
 				Config: testAccDxLagConfig(lagName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxLagExists("aws_dx_lag.hoge"),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "name", lagName),
-					resource.TestCheckResourceAttr("aws_dx_lag.hoge", "tags.%", "0"),
+					testAccCheckAwsDxLagExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", lagName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -143,7 +135,7 @@ func testAccCheckAwsDxLagExists(name string) resource.TestCheckFunc {
 
 func testAccDxLagConfig(n string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_lag" "hoge" {
+resource "aws_dx_lag" "test" {
   name                  = "%s"
   connections_bandwidth = "1Gbps"
   location              = "EqSe2"
@@ -154,7 +146,7 @@ resource "aws_dx_lag" "hoge" {
 
 func testAccDxLagConfig_tags(n string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_lag" "hoge" {
+resource "aws_dx_lag" "test" {
   name                  = "%s"
   connections_bandwidth = "1Gbps"
   location              = "EqSe2"
@@ -170,7 +162,7 @@ resource "aws_dx_lag" "hoge" {
 
 func testAccDxLagConfig_tagsChanged(n string) string {
 	return fmt.Sprintf(`
-resource "aws_dx_lag" "hoge" {
+resource "aws_dx_lag" "test" {
   name                  = "%s"
   connections_bandwidth = "1Gbps"
   location              = "EqSe2"

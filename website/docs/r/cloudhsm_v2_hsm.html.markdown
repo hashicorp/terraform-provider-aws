@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudHSM v2"
 layout: "aws"
 page_title: "AWS: aws_cloudhsm_v2_hsm"
-sidebar_current: "docs-aws-resource-cloudhsm-v2-hsm"
 description: |-
   Provides a CloudHSM v2 HSM module resource.
 ---
@@ -24,6 +24,7 @@ resource "aws_cloudhsm_v2_hsm" "cloudhsm_v2_hsm" {
   cluster_id = "${data.aws_cloudhsm_v2_cluster.cluster.cluster_id}"
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:

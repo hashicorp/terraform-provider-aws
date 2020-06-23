@@ -11,9 +11,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	events "github.com/aws/aws-sdk-go/service/cloudwatchevents"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -251,7 +251,7 @@ func TestAccAWSCloudWatchEventPermission_Multiple(t *testing.T) {
 func TestAccAWSCloudWatchEventPermission_Disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_permission.test1"
 	principal := "111111111111"
-	statementID := acctest.RandomWithPrefix(t.Name())[:64]
+	statementID := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(52, acctest.CharSetAlphaNum)) // len = 64
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },

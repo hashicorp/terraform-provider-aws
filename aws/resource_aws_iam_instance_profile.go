@@ -9,8 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamInstanceProfile() *schema.Resource {
@@ -45,19 +46,10 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name_prefix"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8196-L8201
-					value := v.(string)
-					if len(value) > 128 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 128 characters", k))
-					}
-					if !regexp.MustCompile(`^[\w+=,.@-]+$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"%q must match [\\w+=,.@-]", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 128),
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"name_prefix": {
@@ -65,19 +57,10 @@ func resourceAwsIamInstanceProfile() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					// https://github.com/boto/botocore/blob/2485f5c/botocore/data/iam/2010-05-08/service-2.json#L8196-L8201
-					value := v.(string)
-					if len(value) > 64 {
-						errors = append(errors, fmt.Errorf(
-							"%q cannot be longer than 64 characters, name is limited to 128", k))
-					}
-					if !regexp.MustCompile(`^[\w+=,.@-]+$`).MatchString(value) {
-						errors = append(errors, fmt.Errorf(
-							"%q must match [\\w+=,.@-]", k))
-					}
-					return
-				},
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 64),
+					validation.StringMatch(regexp.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]"),
+				),
 			},
 
 			"path": {
@@ -117,13 +100,6 @@ func resourceAwsIamInstanceProfileCreate(d *schema.ResourceData, meta interface{
 		name = resource.PrefixedUniqueId(v.(string))
 	} else {
 		name = resource.UniqueId()
-	}
-
-	_, hasRoles := d.GetOk("roles")
-	_, hasRole := d.GetOk("role")
-
-	if !hasRole && !hasRoles {
-		return fmt.Errorf("Either `role` or `roles` (deprecated) must be specified when creating an IAM Instance Profile")
 	}
 
 	request := &iam.CreateInstanceProfileInput{
@@ -174,6 +150,9 @@ func instanceProfileAddRole(iamconn *iam.IAM, profileName, roleName string) erro
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = iamconn.AddRoleToInstanceProfile(request)
+	}
 	if err != nil {
 		return fmt.Errorf("Error adding IAM Role %s to Instance Profile %s: %s", roleName, profileName, err)
 	}
@@ -201,8 +180,6 @@ func instanceProfileSetRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
 
 	currentRoles := schema.CopySet(oldRoles)
 
-	d.Partial(true)
-
 	for _, role := range oldRoles.Difference(newRoles).List() {
 		err := instanceProfileRemoveRole(iamconn, d.Id(), role.(string))
 		if err != nil {
@@ -210,7 +187,6 @@ func instanceProfileSetRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
 		}
 		currentRoles.Remove(role)
 		d.Set("roles", currentRoles)
-		d.SetPartial("roles")
 	}
 
 	for _, role := range newRoles.Difference(oldRoles).List() {
@@ -220,10 +196,7 @@ func instanceProfileSetRoles(d *schema.ResourceData, iamconn *iam.IAM) error {
 		}
 		currentRoles.Add(role)
 		d.Set("roles", currentRoles)
-		d.SetPartial("roles")
 	}
-
-	d.Partial(false)
 
 	return nil
 }
@@ -250,8 +223,6 @@ func instanceProfileRemoveAllRoles(d *schema.ResourceData, iamconn *iam.IAM) err
 func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{}) error {
 	iamconn := meta.(*AWSClient).iamconn
 
-	d.Partial(true)
-
 	if d.HasChange("role") {
 		oldRole, newRole := d.GetChange("role")
 
@@ -268,15 +239,11 @@ func resourceAwsIamInstanceProfileUpdate(d *schema.ResourceData, meta interface{
 				return fmt.Errorf("Error adding role %s to IAM instance profile %s: %s", newRole.(string), d.Id(), err)
 			}
 		}
-
-		d.SetPartial("role")
 	}
 
 	if d.HasChange("roles") {
 		return instanceProfileSetRoles(d, iamconn)
 	}
-
-	d.Partial(false)
 
 	return nil
 }

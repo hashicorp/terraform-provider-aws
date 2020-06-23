@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -421,7 +421,7 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_Uid(t *testing.T) {
 }
 
 func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
-	var task1, task2 datasync.DescribeTaskOutput
+	var task1, task2, task3 datasync.DescribeTaskOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_datasync_task.test"
 
@@ -450,6 +450,15 @@ func TestAccAWSDataSyncTask_DefaultSyncOptions_VerifyMode(t *testing.T) {
 					testAccCheckAWSDataSyncTaskNotRecreated(&task1, &task2),
 					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "POINT_IN_TIME_CONSISTENT"),
+				),
+			},
+			{
+				Config: testAccAWSDataSyncTaskConfigDefaultSyncOptionsVerifyMode(rName, "ONLY_FILES_TRANSFERRED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDataSyncTaskExists(resourceName, &task3),
+					testAccCheckAWSDataSyncTaskNotRecreated(&task2, &task3),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.0.verify_mode", "ONLY_FILES_TRANSFERRED"),
 				),
 			},
 		},
@@ -630,6 +639,25 @@ resource "aws_s3_bucket" "destination" {
   force_destroy = true
 }
 
+resource "aws_iam_role_policy" "destination" {
+  role   = aws_iam_role.destination.id
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Action": [
+      "s3:*"
+    ],
+    "Effect": "Allow",
+    "Resource": [
+      "${aws_s3_bucket.destination.arn}",
+      "${aws_s3_bucket.destination.arn}/*"
+    ]
+  }]
+}
+POLICY
+}
+
 resource "aws_datasync_location_s3" "destination" {
   s3_bucket_arn = "${aws_s3_bucket.destination.arn}"
   subdirectory  = "/destination"
@@ -637,6 +665,8 @@ resource "aws_datasync_location_s3" "destination" {
   s3_config {
     bucket_access_role_arn = "${aws_iam_role.destination.arn}"
   }
+
+  depends_on = [aws_iam_role_policy.destination]
 }
 `, rName, rName)
 }

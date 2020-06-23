@@ -5,37 +5,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
-
-func TestAccAWSCloudwatchLogDestinationPolicy_importBasic(t *testing.T) {
-	resourceName := "aws_cloudwatch_log_destination_policy.test"
-
-	rstring := acctest.RandString(5)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudwatchLogDestinationPolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudwatchLogDestinationPolicyConfig(rstring),
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
 
 func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 	var destination cloudwatchlogs.Destination
-
+	resourceName := "aws_cloudwatch_log_destination_policy.test"
 	rstring := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -46,8 +23,13 @@ func TestAccAWSCloudwatchLogDestinationPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSCloudwatchLogDestinationPolicyConfig(rstring),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSCloudwatchLogDestinationPolicyExists("aws_cloudwatch_log_destination_policy.test", &destination),
+					testAccCheckAWSCloudwatchLogDestinationPolicyExists(resourceName, &destination),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})

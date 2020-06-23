@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_metric_alarm"
-sidebar_current: "docs-aws-resource-cloudwatch-metric-alarm"
 description: |-
   Provides a CloudWatch Metric Alarm resource.
 ---
@@ -109,6 +109,63 @@ resource "aws_cloudwatch_metric_alarm" "foobar" {
 }
 ```
 
+```hcl
+resource "aws_cloudwatch_metric_alarm" "xx_anomaly_detection" {
+  alarm_name                = "terraform-test-foobar"
+  comparison_operator       = "GreaterThanUpperThreshold"
+  evaluation_periods        = "2"
+  threshold_metric_id       = "e1"
+  alarm_description         = "This metric monitors ec2 cpu utilization"
+  insufficient_data_actions = []
+
+  metric_query {
+    id          = "e1"
+    expression  = "ANOMALY_DETECTION_BAND(m1)"
+    label       = "CPUUtilization (Expected)"
+    return_data = "true"
+  }
+
+  metric_query {
+    id          = "m1"
+    return_data = "true"
+    metric {
+      metric_name = "CPUUtilization"
+      namespace   = "AWS/EC2"
+      period      = "120"
+      stat        = "Average"
+      unit        = "Count"
+
+      dimensions = {
+        InstanceId = "i-abc123"
+      }
+    }
+  }
+}
+```
+
+## Example of monitoring Healthy Hosts on NLB using Target Group and NLB
+
+```hcl
+resource "aws_cloudwatch_metric_alarm" "xxx_nlb_healthyhosts" {
+  alarm_name          = "alarmname"
+  comparison_operator = "LessThanThreshold"
+  evaluation_periods  = "1"
+  metric_name         = "HealthyHostCount"
+  namespace           = "AWS/NetworkELB"
+  period              = "60"
+  statistic           = "Average"
+  threshold           = var.logstash_servers_count
+  alarm_description   = "Number of XXXX nodes healthy in Target Group"
+  actions_enabled     = "true"
+  alarm_actions       = [aws_sns_topic.sns.arn]
+  ok_actions          = [aws_sns_topic.sns.arn]
+  dimensions = {
+    TargetGroup  = aws_lb_target_group.lb-tg.arn_suffix
+    LoadBalancer = aws_lb.lb.arn_suffix
+  }
+}
+```
+
 ~> **NOTE:**  You cannot create a metric alarm consisting of both `statistic` and `extended_statistic` parameters.
 You must choose one or the other
 
@@ -120,7 +177,7 @@ for details about valid values.
 The following arguments are supported:
 
 * `alarm_name` - (Required) The descriptive name for the alarm. This name must be unique within the user's AWS account
-* `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`.
+* `comparison_operator` - (Required) The arithmetic operation to use when comparing the specified Statistic and Threshold. The specified Statistic value is used as the first operand. Either of the following is supported: `GreaterThanOrEqualToThreshold`, `GreaterThanThreshold`, `LessThanThreshold`, `LessThanOrEqualToThreshold`. Additionally, the values  `LessThanLowerOrGreaterThanUpperThreshold`, `LessThanLowerThreshold`, and `GreaterThanUpperThreshold` are used only for alarms based on anomaly detection models.
 * `evaluation_periods` - (Required) The number of periods over which data is compared to the specified threshold.
 * `metric_name` - (Optional) The name for the alarm's associated metric.
   See docs for [supported metrics](https://docs.aws.amazon.com/AmazonCloudWatch/latest/DeveloperGuide/CW_Support_For_AWS.html).
@@ -129,7 +186,8 @@ The following arguments are supported:
 * `period` - (Optional) The period in seconds over which the specified `statistic` is applied.
 * `statistic` - (Optional) The statistic to apply to the alarm's associated metric.
    Either of the following is supported: `SampleCount`, `Average`, `Sum`, `Minimum`, `Maximum`
-* `threshold` - (Required) The value against which the specified statistic is compared.
+* `threshold` - (Optional) The value against which the specified statistic is compared. This parameter is required for alarms based on static thresholds, but should not be used for alarms based on anomaly detection models.
+* `threshold_metric_id` - (Optional) If this is an alarm based on an anomaly detection model, make this value match the ID of the ANOMALY_DETECTION_BAND function.
 * `actions_enabled` - (Optional) Indicates whether or not actions should be executed during any changes to the alarm's state. Defaults to `true`.
 * `alarm_actions` - (Optional) The list of actions to execute when this alarm transitions into an ALARM state from any other state. Each action is specified as an Amazon Resource Name (ARN).
 * `alarm_description` - (Optional) The description for the alarm.
@@ -147,7 +205,7 @@ If you specify `evaluate` or omit this parameter, the alarm will always be
 evaluated and possibly change state no matter how many data points are available.
 The following values are supported: `ignore`, and `evaluate`.
 * `metric_query` (Optional) Enables you to create an alarm based on a metric math expression. You may specify at most 20.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ~> **NOTE:**  If you specify at least one `metric_query`, you may not specify a `metric_name`, `namespace`, `period` or `statistic`. If you do not specify a `metric_query`, you must specify each of these (although you may use `extended_statistic` instead of `statistic`).
 

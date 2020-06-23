@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSEcrDataSource_ecrRepository(t *testing.T) {
@@ -20,9 +20,9 @@ func TestAccAWSEcrDataSource_ecrRepository(t *testing.T) {
 			{
 				Config: testAccCheckAwsEcrRepositoryDataSourceConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:aws:ecr:[a-zA-Z]+-[a-zA-Z]+-\d+:\d+:repository/tf-acc-test-\d+$`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ecr", regexp.MustCompile(fmt.Sprintf("repository/%s$", rName))),
 					resource.TestCheckResourceAttrSet(resourceName, "registry_id"),
-					resource.TestMatchResourceAttr(resourceName, "repository_url", regexp.MustCompile(`^\d+\.dkr\.ecr\.[a-zA-Z]+-[a-zA-Z]+-\d+\.amazonaws\.com/tf-acc-test-\d+$`)),
+					resource.TestMatchResourceAttr(resourceName, "repository_url", regexp.MustCompile(fmt.Sprintf(`^\d+\.dkr\.ecr\.%s\.amazonaws\.com/%s$`, testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),

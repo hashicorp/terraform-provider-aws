@@ -4,15 +4,15 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsLightsailInstance() *schema.Resource {
@@ -31,7 +31,7 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 255),
+					validation.StringLenBetween(2, 255),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
 					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
@@ -88,7 +88,7 @@ func resourceAwsLightsailInstance() *schema.Resource {
 				Computed: true,
 			},
 			"ram_size": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeFloat,
 				Computed: true,
 			},
 			"ipv6_address": {
@@ -135,10 +135,8 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 		req.UserData = aws.String(v.(string))
 	}
 
-	tags := tagsFromMapLightsail(d.Get("tags").(map[string]interface{}))
-
-	if len(tags) != 0 {
-		req.Tags = tags
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		req.Tags = keyvaluetags.New(v).IgnoreAws().LightsailTags()
 	}
 
 	resp, err := conn.CreateInstances(&req)
@@ -173,6 +171,8 @@ func resourceAwsLightsailInstanceCreate(d *schema.ResourceData, meta interface{}
 
 func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).lightsailconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	resp, err := conn.GetInstance(&lightsail.GetInstanceInput{
 		InstanceName: aws.String(d.Id()),
 	})
@@ -208,14 +208,14 @@ func resourceAwsLightsailInstanceRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("username", i.Username)
 	d.Set("created_at", i.CreatedAt.Format(time.RFC3339))
 	d.Set("cpu_count", i.Hardware.CpuCount)
-	d.Set("ram_size", strconv.FormatFloat(*i.Hardware.RamSizeInGb, 'f', 0, 64))
+	d.Set("ram_size", i.Hardware.RamSizeInGb)
 	d.Set("ipv6_address", i.Ipv6Address)
 	d.Set("is_static_ip", i.IsStaticIp)
 	d.Set("private_ip_address", i.PrivateIpAddress)
 	d.Set("public_ip_address", i.PublicIpAddress)
 
-	if err := d.Set("tags", tagsToMapLightsail(i.Tags)); err != nil {
-		return fmt.Errorf("Error setting tags: %s", err)
+	if err := d.Set("tags", keyvaluetags.LightsailKeyValueTags(i.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -256,10 +256,11 @@ func resourceAwsLightsailInstanceUpdate(d *schema.ResourceData, meta interface{}
 	conn := meta.(*AWSClient).lightsailconn
 
 	if d.HasChange("tags") {
-		if err := setTagsLightsail(conn, d); err != nil {
-			return err
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.LightsailUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating Lightsail Instance (%s) tags: %s", d.Id(), err)
 		}
-		d.SetPartial("tags")
 	}
 
 	return resourceAwsLightsailInstanceRead(d, meta)

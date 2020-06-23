@@ -1,7 +1,7 @@
 ---
+subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_product_subscription"
-sidebar_current: "docs-aws-resource-securityhub-product-subscription"
 description: |-
   Subscribes to a Security Hub product.
 ---
@@ -9,8 +9,6 @@ description: |-
 # Resource: aws_securityhub_product_subscription
 
 Subscribes to a Security Hub product.
-
-~> **NOTE:** This AWS service is in Preview and may change before General Availability release. Backwards compatibility is not guaranteed between Terraform AWS Provider releases.
 
 ## Example Usage
 

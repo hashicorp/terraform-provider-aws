@@ -1,7 +1,7 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_local_disk"
-sidebar_current: "docs-aws-datasource-storagegateway-local-disk"
 description: |-
   Retrieve information about a Storage Gateway local disk
 ---

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAppautoscalingScheduledAction_dynamo(t *testing.T) {
@@ -63,15 +63,38 @@ func TestAccAWSAppautoscalingScheduledAction_EMR(t *testing.T) {
 	})
 }
 
-func TestAccAWSAppautoscalingScheduledAction_SpotFleet(t *testing.T) {
-	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
+func TestAccAWSAppautoscalingScheduledAction_Name_Duplicate(t *testing.T) {
+	resourceName := "aws_appautoscaling_scheduled_action.test"
+	resourceName2 := "aws_appautoscaling_scheduled_action.test2"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAppautoscalingScheduledActionConfig_SpotFleet(acctest.RandString(5), ts),
+				Config: testAccAppautoscalingScheduledActionConfig_Name_Duplicate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppautoscalingScheduledActionExists(resourceName),
+					testAccCheckAwsAppautoscalingScheduledActionExists(resourceName2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSAppautoscalingScheduledAction_SpotFleet(t *testing.T) {
+	ts := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppautoscalingScheduledActionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppautoscalingScheduledActionConfig_SpotFleet(acctest.RandString(5), ts, validUntil),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsAppautoscalingScheduledActionExists("aws_appautoscaling_scheduled_action.hoge"),
 				),
@@ -89,6 +112,7 @@ func testAccCheckAwsAppautoscalingScheduledActionDestroy(s *terraform.State) err
 		}
 
 		input := &applicationautoscaling.DescribeScheduledActionsInput{
+			ResourceId:           aws.String(rs.Primary.Attributes["resource_id"]),
 			ScheduledActionNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 			ServiceNamespace:     aws.String(rs.Primary.Attributes["service_namespace"]),
 		}
@@ -207,6 +231,19 @@ resource "aws_appautoscaling_scheduled_action" "hoge" {
 
 func testAccAppautoscalingScheduledActionConfig_EMR(rName, ts string) string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # The requested instance type c4.large is not supported in the requested availability zone.
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_emr_cluster" "hoge" {
   name          = "tf-emr-%s"
   release_label = "emr-5.4.0"
@@ -288,8 +325,9 @@ resource "aws_vpc" "hoge" {
 }
 
 resource "aws_subnet" "hoge" {
-  vpc_id     = "${aws_vpc.hoge.id}"
-  cidr_block = "168.31.0.0/20"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "168.31.0.0/20"
+  vpc_id            = "${aws_vpc.hoge.id}"
 
   tags = {
     Name = "tf-acc-appautoscaling-scheduled-action"
@@ -323,7 +361,7 @@ resource "aws_iam_role" "emr_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "elasticmapreduce.amazonaws.com"
+        "Service": "elasticmapreduce.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -414,7 +452,7 @@ resource "aws_iam_role" "instance_role" {
       "Sid": "",
       "Effect": "Allow",
       "Principal": {
-        "Service": "ec2.amazonaws.com"
+        "Service": "ec2.${data.aws_partition.current.dns_suffix}"
       },
       "Action": "sts:AssumeRole"
     }
@@ -481,14 +519,14 @@ data "aws_iam_policy_document" "autoscale_role" {
 
     principals {
       type        = "Service"
-      identifiers = ["elasticmapreduce.amazonaws.com", "application-autoscaling.amazonaws.com"]
+      identifiers = ["elasticmapreduce.${data.aws_partition.current.dns_suffix}", "application-autoscaling.${data.aws_partition.current.dns_suffix}"]
     }
   }
 }
 
 resource "aws_iam_role_policy_attachment" "autoscale_role" {
   role       = "${aws_iam_role.autoscale_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
 
 resource "aws_appautoscaling_target" "hoge" {
@@ -515,8 +553,95 @@ resource "aws_appautoscaling_scheduled_action" "hoge" {
 `, rName, rName, rName, rName, ts)
 }
 
-func testAccAppautoscalingScheduledActionConfig_SpotFleet(rName, ts string) string {
+func testAccAppautoscalingScheduledActionConfig_Name_Duplicate(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test2" {
+  name           = "%[1]s-2"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "UserID"
+
+  attribute {
+    name = "UserID"
+    type = "S"
+  }
+}
+
+resource "aws_appautoscaling_target" "test2" {
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.test2.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  min_capacity       = 1
+  max_capacity       = 10
+}
+
+resource "aws_appautoscaling_scheduled_action" "test2" {
+  name               = %[1]q
+  service_namespace  = aws_appautoscaling_target.test2.service_namespace
+  resource_id        = aws_appautoscaling_target.test2.resource_id
+  scalable_dimension = aws_appautoscaling_target.test2.scalable_dimension
+  schedule           = "cron(0 17 * * ? *)"
+
+  scalable_target_action {
+    min_capacity = 1
+    max_capacity = 10
+  }
+}
+
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "UserID"
+
+  attribute {
+    name = "UserID"
+    type = "S"
+  }
+}
+
+resource "aws_appautoscaling_target" "test" {
+  service_namespace  = "dynamodb"
+  resource_id        = "table/${aws_dynamodb_table.test.name}"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  min_capacity       = 1
+  max_capacity       = 10
+}
+
+resource "aws_appautoscaling_scheduled_action" "test" {
+  name               = %[1]q
+  service_namespace  = aws_appautoscaling_target.test.service_namespace
+  resource_id        = aws_appautoscaling_target.test.resource_id
+  scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
+  schedule           = "cron(0 17 * * ? *)"
+
+  scalable_target_action {
+    min_capacity = 1
+    max_capacity = 10
+  }
+}
+`, rName)
+}
+
+func testAccAppautoscalingScheduledActionConfig_SpotFleet(rName, ts, validUntil string) string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+data "aws_partition" "current" {}
+
 resource "aws_iam_role" "fleet_role" {
   assume_role_policy = <<EOF
 {
@@ -526,8 +651,8 @@ resource "aws_iam_role" "fleet_role" {
       "Effect": "Allow",
       "Principal": {
         "Service": [
-          "spotfleet.amazonaws.com",
-          "ec2.amazonaws.com"
+          "spotfleet.${data.aws_partition.current.dns_suffix}",
+          "ec2.${data.aws_partition.current.dns_suffix}"
         ]
       },
       "Action": "sts:AssumeRole"
@@ -539,19 +664,19 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
   role       = "${aws_iam_role.fleet_role.name}"
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2SpotFleetRole"
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "hoge" {
   iam_fleet_role                      = "${aws_iam_role.fleet_role.arn}"
   spot_price                          = "0.005"
   target_capacity                     = 2
-  valid_until                         = "2019-11-04T20:44:20Z"
+  valid_until                         = %[3]q
   terminate_instances_with_expiration = true
 
   launch_specification {
     instance_type = "m3.medium"
-    ami           = "ami-d06a90b0"
+    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   }
 }
 
@@ -564,16 +689,16 @@ resource "aws_appautoscaling_target" "hoge" {
 }
 
 resource "aws_appautoscaling_scheduled_action" "hoge" {
-  name               = "tf-appauto-%s"
+  name               = "tf-appauto-%[1]s"
   service_namespace  = "${aws_appautoscaling_target.hoge.service_namespace}"
   resource_id        = "${aws_appautoscaling_target.hoge.resource_id}"
   scalable_dimension = "${aws_appautoscaling_target.hoge.scalable_dimension}"
-  schedule           = "at(%s)"
+  schedule           = "at(%[2]s)"
 
   scalable_target_action {
     min_capacity = 1
     max_capacity = 3
   }
 }
-`, rName, ts)
+`, rName, ts, validUntil)
 }

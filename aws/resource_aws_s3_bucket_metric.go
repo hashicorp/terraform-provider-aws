@@ -8,8 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsS3BucketMetric() *schema.Resource {
@@ -84,6 +85,9 @@ func resourceAwsS3BucketMetricPut(d *schema.ResourceData, meta interface{}) erro
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutBucketMetricsConfiguration(input)
+	}
 	if err != nil {
 		return fmt.Errorf("Error putting S3 metric configuration: %s", err)
 	}
@@ -112,7 +116,7 @@ func resourceAwsS3BucketMetricDelete(d *schema.ResourceData, meta interface{}) e
 		if isAWSErr(err, s3.ErrCodeNoSuchBucket, "") || isAWSErr(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
 			return nil
 		}
-		return fmt.Errorf("Error deleting S3 metric configuration: %s", err)
+		return fmt.Errorf("Error deleting S3 metric configuration: %w", err)
 	}
 
 	return nil
@@ -162,7 +166,7 @@ func expandS3MetricsFilter(m map[string]interface{}) *s3.MetricsFilter {
 
 	var tags []*s3.Tag
 	if v, ok := m["tags"]; ok {
-		tags = tagsFromMapS3(v.(map[string]interface{}))
+		tags = keyvaluetags.New(v).IgnoreAws().S3Tags()
 	}
 
 	metricsFilter := &s3.MetricsFilter{}
@@ -192,7 +196,7 @@ func flattenS3MetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interfac
 			m["prefix"] = *and.Prefix
 		}
 		if and.Tags != nil {
-			m["tags"] = tagsToMapS3(and.Tags)
+			m["tags"] = keyvaluetags.S3KeyValueTags(and.Tags).IgnoreAws().Map()
 		}
 	} else if metricsFilter.Prefix != nil {
 		m["prefix"] = *metricsFilter.Prefix
@@ -200,7 +204,7 @@ func flattenS3MetricsFilter(metricsFilter *s3.MetricsFilter) map[string]interfac
 		tags := []*s3.Tag{
 			metricsFilter.Tag,
 		}
-		m["tags"] = tagsToMapS3(tags)
+		m["tags"] = keyvaluetags.S3KeyValueTags(tags).IgnoreAws().Map()
 	}
 	return m
 }

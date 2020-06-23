@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsLaunchConfiguration() *schema.Resource {
@@ -25,6 +25,10 @@ func resourceAwsLaunchConfiguration() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -491,6 +495,9 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = autoscalingconn.CreateLaunchConfiguration(&createLaunchConfigurationOpts)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating launch configuration: %s", err)
 	}
@@ -500,13 +507,20 @@ func resourceAwsLaunchConfigurationCreate(d *schema.ResourceData, meta interface
 
 	// We put a Retry here since sometimes eventual consistency bites
 	// us and we need to retry a few times to get the LC to load properly
-	return resource.Retry(30*time.Second, func() *resource.RetryError {
+	err = resource.Retry(30*time.Second, func() *resource.RetryError {
 		err := resourceAwsLaunchConfigurationRead(d, meta)
 		if err != nil {
 			return resource.RetryableError(err)
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		err = resourceAwsLaunchConfigurationRead(d, meta)
+	}
+	if err != nil {
+		return fmt.Errorf("Error reading launch configuration: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}) error {
@@ -542,6 +556,7 @@ func resourceAwsLaunchConfigurationRead(d *schema.ResourceData, meta interface{}
 	d.Set("image_id", lc.ImageId)
 	d.Set("instance_type", lc.InstanceType)
 	d.Set("name", lc.LaunchConfigurationName)
+	d.Set("arn", lc.LaunchConfigurationARN)
 
 	d.Set("iam_instance_profile", lc.IamInstanceProfile)
 	d.Set("ebs_optimized", lc.EbsOptimized)

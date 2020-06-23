@@ -1,7 +1,7 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
 page_title: "AWS: aws_wafregional_web_acl"
-sidebar_current: "docs-aws-resource-wafregional-web-acl"
 description: |-
   Provides a AWS WAF Regional web access control group (ACL) resource for use with ALB.
 ---
@@ -112,6 +112,7 @@ The following arguments are supported:
 * `name` - (Required) The name or description of the web ACL.
 * `logging_configuration` - (Optional) Configuration block to enable WAF logging. Detailed below.
 * `rule` - (Optional) Set of configuration blocks containing rules for the web ACL. Detailed below.
+* `tags` - (Optional) Key-value map of resource tags
 
 ### `default_action` Configuration Block
 

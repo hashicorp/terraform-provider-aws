@@ -1,7 +1,7 @@
 ---
+subcategory: "CodeBuild"
 layout: "aws"
 page_title: "AWS: aws_codebuild_source_credential"
-sidebar_current: "docs-aws-resource-codebuild-source-credential"
 description: |-
   Provides a CodeBuild Source Credential resource.
 ---
@@ -14,9 +14,9 @@ Provides a CodeBuild Source Credentials Resource.
 
 ```hcl
 resource "aws_codebuild_source_credential" "example" {
-  auth_type = "PERSONAL_ACCESS_TOKEN"
+  auth_type   = "PERSONAL_ACCESS_TOKEN"
   server_type = "GITHUB"
-  token = "example"
+  token       = "example"
 }
 ```
 

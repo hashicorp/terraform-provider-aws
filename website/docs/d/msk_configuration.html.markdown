@@ -1,7 +1,7 @@
 ---
+subcategory: "Managed Streaming for Kafka (MSK)"
 layout: "aws"
 page_title: "AWS: aws_msk_configuration"
-sidebar_current: "docs-aws-datasource-msk-configuration"
 description: |-
   Get information on an Amazon MSK Configuration
 ---

@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -87,6 +87,8 @@ func TestAccAWSAppsyncGraphqlApi_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
 					resource.TestCheckNoResourceAttr(resourceName, "tags"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
 				),
 			},
 			{
@@ -140,6 +142,7 @@ func TestAccAWSAppsyncGraphqlApi_Schema(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "openid_connect_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
 					resource.TestCheckResourceAttrSet(resourceName, "schema"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.%"),
 					resource.TestCheckResourceAttrSet(resourceName, "uris.GRAPHQL"),
@@ -329,6 +332,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
 			{
@@ -358,6 +362,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
 			{
@@ -367,6 +372,7 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ERROR"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
 			{
@@ -376,8 +382,50 @@ func TestAccAWSAppsyncGraphqlApi_LogConfig_FieldLogLevel(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "NONE"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_LogConfig_ExcludeVerboseContent(t *testing.T) {
+	var api1, api2 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LogConfig_ExcludeVerboseContent(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "false"),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_LogConfig_ExcludeVerboseContent(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api2),
+					resource.TestCheckResourceAttr(resourceName, "log_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "log_config.0.cloudwatch_logs_role_arn", iamRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.field_log_level", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "log_config.0.exclude_verbose_content", "true"),
+				),
+			},
+
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -694,6 +742,206 @@ func TestAccAWSAppsyncGraphqlApi_Tags(t *testing.T) {
 	})
 }
 
+func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_APIKey(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_AdditionalAuth_AuthType(rName, "AWS_IAM", "API_KEY"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "AWS_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_AWSIAM(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_AdditionalAuth_AuthType(rName, "API_KEY", "AWS_IAM"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "AWS_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_CognitoUserPools(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_AdditionalAuth_UserPoolConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "AMAZON_COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "additional_authentication_provider.0.user_pool_config.0.user_pool_id", cognitoUserPoolResourceName, "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_OpenIDConnect(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_AdditionalAuth_OpenIdConnect(rName, "https://example.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "OPENID_CONNECT"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.0.issuer", "https://example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_AdditionalAuthentication_Multiple(t *testing.T) {
+	var api1 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cognitoUserPoolResourceName := "aws_cognito_user_pool.test"
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_AdditionalAuth_Multiple(rName, "https://example.com"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile(`apis/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "authentication_type", "API_KEY"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.authentication_type", "AWS_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.0.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.1.authentication_type", "AMAZON_COGNITO_USER_POOLS"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.1.openid_connect_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.1.user_pool_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "additional_authentication_provider.1.user_pool_config.0.user_pool_id", cognitoUserPoolResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.authentication_type", "OPENID_CONNECT"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.user_pool_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.openid_connect_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.2.openid_connect_config.0.issuer", "https://example.com"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAppsyncGraphqlApi_XrayEnabled(t *testing.T) {
+	var api1, api2 appsync.GraphqlApi
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSAppSync(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsAppsyncGraphqlApiDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppsyncGraphqlApiConfig_XrayEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "true"),
+				),
+			},
+			{
+				Config: testAccAppsyncGraphqlApiConfig_XrayEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsAppsyncGraphqlApiExists(resourceName, &api2),
+					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsAppsyncGraphqlApiDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).appsyncconn
 	for _, rs := range s.RootModule().Resources {
@@ -844,6 +1092,47 @@ resource "aws_appsync_graphql_api" "test" {
 `, rName, rName, fieldLogLevel)
 }
 
+func testAccAppsyncGraphqlApiConfig_LogConfig_ExcludeVerboseContent(rName string, excludeVerboseContent bool) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %q
+
+  assume_role_policy = <<POLICY
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+        "Effect": "Allow",
+        "Principal": {
+            "Service": "appsync.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+        }
+    ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSAppSyncPushToCloudWatchLogs"
+  role       = "${aws_iam_role.test.name}"
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  log_config {
+    cloudwatch_logs_role_arn = "${aws_iam_role.test.arn}"
+	field_log_level          = "ALL"
+	exclude_verbose_content  = %t
+  }
+}
+`, rName, rName, excludeVerboseContent)
+}
+
 func testAccAppsyncGraphqlApiConfig_OpenIDConnectConfig_AuthTTL(rName string, authTTL int) string {
 	return fmt.Sprintf(`
 resource "aws_appsync_graphql_api" "test" {
@@ -983,4 +1272,97 @@ resource "aws_appsync_graphql_api" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_AdditionalAuth_AuthType(rName, defaultAuthType, additionalAuthType string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = %q
+  name                = %q
+
+  additional_authentication_provider {
+    authentication_type = %q
+  }
+}`, defaultAuthType, rName, additionalAuthType)
+}
+
+func testAccAppsyncGraphqlApiConfig_AdditionalAuth_UserPoolConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %q
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  additional_authentication_provider {
+    authentication_type = "AMAZON_COGNITO_USER_POOLS"
+    
+    user_pool_config {
+      user_pool_id = "${aws_cognito_user_pool.test.id}"
+    }
+  }
+}
+`, rName, rName)
+}
+
+func testAccAppsyncGraphqlApiConfig_AdditionalAuth_OpenIdConnect(rName, issuer string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+
+  additional_authentication_provider {
+    authentication_type = "OPENID_CONNECT"
+
+    openid_connect_config {
+      issuer = %q
+    }
+  }
+}
+`, rName, issuer)
+}
+
+func testAccAppsyncGraphqlApiConfig_AdditionalAuth_Multiple(rName, issuer string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %q
+}
+
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name = %q
+
+  additional_authentication_provider {
+    authentication_type = "AWS_IAM"
+  }
+
+  additional_authentication_provider {
+    authentication_type = "AMAZON_COGNITO_USER_POOLS"
+    
+    user_pool_config {
+      user_pool_id = "${aws_cognito_user_pool.test.id}"
+    }
+  }
+
+  additional_authentication_provider {
+    authentication_type = "OPENID_CONNECT"
+
+    openid_connect_config {
+      issuer = %q
+    }
+  }
+}
+`, rName, rName, issuer)
+}
+
+func testAccAppsyncGraphqlApiConfig_XrayEnabled(rName string, xrayEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %q
+  xray_enabled        = %t
+}
+`, rName, xrayEnabled)
 }

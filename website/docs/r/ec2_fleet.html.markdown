@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_fleet"
-sidebar_current: "docs-aws-resource-ec2-fleet"
 description: |-
   Provides a resource to manage EC2 Fleets
 ---

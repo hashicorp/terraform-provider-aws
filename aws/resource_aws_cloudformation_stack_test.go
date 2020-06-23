@@ -2,19 +2,82 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAWSCloudFormationStack_importBasic(t *testing.T) {
-	stackName := fmt.Sprintf("tf-acc-test-basic-%s", acctest.RandString(10))
+func init() {
+	resource.AddTestSweepers("aws_cloudformation_stack", &resource.Sweeper{
+		Name: "aws_cloudformation_stack",
+		Dependencies: []string{
+			"aws_cloudformation_stack_set_instance",
+		},
+		F: testSweepCloudformationStacks,
+	})
+}
 
-	resourceName := "aws_cloudformation_stack.network"
+func testSweepCloudformationStacks(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+
+	conn := client.(*AWSClient).cfconn
+	input := &cloudformation.ListStacksInput{
+		StackStatusFilter: aws.StringSlice([]string{
+			cloudformation.StackStatusCreateComplete,
+			cloudformation.StackStatusImportComplete,
+			cloudformation.StackStatusRollbackComplete,
+			cloudformation.StackStatusUpdateComplete,
+		}),
+	}
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListStacksPages(input, func(page *cloudformation.ListStacksOutput, lastPage bool) bool {
+		for _, stack := range page.StackSummaries {
+			input := &cloudformation.DeleteStackInput{
+				StackName: stack.StackName,
+			}
+			name := aws.StringValue(stack.StackName)
+
+			log.Printf("[INFO] Deleting CloudFormation Stack: %s", name)
+			_, err := conn.DeleteStack(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting CloudFormation Stack (%s): %w", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudFormation Stack sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudFormation Stacks: %s", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func TestAccAWSCloudFormationStack_basic(t *testing.T) {
+	var stack cloudformation.Stack
+	stackName := fmt.Sprintf("tf-acc-test-basic-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,6 +86,9 @@ func TestAccAWSCloudFormationStack_importBasic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFormationStackConfig(stackName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
+				),
 			},
 			{
 				ResourceName:      resourceName,
@@ -33,28 +99,10 @@ func TestAccAWSCloudFormationStack_importBasic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCloudFormationStack_basic(t *testing.T) {
-	var stack cloudformation.Stack
-	stackName := fmt.Sprintf("tf-acc-test-basic-%s", acctest.RandString(10))
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSCloudFormationStackConfig(stackName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.network", &stack),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-basic-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -64,7 +112,7 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 			{
 				Config: testAccAWSCloudFormationStackConfig(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.network", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 					testAccCheckCloudFormationStackDisappears(&stack),
 				),
 				ExpectNonEmptyPlan: true,
@@ -76,6 +124,7 @@ func TestAccAWSCloudFormationStack_disappears(t *testing.T) {
 func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-yaml-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -85,8 +134,13 @@ func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 			{
 				Config: testAccAWSCloudFormationStackConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.yaml", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -95,6 +149,7 @@ func TestAccAWSCloudFormationStack_yaml(t *testing.T) {
 func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-default-params-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -104,8 +159,14 @@ func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 			{
 				Config: testAccAWSCloudFormationStackConfig_defaultParams(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.asg-demo", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"parameters"},
 			},
 		},
 	})
@@ -114,47 +175,55 @@ func TestAccAWSCloudFormationStack_defaultParams(t *testing.T) {
 func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-all-attributes-%s", acctest.RandString(10))
-
+	resourceName := "aws_cloudformation_stack.test"
 	expectedPolicyBody := "{\"Statement\":[{\"Action\":\"Update:*\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Resource\":\"LogicalResourceId/StaticVPC\"},{\"Action\":\"Update:*\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Resource\":\"*\"}]}"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSCloudFormationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCloudFormationStackConfig_allAttributesWithBodies(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.full", &stack),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "name", stackName),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.#", "1"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.1328347040", "CAPABILITY_IAM"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "disable_rollback", "false"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "notification_arns.#", "1"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.%", "1"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.VpcCIDR", "10.0.0.0/16"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "policy_body", expectedPolicyBody),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "tags.First", "Mickey"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "tags.Second", "Mouse"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "timeout_in_minutes", "10"),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.1328347040", "CAPABILITY_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "policy_body", expectedPolicyBody),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.First", "Mickey"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Second", "Mouse"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "10"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "policy_body"},
 			},
 			{
 				Config: testAccAWSCloudFormationStackConfig_allAttributesWithBodies_modified(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.full", &stack),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "name", stackName),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.#", "1"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "capabilities.1328347040", "CAPABILITY_IAM"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "disable_rollback", "false"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "notification_arns.#", "1"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.%", "1"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "parameters.VpcCIDR", "10.0.0.0/16"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "policy_body", expectedPolicyBody),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "tags.First", "Mickey"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "tags.Second", "Mouse"),
-					resource.TestCheckResourceAttr("aws_cloudformation_stack.full", "timeout_in_minutes", "10"),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
+					resource.TestCheckResourceAttr(resourceName, "name", stackName),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "capabilities.1328347040", "CAPABILITY_IAM"),
+					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.VpcCIDR", "10.0.0.0/16"),
+					resource.TestCheckResourceAttr(resourceName, "policy_body", expectedPolicyBody),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.First", "Mickey"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Second", "Mouse"),
+					resource.TestCheckResourceAttr(resourceName, "timeout_in_minutes", "10"),
 				),
 			},
 		},
@@ -165,6 +234,7 @@ func TestAccAWSCloudFormationStack_allAttributes(t *testing.T) {
 func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 	var stack cloudformation.Stack
 	stackName := fmt.Sprintf("tf-acc-test-with-params-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -174,13 +244,19 @@ func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 			{
 				Config: testAccAWSCloudFormationStackConfig_withParams(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with_params", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"on_failure", "parameters"},
 			},
 			{
 				Config: testAccAWSCloudFormationStackConfig_withParams_modified(stackName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with_params", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -191,6 +267,7 @@ func TestAccAWSCloudFormationStack_withParams(t *testing.T) {
 func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := fmt.Sprintf("tf-acc-test-with-url-and-params-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -200,13 +277,19 @@ func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 			{
 				Config: testAccAWSCloudFormationStackConfig_templateUrl_withParams(rName, "tf-cf-stack.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-url-and-params", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
 			},
 			{
 				Config: testAccAWSCloudFormationStackConfig_templateUrl_withParams(rName, "tf-cf-stack.json", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-url-and-params", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
 			},
 		},
@@ -216,6 +299,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams(t *testing.T) {
 func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := fmt.Sprintf("tf-acc-test-with-params-and-yaml-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -223,10 +307,16 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCloudFormationStackConfig_templateUrl_withParams_withYaml(rName, "tf-cf-stack.yaml", "13.0.0.0/16"),
+				Config: testAccAWSCloudFormationStackConfig_templateUrl_withParams_withYaml(rName, "tf-cf-stack.test", "13.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-url-and-params-and-yaml", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
 			},
 		},
 	})
@@ -236,6 +326,7 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_withYaml(t *testing.T) {
 func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 	var stack cloudformation.Stack
 	rName := fmt.Sprintf("tf-acc-test-with-params-no-update-%s", acctest.RandString(10))
+	resourceName := "aws_cloudformation_stack.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -245,13 +336,45 @@ func TestAccAWSCloudFormationStack_withUrl_withParams_noUpdate(t *testing.T) {
 			{
 				Config: testAccAWSCloudFormationStackConfig_templateUrl_withParams(rName, "tf-cf-stack-1.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-url-and-params", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"on_failure", "parameters", "template_url"},
 			},
 			{
 				Config: testAccAWSCloudFormationStackConfig_templateUrl_withParams(rName, "tf-cf-stack-2.json", "11.0.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-url-and-params", &stack),
+					testAccCheckCloudFormationStackExists(resourceName, &stack),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFormationStack_withTransform(t *testing.T) {
+	var stack cloudformation.Stack
+	rName := fmt.Sprintf("tf-acc-test-with-transform-%s", acctest.RandString(10))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCloudFormationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFormationStackConfig_withTransform(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-transform", &stack),
+				),
+			},
+			{
+				PlanOnly: true,
+				Config:   testAccAWSCloudFormationStackConfig_withTransform(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFormationStackExists("aws_cloudformation_stack.with-transform", &stack),
 				),
 			},
 		},
@@ -336,7 +459,7 @@ func testAccCheckCloudFormationStackDisappears(stack *cloudformation.Stack) reso
 
 func testAccAWSCloudFormationStackConfig(stackName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_stack" "network" {
+resource "aws_cloudformation_stack" "test" {
   name = "%[1]s"
 
   template_body = <<STACK
@@ -370,7 +493,7 @@ STACK
 
 func testAccAWSCloudFormationStackConfig_yaml(stackName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_stack" "yaml" {
+resource "aws_cloudformation_stack" "test" {
   name = "%[1]s"
 
   template_body = <<STACK
@@ -398,7 +521,7 @@ STACK
 
 func testAccAWSCloudFormationStackConfig_defaultParams(stackName string) string {
 	return fmt.Sprintf(`
-resource "aws_cloudformation_stack" "asg-demo" {
+resource "aws_cloudformation_stack" "test" {
   name = "%[1]s"
 
   template_body = <<BODY
@@ -454,7 +577,7 @@ BODY
 }
 
 var testAccAWSCloudFormationStackConfig_allAttributesWithBodies_tpl = `
-resource "aws_cloudformation_stack" "full" {
+resource "aws_cloudformation_stack" "test" {
   name = "%[1]s"
   template_body = <<STACK
 {
@@ -567,7 +690,7 @@ func testAccAWSCloudFormationStackConfig_allAttributesWithBodies_modified(stackN
 }
 
 var tpl_testAccAWSCloudFormationStackConfig_withParams = `
-resource "aws_cloudformation_stack" "with_params" {
+resource "aws_cloudformation_stack" "test" {
   name = "%[1]s"
   parameters = {
     VpcCIDR = "%[2]s"
@@ -648,7 +771,7 @@ resource "aws_s3_bucket_object" "object" {
   source = "test-fixtures/cloudformation-template.json"
 }
 
-resource "aws_cloudformation_stack" "with-url-and-params" {
+resource "aws_cloudformation_stack" "test" {
   name = "%[1]s"
 
   parameters = {
@@ -697,7 +820,7 @@ resource "aws_s3_bucket_object" "object" {
   source = "test-fixtures/cloudformation-template.yaml"
 }
 
-resource "aws_cloudformation_stack" "with-url-and-params-and-yaml" {
+resource "aws_cloudformation_stack" "test" {
   name = "%[1]s"
 
   parameters = {
@@ -709,4 +832,59 @@ resource "aws_cloudformation_stack" "with-url-and-params-and-yaml" {
   timeout_in_minutes = 1
 }
 `, rName, bucketKey, vpcCidr)
+}
+
+func testAccAWSCloudFormationStackConfig_withTransform(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudformation_stack" "with-transform" {
+  name = "%[1]s"
+
+  template_body      = <<STACK
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Transform": "AWS::Serverless-2016-10-31",
+  "Resources": {
+    "Api": {
+      "Type": "AWS::Serverless::Api",
+      "Properties": {
+        "StageName": "Prod",
+        "EndpointConfiguration": "REGIONAL",
+        "DefinitionBody": {
+          "swagger": "2.0",
+          "paths": {
+            "/": {
+              "get": {
+                "consumes": ["application/json"],
+                "produces": ["application/json"],
+                "responses": {
+                  "200": {
+                    "description": "200 response"
+                  }
+                },
+                "x-amazon-apigateway-integration": {
+                  "responses": {
+                    "default": {
+                      "statusCode": "200"
+                    }
+                  },
+                  "requestTemplates": {
+                    "application/json": "{\"statusCode\": 200}"
+                  },
+                  "passthroughBehavior": "when_no_match",
+                  "type": "mock"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+STACK
+  capabilities       = ["CAPABILITY_AUTO_EXPAND"]
+  on_failure         = "DELETE"
+  timeout_in_minutes = 10
+}
+`, rName)
 }

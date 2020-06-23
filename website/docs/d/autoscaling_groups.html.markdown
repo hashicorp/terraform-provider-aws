@@ -1,7 +1,7 @@
 ---
+subcategory: "Autoscaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_groups"
-sidebar_current: "docs-aws-datasource-autoscaling-groups"
 description: |-
     Provides a list of Autoscaling Groups within a specific region.
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_agent"
-sidebar_current: "docs-aws-resource-datasync-agent"
 description: |-
   Manages an AWS DataSync Agent in the provider region
 ---

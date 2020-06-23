@@ -1,7 +1,7 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_vpc_link"
-sidebar_current: "docs-aws_api_gateway_vpc_link"
 description: |-
   Get information on a API Gateway VPC Link
 ---
@@ -29,3 +29,8 @@ data "aws_api_gateway_vpc_link" "my_api_gateway_vpc_link" {
 ## Attributes Reference
 
  * `id` - Set to the ID of the found API Gateway VPC Link.
+ * `description` - The description of the VPC link.
+ * `status` - The status of the VPC link.
+ * `status_message` - The status message of the VPC link.
+ * `target_arns` - The list of network load balancer arns in the VPC targeted by the VPC link. Currently AWS only supports 1 target.
+ * `tags` - Key-value map of resource tags

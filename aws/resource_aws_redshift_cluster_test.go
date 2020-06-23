@@ -10,9 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -57,42 +57,6 @@ func testSweepRedshiftClusters(region string) error {
 		return fmt.Errorf("Error retrieving Redshift Clusters: %s", err)
 	}
 	return nil
-}
-
-func TestValidateRedshiftClusterDbName(t *testing.T) {
-	validNames := []string{
-		"testdbname",
-		"test_dbname",
-		"testdbname123",
-		"testdbname$hashicorp",
-		"_dbname",
-	}
-	for _, v := range validNames {
-		_, errors := validateRedshiftClusterDbName(v, "name")
-		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid Redshift DBName: %q", v, errors)
-		}
-	}
-
-	invalidNames := []string{
-		"!",
-		"/",
-		" ",
-		":",
-		";",
-		"test name",
-		"/slash-at-the-beginning",
-		"slash-at-the-end/",
-		"",
-		randomString(100),
-		"TestDBname",
-	}
-	for _, v := range invalidNames {
-		_, errors := validateRedshiftClusterDbName(v, "name")
-		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid Redshift DBName", v)
-		}
-	}
 }
 
 func TestAccAWSRedshiftCluster_basic(t *testing.T) {
@@ -164,9 +128,10 @@ func TestAccAWSRedshiftCluster_withFinalSnapshot(t *testing.T) {
 func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 	var v redshift.Cluster
 
+	resourceName := "aws_redshift_cluster.default"
+	kmsResourceName := "aws_kms_key.foo"
+
 	ri := acctest.RandInt()
-	config := testAccAWSRedshiftClusterConfig_kmsKey(ri)
-	keyRegex := regexp.MustCompile(`^arn:aws:([a-zA-Z0-9\-])+:([a-z]{2}-[a-z]+-\d{1})?:(\d{12})?:(.*)$`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -174,14 +139,12 @@ func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: config,
+				Config: testAccAWSRedshiftClusterConfig_kmsKey(ri),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "cluster_type", "single-node"),
-					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "publicly_accessible", "true"),
-					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "kms_key_id", keyRegex),
+					testAccCheckAWSRedshiftClusterExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
 				),
 			},
 			{
@@ -256,7 +219,7 @@ func TestAccAWSRedshiftCluster_loggingEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_redshift_cluster.default", "logging.0.enable", "true"),
 					resource.TestCheckResourceAttr(
-						"aws_redshift_cluster.default", "logging.0.bucket_name", fmt.Sprintf("tf-redshift-logging-%d", rInt)),
+						"aws_redshift_cluster.default", "logging.0.bucket_name", fmt.Sprintf("tf-test-redshift-logging-%d", rInt)),
 				),
 			},
 			{
@@ -747,146 +710,6 @@ func testAccCheckAWSRedshiftClusterAvailabilityZone(c *redshift.Cluster, value s
 	}
 }
 
-func TestResourceAWSRedshiftClusterIdentifierValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "tEsting",
-			ErrCount: 1,
-		},
-		{
-			Value:    "1testing",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing--123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing!",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing-",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateRedshiftClusterIdentifier(tc.Value, "aws_redshift_cluster_identifier")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Redshift Cluster cluster_identifier to trigger a validation error")
-		}
-	}
-}
-
-func TestResourceAWSRedshiftClusterFinalSnapshotIdentifierValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "testing--123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing-",
-			ErrCount: 1,
-		},
-		{
-			Value:    "Testingq123!",
-			ErrCount: 1,
-		},
-		{
-			Value:    randomString(256),
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateRedshiftClusterFinalSnapshotIdentifier(tc.Value, "aws_redshift_cluster_final_snapshot_identifier")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Redshift Cluster final_snapshot_identifier to trigger a validation error")
-		}
-	}
-}
-
-func TestResourceAWSRedshiftClusterMasterUsernameValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "1Testing",
-			ErrCount: 1,
-		},
-		{
-			Value:    "Testing!!",
-			ErrCount: 1,
-		},
-		{
-			Value:    randomString(129),
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing_testing123",
-			ErrCount: 0,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateRedshiftClusterMasterUsername(tc.Value, "aws_redshift_cluster_master_username")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Redshift Cluster master_username to trigger a validation error")
-		}
-	}
-}
-
-func TestResourceAWSRedshiftClusterMasterPasswordValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "1TESTING",
-			ErrCount: 1,
-		},
-		{
-			Value:    "1testing",
-			ErrCount: 1,
-		},
-		{
-			Value:    "TestTest",
-			ErrCount: 1,
-		},
-		{
-			Value:    "T3st",
-			ErrCount: 1,
-		},
-		{
-			Value:    "1Testing",
-			ErrCount: 0,
-		},
-		{
-			Value:    "1Testing@",
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateRedshiftClusterMasterPassword(tc.Value, "aws_redshift_cluster_master_password")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Redshift Cluster master_password to trigger a validation error")
-		}
-	}
-}
-
 func testAccCheckAWSRedshiftClusterNotRecreated(i, j *redshift.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		// In lieu of some other uniquely identifying attribute from the API that always changes
@@ -1153,7 +976,7 @@ func testAccAWSRedshiftClusterConfig_loggingEnabled(rInt int) string {
 data "aws_redshift_service_account" "main" {}
 
 resource "aws_s3_bucket" "bucket" {
-  bucket        = "tf-redshift-logging-%d"
+  bucket        = "tf-test-redshift-logging-%d"
   force_destroy = true
 
   policy = <<EOF
@@ -1167,7 +990,7 @@ resource "aws_s3_bucket" "bucket" {
 			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:PutObject",
-		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d/*"
+		 "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d/*"
 	 },
 	 {
 		 "Sid": "Stmt137652664067",
@@ -1176,7 +999,7 @@ resource "aws_s3_bucket" "bucket" {
 			 "AWS": "${data.aws_redshift_service_account.main.arn}"
 		 },
 		 "Action": "s3:GetBucketAcl",
-		 "Resource": "arn:aws:s3:::tf-redshift-logging-%d"
+		 "Resource": "arn:aws:s3:::tf-test-redshift-logging-%d"
 	 }
  ]
 }

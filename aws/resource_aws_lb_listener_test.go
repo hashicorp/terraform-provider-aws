@@ -3,13 +3,14 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLBListener_basic(t *testing.T) {
@@ -37,6 +38,79 @@ func TestAccAWSLBListener_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lb_listener.front_end", "default_action.0.target_group_arn"),
 					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr("aws_lb_listener.front_end", "default_action.0.fixed_response.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSLBListener_forwardWeighted(t *testing.T) {
+	var conf elbv2.Listener
+	resourceName := "aws_lb_listener.weighted"
+	lbName := fmt.Sprintf("testlistener-basic-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
+	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSLBListenerConfig_forwardWeighted(lbName, targetGroupName1, targetGroupName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "load_balancer_arn", "elasticloadbalancing", regexp.MustCompile("loadbalancer/.+$")),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerConfig_changeForwardWeightedStickiness(lbName, targetGroupName1, targetGroupName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "load_balancer_arn", "elasticloadbalancing", regexp.MustCompile("loadbalancer/.+$")),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSLBListenerConfig_changeForwardWeightedToBasic(lbName, targetGroupName1, targetGroupName2),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSLBListenerExists(resourceName, &conf),
+					testAccMatchResourceAttrRegionalARN(resourceName, "load_balancer_arn", "elasticloadbalancing", regexp.MustCompile("loadbalancer/.+$")),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile("listener/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "port", "80"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttrSet(resourceName, "default_action.0.target_group_arn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "default_action.0.target_group_arn", "elasticloadbalancing", regexp.MustCompile("targetgroup/.+$")),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
 			},
 		},
@@ -107,17 +181,18 @@ func TestAccAWSLBListener_BackwardsCompatibility(t *testing.T) {
 
 func TestAccAWSLBListener_https(t *testing.T) {
 	var conf elbv2.Listener
-	lbName := fmt.Sprintf("testlistener-https-%s", acctest.RandStringFromCharSet(13, acctest.CharSetAlphaNum))
-	targetGroupName := fmt.Sprintf("testtargetgroup-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.front_end",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_https(lbName, targetGroupName),
+				Config: testAccAWSLBListenerConfig_https(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.front_end", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.front_end", "load_balancer_arn"),
@@ -140,16 +215,18 @@ func TestAccAWSLBListener_https(t *testing.T) {
 
 func TestAccAWSLBListener_Protocol_Tls(t *testing.T) {
 	var listener1 elbv2.Listener
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_Protocol_Tls(rName),
+				Config: testAccAWSLBListenerConfig_Protocol_Tls(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &listener1),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "TLS"),
@@ -230,16 +307,18 @@ func TestAccAWSLBListener_fixedResponse(t *testing.T) {
 
 func TestAccAWSLBListener_cognito(t *testing.T) {
 	var conf elbv2.Listener
-	rName := acctest.RandString(5)
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.test",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_cognito(rName),
+				Config: testAccAWSLBListenerConfig_cognito(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "load_balancer_arn"),
@@ -265,16 +344,18 @@ func TestAccAWSLBListener_cognito(t *testing.T) {
 
 func TestAccAWSLBListener_oidc(t *testing.T) {
 	var conf elbv2.Listener
-	rName := acctest.RandString(5)
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_lb_listener.test",
-		Providers:     testAccProvidersWithTLS,
+		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_oidc(rName),
+				Config: testAccAWSLBListenerConfig_oidc(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists("aws_lb_listener.test", &conf),
 					resource.TestCheckResourceAttrSet("aws_lb_listener.test", "load_balancer_arn"),
@@ -303,16 +384,18 @@ func TestAccAWSLBListener_oidc(t *testing.T) {
 
 func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 	var listener elbv2.Listener
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName),
+				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
@@ -327,16 +410,18 @@ func TestAccAWSLBListener_DefaultAction_Order(t *testing.T) {
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/6171
 func TestAccAWSLBListener_DefaultAction_Order_Recreates(t *testing.T) {
 	var listener elbv2.Listener
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_lb_listener.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLBListenerDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName),
+				Config: testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLBListenerExists(resourceName, &listener),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
@@ -489,7 +574,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -537,6 +629,397 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName)
 }
 
+func testAccAWSLBListenerConfig_forwardWeighted(lbName, targetGroupName1 string, targetGroupName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "weighted" {
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    type = "forward"
+    forward {
+      target_group {
+        arn    = "${aws_lb_target_group.test1.arn}"
+        weight = 1
+      }
+      target_group {
+        arn    = "${aws_lb_target_group.test2.arn}"
+        weight = 1
+      }
+    }
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_lb_target_group" "test1" {
+  name     = "%s"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.alb_test.id}"
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%s"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.alb_test.id}"
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-listener-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+
+  tags = {
+    Name = "tf-acc-lb-listener-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.alb_test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, targetGroupName1, targetGroupName2)
+}
+
+func testAccAWSLBListenerConfig_changeForwardWeightedStickiness(lbName, targetGroupName1 string, targetGroupName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "weighted" {
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    type = "forward"
+    forward {
+      target_group {
+        arn    = "${aws_lb_target_group.test1.arn}"
+        weight = 1
+      }
+      target_group {
+        arn    = "${aws_lb_target_group.test2.arn}"
+        weight = 1
+      }
+      stickiness {
+        enabled  = true
+        duration = 3600
+      }
+    }
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_lb_target_group" "test1" {
+  name     = "%s"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.alb_test.id}"
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%s"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.alb_test.id}"
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-listener-rule-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+
+  tags = {
+    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.alb_test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, targetGroupName1, targetGroupName2)
+}
+
+func testAccAWSLBListenerConfig_changeForwardWeightedToBasic(lbName, targetGroupName1 string, targetGroupName2 string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener" "weighted" {
+  load_balancer_arn = "${aws_lb.alb_test.id}"
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    target_group_arn = "${aws_lb_target_group.test1.arn}"
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = "%s"
+  internal        = true
+  security_groups = ["${aws_security_group.alb_test.id}"]
+  subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+
+resource "aws_lb_target_group" "test1" {
+  name     = "%s"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.alb_test.id}"
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%s"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = "${aws_vpc.alb_test.id}"
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = "list"
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-listener-rule-basic"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = "${aws_vpc.alb_test.id}"
+  cidr_block              = "${element(var.subnets, count.index)}"
+  map_public_ip_on_launch = true
+  availability_zone       = "${element(data.aws_availability_zones.available.names, count.index)}"
+
+  tags = {
+    Name = "tf-acc-lb-listener-rule-basic-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = "${aws_vpc.alb_test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "TestAccAWSALB_basic"
+  }
+}
+`, lbName, targetGroupName1, targetGroupName2)
+}
+
 func testAccAWSLBListenerConfig_basicUdp(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
@@ -581,7 +1064,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -663,7 +1153,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -711,7 +1208,7 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName)
 }
 
-func testAccAWSLBListenerConfig_https(lbName, targetGroupName string) string {
+func testAccAWSLBListenerConfig_https(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener" "front_end" {
   load_balancer_arn = "${aws_lb.alb_test.id}"
@@ -727,7 +1224,7 @@ resource "aws_lb_listener" "front_end" {
 }
 
 resource "aws_lb" "alb_test" {
-  name            = "%s"
+  name            = "%[1]s"
   internal        = false
   security_groups = ["${aws_security_group.alb_test.id}"]
   subnets         = ["${aws_subnet.alb_test.*.id[0]}", "${aws_subnet.alb_test.*.id[1]}"]
@@ -743,7 +1240,7 @@ resource "aws_lb" "alb_test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.alb_test.id}"
@@ -765,7 +1262,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -820,63 +1324,27 @@ resource "aws_security_group" "alb_test" {
 }
 
 resource "aws_iam_server_certificate" "test_cert" {
-  name             = "terraform-test-cert-%d"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-`, lbName, targetGroupName, acctest.RandInt())
-}
-
-func testAccAWSLBListenerConfig_Protocol_Tls(rName string) string {
+func testAccAWSLBListenerConfig_Protocol_Tls(rName, key, certificate string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
 
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
   }
 }
 
 resource "aws_acm_certificate" "test" {
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_vpc" "test" {
@@ -902,7 +1370,7 @@ resource "aws_subnet" "test" {
 resource "aws_lb" "test" {
   internal           = true
   load_balancer_type = "network"
-  name               = %q
+  name               = %[1]q
   subnets            = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 
   tags = {
@@ -911,7 +1379,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = %q
+  name     = %[1]q
   port     = 443
   protocol = "TCP"
   vpc_id   = "${aws_vpc.test.id}"
@@ -941,7 +1409,7 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
 func testAccAWSLBListenerConfig_redirect(lbName string) string {
@@ -981,7 +1449,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -1066,7 +1541,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "alb_test" {
   cidr_block = "10.0.0.0/16"
@@ -1114,10 +1596,10 @@ resource "aws_security_group" "alb_test" {
 `, lbName)
 }
 
-func testAccAWSLBListenerConfig_cognito(rName string) string {
+func testAccAWSLBListenerConfig_cognito(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name                       = "%s"
+  name                       = "%[1]s"
   internal                   = false
   security_groups            = ["${aws_security_group.test.id}"]
   subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
@@ -1125,7 +1607,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.test.id}"
@@ -1147,7 +1629,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1166,7 +1655,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "%s"
+  name        = "%[1]s"
   description = "Used for ALB Testing"
   vpc_id      = "${aws_vpc.test.id}"
 
@@ -1186,11 +1675,11 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_cognito_user_pool" "test" {
-  name = "%s"
+  name = "%[1]s"
 }
 
 resource "aws_cognito_user_pool_client" "test" {
-  name                                 = "%s"
+  name                                 = "%[1]s"
   user_pool_id                         = "${aws_cognito_user_pool.test.id}"
   generate_secret                      = true
   allowed_oauth_flows_user_pool_client = true
@@ -1202,36 +1691,14 @@ resource "aws_cognito_user_pool_client" "test" {
 }
 
 resource "aws_cognito_user_pool_domain" "test" {
-  domain       = "%s"
+  domain       = "%[1]s"
   user_pool_id = "${aws_cognito_user_pool.test.id}"
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name             = "terraform-test-cert-%s"
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.test.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {
@@ -1260,13 +1727,13 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, rName, rName, rName, rName, rName, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccAWSLBListenerConfig_oidc(rName string) string {
+func testAccAWSLBListenerConfig_oidc(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_lb" "test" {
-  name                       = "%s"
+  name                       = "%[1]s"
   internal                   = false
   security_groups            = ["${aws_security_group.test.id}"]
   subnets                    = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
@@ -1274,7 +1741,7 @@ resource "aws_lb" "test" {
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = "%s"
+  name     = "%[1]s"
   port     = 8080
   protocol = "HTTP"
   vpc_id   = "${aws_vpc.test.id}"
@@ -1296,7 +1763,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -1315,7 +1789,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_security_group" "test" {
-  name        = "%s"
+  name        = "%[1]s"
   description = "Used for ALB Testing"
   vpc_id      = "${aws_vpc.test.id}"
 
@@ -1335,31 +1809,9 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  name             = "terraform-test-cert-%s"
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.test.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb_listener" "test" {
@@ -1391,16 +1843,23 @@ resource "aws_lb_listener" "test" {
     type             = "forward"
   }
 }
-`, rName, rName, rName, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccAWSLBListenerConfig_DefaultAction_Order(rName string) string {
+func testAccAWSLBListenerConfig_DefaultAction_Order(rName, key, certificate string) string {
 	return fmt.Sprintf(`
 variable "rName" {
-  default = %q
+  default = %[1]q
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_lb_listener" "test" {
   load_balancer_arn = "${aws_lb.test.id}"
@@ -1435,30 +1894,9 @@ resource "aws_lb_listener" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
+  certificate_body = "%[2]s"
   name             = "${var.rName}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
-}
-
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
+  private_key      = "%[3]s"
 }
 
 resource "aws_lb" "test" {
@@ -1529,5 +1967,5 @@ resource "aws_security_group" "test" {
     Name = "${var.rName}"
   }
 }
-`, rName)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

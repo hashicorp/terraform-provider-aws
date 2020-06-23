@@ -3,6 +3,7 @@ package aws
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 	"time"
@@ -10,10 +11,66 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_lightsail_instance", &resource.Sweeper{
+		Name: "aws_lightsail_instance",
+		F:    testSweepLightsailInstances,
+	})
+}
+
+func testSweepLightsailInstances(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("Error getting client: %s", err)
+	}
+	conn := client.(*AWSClient).lightsailconn
+
+	input := &lightsail.GetInstancesInput{}
+	var sweeperErrs *multierror.Error
+
+	for {
+		output, err := conn.GetInstances(input)
+
+		if testSweepSkipSweepError(err) {
+			log.Printf("[WARN] Skipping Lightsail Instance sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("Error retrieving Lightsail Instances: %s", err)
+		}
+
+		for _, instance := range output.Instances {
+			name := aws.StringValue(instance.Name)
+			input := &lightsail.DeleteInstanceInput{
+				InstanceName: instance.Name,
+			}
+
+			log.Printf("[INFO] Deleting Lightsail Instance: %s", name)
+			_, err := conn.DeleteInstance(input)
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Lightsail Instance (%s): %s", name, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
+		}
+
+		if aws.StringValue(output.NextPageToken) == "" {
+			break
+		}
+
+		input.PageToken = output.NextPageToken
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSLightsailInstance_basic(t *testing.T) {
 	var conf lightsail.Instance
@@ -34,6 +91,7 @@ func TestAccAWSLightsailInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "bundle_id"),
 					resource.TestCheckResourceAttrSet("aws_lightsail_instance.lightsail_instance_test", "key_pair_name"),
 					resource.TestCheckResourceAttr("aws_lightsail_instance.lightsail_instance_test", "tags.%", "0"),
+					resource.TestMatchResourceAttr("aws_lightsail_instance.lightsail_instance_test", "ram_size", regexp.MustCompile(`\d+(.\d+)?`)),
 				),
 			},
 		},
@@ -239,6 +297,11 @@ func testAccAWSLightsailInstanceConfig_basic(lightsailName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_lightsail_instance" "lightsail_instance_test" {
@@ -254,6 +317,11 @@ func testAccAWSLightsailInstanceConfig_tags1(lightsailName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_lightsail_instance" "lightsail_instance_test" {
@@ -272,6 +340,11 @@ func testAccAWSLightsailInstanceConfig_tags2(lightsailName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_lightsail_instance" "lightsail_instance_test" {

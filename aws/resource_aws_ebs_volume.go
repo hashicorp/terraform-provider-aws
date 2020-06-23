@@ -10,8 +10,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsEbsVolume() *schema.Resource {
@@ -55,6 +56,11 @@ func resourceAwsEbsVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
+			"multi_attach_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"size": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -65,6 +71,12 @@ func resourceAwsEbsVolume() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+			},
+			"outpost_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validateArn,
 			},
 			"type": {
 				Type:     schema.TypeString,
@@ -80,7 +92,8 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	conn := meta.(*AWSClient).ec2conn
 
 	request := &ec2.CreateVolumeInput{
-		AvailabilityZone: aws.String(d.Get("availability_zone").(string)),
+		AvailabilityZone:  aws.String(d.Get("availability_zone").(string)),
+		TagSpecifications: ec2TagSpecificationsFromMap(d.Get("tags").(map[string]interface{}), ec2.ResourceTypeVolume),
 	}
 	if value, ok := d.GetOk("encrypted"); ok {
 		request.Encrypted = aws.Bool(value.(bool))
@@ -94,13 +107,11 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	if value, ok := d.GetOk("snapshot_id"); ok {
 		request.SnapshotId = aws.String(value.(string))
 	}
-	if value, ok := d.GetOk("tags"); ok {
-		request.TagSpecifications = []*ec2.TagSpecification{
-			{
-				ResourceType: aws.String(ec2.ResourceTypeVolume),
-				Tags:         tagsFromMap(value.(map[string]interface{})),
-			},
-		}
+	if value, ok := d.GetOk("multi_attach_enabled"); ok {
+		request.MultiAttachEnabled = aws.Bool(value.(bool))
+	}
+	if value, ok := d.GetOk("outpost_arn"); ok {
+		request.OutpostArn = aws.String(value.(string))
 	}
 
 	// IOPs are only valid, and required for, storage type io1. The current minimu
@@ -114,9 +125,9 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	iops := d.Get("iops").(int)
-	if t != "io1" && iops > 0 {
-		log.Printf("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
-	} else if t == "io1" {
+	if t != ec2.VolumeTypeIo1 && iops > 0 {
+		log.Printf("[WARN] IOPs is only valid on IO1 storage type for EBS Volumes")
+	} else if t == ec2.VolumeTypeIo1 {
 		// We add the iops value without validating it's size, to allow AWS to
 		// enforce a size requirement (currently 100)
 		request.Iops = aws.Int64(int64(iops))
@@ -132,8 +143,8 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Println("[DEBUG] Waiting for Volume to become available")
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"available"},
+		Pending:    []string{ec2.VolumeStateCreating},
+		Target:     []string{ec2.VolumeStateAvailable},
 		Refresh:    volumeStateRefreshFunc(conn, *result.VolumeId),
 		Timeout:    5 * time.Minute,
 		Delay:      10 * time.Second,
@@ -154,11 +165,6 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 
 func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	if _, ok := d.GetOk("tags"); ok {
-		if err := setTags(conn, d); err != nil {
-			return fmt.Errorf("Error updating tags for EBS Volume: %s", err)
-		}
-	}
 
 	requestUpdate := false
 	params := &ec2.ModifyVolumeInput{
@@ -187,8 +193,8 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"creating", "modifying"},
-			Target:     []string{"available", "in-use"},
+			Pending:    []string{ec2.VolumeStateCreating, ec2.VolumeModificationStateModifying},
+			Target:     []string{ec2.VolumeStateAvailable, ec2.VolumeStateInUse},
 			Refresh:    volumeStateRefreshFunc(conn, *result.VolumeModification.VolumeId),
 			Timeout:    5 * time.Minute,
 			Delay:      10 * time.Second,
@@ -200,6 +206,14 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 			return fmt.Errorf(
 				"Error waiting for Volume (%s) to become available: %s",
 				*result.VolumeModification.VolumeId, err)
+		}
+	}
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.Ec2UpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
 		}
 	}
 
@@ -233,6 +247,7 @@ func volumeStateRefreshFunc(conn *ec2.EC2, volumeID string) resource.StateRefres
 
 func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	request := &ec2.DescribeVolumesInput{
 		VolumeIds: []*string{aws.String(d.Id())},
@@ -240,7 +255,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVolume.NotFound" {
+		if isAWSErr(err, "InvalidVolume.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -267,8 +282,10 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("kms_key_id", aws.StringValue(volume.KmsKeyId))
 	d.Set("size", aws.Int64Value(volume.Size))
 	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
+	d.Set("outpost_arn", aws.StringValue(volume.OutpostArn))
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 
-	if err := d.Set("tags", tagsToMap(volume.Tags)); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 

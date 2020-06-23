@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsEip_Filter(t *testing.T) {
@@ -155,6 +155,40 @@ func TestAccDataSourceAwsEip_Instance(t *testing.T) {
 	})
 }
 
+func TestAccDataSourceAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
+	dataSourceName := "data.aws_eip.test"
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ipv4_pool", dataSourceName, "customer_owned_ipv4_pool"),
+					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ip", dataSourceName, "customer_owned_ip"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool() string {
+	return `
+data "aws_ec2_coip_pools" "test" {}
+
+resource "aws_eip" "test" {
+  customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
+  vpc                      = true
+}
+
+data "aws_eip" "test" {
+  id = aws_eip.test.id
+}
+`
+}
+
 func testAccDataSourceAwsEipConfigFilter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_eip" "test" {
@@ -256,11 +290,23 @@ data "aws_eip" "test" {
 `
 
 const testAccDataSourceAwsEipConfigInstance = `
+data "aws_availability_zones" "available" {
+  # Error launching source instance: Unsupported: Your requested instance type (t2.micro) is not supported in your requested Availability Zone (us-west-2d).
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.2.0.0/16"
 }
 
 resource "aws_subnet" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.2.0.0/24"
 }

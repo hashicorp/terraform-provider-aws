@@ -7,9 +7,9 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
@@ -28,7 +28,7 @@ func testAccAwsOrganizationsPolicy_basic(t *testing.T) {
 				Config: testAccAwsOrganizationsPolicyConfig_Required(rName, content1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyExists(resourceName, &policy),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:organizations::[^:]+:policy/o-.+/service_control_policy/p-.+$`)),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "organizations", regexp.MustCompile("policy/o-.+/service_control_policy/p-.+$")),
 					resource.TestCheckResourceAttr(resourceName, "content", content1),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -102,6 +102,49 @@ func testAccAwsOrganizationsPolicy_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsOrganizationsPolicyExists(resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccAwsOrganizationsPolicy_type(t *testing.T) {
+	var policy organizations.Policy
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_organizations_policy.test"
+
+	serviceControlPolicyContent := `{"Version": "2012-10-17", "Statement": { "Effect": "Allow", "Action": "*", "Resource": "*"}}`
+	tagPolicyContent := `{ "tags": { "Product": { "tag_key": { "@@assign": "Product" }, "enforced_for": { "@@assign": [ "ec2:instance" ] } } } }`
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccOrganizationsAccountPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsOrganizationsPolicyDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_Type(rName, serviceControlPolicyContent, organizations.PolicyTypeServiceControlPolicy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
+				),
+			},
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_Type(rName, tagPolicyContent, organizations.PolicyTypeTagPolicy),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeTagPolicy),
+				),
+			},
+			{
+				Config: testAccAwsOrganizationsPolicyConfig_Required(rName, serviceControlPolicyContent),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsOrganizationsPolicyExists(resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "type", organizations.PolicyTypeServiceControlPolicy),
 				),
 			},
 			{
@@ -242,4 +285,18 @@ resource "aws_organizations_policy" "test5" {
   depends_on = ["aws_organizations_organization.test"]
 }
 `, rName)
+}
+
+func testAccAwsOrganizationsPolicyConfig_Type(rName, content, policyType string) string {
+	return fmt.Sprintf(`
+resource "aws_organizations_organization" "test" {}
+
+resource "aws_organizations_policy" "test" {
+  content     = %s
+  name        = "%s"
+  type        = "%s"
+
+  depends_on = ["aws_organizations_organization.test"]
+}
+`, strconv.Quote(content), rName, policyType)
 }

@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_export"
-sidebar_current: "docs-aws-datasource-cloudformation-export"
 description: |-
     Provides metadata of a CloudFormation Export (e.g. Cross Stack References)
 ---

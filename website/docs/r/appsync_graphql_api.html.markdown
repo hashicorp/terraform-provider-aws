@@ -1,7 +1,7 @@
 ---
+subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_graphql_api"
-sidebar_current: "docs-aws-resource-appsync-graphql-api"
 description: |-
   Provides an AppSync GraphQL API.
 ---
@@ -46,6 +46,7 @@ resource "aws_appsync_graphql_api" "example" {
 ```
 
 ### With Schema
+
 ```hcl
 resource "aws_appsync_graphql_api" "example" {
   authentication_type = "AWS_IAM"
@@ -71,6 +72,19 @@ resource "aws_appsync_graphql_api" "example" {
 
   openid_connect_config {
     issuer = "https://example.com"
+  }
+}
+```
+
+### With Multiple Authentication Providers
+
+```hcl
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type = "API_KEY"
+  name                = "example"
+
+  additional_authentication_provider {
+    authentication_type = "AWS_IAM"
   }
 }
 ```
@@ -122,7 +136,9 @@ The following arguments are supported:
 * `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
 * `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
 * `schema` - (Optional) The schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphqlApi. Defined below.
+* `tags` - (Optional) A map of tags to assign to the resource.
+* `xray_enabled` - (Optional) Whether tracing with X-ray is enabled. Defaults to false.
 
 ### log_config
 
@@ -130,6 +146,15 @@ The following arguments are supported:
 
 * `cloudwatch_logs_role_arn` - (Required) Amazon Resource Name of the service role that AWS AppSync will assume to publish to Amazon CloudWatch logs in your account.
 * `field_log_level` - (Required) Field logging level. Valid values: `ALL`, `ERROR`, `NONE`.
+* `exclude_verbose_content` - (Optional) Set to TRUE to exclude sections that contain information such as headers, context, and evaluated mapping templates, regardless of logging  level. Valid values: `true`, `false`. Default value: `false`
+
+### additional_authentication_provider
+
+The following arguments are supported:
+
+* `authentication_type` - (Required) The authentication type. Valid values: `API_KEY`, `AWS_IAM`, `AMAZON_COGNITO_USER_POOLS`, `OPENID_CONNECT`
+* `openid_connect_config` - (Optional) Nested argument containing OpenID Connect configuration. Defined below.
+* `user_pool_config` - (Optional) The Amazon Cognito User Pool configuration. Defined below.
 
 ### openid_connect_config
 
@@ -144,7 +169,7 @@ The following arguments are supported:
 
 The following arguments are supported:
 
-* `default_action` - (Required) The action that you want your GraphQL API to take when a request that uses Amazon Cognito User Pool authentication doesn't match the Amazon Cognito User Pool configuration. Valid: `ALLOW` and `DENY`
+* `default_action` - (Required only if Cognito is used as the default auth provider) The action that you want your GraphQL API to take when a request that uses Amazon Cognito User Pool authentication doesn't match the Amazon Cognito User Pool configuration. Valid: `ALLOW` and `DENY`
 * `user_pool_id` - (Required) The user pool ID.
 * `app_id_client_regex` - (Optional) A regular expression for validating the incoming Amazon Cognito User Pool app client ID.
 * `aws_region` - (Optional) The AWS region in which the user pool was created.

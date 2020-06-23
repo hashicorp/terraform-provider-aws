@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_environment"
-sidebar_current: "docs-aws-resource-elastic-beanstalk-environment"
 description: |-
   Provides an Elastic Beanstalk Environment Resource
 ---
@@ -114,16 +114,17 @@ In addition to all arguments above, the following attributes are exported:
 * `tier` - The environment tier specified.
 * `application` – The Elastic Beanstalk Application specified for this environment.
 * `setting` – Settings specifically set for this Environment.
-* `all_settings` – List of all option settings configured in the Environment. These
+* `all_settings` – List of all option settings configured in this Environment. These
   are a combination of default settings and their overrides from `setting` in
   the configuration.
-* `cname` - Fully qualified DNS name for the Environment.
-* `autoscaling_groups` - The autoscaling groups used by this environment.
-* `instances` - Instances used by this environment.
-* `launch_configurations` - Launch configurations in use by this environment.
-* `load_balancers` - Elastic load balancers in use by this environment.
-* `queues` - SQS queues in use by this environment.
-* `triggers` - Autoscaling triggers in use by this environment.
+* `cname` - Fully qualified DNS name for this Environment.
+* `autoscaling_groups` - The autoscaling groups used by this Environment.
+* `instances` - Instances used by this Environment.
+* `launch_configurations` - Launch configurations in use by this Environment.
+* `load_balancers` - Elastic load balancers in use by this Environment.
+* `queues` - SQS queues in use by this Environment.
+* `triggers` - Autoscaling triggers in use by this Environment.
+* `endpoint_url` - The URL to the Load Balancer for this Environment
 
 
 

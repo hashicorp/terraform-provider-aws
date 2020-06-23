@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_role_alias"
-sidebar_current: "docs-aws-resource-iot-role_alias"
 description: |-
   Provides an IoT role alias.
 ---

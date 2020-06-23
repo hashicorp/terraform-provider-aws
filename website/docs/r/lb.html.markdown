@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing v2 (ALB/NLB)"
 layout: "aws"
 page_title: "AWS: aws_lb"
-sidebar_current: "docs-aws-resource-elbv2"
 description: |-
   Provides a Load Balancer resource.
 ---
@@ -76,6 +76,10 @@ resource "aws_lb" "example" {
 
 ## Argument Reference
 
+~> **NOTE:** Please note that internal LBs can only use `ipv4` as the ip_address_type. You can only change to `dualstack` ip_address_type if the selected subnets are IPv6 enabled.
+
+~> **NOTE:** Please note that one of either `subnets` or `subnet_mapping` is required.
+
 The following arguments are supported:
 
 * `name` - (Optional) The name of the LB. This name must be unique within your AWS account, can have a maximum of 32 characters,
@@ -85,6 +89,7 @@ Terraform will autogenerate a name beginning with `tf-lb`.
 * `internal` - (Optional) If true, the LB will be internal.
 * `load_balancer_type` - (Optional) The type of load balancer to create. Possible values are `application` or `network`. The default value is `application`.
 * `security_groups` - (Optional) A list of security group IDs to assign to the LB. Only valid for Load Balancers of type `application`.
+* `drop_invalid_header_fields` - (Optional) Indicates whether HTTP headers with header fields that are not valid are removed by the load balancer (true) or routed to targets (false). The default is false. Elastic Load Balancing requires that message header names contain only alphanumeric characters and hyphens. Only valid for Load Balancers of type `application`.
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
 * `subnets` - (Optional) A list of subnet IDs to attach to the LB. Subnets
 cannot be updated for Load Balancers of type `network`. Changing this value 
@@ -97,9 +102,7 @@ for load balancers of type `network` will force a recreation of the resource.
    This is a `network` load balancer feature. Defaults to `false`.
 * `enable_http2` - (Optional) Indicates whether HTTP/2 is enabled in `application` load balancers. Defaults to `true`.
 * `ip_address_type` - (Optional) The type of IP addresses used by the subnets for your load balancer. The possible values are `ipv4` and `dualstack`
-* `tags` - (Optional) A mapping of tags to assign to the resource.
-
-~> **NOTE::** Please note that internal LBs can only use `ipv4` as the ip_address_type. You can only change to `dualstack` ip_address_type if the selected subnets are IPv6 enabled.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Access Logs (`access_logs`) support the following:
 

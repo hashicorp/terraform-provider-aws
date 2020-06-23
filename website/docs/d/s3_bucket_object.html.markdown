@@ -1,7 +1,7 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_object"
-sidebar_current: "docs-aws-datasource-s3-bucket-object"
 description: |-
     Provides metadata and optionally content of an S3 object
 ---
@@ -48,7 +48,7 @@ resource "aws_lambda_function" "test_lambda" {
   s3_key            = "${data.aws_s3_bucket_object.lambda.key}"
   s3_object_version = "${data.aws_s3_bucket_object.lambda.version_id}"
   function_name     = "lambda_function_name"
-  role              = "${aws_iam_role.iam_for_lambda.arn}"             # (not shown)
+  role              = "${aws_iam_role.iam_for_lambda.arn}" # (not shown)
   handler           = "exports.test"
 }
 ```
@@ -57,7 +57,7 @@ resource "aws_lambda_function" "test_lambda" {
 
 The following arguments are supported:
 
-* `bucket` - (Required) The name of the bucket to read the object from
+* `bucket` - (Required) The name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `key` - (Required) The full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
@@ -77,9 +77,14 @@ In addition to all arguments above, the following attributes are exported:
 * `expires` - The date and time at which the object is no longer cacheable.
 * `last_modified` - Last modified date of the object in RFC1123 format (e.g. `Mon, 02 Jan 2006 15:04:05 MST`)
 * `metadata` - A map of metadata stored with the object in S3
+* `object_lock_legal_hold_status` - Indicates whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
+* `object_lock_mode` - The object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
+* `object_lock_retain_until_date` - The date and time when this object's object lock will expire.
 * `server_side_encryption` - If the object is stored using server-side encryption (KMS or Amazon S3-managed encryption key), this field includes the chosen encryption and algorithm used.
 * `sse_kms_key_id` - If present, specifies the ID of the Key Management Service (KMS) master encryption key that was used for the object.
 * `storage_class` - [Storage class](http://docs.aws.amazon.com/AmazonS3/latest/dev/storage-class-intro.html) information of the object. Available for all objects except for `Standard` storage class objects.
 * `version_id` - The latest version ID of the object returned.
 * `website_redirect_location` - If the bucket is configured as a website, redirects requests for this object to another object in the same bucket or to an external URL. Amazon S3 stores the value of this header in the object metadata.
-* `tags`  - A mapping of tags assigned to the object.
+* `tags`  - A map of tags assigned to the object.
+
+-> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.

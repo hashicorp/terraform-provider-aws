@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcEndpoint_gatewayBasic(t *testing.T) {
@@ -57,6 +57,62 @@ func TestAccDataSourceAwsVpcEndpoint_byId(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpoint_byFilter(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint.test"
+	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointConfig_byFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
+					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDataSourceAwsVpcEndpoint_byTags(t *testing.T) {
+	datasourceName := "data.aws_vpc_endpoint.test"
+	rName := fmt.Sprintf("tf-testacc-vpce-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAwsVpcEndpointConfig_byTags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "vpc_endpoint_type", "Gateway"),
+					resource.TestCheckResourceAttrSet(datasourceName, "prefix_list_id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "cidr_blocks.#"),
+					resource.TestCheckResourceAttr(datasourceName, "route_table_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "subnet_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "network_interface_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(datasourceName, "private_dns_enabled", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "requester_managed", "false"),
+					resource.TestCheckResourceAttr(datasourceName, "tags.%", "3"),
 					testAccCheckResourceAttrAccountID(datasourceName, "owner_id"),
 				),
 			},
@@ -170,6 +226,67 @@ data "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
+func testAccDataSourceAwsVpcEndpointConfig_byFilter(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id       = "${aws_vpc.test.id}"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+}
+
+data "aws_vpc_endpoint" "test" {
+  filter {
+    name   = "vpc-endpoint-id"
+    values = ["${aws_vpc_endpoint.test.id}"]
+  }
+}
+`, rName)
+}
+
+func testAccDataSourceAwsVpcEndpointConfig_byTags(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id       = "${aws_vpc.test.id}"
+  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
+
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+    Key3 = "Value3"
+  }
+}
+
+data "aws_vpc_endpoint" "test" {
+  vpc_id = "${aws_vpc_endpoint.test.vpc_id}"
+
+  tags = {
+    Key1 = "Value1"
+    Key2 = "Value2"
+    Key3 = "Value3"
+  }
+}
+`, rName)
+}
+
 func testAccDataSourceAwsVpcEndpointConfig_gatewayWithRouteTableAndTags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -221,7 +338,14 @@ resource "aws_vpc" "test" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_subnet" "test" {
   vpc_id            = "${aws_vpc.test.id}"

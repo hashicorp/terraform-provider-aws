@@ -1,7 +1,7 @@
 ---
+subcategory: "Service Discovery"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_service"
-sidebar_current: "docs-aws-resource-service-discovery-service"
 description: |-
   Provides a Service Discovery Service resource.
 ---
@@ -81,6 +81,7 @@ The following arguments are supported:
 * `health_check_config` - (Optional) A complex type that contains settings for an optional health check. Only for Public DNS namespaces.
 * `health_check_custom_config` - (Optional, ForceNew) A complex type that contains settings for ECS managed health checks.
 * `namespace_id` - (Optional) The ID of the namespace that you want to use to create the service.
+* `tags` - (Optional) A map of tags to assign to the service.
 
 ### dns_config
 

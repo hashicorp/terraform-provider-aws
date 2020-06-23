@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet"
-sidebar_current: "docs-aws-resource-subnet"
 description: |-
   Provides an VPC subnet resource.
 ---
@@ -9,6 +9,8 @@ description: |-
 # Resource: aws_subnet
 
 Provides an VPC subnet resource.
+
+~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), subnets associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
 
 ## Example Usage
 
@@ -54,11 +56,12 @@ The following arguments are supported:
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate
     that instances launched into the subnet should be assigned
     a public IP address. Default is `false`.
+* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`
 * `vpc_id` - (Required) The VPC ID.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 
@@ -68,6 +71,14 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - The ARN of the subnet.
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
 * `owner_id` - The ID of the AWS account that owns the subnet.
+
+## Timeouts
+
+`aws_subnet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `10m`) How long to wait for a subnet to be created.
+- `delete` - (Default `20m`) How long to retry on `DependencyViolation` errors during subnet deletion from lingering ENIs left by certain AWS services such as Elastic Load Balancing. NOTE: Lambda ENIs can take up to 45 minutes to delete, which is not affected by changing this customizable timeout (in version 2.31.0 and later of the Terraform AWS Provider) unless it is increased above 45 minutes.
 
 ## Import
 

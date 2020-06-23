@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_spot_datafeed_subscription"
-sidebar_current: "docs-aws-resource-spot-datafeed-subscription"
 description: |-
   Provides a Spot Datafeed Subscription resource.
 ---
@@ -27,6 +27,7 @@ resource "aws_spot_datafeed_subscription" "default" {
 ```
 
 ## Argument Reference
+
 * `bucket` - (Required) The Amazon S3 bucket in which to store the Spot instance data feed.
 * `prefix` - (Optional) Path of folder inside bucket to place spot pricing data.
 

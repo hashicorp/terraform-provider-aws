@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
@@ -37,6 +37,7 @@ func TestAccDataSourceAwsVpcDhcpOptions_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.Name", resourceName, "tags.Name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "owner_id", resourceName, "owner_id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 				),
 			},
 		},

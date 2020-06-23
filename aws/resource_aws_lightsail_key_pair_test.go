@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lightsail"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
@@ -36,7 +36,7 @@ func TestAccAWSLightsailKeyPair_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLightsailKeyPair_imported(t *testing.T) {
+func TestAccAWSLightsailKeyPair_publicKey(t *testing.T) {
 	var conf lightsail.KeyPair
 	lightsailName := fmt.Sprintf("tf-test-lightsail-%d", acctest.RandInt())
 
@@ -46,7 +46,7 @@ func TestAccAWSLightsailKeyPair_imported(t *testing.T) {
 		CheckDestroy: testAccCheckAWSLightsailKeyPairDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSLightsailKeyPairConfig_imported(lightsailName, testLightsailKeyPairPubKey1),
+				Config: testAccAWSLightsailKeyPairConfig_imported(lightsailName, lightsailPubKey),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSLightsailKeyPairExists("aws_lightsail_key_pair.lightsail_key_pair_test", &conf),
 					resource.TestCheckResourceAttrSet("aws_lightsail_key_pair.lightsail_key_pair_test", "arn"),
@@ -175,14 +175,14 @@ resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
 `, lightsailName)
 }
 
-func testAccAWSLightsailKeyPairConfig_imported(lightsailName, key string) string {
+func testAccAWSLightsailKeyPairConfig_imported(lightsailName, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_lightsail_key_pair" "lightsail_key_pair_test" {
   name = "%s"
 
   public_key = "%s"
 }
-`, lightsailName, lightsailPubKey)
+`, lightsailName, publicKey)
 }
 
 func testAccAWSLightsailKeyPairConfig_encrypted(lightsailName, key string) string {

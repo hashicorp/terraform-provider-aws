@@ -1,7 +1,7 @@
 ---
+subcategory: "AppSync"
 layout: "aws"
 page_title: "AWS: aws_appsync_datasource"
-sidebar_current: "docs-aws-resource-appsync-datasource"
 description: |-
   Provides an AppSync DataSource.
 ---

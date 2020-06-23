@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/securityhub"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsSecurityHubProductSubscription() *schema.Resource {
@@ -73,6 +73,7 @@ func resourceAwsSecurityHubProductSubscriptionRead(d *schema.ResourceData, meta 
 	if !exists {
 		log.Printf("[WARN] Security Hub product subscriptions (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return nil
 	}
 
 	d.Set("product_arn", productArn)

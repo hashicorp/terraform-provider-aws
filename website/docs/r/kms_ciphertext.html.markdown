@@ -1,7 +1,7 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_ciphertext"
-sidebar_current: "docs-aws-resource-kms-ciphertext"
 description: |-
     Provides ciphertext encrypted using a KMS key
 ---

@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpcs"
-sidebar_current: "docs-aws-datasource-vpcs"
 description: |-
     Provides a list of VPC Ids in a region
 ---
@@ -49,7 +49,7 @@ output "foo" {
 
 ## Argument Reference
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired vpcs.
 
 * `filter` - (Optional) Custom filter block as described below.

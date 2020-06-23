@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -332,7 +332,7 @@ func TestAccAWSCloudFrontDistribution_noOptionalItemsConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
 					resource.TestCheckResourceAttr(resourceName, "aliases.#", "0"),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(`^arn:[^:]+:cloudfront::[^:]+:distribution/[A-Z0-9]+$`)),
+					testAccMatchResourceAttrGlobalARN(resourceName, "arn", "cloudfront", regexp.MustCompile(`distribution/[A-Z0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "custom_error_response.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.allowed_methods.#", "7"),
@@ -559,6 +559,40 @@ func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_ForwardedValues_Heade
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.forwarded_values.0.headers.#", "2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSCloudFrontDistribution_DefaultCacheBehavior_TrustedSigners(t *testing.T) {
+	var distribution cloudfront.Distribution
+	resourceName := "aws_cloudfront_distribution.test"
+	retainOnDelete := testAccAWSCloudFrontDistributionRetainOnDeleteFromEnv()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCloudFront(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckCloudFrontDistributionDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorTrustedSignersSelf(retainOnDelete),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCloudFrontDistributionExists(resourceName, &distribution),
+					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.%", "6"),
+					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.items.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "active_trusted_signers.items.0.aws_account_number", "self"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_cache_behavior.0.trusted_signers.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"retain_on_delete",
+					"wait_for_deployment",
+				},
 			},
 		},
 	})
@@ -2312,37 +2346,61 @@ resource "aws_cloudfront_distribution" "test" {
 `, retainOnDelete)
 }
 
-// CloudFront Distribution ACM Certificates must be created in us-east-1
-func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBase(commonName string) string {
-	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
-resource "tls_private_key" "test" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "test" {
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-
-  key_algorithm         = "RSA"
-  private_key_pem       = "${tls_private_key.test.private_key_pem}"
-  validity_period_hours = 12
-
-  subject {
-    common_name  = %q
-    organization = "ACME Examples, Inc"
+func testAccAWSCloudFrontDistributionConfigDefaultCacheBehaviorTrustedSignersSelf(retainOnDelete bool) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_distribution" "test" {
+  # Faster acceptance testing
+  enabled             = false
+  retain_on_delete    = %[1]t
+  wait_for_deployment = false
+  default_cache_behavior {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "test"
+    trusted_signers        = ["self"]
+    viewer_protocol_policy = "allow-all"
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "all"
+      }
+    }
+  }
+  origin {
+    domain_name = "www.example.com"
+    origin_id   = "test"
+    custom_origin_config {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "https-only"
+      origin_ssl_protocols   = ["TLSv1.2"]
+    }
+  }
+  restrictions {
+    geo_restriction {
+      restriction_type = "none"
+    }
+  }
+  viewer_certificate {
+    cloudfront_default_certificate = true
   }
 }
+`, retainOnDelete)
+}
 
+// CloudFront Distribution ACM Certificates must be created in us-east-1
+func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArnBase(commonName string) string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, commonName)
+
+	return testAccUsEast1RegionProviderConfig() + fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   provider = "aws.us-east-1"
 
-  certificate_body = "${tls_self_signed_cert.test.cert_pem}"
-  private_key      = "${tls_private_key.test.private_key_pem}"
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
 }
-`, commonName)
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
 func testAccAWSCloudFrontDistributionConfigViewerCertificateAcmCertificateArn(retainOnDelete bool) string {

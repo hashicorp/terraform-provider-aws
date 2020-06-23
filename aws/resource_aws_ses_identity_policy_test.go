@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSESIdentityPolicy_basic(t *testing.T) {
@@ -96,7 +96,7 @@ func TestAccAWSSESIdentityPolicy_Policy(t *testing.T) {
 }
 
 func testAccCheckAwsSESIdentityPolicyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesConn
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ses_identity_policy" {
@@ -138,7 +138,7 @@ func testAccCheckAwsSESIdentityPolicyExists(resourceName string) resource.TestCh
 			return fmt.Errorf("SES Identity Policy ID not set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).sesConn
+		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
 		identityARN, policyName, err := resourceAwsSesIdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {

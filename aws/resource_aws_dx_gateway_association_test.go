@@ -9,10 +9,10 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -189,9 +189,10 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 	rBgpAsn := randIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_deprecatedSingleAccount(rName, rBgpAsn),
@@ -206,6 +207,7 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.1216997074", "10.255.255.0/28"),
+					testAccCheckAwsDxGatewayAssociationStateUpgradeV0(resourceName),
 				),
 			},
 		},
@@ -220,9 +222,10 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 	rBgpAsn := randIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName, rBgpAsn),
@@ -269,8 +272,9 @@ func TestAccAwsDxGatewayAssociation_basicVpnGatewayCrossAccount(t *testing.T) {
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
+		ProviderFactories:   testAccProviderFactories(&providers),
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_basicVpnGatewayCrossAccount(rName, rBgpAsn),
@@ -300,9 +304,10 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewaySingleAccount(t *testing.
 	rBgpAsn := randIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_basicTransitGatewaySingleAccount(rName, rBgpAsn),
@@ -350,8 +355,9 @@ func TestAccAwsDxGatewayAssociation_basicTransitGatewayCrossAccount(t *testing.T
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
+		ProviderFactories:   testAccProviderFactories(&providers),
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_basicTransitGatewayCrossAccount(rName, rBgpAsn),
@@ -382,9 +388,10 @@ func TestAccAwsDxGatewayAssociation_multiVpnGatewaysSingleAccount(t *testing.T) 
 	rBgpAsn := randIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_multiVpnGatewaysSingleAccount(rName1, rName2, rBgpAsn),
@@ -411,9 +418,10 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewaySingleAccount(t *te
 	rBgpAsn := randIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewaySingleAccount(rName, rBgpAsn),
@@ -452,8 +460,9 @@ func TestAccAwsDxGatewayAssociation_allowedPrefixesVpnGatewayCrossAccount(t *tes
 			testAccPreCheck(t)
 			testAccAlternateAccountPreCheck(t)
 		},
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckAwsDxGatewayAssociationDestroy,
+		ProviderFactories:   testAccProviderFactories(&providers),
+		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_allowedPrefixesVpnGatewayCrossAccount(rName, rBgpAsn),
@@ -516,6 +525,35 @@ func testAccCheckAwsDxGatewayAssociationExists(name string) resource.TestCheckFu
 		}
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No ID is set")
+		}
+
+		return nil
+	}
+}
+
+// Perform check in acceptance testing as this StateUpgrader requires an API call
+func testAccCheckAwsDxGatewayAssociationStateUpgradeV0(name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		rawState := map[string]interface{}{
+			"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
+			"vpn_gateway_id": rs.Primary.Attributes["vpn_gateway_id"],
+		}
+
+		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(rawState, testAccProvider.Meta())
+		if err != nil {
+			return err
+		}
+
+		if got, want := updatedRawState["dx_gateway_association_id"], rs.Primary.Attributes["dx_gateway_association_id"]; got != want {
+			return fmt.Errorf("Invalid dx_gateway_association_id attribute in migrated state. Expected %s, got %s", want, got)
 		}
 
 		return nil

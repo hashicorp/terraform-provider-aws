@@ -1,7 +1,7 @@
 ---
+subcategory: "CloudHSM v2"
 layout: "aws"
 page_title: "AWS: aws_cloudhsm_v2_cluster"
-sidebar_current: "docs-aws-datasource-cloudhsm-v2-cluster"
 description: |-
   Get information on a CloudHSM v2 cluster.
 ---
@@ -17,6 +17,7 @@ data "aws_cloudhsm_v2_cluster" "cluster" {
   cluster_id = "cluster-testclusterid"
 }
 ```
+
 ## Argument Reference
 
 The following arguments are supported:

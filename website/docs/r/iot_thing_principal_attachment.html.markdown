@@ -1,7 +1,7 @@
 ---
+subcategory: "IoT"
 layout: "aws"
 page_title: "AWS: aws_iot_thing_principal_attachment"
-sidebar_current: "docs-aws-resource-iot-thing-principal-attachment"
 description: |-
     Provides AWS IoT Thing Principal attachment.
 ---

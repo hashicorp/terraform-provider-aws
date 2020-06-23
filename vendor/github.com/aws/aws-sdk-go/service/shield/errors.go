@@ -2,6 +2,10 @@
 
 package shield
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -14,8 +18,8 @@ const (
 	// ErrCodeAccessDeniedForDependencyException for service response error code
 	// "AccessDeniedForDependencyException".
 	//
-	// In order to grant the necessary access to the DDoS Response Team, the user
-	// submitting AssociateDRTRole must have the iam:PassRole permission. This error
+	// In order to grant the necessary access to the DDoS Response Team (DRT), the
+	// user submitting the request must have the iam:PassRole permission. This error
 	// indicates the user did not have the appropriate permissions. For more information,
 	// see Granting a User Permissions to Pass a Role to an AWS Service (https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_passrole.html).
 	ErrCodeAccessDeniedForDependencyException = "AccessDeniedForDependencyException"
@@ -82,8 +86,8 @@ const (
 	// ErrCodeOptimisticLockException for service response error code
 	// "OptimisticLockException".
 	//
-	// Exception that indicates that the protection state has been modified by another
-	// client. You can retry the request.
+	// Exception that indicates that the resource state has been modified by another
+	// client. Retrieve the resource and then retry your request.
 	ErrCodeOptimisticLockException = "OptimisticLockException"
 
 	// ErrCodeResourceAlreadyExistsException for service response error code
@@ -98,3 +102,19 @@ const (
 	// Exception indicating the specified resource does not exist.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":              newErrorAccessDeniedException,
+	"AccessDeniedForDependencyException": newErrorAccessDeniedForDependencyException,
+	"InternalErrorException":             newErrorInternalErrorException,
+	"InvalidOperationException":          newErrorInvalidOperationException,
+	"InvalidPaginationTokenException":    newErrorInvalidPaginationTokenException,
+	"InvalidParameterException":          newErrorInvalidParameterException,
+	"InvalidResourceException":           newErrorInvalidResourceException,
+	"LimitsExceededException":            newErrorLimitsExceededException,
+	"LockedSubscriptionException":        newErrorLockedSubscriptionException,
+	"NoAssociatedRoleException":          newErrorNoAssociatedRoleException,
+	"OptimisticLockException":            newErrorOptimisticLockException,
+	"ResourceAlreadyExistsException":     newErrorResourceAlreadyExistsException,
+	"ResourceNotFoundException":          newErrorResourceNotFoundException,
+}

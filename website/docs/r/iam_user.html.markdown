@@ -1,7 +1,7 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_user"
-sidebar_current: "docs-aws-resource-iam-user"
 description: |-
   Provides an IAM user.
 ---
@@ -59,7 +59,7 @@ The following arguments are supported:
 * `force_destroy` - (Optional, default false) When destroying this user, destroy even if it
   has non-Terraform-managed IAM access keys, login profile or MFA devices. Without `force_destroy`
   a user with non-Terraform-managed access keys and login profile will fail to be destroyed.
-* `tags` - Key-value mapping of tags for the IAM user
+* `tags` - Key-value map of tags for the IAM user
 
 ## Attributes Reference
 

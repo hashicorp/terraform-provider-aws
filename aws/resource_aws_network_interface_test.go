@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -85,10 +85,14 @@ func TestAccAWSENI_basic(t *testing.T) {
 						"aws_network_interface.bar", "private_ips.#", "1"),
 					resource.TestCheckResourceAttrSet(
 						"aws_network_interface.bar", "private_dns_name"),
+					resource.TestCheckResourceAttrSet(
+						"aws_network_interface.bar", "mac_address"),
 					resource.TestCheckResourceAttr(
 						"aws_network_interface.bar", "tags.Name", "bar_interface"),
 					resource.TestCheckResourceAttr(
 						"aws_network_interface.bar", "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(
+						"aws_network_interface.bar", "outpost_arn", ""),
 				),
 			},
 			{
@@ -376,6 +380,10 @@ func testAccCheckAWSENIAttributes(conf *ec2.NetworkInterface) resource.TestCheck
 
 		if *conf.PrivateDnsName != "ip-172-16-10-100.us-west-2.compute.internal" {
 			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.us-west-2.compute.internal, but was %s", *conf.PrivateDnsName)
+		}
+
+		if len(*conf.MacAddress) == 0 {
+			return fmt.Errorf("expected mac_address to be set")
 		}
 
 		if !*conf.SourceDestCheck {

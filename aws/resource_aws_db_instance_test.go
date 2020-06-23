@@ -8,9 +8,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -119,6 +120,7 @@ func TestAccAWSDBInstance_basic(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
@@ -304,6 +306,86 @@ func TestAccAWSDBInstance_AllowMajorVersionUpgrade(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_DbSubnetGroupName(t *testing.T) {
+	var dbInstance rds.DBInstance
+	var dbSubnetGroup rds.DBSubnetGroup
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_DbSubnetGroupName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_DbSubnetGroupName_RamShared(t *testing.T) {
+	var dbInstance rds.DBInstance
+	var dbSubnetGroup rds.DBSubnetGroup
+	var providers []*schema.Provider
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+			testAccOrganizationsEnabledPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_DbSubnetGroupName_RamShared(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_DbSubnetGroupName_VpcSecurityGroupIds(t *testing.T) {
+	var dbInstance rds.DBInstance
+	var dbSubnetGroup rds.DBSubnetGroup
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_DbSubnetGroupName_VpcSecurityGroupIds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_DeletionProtection(t *testing.T) {
 	var dbInstance rds.DBInstance
 
@@ -331,6 +413,7 @@ func TestAccAWSDBInstance_DeletionProtection(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 			{
@@ -674,6 +757,98 @@ func TestAccAWSDBInstance_ReplicateSourceDb_BackupWindow(t *testing.T) {
 	})
 }
 
+func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName(t *testing.T) {
+	var dbInstance rds.DBInstance
+	var dbSubnetGroup rds.DBSubnetGroup
+	var providers []*schema.Provider
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName_RamShared(t *testing.T) {
+	var dbInstance rds.DBInstance
+	var dbSubnetGroup rds.DBSubnetGroup
+	var providers []*schema.Provider
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+			testAccOrganizationsEnabledPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_RamShared(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupIds(t *testing.T) {
+	var dbInstance rds.DBInstance
+	var dbSubnetGroup rds.DBSubnetGroup
+	var providers []*schema.Provider
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionsPreCheck(t)
+			testAccAlternateRegionPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupIds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection(t *testing.T) {
 	t.Skip("CreateDBInstanceReadReplica API currently ignores DeletionProtection=true with SourceDBInstanceIdentifier set")
 	// --- FAIL: TestAccAWSDBInstance_ReplicateSourceDb_DeletionProtection (1624.88s)
@@ -916,6 +1091,33 @@ func TestAccAWSDBInstance_ReplicateSourceDb_VpcSecurityGroupIds(t *testing.T) {
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_ReplicateSourceDb_CACertificateIdentifier(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	caName := "rds-ca-2019"
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_ReplicateSourceDb_CACertificateIdentifier(rName, caName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceResourceName, &sourceDbInstance),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckAWSDBInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttr(sourceResourceName, "ca_cert_identifier", caName),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", caName),
 				),
 			},
 		},
@@ -1178,6 +1380,101 @@ func TestAccAWSDBInstance_SnapshotIdentifier_BackupWindow(t *testing.T) {
 					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
 					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "backup_window", "00:00-08:00"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+	var dbSubnetGroup rds.DBSubnetGroup
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName_RamShared(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+	var dbSubnetGroup rds.DBSubnetGroup
+	var providers []*schema.Provider
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+			testAccOrganizationsEnabledPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName_RamShared(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(dbSubnetGroupResourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_SnapshotIdentifier_DbSubnetGroupName_VpcSecurityGroupIds(t *testing.T) {
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+	var dbSubnetGroup rds.DBSubnetGroup
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName_VpcSecurityGroupIds(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDbSnapshotExists(snapshotResourceName, &dbSnapshot),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					testAccCheckDBSubnetGroupExists(resourceName, &dbSubnetGroup),
+					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
 		},
@@ -1555,9 +1852,10 @@ func TestAccAWSDBInstance_SnapshotIdentifier_VpcSecurityGroupIds_Tags(t *testing
 	})
 }
 
-func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
+func TestAccAWSDBInstance_MonitoringInterval(t *testing.T) {
 	var dbInstance rds.DBInstance
-	rName := acctest.RandString(5)
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1565,11 +1863,160 @@ func TestAccAWSDBInstance_enhancedMonitoring(t *testing.T) {
 		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotInstanceConfig_enhancedMonitoring(rName),
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 30),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.enhanced_monitoring", &dbInstance),
-					resource.TestCheckResourceAttr(
-						"aws_db_instance.enhanced_monitoring", "monitoring_interval", "5"),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "60"),
+				),
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
+				),
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 30),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "30"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_MonitoringRoleArn_EnabledToDisabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringInterval(rName, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "monitoring_interval", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_MonitoringRoleArn_EnabledToRemoved(t *testing.T) {
+	var dbInstance rds.DBInstance
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArnRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_MonitoringRoleArn_RemovedToEnabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	iamRoleResourceName := "aws_iam_role.test"
+	resourceName := "aws_db_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArnRemoved(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+			{
+				Config: testAccDbInstanceConfigMonitoringRoleArn(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "monitoring_role_arn", iamRoleResourceName, "arn"),
 				),
 			},
 		},
@@ -1777,26 +2224,6 @@ func TestAccAWSDBInstance_MinorVersion(t *testing.T) {
 	})
 }
 
-// See https://github.com/hashicorp/terraform/issues/11881
-func TestAccAWSDBInstance_diffSuppressInitialState(t *testing.T) {
-	var v rds.DBInstance
-	rInt := acctest.RandInt()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSDBInstanceConfigSuppressInitialState(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists("aws_db_instance.bar", &v),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSDBInstance_ec2Classic(t *testing.T) {
 	var v rds.DBInstance
 
@@ -1846,6 +2273,7 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfiguration(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
@@ -1908,6 +2336,39 @@ func TestAccAWSDBInstance_cloudwatchLogsExportConfigurationUpdate(t *testing.T) 
 	})
 }
 
+func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_MSSQL(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_MSSQL(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 	var dbInstance rds.DBInstance
 
@@ -1935,6 +2396,7 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Oracle(t *testing.T) {
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
@@ -1968,10 +2430,66 @@ func TestAccAWSDBInstance_EnabledCloudwatchLogsExports_Postgresql(t *testing.T) 
 					"final_snapshot_identifier",
 					"password",
 					"skip_final_snapshot",
+					"delete_automated_backups",
 				},
 			},
 		},
 	})
+}
+
+func TestAccAWSDBInstance_NoDeleteAutomatedBackups(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	rName := acctest.RandomWithPrefix("tf-testacc-nodelautobak")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceAutomatedBackups,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstanceConfig_NoDeleteAutomatedBackups(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckAWSDBInstanceAutomatedBackups(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).rdsconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_db_instance" {
+			continue
+		}
+
+		log.Printf("[INFO] Trying to locate the DBInstance Automated Backup")
+		describeOutput, err := conn.DescribeDBInstanceAutomatedBackups(
+			&rds.DescribeDBInstanceAutomatedBackupsInput{
+				DBInstanceIdentifier: aws.String(rs.Primary.ID),
+			})
+		if err != nil {
+			return err
+		}
+
+		if describeOutput == nil || len(describeOutput.DBInstanceAutomatedBackups) == 0 {
+			return fmt.Errorf("Automated backup for %s not found", rs.Primary.ID)
+		}
+
+		log.Printf("[INFO] Deleting automated backup for %s", rs.Primary.ID)
+		_, err = conn.DeleteDBInstanceAutomatedBackup(
+			&rds.DeleteDBInstanceAutomatedBackupInput{
+				DbiResourceId: describeOutput.DBInstanceAutomatedBackups[0].DbiResourceId,
+			})
+		if err != nil {
+			return err
+		}
+	}
+
+	return testAccCheckAWSDBInstanceDestroy(s)
 }
 
 func testAccCheckAWSDBInstanceDestroy(s *terraform.State) error {
@@ -2229,10 +2747,11 @@ func testAccCheckAWSDBInstanceExists(n string, v *rds.DBInstance) resource.TestC
 	}
 }
 
-func TestAccAWSRDSDBInstance_withPerformanceInsights(t *testing.T) {
-	var v rds.DBInstance
-	rInt := acctest.RandInt()
-	resourceName := "aws_db_instance.bar"
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/8792
+func TestAccAWSRDSDBInstance_PerformanceInsightsEnabled_DisabledToEnabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -2240,42 +2759,135 @@ func TestAccAWSRDSDBInstance_withPerformanceInsights(t *testing.T) {
 		CheckDestroy: testAccCheckAWSClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rInt, 7),
+				Config: testAccAWSDBInstancePerformanceInsightsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(resourceName, &v),
-					testAccCheckAWSDBInstanceAttributes(&v),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
-				),
-			},
-			{
-				Config: testAccAWSDBInstancePerformanceInsightsDisabled(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(resourceName, &v),
-					testAccCheckAWSDBInstanceAttributes(&v),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "0"),
 				),
 			},
 			{
-				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rInt, 7),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"skip_final_snapshot",
+					"final_snapshot_identifier",
+				},
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(resourceName, &v),
-					testAccCheckAWSDBInstanceAttributes(&v),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSDBInstance_PerformanceInsightsEnabled_EnabledToDisabled(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 				),
 			},
 			{
-				Config: testAccAWSDBInstancePerformanceInsightsEnabled(rInt, 731),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"skip_final_snapshot",
+					"final_snapshot_identifier",
+				},
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsDisabled(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSDBInstanceExists(resourceName, &v),
-					testAccCheckAWSDBInstanceAttributes(&v),
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSDBInstance_PerformanceInsightsKmsKeyId(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	kmsKeyResourceName := "aws_kms_key.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsKmsKeyId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", "aws_kms_key.foo", "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"password",
+					"skip_final_snapshot",
+					"final_snapshot_identifier",
+				},
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsKmsKeyIdDisabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsKmsKeyId(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRDSDBInstance_PerformanceInsightsRetentionPeriod(t *testing.T) {
+	var dbInstance rds.DBInstance
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSClusterDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsRetentionPeriod(rName, 731),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "731"),
 				),
 			},
@@ -2288,6 +2900,14 @@ func TestAccAWSRDSDBInstance_withPerformanceInsights(t *testing.T) {
 					"skip_final_snapshot",
 					"final_snapshot_identifier",
 				},
+			},
+			{
+				Config: testAccAWSDBInstancePerformanceInsightsRetentionPeriod(rName, 7),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
 			},
 		},
 	})
@@ -2345,6 +2965,27 @@ func TestAccAWSDBInstance_SnapshotIdentifier_PerformanceInsightsEnabled(t *testi
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "performance_insights_kms_key_id", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "7"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDBInstance_CACertificateIdentifier(t *testing.T) {
+	var dbInstance rds.DBInstance
+
+	resourceName := "aws_db_instance.bar"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSDBInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: fmt.Sprintf(testAccAWSDBInstanceConfigWithCACertificateIdentifier, "rds-ca-2019"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSDBInstanceExists(resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "ca_cert_identifier", "rds-ca-2019"),
 				),
 			},
 		},
@@ -2458,32 +3099,44 @@ resource "aws_db_instance" "bar" {
 }
 `
 
+const testAccAWSDBInstanceConfigWithCACertificateIdentifier = `
+resource "aws_db_instance" "bar" {
+	allocated_storage = 10
+	engine = "MySQL"
+	instance_class = "db.t2.micro"
+	name = "baz"
+	password = "barbarbarbar"
+	username = "foo"
+	ca_cert_identifier = "%s"
+	apply_immediately = true
+	skip_final_snapshot = true
+	timeouts {
+		create = "30m"
+	}
+}`
+
 func testAccAWSDBInstanceConfigWithOptionGroup(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_db_option_group" "bar" {
-  name                     = "%s"
-  option_group_description = "Test option group for terraform"
+resource "aws_db_option_group" "test" {
   engine_name              = "mysql"
   major_engine_version     = "5.6"
+  name                     = %[1]q
+  option_group_description = "Test option group for terraform"
 }
 
 resource "aws_db_instance" "bar" {
-  identifier = "foobarbaz-test-terraform-%d"
-
-  allocated_storage = 10
-  engine            = "MySQL"
-  instance_class    = "db.t2.micro"
-  name              = "baz"
-  password          = "barbarbarbar"
-  username          = "foo"
-
-  backup_retention_period = 0
-  skip_final_snapshot     = true
-
-  parameter_group_name = "default.mysql5.6"
-  option_group_name    = "${aws_db_option_group.bar.name}"
+  allocated_storage   = 10
+  engine              = aws_db_option_group.test.engine_name
+  engine_version      = aws_db_option_group.test.major_engine_version
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  name                = "baz"
+  option_group_name   = aws_db_option_group.test.name
+  password            = "barbarbarbar"
+  skip_final_snapshot = true
+  username            = "foo"
 }
-`, rName, acctest.RandInt())
+`, rName)
 }
 
 func testAccCheckAWSDBIAMAuth(n int) string {
@@ -2508,7 +3161,7 @@ resource "aws_db_instance" "bar" {
 func testAccAWSDBInstanceConfig_FinalSnapshotIdentifier_SkipFinalSnapshot() string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "snapshot" {
-  identifier = "tf-test-%d"
+  identifier = "tf-acc-test-%[1]d"
 
   allocated_storage       = 5
   engine                  = "mysql"
@@ -2524,7 +3177,7 @@ resource "aws_db_instance" "snapshot" {
   parameter_group_name = "default.mysql5.6"
 
   skip_final_snapshot       = true
-  final_snapshot_identifier = "foobarbaz-test-terraform-final-snapshot-1"
+  final_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 `, acctest.RandInt())
 }
@@ -2538,8 +3191,8 @@ resource "aws_s3_bucket" "xtrabackup" {
 resource "aws_s3_bucket_object" "xtrabackup_db" {
   bucket = "${aws_s3_bucket.xtrabackup.id}"
   key    = "%s/mysql-5-6-xtrabackup.tar.gz"
-  source = "../files/mysql-5-6-xtrabackup.tar.gz"
-  etag   = "${filemd5("../files/mysql-5-6-xtrabackup.tar.gz")}"
+  source = "./testdata/mysql-5-6-xtrabackup.tar.gz"
+  etag   = "${filemd5("./testdata/mysql-5-6-xtrabackup.tar.gz")}"
 }
 
 resource "aws_iam_role" "rds_s3_access_role" {
@@ -2690,10 +3343,12 @@ resource "aws_db_instance" "snapshot" {
 `, rInt, rInt)
 }
 
-func testAccSnapshotInstanceConfig_enhancedMonitoring(rName string) string {
+func testAccDbInstanceConfigMonitoringInterval(rName string, monitoringInterval int) string {
 	return fmt.Sprintf(`
-resource "aws_iam_role" "enhanced_policy_role" {
-  name = "enhanced-monitoring-role-%s"
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -2712,73 +3367,90 @@ resource "aws_iam_role" "enhanced_policy_role" {
 EOF
 }
 
-resource "aws_iam_policy_attachment" "test-attach" {
-  name = "enhanced-monitoring-attachment-%s"
-
-  roles = [
-    "${aws_iam_role.enhanced_policy_role.name}",
-  ]
-
-  policy_arn = "${aws_iam_policy.test.arn}"
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = "${aws_iam_role.test.name}"
 }
 
-resource "aws_iam_policy" "test" {
-  name = "tf-enhanced-monitoring-policy-%s"
+resource "aws_db_instance" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
 
-  policy = <<POLICY
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogGroups",
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:PutRetentionPolicy"
-            ],
-            "Resource": [
-                "arn:aws:logs:*:*:log-group:RDS*"
-            ]
-        },
-        {
-            "Sid": "EnableCreationAndManagementOfRDSCloudwatchLogStreams",
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogStream",
-                "logs:PutLogEvents",
-                "logs:DescribeLogStreams",
-                "logs:GetLogEvents"
-            ],
-            "Resource": [
-                "arn:aws:logs:*:*:log-group:RDS*:log-stream:*"
-            ]
-        }
-    ]
-}
-POLICY
-}
-
-resource "aws_db_instance" "enhanced_monitoring" {
-  identifier = "foobarbaz-enhanced-monitoring-%s"
-  depends_on = ["aws_iam_policy_attachment.test-attach"]
-
-  allocated_storage       = 5
-  engine                  = "mysql"
-  engine_version          = "5.6.35"
-  instance_class          = "db.t2.micro"
-  name                    = "baz"
-  password                = "barbarbarbar"
-  username                = "foo"
-  backup_retention_period = 1
-
-  parameter_group_name = "default.mysql5.6"
-
-  monitoring_role_arn = "${aws_iam_role.enhanced_policy_role.arn}"
-  monitoring_interval = "5"
-
+  allocated_storage   = 5
+  engine              = "mysql"
+  engine_version      = "5.6.35"
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  monitoring_interval = %[2]d
+  monitoring_role_arn = "${aws_iam_role.test.arn}"
+  name                = "baz"
+  password            = "barbarbarbar"
   skip_final_snapshot = true
+  username            = "foo"
 }
-`, rName, rName, rName, rName)
+`, rName, monitoringInterval)
+}
+
+func testAccDbInstanceConfigMonitoringRoleArnRemoved(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage   = 5
+  engine              = "mysql"
+  engine_version      = "5.6.35"
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  name                = "baz"
+  password            = "barbarbarbar"
+  skip_final_snapshot = true
+  username            = "foo"
+}
+`, rName)
+}
+
+func testAccDbInstanceConfigMonitoringRoleArn(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "monitoring.rds.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
+  role       = "${aws_iam_role.test.name}"
+}
+
+resource "aws_db_instance" "test" {
+  depends_on = ["aws_iam_role_policy_attachment.test"]
+
+  allocated_storage   = 5
+  engine              = "mysql"
+  engine_version      = "5.6.35"
+  identifier          = %[1]q
+  instance_class      = "db.t2.micro"
+  monitoring_interval = 5
+  monitoring_role_arn = "${aws_iam_role.test.arn}"
+  name                = "baz"
+  password            = "barbarbarbar"
+  skip_final_snapshot = true
+  username            = "foo"
+}
+`, rName)
 }
 
 func testAccSnapshotInstanceConfig_iopsUpdate(rName string, iops int) string {
@@ -3413,7 +4085,7 @@ resource "aws_vpc" "foo" {
 }
 
 resource "aws_db_subnet_group" "rds_one" {
-  name        = "tf_acc_test_%d"
+  name        = "tf_acc_test_%[1]d"
   description = "db subnets for rds_one"
 
   subnet_ids = ["${aws_subnet.main.id}", "${aws_subnet.other.id}"]
@@ -3442,7 +4114,7 @@ resource "aws_subnet" "other" {
 resource "aws_db_instance" "mssql" {
   allocated_storage   = 20
   engine              = "sqlserver-ex"
-  identifier          = "tf-test-mssql-%d"
+  identifier          = "tf-test-mssql-%[1]d"
   instance_class      = "db.t2.micro"
   password            = "somecrazypassword"
   skip_final_snapshot = true
@@ -3451,11 +4123,11 @@ resource "aws_db_instance" "mssql" {
 
 resource "aws_db_snapshot" "mssql-snap" {
   db_instance_identifier = "${aws_db_instance.mssql.id}"
-  db_snapshot_identifier = "mssql-snap"
+  db_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 
 resource "aws_db_instance" "mssql_restore" {
-  identifier = "tf-test-mssql-%d-restore"
+  identifier = "tf-test-mssql-%[1]d-restore"
 
   db_subnet_group_name = "${aws_db_subnet_group.rds_one.name}"
 
@@ -3476,7 +4148,7 @@ resource "aws_db_instance" "mssql_restore" {
 }
 
 resource "aws_security_group" "rds-mssql" {
-  name = "tf-rds-mssql-test-%d"
+  name = "tf-rds-mssql-test-%[1]d"
 
   description = "TF Testing"
   vpc_id      = "${aws_vpc.foo.id}"
@@ -3505,7 +4177,7 @@ resource "aws_directory_service_directory" "foo" {
 }
 
 resource "aws_iam_role" "role" {
-  name = "tf-acc-db-instance-mssql-domain-role-%d"
+  name = "tf-acc-db-instance-mssql-domain-role-%[1]d"
 
   assume_role_policy = <<EOF
 {
@@ -3528,7 +4200,7 @@ resource "aws_iam_role_policy_attachment" "attatch-policy" {
   role       = "${aws_iam_role.role.name}"
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
 }
-`, rInt, rInt, rInt, rInt, rInt)
+`, rInt)
 }
 
 func testAccAWSDBMySQLSnapshotRestoreWithEngineVersion(rInt int) string {
@@ -3582,7 +4254,7 @@ resource "aws_db_instance" "mysql" {
 
 resource "aws_db_snapshot" "mysql-snap" {
   db_instance_identifier = "${aws_db_instance.mysql.id}"
-  db_snapshot_identifier = "mysql-snap"
+  db_snapshot_identifier = "tf-acc-test-%[1]d"
 }
 
 resource "aws_db_instance" "mysql_restore" {
@@ -3912,29 +4584,6 @@ resource "aws_db_instance" "bar" {
 `, rInt)
 }
 
-func testAccAWSDBInstanceConfigSuppressInitialState(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_db_instance" "bar" {
-  identifier          = "foobarbaz-test-terraform-%d"
-  allocated_storage   = 10
-  engine              = "MySQL"
-  instance_class      = "db.t2.micro"
-  name                = "baz"
-  password            = "barbarbarbar"
-  username            = "foo"
-  skip_final_snapshot = true
-}
-
-data "template_file" "test" {
-  template = ""
-
-  vars = {
-    test_var = "${aws_db_instance.bar.engine_version}"
-  }
-}
-`, rInt)
-}
-
 func testAccAWSDBInstanceConfig_MariaDB(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "test" {
@@ -3945,6 +4594,197 @@ resource "aws_db_instance" "test" {
   password            = "avoid-plaintext-passwords"
   username            = "tfacctest"
   skip_final_snapshot = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_DbSubnetGroupName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage    = 5
+  db_subnet_group_name = aws_db_subnet_group.test.name 
+  engine               = "mysql"
+  identifier           = %[1]q
+  instance_class       = "db.t2.micro"
+  password             = "avoid-plaintext-passwords"
+  username             = "tfacctest"
+  skip_final_snapshot  = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_DbSubnetGroupName_RamShared(rName string) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  provider = "aws.alternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_organizations_organization" "test" {}
+
+resource "aws_vpc" "test" {
+  provider = "aws.alternate"
+
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count    = 2
+  provider = "aws.alternate"
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  provider = "aws.alternate"
+
+  name = %[1]q
+}
+
+resource "aws_ram_principal_association" "test" {
+  provider = "aws.alternate"
+
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_resource_association" "test" {
+  count    = 2
+  provider = "aws.alternate"
+
+  resource_arn       = aws_subnet.test[count.index].arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+
+resource "aws_db_subnet_group" "test" {
+  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 5
+  db_subnet_group_name    = aws_db_subnet_group.test.name 
+  engine                  = "mysql"
+  identifier              = %[1]q
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+  vpc_security_group_ids  = [aws_security_group.test.id]
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_DbSubnetGroupName_VpcSecurityGroupIds(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 5
+  db_subnet_group_name    = aws_db_subnet_group.test.name 
+  engine                  = "mysql"
+  identifier              = %[1]q
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+  vpc_security_group_ids  = [aws_security_group.test.id]
 }
 `, rName)
 }
@@ -3971,7 +4811,23 @@ resource "aws_db_instance" "test" {
   enabled_cloudwatch_logs_exports = ["alert", "listener", "trace"]
   engine                          = "oracle-se"
   identifier                      = %q
-  instance_class                  = "db.t2.micro"
+  instance_class                  = "db.t3.micro"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_EnabledCloudwatchLogsExports_MSSQL(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage               = 20
+  enabled_cloudwatch_logs_exports = ["agent", "error"]
+  engine                          = "sqlserver-se"
+  identifier                      = %q
+  instance_class                  = "db.m4.large"
+  license_model                   = "license-included"
   password                        = "avoid-plaintext-passwords"
   username                        = "tfacctest"
   skip_final_snapshot             = true
@@ -4116,7 +4972,14 @@ resource "aws_db_instance" "test" {
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_AvailabilityZone(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
@@ -4186,6 +5049,353 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, backupWindow, rName, maintenanceWindow)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName(rName string) string {
+	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "alternate" {
+  provider = "aws.alternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alternate" {
+  provider = "aws.alternate"
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "alternate" {
+  count    = 2
+  provider = "aws.alternate"
+
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  cidr_block        = "10.1.${count.index}.0/24"
+  vpc_id            = aws_vpc.alternate.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "alternate" {
+  provider = "aws.alternate"
+
+  name       = %[1]q
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_instance" "source" {
+  provider = "aws.alternate"
+
+  allocated_storage       = 5
+  backup_retention_period = 1
+  db_subnet_group_name    = aws_db_subnet_group.alternate.name
+  engine                  = "mysql"
+  identifier              = "%[1]s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  identifier             = %[1]q
+  instance_class         = aws_db_instance.source.instance_class
+  replicate_source_db    = aws_db_instance.source.arn
+  skip_final_snapshot    = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_RamShared(rName string) string {
+	return testAccAlternateAccountAndAlternateRegionProviderConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "alternateaccountsameregion" {
+  provider = "aws.alternateaccountsameregion"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_availability_zones" "sameaccountalternateregion" {
+  provider = "aws.sameaccountalternateregion"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_organizations_organization" "test" {}
+
+resource "aws_vpc" "sameaccountalternateregion" {
+  provider = "aws.sameaccountalternateregion"
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "alternateaccountsameregion" {
+  provider = "aws.alternateaccountsameregion"
+
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "sameaccountalternateregion" {
+  count    = 2
+  provider = "aws.sameaccountalternateregion"
+
+  availability_zone = data.aws_availability_zones.sameaccountalternateregion.names[count.index]
+  cidr_block        = "10.1.${count.index}.0/24"
+  vpc_id            = aws_vpc.sameaccountalternateregion.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "alternateaccountsameregion" {
+  count    = 2
+  provider = "aws.alternateaccountsameregion"
+
+  availability_zone = data.aws_availability_zones.alternateaccountsameregion.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.alternateaccountsameregion.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_share" "alternateaccountsameregion" {
+  provider = "aws.alternateaccountsameregion"
+
+  name = %[1]q
+}
+
+resource "aws_ram_principal_association" "alternateaccountsameregion" {
+  provider = "aws.alternateaccountsameregion"
+
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.alternateaccountsameregion.arn
+}
+
+resource "aws_ram_resource_association" "alternateaccountsameregion" {
+  count    = 2
+  provider = "aws.alternateaccountsameregion"
+
+  resource_arn       = aws_subnet.alternateaccountsameregion[count.index].arn
+  resource_share_arn = aws_ram_resource_share.alternateaccountsameregion.id
+}
+
+resource "aws_db_subnet_group" "sameaccountalternateregion" {
+  provider = "aws.sameaccountalternateregion"
+
+  name       = %[1]q
+  subnet_ids = aws_subnet.sameaccountalternateregion[*].id
+}
+
+resource "aws_db_subnet_group" "test" {
+  depends_on = [aws_ram_principal_association.alternateaccountsameregion, aws_ram_resource_association.alternateaccountsameregion]
+
+  name       = %[1]q
+  subnet_ids = aws_subnet.alternateaccountsameregion[*].id
+}
+
+resource "aws_security_group" "test" {
+  depends_on = [aws_ram_principal_association.alternateaccountsameregion, aws_ram_resource_association.alternateaccountsameregion]
+
+  name   = %[1]q
+  vpc_id = aws_vpc.alternateaccountsameregion.id
+}
+
+resource "aws_db_instance" "source" {
+  provider = "aws.sameaccountalternateregion"
+
+  allocated_storage       = 5
+  backup_retention_period = 1
+  db_subnet_group_name    = aws_db_subnet_group.sameaccountalternateregion.name
+  engine                  = "mysql"
+  identifier              = "%[1]s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  identifier             = %[1]q
+  instance_class         = aws_db_instance.source.instance_class
+  replicate_source_db    = aws_db_instance.source.arn
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_DbSubnetGroupName_VpcSecurityGroupIds(rName string) string {
+	return testAccAlternateRegionProviderConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "alternate" {
+  provider = "aws.alternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alternate" {
+  provider = "aws.alternate"
+
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "alternate" {
+  count    = 2
+  provider = "aws.alternate"
+
+  availability_zone = data.aws_availability_zones.alternate.names[count.index]
+  cidr_block        = "10.1.${count.index}.0/24"
+  vpc_id            = aws_vpc.alternate.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "alternate" {
+  provider = "aws.alternate"
+
+  name       = %[1]q
+  subnet_ids = aws_subnet.alternate[*].id
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_instance" "source" {
+  provider = "aws.alternate"
+
+  allocated_storage       = 5
+  backup_retention_period = 1
+  db_subnet_group_name    = aws_db_subnet_group.alternate.name
+  engine                  = "mysql"
+  identifier              = "%[1]s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  identifier             = %[1]q
+  instance_class         = aws_db_instance.source.instance_class
+  replicate_source_db    = aws_db_instance.source.arn
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+`, rName)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_DeletionProtection(rName string, deletionProtection bool) string {
@@ -4447,6 +5657,30 @@ resource "aws_db_instance" "test" {
 `, rName, rName, rName)
 }
 
+func testAccAWSDBInstanceConfig_ReplicateSourceDb_CACertificateIdentifier(rName string, caName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = "mysql"
+  identifier              = "%s-source"
+  instance_class          = "db.t2.micro"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  ca_cert_identifier      = %q
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier          = %q
+  instance_class      = "${aws_db_instance.source.instance_class}"
+  replicate_source_db = "${aws_db_instance.source.id}"
+  ca_cert_identifier  = %q
+  skip_final_snapshot = true
+}
+`, rName, caName, rName, caName)
+}
+
 func testAccAWSDBInstanceConfig_SnapshotIdentifier(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "source" {
@@ -4588,7 +5822,14 @@ resource "aws_db_instance" "test" {
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_AvailabilityZone(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_db_instance" "source" {
   allocated_storage   = 5
@@ -4698,6 +5939,233 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, rName, rName, backupWindow, rName, maintenanceWindow)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = "mariadb"
+  identifier          = "%[1]s-source"
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.id
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  identifier           = %[1]q
+  instance_class       = aws_db_instance.source.instance_class
+  snapshot_identifier  = aws_db_snapshot.test.id
+  skip_final_snapshot  = true
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName_RamShared(rName string) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  provider = "aws.alternate"
+
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+data "aws_organizations_organization" "test" {}
+
+resource "aws_vpc" "test" {
+  provider = "aws.alternate"
+
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count    = 2
+  provider = "aws.alternate"
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_ram_resource_share" "test" {
+  provider = "aws.alternate"
+
+  name = %[1]q
+}
+
+resource "aws_ram_principal_association" "test" {
+  provider = "aws.alternate"
+
+  principal          = data.aws_organizations_organization.test.arn
+  resource_share_arn = aws_ram_resource_share.test.arn
+}
+
+resource "aws_ram_resource_association" "test" {
+  count    = 2
+  provider = "aws.alternate"
+
+  resource_arn       = aws_subnet.test[count.index].arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+
+resource "aws_db_subnet_group" "test" {
+  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  depends_on = [aws_ram_principal_association.test, aws_ram_resource_association.test]
+
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = "mariadb"
+  identifier          = "%[1]s-source"
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.id
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  identifier             = %[1]q
+  instance_class         = aws_db_instance.source.instance_class
+  snapshot_identifier    = aws_db_snapshot.test.id
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+`, rName)
+}
+
+func testAccAWSDBInstanceConfig_SnapshotIdentifier_DbSubnetGroupName_VpcSecurityGroupIds(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = "10.0.${count.index}.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_db_instance" "source" {
+  allocated_storage   = 5
+  engine              = "mariadb"
+  identifier          = "%[1]s-source"
+  instance_class      = "db.t2.micro"
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+  skip_final_snapshot = true
+}
+
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.source.id
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  identifier             = %[1]q
+  instance_class         = aws_db_instance.source.instance_class
+  snapshot_identifier    = aws_db_snapshot.test.id
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+}
+`, rName)
 }
 
 func testAccAWSDBInstanceConfig_SnapshotIdentifier_DeletionProtection(rName string, deletionProtection bool) string {
@@ -5127,33 +6595,51 @@ resource "aws_db_instance" "test" {
 `, rName, rName, rName, rName)
 }
 
-func testAccAWSDBInstancePerformanceInsightsDisabled(n int) string {
+func testAccAWSDBInstancePerformanceInsightsDisabled(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %d"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
+  allocated_storage       = 5
+  backup_retention_period = 0
   engine                  = "mysql"
-  identifier              = "tf-db-test-%d"
+  engine_version          = "5.6.41"
+  identifier              = %[1]q
+  instance_class          = "db.m3.medium"
+  name                    = "mydb"
+  password                = "mustbeeightcharaters"
+  skip_final_snapshot     = true
+  username                = "foo"
+}
+`, rName)
+}
+
+func testAccAWSDBInstancePerformanceInsightsEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage                     = 5
+  backup_retention_period               = 0
+  engine                                = "mysql"
+  engine_version                        = "5.6.41"
+  identifier                            = %[1]q
+  instance_class                        = "db.m3.medium"
+  name                                  = "mydb"
+  password                              = "mustbeeightcharaters"
+  performance_insights_enabled          = true
+  performance_insights_retention_period = 7
+  skip_final_snapshot                   = true
+  username                              = "foo"
+}
+`, rName)
+}
+
+func testAccAWSDBInstancePerformanceInsightsKmsKeyIdDisabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
+}
+
+resource "aws_db_instance" "test" {
+  engine                  = "mysql"
+  identifier              = %[1]q
   instance_class          = "db.m3.medium"
   allocated_storage       = 5
   backup_retention_period = 0
@@ -5162,49 +6648,50 @@ resource "aws_db_instance" "bar" {
   password                = "mustbeeightcharaters"
   skip_final_snapshot     = true
 }
-`, n, n)
+`, rName)
 }
 
-func testAccAWSDBInstancePerformanceInsightsEnabled(n int, piRetentionPeriod int) string {
+func testAccAWSDBInstancePerformanceInsightsKmsKeyId(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_kms_key" "foo" {
-  description = "Terraform acc test %d"
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Id": "kms-tf-1",
-  "Statement": [
-    {
-      "Sid": "Enable IAM User Permissions",
-      "Effect": "Allow",
-      "Principal": {
-        "AWS": "*"
-      },
-      "Action": "kms:*",
-      "Resource": "*"
-    }
-  ]
-}
-POLICY
+resource "aws_kms_key" "test" {
+  deletion_window_in_days = 7
 }
 
-resource "aws_db_instance" "bar" {
+resource "aws_db_instance" "test" {
   allocated_storage                     = 5
   backup_retention_period               = 0
   engine                                = "mysql"
   engine_version                        = "5.6.41"
-  identifier                            = "tf-db-test-%d"
+  identifier                            = %[1]q
   instance_class                        = "db.m3.medium"
   name                                  = "mydb"
   password                              = "mustbeeightcharaters"
   performance_insights_enabled          = true
-  performance_insights_kms_key_id       = "${aws_kms_key.foo.arn}"
-  performance_insights_retention_period = %d
+  performance_insights_kms_key_id       = "${aws_kms_key.test.arn}"
+  performance_insights_retention_period = 7
   skip_final_snapshot                   = true
   username                              = "foo"
 }
-`, n, n, piRetentionPeriod)
+`, rName)
+}
+
+func testAccAWSDBInstancePerformanceInsightsRetentionPeriod(rName string, performanceInsightsRetentionPeriod int) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage                     = 5
+  backup_retention_period               = 0
+  engine                                = "mysql"
+  engine_version                        = "5.6.41"
+  identifier                            = %[1]q
+  instance_class                        = "db.m3.medium"
+  name                                  = "mydb"
+  password                              = "mustbeeightcharaters"
+  performance_insights_enabled          = true
+  performance_insights_retention_period = %[2]d
+  skip_final_snapshot                   = true
+  username                              = "foo"
+}
+`, rName, performanceInsightsRetentionPeriod)
 }
 
 func testAccAWSDBInstanceConfig_ReplicateSourceDb_PerformanceInsightsEnabled(rName string) string {
@@ -5305,4 +6792,21 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot                   = true
 }
 `, rName, rName, rName)
+}
+
+func testAccAWSDBInstanceConfig_NoDeleteAutomatedBackups(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  allocated_storage               = 10
+  engine                          = "mariadb"
+  identifier                      = "%s"
+  instance_class                  = "db.t2.micro"
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+
+  backup_retention_period         = 1
+  delete_automated_backups        = false
+}
+`, rName)
 }

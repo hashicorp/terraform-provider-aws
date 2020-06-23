@@ -1,7 +1,7 @@
 ---
+subcategory: "Config"
 layout: "aws"
 page_title: "AWS: aws_config_delivery_channel"
-sidebar_current: "docs-aws-resource-config-delivery-channel"
 description: |-
   Provides an AWS Config Delivery Channel.
 ---
