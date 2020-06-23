@@ -17,6 +17,7 @@ ENHANCEMENTS:
 * resource/aws_ebs_snapshot: Support resource import [GH-13895]
 * resource/aws_ebs_snapshot_copy: Add `arn` attribute [GH-13840]
 * resource/aws_ec2_traffic_mirror_session: Add `arn` attribute [GH-13849]
+* resource/aws_ecs_service: Support `deployment_controller` configuration block `type` argument value of `EXTERNAL` (support external deployments) [GH-8134] / [GH-8652]
 * resource/aws_glue_catalog_database: Add `arn` attribute [GH-13452]
 * resource/aws_iot_policy: Support resource import [GH-13707]
 * resource/aws_iot_topic_rule: Add `error_action` configuration block [GH-11922]
