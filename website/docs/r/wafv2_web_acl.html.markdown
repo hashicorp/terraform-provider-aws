@@ -276,7 +276,7 @@ Each `rule` supports the following arguments:
 
 * `action` - (Optional) The action that AWS WAF should take on a web request when it matches the rule's statement. This is used only for rules whose statements do not reference a rule group. Rule statements that reference a rule group include `rule_group_reference_statement` and `managed_rule_group_statement`. See [Action](#action) below for details.
 * `name` - (Required) A friendly name of the rule.
-* `override_action` - (Optional) The override action to apply to the rules in a WebACL. Used only for rule statements that reference a rule group, like `rule_group_reference_statement` and `managed_rule_group_statement`. See [Override Action](#override-action) below for details.
+* `override_action` - (Optional) The override action to apply to the rules in a WebACL. Required and used only for rule statements that reference a rule group, like `rule_group_reference_statement` and `managed_rule_group_statement`. See [Override Action](#override-action) below for details.
 * `priority` - (Required) If you define more than one Rule in a WebACL, AWS WAF evaluates each request against the `rules` in order based on the value of `priority`. AWS WAF processes rules with lower priority first.
 * `statement` - (Required) The AWS WAF processing statement for the rule, for example `byte_match_statement` or `geo_match_statement`. See [Statement](#statement) below for details.
 * `visibility_config` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [Visibility Configuration](#visibility-configuration) below for details.
