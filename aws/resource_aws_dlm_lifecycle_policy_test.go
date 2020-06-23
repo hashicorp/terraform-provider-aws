@@ -286,54 +286,6 @@ resource "aws_dlm_lifecycle_policy" "basic" {
 `, rName)
 }
 
-func dlmLifecyclePolicyBasicConfigWithCron(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "dlm_lifecycle_role" {
-  name = %q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "dlm.amazonaws.com"
-      },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_dlm_lifecycle_policy" "basic" {
-  description        = "tf-acc-basic"
-  execution_role_arn = "${aws_iam_role.dlm_lifecycle_role.arn}"
-
-  policy_details {
-    resource_types = ["VOLUME"]
-
-    schedule {
-      name = "tf-acc-basic"
-
-      create_rule {
-        cron_expression = "cron(0 18 ? * WED *)"
-      }
-
-      retain_rule {
-        count = 10
-      }
-    }
-
-    target_tags = {
-      tf-acc-test = "basic"
-    }
-  }
-}
-`, rName)
-}
 
 func dlmLifecyclePolicyFullConfig(rName string) string {
 	return fmt.Sprintf(`
