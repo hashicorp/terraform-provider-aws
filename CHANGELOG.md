@@ -5,6 +5,7 @@ ENHANCEMENTS:
 * data-source/aws_customer_gateway: Add `arn` attribute [GH-13611]
 * data-source/aws_ebs_snapshot: Add `arn` attribute [GH-13840]
 * data-source/aws_vpc_endpoint: Add `arn` attribute [GH-13852]
+* data-source/aws_vpc_endpoint_service: Add `arn` attribute [GH-13856]
 * data-source/aws_vpn_gateway: Add `arn` attribute [GH-13827]
 * resource/aws_customer_gateway: Add `arn` attribute and plan-time validations for `bgp_asn`, `ip_address`, and `type` arguments [GH-13611]
 * resource/aws_default_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
