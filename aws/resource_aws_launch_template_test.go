@@ -991,31 +991,6 @@ func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
 	})
 }
 
-func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
-	resName := "aws_launch_template.foo"
-	rInt := acctest.RandInt()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSLaunchTemplateConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resName, "default_version", "1"),
-				),
-			},
-			{
-				Config: testAccAWSLaunchTemplateconfig_updateDefaultVersion(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resName, "default_version", "2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckAWSLaunchTemplateExists(n string, t *ec2.LaunchTemplate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
