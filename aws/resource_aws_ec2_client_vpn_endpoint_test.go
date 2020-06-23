@@ -618,19 +618,19 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.1.0.0/16"
-	tags = {
-		Name = "terraform-testacc-subnet-%s"
-	}
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = "terraform-testacc-subnet-%s"
+  }
 }
 
 resource "aws_subnet" "test" {
-	cidr_block         = "10.1.1.0/24"
-	vpc_id             = "${aws_vpc.test.id}"
-	availability_zone  = "${data.aws_availability_zones.available.names[0]}"
-	tags = {
-		Name = "tf-acc-subnet-%s"
-	}
+  cidr_block         = "10.1.1.0/24"
+  vpc_id             = "${aws_vpc.test.id}"
+  availability_zone  = "${data.aws_availability_zones.available.names[0]}"
+  tags = {
+    Name = "tf-acc-subnet-%s"
+  }
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -645,11 +645,11 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   connection_log_options {
     enabled = false
-	}
+  }
 	
   network_association {
-		subnet_id = "${aws_subnet.test.id}"
-	}
+    subnet_id = "${aws_subnet.test.id}"
+  }
 }
 `, rName, rName, rName)
 }
@@ -670,12 +670,12 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-	cidr_block        = "10.1.1.0/24"
-	vpc_id            = "${aws_vpc.test.id}"
-	availability_zone = "${data.aws_availability_zones.available.names[0]}"
-	tags = {
-		Name = "tf-acc-subnet-%s"
-	}
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  tags = {
+    Name = "tf-acc-subnet-%s"
+  }
 }
 
 resource "aws_ec2_client_vpn_endpoint" "test" {
@@ -690,12 +690,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   connection_log_options {
     enabled = false
-	}
+  }
 
-	authorization_rule {
-		description          = "example auth rule"
-		target_network_cidr  = "10.1.1.0/24"
-	}
+  authorization_rule {
+    description         = "example auth rule"
+    target_network_cidr = "10.1.1.0/24"
+  }
 }
 `, rName, rName)
 }
