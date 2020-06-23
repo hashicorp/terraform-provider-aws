@@ -11,8 +11,6 @@ description: |-
 Provides network associations for AWS Client VPN endpoints. For more information on usage, please see the 
 [AWS Client VPN Administrator's Guide](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/what-is.html).
 
-NOTE: This functionality has been consolidated into the `aws_ec2_client_vpn_endpoint` resource.  This resource will be removed in an upcoming version of this provider.
-
 ## Example Usage
 
 ```hcl

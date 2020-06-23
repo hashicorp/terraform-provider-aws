@@ -15,6 +15,7 @@ import (
 func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	var assoc1 ec2.TargetNetwork
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,7 +25,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnNetworkAssociationExists("aws_ec2_client_vpn_network_association.test", &assoc1),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
 				),
 			},
 		},
@@ -34,6 +35,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 func TestAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 	var assoc1 ec2.TargetNetwork
 	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -43,7 +45,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnNetworkAssociationExists("aws_ec2_client_vpn_network_association.test", &assoc1),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
 					testAccCheckAwsEc2ClientVpnNetworkAssociationDisappears(&assoc1),
 				),
 				ExpectNonEmptyPlan: true,

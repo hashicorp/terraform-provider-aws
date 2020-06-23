@@ -45,7 +45,6 @@ The following arguments are supported:
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `connection_log_options` - (Required) Information about the client connection logging options.
-* `network_association` - (Optional) Information about associating networks to this Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `authorization_rule` - (Optional) Information about granting access to networks via this Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `route` - (Optional)  Information about routes to add to a Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
@@ -66,13 +65,6 @@ One of the following arguments must be supplied:
 * `enabled` - (Required) Indicates whether connection logging is enabled.
 * `cloudwatch_log_group` - (Optional) The name of the CloudWatch Logs log group.
 * `cloudwatch_log_stream` - (Optional) The name of the CloudWatch Logs log stream to which the connection data is published.
-
-### `network_association` Argument Reference
-
-One of the following arguments must be supplied:
-
-* `subnet_id` - (Required) The ID of the subnet to associate with the Client VPN endpoint.
-* `security_groups` - (Optional) The IDs of the security groups to apply to the associated target network. Up to 5 security groups can be applied to an associated target network.
 
 ### `authorization_rule` Argument Reference
 
@@ -98,6 +90,7 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the Client VPN endpoint.
 * `arn` - The ARN of the Client VPN endpoint.
 * `dns_name` - The DNS name to be used by clients when establishing their VPN session.
+* `status` - The current state of the Client VPN endpoint.
 
 ## Import
 

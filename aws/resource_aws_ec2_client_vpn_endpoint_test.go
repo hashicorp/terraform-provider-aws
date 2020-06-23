@@ -240,62 +240,6 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_withNetworkAssociation(t *testing.T) {
-	var v ec2.ClientVpnEndpoint
-	rStr := acctest.RandString(5)
-	resourceName := "aws_ec2_client_vpn_endpoint.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2ClientVpnEndpointConfigWithNetworkAssociation(rStr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "network_association.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAwsEc2ClientVpnEndpoint_addNetworkAssociation(t *testing.T) {
-	var v1, v2, v3 ec2.ClientVpnEndpoint
-	rStr := acctest.RandString(5)
-	resourceName := "aws_ec2_client_vpn_endpoint.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2ClientVpnEndpointConfig(rStr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "network_association.#", "0"),
-				),
-			},
-			{
-				Config: testAccEc2ClientVpnEndpointConfigWithNetworkAssociation(rStr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "network_association.#", "1"),
-				),
-			},
-			{
-				Config: testAccEc2ClientVpnEndpointConfig(rStr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "network_association.#", "0"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAwsEc2ClientVpnEndpoint_withAuthorizationRules(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
@@ -655,54 +599,6 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName)
-}
-
-func testAccEc2ClientVpnEndpointConfigWithNetworkAssociation(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-  tags = {
-    Name = "terraform-testacc-subnet-%s"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block         = "10.1.1.0/24"
-  vpc_id             = "${aws_vpc.test.id}"
-  availability_zone  = "${data.aws_availability_zones.available.names[0]}"
-  tags = {
-    Name = "tf-acc-subnet-%s"
-  }
-}
-
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
-  }
-
-  connection_log_options {
-    enabled = false
-  }
-	
-  network_association {
-    subnet_id = "${aws_subnet.test.id}"
-  }
-}
-`, rName, rName, rName)
 }
 
 func testAccEc2ClientVpnEndpointConfigWithAuthorizationRules(rName string) string {
