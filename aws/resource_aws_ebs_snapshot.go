@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -25,6 +26,10 @@ func resourceAwsEbsSnapshot() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"volume_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -97,7 +102,7 @@ func resourceAwsEbsSnapshotCreate(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error creating EC2 EBS Snapshot: %s", err)
 	}
 
-	d.SetId(*res.SnapshotId)
+	d.SetId(aws.StringValue(res.SnapshotId))
 
 	err = resourceAwsEbsSnapshotWaitForAvailable(d, conn)
 	if err != nil {
@@ -125,6 +130,7 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(res.Snapshots) == 0 {
+		log.Printf("[WARN] Snapshot %q Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -143,6 +149,15 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(snapshot.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
+
+	snapshotArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
+		Service:   "ec2",
+	}.String()
+
+	d.Set("arn", snapshotArn)
 
 	return nil
 }
