@@ -255,6 +255,8 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_ecs_capacity_provider` resource (import)](/docs/providers/aws/r/ecs_capacity_provider.html)
   - [`aws_ecs_cluster` resource (import)](/docs/providers/aws/r/ecs_cluster.html)
   - [`aws_ecs_service` resource (import)](/docs/providers/aws/r/ecs_service.html)
+  - [`aws_customer_gateway` data source](/docs/providers/aws/d/customer_gateway.html)
+  - [`aws_customer_gateway` resource](/docs/providers/aws/r/customer_gateway.html)  
   - [`aws_efs_access_point` data source](/docs/providers/aws/d/efs_access_point.html)
   - [`aws_efs_access_point` resource](/docs/providers/aws/r/efs_access_point.html)
   - [`aws_efs_file_system` data source](/docs/providers/aws/d/efs_file_system.html)
