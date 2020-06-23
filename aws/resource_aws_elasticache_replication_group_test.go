@@ -323,6 +323,8 @@ func TestAccAWSElasticacheReplicationGroup_multiAzInVpc(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "automatic_failover_enabled", "true"),
 					resource.TestCheckResourceAttr(
+						resourceName, "multi_az_enabled", "true"),
+					resource.TestCheckResourceAttr(
 						resourceName, "snapshot_window", "02:00-03:00"),
 					resource.TestCheckResourceAttr(
 						resourceName, "snapshot_retention_limit", "7"),
@@ -692,6 +694,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "3"),
 				),
 			},
@@ -704,6 +707,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					var input *elasticache.ModifyReplicationGroupInput = &elasticache.ModifyReplicationGroupInput{
 						ApplyImmediately:         aws.Bool(true),
 						AutomaticFailoverEnabled: aws.Bool(false),
+						MultiAZEnabled:           aws.Bool(false),
 						ReplicationGroupId:       aws.String(rName),
 					}
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
@@ -730,6 +734,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 					input = &elasticache.ModifyReplicationGroupInput{
 						ApplyImmediately:         aws.Bool(true),
 						AutomaticFailoverEnabled: aws.Bool(true),
+						MultiAZEnabled:           aws.Bool(true),
 						ReplicationGroupId:       aws.String(rName),
 					}
 					if _, err := conn.ModifyReplicationGroup(input); err != nil {
@@ -743,6 +748,7 @@ func TestAccAWSElasticacheReplicationGroup_NumberCacheClusters_Failover_AutoFail
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticacheReplicationGroupExists(resourceName, &replicationGroup),
 					resource.TestCheckResourceAttr(resourceName, "automatic_failover_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "multi_az_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "number_cache_clusters", "2"),
 				),
 			},
@@ -1049,15 +1055,15 @@ data "aws_availability_zones" "available" {
   }
 }
 resource "aws_vpc" "test" {
-    cidr_block = "192.168.0.0/16"
+  cidr_block = "192.168.0.0/16"
   tags = {
         Name = "terraform-testacc-elasticache-replication-group-multi-az-in-vpc"
     }
 }
 resource "aws_subnet" "test" {
-    vpc_id = "${aws_vpc.test.id}"
-    cidr_block = "192.168.0.0/20"
-    availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id = "${aws_vpc.test.id}"
+  cidr_block = "192.168.0.0/20"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
         Name = "tf-acc-elasticache-replication-group-multi-az-in-vpc-foo"
     }
@@ -1099,6 +1105,7 @@ resource "aws_elasticache_replication_group" "test" {
     security_group_ids = ["${aws_security_group.test.id}"]
     availability_zones = ["${data.aws_availability_zones.available.names[0]}","${data.aws_availability_zones.available.names[1]}"]
     automatic_failover_enabled = true
+    multi_az_enabled = true
     snapshot_window = "02:00-03:00"
     snapshot_retention_limit = 7
 }
@@ -1581,6 +1588,7 @@ resource "aws_elasticache_subnet_group" "test" {
 resource "aws_elasticache_replication_group" "test" {
   # InvalidParameterCombination: Automatic failover is not supported for T1 and T2 cache node types.
   automatic_failover_enabled    = %[2]t
+  multi_az_enabled              = %[2]t
   node_type                     = "cache.m3.medium"
   number_cache_clusters         = %[3]d
   replication_group_id          = "%[1]s"

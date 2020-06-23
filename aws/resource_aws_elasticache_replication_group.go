@@ -119,6 +119,11 @@ func resourceAwsElasticacheReplicationGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
+			"multi_az_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -308,6 +313,10 @@ func resourceAwsElasticacheReplicationGroupCreate(d *schema.ResourceData, meta i
 		params.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
+	if _, ok := d.GetOk("multi_az_enabled"); ok {
+		params.MultiAZEnabled = aws.Bool(d.Get("multi_az_enabled").(bool))
+	}
+
 	if v, ok := d.GetOk("notification_topic_arn"); ok {
 		params.NotificationTopicArn = aws.String(v.(string))
 	}
@@ -437,8 +446,18 @@ func resourceAwsElasticacheReplicationGroupRead(d *schema.ResourceData, meta int
 		}
 	}
 
-	d.Set("kms_key_id", rgp.KmsKeyId)
+	if rgp.MultiAZ != nil {
+		switch strings.ToLower(*rgp.MultiAZ) {
+		case "enabled":
+			d.Set("multi_az_enabled", true)
+		case "disabled":
+			d.Set("multi_az_enabled", false)
+		default:
+			log.Printf("Unknown MultiAZ state %s", *rgp.MultiAZ)
+		}
+	}
 
+	d.Set("kms_key_id", rgp.KmsKeyId)
 	d.Set("replication_group_description", rgp.Description)
 	d.Set("number_cache_clusters", len(rgp.MemberClusters))
 	if err := d.Set("member_clusters", flattenStringList(rgp.MemberClusters)); err != nil {
@@ -738,6 +757,11 @@ func resourceAwsElasticacheReplicationGroupUpdate(d *schema.ResourceData, meta i
 
 	if d.HasChange("maintenance_window") {
 		params.PreferredMaintenanceWindow = aws.String(d.Get("maintenance_window").(string))
+		requestUpdate = true
+	}
+
+	if d.HasChange("multi_az_enabled") {
+		params.MultiAZEnabled = aws.Bool(d.Get("multi_az_enabled").(bool))
 		requestUpdate = true
 	}
 
