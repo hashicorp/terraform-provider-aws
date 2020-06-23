@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -13,27 +12,18 @@ import (
 )
 
 func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_basic(t *testing.T) {
-	// Hide Outposts testing behind consistent environment variable
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	localGatewayRouteTableDataSourceName := "data.aws_ec2_local_gateway_route_table.test"
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName, outpostArn),
+				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayRouteTableDataSourceName, "local_gateway_id"),
@@ -52,25 +42,16 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_basic(t *testing.T) {
 }
 
 func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_disappears(t *testing.T) {
-	// Hide Outposts testing behind consistent environment variable
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName, outpostArn),
+				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2LocalGatewayRouteTableVpcAssociation(), resourceName),
@@ -82,25 +63,16 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_disappears(t *testing.T) 
 }
 
 func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_Tags(t *testing.T) {
-	// Hide Outposts testing behind consistent environment variable
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_local_gateway_route_table_vpc_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags1(rName, outpostArn, "key1", "value1"),
+				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -113,7 +85,7 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags2(rName, outpostArn, "key1", "value1updated", "key2", "value2"),
+				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -122,7 +94,7 @@ func TestAccAwsEc2LocalGatewayRouteTableVpcAssociation_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags1(rName, outpostArn, "key2", "value2"),
+				Config: testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -141,7 +113,7 @@ func testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationExists(resourceName s
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Fleet ID is set")
+			return fmt.Errorf("%s: missing resource ID", resourceName)
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -186,10 +158,12 @@ func testAccCheckAwsEc2LocalGatewayRouteTableVpcAssociationDestroy(s *terraform.
 	return nil
 }
 
-func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName, outpostArn string) string {
+func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName string) string {
 	return fmt.Sprintf(`
+data "aws_outposts_outposts" "test" {}
+
 data "aws_ec2_local_gateway_route_table" "test" {
-  outpost_arn = %[2]q
+  outpost_arn = tolist(data.aws_outposts_outposts.test.arns)[0]
 }
 
 resource "aws_vpc" "test" {
@@ -199,12 +173,12 @@ resource "aws_vpc" "test" {
     Name = %[1]q
   }
 }
-`, rName, outpostArn)
+`, rName)
 }
 
-func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName, outpostArn string) string {
+func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfig(rName string) string {
 	return composeConfig(
-		testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName, outpostArn),
+		testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName),
 		`
 resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id
@@ -213,9 +187,9 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 `)
 }
 
-func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags1(rName, outpostArn, tagKey1, tagValue1 string) string {
+func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return composeConfig(
-		testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName, outpostArn),
+		testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id
@@ -228,9 +202,9 @@ resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
 `, tagKey1, tagValue1))
 }
 
-func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags2(rName, outpostArn, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return composeConfig(
-		testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName, outpostArn),
+		testAccAwsEc2LocalGatewayRouteTableVpcAssociationConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_ec2_local_gateway_route_table_vpc_association" "test" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.test.id

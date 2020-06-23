@@ -1,50 +1,93 @@
-## 2.67.0 (Unreleased)
-
-FEATURES:
-
-* **New Data Source:** `aws_ebs_volumes` [GH-13751]
-* **New Data Source:** `aws_ec2_local_gateway_virtual_interface` [GH-13770]
-* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_group` [GH-13767]
-* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_groups` [GH-13767]
-* **New Data Source:** `aws_wafv2_web_acl` [GH-12791]
-* **New Resource:** `aws_ec2_local_gateway_route` [GH-13768]
-* **New Resource:** `aws_ec2_local_gateway_route_table_vpc_association` [GH-13765]
-* **New Resource:** `aws_ec2_tag` [GH-8457]
-* **New Resource:** `aws_wafv2_web_acl` [GH-12688]
+## 2.68.0 (Unreleased)
 
 ENHANCEMENTS:
 
-* data-source/aws_vpc_dhcp_options: Add `arn` attribute [GH-13606]
-* data-source/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
-* data-source/aws_internet_gateway: Add `arn` attribute [GH-13614]
-* resource/aws_ec2_capacity_reservation: Add `arn` attribute and support for Linux SQL Server values in `instance_platform` argument [GH-13607]
-* resource/aws_cloudwatch_log_stream: Support resource import [GH-13697]
-* resource/aws_default_vpc_dhcp_options: Add `arn` attribute [GH-13606]
-* resource/aws_devicefarm_project: Support resource import [GH-13020]
-* resource/aws_ec2_traffic_mirror_target: Add `arn` attribute [GH-13649]
-* resource/aws_ecs_capacity_provider: Implement API deletion support [GH-13740]
-* resource/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes [GH-13650]
-* resource/aws_efs_mount_target: Add plan time validation for `ip_address` argument [GH-13650]
-* resource_aws_elasticsearch_domain: Add support for elasticsearch warm storage [GH-12668]
-* resource_aws_elasticsearch_domain: Add plan time validation for `cloudwatch_log_group_arn`, `role_arn`, and `ebs_options.volume_type` [GH-12668]
-* resource/aws_flow_log: Add `arn` attribute [GH-13656]
-* resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute [GH-13756]
-* resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute [GH-13756]
-* resource/aws_guardduty_threatintelset: Add `tags` argument and `arn` attribute [GH-13756]
-* resource/aws_internet_gateway: Add `arn` attribute [GH-13614]
-* resource/aws_key_pair: Add `arn` attribute [GH-13648]
-* resource/aws_service_discovery_http_namespace: Add `tags` argument [GH-13750]
-* resource/aws_service_discovery_private_dns_namespace: Add `tags` argument [GH-13750]
-* resource/aws_service_discovery_public_dns_namespace: Add `tags` argument [GH-13750]
-* resource/aws_service_discovery_service: Add `tags` argument [GH-13750]
-* resource/aws_vpc_dhcp_options: Add `arn` attribute [GH-13606]
-* resource/aws_wafv2_ip_set: Increase `addresses` maximum amount of items limit from 50 to 10,000 to match AWS limits [GH-13698]
+* data-source/aws_ebs_snapshot: Add `arn` attribute [GH-13840]
+* data-source/aws_vpc_endpoint: Add `arn` attribute [GH-13852]
+* resource/aws_default_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
+* resource/aws_ebs_snapshot: Add `arn` attribute [GH-13840]
+* resource/aws_ebs_snapshot_copy: Add `arn` attribute [GH-13840]
+* resource/aws_ec2_traffic_mirror_session: Add `arn` attribute [GH-13849]
+* resource/aws_glue_catalog_database: Add `arn` attribute [GH-13452]
+* resource/aws_iot_policy: Support resource import [GH-13707]
+* resource/aws_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
+* resource/aws_placement_group: Add `arn` attribute [GH-13838]
+* resource/aws_ses_receipt_filter: Add `arn` attribute and plan-time validations for all arguments [GH-13811]
+* resource/aws_vpc_endpoint: Add `arn` attribute [GH-13853]
 
 BUG FIXES:
 
-* resource/aws_cloudfront_origin_access_identity: Properly trigger resource recreation when deleted outside Terraform [GH-13081]
-* resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive [GH-13680]
-* resource/aws_route: Ensure retries occur on read after creation if route not found for EC2 eventual consistency [GH-13747]
+* resource/aws_iot_policy: Ensure `name` argument updates recreate the resource [GH-13707]
+* resource/aws_vpc_endpoint: Skip `ModifyVpcEndpoint` API call on tags only updates [GH-13853]
+* resource/aws_wafv2_web_acl: Prevent unexpected `UpdateWebACL` API errors on tags only updates [GH-13871]
+
+## 2.67.0 (June 19, 2020)
+
+NOTES:
+
+* data-source/aws_secretsmanager_secret: The `rotation_*` attributes have been deprecated in favor of the new `aws_secretsmanager_secret_rotation` data source. ([#9487](https://github.com/terraform-providers/terraform-provider-aws/issues/9487))
+* resource/aws_secretsmanager_secret: The `rotation_*` arguments have been deprecated in favor of the new `aws_secretsmanager_secret_rotation` resource. The new resource, which fixes workflow issues, prevents the existing resource from showing changes when attempting to remove rotation. Removal must be done with the new resource or manually. ([#9487](https://github.com/terraform-providers/terraform-provider-aws/issues/9487))
+
+FEATURES:
+
+* **New Data Source:** `aws_ebs_volumes` ([#13751](https://github.com/terraform-providers/terraform-provider-aws/issues/13751))
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface` ([#13770](https://github.com/terraform-providers/terraform-provider-aws/issues/13770))
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_group` ([#13767](https://github.com/terraform-providers/terraform-provider-aws/issues/13767))
+* **New Data Source:** `aws_ec2_local_gateway_virtual_interface_groups` ([#13767](https://github.com/terraform-providers/terraform-provider-aws/issues/13767))
+* **New Data Source:** `aws_ecr_authorization_token` ([#12395](https://github.com/terraform-providers/terraform-provider-aws/issues/12395))
+* **New Data Source:** `aws_outposts_outpost` ([#13777](https://github.com/terraform-providers/terraform-provider-aws/issues/13777))
+* **New Data Source:** `aws_outposts_outpost_instance_type` ([#13824](https://github.com/terraform-providers/terraform-provider-aws/issues/13824))
+* **New Data Source:** `aws_outposts_outpost_instance_types` ([#13824](https://github.com/terraform-providers/terraform-provider-aws/issues/13824))
+* **New Data Source:** `aws_outposts_outposts` ([#13777](https://github.com/terraform-providers/terraform-provider-aws/issues/13777))
+* **New Data Source:** `aws_outposts_site` ([#13825](https://github.com/terraform-providers/terraform-provider-aws/issues/13825))
+* **New Data Source:** `aws_outposts_sites` ([#13825](https://github.com/terraform-providers/terraform-provider-aws/issues/13825))
+* **New Data Source:** `aws_secretsmanager_secret_rotation` ([#9487](https://github.com/terraform-providers/terraform-provider-aws/issues/9487))
+* **New Data Source:** `aws_wafv2_web_acl` ([#12791](https://github.com/terraform-providers/terraform-provider-aws/issues/12791))
+* **New Guide:** [Resource Tagging](https://terraform.io/docs/providers/aws/guides/resource-tagging.html) ([#13779](https://github.com/terraform-providers/terraform-provider-aws/issues/13779))
+* **New Resource:** `aws_ec2_local_gateway_route` ([#13768](https://github.com/terraform-providers/terraform-provider-aws/issues/13768))
+* **New Resource:** `aws_ec2_local_gateway_route_table_vpc_association` ([#13765](https://github.com/terraform-providers/terraform-provider-aws/issues/13765))
+* **New Resource:** `aws_ec2_tag` ([#8457](https://github.com/terraform-providers/terraform-provider-aws/issues/8457))
+* **New Resource:** `aws_secretsmanager_secret_rotation` ([#9487](https://github.com/terraform-providers/terraform-provider-aws/issues/9487))
+* **New Resource:** `aws_wafv2_web_acl` ([#12688](https://github.com/terraform-providers/terraform-provider-aws/issues/12688))
+* **New Resource:** `aws_wafv2_web_acl_association` ([#12698](https://github.com/terraform-providers/terraform-provider-aws/issues/12698))
+
+ENHANCEMENTS:
+
+* data-source/aws_vpc_dhcp_options: Add `arn` attribute ([#13606](https://github.com/terraform-providers/terraform-provider-aws/issues/13606))
+* data-source/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes ([#13650](https://github.com/terraform-providers/terraform-provider-aws/issues/13650))
+* data-source/aws_internet_gateway: Add `arn` attribute ([#13614](https://github.com/terraform-providers/terraform-provider-aws/issues/13614))
+* data-source/aws_lambda_function: Add `file_system_config` attribute ([#13782](https://github.com/terraform-providers/terraform-provider-aws/issues/13782))
+* data-source/aws_workspaces_bundle: Add `name` and `owner` as search crieria ([#12497](https://github.com/terraform-providers/terraform-provider-aws/issues/12497))
+* resource/aws_ec2_capacity_reservation: Add `arn` attribute and support for Linux SQL Server values in `instance_platform` argument ([#13607](https://github.com/terraform-providers/terraform-provider-aws/issues/13607))
+* resource/aws_cloudwatch_log_stream: Support resource import ([#13697](https://github.com/terraform-providers/terraform-provider-aws/issues/13697))
+* resource/aws_default_vpc_dhcp_options: Add `arn` attribute ([#13606](https://github.com/terraform-providers/terraform-provider-aws/issues/13606))
+* resource/aws_devicefarm_project: Support resource import ([#13020](https://github.com/terraform-providers/terraform-provider-aws/issues/13020))
+* resource/aws_ec2_traffic_mirror_target: Add `arn` attribute ([#13649](https://github.com/terraform-providers/terraform-provider-aws/issues/13649))
+* resource/aws_ecs_capacity_provider: Implement API deletion support ([#13740](https://github.com/terraform-providers/terraform-provider-aws/issues/13740))
+* resource/aws_efs_mount_target: Add `availability_zone_name`, `availability_zone_id`, `mount_target_dns_name`, and `owner_id` attributes ([#13650](https://github.com/terraform-providers/terraform-provider-aws/issues/13650))
+* resource/aws_efs_mount_target: Add plan time validation for `ip_address` argument ([#13650](https://github.com/terraform-providers/terraform-provider-aws/issues/13650))
+* resource_aws_elasticsearch_domain: Add support for elasticsearch warm storage ([#12668](https://github.com/terraform-providers/terraform-provider-aws/issues/12668))
+* resource_aws_elasticsearch_domain: Add plan time validation for `cloudwatch_log_group_arn`, `role_arn`, and `ebs_options.volume_type` ([#12668](https://github.com/terraform-providers/terraform-provider-aws/issues/12668))
+* resource/aws_flow_log: Add `arn` attribute ([#13656](https://github.com/terraform-providers/terraform-provider-aws/issues/13656))
+* resource/aws_glue_catalog_table: Add `arn` attribute ([#13456](https://github.com/terraform-providers/terraform-provider-aws/issues/13456))
+* resource/aws_guardduty_detector: Add `tags` argument and `arn` attribute ([#13756](https://github.com/terraform-providers/terraform-provider-aws/issues/13756))
+* resource/aws_guardduty_ipset: Add `tags` argument and `arn` attribute ([#13756](https://github.com/terraform-providers/terraform-provider-aws/issues/13756))
+* resource/aws_guardduty_threatintelset: Add `tags` argument and `arn` attribute ([#13756](https://github.com/terraform-providers/terraform-provider-aws/issues/13756))
+* resource/aws_internet_gateway: Add `arn` attribute ([#13614](https://github.com/terraform-providers/terraform-provider-aws/issues/13614))
+* resource/aws_key_pair: Add `arn` attribute ([#13648](https://github.com/terraform-providers/terraform-provider-aws/issues/13648))
+* resource/aws_lambda_function: Add `file_system_config` attribute ([#13782](https://github.com/terraform-providers/terraform-provider-aws/issues/13782))
+* resource/aws_service_discovery_http_namespace: Add `tags` argument ([#13750](https://github.com/terraform-providers/terraform-provider-aws/issues/13750))
+* resource/aws_service_discovery_private_dns_namespace: Add `tags` argument ([#13750](https://github.com/terraform-providers/terraform-provider-aws/issues/13750))
+* resource/aws_service_discovery_public_dns_namespace: Add `tags` argument ([#13750](https://github.com/terraform-providers/terraform-provider-aws/issues/13750))
+* resource/aws_service_discovery_service: Add `tags` argument ([#13750](https://github.com/terraform-providers/terraform-provider-aws/issues/13750))
+* resource/aws_vpc_dhcp_options: Add `arn` attribute ([#13606](https://github.com/terraform-providers/terraform-provider-aws/issues/13606))
+* resource/aws_wafv2_ip_set: Increase `addresses` maximum amount of items limit from 50 to 10,000 to match AWS limits ([#13698](https://github.com/terraform-providers/terraform-provider-aws/issues/13698))
+
+BUG FIXES:
+
+* resource/aws_cloudfront_origin_access_identity: Properly trigger resource recreation when deleted outside Terraform ([#13081](https://github.com/terraform-providers/terraform-provider-aws/issues/13081))
+* resource/aws_cognito_user_pool_client: Mark `client_secret` as sensitive ([#13680](https://github.com/terraform-providers/terraform-provider-aws/issues/13680))
+* resource/aws_route: Ensure retries occur on read after creation if route not found for EC2 eventual consistency ([#13747](https://github.com/terraform-providers/terraform-provider-aws/issues/13747))
 
 ## 2.66.0 (June 12, 2020)
 
