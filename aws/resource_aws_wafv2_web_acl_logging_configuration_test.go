@@ -2,8 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -11,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
@@ -18,7 +17,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
-	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -29,10 +28,8 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -50,7 +47,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
-	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -61,10 +58,8 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -72,18 +67,14 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateTwoRedactedFields(rInt, webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"name":  "single_query_argument.0.name",
-						"value": "username",
+						"single_header.0.name": "referer",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"name":  "single_header.0.name",
-						"value": "user-agent",
+						"single_header.0.name": "user-agent",
 					}),
 				),
 			},
@@ -91,14 +82,11 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateOneRedactedField(rInt, webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					testAccMatchResourceAttrRegionalARN(resourceName, "resource_arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "redacted_fields.*", map[string]string{
-						"name":  "single_header.0.name",
-						"value": "user-agent",
+						"single_header.0.name": "user-agent",
 					}),
 				),
 			},
@@ -111,14 +99,13 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_changeResourceArnForceNew(t *testing.T) {
+func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceArnForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	webACLNameNew := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
-	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -129,11 +116,9 @@ func TestAccAwsWafv2WebACL_changeResourceArnForceNew(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &before),
-					resource.TestCheckResourceAttr(kinesisResourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(webACLResourceName, "name", webACLName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -144,8 +129,6 @@ func TestAccAwsWafv2WebACL_changeResourceArnForceNew(t *testing.T) {
 					resource.TestCheckResourceAttr(webACLResourceName, "name", webACLNameNew),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -158,15 +141,13 @@ func TestAccAwsWafv2WebACL_changeResourceArnForceNew(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACL_changeLogDestinationConfigsForceNew(t *testing.T) {
+func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	rIntTwo := acctest.RandInt()
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
-	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
-	kinesisResourceNameFoo := "aws_kinesis_firehose_delivery_stream.foo"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -179,8 +160,6 @@ func TestAccAwsWafv2WebACL_changeLogDestinationConfigsForceNew(t *testing.T) {
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &before),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -190,9 +169,6 @@ func TestAccAwsWafv2WebACL_changeLogDestinationConfigsForceNew(t *testing.T) {
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &after),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "2"),
-					// TODO: determine Set Hash # or use tfawsresource method if available
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.12345", kinesisResourceName, "arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "log_destination_configs.45678", kinesisResourceNameFoo, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -300,14 +276,12 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationExists(n string, v *wafv2.Log
 	}
 }
 
-func testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt int, name string) string {
+func testAccIAMRoleResourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
-data "aws_partition" "current" {}
-
 resource "aws_iam_role" "firehose" {
-  name = "tf_acctest_firehose_delivery_role_%[1]d"
+  name = "tf_acctest_firehose_delivery_role_%d"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -328,8 +302,11 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
+}`, rInt)
 }
 
+func testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt int, name string) string {
+	return fmt.Sprintf(`
 resource "aws_s3_bucket" "%[2]s" {
   bucket = "tf-test-bucket-%[1]d"
   acl = "private"
@@ -357,7 +334,13 @@ resource "aws_iam_role_policy" "%[2]s" {
         "${aws_s3_bucket.%[2]s.arn}",
         "${aws_s3_bucket.%[2]s.arn}/*"
       ]
-    }
+    },
+	{
+      "Effect": "Allow",
+	  "Action": "iam:CreateServiceLinkedRole",
+	  "Resource": "arn:aws:iam::*:role/aws-service-role/wafv2.amazonaws.com/AWSServiceRoleForWAFV2Logging",
+	  "Condition": {"StringLike": {"iam:AWSServiceName": "wafv2.amazonaws.com"}}
+	}
   ]
 }
 EOF
@@ -403,7 +386,6 @@ const testAccWebACLLoggingConfigurationResourceConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn = aws_wafv2_web_acl.test.arn
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
-  redacted_fields {}
 }
 `
 
@@ -411,7 +393,6 @@ const testAccWebACLLoggingConfigurationMultipleLoggingConfigs = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn = aws_wafv2_web_acl.test.arn
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn, aws_kinesis_firehose_delivery_stream.foo.arn]
-  redacted_fields {}
 }
 `
 
@@ -419,16 +400,16 @@ const testAccWebACLLoggingConfigurationResourceUpdateTwoRedactedFieldsConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn = aws_wafv2_web_acl.test.arn
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
-  
+ 
+  redacted_fields {
+    single_header {
+      name = "referer"
+    }
+  }
+
   redacted_fields {
  	single_header {
       name = "user-agent"
-    }
-  }
-  
-  redacted_fields {
-    single_query_argument {
-	  name = "username"
     }
   }
 }
@@ -449,6 +430,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 
 func testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt int, webACLName string) string {
 	return composeConfig(
+		testAccIAMRoleResourceConfig(rInt),
 		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
 		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
 		testAccWebACLResourceConfig(webACLName),
@@ -457,6 +439,7 @@ func testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt int, webACLName string
 
 func testAccAwsWafv2WebACLLoggingConfiguration_updateTwoRedactedFields(rInt int, webACLName string) string {
 	return composeConfig(
+		testAccIAMRoleResourceConfig(rInt),
 		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
 		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
 		testAccWebACLResourceConfig(webACLName),
@@ -465,6 +448,7 @@ func testAccAwsWafv2WebACLLoggingConfiguration_updateTwoRedactedFields(rInt int,
 
 func testAccAwsWafv2WebACLLoggingConfiguration_updateOneRedactedField(rInt int, webACLName string) string {
 	return composeConfig(
+		testAccIAMRoleResourceConfig(rInt),
 		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
 		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
 		testAccWebACLResourceConfig(webACLName),
@@ -473,6 +457,7 @@ func testAccAwsWafv2WebACLLoggingConfiguration_updateOneRedactedField(rInt int, 
 
 func testAccAwsWafv2WebACLLoggingConfiguration_multipleLoggingConfigs(rInt, rIntTwo int, webACLName string) string {
 	return composeConfig(
+		testAccIAMRoleResourceConfig(rInt),
 		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
 		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
 		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rIntTwo, "foo"),

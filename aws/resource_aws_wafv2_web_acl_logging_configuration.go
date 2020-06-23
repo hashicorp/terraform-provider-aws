@@ -103,6 +103,8 @@ func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta
 		return fmt.Errorf("error setting log_destination_configs: %w", err)
 	}
 
+	log.Printf("[INFO] CONFIGS: %v", d.Get("log_destination_configs").(*schema.Set))
+
 	if err := d.Set("redacted_fields", flattenWafv2RedactedFields(output.LoggingConfiguration.RedactedFields)); err != nil {
 		return fmt.Errorf("error setting redacted_fields: %w", err)
 	}
@@ -125,10 +127,10 @@ func resourceAwsWafv2WebACLLoggingConfigurationDelete(d *schema.ResourceData, me
 	return nil
 }
 
-func flattenWafv2RedactedFields(fields []*wafv2.FieldToMatch) []interface{} {
-	redactedFields := make([]interface{}, 0, len(fields))
+func flattenWafv2RedactedFields(fields []*wafv2.FieldToMatch) []map[string]interface{} {
+	redactedFields := make([]map[string]interface{}, 0, len(fields))
 	for _, field := range fields {
-		redactedFields = append(redactedFields, flattenWafv2FieldToMatch(field))
+		redactedFields = append(redactedFields, flattenWafv2FieldToMatch(field).([]interface{})[0].(map[string]interface{}))
 	}
 	return redactedFields
 }
