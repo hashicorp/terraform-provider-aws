@@ -246,42 +246,42 @@ func resourceAwsWafv2WebACLRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsWafv2WebACLUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).wafv2conn
 
-	log.Printf("[INFO] Updating WAFv2 WebACL %s", d.Id())
+	if d.HasChanges("default_action", "description", "rule", "visibility_config") {
+		u := &wafv2.UpdateWebACLInput{
+			Id:               aws.String(d.Id()),
+			Name:             aws.String(d.Get("name").(string)),
+			Scope:            aws.String(d.Get("scope").(string)),
+			LockToken:        aws.String(d.Get("lock_token").(string)),
+			DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
+			Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
+			VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
+		}
 
-	u := &wafv2.UpdateWebACLInput{
-		Id:               aws.String(d.Id()),
-		Name:             aws.String(d.Get("name").(string)),
-		Scope:            aws.String(d.Get("scope").(string)),
-		LockToken:        aws.String(d.Get("lock_token").(string)),
-		DefaultAction:    expandWafv2DefaultAction(d.Get("default_action").([]interface{})),
-		Rules:            expandWafv2Rules(d.Get("rule").(*schema.Set).List()),
-		VisibilityConfig: expandWafv2VisibilityConfig(d.Get("visibility_config").([]interface{})),
-	}
+		if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
+			u.Description = aws.String(v.(string))
+		}
 
-	if v, ok := d.GetOk("description"); ok && len(v.(string)) > 0 {
-		u.Description = aws.String(v.(string))
-	}
-
-	err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
-		_, err := conn.UpdateWebACL(u)
-		if err != nil {
-			if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
-				return resource.RetryableError(err)
+		err := resource.Retry(Wafv2WebACLUpdateTimeout, func() *resource.RetryError {
+			_, err := conn.UpdateWebACL(u)
+			if err != nil {
+				if isAWSErr(err, wafv2.ErrCodeWAFUnavailableEntityException, "") {
+					return resource.RetryableError(err)
+				}
+				return resource.NonRetryableError(err)
 			}
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+			return nil
+		})
 
-	if isResourceTimeoutError(err) {
-		_, err = conn.UpdateWebACL(u)
-	}
-
-	if err != nil {
-		if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
-			return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
+		if isResourceTimeoutError(err) {
+			_, err = conn.UpdateWebACL(u)
 		}
-		return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
+
+		if err != nil {
+			if isAWSErr(err, wafv2.ErrCodeWAFOptimisticLockException, "") {
+				return fmt.Errorf("Error updating WAFv2 WebACL, resource has changed since last refresh please run a new plan before applying again: %w", err)
+			}
+			return fmt.Errorf("Error updating WAFv2 WebACL: %w", err)
+		}
 	}
 
 	if d.HasChange("tags") {
