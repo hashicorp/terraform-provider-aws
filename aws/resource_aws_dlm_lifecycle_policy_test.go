@@ -286,7 +286,6 @@ resource "aws_dlm_lifecycle_policy" "basic" {
 `, rName)
 }
 
-
 func dlmLifecyclePolicyFullConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "dlm_lifecycle_role" {
