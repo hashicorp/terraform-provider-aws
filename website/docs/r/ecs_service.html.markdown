@@ -111,7 +111,7 @@ The `capacity_provider_strategy` configuration block supports the following:
 
 The `deployment_controller` configuration block supports the following:
 
-* `type` - (Optional) Type of deployment controller. Valid values: `CODE_DEPLOY`, `ECS`. Default: `ECS`.
+* `type` - (Optional) Type of deployment controller. Valid values: `CODE_DEPLOY`, `ECS`, `EXTERNAL`. Default: `ECS`.
 
 ## load_balancer
 
