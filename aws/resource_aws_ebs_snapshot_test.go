@@ -28,7 +28,13 @@ func TestAccAWSEBSSnapshot_basic(t *testing.T) {
 					testAccCheckSnapshotExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "ec2", regexp.MustCompile(`snapshot/snap-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -51,6 +57,11 @@ func TestAccAWSEBSSnapshot_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAwsEbsSnapshotConfigBasicTags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -90,6 +101,11 @@ func TestAccAWSEBSSnapshot_withDescription(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -111,6 +127,11 @@ func TestAccAWSEBSSnapshot_withKms(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "kms_key_id",
 						regexp.MustCompile(`^arn:aws:kms:[a-z]{2}-[a-z]+-\d{1}:[0-9]{12}:key/[a-z0-9-]{36}$`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -194,14 +215,21 @@ func testAccCheckAWSEbsSnapshotDestroy(s *terraform.State) error {
 
 func testAccAwsEbsSnapshotConfigBasic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_region.current.name}a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
 
   tags = {
-    Name = "%s"
+    Name = %[1]q
   }
 }
 
@@ -218,10 +246,17 @@ resource "aws_ebs_snapshot" "test" {
 
 func testAccAwsEbsSnapshotConfigBasicTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_region.current.name}a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
 }
 
@@ -243,10 +278,17 @@ resource "aws_ebs_snapshot" "test" {
 
 func testAccAwsEbsSnapshotConfigBasicTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_region.current.name}a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
 }
 
@@ -269,53 +311,59 @@ resource "aws_ebs_snapshot" "test" {
 
 func testAccAwsEbsSnapshotConfigWithDescription(rName string) string {
 	return fmt.Sprintf(`
-data "aws_region" "current" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_ebs_volume" "description_test" {
-  availability_zone = "${data.aws_region.current.name}a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
 }
 
 resource "aws_ebs_snapshot" "test" {
   volume_id   = "${aws_ebs_volume.description_test.id}"
-  description = "%s"
+  description = %[1]q
 }
 `, rName)
 }
 
 func testAccAwsEbsSnapshotConfigWithKms(rName string) string {
 	return fmt.Sprintf(`
-variable "name" {
-  default = "%s"
-}
+data "aws_availability_zones" "available" {
+  state = "available"
 
-data "aws_region" "current" {}
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 
   tags = {
-    Name = "${var.name}"
+    Name = %[1]q
   }
 }
 
 resource "aws_ebs_volume" "test" {
-  availability_zone = "${data.aws_region.current.name}a"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   size              = 1
   encrypted         = true
   kms_key_id        = "${aws_kms_key.test.arn}"
 
   tags = {
-    Name = "${var.name}"
+    Name = %[1]q
   }
 }
 
 resource "aws_ebs_snapshot" "test" {
   volume_id = "${aws_ebs_volume.test.id}"
-
-  tags = {
-    Name = "${var.name}"
-  }
 }
 `, rName)
 }
