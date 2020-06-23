@@ -57,7 +57,7 @@ provider "aws" {
 
 ### blacklisted_names Attribute Removal
 
-Switch your Terraform configuration to the `skip_names` attribute instead.
+Switch your Terraform configuration to the `exclude_names` attribute instead.
 
 For example, given this previous configuration:
 
@@ -71,13 +71,13 @@ An updated configuration:
 
 ```hcl
 data "aws_availability_zones" "example" {
-  skip_names = ["us-west-2d"]
+  exclude_names = ["us-west-2d"]
 }
 ```
 
 ### blacklisted_zone_ids Attribute Removal
 
-Switch your Terraform configuration to the `skip_zone_ids` attribute instead.
+Switch your Terraform configuration to the `exclude_zone_ids` attribute instead.
 
 For example, given this previous configuration:
 
@@ -91,7 +91,7 @@ An updated configuration:
 
 ```hcl
 data "aws_availability_zones" "example" {
-  skip_zone_ids = ["usw2-az4"]
+  exclude_zone_ids = ["usw2-az4"]
 }
 ```
 

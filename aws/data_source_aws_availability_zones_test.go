@@ -107,7 +107,7 @@ func TestAccAWSAvailabilityZones_AllAvailabilityZones(t *testing.T) {
 
 func TestAccAWSAvailabilityZones_BlacklistedNames(t *testing.T) {
 	allDataSourceName := "data.aws_availability_zones.all"
-	skippedDataSourceName := "data.aws_availability_zones.test"
+	excludeDataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -116,7 +116,7 @@ func TestAccAWSAvailabilityZones_BlacklistedNames(t *testing.T) {
 			{
 				Config: testAccCheckAwsAvailabilityZonesConfigBlacklistedNames(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesSkipping(allDataSourceName, skippedDataSourceName),
+					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
 			},
 		},
@@ -125,7 +125,7 @@ func TestAccAWSAvailabilityZones_BlacklistedNames(t *testing.T) {
 
 func TestAccAWSAvailabilityZones_BlacklistedZoneIds(t *testing.T) {
 	allDataSourceName := "data.aws_availability_zones.all"
-	skippedDataSourceName := "data.aws_availability_zones.test"
+	excludeDataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
@@ -134,7 +134,7 @@ func TestAccAWSAvailabilityZones_BlacklistedZoneIds(t *testing.T) {
 			{
 				Config: testAccCheckAwsAvailabilityZonesConfigBlacklistedZoneIds(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesSkipping(allDataSourceName, skippedDataSourceName),
+					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
 			},
 		},
@@ -158,36 +158,36 @@ func TestAccAWSAvailabilityZones_Filter(t *testing.T) {
 	})
 }
 
-func TestAccAWSAvailabilityZones_SkipNames(t *testing.T) {
+func TestAccAWSAvailabilityZones_ExcludeNames(t *testing.T) {
 	allDataSourceName := "data.aws_availability_zones.all"
-	skippedDataSourceName := "data.aws_availability_zones.test"
+	excludeDataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesConfigSkipNames(),
+				Config: testAccCheckAwsAvailabilityZonesConfigExcludeNames(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesSkipping(allDataSourceName, skippedDataSourceName),
+					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
 			},
 		},
 	})
 }
 
-func TestAccAWSAvailabilityZones_SkipZoneIds(t *testing.T) {
+func TestAccAWSAvailabilityZones_ExcludeZoneIds(t *testing.T) {
 	allDataSourceName := "data.aws_availability_zones.all"
-	skippedDataSourceName := "data.aws_availability_zones.test"
+	excludeDataSourceName := "data.aws_availability_zones.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckAwsAvailabilityZonesConfigSkipZoneIds(),
+				Config: testAccCheckAwsAvailabilityZonesConfigExcludeZoneIds(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsAvailabilityZonesSkipping(allDataSourceName, skippedDataSourceName),
+					testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName),
 				),
 			},
 		},
@@ -234,16 +234,16 @@ func testAccCheckAwsAvailabilityZonesMeta(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAwsAvailabilityZonesSkipping(allDataSourceName, skippingDataSourceName string) resource.TestCheckFunc {
+func testAccCheckAwsAvailabilityZonesExcluded(allDataSourceName, excludeDataSourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		allResourceState, ok := s.RootModule().Resources[allDataSourceName]
 		if !ok {
 			return fmt.Errorf("Resource does not exist: %s", allDataSourceName)
 		}
 
-		skippingResourceState, ok := s.RootModule().Resources[skippingDataSourceName]
+		excludeResourceState, ok := s.RootModule().Resources[excludeDataSourceName]
 		if !ok {
-			return fmt.Errorf("Resource does not exist: %s", skippingDataSourceName)
+			return fmt.Errorf("Resource does not exist: %s", excludeDataSourceName)
 		}
 
 		for _, attribute := range []string{"names.#", "zone_ids.#"} {
@@ -253,13 +253,13 @@ func testAccCheckAwsAvailabilityZonesSkipping(allDataSourceName, skippingDataSou
 				return fmt.Errorf("cannot find %s in %s resource state attributes: %+v", attribute, allDataSourceName, allResourceState.Primary.Attributes)
 			}
 
-			skippingValue, ok := skippingResourceState.Primary.Attributes[attribute]
+			excludeValue, ok := excludeResourceState.Primary.Attributes[attribute]
 
 			if !ok {
-				return fmt.Errorf("cannot find %s in %s resource state attributes: %+v", attribute, skippingDataSourceName, skippingResourceState.Primary.Attributes)
+				return fmt.Errorf("cannot find %s in %s resource state attributes: %+v", attribute, excludeDataSourceName, excludeResourceState.Primary.Attributes)
 			}
 
-			if allValue == skippingValue {
+			if allValue == excludeValue {
 				return fmt.Errorf("expected %s attribute value difference, got: %s", attribute, allValue)
 			}
 		}
@@ -374,22 +374,22 @@ data "aws_availability_zones" "test" {
 `)
 }
 
-func testAccCheckAwsAvailabilityZonesConfigSkipNames() string {
+func testAccCheckAwsAvailabilityZonesConfigExcludeNames() string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  skip_names = ["${data.aws_availability_zones.all.names[0]}"]
+  exclude_names = ["${data.aws_availability_zones.all.names[0]}"]
 }
 `)
 }
 
-func testAccCheckAwsAvailabilityZonesConfigSkipZoneIds() string {
+func testAccCheckAwsAvailabilityZonesConfigExcludeZoneIds() string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "all" {}
 
 data "aws_availability_zones" "test" {
-  skip_zone_ids = ["${data.aws_availability_zones.all.zone_ids[0]}"]
+  exclude_zone_ids = ["${data.aws_availability_zones.all.zone_ids[0]}"]
 }
 `)
 }
