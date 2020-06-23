@@ -58,8 +58,11 @@ func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta 
 		LogDestinationConfigs: expandStringList(d.Get("log_destination_configs").(*schema.Set).List()),
 		ResourceArn:           aws.String(resourceArn),
 	}
+
 	if v, ok := d.GetOk("redacted_fields"); ok && v.(*schema.Set).Len() > 0 {
 		config.RedactedFields = expandWafv2RedactedFields(v.(*schema.Set).List())
+	} else {
+		config.RedactedFields = []*wafv2.FieldToMatch{}
 	}
 
 	input := &wafv2.PutLoggingConfigurationInput{
@@ -70,7 +73,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta 
 		return err
 	}
 	if output == nil || output.LoggingConfiguration == nil {
-		return fmt.Errorf("error creating logging configuration for WebACL resource: %s", resourceArn)
+		return fmt.Errorf("error creating logging configuration for WebACL with ARN: %s", resourceArn)
 	}
 
 	d.SetId(aws.StringValue(output.LoggingConfiguration.ResourceArn))
