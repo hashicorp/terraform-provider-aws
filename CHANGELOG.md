@@ -27,6 +27,7 @@ BUG FIXES:
 
 * resource/aws_iot_policy: Ensure `name` argument updates recreate the resource [GH-13707]
 * resource/aws_vpc_endpoint: Skip `ModifyVpcEndpoint` API call on tags only updates [GH-13853]
+* resource/aws_vpc_endpoint: Wait for acceptance when `auto_accept` is enabled [GH-13876]
 * resource/aws_wafv2_web_acl: Prevent unexpected `UpdateWebACL` API errors on tags only updates [GH-13871]
 
 ## 2.67.0 (June 19, 2020)
