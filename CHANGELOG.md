@@ -9,6 +9,7 @@ ENHANCEMENTS:
 * resource/aws_customer_gateway: Add `arn` attribute and plan-time validations for `bgp_asn`, `ip_address`, and `type` arguments [GH-13611]
 * resource/aws_default_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
 * resource/aws_ebs_snapshot: Add `arn` attribute [GH-13840]
+* resource/aws_ebs_snapshot: Support resource import [GH-13895]
 * resource/aws_ebs_snapshot_copy: Add `arn` attribute [GH-13840]
 * resource/aws_ec2_traffic_mirror_session: Add `arn` attribute [GH-13849]
 * resource/aws_glue_catalog_database: Add `arn` attribute [GH-13452]
