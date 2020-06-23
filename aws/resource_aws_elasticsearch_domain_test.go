@@ -1048,6 +1048,10 @@ resource "aws_elasticsearch_domain" "test" {
     ebs_enabled = true
     volume_size = 10
   }
+
+  timeouts {
+    delete = "180m"
+  }
 }
 `, randInt)
 }

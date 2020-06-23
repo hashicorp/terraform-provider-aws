@@ -30,6 +30,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Update: schema.DefaultTimeout(60 * time.Minute),
+			Delete: schema.DefaultTimeout(90 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -899,17 +900,17 @@ func resourceAwsElasticSearchDomainDelete(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Waiting for ElasticSearch domain %q to be deleted", domainName)
-	err = resourceAwsElasticSearchDomainDeleteWaiter(domainName, conn)
+	err = resourceAwsElasticSearchDomainDeleteWaiter(d, domainName, conn)
 
 	return err
 }
 
-func resourceAwsElasticSearchDomainDeleteWaiter(domainName string, conn *elasticsearch.ElasticsearchService) error {
+func resourceAwsElasticSearchDomainDeleteWaiter(d *schema.ResourceData, domainName string, conn *elasticsearch.ElasticsearchService) error {
 	input := &elasticsearch.DescribeElasticsearchDomainInput{
 		DomainName: aws.String(domainName),
 	}
 	var out *elasticsearch.DescribeElasticsearchDomainOutput
-	err := resource.Retry(90*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
 		var err error
 		out, err = conn.DescribeElasticsearchDomain(input)
 

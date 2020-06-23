@@ -318,6 +318,7 @@ In addition to all arguments above, the following attributes are exported:
 `aws_elasticsearch_domain` provides the following [Timeouts](/docs/configuration/resources.html#operation-timeouts) configuration options:
 
 * `update` - (Optional, Default: `60m`) How long to wait for updates.
+* `delete` - (Optional, Default: `90m`) How long to wait for deleting.
 
 ## Import
 
