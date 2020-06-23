@@ -270,6 +270,7 @@ resource "aws_dlm_lifecycle_policy" "basic" {
 
       create_rule {
         interval = 12
+        interval_unit = "HOURS"
       }
 
       retain_rule {
@@ -596,6 +597,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
       create_rule {
         interval = 12
+        interval_unit = "HOURS"
       }
 
       retain_rule {
@@ -649,6 +651,7 @@ resource "aws_dlm_lifecycle_policy" "test" {
 
       create_rule {
         interval = 12
+        interval_unit = "HOURS"
       }
 
       retain_rule {
