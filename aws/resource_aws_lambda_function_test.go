@@ -610,6 +610,61 @@ func TestAccAWSLambdaFunction_nilDeadLetterConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSLambdaFunction_FileSystemConfig(t *testing.T) {
+	var conf lambda.GetFunctionOutput
+	resourceName := "aws_lambda_function.test"
+
+	rString := acctest.RandString(8)
+	funcName := fmt.Sprintf("tf_acc_lambda_func_basic_%s", rString)
+	policyName := fmt.Sprintf("tf_acc_policy_lambda_func_basic_%s", rString)
+	roleName := fmt.Sprintf("tf_acc_role_lambda_func_basic_%s", rString)
+	sgName := fmt.Sprintf("tf_acc_sg_lambda_func_basic_%s", rString)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckLambdaFunctionDestroy,
+		Steps: []resource.TestStep{
+			// Ensure a function with lambda file system configuration can be created
+			{
+				Config: testAccAWSLambdaFileSystemConfig(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					testAccCheckAwsLambdaFunctionName(&conf, funcName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
+					testAccCheckAwsLambdaFunctionInvokeArn(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/efs"),
+				),
+			},
+			// Ensure configuration can be imported
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			// Ensure lambda file system configuration can be updated
+			{
+				Config: testAccAWSLambdaFileSystemUpdateConfig(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.0.local_mount_path", "/mnt/lambda"),
+				),
+			},
+			// Ensure lambda file system configuration can be removed
+			{
+				Config: testAccAWSLambdaConfigBasic(funcName, policyName, roleName, sgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaFunctionExists(resourceName, funcName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "file_system_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSLambdaFunction_tracingConfig(t *testing.T) {
 	var conf lambda.GetFunctionOutput
 
@@ -1921,6 +1976,15 @@ func baseAccAWSLambdaConfig(policyName, roleName, sgName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
   name = "%s"
   role = "${aws_iam_role.iam_for_lambda.id}"
@@ -2001,11 +2065,24 @@ resource "aws_vpc" "vpc_for_lambda" {
 }
 
 resource "aws_subnet" "subnet_for_lambda" {
-  vpc_id     = "${aws_vpc.vpc_for_lambda.id}"
-  cidr_block = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.vpc_for_lambda.id}"
+  cidr_block        = "10.0.1.0/24"
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = "tf-acc-lambda-function-1"
+  }
+}
+
+# This is defined here, rather than only in test cases where it's needed is to
+# prevent a timeout issue when fully removing Lambda Filesystems
+resource "aws_subnet" "subnet_for_lambda_az2" {
+  vpc_id            = "${aws_vpc.vpc_for_lambda.id}"
+  cidr_block        = "10.0.2.0/24"
+  availability_zone = data.aws_availability_zones.available.names[1]
+
+  tags = {
+    Name = "tf-acc-lambda-function-2"
   }
 }
 
@@ -2227,6 +2304,118 @@ resource "aws_lambda_function" "test" {
     runtime = "nodejs12.x"
 }
 `, fileName, funcName)
+}
+
+func testAccAWSLambdaFileSystemConfig(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_efs_file_system" "efs_for_lambda" {
+	tags = {
+    	Name = "efs_for_lambda"
+  	}
+}
+
+resource "aws_efs_mount_target" "mount_target_az1" {
+	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+	subnet_id      = "${aws_subnet.subnet_for_lambda.id}"
+	security_groups = ["${aws_security_group.sg_for_lambda.id}"]
+}
+
+resource "aws_efs_access_point" "access_point_1" {
+	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+
+	root_directory {
+		path = "/lambda1"
+		creation_info {
+			owner_gid   = 1000
+			owner_uid   = 1000
+			permissions = "777"
+		}
+	}
+	
+	posix_user {
+		gid = 1000
+		uid = 1000
+	}
+}
+
+resource "aws_lambda_function" "test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    publish = true
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs12.x"
+
+    vpc_config {
+        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}"]
+        security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
+    }
+
+	file_system_config {
+	   	arn = "${aws_efs_access_point.access_point_1.arn}"
+		local_mount_path = "/mnt/efs"
+	}
+
+	depends_on = [aws_efs_mount_target.mount_target_az1]
+
+}
+`, funcName)
+}
+
+func testAccAWSLambdaFileSystemUpdateConfig(funcName, policyName, roleName, sgName string) string {
+	return fmt.Sprintf(baseAccAWSLambdaConfig(policyName, roleName, sgName)+`
+resource "aws_efs_file_system" "efs_for_lambda" {
+	tags = {
+    	Name = "efs_for_lambda"
+  	}
+}
+
+resource "aws_efs_mount_target" "mount_target_az2" {
+	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+	subnet_id      = "${aws_subnet.subnet_for_lambda_az2.id}"
+	security_groups = ["${aws_security_group.sg_for_lambda.id}"]
+}
+
+resource "aws_efs_access_point" "access_point_2" {
+	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+
+	root_directory {
+		path = "/lambda2"
+		creation_info {
+			owner_gid   = 1000
+			owner_uid   = 1000
+			permissions = "777"
+		}
+	}
+	
+	posix_user {
+		gid = 1000
+		uid = 1000
+	}
+}
+
+resource "aws_lambda_function" "test" {
+    filename = "test-fixtures/lambdatest.zip"
+    function_name = "%s"
+    publish = true
+    role = "${aws_iam_role.iam_for_lambda.arn}"
+    handler = "exports.example"
+    runtime = "nodejs12.x"
+
+    vpc_config {
+        subnet_ids = ["${aws_subnet.subnet_for_lambda_az2.id}"]
+        security_group_ids = ["${aws_security_group.sg_for_lambda.id}"]
+    }
+
+	file_system_config {
+	   	arn = "${aws_efs_access_point.access_point_2.arn}"
+	   	local_mount_path = "/mnt/lambda"
+	}
+
+	depends_on = [aws_efs_mount_target.mount_target_az2]
+
+}
+`, funcName)
 }
 
 func testAccAWSLambdaConfigVersionedNodeJs10xRuntime(fileName, funcName, policyName, roleName, sgName string) string {
@@ -2522,17 +2711,8 @@ resource "aws_lambda_function" "test" {
     runtime = "nodejs12.x"
 
     vpc_config {
-        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_2.id}"]
+        subnet_ids = ["${aws_subnet.subnet_for_lambda.id}", "${aws_subnet.subnet_for_lambda_az2.id}"]
         security_group_ids = ["${aws_security_group.sg_for_lambda.id}", "${aws_security_group.sg_for_lambda_2.id}"]
-    }
-}
-
-resource "aws_subnet" "subnet_for_lambda_2" {
-    vpc_id = "${aws_vpc.vpc_for_lambda.id}"
-    cidr_block = "10.0.2.0/24"
-
-  tags = {
-        Name = "tf-acc-lambda-function-2"
     }
 }
 

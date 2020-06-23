@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -103,6 +104,29 @@ func resourceAwsLambdaFunction() *schema.Resource {
 					},
 				},
 			},
+			"file_system_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MinItems: 0,
+				// Lambda file system supports 1 EFS file system per lambda function. This might increase in future.
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// EFS access point arn
+						"arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validateArn,
+						},
+						// Local mount path inside a lambda function. Must start with "/mnt/".
+						"local_mount_path": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringMatch(regexp.MustCompile(`^/mnt/[a-zA-Z0-9-_.]+$`), "must start with '/mnt/'"),
+						},
+					},
+				},
+			},
 			"function_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -192,7 +216,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 						return false
 					}
 
-					if d.HasChange("vpc_config.0.security_group_ids") || d.HasChange("vpc_config.0.subnet_ids") {
+					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
 						return false
 					}
 
@@ -355,6 +379,10 @@ func resourceAwsLambdaFunctionCreate(d *schema.ResourceData, meta interface{}) e
 				TargetArn: aws.String(dlcMap["target_arn"].(string)),
 			}
 		}
+	}
+
+	if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
+		params.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 {
@@ -549,6 +577,12 @@ func resourceAwsLambdaFunctionRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("source_code_hash", function.CodeSha256)
 	d.Set("source_code_size", function.CodeSize)
 
+	fileSystemConfigs := flattenLambdaFileSystemConfigs(function.FileSystemConfigs)
+	log.Printf("[INFO] Setting Lambda %s file system configs %#v from API", d.Id(), fileSystemConfigs)
+	if err := d.Set("file_system_config", fileSystemConfigs); err != nil {
+		return fmt.Errorf("Error setting file system config for Lambda Function (%s): %s", d.Id(), err)
+	}
+
 	layers := flattenLambdaLayers(function.Layers)
 	log.Printf("[INFO] Setting Lambda %s Layers %#v from API", d.Id(), layers)
 	if err := d.Set("layers", layers); err != nil {
@@ -693,6 +727,13 @@ func resourceAwsLambdaFunctionUpdate(d *schema.ResourceData, meta interface{}) e
 	}
 	if d.HasChange("handler") {
 		configReq.Handler = aws.String(d.Get("handler").(string))
+		configUpdate = true
+	}
+	if d.HasChange("file_system_config") {
+		configReq.FileSystemConfigs = make([]*lambda.FileSystemConfig, 0)
+		if v, ok := d.GetOk("file_system_config"); ok && len(v.([]interface{})) > 0 {
+			configReq.FileSystemConfigs = expandLambdaFileSystemConfigs(v.([]interface{}))
+		}
 		configUpdate = true
 	}
 	if d.HasChange("memory_size") {
@@ -1029,4 +1070,28 @@ func waitForLambdaFunctionUpdate(conn *lambda.Lambda, functionName string, timeo
 	_, err := stateConf.WaitForState()
 
 	return err
+}
+
+func flattenLambdaFileSystemConfigs(fscList []*lambda.FileSystemConfig) []map[string]interface{} {
+	results := make([]map[string]interface{}, 0, len(fscList))
+	for _, fsc := range fscList {
+		f := make(map[string]interface{})
+		f["arn"] = *fsc.Arn
+		f["local_mount_path"] = *fsc.LocalMountPath
+
+		results = append(results, f)
+	}
+	return results
+}
+
+func expandLambdaFileSystemConfigs(fscMaps []interface{}) []*lambda.FileSystemConfig {
+	fileSystemConfigs := make([]*lambda.FileSystemConfig, 0, len(fscMaps))
+	for _, fsc := range fscMaps {
+		fscMap := fsc.(map[string]interface{})
+		fileSystemConfigs = append(fileSystemConfigs, &lambda.FileSystemConfig{
+			Arn:            aws.String(fscMap["arn"].(string)),
+			LocalMountPath: aws.String(fscMap["local_mount_path"].(string)),
+		})
+	}
+	return fileSystemConfigs
 }

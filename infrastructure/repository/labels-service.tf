@@ -38,6 +38,7 @@ variable "service_labels" {
     "cloudwatch",
     "cloudwatchevents",
     "cloudwatchlogs",
+    "codeartifact",
     "codebuild",
     "codecommit",
     "codedeploy",

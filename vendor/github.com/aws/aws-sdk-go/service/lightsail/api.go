@@ -6660,6 +6660,10 @@ func (c *Lightsail) GetInstanceMetricDataRequest(input *GetInstanceMetricDataInp
 // Returns the data points for the specified Amazon Lightsail instance metric,
 // given an instance name.
 //
+// Metrics report the utilization of your resources, and the error counts generated
+// by them. Monitor and collect metric data regularly to maintain the reliability,
+// availability, and performance of your resources.
+//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -7598,6 +7602,10 @@ func (c *Lightsail) GetLoadBalancerMetricDataRequest(input *GetLoadBalancerMetri
 // GetLoadBalancerMetricData API operation for Amazon Lightsail.
 //
 // Returns information about health metrics for your Lightsail load balancer.
+//
+// Metrics report the utilization of your resources, and the error counts generated
+// by them. Monitor and collect metric data regularly to maintain the reliability,
+// availability, and performance of your resources.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -9081,6 +9089,10 @@ func (c *Lightsail) GetRelationalDatabaseMetricDataRequest(input *GetRelationalD
 //
 // Returns the data points of the specified metric for a database in Amazon
 // Lightsail.
+//
+// Metrics report the utilization of your resources, and the error counts generated
+// by them. Monitor and collect metric data regularly to maintain the reliability,
+// availability, and performance of your resources.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -13396,7 +13408,7 @@ type Bundle struct {
 	// instance that uses a blueprint with a minimum power value of 500.
 	Power *int64 `locationName:"power" type:"integer"`
 
-	// The price in US dollars (e.g., 5.0).
+	// The price in US dollars (e.g., 5.0) of the bundle.
 	Price *float64 `locationName:"price" type:"float"`
 
 	// The amount of RAM in GB (e.g., 2.0).
@@ -19571,6 +19583,28 @@ type GetInstanceMetricDataInput struct {
 	// Valid instance metric names are listed below, along with the most useful
 	// statistics to include in your request, and the published unit value.
 	//
+	//    * BurstCapacityPercentage - The percentage of CPU performance available
+	//    for your instance to burst above its baseline. Your instance continuously
+	//    accrues and consumes burst capacity. Burst capacity stops accruing when
+	//    your instance's BurstCapacityPercentage reaches 100%. For more information,
+	//    see Viewing instance burst capacity in Amazon Lightsail (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-viewing-instance-burst-capacity).
+	//    Statistics: The most useful statistics are Maximum and Average. Unit:
+	//    The published unit is Percent.
+	//
+	//    * BurstCapacityTime - The available amount of time for your instance to
+	//    burst at 100% CPU utilization. Your instance continuously accrues and
+	//    consumes burst capacity. Burst capacity time stops accruing when your
+	//    instance's BurstCapacityPercentage metric reaches 100%. Burst capacity
+	//    time is consumed at the full rate only when your instance operates at
+	//    100% CPU utilization. For example, if your instance operates at 50% CPU
+	//    utilization in the burstable zone for a 5-minute period, then it consumes
+	//    CPU burst capacity minutes at a 50% rate in that period. Your instance
+	//    consumed 2 minutes and 30 seconds of CPU burst capacity minutes in the
+	//    5-minute period. For more information, see Viewing instance burst capacity
+	//    in Amazon Lightsail (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-viewing-instance-burst-capacity).
+	//    Statistics: The most useful statistics are Maximum and Average. Unit:
+	//    The published unit is Seconds.
+	//
 	//    * CPUUtilization - The percentage of allocated compute units that are
 	//    currently in use on the instance. This metric identifies the processing
 	//    power to run the applications on the instance. Tools in your operating
@@ -19748,11 +19782,10 @@ func (s *GetInstanceMetricDataInput) SetUnit(v string) *GetInstanceMetricDataInp
 type GetInstanceMetricDataOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of key-value pairs containing information about the results of your
-	// get instance metric data request.
+	// An array of objects that describe the metric data returned.
 	MetricData []*MetricDatapoint `locationName:"metricData" type:"list"`
 
-	// The metric name to return data for.
+	// The name of the metric returned.
 	MetricName *string `locationName:"metricName" type:"string" enum:"InstanceMetricName"`
 }
 
@@ -20405,8 +20438,8 @@ type GetLoadBalancerMetricDataInput struct {
 	Statistics []*string `locationName:"statistics" type:"list" required:"true"`
 
 	// The unit for the metric data request. Valid units depend on the metric data
-	// being required. For the valid units with each available metric, see the metricName
-	// parameter.
+	// being requested. For the valid units with each available metric, see the
+	// metricName parameter.
 	//
 	// Unit is a required field
 	Unit *string `locationName:"unit" type:"string" required:"true" enum:"MetricUnit"`
@@ -20501,70 +20534,10 @@ func (s *GetLoadBalancerMetricDataInput) SetUnit(v string) *GetLoadBalancerMetri
 type GetLoadBalancerMetricDataOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An array of metric datapoint objects.
+	// An array of objects that describe the metric data returned.
 	MetricData []*MetricDatapoint `locationName:"metricData" type:"list"`
 
-	// The metric about which you are receiving information. Valid values are listed
-	// below, along with the most useful statistics to include in your request.
-	//
-	//    * ClientTLSNegotiationErrorCount - The number of TLS connections initiated
-	//    by the client that did not establish a session with the load balancer.
-	//    Possible causes include a mismatch of ciphers or protocols. Statistics:
-	//    The most useful statistic is Sum.
-	//
-	//    * HealthyHostCount - The number of target instances that are considered
-	//    healthy. Statistics: The most useful statistic are Average, Minimum, and
-	//    Maximum.
-	//
-	//    * UnhealthyHostCount - The number of target instances that are considered
-	//    unhealthy. Statistics: The most useful statistic are Average, Minimum,
-	//    and Maximum.
-	//
-	//    * HTTPCode_LB_4XX_Count - The number of HTTP 4XX client error codes that
-	//    originate from the load balancer. Client errors are generated when requests
-	//    are malformed or incomplete. These requests have not been received by
-	//    the target instance. This count does not include any response codes generated
-	//    by the target instances. Statistics: The most useful statistic is Sum.
-	//    Note that Minimum, Maximum, and Average all return 1.
-	//
-	//    * HTTPCode_LB_5XX_Count - The number of HTTP 5XX server error codes that
-	//    originate from the load balancer. This count does not include any response
-	//    codes generated by the target instances. Statistics: The most useful statistic
-	//    is Sum. Note that Minimum, Maximum, and Average all return 1. Note that
-	//    Minimum, Maximum, and Average all return 1.
-	//
-	//    * HTTPCode_Instance_2XX_Count - The number of HTTP response codes generated
-	//    by the target instances. This does not include any response codes generated
-	//    by the load balancer. Statistics: The most useful statistic is Sum. Note
-	//    that Minimum, Maximum, and Average all return 1.
-	//
-	//    * HTTPCode_Instance_3XX_Count - The number of HTTP response codes generated
-	//    by the target instances. This does not include any response codes generated
-	//    by the load balancer. Statistics: The most useful statistic is Sum. Note
-	//    that Minimum, Maximum, and Average all return 1.
-	//
-	//    * HTTPCode_Instance_4XX_Count - The number of HTTP response codes generated
-	//    by the target instances. This does not include any response codes generated
-	//    by the load balancer. Statistics: The most useful statistic is Sum. Note
-	//    that Minimum, Maximum, and Average all return 1.
-	//
-	//    * HTTPCode_Instance_5XX_Count - The number of HTTP response codes generated
-	//    by the target instances. This does not include any response codes generated
-	//    by the load balancer. Statistics: The most useful statistic is Sum. Note
-	//    that Minimum, Maximum, and Average all return 1.
-	//
-	//    * InstanceResponseTime - The time elapsed, in seconds, after the request
-	//    leaves the load balancer until a response from the target instance is
-	//    received. Statistics: The most useful statistic is Average.
-	//
-	//    * RejectedConnectionCount - The number of connections that were rejected
-	//    because the load balancer had reached its maximum number of connections.
-	//    Statistics: The most useful statistic is Sum.
-	//
-	//    * RequestCount - The number of requests processed over IPv4. This count
-	//    includes only the requests with a response generated by a target instance
-	//    of the load balancer. Statistics: The most useful statistic is Sum. Note
-	//    that Minimum, Maximum, and Average all return 1.
+	// The name of the metric returned.
 	MetricName *string `locationName:"metricName" type:"string" enum:"LoadBalancerMetricName"`
 }
 
@@ -21712,8 +21685,8 @@ type GetRelationalDatabaseMetricDataInput struct {
 	Statistics []*string `locationName:"statistics" type:"list" required:"true"`
 
 	// The unit for the metric data request. Valid units depend on the metric data
-	// being required. For the valid units with each available metric, see the metricName
-	// parameter.
+	// being requested. For the valid units with each available metric, see the
+	// metricName parameter.
 	//
 	// Unit is a required field
 	Unit *string `locationName:"unit" type:"string" required:"true" enum:"MetricUnit"`
@@ -21808,11 +21781,10 @@ func (s *GetRelationalDatabaseMetricDataInput) SetUnit(v string) *GetRelationalD
 type GetRelationalDatabaseMetricDataOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An object describing the result of your get relational database metric data
-	// request.
+	// An array of objects that describe the metric data returned.
 	MetricData []*MetricDatapoint `locationName:"metricData" type:"list"`
 
-	// The name of the metric.
+	// The name of the metric returned.
 	MetricName *string `locationName:"metricName" type:"string" enum:"RelationalDatabaseMetricName"`
 }
 
@@ -23082,9 +23054,10 @@ type InstancePortInfo struct {
 	//
 	//    * TCP and UDP - 0 to 65535
 	//
-	//    * ICMP - 8 (to configure Ping) Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    * ICMP - The ICMP type. For example, specify 8 as the fromPort (ICMP type),
+	//    and -1 as the toPort (ICMP code), to enable ICMP Ping. For more information,
+	//    see Control Messages (https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Control_messages)
+	//    on Wikipedia.
 	FromPort *int64 `locationName:"fromPort" type:"integer"`
 
 	// The IP protocol name.
@@ -23111,9 +23084,9 @@ type InstancePortInfo struct {
 	//    * icmp - Internet Control Message Protocol (ICMP) is used to send error
 	//    messages and operational information indicating success or failure when
 	//    communicating with an instance. For example, an error is indicated when
-	//    an instance could not be reached. Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    an instance could not be reached. When you specify icmp as the protocol,
+	//    you must specify the ICMP type using the fromPort parameter, and ICMP
+	//    code using the toPort parameter.
 	Protocol *string `locationName:"protocol" type:"string" enum:"NetworkProtocol"`
 
 	// The last port in a range of open ports on an instance.
@@ -23122,9 +23095,10 @@ type InstancePortInfo struct {
 	//
 	//    * TCP and UDP - 0 to 65535
 	//
-	//    * ICMP - -1 (to configure Ping) Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    * ICMP - The ICMP code. For example, specify 8 as the fromPort (ICMP type),
+	//    and -1 as the toPort (ICMP code), to enable ICMP Ping. For more information,
+	//    see Control Messages (https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Control_messages)
+	//    on Wikipedia.
 	ToPort *int64 `locationName:"toPort" type:"integer"`
 }
 
@@ -23219,9 +23193,10 @@ type InstancePortState struct {
 	//
 	//    * TCP and UDP - 0 to 65535
 	//
-	//    * ICMP - 8 (to configure Ping) Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    * ICMP - The ICMP type. For example, specify 8 as the fromPort (ICMP type),
+	//    and -1 as the toPort (ICMP code), to enable ICMP Ping. For more information,
+	//    see Control Messages (https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Control_messages)
+	//    on Wikipedia.
 	FromPort *int64 `locationName:"fromPort" type:"integer"`
 
 	// The IP protocol name.
@@ -23248,9 +23223,9 @@ type InstancePortState struct {
 	//    * icmp - Internet Control Message Protocol (ICMP) is used to send error
 	//    messages and operational information indicating success or failure when
 	//    communicating with an instance. For example, an error is indicated when
-	//    an instance could not be reached. Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    an instance could not be reached. When you specify icmp as the protocol,
+	//    you must specify the ICMP type using the fromPort parameter, and ICMP
+	//    code using the toPort parameter.
 	Protocol *string `locationName:"protocol" type:"string" enum:"NetworkProtocol"`
 
 	// Specifies whether the instance port is open or closed.
@@ -23264,9 +23239,10 @@ type InstancePortState struct {
 	//
 	//    * TCP and UDP - 0 to 65535
 	//
-	//    * ICMP - -1 (to configure Ping) Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    * ICMP - The ICMP code. For example, specify 8 as the fromPort (ICMP type),
+	//    and -1 as the toPort (ICMP code), to enable ICMP Ping. For more information,
+	//    see Control Messages (https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Control_messages)
+	//    on Wikipedia.
 	ToPort *int64 `locationName:"toPort" type:"integer"`
 }
 
@@ -24013,7 +23989,7 @@ type LoadBalancerTlsCertificate struct {
 	// The algorithm that was used to sign the certificate.
 	SignatureAlgorithm *string `locationName:"signatureAlgorithm" type:"string"`
 
-	// The status of the SSL/TLS certificate. Valid values are below.
+	// The validation status of the SSL/TLS certificate. Valid values are below.
 	Status *string `locationName:"status" type:"string" enum:"LoadBalancerTlsCertificateStatus"`
 
 	// The name of the entity that is associated with the public key contained in
@@ -25083,9 +25059,10 @@ type PortInfo struct {
 	//
 	//    * TCP and UDP - 0 to 65535
 	//
-	//    * ICMP - 8 (to configure Ping) Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    * ICMP - The ICMP type. For example, specify 8 as the fromPort (ICMP type),
+	//    and -1 as the toPort (ICMP code), to enable ICMP Ping. For more information,
+	//    see Control Messages (https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Control_messages)
+	//    on Wikipedia.
 	FromPort *int64 `locationName:"fromPort" type:"integer"`
 
 	// The IP protocol name.
@@ -25112,9 +25089,9 @@ type PortInfo struct {
 	//    * icmp - Internet Control Message Protocol (ICMP) is used to send error
 	//    messages and operational information indicating success or failure when
 	//    communicating with an instance. For example, an error is indicated when
-	//    an instance could not be reached. Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    an instance could not be reached. When you specify icmp as the protocol,
+	//    you must specify the ICMP type using the fromPort parameter, and ICMP
+	//    code using the toPort parameter.
 	Protocol *string `locationName:"protocol" type:"string" enum:"NetworkProtocol"`
 
 	// The last port in a range of open ports on an instance.
@@ -25123,9 +25100,10 @@ type PortInfo struct {
 	//
 	//    * TCP and UDP - 0 to 65535
 	//
-	//    * ICMP - -1 (to configure Ping) Ping is the only communication supported
-	//    through the ICMP protocol in Lightsail. To configure ping, specify the
-	//    fromPort parameter as 8, and the toPort parameter as -1.
+	//    * ICMP - The ICMP code. For example, specify 8 as the fromPort (ICMP type),
+	//    and -1 as the toPort (ICMP code), to enable ICMP Ping. For more information,
+	//    see Control Messages (https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol#Control_messages)
+	//    on Wikipedia.
 	ToPort *int64 `locationName:"toPort" type:"integer"`
 }
 
@@ -25242,8 +25220,9 @@ type PutAlarmInput struct {
 	//
 	// The following metrics are available for each resource type:
 	//
-	//    * Instances: CPUUtilization, NetworkIn, NetworkOut, StatusCheckFailed,
-	//    StatusCheckFailed_Instance, and StatusCheckFailed_System.
+	//    * Instances: BurstCapacityPercentage, BurstCapacityTime, CPUUtilization,
+	//    NetworkIn, NetworkOut, StatusCheckFailed, StatusCheckFailed_Instance,
+	//    and StatusCheckFailed_System.
 	//
 	//    * Load balancers: ClientTLSNegotiationErrorCount, HealthyHostCount, UnhealthyHostCount,
 	//    HTTPCode_LB_4XX_Count, HTTPCode_LB_5XX_Count, HTTPCode_Instance_2XX_Count,
@@ -25252,6 +25231,9 @@ type PutAlarmInput struct {
 	//
 	//    * Relational databases: CPUUtilization, DatabaseConnections, DiskQueueDepth,
 	//    FreeStorageSpace, NetworkReceiveThroughput, and NetworkTransmitThroughput.
+	//
+	// For more information about these metrics, see Metrics available in Lightsail
+	// (https://lightsail.aws.amazon.com/ls/docs/en_us/articles/amazon-lightsail-resource-health-metrics#available-metrics).
 	//
 	// MetricName is a required field
 	MetricName *string `locationName:"metricName" type:"string" required:"true" enum:"MetricName"`
@@ -28184,6 +28166,12 @@ const (
 
 	// InstanceMetricNameStatusCheckFailedSystem is a InstanceMetricName enum value
 	InstanceMetricNameStatusCheckFailedSystem = "StatusCheckFailed_System"
+
+	// InstanceMetricNameBurstCapacityTime is a InstanceMetricName enum value
+	InstanceMetricNameBurstCapacityTime = "BurstCapacityTime"
+
+	// InstanceMetricNameBurstCapacityPercentage is a InstanceMetricName enum value
+	InstanceMetricNameBurstCapacityPercentage = "BurstCapacityPercentage"
 )
 
 const (
@@ -28448,6 +28436,12 @@ const (
 
 	// MetricNameNetworkTransmitThroughput is a MetricName enum value
 	MetricNameNetworkTransmitThroughput = "NetworkTransmitThroughput"
+
+	// MetricNameBurstCapacityTime is a MetricName enum value
+	MetricNameBurstCapacityTime = "BurstCapacityTime"
+
+	// MetricNameBurstCapacityPercentage is a MetricName enum value
+	MetricNameBurstCapacityPercentage = "BurstCapacityPercentage"
 )
 
 const (
