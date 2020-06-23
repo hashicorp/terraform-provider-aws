@@ -60,3 +60,11 @@ In addition to all arguments above, the following attributes are exported:
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
 * `tags` - A map of tags for the snapshot.
+
+## Import
+
+EBS Snapshot can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_ebs_snapshot.id snap-049df61146c4d7901
+```

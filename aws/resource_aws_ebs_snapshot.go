@@ -19,6 +19,9 @@ func resourceAwsEbsSnapshot() *schema.Resource {
 		Read:   resourceAwsEbsSnapshotRead,
 		Update: resourceAwsEbsSnapshotUpdate,
 		Delete: resourceAwsEbsSnapshotDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
@@ -122,7 +125,7 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	res, err := conn.DescribeSnapshots(req)
 	if err != nil {
 		if isAWSErr(err, "InvalidSnapshot.NotFound", "") {
-			log.Printf("[WARN] Snapshot %q Not found - removing from state", d.Id())
+			log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -130,7 +133,7 @@ func resourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	if len(res.Snapshots) == 0 {
-		log.Printf("[WARN] Snapshot %q Not found - removing from state", d.Id())
+		log.Printf("[WARN] EBS Snapshot %q Not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
