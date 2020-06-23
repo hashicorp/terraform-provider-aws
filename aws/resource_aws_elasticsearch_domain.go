@@ -242,7 +242,6 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"warm_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							ForceNew: true,
 						},
 						"warm_count": {
 							Type:         schema.TypeInt,
