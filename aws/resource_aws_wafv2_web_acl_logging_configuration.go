@@ -89,7 +89,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta
 	output, err := conn.GetLoggingConfiguration(input)
 	if err != nil {
 		if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
-			log.Printf("[WARN] WAFv2 Logging Configuration for WebACL with ARN %q not found, removing from state", d.Id())
+			log.Printf("[WARN] WAFv2 Logging Configuration for WebACL with ARN %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}

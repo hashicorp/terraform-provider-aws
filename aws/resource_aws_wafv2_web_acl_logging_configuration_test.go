@@ -186,6 +186,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	rInt := acctest.RandInt()
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -204,7 +205,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), webACLResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
