@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
@@ -26,6 +27,10 @@ func resourceAwsVpcEndpoint() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_accept": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -215,6 +220,15 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 
 	vpce := vpceRaw.(*ec2.VpcEndpoint)
 
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("vpc-endpoint/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	serviceName := aws.StringValue(vpce.ServiceName)
 	d.Set("service_name", serviceName)
 	d.Set("state", vpce.State)
@@ -293,38 +307,40 @@ func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) erro
 		}
 	}
 
-	req := &ec2.ModifyVpcEndpointInput{
-		VpcEndpointId: aws.String(d.Id()),
-	}
-
-	if d.HasChange("policy") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy"))
-		if err != nil {
-			return fmt.Errorf("policy contains an invalid JSON: %s", err)
+	if d.HasChanges("policy", "route_table_ids", "subnet_ids", "security_group_ids", "private_dns_enabled") {
+		req := &ec2.ModifyVpcEndpointInput{
+			VpcEndpointId: aws.String(d.Id()),
 		}
 
-		if policy == "" {
-			req.ResetPolicy = aws.Bool(true)
-		} else {
-			req.PolicyDocument = aws.String(policy)
+		if d.HasChange("policy") {
+			policy, err := structure.NormalizeJsonString(d.Get("policy"))
+			if err != nil {
+				return fmt.Errorf("policy contains an invalid JSON: %s", err)
+			}
+
+			if policy == "" {
+				req.ResetPolicy = aws.Bool(true)
+			} else {
+				req.PolicyDocument = aws.String(policy)
+			}
 		}
-	}
 
-	setVpcEndpointUpdateLists(d, "route_table_ids", &req.AddRouteTableIds, &req.RemoveRouteTableIds)
-	setVpcEndpointUpdateLists(d, "subnet_ids", &req.AddSubnetIds, &req.RemoveSubnetIds)
-	setVpcEndpointUpdateLists(d, "security_group_ids", &req.AddSecurityGroupIds, &req.RemoveSecurityGroupIds)
+		setVpcEndpointUpdateLists(d, "route_table_ids", &req.AddRouteTableIds, &req.RemoveRouteTableIds)
+		setVpcEndpointUpdateLists(d, "subnet_ids", &req.AddSubnetIds, &req.RemoveSubnetIds)
+		setVpcEndpointUpdateLists(d, "security_group_ids", &req.AddSecurityGroupIds, &req.RemoveSecurityGroupIds)
 
-	if d.HasChange("private_dns_enabled") {
-		req.PrivateDnsEnabled = aws.Bool(d.Get("private_dns_enabled").(bool))
-	}
+		if d.HasChange("private_dns_enabled") {
+			req.PrivateDnsEnabled = aws.Bool(d.Get("private_dns_enabled").(bool))
+		}
 
-	log.Printf("[DEBUG] Updating VPC Endpoint: %#v", req)
-	if _, err := conn.ModifyVpcEndpoint(req); err != nil {
-		return fmt.Errorf("Error updating VPC Endpoint: %s", err)
-	}
+		log.Printf("[DEBUG] Updating VPC Endpoint: %#v", req)
+		if _, err := conn.ModifyVpcEndpoint(req); err != nil {
+			return fmt.Errorf("Error updating VPC Endpoint: %s", err)
+		}
 
-	if err := vpcEndpointWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return err
+		if err := vpcEndpointWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return err
+		}
 	}
 
 	if d.HasChange("tags") {
