@@ -309,6 +309,7 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
   - [`aws_vpc_endpoint` resource](/docs/providers/aws/r/vpc_endpoint.html)
   - [`aws_vpc_endpoint_service` data source](/docs/providers/aws/d/vpc_endpoint_service.html)
   - [`aws_vpc_endpoint_service` resource](/docs/providers/aws/r/vpc_endpoint_service.html)
+  - [`aws_vpn_connection` resource](/docs/providers/aws/r/vpn_connection.html)
   - [`aws_vpn_gateway` data source](/docs/providers/aws/d/vpn_gateway.html)
   - [`aws_vpn_gateway` resource](/docs/providers/aws/r/vpn_gateway.html)
   - [`aws_waf_geo_match_set` resource](/docs/providers/aws/r/waf_geo_match_set.html)
