@@ -13,10 +13,12 @@ ENHANCEMENTS:
 * resource/aws_network_acl: Add `arn` attribute and plan-time validations for `ingress` and `egress` configuration block arguments [GH-13819]
 * resource/aws_placement_group: Add `arn` attribute [GH-13838]
 * resource/aws_ses_receipt_filter: Add `arn` attribute and plan-time validations for all arguments [GH-13811]
+* resource/aws_vpc_endpoint: Add `arn` attribute [GH-13853]
 
 BUG FIXES:
 
 * resource/aws_iot_policy: Ensure `name` argument updates recreate the resource [GH-13707]
+* resource/aws_vpc_endpoint: Skip `ModifyVpcEndpoint` API call on tags only updates [GH-13853]
 * resource/aws_wafv2_web_acl: Prevent unexpected `UpdateWebACL` API errors on tags only updates [GH-13871]
 
 ## 2.67.0 (June 19, 2020)
