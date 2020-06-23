@@ -19,8 +19,8 @@ This guide outlines how to get started with customizing endpoints, the available
 - [Getting Started with Custom Endpoints](#getting-started-with-custom-endpoints)
 - [Available Endpoint Customizations](#available-endpoint-customizations)
 - [Connecting to Local AWS Compatible Solutions](#connecting-to-local-aws-compatible-solutions)
-    - [DynamoDB Local](#dynamodb-local)
-    - [LocalStack](#localstack)
+  - [DynamoDB Local](#dynamodb-local)
+  - [LocalStack](#localstack)
 
 <!-- /TOC -->
 

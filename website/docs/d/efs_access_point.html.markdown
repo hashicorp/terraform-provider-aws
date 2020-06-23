@@ -33,13 +33,13 @@ In addition to all arguments above, the following attributes are exported:
 * `file_system_arn` - Amazon Resource Name of the file system.
 * `file_system_id` - The ID of the file system for which the access point is intended.
 * `posix_user` - Single element list containing operating system user and group applied to all file system requests made using the access point.
-    * `gid` - Group ID
-    * `secondary_gids` - Secondary group IDs
-    * `uid` - User Id
+  * `gid` - Group ID
+  * `secondary_gids` - Secondary group IDs
+  * `uid` - User Id
 * `root_directory`- Single element list containing information on the directory on the Amazon EFS file system that the access point provides access to.
-    * `creation_info` - Single element list containing information on the creation permissions of the directory
-        * `owner_gid` - POSIX owner group ID
-        * `owner_uid` - POSIX owner user ID
-        * `permissions` - POSIX permissions mode
-    * `path` - Path exposed as the root directory
+  * `creation_info` - Single element list containing information on the creation permissions of the directory
+    * `owner_gid` - POSIX owner group ID
+    * `owner_uid` - POSIX owner user ID
+    * `permissions` - POSIX permissions mode
+  * `path` - Path exposed as the root directory
 * `tags` - Key-value mapping of resource tags.
