@@ -75,10 +75,13 @@ resource "aws_ecs_service" "bar" {
 ### External Deployment Controller
 
 ```hcl
-resource "aws_ecs_service" "foo" {
-  name                  = "foo"
-  cluster               = "${aws_ecs_cluster.foo.id}"
-  deployment_controller = "EXTERNAL"
+resource "aws_ecs_service" "example" {
+  name    = "example"
+  cluster = "${aws_ecs_cluster.example.id}"
+
+  deployment_controller {
+    type = "EXTERNAL"
+  }
 }
 ```
 
@@ -107,7 +110,7 @@ The following arguments are supported:
 * `scheduling_strategy` - (Optional) The scheduling strategy to use for the service. The valid values are `REPLICA` and `DAEMON`. Defaults to `REPLICA`. Note that [*Tasks using the Fargate launch type or the `CODE_DEPLOY` or `EXTERNAL` deployment controller types don't support the `DAEMON` scheduling strategy*](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_CreateService.html).
 * `service_registries` - (Optional) The service discovery registries for the service. The maximum number of `service_registries` blocks is `1`.
 * `tags` - (Optional) Key-value map of resource tags
-* `task_definition` - (Optional) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. If a revision is not specified, the latest `ACTIVE` revision is used. Note that a task definition must be specified if the service is using the `ECS` deployment controller.
+* `task_definition` - (Optional) The family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
 
 ## capacity_provider_strategy
 
