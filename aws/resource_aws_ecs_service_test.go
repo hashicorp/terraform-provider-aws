@@ -443,7 +443,7 @@ func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsServiceExists(resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", "CODE_DEPLOY"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeCodeDeploy),
 				),
 			},
 			{
@@ -453,6 +453,34 @@ func TestAccAWSEcsService_withDeploymentController_Type_CodeDeploy(t *testing.T)
 				ImportStateVerify: true,
 				// Resource currently defaults to importing task_definition as family:revision
 				ImportStateVerifyIgnore: []string{"task_definition"},
+			},
+		},
+	})
+}
+
+func TestAccAWSEcsService_withDeploymentController_Type_External(t *testing.T) {
+	var service ecs.Service
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEcsServiceConfigDeploymentControllerTypeExternal(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEcsServiceExists(resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_controller.0.type", ecs.DeploymentControllerTypeExternal),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     fmt.Sprintf("%s/%s", rName, rName),
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3132,7 +3160,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_lb" "test" {
   internal = true
-  name     = %q
+  name     = %[1]q
   subnets  = ["${aws_subnet.test.*.id[0]}", "${aws_subnet.test.*.id[1]}"]
 }
 
@@ -3155,11 +3183,11 @@ resource "aws_lb_target_group" "test" {
 }
 
 resource "aws_ecs_cluster" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %q
+  family = %[1]q
 
   container_definitions = <<DEFINITION
 [
@@ -3183,7 +3211,7 @@ DEFINITION
 resource "aws_ecs_service" "test" {
   cluster         = "${aws_ecs_cluster.test.id}"
   desired_count   = 0
-  name            = %q
+  name            = %[1]q
   task_definition = "${aws_ecs_task_definition.test.arn}"
 
   deployment_controller {
@@ -3196,7 +3224,26 @@ resource "aws_ecs_service" "test" {
     target_group_arn = "${aws_lb_target_group.test.id}"
   }
 }
-`, rName, rName, rName, rName)
+`, rName)
+}
+
+func testAccAWSEcsServiceConfigDeploymentControllerTypeExternal(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_service" "test" {
+  cluster         = "${aws_ecs_cluster.test.id}"
+  desired_count   = 0
+  name            = %[1]q
+
+  deployment_controller {
+    type = "EXTERNAL"
+  }
+}
+
+`, rName)
 }
 
 func testAccAWSEcsServiceConfigDeploymentPercents(rName string, deploymentMinimumHealthyPercent, deploymentMaximumPercent int) string {
