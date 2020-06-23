@@ -691,10 +691,6 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   connection_log_options {
     enabled = false
 	}
-	
-  network_association {
-		subnet_id = "${aws_subnet.test.id}"
-	}
 
 	authorization_rule {
 		description          = "example auth rule"
