@@ -92,7 +92,6 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "status", ec2.ClientVpnEndpointStatusCodePendingAssociate),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -140,7 +139,6 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.0.type", "directory-service-authentication"),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -168,7 +166,6 @@ func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "authentication_options.1.type", "certificate-authentication"),
 				),
 			},
-
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
@@ -193,7 +190,6 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
 				),
 			},
-
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithLogGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
@@ -228,7 +224,6 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName),
 				),
 			},
-
 			{
 				Config: testAccEc2ClientVpnEndpointConfigWithDNSServers(rStr),
 				Check: resource.ComposeTestCheckFunc(
@@ -746,11 +741,6 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     subnet_id = "${aws_subnet.test.id}"
   }
 
-  authorization_rule {
-    description         = "example auth rule"
-    target_network_cidr = "10.1.1.0/24"
-  }
-
   route {
     description              = "example route 1"
     subnet_id                = "${aws_subnet.test.id}"
@@ -801,11 +791,6 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 
   network_association {
     subnet_id = "${aws_subnet.test.id}"
-  }
-
-  authorization_rule {
-    description          = "example auth rule"
-    target_network_cidr  = "10.1.1.0/24"
   }
 
   route {
