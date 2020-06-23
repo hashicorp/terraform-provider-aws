@@ -32,8 +32,7 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
-					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.enabled", resourceName, "advanced_security_options.0.enabled"),
-					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.internal_user_database_enabled", resourceName, "advanced_security_options.0.internal_user_database_enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.#", resourceName, "advanced_security_options.#"),
 				),
 			},
 		},
@@ -122,10 +121,6 @@ POLICY
   snapshot_options {
     automated_snapshot_start_hour = 23
   }
-	advanced_security_options {
-		enabled = false
-		internal_user_database_enabled = false
-	}
 }
 
 data "aws_elasticsearch_domain" "test" {
@@ -256,10 +251,10 @@ POLICY
 			"${aws_subnet.test2.id}"
 		]
   }
-	advanced_security_options {
-		enabled = false
-		internal_user_database_enabled = false
-	}
+  advanced_security_options {
+	enabled = false
+	internal_user_database_enabled = false
+  }
 
   tags = {
 	Domain = "TestDomain"
