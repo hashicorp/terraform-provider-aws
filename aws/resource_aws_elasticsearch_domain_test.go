@@ -194,8 +194,8 @@ func TestAccAWSElasticSearchDomain_warm(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "6"),
-					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", "ultrawarm1.medium.elasticsearch"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_count", "0"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.warm_type", ""),
 				),
 			},
 			{
