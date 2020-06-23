@@ -368,7 +368,7 @@ EOF
 func testAccKinesisFirehoseDeliveryStreamConfig(rInt int, name string) string {
 	return fmt.Sprintf(`
 resource "aws_kinesis_firehose_delivery_stream" "%[2]s" {
-	depends_on = ["aws_iam_role_policy.firehose"]
+	depends_on = ["aws_iam_role_policy.%[2]s"]
 	name = "aws-waf-logs-%[1]d"
 	destination = "s3"
 	s3_configuration {
