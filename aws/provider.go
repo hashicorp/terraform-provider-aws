@@ -911,6 +911,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_wafv2_rule_group":                                    resourceAwsWafv2RuleGroup(),
 			"aws_wafv2_web_acl":                                       resourceAwsWafv2WebACL(),
 			"aws_wafv2_web_acl_association":                           resourceAwsWafv2WebACLAssociation(),
+			"aws_wafv2_web_acl_logging_configuration":                 resourceAwsWafv2WebACLLoggingConfiguration(),
 			"aws_worklink_fleet":                                      resourceAwsWorkLinkFleet(),
 			"aws_worklink_website_certificate_authority_association":  resourceAwsWorkLinkWebsiteCertificateAuthorityAssociation(),
 			"aws_workspaces_directory":                                resourceAwsWorkspacesDirectory(),
