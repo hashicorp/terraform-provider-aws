@@ -183,14 +183,14 @@ func resourceAwsVpcEndpointCreate(d *schema.ResourceData, meta interface{}) erro
 	vpce := resp.VpcEndpoint
 	d.SetId(aws.StringValue(vpce.VpcEndpointId))
 
-	if _, ok := d.GetOk("auto_accept"); ok && aws.StringValue(vpce.State) == "pendingAcceptance" {
-		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName)); err != nil {
+	if v, ok := d.GetOk("auto_accept"); ok && v.(bool) && aws.StringValue(vpce.State) == "pendingAcceptance" {
+		if err := vpcEndpointAccept(conn, d.Id(), aws.StringValue(vpce.ServiceName), d.Timeout(schema.TimeoutCreate)); err != nil {
 			return err
 		}
 	}
 
 	if err := vpcEndpointWaitUntilAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return err
+		return fmt.Errorf("error waiting for VPC Endpoint (%s) to become available: %s", d.Id(), err)
 	}
 
 	return resourceAwsVpcEndpointRead(d, meta)
@@ -301,8 +301,8 @@ func resourceAwsVpcEndpointRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsVpcEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	if _, ok := d.GetOk("auto_accept"); ok && d.Get("state").(string) == "pendingAcceptance" {
-		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string)); err != nil {
+	if d.HasChange("auto_accept") && d.Get("auto_accept").(bool) && d.Get("state").(string) == "pendingAcceptance" {
+		if err := vpcEndpointAccept(conn, d.Id(), d.Get("service_name").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return err
 		}
 	}
@@ -375,7 +375,7 @@ func resourceAwsVpcEndpointDelete(d *schema.ResourceData, meta interface{}) erro
 	return nil
 }
 
-func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string) error {
+func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string, timeout time.Duration) error {
 	describeSvcReq := &ec2.DescribeVpcEndpointServiceConfigurationsInput{}
 	describeSvcReq.Filters = buildEC2AttributeFilterList(
 		map[string]string{
@@ -385,7 +385,7 @@ func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string) error {
 
 	describeSvcResp, err := conn.DescribeVpcEndpointServiceConfigurations(describeSvcReq)
 	if err != nil {
-		return fmt.Errorf("Error reading VPC Endpoint Service: %s", err)
+		return fmt.Errorf("error reading VPC Endpoint Service (%s): %s", svcName, err)
 	}
 	if describeSvcResp == nil || len(describeSvcResp.ServiceConfigurations) == 0 {
 		return fmt.Errorf("No matching VPC Endpoint Service found")
@@ -399,7 +399,21 @@ func vpcEndpointAccept(conn *ec2.EC2, vpceId, svcName string) error {
 	log.Printf("[DEBUG] Accepting VPC Endpoint connection: %#v", acceptEpReq)
 	_, err = conn.AcceptVpcEndpointConnections(acceptEpReq)
 	if err != nil {
-		return fmt.Errorf("Error accepting VPC Endpoint connection: %s", err)
+		return fmt.Errorf("error accepting VPC Endpoint (%s) connection: %s", vpceId, err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{"pendingAcceptance"},
+		Target:     []string{"available"},
+		Refresh:    vpcEndpointStateRefresh(conn, vpceId),
+		Timeout:    timeout,
+		Delay:      5 * time.Second,
+		MinTimeout: 5 * time.Second,
+	}
+
+	_, err = stateConf.WaitForState()
+	if err != nil {
+		return fmt.Errorf("error waiting for VPC Endpoint (%s) to be accepted: %s", vpceId, err)
 	}
 
 	return nil
@@ -448,11 +462,10 @@ func vpcEndpointWaitUntilAvailable(conn *ec2.EC2, vpceId string, timeout time.Du
 		Delay:      5 * time.Second,
 		MinTimeout: 5 * time.Second,
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf("Error waiting for VPC Endpoint (%s) to become available: %s", vpceId, err)
-	}
 
-	return nil
+	_, err := stateConf.WaitForState()
+
+	return err
 }
 
 func vpcEndpointWaitUntilDeleted(conn *ec2.EC2, vpceId string, timeout time.Duration) error {
