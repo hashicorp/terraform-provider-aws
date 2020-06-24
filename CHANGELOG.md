@@ -34,6 +34,7 @@ BUG FIXES:
 
 * resource/aws_ecs_task_definition: Prevent showing API ordering differences in `container_definitions` environment variables during update plans [GH-11463]
 * resource/aws_iot_policy: Ensure `name` argument updates recreate the resource [GH-13707]
+* resource/aws_spot_fleet_request: Prevent crash with missing placement information [GH-13577]
 * resource/aws_vpc_endpoint: Skip `ModifyVpcEndpoint` API call on tags only updates [GH-13853]
 * resource/aws_vpc_endpoint: Wait for acceptance when `auto_accept` is enabled [GH-13876]
 * resource/aws_wafv2_web_acl: Prevent unexpected `UpdateWebACL` API errors on tags only updates [GH-13871]
