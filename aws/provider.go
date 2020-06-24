@@ -237,6 +237,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ecs_task_definition":                        dataSourceAwsEcsTaskDefinition(),
 			"aws_customer_gateway":                           dataSourceAwsCustomerGateway(),
 			"aws_efs_access_point":                           dataSourceAwsEfsAccessPoint(),
+			"aws_efs_access_points":                          dataSourceAwsEfsAccessPoints(),
 			"aws_efs_file_system":                            dataSourceAwsEfsFileSystem(),
 			"aws_efs_mount_target":                           dataSourceAwsEfsMountTarget(),
 			"aws_eip":                                        dataSourceAwsEip(),
