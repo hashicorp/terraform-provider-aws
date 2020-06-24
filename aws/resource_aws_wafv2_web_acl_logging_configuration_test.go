@@ -184,7 +184,6 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	var v wafv2.LoggingConfiguration
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
-	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -196,14 +195,6 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACLLoggingConfiguration(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), webACLResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -360,7 +351,7 @@ resource "aws_iam_role_policy" "test" {
       "Effect": "Allow",
 	  "Action": "iam:CreateServiceLinkedRole",
 	  "Resource": "arn:aws:iam::*:role/aws-service-role/wafv2.amazonaws.com/AWSServiceRoleForWAFV2Logging",
-	  "Condition": {"StringLike": {"iam:AWSServiceName": "wafv2.amazonaws.com"}}
+	  "Condition": {"StringLike": {"iam:AWSServiceName": "wafv2.${data.aws_partition.current.dns_suffix}"}}
 	}
   ]
 }
