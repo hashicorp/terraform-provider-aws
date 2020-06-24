@@ -352,7 +352,7 @@ resource "aws_iam_role_policy" "test" {
       "Effect": "Allow",
 	  "Action": "iam:CreateServiceLinkedRole",
 	  "Resource": "arn:aws:iam::*:role/aws-service-role/wafv2.amazonaws.com/AWSServiceRoleForWAFV2Logging",
-	  "Condition": {"StringLike": {"iam:AWSServiceName": "wafv2.amazonaws.com"}}
+	  "Condition": {"StringLike": {"iam:AWSServiceName": "wafv2.${data.aws_partition.current.dns_suffix}"}}
 	}
   ]
 }
