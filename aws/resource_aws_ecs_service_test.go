@@ -737,6 +737,23 @@ func TestAccAWSEcsService_withPlacementStrategy(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13146
+func TestAccAWSEcsService_withPlacementStrategy_Type_Missing(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEcsServiceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccAWSEcsServiceWithPlacementStrategyType(rName, ""),
+				ExpectError: regexp.MustCompile(`expected ordered_placement_strategy.0.type to be one of`),
+			},
+		},
+	})
+}
+
 func TestAccAWSEcsService_withPlacementConstraints(t *testing.T) {
 	var service1, service2 ecs.Service
 	rString := acctest.RandString(8)
@@ -1561,6 +1578,41 @@ resource "aws_ecs_service" "mongo" {
   }
 }
 `, clusterName, tdName, svcName)
+}
+
+func testAccAWSEcsServiceWithPlacementStrategyType(rName string, placementStrategyType string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  cluster         = aws_ecs_cluster.test.id
+  desired_count   = 1
+  name            = %[1]q
+  task_definition = aws_ecs_task_definition.test.arn
+
+  ordered_placement_strategy {
+    type = %[1]q
+  }
+}
+`, rName, placementStrategyType)
 }
 
 func testAccAWSEcsServiceWithRandomPlacementStrategy(clusterName, tdName, svcName string) string {
