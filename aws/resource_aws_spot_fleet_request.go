@@ -1604,11 +1604,11 @@ func hashLaunchSpecification(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
-	if m["availability_zone"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["availability_zone"].(string)))
+	if v, ok := m["availability_zone"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if m["subnet_id"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+	if v, ok := m["subnet_id"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))
