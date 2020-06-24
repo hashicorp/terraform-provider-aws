@@ -284,6 +284,11 @@ func resourceAwsEcsService() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								ecs.PlacementStrategyTypeBinpack,
+								ecs.PlacementStrategyTypeRandom,
+								ecs.PlacementStrategyTypeSpread,
+							}, false),
 						},
 						"field": {
 							Type:     schema.TypeString,
@@ -857,9 +862,24 @@ func expandPlacementStrategy(s []interface{}) ([]*ecs.PlacementStrategy, error) 
 	}
 	pss := make([]*ecs.PlacementStrategy, 0)
 	for _, raw := range s {
-		p := raw.(map[string]interface{})
-		t := p["type"].(string)
-		f := p["field"].(string)
+		p, ok := raw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		t, ok := p["type"].(string)
+
+		if !ok {
+			return nil, fmt.Errorf("missing type attribute in placement strategy configuration block")
+		}
+
+		f, ok := p["field"].(string)
+
+		if !ok {
+			return nil, fmt.Errorf("missing field attribute in placement strategy configuration block")
+		}
+
 		if err := validateAwsEcsPlacementStrategy(t, f); err != nil {
 			return nil, err
 		}
