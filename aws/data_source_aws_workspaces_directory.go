@@ -99,13 +99,17 @@ func dataSourceAwsWorkspacesDirectoryRead(d *schema.ResourceData, meta interface
 	conn := meta.(*AWSClient).workspacesconn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	rawOutput, state, err := waiter.DirectoryState(conn, d.Id())()
+	directoryID := d.Get("directory_id").(string)
+
+	rawOutput, state, err := waiter.DirectoryState(conn, directoryID)()
 	if err != nil {
-		return fmt.Errorf("error getting WorkSpaces Directory (%s): %s", d.Id(), err)
+		return fmt.Errorf("error getting WorkSpaces Directory (%s): %s", directoryID, err)
 	}
 	if state == workspaces.WorkspaceDirectoryStateDeregistered {
-		return fmt.Errorf("WorkSpaces directory %s was not found", d.Id())
+		return fmt.Errorf("WorkSpaces directory %s was not found", directoryID)
 	}
+
+	d.SetId(directoryID)
 
 	directory := rawOutput.(*workspaces.WorkspaceDirectory)
 	d.Set("directory_id", directory.DirectoryId)
