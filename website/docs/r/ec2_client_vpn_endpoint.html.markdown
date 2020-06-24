@@ -45,7 +45,6 @@ The following arguments are supported:
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `connection_log_options` - (Required) Information about the client connection logging options.
-* `authorization_rule` - (Optional) Information about granting access to networks via this Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `route` - (Optional)  Information about routes to add to a Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
@@ -65,15 +64,6 @@ One of the following arguments must be supplied:
 * `enabled` - (Required) Indicates whether connection logging is enabled.
 * `cloudwatch_log_group` - (Optional) The name of the CloudWatch Logs log group.
 * `cloudwatch_log_stream` - (Optional) The name of the CloudWatch Logs log stream to which the connection data is published.
-
-### `authorization_rule` Argument Reference
-
-One of the following arguments must be supplied:
-
-* `description` - (Optional) A brief description of the authorization rule.
-* `target_network_cidr` - (Required) The IPv4 address range, in CIDR notation, of the network to which the authorization rule applies.
-* `access_group_id` - (Optional) The ID of the Active Directory group to which the authorization rule grants access.
-* `authorize_all_groups` - (Optional) Indicates whether the authorization rule grants access to all clients.
 
 ### `route` Argument Reference
 

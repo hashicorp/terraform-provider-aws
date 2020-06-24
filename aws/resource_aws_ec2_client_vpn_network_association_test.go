@@ -3,7 +3,6 @@ package aws
 import (
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -46,7 +45,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 				Config: testAccEc2ClientVpnNetworkAssociationConfig(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
-					testAccCheckAwsEc2ClientVpnNetworkAssociationDisappears(&assoc1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnNetworkAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,32 +76,6 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) er
 	return nil
 }
 
-func testAccCheckAwsEc2ClientVpnNetworkAssociationDisappears(targetNetwork *ec2.TargetNetwork) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
-			AssociationId:       targetNetwork.AssociationId,
-			ClientVpnEndpointId: targetNetwork.ClientVpnEndpointId,
-		})
-
-		if err != nil {
-			return err
-		}
-
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{ec2.AssociationStatusCodeDisassociating},
-			Target:  []string{ec2.AssociationStatusCodeDisassociated},
-			Refresh: clientVpnNetworkAssociationRefreshFunc(conn, aws.StringValue(targetNetwork.AssociationId), aws.StringValue(targetNetwork.ClientVpnEndpointId)),
-			Timeout: 10 * time.Minute,
-		}
-
-		_, err = stateConf.WaitForState()
-
-		return err
-	}
-}
-
 func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2.TargetNetwork) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
@@ -122,7 +95,7 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 		})
 
 		if err != nil {
-			return fmt.Errorf("Error reading Client VPN network association (%s): %s", rs.Primary.ID, err)
+			return fmt.Errorf("Error reading Client VPN network association (%s): %w", rs.Primary.ID, err)
 		}
 
 		for _, a := range resp.ClientVpnTargetNetworks {
@@ -136,20 +109,8 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 	}
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfigAcmCertificateBase() string {
-	key := tlsRsaPrivateKeyPem(2048)
-	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
-
-	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body = "%[1]s"
-  private_key      = "%[2]s"
-}
-`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
-}
-
 func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
-	return testAccEc2ClientVpnNetworkAssociationConfigAcmCertificateBase() + fmt.Sprintf(`
+	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
   blacklisted_zone_ids = ["usw2-az4"]

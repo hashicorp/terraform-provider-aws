@@ -240,36 +240,6 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_withAuthorizationRules(t *testing.T) {
-	var v1, v2 ec2.ClientVpnEndpoint
-	rStr := acctest.RandString(5)
-	resourceName := "aws_ec2_client_vpn_endpoint.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEc2ClientVpnEndpointConfig(rStr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "authorization_rule.#", "0"),
-				),
-			},
-			{
-				Config: testAccEc2ClientVpnEndpointConfigWithAuthorizationRules(rStr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnEndpointExists(resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "authorization_rule.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "authorization_rule.2707333359.description"),
-					resource.TestCheckResourceAttrSet(resourceName, "authorization_rule.2707333359.target_network_cidr"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAwsEc2ClientVpnEndpoint_withRoutes(t *testing.T) {
 	var v1, v2, v3, v4 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
