@@ -74,7 +74,13 @@ func resourceAwsEcsTaskDefinition() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
+					// Sort the lists of environment variables as they are serialized to state, so we won't get
+					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
+					// but they still show in the plan if some other property changes).
+					orderedCDs, _ := expandEcsContainerDefinitions(v.(string))
+					containerDefinitions(orderedCDs).OrderEnvironmentVariables()
+					unnormalizedJson, _ := flattenEcsContainerDefinitions(orderedCDs)
+					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
 				},
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
@@ -511,6 +517,11 @@ func resourceAwsEcsTaskDefinitionRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("arn", taskDefinition.TaskDefinitionArn)
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
+
+	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
+	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
+	// some other property changes).
+	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
 
 	defs, err := flattenEcsContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
