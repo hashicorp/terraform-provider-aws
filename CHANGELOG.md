@@ -34,6 +34,7 @@ BUG FIXES:
 
 * resource/aws_default_route_table: Validate CIDR blocks for misalignment before attempting to create the route to ensure Terraform can read the information after EC2 API canonicalization [GH-13778]
 * resource/aws_default_route_table: Ensure empty string (`""`) validation in `cidr_block` and `ipv6_cidr_block` arguments continues to work for Terraform 0.11 support [GH-13778]
+* resource/aws_ecs_service: Add plan-time validation and prevent panics with empty `type` argument in `ordered_placement_strategy` configuration block [GH-13926]
 * resource/aws_ecs_task_definition: Prevent showing API ordering differences in `container_definitions` environment variables during update plans [GH-11463]
 * resource/aws_iot_policy: Ensure `name` argument updates recreate the resource [GH-13707]
 * resource/aws_route: Validate CIDR blocks for misalignment before attempting to create the route to ensure Terraform can read the information after EC2 API canonicalization [GH-13778]
