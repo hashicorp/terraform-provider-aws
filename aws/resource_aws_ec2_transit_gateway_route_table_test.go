@@ -195,24 +195,6 @@ func testAccCheckAWSEc2TransitGatewayRouteTableDestroy(s *terraform.State) error
 	return nil
 }
 
-func testAccCheckAWSEc2TransitGatewayRouteTableDisappears(transitGatewayRouteTable *ec2.TransitGatewayRouteTable) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		input := &ec2.DeleteTransitGatewayRouteTableInput{
-			TransitGatewayRouteTableId: transitGatewayRouteTable.TransitGatewayRouteTableId,
-		}
-
-		_, err := conn.DeleteTransitGatewayRouteTable(input)
-
-		if err != nil {
-			return err
-		}
-
-		return waitForEc2TransitGatewayRouteTableDeletion(conn, aws.StringValue(transitGatewayRouteTable.TransitGatewayRouteTableId))
-	}
-}
-
 func testAccCheckAWSEc2TransitGatewayRouteTableNotRecreated(i, j *ec2.TransitGatewayRouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.StringValue(i.TransitGatewayRouteTableId) != aws.StringValue(j.TransitGatewayRouteTableId) {
