@@ -207,6 +207,10 @@ func waitForRdsDbInstanceRoleAssociation(conn *rds.RDS, dbInstanceIdentifier, ro
 				return nil, "", err
 			}
 
+			if dbInstanceRole == nil {
+				return nil, rdsDbInstanceRoleStatusPending, nil
+			}
+
 			return dbInstanceRole, aws.StringValue(dbInstanceRole.Status), nil
 		},
 		Timeout: 5 * time.Minute,
