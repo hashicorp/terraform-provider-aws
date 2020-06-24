@@ -199,14 +199,6 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 				),
 				ExpectNonEmptyPlan: true,
 			},
-			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), webACLResourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
 		},
 	})
 }
