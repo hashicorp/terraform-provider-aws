@@ -9,17 +9,17 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_default_security_group.web",
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSDefaultSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_default_security_group.web",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDefaultSecurityGroupConfig,
@@ -30,16 +30,13 @@ func TestAccAWSDefaultSecurityGroup_basic(t *testing.T) {
 						"aws_default_security_group.web", "name", "default"),
 					resource.TestCheckResourceAttr(
 						"aws_default_security_group.web", "description", "default VPC security group"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_default_security_group.web", "ingress.*", map[string]string{
+						"protocol":      "tcp",
+						"from_port":     "80",
+						"to_port":       "8000",
+						"cidr_blocks":   "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
 				),
 			},
 		},
@@ -50,11 +47,10 @@ func TestAccAWSDefaultSecurityGroup_classic(t *testing.T) {
 	var group ec2.SecurityGroup
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       "aws_default_security_group.web",
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSDefaultSecurityGroupDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_default_security_group.web",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSDefaultSecurityGroupDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSDefaultSecurityGroupConfig_classic,
@@ -63,16 +59,13 @@ func TestAccAWSDefaultSecurityGroup_classic(t *testing.T) {
 					testAccCheckAWSDefaultSecurityGroupAttributes(&group),
 					resource.TestCheckResourceAttr(
 						"aws_default_security_group.web", "name", "default"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.protocol", "tcp"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.from_port", "80"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.to_port", "8000"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_default_security_group.web", "ingress.3629188364.cidr_blocks.0", "10.0.0.0/8"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_default_security_group.web", "ingress.*", map[string]string{
+						"protocol":      "tcp",
+						"from_port":     "80",
+						"to_port":       "8000",
+						"cidr_blocks":   "1",
+						"cidr_blocks.0": "10.0.0.0/8",
+					}),
 				),
 			},
 		},
