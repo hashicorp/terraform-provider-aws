@@ -70,10 +70,10 @@ func resourceAwsWafv2WebACLLoggingConfigurationPut(d *schema.ResourceData, meta 
 	}
 	output, err := conn.PutLoggingConfiguration(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error putting WAFv2 Logging Configuration for resource (%s): %w", resourceArn, err)
 	}
 	if output == nil || output.LoggingConfiguration == nil {
-		return fmt.Errorf("error creating logging configuration for WebACL with ARN: %s", resourceArn)
+		return fmt.Errorf("error putting WAFv2 Logging Configuration for resource (%s): empty response", resourceArn)
 	}
 
 	d.SetId(aws.StringValue(output.LoggingConfiguration.ResourceArn))
@@ -93,10 +93,10 @@ func resourceAwsWafv2WebACLLoggingConfigurationRead(d *schema.ResourceData, meta
 			d.SetId("")
 			return nil
 		}
-		return err
+		return fmt.Errorf("error reading WAFv2 Logging Configuration for resource (%s): %w", d.Id(), err)
 	}
 	if output == nil || output.LoggingConfiguration == nil {
-		return fmt.Errorf("error reading logging configuration for WebACL resource: %s", d.Id())
+		return fmt.Errorf("error reading WAFv2 Logging Configuration for resource (%s): empty response", d.Id())
 	}
 
 	if err := d.Set("log_destination_configs", flattenStringList(output.LoggingConfiguration.LogDestinationConfigs)); err != nil {
@@ -119,7 +119,7 @@ func resourceAwsWafv2WebACLLoggingConfigurationDelete(d *schema.ResourceData, me
 	}
 	_, err := conn.DeleteLoggingConfiguration(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error deleting WAFv2 Logging Configuration for resource (%s): %w", d.Id(), err)
 	}
 
 	return nil

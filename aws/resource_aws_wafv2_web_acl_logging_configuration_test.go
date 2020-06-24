@@ -14,18 +14,17 @@ import (
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	webACLName := acctest.RandomWithPrefix("tf-acc-test")
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -44,18 +43,17 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_basic(t *testing.T) {
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	webACLName := acctest.RandomWithPrefix("tf-acc-test")
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -64,7 +62,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateTwoRedactedFields(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateTwoRedactedFields(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -79,7 +77,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateOneRedactedField(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateOneRedactedField(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
@@ -99,11 +97,10 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_update(t *testing.T) {
 	})
 }
 
-func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceArnForceNew(t *testing.T) {
+func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceARNForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
-	webACLName := acctest.RandomWithPrefix("tf-acc-test")
-	webACLNameNew := acctest.RandomWithPrefix("tf-acc-test")
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameNew := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
@@ -113,20 +110,20 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceArnForceNew(t *test
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &before),
-					resource.TestCheckResourceAttr(webACLResourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(webACLResourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLNameNew),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &after),
-					resource.TestCheckResourceAttr(webACLResourceName, "name", webACLNameNew),
+					resource.TestCheckResourceAttr(webACLResourceName, "name", rNameNew),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
@@ -143,11 +140,11 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeResourceArnForceNew(t *test
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceNew(t *testing.T) {
 	var before, after wafv2.LoggingConfiguration
-	webACLName := acctest.RandomWithPrefix("tf-acc-test")
-	rInt := acctest.RandInt()
-	rIntTwo := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNameNew := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
+	kinesisResourceName := "aws_kinesis_firehose_delivery_stream.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -155,20 +152,22 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceN
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &before),
+					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_multipleLoggingConfigs(rInt, rIntTwo, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_updateLogDestination(rName, rNameNew),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &after),
+					resource.TestCheckResourceAttr(kinesisResourceName, "name", fmt.Sprintf("aws-waf-logs-%s", rNameNew)),
 					resource.TestCheckResourceAttrPair(resourceName, "resource_arn", webACLResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_destination_configs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "redacted_fields.#", "0"),
 				),
 			},
@@ -183,8 +182,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_changeLogDestinationConfigsForceN
 
 func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 	var v wafv2.LoggingConfiguration
-	webACLName := acctest.RandomWithPrefix("tf-acc-test")
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
 	webACLResourceName := "aws_wafv2_web_acl.test"
 
@@ -194,7 +192,7 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACLLoggingConfiguration(), resourceName),
@@ -202,7 +200,30 @@ func TestAccAwsWafv2WebACLLoggingConfiguration_disappears(t *testing.T) {
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt, webACLName),
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), webACLResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACLLoggingConfiguration_webACLDisappears(t *testing.T) {
+	var v wafv2.LoggingConfiguration
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl_logging_configuration.test"
+	webACLResourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLLoggingConfiguration_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLLoggingConfigurationExists(resourceName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsWafv2WebACL(), webACLResourceName),
@@ -226,9 +247,9 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationDestroy(s *terraform.State) e
 			})
 
 		if err != nil {
-			// Return nil if the WebACL Logging Configuration is already destroyed
+			// Continue checking resources in state if a WebACL Logging Configuration is already destroyed
 			if isAWSErr(err, wafv2.ErrCodeWAFNonexistentItemException, "") {
-				return nil
+				continue
 			}
 			return err
 		}
@@ -277,12 +298,14 @@ func testAccCheckAwsWafv2WebACLLoggingConfigurationExists(n string, v *wafv2.Log
 	}
 }
 
-func testAccIAMRoleResourceConfig(rInt int) string {
+func testAccWebACLLoggingConfigurationDependenciesConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_role" "firehose" {
-  name = "tf_acctest_firehose_delivery_role_%d"
+  name = "%[1]s"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -303,18 +326,15 @@ resource "aws_iam_role" "firehose" {
   ]
 }
 EOF
-}`, rInt)
 }
 
-func testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt int, name string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "%[2]s" {
-  bucket = "tf-test-bucket-%[1]d"
+resource "aws_s3_bucket" "test" {
+  bucket = "%[1]s"
   acl = "private"
 }
 
-resource "aws_iam_role_policy" "%[2]s" {
-  name = "tf_acctest_firehose_delivery_policy_%[1]d"
+resource "aws_iam_role_policy" "test" {
+  name = "%[1]s"
   role = "${aws_iam_role.firehose.id}"
   policy = <<EOF
 {
@@ -332,8 +352,8 @@ resource "aws_iam_role_policy" "%[2]s" {
         "s3:PutObject"
       ],
       "Resource": [
-        "${aws_s3_bucket.%[2]s.arn}",
-        "${aws_s3_bucket.%[2]s.arn}/*"
+        "${aws_s3_bucket.test.arn}",
+        "${aws_s3_bucket.test.arn}/*"
       ]
     },
 	{
@@ -346,25 +366,7 @@ resource "aws_iam_role_policy" "%[2]s" {
 }
 EOF
 }
-`, rInt, name)
-}
 
-func testAccKinesisFirehoseDeliveryStreamConfig(rInt int, name string) string {
-	return fmt.Sprintf(`
-resource "aws_kinesis_firehose_delivery_stream" "%[2]s" {
-	depends_on = ["aws_iam_role_policy.%[2]s"]
-	name = "aws-waf-logs-%[1]d"
-	destination = "s3"
-	s3_configuration {
-		role_arn = "${aws_iam_role.firehose.arn}"
-		bucket_arn = "${aws_s3_bucket.%[2]s.arn}"
-	}
-}
-`, rInt, name)
-}
-
-func testAccWebACLResourceConfig(name string) string {
-	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
   name        = "%[1]s"
   description = "%[1]s"
@@ -380,20 +382,28 @@ resource "aws_wafv2_web_acl" "test" {
     sampled_requests_enabled   = false
   }
 }
-`, name)
+`, rName)
+}
+
+func testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+	depends_on = ["aws_iam_role_policy.test"]
+	name = "aws-waf-logs-%s"
+	destination = "s3"
+
+	s3_configuration {
+		role_arn = "${aws_iam_role.firehose.arn}"
+		bucket_arn = "${aws_s3_bucket.test.arn}"
+	}
+}
+`, rName)
 }
 
 const testAccWebACLLoggingConfigurationResourceConfig = `
 resource "aws_wafv2_web_acl_logging_configuration" "test" {
   resource_arn = aws_wafv2_web_acl.test.arn
   log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn]
-}
-`
-
-const testAccWebACLLoggingConfigurationMultipleLoggingConfigs = `
-resource "aws_wafv2_web_acl_logging_configuration" "test" {
-  resource_arn = aws_wafv2_web_acl.test.arn
-  log_destination_configs = [aws_kinesis_firehose_delivery_stream.test.arn, aws_kinesis_firehose_delivery_stream.foo.arn]
 }
 `
 
@@ -429,40 +439,30 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 }
 `
 
-func testAccAwsWafv2WebACLLoggingConfiguration_basic(rInt int, webACLName string) string {
+func testAccAwsWafv2WebACLLoggingConfiguration_basic(rName string) string {
 	return composeConfig(
-		testAccIAMRoleResourceConfig(rInt),
-		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
-		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
-		testAccWebACLResourceConfig(webACLName),
+		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResourceConfig)
 }
 
-func testAccAwsWafv2WebACLLoggingConfiguration_updateTwoRedactedFields(rInt int, webACLName string) string {
+func testAccAwsWafv2WebACLLoggingConfiguration_updateLogDestination(rName, rNameNew string) string {
 	return composeConfig(
-		testAccIAMRoleResourceConfig(rInt),
-		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
-		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
-		testAccWebACLResourceConfig(webACLName),
+		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rNameNew),
+		testAccWebACLLoggingConfigurationResourceConfig)
+}
+
+func testAccAwsWafv2WebACLLoggingConfiguration_updateTwoRedactedFields(rName string) string {
+	return composeConfig(
+		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResourceUpdateTwoRedactedFieldsConfig)
 }
 
-func testAccAwsWafv2WebACLLoggingConfiguration_updateOneRedactedField(rInt int, webACLName string) string {
+func testAccAwsWafv2WebACLLoggingConfiguration_updateOneRedactedField(rName string) string {
 	return composeConfig(
-		testAccIAMRoleResourceConfig(rInt),
-		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
-		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
-		testAccWebACLResourceConfig(webACLName),
+		testAccWebACLLoggingConfigurationDependenciesConfig(rName),
+		testAccWebACLLoggingConfigurationKinesisDependencyConfig(rName),
 		testAccWebACLLoggingConfigurationResourceUpdateOneRedactedFieldConfig)
-}
-
-func testAccAwsWafv2WebACLLoggingConfiguration_multipleLoggingConfigs(rInt, rIntTwo int, webACLName string) string {
-	return composeConfig(
-		testAccIAMRoleResourceConfig(rInt),
-		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rInt, "test"),
-		testAccKinesisFirehoseDeliveryStreamConfig(rInt, "test"),
-		testAccKinesisFirehoseDeliveryStreamDependencyConfig(rIntTwo, "foo"),
-		testAccKinesisFirehoseDeliveryStreamConfig(rIntTwo, "foo"),
-		testAccWebACLResourceConfig(webACLName),
-		testAccWebACLLoggingConfigurationMultipleLoggingConfigs)
 }
