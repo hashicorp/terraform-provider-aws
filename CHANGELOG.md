@@ -32,6 +32,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_ecs_task_definition: Prevent showing API ordering differences in `container_definitions` environment variables during update plans [GH-11463]
 * resource/aws_iot_policy: Ensure `name` argument updates recreate the resource [GH-13707]
 * resource/aws_vpc_endpoint: Skip `ModifyVpcEndpoint` API call on tags only updates [GH-13853]
 * resource/aws_vpc_endpoint: Wait for acceptance when `auto_accept` is enabled [GH-13876]
