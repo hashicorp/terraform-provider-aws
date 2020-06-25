@@ -37,6 +37,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * resource/aws_batch_compute_environment: Ensure `desired_vcpus` is fully optional and wait for updates [GH-4855]
+* resource/aws_cloudtrail: Properly configure single `event_selector` with no `data_resource` and `read_write_type` of `ReadOnly` or `WriteOnly` [GH-5448]
+* resource/aws_cloudtrail: Prevent `InvalidEventSelectorsException` error when removing all `event_selector` configuration [GH-5448]
 * resource/aws_default_route_table: Validate CIDR blocks for misalignment before attempting to create the route to ensure Terraform can read the information after EC2 API canonicalization [GH-13778]
 * resource/aws_default_route_table: Ensure empty string (`""`) validation in `cidr_block` and `ipv6_cidr_block` arguments continues to work for Terraform 0.11 support [GH-13778]
 * resource/aws_ecs_service: Add plan-time validation and prevent panics with empty `type` argument in `ordered_placement_strategy` configuration block [GH-13926]
