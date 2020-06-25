@@ -171,7 +171,7 @@ func resourceAwsEc2TrafficMirrorFilterRuleRead(d *schema.ResourceData, meta inte
 	}
 
 	if nil == rule {
-		log.Printf("[WARN] EC2 Traffic Mirror Filter (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] EC2 Traffic Mirror Filter Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
@@ -210,15 +210,16 @@ func resourceAwsEc2TrafficMirrorFilterRuleRead(d *schema.ResourceData, meta inte
 func findEc2TrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorFilter) (rule *ec2.TrafficMirrorFilterRule) {
 	log.Printf("[DEBUG] searching %s in %d filters", ruleId, len(filters))
 	for _, v := range filters {
-		log.Printf("[DEBUG]: searching filter %s, ingress rule count = %d, egress rule count = %d", *v.TrafficMirrorFilterId, len(v.IngressFilterRules), len(v.EgressFilterRules))
+		log.Printf("[DEBUG]: searching filter %s, ingress rule count = %d, egress rule count = %d",
+			aws.StringValue(v.TrafficMirrorFilterId), len(v.IngressFilterRules), len(v.EgressFilterRules))
 		for _, r := range v.IngressFilterRules {
-			if *r.TrafficMirrorFilterRuleId == ruleId {
+			if aws.StringValue(r.TrafficMirrorFilterRuleId) == ruleId {
 				rule = r
 				break
 			}
 		}
 		for _, r := range v.EgressFilterRules {
-			if *r.TrafficMirrorFilterRuleId == ruleId {
+			if aws.StringValue(r.TrafficMirrorFilterRuleId) == ruleId {
 				rule = r
 				break
 			}
@@ -226,7 +227,7 @@ func findEc2TrafficMirrorFilterRule(ruleId string, filters []*ec2.TrafficMirrorF
 	}
 
 	if nil != rule {
-		log.Printf("[DEBUG]: Found %s in %s", ruleId, *rule.TrafficDirection)
+		log.Printf("[DEBUG]: Found %s in %s", ruleId, aws.StringValue(rule.TrafficDirection))
 	}
 
 	return rule
