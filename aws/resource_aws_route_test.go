@@ -255,50 +255,6 @@ func TestAccAWSRoute_changeCidr(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_noopdiff(t *testing.T) {
-	var route ec2.Route
-	var routeTable ec2.RouteTable
-
-	testCheck := func(s *terraform.State) error {
-		return nil
-	}
-
-	testCheckChange := func(s *terraform.State) error {
-		return nil
-	}
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSRouteNoopChange,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.test", &route),
-					testCheck,
-				),
-			},
-			{
-				Config: testAccAWSRouteNoopChange,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.test", &route),
-					testAccCheckRouteTableExists("aws_route_table.test", &routeTable),
-					testCheckChange,
-				),
-			},
-			{
-				ResourceName:      "aws_route.test",
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.test"),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 	var route ec2.Route
 
@@ -308,7 +264,7 @@ func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteWithVPCEndpoint(),
+				Config: testAccAWSRouteWithVPCEndpoint,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists("aws_route.bar", &route),
 				),
@@ -975,55 +931,7 @@ resource "aws_route" "bar" {
 `)
 }
 
-var testAccAWSRouteNoopChange = fmt.Sprint(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-route-noop-change"
-  }
-}
-
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.10.10.0/24"
-
-  tags = {
-    Name = "tf-acc-route-noop-change"
-  }
-}
-
-resource "aws_route" "test" {
-  route_table_id         = aws_route_table.test.id
-  destination_cidr_block = "0.0.0.0/0"
-  instance_id            = aws_instance.nat.id
-}
-
-resource "aws_instance" "nat" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.test.id
-}
-`)
-
-func testAccAWSRouteWithVPCEndpoint() string {
-	return fmt.Sprintf(`
-data "aws_region" "current" {}
-
+var testAccAWSRouteWithVPCEndpoint = fmt.Sprint(`
 resource "aws_vpc" "foo" {
   cidr_block = "10.1.0.0/16"
 
@@ -1059,7 +967,6 @@ resource "aws_vpc_endpoint" "baz" {
   route_table_ids = [aws_route_table.foo.id]
 }
 `)
-}
 
 func testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock() string {
 	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
