@@ -77,6 +77,7 @@ Traffic mirror port range support following attributes:
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - The ARN of the traffic mirror filter rule.
 * `id` - The name of the traffic mirror filter rule.
 
 ## Import

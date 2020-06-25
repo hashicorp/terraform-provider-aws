@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,6 +22,10 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 			State: resourceAwsEc2TrafficMirrorFilterRuleImport,
 		},
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -42,12 +47,14 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IsPortNumber,
 						},
 						"to_port": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IsPortNumber,
 						},
 					},
 				},
@@ -80,12 +87,14 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"from_port": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IsPortNumber,
 						},
 						"to_port": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IsPortNumber,
 						},
 					},
 				},
@@ -184,6 +193,16 @@ func resourceAwsEc2TrafficMirrorFilterRuleRead(d *schema.ResourceData, meta inte
 	if err := d.Set("source_port_range", buildTrafficMirrorFilterRulePortRangeSchema(rule.SourcePortRange)); err != nil {
 		return fmt.Errorf("error setting source_port_range: %s", err)
 	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "ec2",
+		Region:    meta.(*AWSClient).region,
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("traffic-mirror-filter-rule/%s", d.Id()),
+	}.String()
+
+	d.Set("arn", arn)
 
 	return nil
 }
