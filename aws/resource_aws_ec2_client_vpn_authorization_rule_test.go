@@ -114,6 +114,62 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
+	var v1, v2, v3 ec2.AuthorizationRule
+	rStr := acctest.RandString(5)
+	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
+	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
+
+	subnetCount := 2
+
+	subnetIndex1 := 0
+	subnetIndex2 := 1
+
+	case1 := map[string]int{
+		"test1": subnetIndex1,
+		"test2": subnetIndex2,
+	}
+	case2 := map[string]int{
+		"test2": subnetIndex2,
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rStr, subnetCount, case1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource1Name, &v1),
+					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex1), "cidr_block"),
+					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resource1Name, "access_group_id", ""),
+
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v2),
+					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex2), "cidr_block"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resource2Name, "access_group_id", ""),
+				),
+			},
+			{
+				ResourceName:      resource2Name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rStr, subnetCount, case2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v3),
+					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", fmt.Sprintf("aws_subnet.test.%d", subnetIndex2), "cidr_block"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resource2Name, "access_group_id", ""),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 	var v ec2.AuthorizationRule
 	rStr := acctest.RandString(5)
@@ -227,11 +283,27 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
   access_group_id        = %[2]q
 }
 `, k, v)
-
 	}
 
 	return testAccEc2ClientVpnEndpointComposeConfig(rName,
 		testAccEc2ClientVpnEndpointConfigVpcBase(rName, 1),
+		b.String())
+}
+
+func testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName string, subnetCount int, groupNames map[string]int) string {
+	var b strings.Builder
+	for k, v := range groupNames {
+		fmt.Fprintf(&b, `
+resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
+  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
+  target_network_cidr    = "${aws_subnet.test[%[2]d].cidr_block}"
+  authorize_all_groups   = true
+}
+`, k, v)
+	}
+
+	return testAccEc2ClientVpnEndpointComposeConfig(rName,
+		testAccEc2ClientVpnEndpointConfigVpcBase(rName, subnetCount),
 		b.String())
 }
 
@@ -258,7 +330,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   count                   = %[2]d
-  availability_zone       = data.aws_availability_zones.available.names[0]
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
   cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   vpc_id                  = "${aws_vpc.test.id}"
   map_public_ip_on_launch = true
