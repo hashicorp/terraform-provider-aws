@@ -33,6 +33,11 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_group_id", ""),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -73,6 +78,11 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resource1Name,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource1Name, &v2),
@@ -85,6 +95,11 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "false"),
 					resource.TestCheckResourceAttr(resource2Name, "access_group_id", group2Name),
 				),
+			},
+			{
+				ResourceName:      resource2Name,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups3),

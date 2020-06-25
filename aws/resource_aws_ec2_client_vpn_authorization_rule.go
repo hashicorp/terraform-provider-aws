@@ -17,6 +17,9 @@ func resourceAwsEc2ClientVpnAuthorizationRule() *schema.Resource {
 		Create: resourceAwsEc2ClientVpnAuthorizationRuleCreate,
 		Read:   resourceAwsEc2ClientVpnAuthorizationRuleRead,
 		Delete: resourceAwsEc2ClientVpnAuthorizationRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsEc2ClientVpnAuthorizationRuleImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"client_vpn_endpoint_id": {
@@ -142,15 +145,11 @@ func resourceAwsEc2ClientVpnAuthorizationRuleDelete(d *schema.ResourceData, meta
 	input := &ec2.RevokeClientVpnIngressInput{
 		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
 		TargetNetworkCidr:   aws.String(d.Get("target_network_cidr").(string)),
+		RevokeAllGroups:     aws.Bool(d.Get("authorize_all_groups").(bool)),
 	}
 	if v, ok := d.GetOk("access_group_id"); ok {
 		if s, ok := v.(string); ok && s != "" {
 			input.AccessGroupId = aws.String(s)
-		}
-	}
-	if v, ok := d.GetOk("authorize_all_groups"); ok {
-		if b, ok := v.(bool); ok {
-			input.RevokeAllGroups = aws.Bool(b)
 		}
 	}
 
@@ -161,6 +160,18 @@ func resourceAwsEc2ClientVpnAuthorizationRuleDelete(d *schema.ResourceData, meta
 	}
 
 	return nil
+}
+
+func resourceAwsEc2ClientVpnAuthorizationRuleImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	d.Set("client_vpn_endpoint_id", endpointID)
+	d.Set("target_network_cidr", targetNetworkCidr)
+	d.Set("access_group_id", accessGroupID)
+	return []*schema.ResourceData{d}, nil
 }
 
 func deleteClientVpnAuthorizationRule(conn *ec2.EC2, input *ec2.RevokeClientVpnIngressInput) error {
