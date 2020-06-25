@@ -490,18 +490,18 @@ func testAccEc2ClientVpnEndpointConfigWithMicrosoftAD(rName string) string {
 	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() +
 		testAccEc2ClientVpnEndpointMsADBase() + fmt.Sprintf(`
 resource "aws_ec2_client_vpn_endpoint" "test" {
-description            = "terraform-testacc-clientvpn-%s"
-server_certificate_arn = "${aws_acm_certificate.test.arn}"
-client_cidr_block      = "10.0.0.0/16"
-
-authentication_options {
-type                = "directory-service-authentication"
-active_directory_id = "${aws_directory_service_directory.test.id}"
-}
-
-connection_log_options {
-enabled = false
-}
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+  
+  authentication_options {
+    type                = "directory-service-authentication"
+    active_directory_id = "${aws_directory_service_directory.test.id}"
+  }
+  
+  connection_log_options {
+    enabled = false
+  }
 }
 `, rName)
 }

@@ -200,7 +200,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+	if isAWSErr(err, errCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -385,7 +385,7 @@ func clientVpnNetworkAssociationRefresh(conn *ec2.EC2, cvnaID string, cvepID str
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
-		if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+		if isAWSErr(err, errCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
 			return 42, ec2.AssociationStatusCodeDisassociated, nil
 		}
 

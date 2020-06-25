@@ -10,6 +10,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
+const errCodeClientVpnAssociationIdNotFound = "InvalidClientVpnAssociationId.NotFound"
+
 func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceAwsEc2ClientVpnNetworkAssociationCreate,
@@ -85,7 +87,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 		AssociationIds:      []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+	if isAWSErr(err, errCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -127,7 +129,7 @@ func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, met
 		AssociationId:       aws.String(d.Id()),
 	})
 
-	if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+	if isAWSErr(err, errCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
 		return nil
 	}
 
@@ -158,7 +160,7 @@ func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID
 			AssociationIds:      []*string{aws.String(cvnaID)},
 		})
 
-		if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+		if isAWSErr(err, errCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
 			return 42, ec2.AssociationStatusCodeDisassociated, nil
 		}
 
