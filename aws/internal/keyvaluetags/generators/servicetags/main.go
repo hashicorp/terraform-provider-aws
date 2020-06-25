@@ -258,13 +258,7 @@ func {{ . | Title }}KeyValueTags(tags []*{{ . | TagPackage }}.{{ . | TagType }})
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		if tag.{{ . | TagTypeValueField }} == nil {
-			// {{ . | TagTypeKeyField }}-only tag
-			m[aws.StringValue(tag.{{ . | TagTypeKeyField }})] = aws.String("")
-		} else {
-			// {{ . | TagTypeKeyField }}-{{ . | TagTypeValueField }} tag
-			m[aws.StringValue(tag.{{ . | TagTypeKeyField }})] = tag.{{ . | TagTypeValueField }}
-		}
+		m[aws.StringValue(tag.{{ . | TagTypeKeyField }})] = tag.{{ . | TagTypeValueField }}
 	}
 
 	return New(m)
