@@ -103,8 +103,8 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		Partition: meta.(*AWSClient).partition,
 		Service:   "ec2",
 		Region:    meta.(*AWSClient).region,
-		AccountID: *sg.OwnerId,
-		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),
+		AccountID: aws.StringValue(sg.OwnerId),
+		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
 	}.String()
 	d.Set("arn", arn)
 

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -55,7 +56,7 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Reading Security Groups with request: %s", req)
 
-	var ids, vpc_ids []string
+	var ids, vpc_ids, arns []string
 	for {
 		resp, err := conn.DescribeSecurityGroups(req)
 		if err != nil {
@@ -65,6 +66,16 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 		for _, sg := range resp.SecurityGroups {
 			ids = append(ids, aws.StringValue(sg.GroupId))
 			vpc_ids = append(vpc_ids, aws.StringValue(sg.VpcId))
+
+			arn := arn.ARN{
+				Partition: meta.(*AWSClient).partition,
+				Service:   "ec2",
+				Region:    meta.(*AWSClient).region,
+				AccountID: aws.StringValue(sg.OwnerId),
+				Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
+			}.String()
+
+			arns = append(arns, arn)
 		}
 
 		if resp.NextToken == nil {

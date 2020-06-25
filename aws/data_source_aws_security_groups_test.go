@@ -19,6 +19,7 @@ func TestAccDataSourceAwsSecurityGroups_tag(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_security_groups.by_tag", "ids.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_security_groups.by_tag", "vpc_ids.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_security_groups.by_tag", "arns.#", "3"),
 				),
 			},
 		},
@@ -36,6 +37,7 @@ func TestAccDataSourceAwsSecurityGroups_filter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("data.aws_security_groups.by_filter", "ids.#", "3"),
 					resource.TestCheckResourceAttr("data.aws_security_groups.by_filter", "vpc_ids.#", "3"),
+					resource.TestCheckResourceAttr("data.aws_security_groups.by_filter", "arns.#", "3"),
 				),
 			},
 		},

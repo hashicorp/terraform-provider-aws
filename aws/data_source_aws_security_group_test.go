@@ -11,69 +11,40 @@ import (
 )
 
 func TestAccDataSourceAwsSecurityGroup_basic(t *testing.T) {
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_security_group.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsSecurityGroupConfig(rInt),
+				Config: testAccDataSourceAwsSecurityGroupConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_id"),
-					resource.TestCheckResourceAttr("data.aws_security_group.by_id", "description", "sg description"),
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_tag"),
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_filter"),
-					testAccDataSourceAwsSecurityGroupCheck("data.aws_security_group.by_name"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_id", "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_id", "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_id", "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_id", "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_id", "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_name", "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_name", "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_name", "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_name", "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_name", "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_filter", "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_filter", "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_filter", "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_filter", "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_filter", "vpc_id", resourceName, "vpc_id"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_tag", "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_tag", "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_tag", "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_tag", "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair("data.aws_security_group.by_tag", "vpc_id", resourceName, "vpc_id"),
 					testAccDataSourceAwsSecurityGroupCheckDefault("data.aws_security_group.default_by_name"),
 				),
 			},
 		},
 	})
-}
-
-func testAccDataSourceAwsSecurityGroupCheck(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", name)
-		}
-
-		SGRs, ok := s.RootModule().Resources["aws_security_group.test"]
-		if !ok {
-			return fmt.Errorf("can't find aws_security_group.test in state")
-		}
-		vpcRs, ok := s.RootModule().Resources["aws_vpc.test"]
-		if !ok {
-			return fmt.Errorf("can't find aws_vpc.test in state")
-		}
-		attr := rs.Primary.Attributes
-
-		if attr["id"] != SGRs.Primary.Attributes["id"] {
-			return fmt.Errorf(
-				"id is %s; want %s",
-				attr["id"],
-				SGRs.Primary.Attributes["id"],
-			)
-		}
-
-		if attr["vpc_id"] != vpcRs.Primary.Attributes["id"] {
-			return fmt.Errorf(
-				"vpc_id is %s; want %s",
-				attr["vpc_id"],
-				vpcRs.Primary.Attributes["id"],
-			)
-		}
-
-		if attr["tags.Name"] != "tf-acctest" {
-			return fmt.Errorf("bad Name tag %s", attr["tags.Name"])
-		}
-
-		if !strings.Contains(attr["arn"], attr["id"]) {
-			return fmt.Errorf("bad ARN %s", attr["arn"])
-		}
-
-		return nil
-	}
 }
 
 func testAccDataSourceAwsSecurityGroupCheckDefault(name string) resource.TestCheckFunc {
@@ -101,52 +72,22 @@ func testAccDataSourceAwsSecurityGroupCheckDefault(name string) resource.TestChe
 	}
 }
 
-func testAccDataSourceAwsSecurityGroupConfig(rInt int) string {
+func testAccDataSourceAwsSecurityGroupConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-security-group-data-source"
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
+<<<<<<< HEAD
   vpc_id = aws_vpc.test.id
   name   = "test-%d"
-
-  tags = {
-    Name = "tf-acctest"
-    Seed = "%d"
-  }
-
-  description = "sg description"
-}
-
-data "aws_security_group" "by_id" {
-  id = aws_security_group.test.id
-}
-
-data "aws_security_group" "by_name" {
-  name = aws_security_group.test.name
-}
-
-data "aws_security_group" "default_by_name" {
+=======
   vpc_id = aws_vpc.test.id
-  name   = "default"
-}
+  name   = %[1]q
+>>>>>>> 5d0742b09 (use aws sdk wrappers, refactor tests)
 
-data "aws_security_group" "by_tag" {
-  tags = {
-    Seed = aws_security_group.test.tags["Seed"]
-  }
-}
-
-data "aws_security_group" "by_filter" {
-  filter {
-    name   = "group-name"
-    values = [aws_security_group.test.name]
-  }
-}
-`, rInt, rInt)
-}
