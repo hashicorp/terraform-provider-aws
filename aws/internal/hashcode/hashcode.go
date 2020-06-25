@@ -1,6 +1,10 @@
 package hashcode
 
-import "hash/crc32"
+import (
+	"bytes"
+	"fmt"
+	"hash/crc32"
+)
 
 // String hashes a string to a unique hashcode.
 //
@@ -17,4 +21,15 @@ func String(s string) int {
 	}
 	// v == MinInt
 	return 0
+}
+
+// Strings hashes a list of strings to a unique hashcode.
+func Strings(strings []string) string {
+	var buf bytes.Buffer
+
+	for _, s := range strings {
+		buf.WriteString(fmt.Sprintf("%s-", s))
+	}
+
+	return fmt.Sprintf("%d", String(buf.String()))
 }
