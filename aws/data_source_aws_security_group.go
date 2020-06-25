@@ -90,7 +90,7 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 
 	sg := resp.SecurityGroups[0]
 
-	d.SetId(aws.StringValue(sg.GroupId))
+	d.SetId(*sg.GroupId)
 	d.Set("name", sg.GroupName)
 	d.Set("description", sg.Description)
 	d.Set("vpc_id", sg.VpcId)
@@ -103,8 +103,8 @@ func dataSourceAwsSecurityGroupRead(d *schema.ResourceData, meta interface{}) er
 		Partition: meta.(*AWSClient).partition,
 		Service:   "ec2",
 		Region:    meta.(*AWSClient).region,
-		AccountID: aws.StringValue(sg.OwnerId),
-		Resource:  fmt.Sprintf("security-group/%s", aws.StringValue(sg.GroupId)),
+		AccountID: *sg.OwnerId,
+		Resource:  fmt.Sprintf("security-group/%s", *sg.GroupId),
 	}.String()
 	d.Set("arn", arn)
 
