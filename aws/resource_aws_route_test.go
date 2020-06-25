@@ -257,6 +257,8 @@ func TestAccAWSRoute_changeCidr(t *testing.T) {
 
 func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 	var route ec2.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -264,15 +266,15 @@ func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteWithVPCEndpoint,
+				Config: testAccAWSRouteWithVPCEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.bar", &route),
+					testAccCheckAWSRouteExists(resourceName, &route),
 				),
 			},
 			{
-				ResourceName:      "aws_route.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -931,42 +933,50 @@ resource "aws_route" "bar" {
 `)
 }
 
-var testAccAWSRouteWithVPCEndpoint = fmt.Sprint(`
-resource "aws_vpc" "foo" {
+func testAccAWSRouteWithVPCEndpoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-with-vpc-endpoint"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-route-with-vpc-endpoint"
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route" "bar" {
-  route_table_id         = aws_route_table.foo.id
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
   destination_cidr_block = "10.3.0.0/16"
-  gateway_id             = aws_internet_gateway.foo.id
+  gateway_id             = aws_internet_gateway.test.id
 
   # Forcing endpoint to create before route - without this the crash is a race.
-  depends_on = [aws_vpc_endpoint.baz]
+  depends_on = [aws_vpc_endpoint.test]
 }
 
-resource "aws_vpc_endpoint" "baz" {
-  vpc_id          = aws_vpc.foo.id
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id          = aws_vpc.test.id
   service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
-  route_table_ids = [aws_route_table.foo.id]
+  route_table_ids = [aws_route_table.test.id]
 }
-`)
+`, rName)
+}
 
 func testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock() string {
 	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
