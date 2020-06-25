@@ -726,7 +726,7 @@ func (c *Config) Client() (interface{}, error) {
 			r.Retryable = aws.Bool(true)
 		}
 
-		if isAWSErr(r.Error, wafv2.ErrCodeWAFServiceLinkedRoleErrorException, "Retry your request") {
+		if isAWSErr(r.Error, wafv2.ErrCodeWAFServiceLinkedRoleErrorException, "Retry") {
 			r.Retryable = aws.Bool(true)
 		}
 
