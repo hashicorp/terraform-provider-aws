@@ -24,6 +24,10 @@ func init() {
 	resource.AddTestSweepers("aws_instance", &resource.Sweeper{
 		Name: "aws_instance",
 		F:    testSweepInstances,
+		Dependencies: []string{
+			"aws_autoscaling_group",
+			"aws_spot_fleet_request",
+		},
 	})
 }
 
