@@ -141,11 +141,14 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								elasticsearch.VolumeTypeStandard,
-								elasticsearch.VolumeTypeGp2,
-								elasticsearch.VolumeTypeIo1,
-							}, false),
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validation.StringInSlice([]string{
+									elasticsearch.VolumeTypeStandard,
+									elasticsearch.VolumeTypeGp2,
+									elasticsearch.VolumeTypeIo1,
+								}, false),
+							),
 						},
 					},
 				},
