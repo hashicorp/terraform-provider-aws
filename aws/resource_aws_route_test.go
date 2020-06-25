@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -12,44 +13,27 @@ import (
 
 func TestAccAWSRoute_basic(t *testing.T) {
 	var route ec2.Route
-
-	//aws creates a default route
-	testCheck := func(s *terraform.State) error {
-		if *route.DestinationCidrBlock != "10.3.0.0/16" {
-			return fmt.Errorf("Destination Cidr (Expected=%s, Actual=%s)\n", "10.3.0.0/16", *route.DestinationCidrBlock)
-		}
-
-		name := "aws_internet_gateway.foo"
-		gwres, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s\n", name)
-		}
-
-		if *route.GatewayId != gwres.Primary.ID {
-			return fmt.Errorf("Internet Gateway Id (Expected=%s, Actual=%s)\n", gwres.Primary.ID, *route.GatewayId)
-		}
-
-		return nil
-	}
+	resourceName := "aws_route.test"
+	igwResourceName := "aws_internet_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteBasicConfig(),
+				Config: testAccAWSRouteConfigBasic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.bar", &route),
-					testCheck,
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteInternetGatewayRoute(igwResourceName, &route, cidr),
 				),
 			},
 			{
-				ResourceName:      "aws_route.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -58,19 +42,20 @@ func TestAccAWSRoute_basic(t *testing.T) {
 
 func TestAccAWSRoute_disappears(t *testing.T) {
 	var route ec2.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteBasicConfig(),
+				Config: testAccAWSRouteConfigBasic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.bar", &route),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute(), "aws_route.bar"),
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -233,110 +218,41 @@ func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_changeRouteTable(t *testing.T) {
-	var before ec2.Route
-	var after ec2.Route
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSRouteDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSRouteBasicConfig(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.bar", &before),
-				),
-			},
-			{
-				Config: testAccAWSRouteNewRouteTable(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.bar", &after),
-				),
-			},
-			{
-				ResourceName:      "aws_route.bar",
-				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSRoute_changeCidr(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
-
-	//aws creates a default route
-	testCheck := func(s *terraform.State) error {
-		if *route.DestinationCidrBlock != "10.3.0.0/16" {
-			return fmt.Errorf("Destination Cidr (Expected=%s, Actual=%s)\n", "10.3.0.0/16", *route.DestinationCidrBlock)
-		}
-
-		name := "aws_internet_gateway.foo"
-		gwres, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s\n", name)
-		}
-
-		if *route.GatewayId != gwres.Primary.ID {
-			return fmt.Errorf("Internet Gateway Id (Expected=%s, Actual=%s)\n", gwres.Primary.ID, *route.GatewayId)
-		}
-
-		return nil
-	}
-
-	testCheckChange := func(s *terraform.State) error {
-		if *route.DestinationCidrBlock != "10.2.0.0/16" {
-			return fmt.Errorf("Destination Cidr (Expected=%s, Actual=%s)\n", "10.2.0.0/16", *route.DestinationCidrBlock)
-		}
-
-		name := "aws_internet_gateway.foo"
-		gwres, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s\n", name)
-		}
-
-		if *route.GatewayId != gwres.Primary.ID {
-			return fmt.Errorf("Internet Gateway Id (Expected=%s, Actual=%s)\n", gwres.Primary.ID, *route.GatewayId)
-		}
-
-		if rtlen := len(routeTable.Routes); rtlen != 2 {
-			return fmt.Errorf("Route Table has too many routes (Expected=%d, Actual=%d)\n", rtlen, 2)
-		}
-
-		return nil
-	}
+	resourceName := "aws_route.test"
+	igwResourceName := "aws_internet_gateway.test"
+	rtResourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	cidr := "10.3.0.0/16"
+	changedCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteBasicConfig(),
+				Config: testAccAWSRouteConfigBasic(rName, cidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.bar", &route),
-					testCheck,
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteInternetGatewayRoute(igwResourceName, &route, cidr),
 				),
 			},
 			{
-				Config: testAccAWSRouteBasicConfigChangeCidr(),
+				Config: testAccAWSRouteConfigBasic(rName, changedCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.bar", &route),
-					testAccCheckRouteTableExists("aws_route_table.foo", &routeTable),
-					testCheckChange,
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteInternetGatewayRoute(igwResourceName, &route, changedCidr),
+					testAccCheckRouteTableExists(rtResourceName, &routeTable),
+					testAccCheckAWSRouteNumberOfRoutes(&routeTable, 2),
 				),
 			},
 			{
-				ResourceName:      "aws_route.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -363,14 +279,14 @@ func TestAccAWSRoute_noopdiff(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteNoopChange(),
+				Config: testAccAWSRouteNoopChange,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists("aws_route.test", &route),
 					testCheck,
 				),
 			},
 			{
-				Config: testAccAWSRouteNoopChange(),
+				Config: testAccAWSRouteNoopChange,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists("aws_route.test", &route),
 					testAccCheckRouteTableExists("aws_route_table.test", &routeTable),
@@ -572,34 +488,71 @@ func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
-func testAccAWSRouteBasicConfig() string {
+func testAccCheckAWSRouteInternetGatewayRoute(n string, route *ec2.Route, cidr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.StringValue(route.DestinationCidrBlock) != cidr {
+			return fmt.Errorf("Destination CIDR (Expected=%s, Actual=%s)\n", cidr, aws.StringValue(route.DestinationCidrBlock))
+		}
+
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s\n", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if aws.StringValue(route.GatewayId) != rs.Primary.ID {
+			return fmt.Errorf("Internet Gateway ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, aws.StringValue(route.GatewayId))
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSRouteNumberOfRoutes(routeTable *ec2.RouteTable, n int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if len := len(routeTable.Routes); len != n {
+			return fmt.Errorf("Route Table has incorrect number of routes (Expected=%d, Actual=%d)\n", n, len)
+		}
+
+		return nil
+	}
+}
+
+func testAccAWSRouteConfigBasic(rName, cidr string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-route-basic"
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route" "bar" {
-  route_table_id         = aws_route_table.foo.id
-  destination_cidr_block = "10.3.0.0/16"
-  gateway_id             = aws_internet_gateway.foo.id
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  gateway_id             = aws_internet_gateway.test.id
 }
-`)
+`, rName, cidr)
 }
 
 func testAccAWSRouteConfigIpv6InternetGateway() string {
@@ -1030,40 +983,7 @@ resource "aws_route" "bar" {
 `)
 }
 
-func testAccAWSRouteBasicConfigChangeCidr() string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-route-change-cidr"
-  }
-}
-
-resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
-
-  tags = {
-    Name = "terraform-testacc-route-change-cidr"
-  }
-}
-
-resource "aws_route_table" "foo" {
-  vpc_id = aws_vpc.foo.id
-}
-
-resource "aws_route" "bar" {
-  route_table_id         = aws_route_table.foo.id
-  destination_cidr_block = "10.2.0.0/16"
-  gateway_id             = aws_internet_gateway.foo.id
-}
-`)
-}
-
-func testAccAWSRouteNoopChange() string {
-	return testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t2.nano", "t3.nano") +
-		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		fmt.Sprint(`
+var testAccAWSRouteNoopChange = fmt.Sprint(`
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -1107,7 +1027,6 @@ resource "aws_instance" "nat" {
   subnet_id     = aws_subnet.test.id
 }
 `)
-}
 
 func testAccAWSRouteWithVPCEndpoint() string {
 	return fmt.Sprintf(`
@@ -1150,68 +1069,10 @@ resource "aws_vpc_endpoint" "baz" {
 `)
 }
 
-func testAccAWSRouteNewRouteTable() string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-route-basic"
-  }
-}
-
-resource "aws_vpc" "bar" {
-  cidr_block = "10.2.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-route-new-route-table"
-  }
-}
-
-resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
-
-  tags = {
-    Name = "terraform-testacc-route-basic"
-  }
-}
-
-resource "aws_internet_gateway" "bar" {
-  vpc_id = aws_vpc.bar.id
-
-  tags = {
-    Name = "terraform-testacc-route-new-route-table"
-  }
-}
-
-resource "aws_route_table" "foo" {
-  vpc_id = aws_vpc.foo.id
-
-  tags = {
-    Name = "terraform-testacc-route-basic"
-  }
-}
-
-resource "aws_route_table" "bar" {
-  vpc_id = aws_vpc.bar.id
-
-  tags = {
-    Name = "terraform-testacc-route-new-route-table"
-  }
-}
-
-resource "aws_route" "bar" {
-  route_table_id         = aws_route_table.bar.id
-  destination_cidr_block = "10.4.0.0/16"
-  gateway_id             = aws_internet_gateway.bar.id
-}
-`)
-}
-
 func testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock() string {
 	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
 		fmt.Sprintf(`
-# IncorrectState: Transit Gateway is not available in availability zone usw2-az4	
+# IncorrectState: Transit Gateway is not available in availability zone usw2-az4
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
