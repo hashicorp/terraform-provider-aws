@@ -61,7 +61,7 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 
 	log.Printf("[DEBUG] Reading Security Groups with request: %s", req)
 
-	var ids, vpc_ids, arns []string
+	var ids, vpcIds, arns []string
 	for {
 		resp, err := conn.DescribeSecurityGroups(req)
 		if err != nil {
@@ -70,7 +70,7 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 
 		for _, sg := range resp.SecurityGroups {
 			ids = append(ids, aws.StringValue(sg.GroupId))
-			vpc_ids = append(vpc_ids, aws.StringValue(sg.VpcId))
+			vpcIds = append(vpcIds, aws.StringValue(sg.VpcId))
 
 			arn := arn.ARN{
 				Partition: meta.(*AWSClient).partition,
@@ -102,6 +102,6 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	err = d.Set("vpc_ids", vpc_ids)
+	err = d.Set("vpcIds", vpcIds)
 	return err
 }
