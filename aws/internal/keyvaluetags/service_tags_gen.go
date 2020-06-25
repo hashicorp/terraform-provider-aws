@@ -1782,13 +1782,7 @@ func LightsailKeyValueTags(tags []*lightsail.Tag) KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		if tag.Value == nil {
-			// Key-only tag
-			m[aws.StringValue(tag.Key)] = aws.String("")
-		} else {
-			// Key-value tag
-			m[aws.StringValue(tag.Key)] = tag.Value
-		}
+		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
 	return New(m)
