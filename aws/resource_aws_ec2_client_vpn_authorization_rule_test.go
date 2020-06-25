@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,6 +30,69 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "target_network_cidr", subnetResourceName, "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "authorize_all_groups", "true"),
+					resource.TestCheckResourceAttr(resourceName, "access_group_id", ""),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
+	var v1, v2, v3, v4 ec2.AuthorizationRule
+	rStr := acctest.RandString(5)
+	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
+	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
+	subnetResourceName := "aws_subnet.test"
+
+	group1Name := "group_one"
+	group2Name := "group_two"
+
+	groups1 := map[string]string{
+		"test1": group1Name,
+	}
+	groups2 := map[string]string{
+		"test1": group1Name,
+		"test2": group2Name,
+	}
+	groups3 := map[string]string{
+		"test2": group2Name,
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource1Name, &v1),
+					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
+					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource1Name, "access_group_id", group1Name),
+				),
+			},
+			{
+				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource1Name, &v2),
+					resource.TestCheckResourceAttrPair(resource1Name, "target_network_cidr", subnetResourceName, "cidr_block"),
+					resource.TestCheckResourceAttr(resource1Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource1Name, "access_group_id", group1Name),
+
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v3),
+					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", subnetResourceName, "cidr_block"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource2Name, "access_group_id", group2Name),
+				),
+			},
+			{
+				Config: testAccEc2ClientVpnAuthorizationRuleConfigGroups(rStr, groups3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resource2Name, &v4),
+					resource.TestCheckResourceAttrPair(resource2Name, "target_network_cidr", subnetResourceName, "cidr_block"),
+					resource.TestCheckResourceAttr(resource2Name, "authorize_all_groups", "false"),
+					resource.TestCheckResourceAttr(resource2Name, "access_group_id", group2Name),
 				),
 			},
 		},
@@ -65,14 +129,13 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 			continue
 		}
 
-		endpointID, _ /*targetNetworkCidr*/, _ /*accessGroupID*/, err := tfec2.ClientVpnAuthorizationRuleParseID(rs.Primary.ID)
+		endpointID, _, _, err := tfec2.ClientVpnAuthorizationRuleParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
 		input := &ec2.DescribeClientVpnAuthorizationRulesInput{
 			ClientVpnEndpointId: aws.String(endpointID),
-			// TODO: filters
 		}
 
 		_, err = conn.DescribeClientVpnAuthorizationRules(input)
@@ -121,7 +184,36 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
+	return testAccEc2ClientVpnEndpointComposeConfig(rName,
+		testAccEc2ClientVpnEndpointConfigVpcBase(rName, 1), `
+resource "aws_ec2_client_vpn_authorization_rule" "test" {
+  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
+  target_network_cidr    = "${aws_subnet.test[0].cidr_block}"
+  authorize_all_groups   = true
+}
+`)
+}
+
+func testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName string, groupNames map[string]string) string {
+	var b strings.Builder
+	for k, v := range groupNames {
+		fmt.Fprintf(&b, `
+resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
+  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
+  target_network_cidr    = "${aws_subnet.test[0].cidr_block}"
+  access_group_id        = %[2]q
+}
+`, k, v)
+
+	}
+
+	return testAccEc2ClientVpnEndpointComposeConfig(rName,
+		testAccEc2ClientVpnEndpointConfigVpcBase(rName, 1),
+		b.String())
+}
+
+func testAccEc2ClientVpnEndpointConfigVpcBase(rName string, subnetCount int) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
   blacklisted_zone_ids = ["usw2-az4"]
@@ -142,8 +234,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
+  count                   = %[2]d
   availability_zone       = data.aws_availability_zones.available.names[0]
-  cidr_block              = "10.1.1.0/24"
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   vpc_id                  = "${aws_vpc.test.id}"
   map_public_ip_on_launch = true
 
@@ -151,26 +244,14 @@ resource "aws_subnet" "test" {
     Name = "tf-acc-subnet-%[1]s"
   }
 }
-
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%[1]s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
-  }
-
-  connection_log_options {
-    enabled = false
-  }
+`, rName, subnetCount)
 }
 
-resource "aws_ec2_client_vpn_authorization_rule" "test" {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  target_network_cidr    = "${aws_subnet.test.cidr_block}"
-  authorize_all_groups   = true
-}
-`, rName)
+func testAccEc2ClientVpnEndpointComposeConfig(rName string, config ...string) string {
+	return composeConfig(
+		append(
+			config,
+			testAccEc2ClientVpnEndpointConfig(rName),
+		)...,
+	)
 }

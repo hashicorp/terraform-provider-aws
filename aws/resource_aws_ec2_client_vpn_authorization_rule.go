@@ -97,8 +97,16 @@ func resourceAwsEc2ClientVpnAuthorizationRuleCreate(d *schema.ResourceData, meta
 func resourceAwsEc2ClientVpnAuthorizationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
+	filters := map[string]string{
+		"destination-cidr": d.Get("target_network_cidr").(string),
+	}
+	if v := d.Get("access_group_id").(string); v != "" {
+		filters["group-id"] = v
+	}
+
 	input := &ec2.DescribeClientVpnAuthorizationRulesInput{
 		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
+		Filters:             buildEC2AttributeFilterList(filters),
 	}
 
 	result, err := conn.DescribeClientVpnAuthorizationRules(input)
@@ -118,10 +126,12 @@ func resourceAwsEc2ClientVpnAuthorizationRuleRead(d *schema.ResourceData, meta i
 		return nil
 	}
 
-	d.Set("client_vpn_endpoint_id", result.AuthorizationRules[0].ClientVpnEndpointId)
-	d.Set("target_network_cidr", result.AuthorizationRules[0].DestinationCidr)
-	// TODO: Fill in Groups
-	d.Set("description", result.AuthorizationRules[0].Description)
+	rule := result.AuthorizationRules[0]
+	d.Set("client_vpn_endpoint_id", rule.ClientVpnEndpointId)
+	d.Set("target_network_cidr", rule.DestinationCidr)
+	d.Set("access_group_id", rule.GroupId)
+	d.Set("authorize_all_groups", rule.AccessAll)
+	d.Set("description", rule.Description)
 
 	return nil
 }
@@ -134,10 +144,14 @@ func resourceAwsEc2ClientVpnAuthorizationRuleDelete(d *schema.ResourceData, meta
 		TargetNetworkCidr:   aws.String(d.Get("target_network_cidr").(string)),
 	}
 	if v, ok := d.GetOk("access_group_id"); ok {
-		input.AccessGroupId = aws.String(v.(string))
+		if s, ok := v.(string); ok && s != "" {
+			input.AccessGroupId = aws.String(s)
+		}
 	}
 	if v, ok := d.GetOk("authorize_all_groups"); ok {
-		input.RevokeAllGroups = aws.Bool(v.(bool))
+		if b, ok := v.(bool); ok {
+			input.RevokeAllGroups = aws.Bool(b)
+		}
 	}
 
 	log.Printf("[DEBUG] Revoking Client VPN authorization rule %q", d.Id())
@@ -200,14 +214,21 @@ func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string
 // This should be in the waiters package, but has a dependency on isAWSErr()
 func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		endpointID, _ /*targetNetworkCidr*/, _ /*accessGroupID*/, err := tfec2.ClientVpnAuthorizationRuleParseID(authorizationRuleID)
+		endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(authorizationRuleID)
 		if err != nil {
 			return nil, waiter.ClientVpnAuthorizationRuleStatusUnknown, err
 		}
 
+		filters := map[string]string{
+			"destination-cidr": targetNetworkCidr,
+		}
+		if accessGroupID != "" {
+			filters["group-id"] = accessGroupID
+		}
+
 		input := &ec2.DescribeClientVpnAuthorizationRulesInput{
 			ClientVpnEndpointId: aws.String(endpointID),
-			// TODO: filters
+			Filters:             buildEC2AttributeFilterList(filters),
 		}
 
 		result, err := conn.DescribeClientVpnAuthorizationRules(input)
@@ -220,6 +241,10 @@ func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string)
 
 		if result == nil || len(result.AuthorizationRules) == 0 || result.AuthorizationRules[0] == nil {
 			return nil, waiter.ClientVpnAuthorizationRuleStatusNotFound, nil
+		}
+
+		if len(result.AuthorizationRules) > 1 {
+			return nil, waiter.ClientVpnAuthorizationRuleStatusUnknown, fmt.Errorf("internal error: found %d results for status, need 1", len(result.AuthorizationRules))
 		}
 
 		rule := result.AuthorizationRules[0]
