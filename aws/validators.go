@@ -10,24 +10,89 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
-// When released, replace all usage with upstream validation function:
-// https://github.com/hashicorp/terraform/pull/17484
-func validateRFC3339TimeString(v interface{}, k string) (ws []string, errors []error) {
-	if _, err := time.Parse(time.RFC3339, v.(string)); err != nil {
-		errors = append(errors, fmt.Errorf("%q: %s", k, err))
+const (
+	awsAccountIDRegexpPattern = `^(aws|\d{12})$`
+	awsPartitionRegexpPattern = `^aws(-[a-z]+)*$`
+	awsRegionRegexpPattern    = `^[a-z]{2}(-[a-z]+)+-\d$`
+)
+
+var awsAccountIDRegexp = regexp.MustCompile(awsAccountIDRegexpPattern)
+var awsPartitionRegexp = regexp.MustCompile(awsPartitionRegexpPattern)
+var awsRegionRegexp = regexp.MustCompile(awsRegionRegexpPattern)
+
+// validateTypeStringNullableBoolean provides custom error messaging for TypeString booleans
+// Some arguments require three values: true, false, and "" (unspecified).
+// This ValidateFunc returns a custom message since the message with
+// validation.StringInSlice([]string{"", "false", "true"}, false) is confusing:
+// to be one of [ false true], got 1
+func validateTypeStringNullableBoolean(v interface{}, k string) (ws []string, es []error) {
+	value, ok := v.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	for _, str := range []string{"", "0", "1", "false", "true"} {
+		if value == str {
+			return
+		}
+	}
+
+	es = append(es, fmt.Errorf("expected %s to be one of [\"\", false, true], got %s", k, value))
+	return
+}
+
+// validateTypeStringNullableFloat provides custom error messaging for TypeString floats
+// Some arguments require a floating point value or an unspecified, empty field.
+func validateTypeStringNullableFloat(v interface{}, k string) (ws []string, es []error) {
+	value, ok := v.(string)
+	if !ok {
+		es = append(es, fmt.Errorf("expected type of %s to be string", k))
+		return
+	}
+
+	if value == "" {
+		return
+	}
+
+	if _, err := strconv.ParseFloat(value, 64); err != nil {
+		es = append(es, fmt.Errorf("%s: cannot parse '%s' as float: %s", k, value, err))
+	}
+
+	return
+}
+
+func validateTransferServerID(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
+	pattern := `^s-([0-9a-f]{17})$`
+	if !regexp.MustCompile(pattern).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q isn't a valid transfer server id (only lowercase alphanumeric characters are allowed): %q",
+			k, value))
+	}
+
+	return
+}
+
+func validateTransferUserName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	// https://docs.aws.amazon.com/transfer/latest/userguide/API_CreateUser.html
+	if !regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_-]{2,31}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("Invalid %q: must be between 3 and 32 alphanumeric or special characters hyphen and underscore. However, %q cannot begin with a hyphen", k, k))
 	}
 	return
 }
@@ -122,31 +187,6 @@ func validateNeptuneEngine() schema.SchemaValidateFunc {
 	}, false)
 }
 
-func validateElastiCacheClusterId(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if (len(value) < 1) || (len(value) > 20) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) must contain from 1 to 20 alphanumeric characters or hyphens", k, value))
-	}
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q (%q)", k, value))
-	}
-	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"first character of %q (%q) must be a letter", k, value))
-	}
-	if regexp.MustCompile(`--`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) cannot contain two consecutive hyphens", k, value))
-	}
-	if regexp.MustCompile(`-$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q (%q) cannot end with a hyphen", k, value))
-	}
-	return
-}
-
 func validateASGScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	_, err := time.Parse(awsAutoscalingScheduleTimeLayout, value)
@@ -215,6 +255,142 @@ func validateDbParamGroupNamePrefix(v interface{}, k string) (ws []string, error
 	return
 }
 
+func validateDocDBIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot end with a hyphen", k))
+	}
+	if len(value) > 63 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 63 characters", k))
+	}
+	return
+}
+
+func validateDocDBIdentifierPrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	return
+}
+
+func validateDocDBEngine() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		"docdb",
+	}, false)
+}
+
+func validateDocDBParamGroupName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of parameter group %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot end with a hyphen", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot be greater than 255 characters", k))
+	}
+	return
+}
+
+func validateDocDBParamGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of parameter group %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot contain two consecutive hyphens", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"parameter group %q cannot be greater than 226 characters", k))
+	}
+	return
+}
+
+func validateDocDBClusterIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot end with a hyphen", k))
+	}
+	return
+}
+
+func validateDocDBClusterSnapshotIdentifier(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if regexp.MustCompile(`--`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot contain two consecutive hyphens", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot end with a hyphen", k))
+	}
+	return
+}
+
 func validateElbName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) == 0 {
@@ -258,25 +434,77 @@ func validateElbNamePrefix(v interface{}, k string) (ws []string, errors []error
 	return
 }
 
-func validateEcrRepositoryName(v interface{}, k string) (ws []string, errors []error) {
+func validateSagemakerName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if len(value) < 2 {
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must be at least 2 characters long: %q", k, value))
+			"only alphanumeric characters and hyphens allowed in %q: %q",
+			k, value))
 	}
-	if len(value) > 256 {
+	if len(value) > 63 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 256 characters: %q", k, value))
+			"%q cannot be longer than 63 characters: %q", k, value))
 	}
+	if regexp.MustCompile(`^-`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot begin with a hyphen: %q", k, value))
+	}
+	return
+}
 
-	// http://docs.aws.amazon.com/AmazonECR/latest/APIReference/API_CreateRepository.html
-	pattern := `^(?:[a-z0-9]+(?:[._-][a-z0-9]+)*/)*[a-z0-9]+(?:[._-][a-z0-9]+)*$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q doesn't comply with restrictions (%q): %q",
-			k, pattern, value))
+func validateSagemakerEnvironment(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(map[string]interface{})
+	for envK, envV := range value {
+		if !regexp.MustCompile(`^[0-9A-Za-z_]+$`).MatchString(envK) {
+			errors = append(errors, fmt.Errorf(
+				"only alphanumeric characters and underscore allowed in %q: %q",
+				k, envK))
+		}
+		if len(envK) > 1024 {
+			errors = append(errors, fmt.Errorf(
+				"%q cannot be longer than 1024 characters: %q", k, envK))
+		}
+		if len(envV.(string)) > 1024 {
+			errors = append(errors, fmt.Errorf(
+				"%q cannot be longer than 1024 characters: %q", k, envV.(string)))
+		}
+		if regexp.MustCompile(`^[0-9]`).MatchString(envK) {
+			errors = append(errors, fmt.Errorf(
+				"%q cannot begin with a digit: %q", k, envK))
+		}
 	}
+	return
+}
 
+func validateSagemakerImage(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`[\S]+`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"no whitespace allowed in %q: %q",
+			k, value))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 255 characters: %q", k, value))
+	}
+	return
+}
+
+func validateSagemakerModelDataUrl(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^(https|s3)://([^/]+)/?(.*)$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a valid path: %q",
+			k, value))
+	}
+	if len(value) > 1024 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 1024 characters: %q", k, value))
+	}
+	if !regexp.MustCompile(`^(https|s3)://`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q must be a path that starts with either s3 or https: %q", k, value))
+	}
 	return
 }
 
@@ -326,25 +554,6 @@ func validateCloudWatchLogResourcePolicyDocument(v interface{}, k string) (ws []
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
 	return
-}
-
-func validateMaxLength(length int) schema.SchemaValidateFunc {
-	return validation.StringLenBetween(0, length)
-}
-
-func validateIntegerInRange(min, max int) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(int)
-		if value < min {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be lower than %d: %d", k, min, value))
-		}
-		if value > max {
-			errors = append(errors, fmt.Errorf(
-				"%q cannot be higher than %d: %d", k, max, value))
-		}
-		return
-	}
 }
 
 func validateCloudWatchEventTargetId(v interface{}, k string) (ws []string, errors []error) {
@@ -452,11 +661,42 @@ func validateArn(v interface{}, k string) (ws []string, errors []error) {
 		return
 	}
 
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:(.*)$`
+	parsedARN, err := arn.Parse(value)
+
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: %s", k, value, err))
+		return
+	}
+
+	if parsedARN.Partition == "" {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing partition value", k, value))
+	} else if !awsPartitionRegexp.MatchString(parsedARN.Partition) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid partition value (expecting to match regular expression: %s)", k, value, awsPartitionRegexpPattern))
+	}
+
+	if parsedARN.Region != "" && !awsRegionRegexp.MatchString(parsedARN.Region) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid region value (expecting to match regular expression: %s)", k, value, awsRegionRegexpPattern))
+	}
+
+	if parsedARN.AccountID != "" && !awsAccountIDRegexp.MatchString(parsedARN.AccountID) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: invalid account ID value (expecting to match regular expression: %s)", k, value, awsAccountIDRegexpPattern))
+	}
+
+	if parsedARN.Resource == "" {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid ARN: missing resource value", k, value))
+	}
+
+	return
+}
+
+func validateEC2AutomateARN(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricAlarm.html
+	pattern := `^arn:[\w-]+:automate:[\w-]+:ec2:(reboot|recover|stop|terminate)$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q doesn't look like a valid ARN (%q): %q",
+			"%q does not match EC2 automation ARN (%q): %q",
 			k, pattern, value))
 	}
 
@@ -485,20 +725,112 @@ func validatePolicyStatementId(v interface{}, k string) (ws []string, errors []e
 // validateCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func validateCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	_, ipnet, err := net.ParseCIDR(value)
-	if err != nil {
-		errors = append(errors, fmt.Errorf(
-			"%q must contain a valid CIDR, got error parsing: %s", k, err))
+	if err := validateCIDRBlock(v.(string)); err != nil {
+		errors = append(errors, err)
 		return
 	}
 
-	if ipnet == nil || value != ipnet.String() {
-		errors = append(errors, fmt.Errorf(
-			"%q must contain a valid network CIDR, got %q", k, value))
+	return
+}
+
+// validateIpv4CIDRNetworkAddress ensures that the string value is a valid IPv4 CIDR that
+// represents a network address - it adds an error otherwise
+func validateIpv4CIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+	if err := validateIpv4CIDRBlock(v.(string)); err != nil {
+		errors = append(errors, err)
+		return
 	}
 
 	return
+}
+
+// validateIpv6CIDRNetworkAddress ensures that the string value is a valid IPv6 CIDR that
+// represents a network address - it adds an error otherwise
+func validateIpv6CIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
+	if err := validateIpv6CIDRBlock(v.(string)); err != nil {
+		errors = append(errors, err)
+		return
+	}
+
+	return
+}
+
+// validateCIDRBlock validates that the specified CIDR block is valid:
+// - The CIDR block parses to an IP address and network
+// - The CIDR block is the CIDR block for the network
+func validateCIDRBlock(cidr string) error {
+	_, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
+	}
+
+	if !cidrBlocksEqual(cidr, ipnet.String()) {
+		return fmt.Errorf("%q is not a valid CIDR block; did you mean %q?", cidr, ipnet)
+	}
+
+	return nil
+}
+
+// validateIpv4CIDRBlock validates that the specified CIDR block is valid:
+// - The CIDR block parses to an IP address and network
+// - The IP address is an IPv4 address
+// - The CIDR block is the CIDR block for the network
+func validateIpv4CIDRBlock(cidr string) error {
+	ip, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
+	}
+
+	ipv4 := ip.To4()
+	if ipv4 == nil {
+		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
+	}
+
+	if !cidrBlocksEqual(cidr, ipnet.String()) {
+		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
+	}
+
+	return nil
+}
+
+// validateIpv6CIDRBlock validates that the specified CIDR block is valid:
+// - The CIDR block parses to an IP address and network
+// - The IP address is an IPv6 address
+// - The CIDR block is the CIDR block for the network
+func validateIpv6CIDRBlock(cidr string) error {
+	ip, ipnet, err := net.ParseCIDR(cidr)
+	if err != nil {
+		return fmt.Errorf("%q is not a valid CIDR block: %w", cidr, err)
+	}
+
+	ipv4 := ip.To4()
+	if ipv4 != nil {
+		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
+	}
+
+	if !cidrBlocksEqual(cidr, ipnet.String()) {
+		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
+	}
+
+	return nil
+}
+
+// cidrBlocksEqual returns whether or not two CIDR blocks are equal:
+// - Both CIDR blocks parse to an IP address and network
+// - The string representation of the IP addresses are equal
+// - The string representation of the networks are equal
+// This function is especially useful for IPv6 CIDR blocks which have multiple valid representations.
+func cidrBlocksEqual(cidr1, cidr2 string) bool {
+	ip1, ipnet1, err := net.ParseCIDR(cidr1)
+	if err != nil {
+		return false
+	}
+	ip2, ipnet2, err := net.ParseCIDR(cidr2)
+	if err != nil {
+		return false
+	}
+
+	return ip2.String() == ip1.String() && ipnet2.String() == ipnet1.String()
 }
 
 func validateHTTPMethod() schema.SchemaValidateFunc {
@@ -604,11 +936,13 @@ func validateS3BucketLifecycleTimestamp(v interface{}, k string) (ws []string, e
 	return
 }
 
-func validateS3BucketLifecycleStorageClass() schema.SchemaValidateFunc {
+func validateS3BucketLifecycleTransitionStorageClass() schema.SchemaValidateFunc {
 	return validation.StringInSlice([]string{
-		s3.TransitionStorageClassOnezoneIa,
-		s3.TransitionStorageClassStandardIa,
 		s3.TransitionStorageClassGlacier,
+		s3.TransitionStorageClassStandardIa,
+		s3.TransitionStorageClassOnezoneIa,
+		s3.TransitionStorageClassIntelligentTiering,
+		s3.TransitionStorageClassDeepArchive,
 	}, false)
 }
 
@@ -621,13 +955,6 @@ func validateDbEventSubscriptionName(v interface{}, k string) (ws []string, erro
 	if len(value) > 255 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 255 characters", k))
-	}
-	return
-}
-
-func validateJsonString(v interface{}, k string) (ws []string, errors []error) {
-	if _, err := structure.NormalizeJsonString(v); err != nil {
-		errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %s", k, err))
 	}
 	return
 }
@@ -681,7 +1008,8 @@ func validateSQSQueueName(v interface{}, k string) (ws []string, errors []error)
 	return
 }
 
-func validateSQSNonFifoQueueName(v interface{}, k string) (errors []error) {
+func validateSQSNonFifoQueueName(v interface{}) (errors []error) {
+	k := "name"
 	value := v.(string)
 	if len(value) > 80 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 80 characters", k))
@@ -693,7 +1021,8 @@ func validateSQSNonFifoQueueName(v interface{}, k string) (errors []error) {
 	return
 }
 
-func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
+func validateSQSFifoQueueName(v interface{}) (errors []error) {
+	k := "name"
 	value := v.(string)
 
 	if len(value) > 80 {
@@ -709,7 +1038,7 @@ func validateSQSFifoQueueName(v interface{}, k string) (errors []error) {
 	}
 
 	if !regexp.MustCompile(`\.fifo$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("FIFO queue name should ends with \".fifo\": %v", value))
+		errors = append(errors, fmt.Errorf("FIFO queue name should end with \".fifo\": %v", value))
 	}
 
 	return
@@ -776,8 +1105,11 @@ func validateAwsDynamoDbGlobalTableName(v interface{}, k string) (ws []string, e
 func validateAwsEcsPlacementStrategy(stratType, stratField string) error {
 	switch stratType {
 	case "random":
-		// random does not need the field attribute set, could error, but it isn't read at the API level
-		return nil
+		// random requires the field attribute to be unset.
+		if stratField != "" {
+			return fmt.Errorf("Random type requires the field attribute to be unset. Got: %s",
+				stratField)
+		}
 	case "spread":
 		//  For the spread placement strategy, valid values are instanceId
 		// (or host, which has the same effect), or any platform or custom attribute
@@ -800,6 +1132,7 @@ func validateAwsEmrEbsVolumeType() schema.SchemaValidateFunc {
 		"gp2",
 		"io1",
 		"standard",
+		"st1",
 	}, false)
 }
 
@@ -957,8 +1290,8 @@ func validateIamRolePolicyName(v interface{}, k string) (ws []string, errors []e
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 128 characters", k))
 	}
-	if !regexp.MustCompile("^[\\w+=,.@-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must match [\\w+=,.@-]", k))
+	if !regexp.MustCompile(`^[\w+=,.@-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(`%q must match [\w+=,.@-]`, k))
 	}
 	return
 }
@@ -969,8 +1302,8 @@ func validateIamRolePolicyNamePrefix(v interface{}, k string) (ws []string, erro
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 100 characters", k))
 	}
-	if !regexp.MustCompile("^[\\w+=,.@-]+$").MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must match [\\w+=,.@-]", k))
+	if !regexp.MustCompile(`^[\w+=,.@-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(`%q must match [\w+=,.@-]`, k))
 	}
 	return
 }
@@ -1011,6 +1344,23 @@ func validateDbSubnetGroupName(v interface{}, k string) (ws []string, errors []e
 	return
 }
 
+func validateDocDBSubnetGroupName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[ .0-9a-z-_]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 255 characters", k))
+	}
+	if value == "default" {
+		errors = append(errors, fmt.Errorf(
+			"%q is not allowed as %q", "Default", k))
+	}
+	return
+}
+
 func validateNeptuneSubnetGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if !regexp.MustCompile(`^[ .0-9a-z-_]+$`).MatchString(value) {
@@ -1037,6 +1387,20 @@ func validateDbSubnetGroupNamePrefix(v interface{}, k string) (ws []string, erro
 	if len(value) > 229 {
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be longer than 229 characters", k))
+	}
+	return
+}
+
+func validateDocDBSubnetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[ .0-9a-z-_]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only lowercase alphanumeric characters, hyphens, underscores, periods, and spaces allowed in %q", k))
+	}
+	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than %d characters", k, prefixMaxLength))
 	}
 	return
 }
@@ -1142,7 +1506,7 @@ func validateAwsKmsGrantName(v interface{}, k string) (ws []string, es []error) 
 
 func validateCognitoIdentityPoolName(v interface{}, k string) (ws []string, errors []error) {
 	val := v.(string)
-	if !regexp.MustCompile("^[\\w _]+$").MatchString(val) {
+	if !regexp.MustCompile(`^[\w _]+$`).MatchString(val) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and spaces", k))
 	}
 
@@ -1155,7 +1519,7 @@ func validateCognitoProviderDeveloperName(v interface{}, k string) (ws []string,
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 100 characters", k))
 	}
 
-	if !regexp.MustCompile("^[\\w._-]+$").MatchString(value) {
+	if !regexp.MustCompile(`^[\w._-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores and hyphens", k))
 	}
 
@@ -1172,7 +1536,7 @@ func validateCognitoSupportedLoginProviders(v interface{}, k string) (ws []strin
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
-	if !regexp.MustCompile("^[\\w.;_/-]+$").MatchString(value) {
+	if !regexp.MustCompile(`^[\w.;_/-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, semicolons, underscores, slashes and hyphens", k))
 	}
 
@@ -1189,7 +1553,7 @@ func validateCognitoIdentityProvidersClientId(v interface{}, k string) (ws []str
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
-	if !regexp.MustCompile("^[\\w_]+$").MatchString(value) {
+	if !regexp.MustCompile(`^[\w_]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters and underscores", k))
 	}
 
@@ -1206,7 +1570,7 @@ func validateCognitoIdentityProvidersProviderName(v interface{}, k string) (ws [
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 128 characters", k))
 	}
 
-	if !regexp.MustCompile("^[\\w._:/-]+$").MatchString(value) {
+	if !regexp.MustCompile(`^[\w._:/-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
@@ -1224,7 +1588,7 @@ func validateCognitoUserGroupName(v interface{}, k string) (ws []string, es []er
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+`, k))
 	}
 	return
 }
@@ -1301,23 +1665,6 @@ func validateCognitoUserPoolSmsVerificationMessage(v interface{}, k string) (ws 
 	return
 }
 
-func validateCognitoUserPoolClientAuthFlows(v interface{}, k string) (ws []string, es []error) {
-	validValues := []string{
-		cognitoidentityprovider.AuthFlowTypeAdminNoSrpAuth,
-		cognitoidentityprovider.AuthFlowTypeCustomAuth,
-	}
-	period := v.(string)
-	for _, f := range validValues {
-		if period == f {
-			return
-		}
-	}
-	es = append(es, fmt.Errorf(
-		"%q contains an invalid auth flow %q. Valid auth flows are %q.",
-		k, period, validValues))
-	return
-}
-
 func validateCognitoUserPoolTemplateEmailMessage(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if len(value) < 6 {
@@ -1345,7 +1692,7 @@ func validateCognitoUserPoolTemplateEmailMessageByLink(v interface{}, k string) 
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{##[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*##\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*\\{##[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*##\\}[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s*]*", k))
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*\{##[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*##\}[\p{L}\p{M}\p{S}\p{N}\p{P}\s*]*`, k))
 	}
 	return
 }
@@ -1361,7 +1708,7 @@ func validateCognitoUserPoolTemplateEmailSubject(v interface{}, k string) (ws []
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s]+", k))
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`, k))
 	}
 	return
 }
@@ -1377,7 +1724,7 @@ func validateCognitoUserPoolTemplateEmailSubjectByLink(v interface{}, k string) 
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}\\s]+", k))
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}\s]+`, k))
 	}
 	return
 }
@@ -1438,16 +1785,6 @@ func validateCognitoUserPoolInviteTemplateSmsMessage(v interface{}, k string) (w
 	return
 }
 
-func validateCognitoUserPoolReplyEmailAddress(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+@[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+@[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
-	}
-	return
-}
-
 func validateCognitoUserPoolSchemaName(v interface{}, k string) (ws []string, es []error) {
 	value := v.(string)
 	if len(value) < 1 {
@@ -1459,7 +1796,7 @@ func validateCognitoUserPoolSchemaName(v interface{}, k string) (ws []string, es
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+`, k))
 	}
 	return
 }
@@ -1475,7 +1812,7 @@ func validateCognitoUserPoolClientURL(v interface{}, k string) (ws []string, es 
 	}
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{S}\p{N}\p{P}]+`).MatchString(value) {
-		es = append(es, fmt.Errorf("%q must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+", k))
+		es = append(es, fmt.Errorf(`%q must satisfy regular expression pattern: [\p{L}\p{M}\p{S}\p{N}\p{P}]+`, k))
 	}
 	return
 }
@@ -1490,7 +1827,7 @@ func validateCognitoResourceServerScopeName(v interface{}, k string) (ws []strin
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 256 character", k))
 	}
 	if !regexp.MustCompile(`[\x21\x23-\x2E\x30-\x5B\x5D-\x7E]+`).MatchString(value) {
-		errors = append(errors, fmt.Errorf("%q must satisfy regular expression pattern: [\\x21\\x23-\\x2E\\x30-\\x5B\\x5D-\\x7E]+", k))
+		errors = append(errors, fmt.Errorf(`%q must satisfy regular expression pattern: [\x21\x23-\x2E\x30-\x5B\x5D-\x7E]+`, k))
 	}
 	return
 }
@@ -1526,7 +1863,7 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 
 	if !regexp.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"Only alphanumeric & accented characters allowed in %q: %q (Must satisfy regular expression pattern: [\\p{L}\\p{M}\\p{Z}\\p{S}\\p{N}\\p{P}]*)",
+			`Only alphanumeric & accented characters allowed in %q: %q (Must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
 			k, value))
 	}
 	return
@@ -1534,6 +1871,19 @@ func validateIamRoleDescription(v interface{}, k string) (ws []string, errors []
 
 func validateAwsSSMName(v interface{}, k string) (ws []string, errors []error) {
 	// http://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateDocument.html#EC2-CreateDocument-request-Name
+	value := v.(string)
+
+	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			`Only alphanumeric characters, hyphens, dots & underscores allowed in %q: %q (Must satisfy regular expression pattern: ^[a-zA-Z0-9_\-.]{3,128}$)`,
+			k, value))
+	}
+
+	return
+}
+
+func validateAwsSSMMaintenanceWindowTaskName(v interface{}, k string) (ws []string, errors []error) {
+	// https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_RegisterTaskWithMaintenanceWindow.html#systemsmanager-RegisterTaskWithMaintenanceWindow-request-Name
 	value := v.(string)
 
 	if !regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`).MatchString(value) {
@@ -1553,6 +1903,14 @@ func validateBatchName(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
+func validateBatchPrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9a-zA-Z]{1}[0-9a-zA-Z_\-]{0,101}$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be up to 102 letters (uppercase and lowercase), numbers, underscores and dashes, and must start with an alphanumeric.", k, v))
+	}
+	return
+}
+
 func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 	if len(value) > 255 {
@@ -1562,7 +1920,7 @@ func validateSecurityGroupRuleDescription(v interface{}, k string) (ws []string,
 
 	// https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpRange.html. Note that
 	// "" is an allowable description value.
-	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\;\{\}\!\$\*]*$`
+	pattern := `^[A-Za-z0-9 \.\_\-\:\/\(\)\#\,\@\[\]\+\=\&\;\{\}\!\$\*]*$`
 	if !regexp.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",
@@ -1624,12 +1982,25 @@ func validateIoTTopicRuleElasticSearchEndpoint(v interface{}, k string) (ws []st
 	return
 }
 
+func validateIoTTopicRuleFirehoseSeparator(v interface{}, s string) ([]string, []error) {
+	switch v.(string) {
+	case
+		",",
+		"\t",
+		"\n",
+		"\r\n":
+		return nil, nil
+	}
+
+	return nil, []error{fmt.Errorf(`Separator must be one of ',' (comma), '\t' (tab) '\n' (newline) or '\r\n' (Windows newline)`)}
+}
+
 func validateCognitoRoleMappingsAmbiguousRoleResolutionAgainstType(v map[string]interface{}) (errors []error) {
 	t := v["type"].(string)
 	isRequired := t == cognitoidentity.RoleMappingTypeToken || t == cognitoidentity.RoleMappingTypeRules
 
 	if value, ok := v["ambiguous_role_resolution"]; (!ok || value == "") && isRequired {
-		errors = append(errors, fmt.Errorf("Ambiguous Role Resolution must be defined when \"type\" equals \"Token\" or \"Rules\""))
+		errors = append(errors, fmt.Errorf(`Ambiguous Role Resolution must be defined when "type" equals "Token" or "Rules"`))
 	}
 
 	return
@@ -1656,7 +2027,7 @@ func validateCognitoRoleMappingsRulesConfiguration(v map[string]interface{}) (er
 func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !regexp.MustCompile("^[\\p{L}\\p{M}\\p{S}\\p{N}\\p{P}]+$").MatchString(value) {
+	if !regexp.MustCompile(`^[\p{L}\p{M}\p{S}\p{N}\p{P}]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q must contain only alphanumeric characters, dots, underscores, colons, slashes and hyphens", k))
 	}
 
@@ -1664,7 +2035,8 @@ func validateCognitoRoleMappingsRulesClaim(v interface{}, k string) (ws []string
 }
 
 // Validates that either authenticated or unauthenticated is defined
-func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
+func validateCognitoRoles(v map[string]interface{}) (errors []error) {
+	k := "roles"
 	_, hasAuthenticated := v["authenticated"].(string)
 	_, hasUnauthenticated := v["unauthenticated"].(string)
 
@@ -1675,17 +2047,18 @@ func validateCognitoRoles(v map[string]interface{}, k string) (errors []error) {
 	return
 }
 
-func validateCognitoUserPoolDomain(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,61}[a-z0-9])?$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens (max length 63 chars) allowed in %q", k))
-	}
-	return
-}
-
 func validateDxConnectionBandWidth() schema.SchemaValidateFunc {
-	return validation.StringInSlice([]string{"1Gbps", "10Gbps"}, false)
+	return validation.StringInSlice([]string{
+		"1Gbps",
+		"2Gbps",
+		"5Gbps",
+		"10Gbps",
+		"50Mbps",
+		"100Mbps",
+		"200Mbps",
+		"300Mbps",
+		"400Mbps",
+		"500Mbps"}, false)
 }
 
 func validateKmsKey(v interface{}, k string) (ws []string, errors []error) {
@@ -1732,54 +2105,23 @@ func validateDynamoDbStreamSpec(d *schema.ResourceDiff) error {
 	return nil
 }
 
-func validateVpcEndpointType(v interface{}, k string) (ws []string, errors []error) {
-	return validateStringIn(ec2.VpcEndpointTypeGateway, ec2.VpcEndpointTypeInterface)(v, k)
-}
-
-func validateStringIn(validValues ...string) schema.SchemaValidateFunc {
-	return func(v interface{}, k string) (ws []string, errors []error) {
-		value := v.(string)
-		for _, s := range validValues {
-			if value == s {
-				return
-			}
-		}
-		errors = append(errors, fmt.Errorf(
-			"%q contains an invalid value %q. Valid values are %q.",
-			k, value, validValues))
-		return
-	}
-}
-
-func validateVpnGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
+func validateAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	// http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_CreateVpnGateway.html
+	asn, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
+		return
+	}
+
 	// https://github.com/terraform-providers/terraform-provider-aws/issues/5263
-	asn, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
-		return
+	isLegacyAsn := func(a int64) bool {
+		return a == 7224 || a == 9059 || a == 10124 || a == 17493
 	}
 
-	if (asn != 7224) && (asn != 9059) && ((asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294)) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be 7224 or 9059 or in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
-	}
-	return
-}
-
-func validateDxGatewayAmazonSideAsn(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-
-	// https://docs.aws.amazon.com/directconnect/latest/APIReference/API_CreateDirectConnectGateway.html
-	asn, err := strconv.ParseInt(value, 10, 64)
-	if err != nil {
-		errors = append(errors, fmt.Errorf("%q (%q) must be a 64-bit integer", k, v))
-		return
-	}
-
-	if (asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294) {
-		errors = append(errors, fmt.Errorf("%q (%q) must be in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
+	if !isLegacyAsn(asn) && ((asn < 64512) || (asn > 65534 && asn < 4200000000) || (asn > 4294967294)) {
+		errors = append(errors, fmt.Errorf("%q (%q) must be 7224, 9059, 10124 or 17493 or in the range 64512 to 65534 or 4200000000 to 4294967294", k, v))
 	}
 	return
 }
@@ -1801,7 +2143,7 @@ func validateIotThingTypeDescription(v interface{}, k string) (ws []string, erro
 	}
 	if !regexp.MustCompile(`[\\p{Graph}\\x20]*`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q must match pattern [\\p{Graph}\\x20]*", k))
+			`%q must match pattern [\p{Graph}\x20]*`, k))
 	}
 	return
 }
@@ -1940,5 +2282,184 @@ func validateNeptuneParamGroupNamePrefix(v interface{}, k string) (ws []string, 
 		errors = append(errors, fmt.Errorf(
 			"%q cannot be greater than %d characters", k, prefixMaxLength))
 	}
+	return
+}
+
+func validateNeptuneEventSubscriptionName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if len(value) > 255 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 255 characters", k))
+	}
+	return
+}
+
+func validateNeptuneEventSubscriptionNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	prefixMaxLength := 255 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
+}
+
+func validateCloudFrontPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 128 characters", k))
+	}
+	return
+}
+
+func validateCloudFrontPublicKeyNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	prefixMaxLength := 128 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
+}
+
+func validateServiceDiscoveryHttpNamespaceName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	if !regexp.MustCompile(`^[a-zA-Z]`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"first character of %q must be a letter", k))
+	}
+	if !regexp.MustCompile(`[a-zA-Z]$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"last character of %q must be a letter", k))
+	}
+	if len(value) > 1024 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 1024 characters", k))
+	}
+	return
+}
+
+func validateLbTargetGroupName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if len(value) > 32 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than 32 characters", k))
+	}
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if regexp.MustCompile(`^-`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot begin with a hyphen", k))
+	}
+	if regexp.MustCompile(`-$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot end with a hyphen", k))
+	}
+	return
+}
+
+func validateSecretManagerSecretName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z/_+=.@-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and /_+=.@- special characters are allowed in %q", k))
+	}
+	if len(value) > 512 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 512 characters", k))
+	}
+	return
+}
+
+func validateLbTargetGroupNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	prefixMaxLength := 32 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be longer than %d characters", k, prefixMaxLength))
+	}
+	if !regexp.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and hyphens allowed in %q", k))
+	}
+	if regexp.MustCompile(`^-`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot begin with a hyphen", k))
+	}
+	return
+}
+
+func validateSecretManagerSecretNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[0-9A-Za-z/_+=.@-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters and /_+=.@- special characters are allowed in %q", k))
+	}
+	prefixMaxLength := 512 - resource.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
+}
+
+func validateWorklinkFleetName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexp.MustCompile(`^[a-z0-9](?:[a-z0-9\-]{0,46}[a-z0-9])?$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters are allowed in %q", k))
+	}
+	if len(value) < 1 {
+		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
+	} else if len(value) > 48 {
+		errors = append(errors, fmt.Errorf("%q cannot be longer than 48 characters", k))
+	}
+
+	return
+}
+
+func validateRoute53ResolverName(v interface{}, k string) (ws []string, errors []error) {
+	// Type: String
+	// Length Constraints: Maximum length of 64.
+	// Pattern: (?!^[0-9]+$)([a-zA-Z0-9-_' ']+)
+	value := v.(string)
+
+	// re2 doesn't support negative lookaheads so check for single numeric character explicitly.
+	if regexp.MustCompile(`^[0-9]$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be a single digit", k))
+	}
+	if !regexp.MustCompile(`^[a-zA-Z0-9-_' ']+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, '-', '_' and ' ' are allowed in %q", k))
+	}
+	if len(value) > 64 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 64 characters", k))
+	}
+
 	return
 }

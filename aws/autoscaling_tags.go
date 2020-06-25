@@ -9,8 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 // autoscalingTagSchema returns the schema to use for the tag element.
@@ -20,17 +20,17 @@ func autoscalingTagSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"key": &schema.Schema{
+				"key": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
 
-				"value": &schema.Schema{
+				"value": {
 					Type:     schema.TypeString,
 					Required: true,
 				},
 
-				"propagate_at_launch": &schema.Schema{
+				"propagate_at_launch": {
 					Type:     schema.TypeBool,
 					Required: true,
 				},
@@ -56,10 +56,10 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 	resourceID := d.Get("name").(string)
 	var createTags, removeTags []*autoscaling.Tag
 
-	if d.HasChange("tag") || d.HasChange("tags") {
+	if d.HasChanges("tag", "tags") {
 		oraw, nraw := d.GetChange("tag")
-		o := setToMapByKey(oraw.(*schema.Set), "key")
-		n := setToMapByKey(nraw.(*schema.Set), "key")
+		o := setToMapByKey(oraw.(*schema.Set))
+		n := setToMapByKey(nraw.(*schema.Set))
 
 		old, err := autoscalingTagsFromMap(o, resourceID)
 		if err != nil {
@@ -80,12 +80,12 @@ func setAutoscalingTags(conn *autoscaling.AutoScaling, d *schema.ResourceData) e
 		removeTags = append(removeTags, r...)
 
 		oraw, nraw = d.GetChange("tags")
-		old, err = autoscalingTagsFromList(oraw.([]interface{}), resourceID)
+		old, err = autoscalingTagsFromList(oraw.(*schema.Set).List(), resourceID)
 		if err != nil {
 			return err
 		}
 
-		new, err = autoscalingTagsFromList(nraw.([]interface{}), resourceID)
+		new, err = autoscalingTagsFromList(nraw.(*schema.Set).List(), resourceID)
 		if err != nil {
 			return err
 		}
@@ -165,7 +165,7 @@ func autoscalingTagsFromList(vs []interface{}, resourceID string) ([]*autoscalin
 	result := make([]*autoscaling.Tag, 0, len(vs))
 	for _, tag := range vs {
 		attr, ok := tag.(map[string]interface{})
-		if !ok {
+		if !ok || len(attr) == 0 {
 			continue
 		}
 
@@ -248,55 +248,32 @@ func autoscalingTagFromMap(attr map[string]interface{}, resourceID string) (*aut
 	return t, nil
 }
 
-// autoscalingTagsToMap turns the list of tags into a map.
-func autoscalingTagsToMap(ts []*autoscaling.Tag) map[string]interface{} {
-	tags := make(map[string]interface{})
-	for _, t := range ts {
-		tag := map[string]interface{}{
-			"key":                 *t.Key,
-			"value":               *t.Value,
-			"propagate_at_launch": *t.PropagateAtLaunch,
-		}
-		tags[*t.Key] = tag
-	}
-
-	return tags
-}
-
-// autoscalingTagDescriptionsToMap turns the list of tags into a map.
-func autoscalingTagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
-	tags := make(map[string]map[string]interface{})
-	for _, t := range *ts {
-		tag := map[string]interface{}{
-			"key":                 *t.Key,
-			"value":               *t.Value,
-			"propagate_at_launch": *t.PropagateAtLaunch,
-		}
-		tags[*t.Key] = tag
-	}
-
-	return tags
-}
-
-// autoscalingTagDescriptionsToSlice turns the list of tags into a slice.
-func autoscalingTagDescriptionsToSlice(ts []*autoscaling.TagDescription) []map[string]interface{} {
+// autoscalingTagDescriptionsToSlice turns the list of tags into a slice. If
+// forceStrings is true, all values are converted to strings
+func autoscalingTagDescriptionsToSlice(ts []*autoscaling.TagDescription, forceStrings bool) []map[string]interface{} {
 	tags := make([]map[string]interface{}, 0, len(ts))
 	for _, t := range ts {
+		var propagateAtLaunch interface{}
+		if forceStrings {
+			propagateAtLaunch = strconv.FormatBool(aws.BoolValue(t.PropagateAtLaunch))
+		} else {
+			propagateAtLaunch = aws.BoolValue(t.PropagateAtLaunch)
+		}
 		tags = append(tags, map[string]interface{}{
-			"key":                 *t.Key,
-			"value":               *t.Value,
-			"propagate_at_launch": *t.PropagateAtLaunch,
+			"key":                 aws.StringValue(t.Key),
+			"value":               aws.StringValue(t.Value),
+			"propagate_at_launch": propagateAtLaunch,
 		})
 	}
 
 	return tags
 }
 
-func setToMapByKey(s *schema.Set, key string) map[string]interface{} {
+func setToMapByKey(s *schema.Set) map[string]interface{} {
 	result := make(map[string]interface{})
 	for _, rawData := range s.List() {
 		data := rawData.(map[string]interface{})
-		result[data[key].(string)] = data
+		result[data["key"].(string)] = data
 	}
 
 	return result
@@ -308,7 +285,8 @@ func tagIgnoredAutoscaling(t *autoscaling.Tag) bool {
 	filter := []string{"^aws:"}
 	for _, v := range filter {
 		log.Printf("[DEBUG] Matching %v with %v\n", v, *t.Key)
-		if r, _ := regexp.MatchString(v, *t.Key); r == true {
+		r, _ := regexp.MatchString(v, *t.Key)
+		if r {
 			log.Printf("[DEBUG] Found AWS specific tag %s (val: %s), ignoring.\n", *t.Key, *t.Value)
 			return true
 		}

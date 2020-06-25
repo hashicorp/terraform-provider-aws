@@ -30,6 +30,44 @@ func NumberVal(v *big.Float) Value {
 	}
 }
 
+// ParseNumberVal returns a Value of type number produced by parsing the given
+// string as a decimal real number. To ensure that two identical strings will
+// always produce an equal number, always use this function to derive a number
+// from a string; it will ensure that the precision and rounding mode for the
+// internal big decimal is configured in a consistent way.
+//
+// If the given string cannot be parsed as a number, the returned error has
+// the message "a number is required", making it suitable to return to an
+// end-user to signal a type conversion error.
+//
+// If the given string contains a number that becomes a recurring fraction
+// when expressed in binary then it will be truncated to have a 512-bit
+// mantissa. Note that this is a higher precision than that of a float64,
+// so coverting the same decimal number first to float64 and then calling
+// NumberFloatVal will not produce an equal result; the conversion first
+// to float64 will round the mantissa to fewer than 512 bits.
+func ParseNumberVal(s string) (Value, error) {
+	// Base 10, precision 512, and rounding to nearest even is the standard
+	// way to handle numbers arriving as strings.
+	f, _, err := big.ParseFloat(s, 10, 512, big.ToNearestEven)
+	if err != nil {
+		return NilVal, fmt.Errorf("a number is required")
+	}
+	return NumberVal(f), nil
+}
+
+// MustParseNumberVal is like ParseNumberVal but it will panic in case of any
+// error. It can be used during initialization or any other situation where
+// the given string is a constant or otherwise known to be correct by the
+// caller.
+func MustParseNumberVal(s string) Value {
+	ret, err := ParseNumberVal(s)
+	if err != nil {
+		panic(err)
+	}
+	return ret
+}
+
 // NumberIntVal returns a Value of type Number whose internal value is equal
 // to the given integer.
 func NumberIntVal(v int64) Value {
@@ -59,8 +97,17 @@ func NumberFloatVal(v float64) Value {
 func StringVal(v string) Value {
 	return Value{
 		ty: String,
-		v:  norm.NFC.String(v),
+		v:  NormalizeString(v),
 	}
+}
+
+// NormalizeString applies the same normalization that cty applies when
+// constructing string values.
+//
+// A return value from this function can be meaningfully compared byte-for-byte
+// with a Value.AsString result.
+func NormalizeString(s string) string {
+	return norm.NFC.String(s)
 }
 
 // ObjectVal returns a Value of an object type whose structure is defined
@@ -70,6 +117,7 @@ func ObjectVal(attrs map[string]Value) Value {
 	attrVals := make(map[string]interface{}, len(attrs))
 
 	for attr, val := range attrs {
+		attr = NormalizeString(attr)
 		attrTypes[attr] = val.ty
 		attrVals[attr] = val.v
 	}
@@ -162,7 +210,7 @@ func MapVal(vals map[string]Value) Value {
 			))
 		}
 
-		rawMap[key] = val.v
+		rawMap[NormalizeString(key)] = val.v
 	}
 
 	return Value{
@@ -192,8 +240,18 @@ func SetVal(vals []Value) Value {
 	}
 	elementType := DynamicPseudoType
 	rawList := make([]interface{}, len(vals))
+	var markSets []ValueMarks
 
 	for i, val := range vals {
+		if unmarkedVal, marks := val.UnmarkDeep(); len(marks) > 0 {
+			val = unmarkedVal
+			markSets = append(markSets, marks)
+		}
+		if val.ContainsMarked() {
+			// FIXME: Allow this, but unmark the values and apply the
+			// marking to the set itself instead.
+			panic("set cannot contain marked values")
+		}
 		if elementType == DynamicPseudoType {
 			elementType = val.ty
 		} else if val.ty != DynamicPseudoType && !elementType.Equals(val.ty) {
@@ -210,6 +268,21 @@ func SetVal(vals []Value) Value {
 
 	return Value{
 		ty: Set(elementType),
+		v:  rawVal,
+	}.WithMarks(markSets...)
+}
+
+// SetValFromValueSet returns a Value of set type based on an already-constructed
+// ValueSet.
+//
+// The element type of the returned value is the element type of the given
+// set.
+func SetValFromValueSet(s ValueSet) Value {
+	ety := s.ElementType()
+	rawVal := s.s.Copy() // copy so caller can't mutate what we wrap
+
+	return Value{
+		ty: Set(ety),
 		v:  rawVal,
 	}
 }

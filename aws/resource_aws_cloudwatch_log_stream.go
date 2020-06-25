@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsCloudWatchLogStream() *schema.Resource {
@@ -16,6 +18,9 @@ func resourceAwsCloudWatchLogStream() *schema.Resource {
 		Create: resourceAwsCloudWatchLogStreamCreate,
 		Read:   resourceAwsCloudWatchLogStreamRead,
 		Delete: resourceAwsCloudWatchLogStreamDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsCloudWatchLogStreamImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -48,7 +53,7 @@ func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface
 		LogStreamName: aws.String(d.Get("name").(string)),
 	})
 	if err != nil {
-		return errwrap.Wrapf("Creating CloudWatch Log Stream failed: {{err}}", err)
+		return fmt.Errorf("Creating CloudWatch Log Stream failed: %s", err)
 	}
 
 	d.SetId(d.Get("name").(string))
@@ -59,9 +64,33 @@ func resourceAwsCloudWatchLogStreamCreate(d *schema.ResourceData, meta interface
 func resourceAwsCloudWatchLogStreamRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 
-	ls, exists, err := lookupCloudWatchLogStream(conn, d.Id(), d.Get("log_group_name").(string), nil)
+	group := d.Get("log_group_name").(string)
+
+	var ls *cloudwatchlogs.LogStream
+	var exists bool
+
+	err := resource.Retry(2*time.Minute, func() *resource.RetryError {
+		var err error
+		ls, exists, err = lookupCloudWatchLogStream(conn, d.Id(), group, nil)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		if d.IsNewResource() && !exists {
+			return resource.RetryableError(&resource.NotFoundError{})
+		}
+		return nil
+	})
+	if isResourceTimeoutError(err) {
+		ls, exists, err = lookupCloudWatchLogStream(conn, d.Id(), group, nil)
+	}
+
 	if err != nil {
-		return err
+		if !isAWSErr(err, cloudwatchlogs.ErrCodeResourceNotFoundException, "") {
+			return err
+		}
+
+		log.Printf("[DEBUG] container CloudWatch group %q Not Found.", group)
+		exists = false
 	}
 
 	if !exists {
@@ -86,10 +115,25 @@ func resourceAwsCloudWatchLogStreamDelete(d *schema.ResourceData, meta interface
 	}
 	_, err := conn.DeleteLogStream(params)
 	if err != nil {
-		return errwrap.Wrapf("Error deleting CloudWatch Log Stream: {{err}}", err)
+		return fmt.Errorf("Error deleting CloudWatch Log Stream: %s", err)
 	}
 
 	return nil
+}
+
+func resourceAwsCloudWatchLogStreamImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	parts := strings.Split(d.Id(), ":")
+	if len(parts) != 2 {
+		return []*schema.ResourceData{}, fmt.Errorf("Wrong format of resource: %s. Please follow 'log-group-name:log-stream-name'", d.Id())
+	}
+
+	logGroupName := parts[0]
+	logStreamName := parts[1]
+
+	d.SetId(logStreamName)
+	d.Set("log_group_name", logGroupName)
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func lookupCloudWatchLogStream(conn *cloudwatchlogs.CloudWatchLogs,

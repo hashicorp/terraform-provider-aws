@@ -3,11 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamUserGroupMembership() *schema.Resource {
@@ -16,6 +17,9 @@ func resourceAwsIamUserGroupMembership() *schema.Resource {
 		Read:   resourceAwsIamUserGroupMembershipRead,
 		Update: resourceAwsIamUserGroupMembershipUpdate,
 		Delete: resourceAwsIamUserGroupMembershipDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsIamUserGroupMembershipImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"user": {
@@ -86,7 +90,7 @@ func resourceAwsIamUserGroupMembershipRead(d *schema.ResourceData, meta interfac
 	}
 
 	if err := d.Set("groups", gl); err != nil {
-		return fmt.Errorf("[WARN] Error setting group list from IAM (%s), error: %s", user, err)
+		return fmt.Errorf("Error setting group list from IAM (%s), error: %s", user, err)
 	}
 
 	return nil
@@ -128,11 +132,8 @@ func resourceAwsIamUserGroupMembershipDelete(d *schema.ResourceData, meta interf
 	user := d.Get("user").(string)
 	groups := expandStringList(d.Get("groups").(*schema.Set).List())
 
-	if err := removeUserFromGroups(conn, user, groups); err != nil {
-		return err
-	}
-
-	return nil
+	err := removeUserFromGroups(conn, user, groups)
+	return err
 }
 
 func removeUserFromGroups(conn *iam.IAM, user string, groups []*string) error {
@@ -164,4 +165,20 @@ func addUserToGroups(conn *iam.IAM, user string, groups []*string) error {
 	}
 
 	return nil
+}
+
+func resourceAwsIamUserGroupMembershipImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+	if len(idParts) < 2 {
+		return nil, fmt.Errorf("unexpected format of ID (%q), expected <user-name>/<group-name1>/...", d.Id())
+	}
+
+	userName := idParts[0]
+	groupList := idParts[1:]
+
+	d.Set("user", userName)
+	d.Set("groups", groupList)
+	d.SetId(resource.UniqueId())
+
+	return []*schema.ResourceData{d}, nil
 }

@@ -9,13 +9,65 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sns"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_sns_platform_application", &resource.Sweeper{
+		Name: "aws_sns_platform_application",
+		F:    testSweepSnsPlatformApplications,
+	})
+}
+
+func testSweepSnsPlatformApplications(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).snsconn
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListPlatformApplicationsPages(&sns.ListPlatformApplicationsInput{}, func(page *sns.ListPlatformApplicationsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, platformApplication := range page.PlatformApplications {
+			arn := aws.StringValue(platformApplication.PlatformApplicationArn)
+
+			log.Printf("[INFO] Deleting SNS Platform Application: %s", arn)
+			_, err := conn.DeletePlatformApplication(&sns.DeletePlatformApplicationInput{
+				PlatformApplicationArn: aws.String(arn),
+			})
+			if isAWSErr(err, sns.ErrCodeNotFoundException, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting SNS Platform Application (%s): %w", arn, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SNS Platform Applications: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 /**
  Before running this test, at least one of these ENV variables combinations must be set:
@@ -158,7 +210,7 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 		}
 
 		t.Run(platform.Name, func(*testing.T) {
-			resource.Test(t, resource.TestCase{
+			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { testAccPreCheck(t) },
 				Providers:    testAccProviders,
 				CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -183,7 +235,7 @@ func TestAccAWSSnsPlatformApplication_basic(t *testing.T) {
 						Config: testAccAwsSnsPlatformApplicationConfig_basic(name, platform),
 						Check: resource.ComposeTestCheckFunc(
 							testAccCheckAwsSnsPlatformApplicationExists(resourceName),
-							resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:sns:[^:]+:[^:]+:app/%s/%s$", platform.Name, name))),
+							testAccMatchResourceAttrRegionalARN(resourceName, "arn", "sns", regexp.MustCompile(fmt.Sprintf("app/%s/%s$", platform.Name, name))),
 							resource.TestCheckResourceAttr(resourceName, "name", name),
 							resource.TestCheckResourceAttr(resourceName, "platform", platform.Name),
 							resource.TestCheckResourceAttrSet(resourceName, "platform_credential"),
@@ -224,7 +276,7 @@ func TestAccAWSSnsPlatformApplication_basicAttributes(t *testing.T) {
 				t.Run(fmt.Sprintf("%s/%s", platform.Name, tc.AttributeKey), func(*testing.T) {
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 
-					resource.Test(t, resource.TestCase{
+					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -274,7 +326,7 @@ func TestAccAWSSnsPlatformApplication_iamRoleAttributes(t *testing.T) {
 					iamRoleName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 
-					resource.Test(t, resource.TestCase{
+					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -326,7 +378,7 @@ func TestAccAWSSnsPlatformApplication_snsTopicAttributes(t *testing.T) {
 					snsTopicName2 := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 					name := fmt.Sprintf("tf-acc-%d", acctest.RandInt())
 
-					resource.Test(t, resource.TestCase{
+					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:     func() { testAccPreCheck(t) },
 						Providers:    testAccProviders,
 						CheckDestroy: testAccCheckAWSSNSPlatformApplicationDestroy,
@@ -378,11 +430,8 @@ func testAccCheckAwsSnsPlatformApplicationExists(name string) resource.TestCheck
 
 		log.Printf("[DEBUG] Reading SNS Platform Application attributes: %s", input)
 		_, err := conn.GetPlatformApplicationAttributes(input)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -475,6 +524,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 %s
+
 `, iamRoleName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_iam_role.test.arn}"))
 }
 
@@ -485,5 +535,6 @@ resource "aws_sns_topic" "test" {
 }
 
 %s
+
 `, snsTopicName, testAccAwsSnsPlatformApplicationConfig_basicAttribute(name, platform, attributeKey, "${aws_sns_topic.test.arn}"))
 }

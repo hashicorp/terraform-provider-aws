@@ -10,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsKmsGrant() *schema.Resource {
@@ -23,7 +23,19 @@ func resourceAwsKmsGrant() *schema.Resource {
 		Create: resourceAwsKmsGrantCreate,
 		Read:   resourceAwsKmsGrantRead,
 		Delete: resourceAwsKmsGrantDelete,
-		Exists: resourceAwsKmsGrantExists,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				keyId, grantId, err := decodeKmsGrantId(d.Id())
+				if err != nil {
+					return nil, err
+				}
+				d.Set("key_id", keyId)
+				d.Set("grant_id", grantId)
+				d.SetId(fmt.Sprintf("%s:%s", keyId, grantId))
+
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -132,7 +144,7 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 	if v, ok := d.GetOk("constraints"); ok {
 		if !kmsGrantConstraintsIsValid(v.(*schema.Set)) {
-			return fmt.Errorf("[ERROR] A grant constraint can't have both encryption_context_equals and encryption_context_subset set")
+			return fmt.Errorf("A grant constraint can't have both encryption_context_equals and encryption_context_subset set")
 		}
 		input.Constraints = expandKmsGrantConstraints(v.(*schema.Set))
 	}
@@ -149,7 +161,6 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
 		var err error
-
 		out, err = conn.CreateGrant(&input)
 
 		if err != nil {
@@ -160,17 +171,21 @@ func resourceAwsKmsGrantCreate(d *schema.ResourceData, meta interface{}) error {
 				isAWSErr(err, kms.ErrCodeInternalException, "") ||
 				isAWSErr(err, kms.ErrCodeInvalidArnException, "") {
 				return resource.RetryableError(
-					fmt.Errorf("[WARN] Error adding new KMS Grant for key: %s, retrying %s",
+					fmt.Errorf("Error adding new KMS Grant for key: %s, retrying %s",
 						*input.KeyId, err))
 			}
-			log.Printf("[ERROR] An error occured creating new AWS KMS Grant: %s", err)
+			log.Printf("[ERROR] An error occurred creating new AWS KMS Grant: %s", err)
 			return resource.NonRetryableError(err)
 		}
 		return nil
 	})
 
+	if isResourceTimeoutError(err) {
+		out, err = conn.CreateGrant(&input)
+	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating KMS grant: %s", err)
 	}
 
 	log.Printf("[DEBUG] Created new KMS Grant: %s", *out.GrantId)
@@ -193,6 +208,11 @@ func resourceAwsKmsGrantRead(d *schema.ResourceData, meta interface{}) error {
 	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
 
 	if err != nil {
+		if isResourceNotFoundError(err) {
+			log.Printf("[WARN] %s KMS grant id not found for key id %s, removing from state file", grantId, keyId)
+			d.SetId("")
+			return nil
+		}
 		return err
 	}
 
@@ -275,32 +295,7 @@ func resourceAwsKmsGrantDelete(d *schema.ResourceData, meta interface{}) error {
 	log.Printf("[DEBUG] Checking if grant is revoked: %s", grantId)
 	err = waitForKmsGrantToBeRevoked(conn, keyId, grantId)
 
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func resourceAwsKmsGrantExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).kmsconn
-
-	keyId, grantId, err := decodeKmsGrantId(d.Id())
-	if err != nil {
-		return false, err
-	}
-
-	log.Printf("[DEBUG] Looking for Grant: %s", grantId)
-	grant, err := findKmsGrantByIdWithRetry(conn, keyId, grantId)
-
-	if err != nil {
-		return true, err
-	}
-	if grant != nil {
-		return true, err
-	}
-
-	return false, nil
+	return err
 }
 
 func getKmsGrantById(grants []*kms.GrantListEntry, grantIdentifier string) *kms.GrantListEntry {
@@ -327,39 +322,45 @@ func findKmsGrantByIdWithRetry(conn *kms.KMS, keyId string, grantId string) (*km
 		var err error
 		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
 
-		if err != nil {
-			if serr, ok := err.(KmsGrantMissingError); ok {
-				// Force a retry if the grant should exist
-				return resource.RetryableError(serr)
-			}
+		if isResourceNotFoundError(err) {
+			return resource.RetryableError(err)
+		}
 
+		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
+	}
 
 	return grant, err
 }
 
 // Used by the tests as well
 func waitForKmsGrantToBeRevoked(conn *kms.KMS, keyId string, grantId string) error {
+	var grant *kms.GrantListEntry
 	err := resource.Retry(3*time.Minute, func() *resource.RetryError {
-		grant, err := findKmsGrantById(conn, keyId, grantId, nil)
-		if err != nil {
-			if _, ok := err.(KmsGrantMissingError); ok {
-				return nil
-			}
+		var err error
+		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
+
+		if isResourceNotFoundError(err) {
+			return nil
 		}
 
 		if grant != nil {
 			// Force a retry if the grant still exists
 			return resource.RetryableError(
-				fmt.Errorf("[DEBUG] Grant still exists while expected to be revoked, retyring revocation check: %s", *grant.GrantId))
+				fmt.Errorf("Grant still exists while expected to be revoked, retyring revocation check: %s", *grant.GrantId))
 		}
 
 		return resource.NonRetryableError(err)
 	})
+	if isResourceTimeoutError(err) {
+		grant, err = findKmsGrantById(conn, keyId, grantId, nil)
+	}
 
 	return err
 }
@@ -393,6 +394,10 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.ListGrants(&input)
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("error listing KMS Grants: %s", err)
 	}
@@ -406,7 +411,9 @@ func findKmsGrantById(conn *kms.KMS, keyId string, grantId string, marker *strin
 		return findKmsGrantById(conn, keyId, grantId, out.NextMarker)
 	}
 
-	return nil, NewKmsGrantMissingError(fmt.Sprintf("[DEBUG] Grant %s not found for key id: %s", grantId, keyId))
+	return nil, &resource.NotFoundError{
+		Message: fmt.Sprintf("grant %s not found for key id: %s", grantId, keyId),
+	}
 }
 
 // Can't have both constraint options set:
@@ -429,10 +436,8 @@ func kmsGrantConstraintsIsValid(constraints *schema.Set) bool {
 		}
 	}
 
-	if constraintCount > 1 {
-		return false
-	}
-	return true
+	return constraintCount <= 1
+
 }
 
 func expandKmsGrantConstraints(configured *schema.Set) *kms.GrantConstraints {
@@ -468,13 +473,13 @@ func sortStringMapKeys(m map[string]*string) []string {
 // NB: For the constraint hash to be deterministic the order in which
 // print the keys and values of the encryption context maps needs to be
 // determistic, so sort them.
-func sortedConcatStringMap(m map[string]*string, sep string) string {
+func sortedConcatStringMap(m map[string]*string) string {
 	var strList []string
 	mapKeys := sortStringMapKeys(m)
 	for _, key := range mapKeys {
 		strList = append(strList, key, *m[key])
 	}
-	return strings.Join(strList, sep)
+	return strings.Join(strList, "-")
 }
 
 // The hash needs to encapsulate what type of constraint it is
@@ -488,12 +493,12 @@ func resourceKmsGrantConstraintsHash(v interface{}) int {
 
 	if v, ok := m["encryption_context_equals"]; ok {
 		if len(v.(map[string]interface{})) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})), "-")))
+			buf.WriteString(fmt.Sprintf("encryption_context_equals-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})))))
 		}
 	}
 	if v, ok := m["encryption_context_subset"]; ok {
 		if len(v.(map[string]interface{})) > 0 {
-			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})), "-")))
+			buf.WriteString(fmt.Sprintf("encryption_context_subset-%s-", sortedConcatStringMap(stringMapToPointers(v.(map[string]interface{})))))
 		}
 	}
 
@@ -506,7 +511,7 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 		return constraints
 	}
 
-	m := make(map[string]interface{}, 0)
+	m := make(map[string]interface{})
 	if constraint.EncryptionContextEquals != nil {
 		if len(constraint.EncryptionContextEquals) > 0 {
 			m["encryption_context_equals"] = pointersMapToStringList(constraint.EncryptionContextEquals)
@@ -524,16 +529,16 @@ func flattenKmsGrantConstraints(constraint *kms.GrantConstraints) *schema.Set {
 
 func decodeKmsGrantId(id string) (string, string, error) {
 	if strings.HasPrefix(id, "arn:aws") {
-		arn_parts := strings.Split(id, "/")
-		if len(arn_parts) != 2 {
+		arnParts := strings.Split(id, "/")
+		if len(arnParts) != 2 {
 			return "", "", fmt.Errorf("unexpected format of ARN (%q), expected KeyID:GrantID", id)
 		}
-		arn_prefix := arn_parts[0]
-		parts := strings.Split(arn_parts[1], ":")
+		arnPrefix := arnParts[0]
+		parts := strings.Split(arnParts[1], ":")
 		if len(parts) != 2 {
 			return "", "", fmt.Errorf("unexpected format of ID (%q), expected KeyID:GrantID", id)
 		}
-		return fmt.Sprintf("%s/%s", arn_prefix, parts[0]), parts[1], nil
+		return fmt.Sprintf("%s/%s", arnPrefix, parts[0]), parts[1], nil
 	} else {
 		parts := strings.Split(id, ":")
 		if len(parts) != 2 {
@@ -541,16 +546,4 @@ func decodeKmsGrantId(id string) (string, string, error) {
 		}
 		return parts[0], parts[1], nil
 	}
-}
-
-// Custom error, so we don't have to rely on
-// the content of an error message
-type KmsGrantMissingError string
-
-func (e KmsGrantMissingError) Error() string {
-	return e.Error()
-}
-
-func NewKmsGrantMissingError(msg string) KmsGrantMissingError {
-	return KmsGrantMissingError(msg)
 }

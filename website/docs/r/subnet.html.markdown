@@ -1,14 +1,16 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_subnet"
-sidebar_current: "docs-aws-resource-subnet"
 description: |-
   Provides an VPC subnet resource.
 ---
 
-# aws_subnet
+# Resource: aws_subnet
 
 Provides an VPC subnet resource.
+
+~> **NOTE:** Due to [AWS Lambda improved VPC networking changes that began deploying in September 2019](https://aws.amazon.com/blogs/compute/announcing-improved-vpc-networking-for-aws-lambda-functions/), subnets associated with Lambda Functions can take up to 45 minutes to successfully delete. Terraform AWS Provider version 2.31.0 and later automatically handles this increased timeout, however prior versions require setting the [customizable deletion timeout](#timeouts) to 45 minutes (`delete = "45m"`). AWS and HashiCorp are working together to reduce the amount of time required for resource deletion and updates can be tracked in this [GitHub issue](https://github.com/terraform-providers/terraform-provider-aws/issues/10329).
 
 ## Example Usage
 
@@ -19,7 +21,7 @@ resource "aws_subnet" "main" {
   vpc_id     = "${aws_vpc.main.id}"
   cidr_block = "10.0.1.0/24"
 
-  tags {
+  tags = {
     Name = "Main"
   }
 }
@@ -46,29 +48,37 @@ resource "aws_subnet" "in_secondary_cidr" {
 
 The following arguments are supported:
 
-* `availability_zone`- (Optional) The AZ for the subnet.
+* `availability_zone` - (Optional) The AZ for the subnet.
+* `availability_zone_id` - (Optional) The AZ ID of the subnet.
 * `cidr_block` - (Required) The CIDR block for the subnet.
 * `ipv6_cidr_block` - (Optional) The IPv6 network range for the subnet,
     in CIDR notation. The subnet size must use a /64 prefix length.
 * `map_public_ip_on_launch` -  (Optional) Specify true to indicate
     that instances launched into the subnet should be assigned
     a public IP address. Default is `false`.
+* `outpost_arn` - (Optional) The Amazon Resource Name (ARN) of the Outpost.
 * `assign_ipv6_address_on_creation` - (Optional) Specify true to indicate
     that network interfaces created in the specified subnet should be
     assigned an IPv6 address. Default is `false`
 * `vpc_id` - (Required) The VPC ID.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the subnet
-* `availability_zone`- The AZ for the subnet.
-* `cidr_block` - The CIDR block for the subnet.
-* `vpc_id` - The VPC ID.
+* `arn` - The ARN of the subnet.
 * `ipv6_cidr_block_association_id` - The association ID for the IPv6 CIDR block.
-* `ipv6_cidr_block` - The IPv6 CIDR block.
+* `owner_id` - The ID of the AWS account that owns the subnet.
+
+## Timeouts
+
+`aws_subnet` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
+configuration options:
+
+- `create` - (Default `10m`) How long to wait for a subnet to be created.
+- `delete` - (Default `20m`) How long to retry on `DependencyViolation` errors during subnet deletion from lingering ENIs left by certain AWS services such as Elastic Load Balancing. NOTE: Lambda ENIs can take up to 45 minutes to delete, which is not affected by changing this customizable timeout (in version 2.31.0 and later of the Terraform AWS Provider) unless it is increased above 45 minutes.
 
 ## Import
 

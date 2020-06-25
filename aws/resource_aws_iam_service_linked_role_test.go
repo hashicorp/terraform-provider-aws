@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -103,6 +103,13 @@ func TestDecodeIamServiceLinkedRoleID(t *testing.T) {
 			CustomSuffix: "custom-suffix",
 			ErrCount:     0,
 		},
+		{
+			Input:        "arn:aws:iam::123456789012:role/aws-service-role/dynamodb.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_DynamoDBTable",
+			ServiceName:  "dynamodb.application-autoscaling.amazonaws.com",
+			RoleName:     "AWSServiceRoleForApplicationAutoScaling_DynamoDBTable",
+			CustomSuffix: "DynamoDBTable",
+			ErrCount:     0,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -131,7 +138,7 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 	name := "AWSServiceRoleForElasticBeanstalk"
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -158,8 +165,9 @@ func TestAccAWSIAMServiceLinkedRole_basic(t *testing.T) {
 				Config: testAccAWSIAMServiceLinkedRoleConfig(awsServiceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIAMServiceLinkedRoleExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role%s%s$", path, name))),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role%s%s", path, name)),
 					resource.TestCheckResourceAttr(resourceName, "aws_service_name", awsServiceName),
+					testAccCheckResourceAttrRfc3339(resourceName, "create_date"),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "path", path),
@@ -182,7 +190,7 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix(t *testing.T) {
 	name := fmt.Sprintf("AWSServiceRoleForAutoScaling_%s", customSuffix)
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},
@@ -193,7 +201,38 @@ func TestAccAWSIAMServiceLinkedRole_CustomSuffix(t *testing.T) {
 				Config: testAccAWSIAMServiceLinkedRoleConfig_CustomSuffix(awsServiceName, customSuffix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSIAMServiceLinkedRoleExists(resourceName),
-					resource.TestMatchResourceAttr(resourceName, "arn", regexp.MustCompile(fmt.Sprintf("^arn:[^:]+:iam::[^:]+:role%s%s$", path, name))),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role%s%s", path, name)),
+					resource.TestCheckResourceAttr(resourceName, "name", name),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/4439
+func TestAccAWSIAMServiceLinkedRole_CustomSuffix_DiffSuppressFunc(t *testing.T) {
+	resourceName := "aws_iam_service_linked_role.test"
+	awsServiceName := "custom-resource.application-autoscaling.amazonaws.com"
+	name := "AWSServiceRoleForApplicationAutoScaling_CustomResource"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSIAMServiceLinkedRoleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSIAMServiceLinkedRoleConfig(awsServiceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIAMServiceLinkedRoleExists(resourceName),
+					testAccCheckResourceAttrGlobalARN(resourceName, "arn", "iam", fmt.Sprintf("role/aws-service-role/%s/%s", awsServiceName, name)),
+					resource.TestCheckResourceAttr(resourceName, "custom_suffix", "CustomResource"),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 				),
 			},
@@ -211,7 +250,7 @@ func TestAccAWSIAMServiceLinkedRole_Description(t *testing.T) {
 	awsServiceName := "autoscaling.amazonaws.com"
 	customSuffix := acctest.RandomWithPrefix("tf-acc-test")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
 		},

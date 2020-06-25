@@ -5,7 +5,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDaxSubnetGroup() *schema.Resource {
@@ -29,7 +29,7 @@ func resourceAwsDaxSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"subnet_ids": &schema.Schema{
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},

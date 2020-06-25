@@ -6,16 +6,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsDmsEndpointBasic(t *testing.T) {
+func TestAccAwsDmsEndpoint_Basic(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-basic"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,
@@ -50,11 +50,11 @@ func TestAccAwsDmsEndpointBasic(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointS3(t *testing.T) {
+func TestAccAwsDmsEndpoint_S3(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-s3"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,
@@ -96,11 +96,11 @@ func TestAccAwsDmsEndpointS3(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
+func TestAccAwsDmsEndpoint_DynamoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-dynamodb"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,
@@ -128,11 +128,223 @@ func TestAccAwsDmsEndpointDynamoDb(t *testing.T) {
 	})
 }
 
-func TestAccAwsDmsEndpointMongoDb(t *testing.T) {
+func TestAccAwsDmsEndpoint_Elasticsearch(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointElasticsearchConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.endpoint_uri", "search-estest.us-west-2.es.amazonaws.com"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "10"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "300"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Elasticsearch_ErrorRetryDuration(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 60),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "60"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			// Resource needs additional creation retry handling for the following:
+			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
+			// {
+			// 	Config: dmsEndpointElasticsearchConfigErrorRetryDuration(rName, 120),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		checkDmsEndpointExists(resourceName),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.error_retry_duration", "120"),
+			// 	),
+			// },
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			// Resource needs additional creation retry handling for the following:
+			// Error creating DMS endpoint: ResourceAlreadyExistsFault: ReplicationEndpoint "xxx" already in use
+			// {
+			// 	Config: dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName, 2),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		checkDmsEndpointExists(resourceName),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.#", "1"),
+			// 		resource.TestCheckResourceAttr(resourceName, "elasticsearch_settings.0.full_load_error_percentage", "2"),
+			// 	),
+			// },
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointKafkaConfigBroker(rName, "ec2-12-345-678-901.compute-1.amazonaws.com:2345"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.broker", "ec2-12-345-678-901.compute-1.amazonaws.com:2345"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointKafkaConfigBroker(rName, "ec2-12-345-678-901.compute-1.amazonaws.com:3456"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.broker", "ec2-12-345-678-901.compute-1.amazonaws.com:3456"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Kafka_Topic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointKafkaConfigTopic(rName, "topic1"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "topic1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointKafkaConfigTopic(rName, "topic2"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "topic2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
+	resourceName := "aws_dms_endpoint.dms_endpoint"
+	randId := acctest.RandString(8) + "-kinesis"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointKinesisConfig(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
+					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream1", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointKinesisConfigUpdate(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_settings.0.message_format", "json"),
+					resource.TestCheckResourceAttrPair(resourceName, "kinesis_settings.0.stream_arn", "aws_kinesis_stream.stream2", "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_MongoDb(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-mongodb"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: dmsEndpointDestroy,
@@ -162,10 +374,88 @@ func TestAccAwsDmsEndpointMongoDb(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "require"),
 					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "key=value;"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.auth_mechanism", "SCRAM_SHA_1"),
-					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "ONE"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.auth_mechanism", "scram-sha-1"),
+					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.nesting_level", "one"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.extract_doc_id", "true"),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_settings.0.docs_to_investigate", "1001"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_DocDB(t *testing.T) {
+	resourceName := "aws_dms_endpoint.dms_endpoint"
+	randId := acctest.RandString(8) + "-docdb"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointDocDBConfig(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointDocDBConfigUpdate(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27019"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftestupdate"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Db2(t *testing.T) {
+	resourceName := "aws_dms_endpoint.dms_endpoint"
+	randId := acctest.RandString(8) + "-db2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointDb2Config(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint_arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointDb2ConfigUpdate(randId),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "database_name", "tf-test-dms-db-updated"),
+					resource.TestCheckResourceAttr(resourceName, "extra_connection_attributes", "extra"),
+					resource.TestCheckResourceAttr(resourceName, "password", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "port", "27019"),
+					resource.TestCheckResourceAttr(resourceName, "ssl_mode", "none"),
+					resource.TestCheckResourceAttr(resourceName, "server_name", "tftestupdate"),
+					resource.TestCheckResourceAttr(resourceName, "username", "tftestupdate"),
 				),
 			},
 		},
@@ -223,21 +513,23 @@ func checkDmsEndpointExists(n string) resource.TestCheckFunc {
 func dmsEndpointBasicConfig(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	database_name = "tf-test-dms-db"
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "source"
-	engine_name = "aurora"
-	extra_connection_attributes = ""
-	password = "tftest"
-	port = 3306
-	server_name = "tftest"
-	ssl_mode = "none"
-	tags {
-		Name = "tf-test-dms-endpoint-%[1]s"
-		Update = "to-update"
-		Remove = "to-remove"
-	}
-	username = "tftest"
+  database_name               = "tf-test-dms-db"
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "source"
+  engine_name                 = "aurora"
+  extra_connection_attributes = ""
+  password                    = "tftest"
+  port                        = 3306
+  server_name                 = "tftest"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  username = "tftest"
 }
 `, randId)
 }
@@ -245,21 +537,23 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointBasicConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	database_name = "tf-test-dms-db-updated"
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "source"
-	engine_name = "aurora"
-	extra_connection_attributes = "extra"
-	password = "tftestupdate"
-	port = 3303
-	server_name = "tftestupdate"
-	ssl_mode = "none"
-	tags {
-		Name = "tf-test-dms-endpoint-%[1]s"
-		Update = "updated"
-		Add = "added"
-	}
-	username = "tftestupdate"
+  database_name               = "tf-test-dms-db-updated"
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "source"
+  engine_name                 = "aurora"
+  extra_connection_attributes = "extra"
+  password                    = "tftestupdate"
+  port                        = 3303
+  server_name                 = "tftestupdate"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "updated"
+    Add    = "added"
+  }
+
+  username = "tftestupdate"
 }
 `, randId)
 }
@@ -267,24 +561,25 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointDynamoDbConfig(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "dynamodb"
-	service_access_role = "${aws_iam_role.iam_role.arn}"
-	ssl_mode = "none"
-	tags {
-		Name = "tf-test-dynamodb-endpoint-%[1]s"
-		Update = "to-update"
-		Remove = "to-remove"
-	}
+  endpoint_id         = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type       = "target"
+  engine_name         = "dynamodb"
+  service_access_role = "${aws_iam_role.iam_role.arn}"
+  ssl_mode            = "none"
 
-	depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
+  tags = {
+    Name   = "tf-test-dynamodb-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  depends_on = ["aws_iam_role_policy.dms_dynamodb_access"]
 }
 
 resource "aws_iam_role" "iam_role" {
-	name = "tf-test-iam-dynamodb-role-%[1]s"
+  name = "tf-test-iam-dynamodb-role-%[1]s"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -301,10 +596,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-	name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-	role = "${aws_iam_role.iam_role.name}"
+  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+  role = "${aws_iam_role.iam_role.name}"
 
-	policy = <<EOF
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -330,22 +625,23 @@ EOF
 func dmsEndpointDynamoDbConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "dynamodb"
-	service_access_role = "${aws_iam_role.iam_role.arn}"
-	ssl_mode = "none"
-	tags {
-		Name = "tf-test-dynamodb-endpoint-%[1]s"
-		Update = "updated"
-		Add = "added"
-	}
+  endpoint_id         = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type       = "target"
+  engine_name         = "dynamodb"
+  service_access_role = "${aws_iam_role.iam_role.arn}"
+  ssl_mode            = "none"
+
+  tags = {
+    Name   = "tf-test-dynamodb-endpoint-%[1]s"
+    Update = "updated"
+    Add    = "added"
+  }
 }
 
 resource "aws_iam_role" "iam_role" {
-	name = "tf-test-iam-dynamodb-role-%[1]s"
+  name = "tf-test-iam-dynamodb-role-%[1]s"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -362,10 +658,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_dynamodb_access" {
-	name = "tf-test-iam-dynamodb-role-policy-%[1]s"
-	role = "${aws_iam_role.iam_role.name}"
+  name = "tf-test-iam-dynamodb-role-policy-%[1]s"
+  role = "${aws_iam_role.iam_role.name}"
 
-	policy = <<EOF
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -391,28 +687,30 @@ EOF
 func dmsEndpointS3Config(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "s3"
-	ssl_mode = "none"
-	extra_connection_attributes = ""
-	tags {
-		Name = "tf-test-s3-endpoint-%[1]s"
-		Update = "to-update"
-		Remove = "to-remove"
-	}
-	s3_settings {
-		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-		bucket_name = "bucket_name"
-	}
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "target"
+  engine_name                 = "s3"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
 
-	depends_on = ["aws_iam_role_policy.dms_s3_access"]
+  tags = {
+    Name   = "tf-test-s3-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  s3_settings {
+    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+    bucket_name             = "bucket_name"
+  }
+
+  depends_on = ["aws_iam_role_policy.dms_s3_access"]
 }
 
 resource "aws_iam_role" "iam_role" {
-	name = "tf-test-iam-s3-role-%[1]s"
+  name = "tf-test-iam-s3-role-%[1]s"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -429,10 +727,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-	name = "tf-test-iam-s3-role-policy-%[1]s"
-	role = "${aws_iam_role.iam_role.name}"
+  name = "tf-test-iam-s3-role-policy-%[1]s"
+  role = "${aws_iam_role.iam_role.name}"
 
-	policy = <<EOF
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -463,31 +761,33 @@ EOF
 func dmsEndpointS3ConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "target"
-	engine_name = "s3"
-	ssl_mode = "none"
-	extra_connection_attributes = "key=value;"
-	tags {
-		Name = "tf-test-s3-endpoint-%[1]s"
-		Update = "updated"
-		Add = "added"
-	}
-	s3_settings {
-		service_access_role_arn = "${aws_iam_role.iam_role.arn}"
-		external_table_definition = "new-external_table_definition"
-		csv_row_delimiter = "\\r"
-		csv_delimiter = "."
-		bucket_folder = "new-bucket_folder"
-		bucket_name = "new-bucket_name"
-		compression_type = "GZIP"
-	}
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "target"
+  engine_name                 = "s3"
+  ssl_mode                    = "none"
+  extra_connection_attributes = "key=value;"
+
+  tags = {
+    Name   = "tf-test-s3-endpoint-%[1]s"
+    Update = "updated"
+    Add    = "added"
+  }
+
+  s3_settings {
+    service_access_role_arn   = "${aws_iam_role.iam_role.arn}"
+    external_table_definition = "new-external_table_definition"
+    csv_row_delimiter         = "\\r"
+    csv_delimiter             = "."
+    bucket_folder             = "new-bucket_folder"
+    bucket_name               = "new-bucket_name"
+    compression_type          = "GZIP"
+  }
 }
 
 resource "aws_iam_role" "iam_role" {
-	name = "tf-test-iam-s3-role-%[1]s"
+  name = "tf-test-iam-s3-role-%[1]s"
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -504,10 +804,10 @@ EOF
 }
 
 resource "aws_iam_role_policy" "dms_s3_access" {
-	name = "tf-test-iam-s3-role-policy-%[1]s"
-	role = "${aws_iam_role.iam_role.name}"
+  name = "tf-test-iam-s3-role-policy-%[1]s"
+  role = "${aws_iam_role.iam_role.name}"
 
-	policy = <<EOF
+  policy = <<EOF
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -535,37 +835,306 @@ EOF
 `, randId)
 }
 
+func dmsEndpointElasticsearchConfigBase(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Effect": "Allow",
+			"Action": [
+				 "es:ESHttpDelete",
+				 "es:ESHttpGet",
+				 "es:ESHttpHead",
+				 "es:ESHttpPost",
+				 "es:ESHttpPut"
+			],
+			"Resource": "*"
+		}
+	]
+}
+EOF
+}
+`, rName)
+}
+
+func dmsEndpointElasticsearchConfig(rName string) string {
+	return composeConfig(
+		dmsEndpointElasticsearchConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri            = "search-estest.us-west-2.es.amazonaws.com"
+    service_access_role_arn = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName))
+}
+
+func dmsEndpointElasticsearchConfigErrorRetryDuration(rName string, errorRetryDuration int) string {
+	return composeConfig(
+		dmsEndpointElasticsearchConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
+    error_retry_duration       = %[2]d
+    service_access_role_arn    = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, errorRetryDuration))
+}
+
+func dmsEndpointElasticsearchConfigFullLoadErrorPercentage(rName string, fullLoadErrorPercentage int) string {
+	return composeConfig(
+		dmsEndpointElasticsearchConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "elasticsearch"
+
+  elasticsearch_settings {
+    endpoint_uri               = "search-estest.us-west-2.es.amazonaws.com"
+    full_load_error_percentage = %[2]d
+    service_access_role_arn    = aws_iam_role.test.arn
+  }
+
+  depends_on = [aws_iam_role_policy.test]
+}
+`, rName, fullLoadErrorPercentage))
+}
+
+func dmsEndpointKafkaConfigBroker(rName string, broker string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "kafka"
+
+  kafka_settings {
+    broker = %[2]q
+  }
+}
+`, rName, broker)
+}
+
+func dmsEndpointKafkaConfigTopic(rName string, topic string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "kafka"
+
+  kafka_settings {
+    broker = "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+    topic  = %[2]q
+  }
+}
+`, rName, topic)
+}
+
+func dmsEndpointKinesisConfig(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+  endpoint_id   = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type = "target"
+  engine_name   = "kinesis"
+
+  kinesis_settings {
+    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+    stream_arn              = "${aws_kinesis_stream.stream1.arn}"
+  }
+
+  depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
+}
+
+resource "aws_kinesis_stream" "stream1" {
+  name        = "tf-test-dms-kinesis-1-%[1]s"
+  shard_count = 1
+}
+
+resource "aws_kinesis_stream" "stream2" {
+  name        = "tf-test-dms-kinesis-2-%[1]s"
+  shard_count = 1
+}
+
+resource "aws_iam_role" "iam_role" {
+  name_prefix = "tf-test-iam-kinesis-role"
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_kinesis_access" {
+  name_prefix = "tf-test-iam-kinesis-role-policy"
+  role        = "${aws_iam_role.iam_role.name}"
+  policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
+}
+
+data "aws_iam_policy_document" "dms_kinesis_access" {
+  statement {
+	actions = [
+		"kinesis:DescribeStream",
+		"kinesis:PutRecord",
+		"kinesis:PutRecords",
+	]
+	resources = [
+		"${aws_kinesis_stream.stream1.arn}",
+		"${aws_kinesis_stream.stream2.arn}",
+	]
+  }
+}
+`, randId)
+}
+
+func dmsEndpointKinesisConfigUpdate(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+  endpoint_id = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type = "target"
+  engine_name = "kinesis"
+
+  kinesis_settings {
+    service_access_role_arn = "${aws_iam_role.iam_role.arn}"
+    stream_arn              = "${aws_kinesis_stream.stream2.arn}"
+  }
+
+  depends_on = ["aws_iam_role_policy.dms_kinesis_access"]
+}
+
+resource "aws_kinesis_stream" "stream1" {
+  name        = "tf-test-dms-kinesis-1-%[1]s"
+  shard_count = 1
+}
+
+resource "aws_kinesis_stream" "stream2" {
+  name        = "tf-test-dms-kinesis-2-%[1]s"
+  shard_count = 1
+}
+
+resource "aws_iam_role" "iam_role" {
+  name_prefix = "tf-test-iam-kinesis-role"
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Action": "sts:AssumeRole",
+			"Principal": {
+				"Service": "dms.amazonaws.com"
+			},
+			"Effect": "Allow"
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "dms_kinesis_access" {
+  name_prefix = "tf-test-iam-kinesis-role-policy"
+  role        = "${aws_iam_role.iam_role.name}"
+  policy      = "${data.aws_iam_policy_document.dms_kinesis_access.json}"
+}
+
+data "aws_iam_policy_document" "dms_kinesis_access" {
+  statement {
+	actions = [
+		"kinesis:DescribeStream",
+		"kinesis:PutRecord",
+		"kinesis:PutRecords",
+	]
+	resources = [
+		"${aws_kinesis_stream.stream1.arn}",
+		"${aws_kinesis_stream.stream2.arn}",
+	]
+  }
+}
+`, randId)
+}
+
 func dmsEndpointMongoDbConfig(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
-	name = "alias/aws/dms"
+  name = "alias/aws/dms"
 }
 
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "source"
-	engine_name = "mongodb"
-	server_name = "tftest"
-	port = 27017
-	username = "tftest"
-	password = "tftest"
-	database_name = "tftest"
-	ssl_mode = "none"
-	extra_connection_attributes = ""
-	kms_key_arn = "${data.aws_kms_alias.dms.target_key_arn}"
-	tags {
-		Name = "tf-test-dms-endpoint-%[1]s"
-		Update = "to-update"
-		Remove = "to-remove"
-	}
-	mongodb_settings {
-		auth_type = "PASSWORD"
-		auth_mechanism = "DEFAULT"
-		nesting_level = "NONE"
-		extract_doc_id = "false"
-		docs_to_investigate = "1000"
-		auth_source = "admin"
-	}
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "source"
+  engine_name                 = "mongodb"
+  server_name                 = "tftest"
+  port                        = 27017
+  username                    = "tftest"
+  password                    = "tftest"
+  database_name               = "tftest"
+  ssl_mode                    = "none"
+  extra_connection_attributes = ""
+  kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  mongodb_settings {
+    auth_type           = "password"
+    auth_mechanism      = "default"
+    nesting_level       = "none"
+    extract_doc_id      = "false"
+    docs_to_investigate = "1000"
+    auth_source         = "admin"
+  }
 }
 `, randId)
 }
@@ -573,32 +1142,130 @@ resource "aws_dms_endpoint" "dms_endpoint" {
 func dmsEndpointMongoDbConfigUpdate(randId string) string {
 	return fmt.Sprintf(`
 data "aws_kms_alias" "dms" {
-	name = "alias/aws/dms"
+  name = "alias/aws/dms"
 }
 
 resource "aws_dms_endpoint" "dms_endpoint" {
-	endpoint_id = "tf-test-dms-endpoint-%[1]s"
-	endpoint_type = "source"
-	engine_name = "mongodb"
-	server_name = "tftest-new-server_name"
-	port = 27018
-	username = "tftest-new-username"
-	password = "tftest-new-password"
-	database_name = "tftest-new-database_name"
-	ssl_mode = "require"
-	extra_connection_attributes = "key=value;"
-	kms_key_arn = "${data.aws_kms_alias.dms.target_key_arn}"
-	tags {
-		Name = "tf-test-dms-endpoint-%[1]s"
-		Update = "updated"
-		Add = "added"
-	}
-	mongodb_settings {
-		auth_mechanism = "SCRAM_SHA_1"
-		nesting_level = "ONE"
-		extract_doc_id = "true"
-		docs_to_investigate = "1001"
-	}
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "source"
+  engine_name                 = "mongodb"
+  server_name                 = "tftest-new-server_name"
+  port                        = 27018
+  username                    = "tftest-new-username"
+  password                    = "tftest-new-password"
+  database_name               = "tftest-new-database_name"
+  ssl_mode                    = "require"
+  extra_connection_attributes = "key=value;"
+  kms_key_arn                 = "${data.aws_kms_alias.dms.target_key_arn}"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "updated"
+    Add    = "added"
+  }
+
+  mongodb_settings {
+    auth_mechanism      = "scram-sha-1"
+    nesting_level       = "one"
+    extract_doc_id      = "true"
+    docs_to_investigate = "1001"
+  }
+}
+`, randId)
+}
+
+func dmsEndpointDocDBConfig(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+  database_name               = "tf-test-dms-db"
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "target"
+  engine_name                 = "docdb"
+  extra_connection_attributes = ""
+  password                    = "tftest"
+  port                        = 27017
+  server_name                 = "tftest"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  username = "tftest"
+}
+`, randId)
+}
+
+func dmsEndpointDocDBConfigUpdate(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+  database_name               = "tf-test-dms-db-updated"
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "target"
+  engine_name                 = "docdb"
+  extra_connection_attributes = "extra"
+  password                    = "tftestupdate"
+  port                        = 27019
+  server_name                 = "tftestupdate"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "updated"
+    Add    = "added"
+  }
+
+  username = "tftestupdate"
+}
+`, randId)
+}
+
+func dmsEndpointDb2Config(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+  database_name               = "tf-test-dms-db"
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "source"
+  engine_name                 = "db2"
+  extra_connection_attributes = ""
+  password                    = "tftest"
+  port                        = 27017
+  server_name                 = "tftest"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "to-update"
+    Remove = "to-remove"
+  }
+
+  username = "tftest"
+}
+`, randId)
+}
+
+func dmsEndpointDb2ConfigUpdate(randId string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "dms_endpoint" {
+  database_name               = "tf-test-dms-db-updated"
+  endpoint_id                 = "tf-test-dms-endpoint-%[1]s"
+  endpoint_type               = "source"
+  engine_name                 = "db2"
+  extra_connection_attributes = "extra"
+  password                    = "tftestupdate"
+  port                        = 27019
+  server_name                 = "tftestupdate"
+  ssl_mode                    = "none"
+
+  tags = {
+    Name   = "tf-test-dms-endpoint-%[1]s"
+    Update = "updated"
+    Add    = "added"
+  }
+
+  username = "tftestupdate"
 }
 `, randId)
 }

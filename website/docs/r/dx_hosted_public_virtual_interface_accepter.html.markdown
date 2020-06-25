@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_hosted_public_virtual_interface_accepter"
-sidebar_current: "docs-aws-resource-dx-hosted-public-virtual-interface-accepter"
 description: |-
   Provides a resource to manage the accepter's side of a Direct Connect hosted public virtual interface.
 ---
 
-# aws_dx_hosted_public_virtual_interface_accepter
+# Resource: aws_dx_hosted_public_virtual_interface_accepter
 
 Provides a resource to manage the accepter's side of a Direct Connect hosted public virtual interface.
 This resource accepts ownership of a public virtual interface created by another AWS account.
@@ -40,9 +40,10 @@ resource "aws_dx_hosted_public_virtual_interface" "creator" {
 
   customer_address = "175.45.176.1/30"
   amazon_address   = "175.45.176.2/30"
+
   route_filter_prefixes = [
-      "210.52.109.0/24",
-      "175.45.176.0/22"
+    "210.52.109.0/24",
+    "175.45.176.0/22",
   ]
 }
 
@@ -51,7 +52,7 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "accepter" {
   provider             = "aws.accepter"
   virtual_interface_id = "${aws_dx_hosted_public_virtual_interface.creator.id}"
 
-  tags {
+  tags = {
     Side = "Accepter"
   }
 }
@@ -62,7 +63,7 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "accepter" {
 The following arguments are supported:
 
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ### Removing `aws_dx_hosted_public_virtual_interface_accepter` from your configuration
 

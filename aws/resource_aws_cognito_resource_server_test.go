@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
@@ -20,8 +20,8 @@ func TestAccAWSCognitoResourceServer_basic(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_cognito_resource_server.main"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
@@ -61,8 +61,8 @@ func TestAccAWSCognitoResourceServer_scope(t *testing.T) {
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
 	resourceName := "aws_cognito_resource_server.main"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCognitoIdentityProvider(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCognitoResourceServerDestroy,
 		Steps: []resource.TestStep{
@@ -169,8 +169,8 @@ func testAccCheckAWSCognitoResourceServerDestroy(s *terraform.State) error {
 func testAccAWSCognitoResourceServerConfig_basic(identifier string, name string, poolName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
-  identifier = "%s"
-  name = "%s"
+  identifier   = "%s"
+  name         = "%s"
   user_pool_id = "${aws_cognito_user_pool.main.id}"
 }
 
@@ -184,15 +184,15 @@ func testAccAWSCognitoResourceServerConfig_scope(identifier string, name string,
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
-  name = "%s"
+  name       = "%s"
 
-  scope = {
-    scope_name = "scope_1_name"
+  scope {
+    scope_name        = "scope_1_name"
     scope_description = "scope_1_description"
   }
 
-  scope = {
-    scope_name = "scope_2_name"
+  scope {
+    scope_name        = "scope_2_name"
     scope_description = "scope_2_description"
   }
 
@@ -209,10 +209,10 @@ func testAccAWSCognitoResourceServerConfig_scope_update(identifier string, name 
 	return fmt.Sprintf(`
 resource "aws_cognito_resource_server" "main" {
   identifier = "%s"
-  name = "%s"
+  name       = "%s"
 
-  scope = {
-    scope_name = "scope_1_name_updated"
+  scope {
+    scope_name        = "scope_1_name_updated"
     scope_description = "scope_1_description"
   }
 

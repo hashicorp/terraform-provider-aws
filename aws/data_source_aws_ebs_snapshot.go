@@ -3,9 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
+	"sort"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsEbsSnapshot() *schema.Resource {
@@ -13,30 +17,30 @@ func dataSourceAwsEbsSnapshot() *schema.Resource {
 		Read: dataSourceAwsEbsSnapshotRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			//selection criteria
 			"filter": dataSourceFiltersSchema(),
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"owners": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"snapshot_ids": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"restorable_by_user_ids": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			//Computed values returned
@@ -117,33 +121,28 @@ func dataSourceAwsEbsSnapshotRead(d *schema.ResourceData, meta interface{}) erro
 		return err
 	}
 
-	var snapshot *ec2.Snapshot
 	if len(resp.Snapshots) < 1 {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	if len(resp.Snapshots) > 1 {
-		recent := d.Get("most_recent").(bool)
-		log.Printf("[DEBUG] aws_ebs_snapshot - multiple results found and `most_recent` is set to: %t", recent)
-		if recent {
-			snapshot = mostRecentSnapshot(resp.Snapshots)
-		} else {
-			return fmt.Errorf("Your query returned more than one result. Please try a more specific search criteria.")
+		if !d.Get("most_recent").(bool) {
+			return fmt.Errorf("Your query returned more than one result. Please try a more " +
+				"specific search criteria, or set `most_recent` attribute to true.")
 		}
-	} else {
-		snapshot = resp.Snapshots[0]
+		sort.Slice(resp.Snapshots, func(i, j int) bool {
+			return aws.TimeValue(resp.Snapshots[i].StartTime).Unix() > aws.TimeValue(resp.Snapshots[j].StartTime).Unix()
+		})
 	}
 
 	//Single Snapshot found so set to state
-	return snapshotDescriptionAttributes(d, snapshot)
+	return snapshotDescriptionAttributes(d, resp.Snapshots[0], meta)
 }
 
-func mostRecentSnapshot(snapshots []*ec2.Snapshot) *ec2.Snapshot {
-	return sortSnapshots(snapshots)[0]
-}
+func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapshot, meta interface{}) error {
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapshot) error {
-	d.SetId(*snapshot.SnapshotId)
+	d.SetId(aws.StringValue(snapshot.SnapshotId))
 	d.Set("snapshot_id", snapshot.SnapshotId)
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("data_encryption_key_id", snapshot.DataEncryptionKeyId)
@@ -155,9 +154,18 @@ func snapshotDescriptionAttributes(d *schema.ResourceData, snapshot *ec2.Snapsho
 	d.Set("owner_id", snapshot.OwnerId)
 	d.Set("owner_alias", snapshot.OwnerAlias)
 
-	if err := d.Set("tags", tagsToMap(snapshot.Tags)); err != nil {
-		return err
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(snapshot.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
+
+	snapshotArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("snapshot/%s", d.Id()),
+		Service:   "ec2",
+	}.String()
+
+	d.Set("arn", snapshotArn)
 
 	return nil
 }

@@ -1,12 +1,12 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_server_certificate"
-sidebar_current: "docs-aws-resource-iam-server-certificate"
 description: |-
   Provides an IAM Server Certificate
 ---
 
-# aws_iam_server_certificate
+# Resource: aws_iam_server_certificate
 
 Provides an IAM Server Certificate resource to upload Server Certificates.
 Certs uploaded to IAM can easily work with other AWS services such as:

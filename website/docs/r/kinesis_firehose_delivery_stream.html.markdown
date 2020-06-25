@@ -1,12 +1,12 @@
 ---
+subcategory: "Kinesis Firehose"
 layout: "aws"
 page_title: "AWS: aws_kinesis_firehose_delivery_stream"
-sidebar_current: "docs-aws-resource-kinesis-firehose-delivery-stream"
 description: |-
   Provides a AWS Kinesis Firehose Delivery Stream
 ---
 
-# aws_kinesis_firehose_delivery_stream
+# Resource: aws_kinesis_firehose_delivery_stream
 
 Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 and Amazon Redshift.
 
@@ -24,22 +24,19 @@ resource "aws_kinesis_firehose_delivery_stream" "extended_s3_stream" {
   extended_s3_configuration {
     role_arn   = "${aws_iam_role.firehose_role.arn}"
     bucket_arn = "${aws_s3_bucket.bucket.arn}"
-    processing_configuration = [
-      {
-        enabled = "true"
-        processors = [
-          {
-            type = "Lambda"
-            parameters = [
-              {
-                parameter_name = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              }
-            ]
-          }
-        ]
+
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
       }
-    ]
+    }
   }
 }
 
@@ -70,6 +67,7 @@ EOF
 
 resource "aws_iam_role" "lambda_iam" {
   name = "lambda_iam"
+
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -88,11 +86,11 @@ EOF
 }
 
 resource "aws_lambda_function" "lambda_processor" {
-  filename = "lambda.zip"
+  filename      = "lambda.zip"
   function_name = "firehose_lambda_processor"
-  role = "${aws_iam_role.lambda_iam.arn}"
-  handler = "exports.handler"
-  runtime = "nodejs4.3"
+  role          = "${aws_iam_role.lambda_iam.arn}"
+  handler       = "exports.handler"
+  runtime       = "nodejs8.10"
 }
 ```
 
@@ -168,6 +166,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     copy_options       = "delimiter '|'" # the default delimiter
     data_table_columns = "test-col"
     s3_backup_mode     = "Enabled"
+
     s3_backup_configuration {
       role_arn           = "${aws_iam_role.firehose_role.arn}"
       bucket_arn         = "${aws_s3_bucket.bucket.arn}"
@@ -204,22 +203,18 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
     index_name = "test"
     type_name  = "test"
 
-    processing_configuration = [
-      {
-        enabled = "true"
-        processors = [
-          {
-            type = "Lambda"
-            parameters = [
-              {
-                parameter_name = "LambdaArn"
-                parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
-              }
-            ]
-          }
-        ]
+    processing_configuration {
+      enabled = "true"
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_processor.arn}:$LATEST"
+        }
       }
-    ]
+    }
   }
 }
 ```
@@ -249,7 +244,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
   }
 }
 ```
-~> **NOTE:** Kinesis Firehose is currently only supported in us-east-1, us-west-2 and eu-west-1.
 
 ## Argument Reference
 
@@ -257,19 +251,27 @@ The following arguments are supported:
 
 * `name` - (Required) A name to identify the stream. This is unique to the
 AWS account and region the Stream is created in.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `kinesis_source_configuration` - (Optional) Allows the ability to specify the kinesis stream that is used as the source of the firehose delivery stream.
+* `server_side_encryption` - (Optional) Encrypt at rest options.
+Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
 * `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, and `splunk`.
-* `s3_configuration` - (Optional, Deprecated, see/use `extended_s3_configuration` unless `destination` is `redshift`) Configuration options for the s3 destination (or the intermediate bucket if the destination
+* `s3_configuration` - (Optional) Required for non-S3 destinations. For S3 destination, use `extended_s3_configuration` instead. Configuration options for the s3 destination (or the intermediate bucket if the destination
 is redshift). More details are given below.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. More details are given below.
 * `redshift_configuration` - (Optional) Configuration options if redshift is the destination.
 Using `redshift_configuration` requires the user to also specify a
 `s3_configuration` block. More details are given below.
+* `elasticsearch_configuration` - (Optional) Configuration options if elasticsearch is the destination. More details are given below.
 
-The `kinesis_source_configuration` object supports the following: 
+The `kinesis_source_configuration` object supports the following:
 
 * `kinesis_stream_arn` (Required) The kinesis stream used as the source of the firehose delivery stream.
 * `role_arn` (Required) The ARN of the role that provides access to the source Kinesis stream.
+
+The `server_side_encryption` object supports the following:
+
+* `enabled` - (Optional) Whether to enable encryption at rest. Default is `false`.
 
 The `s3_configuration` object supports the following:
 
@@ -287,6 +289,7 @@ be used.
 The `extended_s3_configuration` object supports the same fields from `s3_configuration` as well as the following:
 
 * `data_format_conversion_configuration` - (Optional) Nested argument for the serializer, deserializer, and schema for converting data from the JSON format to the Parquet or ORC format before writing it to Amazon S3. More details given below.
+* `error_output_prefix` - (Optional) Prefix added to failed records before writing them to S3. This prefix appears immediately following the bucket name.
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 * `s3_backup_mode` - (Optional) The Amazon S3 backup mode.  Valid values are `Disabled` and `Enabled`.  Default value is `Disabled`.
 * `s3_backup_configuration` - (Optional) The configuration for backup in Amazon S3. Required if `s3_backup_mode` is `Enabled`. Supports the same fields as `s3_configuration` object.
@@ -327,7 +330,7 @@ The `splunk_configuration` objects supports the following:
 * `hec_endpoint_type` - (Optional) The HEC endpoint type. Valid values are `Raw` or `Event`. The default value is `Raw`.
 * `hec_token` - The GUID that you obtain from your Splunk cluster when you create a new HEC endpoint.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedEventsOnly` and `AllEvents`.  Default value is `FailedEventsOnly`.
-* `retry_duration` - (Optional) After an initial failure to deliver to Amazon Elasticsearch, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
+* `retry_duration` - (Optional) After an initial failure to deliver to Splunk, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 300s.  There will be no retry if the value is 0.
 * `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
 * `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
 
@@ -354,6 +357,8 @@ The `parameters` array objects support the following:
 
 ### data_format_conversion_configuration
 
+~> **NOTE:** Once configured, the data format conversion configuration can only be disabled, in which the configuration values will remain, but will not be active. It is not currently possible to completely remove the configuration without recreating the resource.
+
 Example:
 
 ```hcl
@@ -362,6 +367,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
   extended_s3_configuration {
     # Must be at least 64
     buffer_size = 128
+
     # ... other configuration ...
     data_format_conversion_configuration {
       input_format_configuration {

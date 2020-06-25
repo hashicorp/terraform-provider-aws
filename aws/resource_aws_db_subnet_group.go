@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/rds"
-
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDbSubnetGroup() *schema.Resource {
@@ -25,12 +25,12 @@ func resourceAwsDbSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 
-			"name": &schema.Schema{
+			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -38,7 +38,7 @@ func resourceAwsDbSubnetGroup() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateFunc:  validateDbSubnetGroupName,
 			},
-			"name_prefix": &schema.Schema{
+			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
 				Computed:      true,
@@ -47,13 +47,13 @@ func resourceAwsDbSubnetGroup() *schema.Resource {
 				ValidateFunc:  validateDbSubnetGroupNamePrefix,
 			},
 
-			"description": &schema.Schema{
+			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "Managed by Terraform",
 			},
 
-			"subnet_ids": &schema.Schema{
+			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
@@ -67,7 +67,7 @@ func resourceAwsDbSubnetGroup() *schema.Resource {
 
 func resourceAwsDbSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
 	rdsconn := meta.(*AWSClient).rdsconn
-	tags := tagsFromMapRDS(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RdsTags()
 
 	subnetIdsSet := d.Get("subnet_ids").(*schema.Set)
 	subnetIds := make([]*string, subnetIdsSet.Len())
@@ -104,6 +104,7 @@ func resourceAwsDbSubnetGroupCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	rdsconn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := rds.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(d.Id()),
@@ -128,7 +129,7 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 		// AWS is down casing the name provided, so we compare lower case versions
 		// of the names. We lower case both our name and their name in the check,
 		// incase they change that someday.
-		if strings.ToLower(d.Id()) == strings.ToLower(*s.DBSubnetGroupName) {
+		if strings.EqualFold(d.Id(), *s.DBSubnetGroupName) {
 			subnetGroup = describeResp.DBSubnetGroups[0]
 		}
 	}
@@ -146,32 +147,27 @@ func resourceAwsDbSubnetGroupRead(d *schema.ResourceData, meta interface{}) erro
 	}
 	d.Set("subnet_ids", subnets)
 
-	// list tags for resource
-	// set tags
 	conn := meta.(*AWSClient).rdsconn
 
 	arn := aws.StringValue(subnetGroup.DBSubnetGroupArn)
 	d.Set("arn", arn)
-	resp, err := conn.ListTagsForResource(&rds.ListTagsForResourceInput{
-		ResourceName: aws.String(arn),
-	})
+
+	tags, err := keyvaluetags.RdsListTags(conn, d.Get("arn").(string))
 
 	if err != nil {
-		log.Printf("[DEBUG] Error retreiving tags for ARN: %s", arn)
+		return fmt.Errorf("error listing tags for RDS DB Subnet Group (%s): %s", d.Get("arn").(string), err)
 	}
 
-	var dt []*rds.Tag
-	if len(resp.TagList) > 0 {
-		dt = resp.TagList
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-	d.Set("tags", tagsToMapRDS(dt))
 
 	return nil
 }
 
 func resourceAwsDbSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
-	if d.HasChange("subnet_ids") || d.HasChange("description") {
+	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
 			n = new(schema.Set)
@@ -194,11 +190,12 @@ func resourceAwsDbSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
-	arn := d.Get("arn").(string)
-	if err := setTagsRDS(conn, d, arn); err != nil {
-		return err
-	} else {
-		d.SetPartial("tags")
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RdsUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating RDS DB Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
 	return resourceAwsDbSubnetGroupRead(d, meta)

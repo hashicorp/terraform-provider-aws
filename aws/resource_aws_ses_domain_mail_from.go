@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsSesDomainMailFrom() *schema.Resource {
@@ -39,7 +39,7 @@ func resourceAwsSesDomainMailFrom() *schema.Resource {
 }
 
 func resourceAwsSesDomainMailFromSet(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	behaviorOnMxFailure := d.Get("behavior_on_mx_failure").(string)
 	domainName := d.Get("domain").(string)
@@ -62,7 +62,7 @@ func resourceAwsSesDomainMailFromSet(d *schema.ResourceData, meta interface{}) e
 }
 
 func resourceAwsSesDomainMailFromRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	domainName := d.Id()
 
@@ -73,26 +73,32 @@ func resourceAwsSesDomainMailFromRead(d *schema.ResourceData, meta interface{}) 
 	}
 
 	out, err := conn.GetIdentityMailFromDomainAttributes(readOpts)
+
 	if err != nil {
-		log.Printf("error fetching MAIL FROM domain attributes for %s: %s", domainName, err)
-		return err
+		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: %s", domainName, err)
 	}
 
+	if out == nil {
+		return fmt.Errorf("error fetching SES MAIL FROM domain attributes for %s: empty response", domainName)
+	}
+
+	attributes, ok := out.MailFromDomainAttributes[domainName]
+
+	if !ok {
+		log.Printf("[WARN] SES Domain Identity (%s) not found, removing from state", domainName)
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("behavior_on_mx_failure", attributes.BehaviorOnMXFailure)
 	d.Set("domain", domainName)
-
-	if v, ok := out.MailFromDomainAttributes[domainName]; ok {
-		d.Set("behavior_on_mx_failure", v.BehaviorOnMXFailure)
-		d.Set("mail_from_domain", v.MailFromDomain)
-	} else {
-		d.Set("behavior_on_mx_failure", v.BehaviorOnMXFailure)
-		d.Set("mail_from_domain", "")
-	}
+	d.Set("mail_from_domain", attributes.MailFromDomain)
 
 	return nil
 }
 
 func resourceAwsSesDomainMailFromDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	domainName := d.Id()
 

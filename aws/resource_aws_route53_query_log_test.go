@@ -2,17 +2,71 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"os"
-	"regexp"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_route53_query_log", &resource.Sweeper{
+		Name: "aws_route53_query_log",
+		F:    testSweepRoute53QueryLogs,
+	})
+}
+
+func testSweepRoute53QueryLogs(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).r53conn
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListQueryLoggingConfigsPages(&route53.ListQueryLoggingConfigsInput{}, func(page *route53.ListQueryLoggingConfigsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
+		}
+
+		for _, queryLoggingConfig := range page.QueryLoggingConfigs {
+			id := aws.StringValue(queryLoggingConfig.Id)
+
+			log.Printf("[INFO] Deleting Route53 query logging configuration: %s", id)
+			_, err := conn.DeleteQueryLoggingConfig(&route53.DeleteQueryLoggingConfigInput{
+				Id: aws.String(id),
+			})
+			if isAWSErr(err, route53.ErrCodeNoSuchQueryLoggingConfig, "") {
+				continue
+			}
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting Route53 query logging configuration (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !isLast
+	})
+	// In unsupported AWS partitions, the API may return an error even the SDK cannot handle.
+	// Reference: https://github.com/aws/aws-sdk-go/issues/3313
+	if testSweepSkipSweepError(err) || isAWSErr(err, "SerializationError", "failed to unmarshal error message") || isAWSErr(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+		log.Printf("[WARN] Skipping Route53 query logging configurations sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Route53 query logging configurations: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func TestAccAWSRoute53QueryLog_Basic(t *testing.T) {
 	// The underlying resources are sensitive to where they are located
@@ -21,48 +75,26 @@ func TestAccAWSRoute53QueryLog_Basic(t *testing.T) {
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
 
+	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_route53_query_log.test"
-	rName := fmt.Sprintf("%s-%s", t.Name(), acctest.RandString(5))
+	route53ZoneResourceName := "aws_route53_zone.test"
+	rName := strings.ToLower(fmt.Sprintf("%s-%s", t.Name(), acctest.RandString(5)))
 
 	var queryLoggingConfig route53.QueryLoggingConfig
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRoute53QueryLogDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53QueryLogExists(resourceName, &queryLoggingConfig),
-					resource.TestMatchResourceAttr(resourceName, "cloudwatch_log_group_arn",
-						regexp.MustCompile(fmt.Sprintf(`^arn:aws:logs:[^:]+:[0-9]{12}:log-group:/aws/route53/%s.com:\*$`, rName))),
-					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "cloudwatch_log_group_arn", cloudwatchLogGroupResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "zone_id", route53ZoneResourceName, "zone_id"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSRoute53QueryLog_Import(t *testing.T) {
-	// The underlying resources are sensitive to where they are located
-	// Use us-east-1 for testing
-	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
-
-	resourceName := "aws_route53_query_log.test"
-	rName := fmt.Sprintf("%s-%s", t.Name(), acctest.RandString(5))
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckRoute53QueryLogDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccCheckAWSRoute53QueryLogResourceConfigBasic1(rName),
-			},
-
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -146,7 +178,7 @@ data "aws_iam_policy_document" "test" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "test" {
-  policy_name = "%[1]s"
+  policy_name     = "%[1]s"
   policy_document = "${data.aws_iam_policy_document.test.json}"
 }
 

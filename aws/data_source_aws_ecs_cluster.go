@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsEcsCluster() *schema.Resource {
@@ -17,7 +17,6 @@ func dataSourceAwsEcsCluster() *schema.Resource {
 			"cluster_name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 
 			"arn": {
@@ -43,6 +42,23 @@ func dataSourceAwsEcsCluster() *schema.Resource {
 			"registered_container_instances_count": {
 				Type:     schema.TypeInt,
 				Computed: true,
+			},
+
+			"setting": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"value": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 		},
 	}
@@ -76,6 +92,10 @@ func dataSourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("pending_tasks_count", cluster.PendingTasksCount)
 	d.Set("running_tasks_count", cluster.RunningTasksCount)
 	d.Set("registered_container_instances_count", cluster.RegisteredContainerInstancesCount)
+
+	if err := d.Set("setting", flattenEcsSettings(cluster.Settings)); err != nil {
+		return fmt.Errorf("error setting setting: %s", err)
+	}
 
 	return nil
 }

@@ -2,23 +2,82 @@ package aws
 
 import (
 	"fmt"
+	"log"
+	"regexp"
 	"testing"
 	"time"
 
-	"regexp"
-	"strings"
-
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
-	"github.com/jen20/awspolicyequivalence"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
+func init() {
+	resource.AddTestSweepers("aws_sqs_queue", &resource.Sweeper{
+		Name: "aws_sqs_queue",
+		F:    testSweepSqsQueues,
+		Dependencies: []string{
+			"aws_autoscaling_group",
+			"aws_cloudwatch_event_rule",
+			"aws_elastic_beanstalk_environment",
+			"aws_iot_topic_rule",
+			"aws_lambda_function",
+			"aws_s3_bucket",
+			"aws_sns_topic",
+		},
+	})
+}
+
+func testSweepSqsQueues(region string) error {
+	client, err := sharedClientForRegion(region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.(*AWSClient).sqsconn
+	input := &sqs.ListQueuesInput{}
+	var sweeperErrs *multierror.Error
+
+	output, err := conn.ListQueues(input)
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping SQS Queues sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SQS Queues: %w", err))
+		return sweeperErrs
+	}
+
+	for _, queueUrl := range output.QueueUrls {
+		url := aws.StringValue(queueUrl)
+
+		log.Printf("[INFO] Deleting SQS Queue: %s", url)
+		_, err := conn.DeleteQueue(&sqs.DeleteQueueInput{
+			QueueUrl: aws.String(url),
+		})
+		if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
+			continue
+		}
+		if err != nil {
+			sweeperErr := fmt.Errorf("error deleting SQS Queue (%s): %w", url, err)
+			log.Printf("[ERROR] %s", sweeperErr)
+			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			continue
+		}
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
 func TestAccAWSSQSQueue_basic(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -26,19 +85,30 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 			{
 				Config: testAccAWSSQSConfigWithOverrides(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithOverrides("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueOverrideAttributes(&queueAttributes),
 				),
 			},
 			{
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 				),
 			},
 		},
@@ -46,8 +116,11 @@ func TestAccAWSSQSQueue_basic(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_tags(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -55,24 +128,35 @@ func TestAccAWSSQSQueue_tags(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithTags(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "original"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "original"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 			{
 				Config: testAccAWSSQSConfigWithTagsChanged(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.%", "1"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "tags.Usage", "changed"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Usage", "changed"),
 				),
 			},
 			{
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
-					resource.TestCheckNoResourceAttr("aws_sqs_queue.queue", "tags"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestCheckNoResourceAttr(resourceName, "tags"),
 				),
 			},
 		},
@@ -80,8 +164,11 @@ func TestAccAWSSQSQueue_tags(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
 	prefix := "acctest-sqs-queue"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -89,17 +176,29 @@ func TestAccAWSSQSQueue_namePrefix(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithNamePrefix(prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
-					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue", false),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(`^acctest-sqs-queue`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_namePrefix_fifo(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
 	prefix := "acctest-sqs-queue"
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -107,15 +206,26 @@ func TestAccAWSSQSQueue_namePrefix_fifo(t *testing.T) {
 			{
 				Config: testAccAWSSQSFifoConfigWithNamePrefix(prefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
-					testAccCheckAWSSQSGeneratedNamePrefix("aws_sqs_queue.queue", "acctest-sqs-queue", true),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
+					resource.TestMatchResourceAttr(resourceName, "name", regexp.MustCompile(`^acctest-sqs-queue.*\.fifo$`)),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_policy(t *testing.T) {
+	var queueAttributes map[string]*string
+
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
 
@@ -123,7 +233,7 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 		`{"Version": "2012-10-17","Id": "sqspolicy","Statement":[{"Sid": "Stmt1451501026839","Effect": "Allow","Principal":"*","Action":"sqs:SendMessage","Resource":"arn:aws:sqs:us-west-2:470663696735:%s","Condition":{"ArnEquals":{"aws:SourceArn":"arn:aws:sns:us-west-2:470663696735:%s"}}}]}`,
 		topicName, queueName)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -131,16 +241,28 @@ func TestAccAWSSQSQueue_policy(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSQSHasPolicy("aws_sqs_queue.test-email-events", expectedPolicyText),
+					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test-email-events", &queueAttributes),
+					testAccCheckAWSSQSQueuePolicyAttribute(&queueAttributes, expectedPolicyText),
 				),
+			},
+			{
+				ResourceName:      "aws_sqs_queue.test-email-events",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -148,25 +270,26 @@ func TestAccAWSSQSQueue_queueDeletedRecently(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 				),
-			},
-			{
-				Config: "# delete queue to quickly recreate",
-				Check:  testAccCheckAWSSQSQueueDestroy,
 			},
 			{
 				Config: testAccAWSSQSConfigWithDefaults(queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.queue"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 				),
+				Taint: []string{resourceName},
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	var queueAttributes map[string]*string
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -174,8 +297,17 @@ func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithRedrive(acctest.RandString(10)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithDefaults("aws_sqs_queue.my_dead_letter_queue"),
+					testAccCheckAWSSQSQueueExists("aws_sqs_queue.my_dead_letter_queue", &queueAttributes),
+					testAccCheckAWSSQSQueueDefaultAttributes(&queueAttributes),
 				),
+			},
+			{
+				ResourceName:      "aws_sqs_queue.my_dead_letter_queue",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
@@ -183,9 +315,11 @@ func TestAccAWSSQSQueue_redrivePolicy(t *testing.T) {
 
 // Tests formatting and compacting of Policy, Redrive json
 func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
+	var queueAttributes map[string]*string
+
 	queueName := fmt.Sprintf("sqs-queue-%s", acctest.RandString(10))
 	topicName := fmt.Sprintf("sns-topic-%s", acctest.RandString(10))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -193,16 +327,27 @@ func TestAccAWSSQSQueue_Policybasic(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfig_PolicyFormat(topicName, queueName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExistsWithOverrides("aws_sqs_queue.test-email-events"),
+					testAccCheckAWSSQSQueueExists("aws_sqs_queue.test-email-events", &queueAttributes),
+					testAccCheckAWSSQSQueueOverrideAttributes(&queueAttributes),
 				),
+			},
+			{
+				ResourceName:      "aws_sqs_queue.test-email-events",
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_FIFO(t *testing.T) {
+	var queueAttributes map[string]*string
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_sqs_queue.queue"
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -210,16 +355,24 @@ func TestAccAWSSQSQueue_FIFO(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithFIFO(acctest.RandString(10)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExists("aws_sqs_queue.queue"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "fifo_queue", "true"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -233,7 +386,10 @@ func TestAccAWSSQSQueue_FIFOExpectNameError(t *testing.T) {
 }
 
 func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -241,17 +397,25 @@ func TestAccAWSSQSQueue_FIFOWithContentBasedDeduplication(t *testing.T) {
 			{
 				Config: testAccAWSSQSConfigWithFIFOContentBasedDeduplication(acctest.RandString(10)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExists("aws_sqs_queue.queue"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "fifo_queue", "true"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "content_based_deduplication", "true"),
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "fifo_queue", "true"),
+					resource.TestCheckResourceAttr(resourceName, "content_based_deduplication", "true"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
 }
 
 func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
@@ -259,6 +423,34 @@ func TestAccAWSSQSQueue_ExpectContentBasedDeduplicationError(t *testing.T) {
 			{
 				Config:      testAccExpectContentBasedDeduplicationError(acctest.RandString(10)),
 				ExpectError: regexp.MustCompile(`Content based deduplication can only be set with FIFO queues`),
+			},
+		},
+	})
+}
+
+func TestAccAWSSQSQueue_Encryption(t *testing.T) {
+	var queueAttributes map[string]*string
+
+	resourceName := "aws_sqs_queue.queue"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSQSConfigWithEncryption(acctest.RandString(10)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSQSQueueExists(resourceName, &queueAttributes),
+					resource.TestCheckResourceAttr(resourceName, "kms_master_key_id", "alias/aws/sqs"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"name_prefix",
+				},
 			},
 		},
 	})
@@ -293,32 +485,12 @@ func testAccCheckAWSSQSQueueDestroy(s *terraform.State) error {
 
 	return nil
 }
-func testAccCheckAWSQSHasPolicy(n string, expectedPolicyText string) resource.TestCheckFunc {
+func testAccCheckAWSSQSQueuePolicyAttribute(queueAttributes *map[string]*string, expectedPolicyText string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Queue URL specified!")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).sqsconn
-
-		params := &sqs.GetQueueAttributesInput{
-			QueueUrl:       aws.String(rs.Primary.ID),
-			AttributeNames: []*string{aws.String("Policy")},
-		}
-		resp, err := conn.GetQueueAttributes(params)
-		if err != nil {
-			return err
-		}
-
 		var actualPolicyText string
-		for k, v := range resp.Attributes {
-			if k == "Policy" {
-				actualPolicyText = *v
+		for key, valuePointer := range *queueAttributes {
+			if key == "Policy" {
+				actualPolicyText = aws.StringValue(valuePointer)
 				break
 			}
 		}
@@ -336,26 +508,11 @@ func testAccCheckAWSQSHasPolicy(n string, expectedPolicyText string) resource.Te
 	}
 }
 
-func testAccCheckAWSSQSExists(n string) resource.TestCheckFunc {
+func testAccCheckAWSSQSQueueExists(resourceName string, queueAttributes *map[string]*string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Queue URL specified!")
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckAWSSQSExistsWithDefaults(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
 		if rs.Primary.ID == "" {
@@ -364,36 +521,45 @@ func testAccCheckAWSSQSExistsWithDefaults(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).sqsconn
 
-		params := &sqs.GetQueueAttributesInput{
+		input := &sqs.GetQueueAttributesInput{
 			QueueUrl:       aws.String(rs.Primary.ID),
 			AttributeNames: []*string{aws.String("All")},
 		}
-		resp, err := conn.GetQueueAttributes(params)
+		output, err := conn.GetQueueAttributes(input)
 
 		if err != nil {
 			return err
 		}
 
+		*queueAttributes = output.Attributes
+
+		return nil
+	}
+}
+
+func testAccCheckAWSSQSQueueDefaultAttributes(queueAttributes *map[string]*string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
 		// checking if attributes are defaults
-		for k, v := range resp.Attributes {
-			if k == "VisibilityTimeout" && *v != "30" {
-				return fmt.Errorf("VisibilityTimeout (%s) was not set to 30", *v)
+		for key, valuePointer := range *queueAttributes {
+			value := aws.StringValue(valuePointer)
+			if key == "VisibilityTimeout" && value != "30" {
+				return fmt.Errorf("VisibilityTimeout (%s) was not set to 30", value)
 			}
 
-			if k == "MessageRetentionPeriod" && *v != "345600" {
-				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 345600", *v)
+			if key == "MessageRetentionPeriod" && value != "345600" {
+				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 345600", value)
 			}
 
-			if k == "MaximumMessageSize" && *v != "262144" {
-				return fmt.Errorf("MaximumMessageSize (%s) was not set to 262144", *v)
+			if key == "MaximumMessageSize" && value != "262144" {
+				return fmt.Errorf("MaximumMessageSize (%s) was not set to 262144", value)
 			}
 
-			if k == "DelaySeconds" && *v != "0" {
-				return fmt.Errorf("DelaySeconds (%s) was not set to 0", *v)
+			if key == "DelaySeconds" && value != "0" {
+				return fmt.Errorf("DelaySeconds (%s) was not set to 0", value)
 			}
 
-			if k == "ReceiveMessageWaitTimeSeconds" && *v != "0" {
-				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 0", *v)
+			if key == "ReceiveMessageWaitTimeSeconds" && value != "0" {
+				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 0", value)
 			}
 		}
 
@@ -401,92 +567,34 @@ func testAccCheckAWSSQSExistsWithDefaults(n string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAWSSQSGeneratedNamePrefix(resource, prefix string, isFifo bool) resource.TestCheckFunc {
+func testAccCheckAWSSQSQueueOverrideAttributes(queueAttributes *map[string]*string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		r, ok := s.RootModule().Resources[resource]
-		if !ok {
-			return fmt.Errorf("Resource not found")
-		}
-		name, ok := r.Primary.Attributes["name"]
-		if !ok {
-			return fmt.Errorf("Name attr not found: %#v", r.Primary.Attributes)
-		}
-		if !strings.HasPrefix(name, prefix) {
-			return fmt.Errorf("Name: %q, does not have prefix: %q", name, prefix)
-		}
-		if isFifo && !strings.HasSuffix(name, ".fifo") {
-			return fmt.Errorf("Name: %q, does not have suffix: %q", name, ".fifo")
-		}
-		return nil
-	}
-}
-
-func testAccCheckAWSSQSExistsWithOverrides(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Queue URL specified!")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).sqsconn
-
-		params := &sqs.GetQueueAttributesInput{
-			QueueUrl:       aws.String(rs.Primary.ID),
-			AttributeNames: []*string{aws.String("All")},
-		}
-		resp, err := conn.GetQueueAttributes(params)
-
-		if err != nil {
-			return err
-		}
-
 		// checking if attributes match our overrides
-		for k, v := range resp.Attributes {
-			if k == "VisibilityTimeout" && *v != "60" {
-				return fmt.Errorf("VisibilityTimeout (%s) was not set to 60", *v)
+		for key, valuePointer := range *queueAttributes {
+			value := aws.StringValue(valuePointer)
+			if key == "VisibilityTimeout" && value != "60" {
+				return fmt.Errorf("VisibilityTimeout (%s) was not set to 60", value)
 			}
 
-			if k == "MessageRetentionPeriod" && *v != "86400" {
-				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 86400", *v)
+			if key == "MessageRetentionPeriod" && value != "86400" {
+				return fmt.Errorf("MessageRetentionPeriod (%s) was not set to 86400", value)
 			}
 
-			if k == "MaximumMessageSize" && *v != "2048" {
-				return fmt.Errorf("MaximumMessageSize (%s) was not set to 2048", *v)
+			if key == "MaximumMessageSize" && value != "2048" {
+				return fmt.Errorf("MaximumMessageSize (%s) was not set to 2048", value)
 			}
 
-			if k == "DelaySeconds" && *v != "90" {
-				return fmt.Errorf("DelaySeconds (%s) was not set to 90", *v)
+			if key == "DelaySeconds" && value != "90" {
+				return fmt.Errorf("DelaySeconds (%s) was not set to 90", value)
 			}
 
-			if k == "ReceiveMessageWaitTimeSeconds" && *v != "10" {
-				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 10", *v)
+			if key == "ReceiveMessageWaitTimeSeconds" && value != "10" {
+				return fmt.Errorf("ReceiveMessageWaitTimeSeconds (%s) was not set to 10", value)
 			}
 		}
 
 		return nil
 	}
-}
-
-func TestAccAWSSQSQueue_Encryption(t *testing.T) {
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSSQSQueueDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSSQSConfigWithEncryption(acctest.RandString(10)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSQSExists("aws_sqs_queue.queue"),
-					resource.TestCheckResourceAttr("aws_sqs_queue.queue", "kms_master_key_id", "alias/aws/sqs"),
-				),
-			},
-		},
-	})
 }
 
 func testAccAWSSQSConfigWithDefaults(r string) string {
@@ -514,15 +622,6 @@ resource "aws_sqs_queue" "queue" {
 `, r)
 }
 
-func testAccAWSSQSFifoConfigWithDefaults(r string) string {
-	return fmt.Sprintf(`
-resource "aws_sqs_queue" "queue" {
-  name = "%s.fifo"
-  fifo_queue = true
-}
-`, r)
-}
-
 func testAccAWSSQSConfigWithOverrides(r string) string {
 	return fmt.Sprintf(`
 resource "aws_sqs_queue" "queue" {
@@ -532,7 +631,8 @@ resource "aws_sqs_queue" "queue" {
   message_retention_seconds  = 86400
   receive_wait_time_seconds  = 10
   visibility_timeout_seconds = 60
-}`, r)
+}
+`, r)
 }
 
 func testAccAWSSQSConfigWithRedrive(name string) string {
@@ -661,9 +761,9 @@ func testAccAWSSQSConfigWithTags(r string) string {
 resource "aws_sqs_queue" "queue" {
   name = "%s"
 
-  tags {
+  tags = {
     Environment = "production"
-    Usage = "original"
+    Usage       = "original"
   }
 }
 `, r)
@@ -674,7 +774,7 @@ func testAccAWSSQSConfigWithTagsChanged(r string) string {
 resource "aws_sqs_queue" "queue" {
   name = "%s"
 
-  tags {
+  tags = {
     Usage = "changed"
   }
 }

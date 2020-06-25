@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_base_path_mapping"
-sidebar_current: "docs-aws-resource-api-gateway-base-path-mapping"
 description: |-
   Connects a custom domain with a deployed API
 ---
 
-# aws_api_gateway_base_path_mapping
+# Resource: aws_api_gateway_base_path_mapping
 
 Connects a custom domain name registered via `aws_api_gateway_domain_name`
 with a deployed API so that its methods can be called via the
@@ -16,7 +16,7 @@ custom domain name.
 
 ```hcl
 resource "aws_api_gateway_deployment" "example" {
-  # See aws_api_gateway_rest_api_docs for how to create this
+  # See aws_api_gateway_rest_api docs for how to create this
   rest_api_id = "${aws_api_gateway_rest_api.MyDemoAPI.id}"
   stage_name  = "live"
 }
@@ -45,3 +45,19 @@ The following arguments are supported:
 * `api_id` - (Required) The id of the API to connect.
 * `stage_name` - (Optional) The name of a specific deployment stage to expose at the given path. If omitted, callers may select any stage by including its name as a path element after the base path.
 * `base_path` - (Optional) Path segment that must be prepended to the path when accessing the API via this mapping. If omitted, the API is exposed at the root of the given domain.
+
+## Import
+
+`aws_api_gateway_base_path_mapping` can be imported by using the domain name and base path, e.g.
+
+For empty `base_path` (e.g. root path (`/`)):
+
+```
+$ terraform import aws_api_gateway_base_path_mapping.example example.com/
+```
+
+Otherwise:
+
+```
+$ terraform import aws_api_gateway_base_path_mapping.example example.com/base-path
+```

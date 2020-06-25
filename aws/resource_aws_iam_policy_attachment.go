@@ -3,15 +3,12 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
-	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamPolicyAttachment() *schema.Resource {
@@ -22,31 +19,31 @@ func resourceAwsIamPolicyAttachment() *schema.Resource {
 		Delete: resourceAwsIamPolicyAttachmentDelete,
 
 		Schema: map[string]*schema.Schema{
-			"name": &schema.Schema{
+			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.NoZeroValues,
 			},
-			"users": &schema.Schema{
+			"users": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"roles": &schema.Schema{
+			"roles": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"groups": &schema.Schema{
+			"groups": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      schema.HashString,
 			},
-			"policy_arn": &schema.Schema{
+			"policy_arn": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -65,7 +62,7 @@ func resourceAwsIamPolicyAttachmentCreate(d *schema.ResourceData, meta interface
 	groups := expandStringList(d.Get("groups").(*schema.Set).List())
 
 	if len(users) == 0 && len(roles) == 0 && len(groups) == 0 {
-		return fmt.Errorf("[WARN] No Users, Roles, or Groups specified for IAM Policy Attachment %s", name)
+		return fmt.Errorf("No Users, Roles, or Groups specified for IAM Policy Attachment %s", name)
 	} else {
 		var userErr, roleErr, groupErr error
 		if users != nil {
@@ -146,13 +143,13 @@ func resourceAwsIamPolicyAttachmentUpdate(d *schema.ResourceData, meta interface
 	var userErr, roleErr, groupErr error
 
 	if d.HasChange("users") {
-		userErr = updateUsers(conn, d, meta)
+		userErr = updateUsers(conn, d)
 	}
 	if d.HasChange("roles") {
-		roleErr = updateRoles(conn, d, meta)
+		roleErr = updateRoles(conn, d)
 	}
 	if d.HasChange("groups") {
-		groupErr = updateGroups(conn, d, meta)
+		groupErr = updateGroups(conn, d)
 	}
 	if userErr != nil || roleErr != nil || groupErr != nil {
 		return composeErrors(fmt.Sprint("[WARN] Error updating user, role, or group list from IAM Policy Attachment ", name, ":"), userErr, roleErr, groupErr)
@@ -185,7 +182,7 @@ func resourceAwsIamPolicyAttachmentDelete(d *schema.ResourceData, meta interface
 }
 
 func composeErrors(desc string, uErr error, rErr error, gErr error) error {
-	errMsg := fmt.Sprintf(desc)
+	errMsg := fmt.Sprint(desc)
 	errs := []error{uErr, rErr, gErr}
 	for _, e := range errs {
 		if e != nil {
@@ -216,39 +213,6 @@ func attachPolicyToRoles(conn *iam.IAM, roles []*string, arn string) error {
 		if err != nil {
 			return err
 		}
-
-		var attachmentErr error
-		attachmentErr = resource.Retry(2*time.Minute, func() *resource.RetryError {
-
-			input := iam.ListRolePoliciesInput{
-				RoleName: r,
-			}
-
-			attachedPolicies, err := conn.ListRolePolicies(&input)
-			if err != nil {
-				return resource.NonRetryableError(err)
-			}
-
-			if len(attachedPolicies.PolicyNames) > 0 {
-				var foundPolicy bool
-				for _, policyName := range attachedPolicies.PolicyNames {
-					if strings.HasSuffix(arn, *policyName) {
-						foundPolicy = true
-						break
-					}
-				}
-
-				if !foundPolicy {
-					return resource.NonRetryableError(err)
-				}
-			}
-
-			return nil
-		})
-
-		if attachmentErr != nil {
-			return attachmentErr
-		}
 	}
 	return nil
 }
@@ -264,7 +228,7 @@ func attachPolicyToGroups(conn *iam.IAM, groups []*string, arn string) error {
 	}
 	return nil
 }
-func updateUsers(conn *iam.IAM, d *schema.ResourceData, meta interface{}) error {
+func updateUsers(conn *iam.IAM, d *schema.ResourceData) error {
 	arn := d.Get("policy_arn").(string)
 	o, n := d.GetChange("users")
 	if o == nil {
@@ -286,7 +250,7 @@ func updateUsers(conn *iam.IAM, d *schema.ResourceData, meta interface{}) error 
 	}
 	return nil
 }
-func updateRoles(conn *iam.IAM, d *schema.ResourceData, meta interface{}) error {
+func updateRoles(conn *iam.IAM, d *schema.ResourceData) error {
 	arn := d.Get("policy_arn").(string)
 	o, n := d.GetChange("roles")
 	if o == nil {
@@ -308,7 +272,7 @@ func updateRoles(conn *iam.IAM, d *schema.ResourceData, meta interface{}) error 
 	}
 	return nil
 }
-func updateGroups(conn *iam.IAM, d *schema.ResourceData, meta interface{}) error {
+func updateGroups(conn *iam.IAM, d *schema.ResourceData) error {
 	arn := d.Get("policy_arn").(string)
 	o, n := d.GetChange("groups")
 	if o == nil {
@@ -337,6 +301,9 @@ func detachPolicyFromUsers(conn *iam.IAM, users []*string, arn string) error {
 			UserName:  u,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -349,6 +316,9 @@ func detachPolicyFromRoles(conn *iam.IAM, roles []*string, arn string) error {
 			RoleName:  r,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}
@@ -361,6 +331,9 @@ func detachPolicyFromGroups(conn *iam.IAM, groups []*string, arn string) error {
 			GroupName: g,
 			PolicyArn: aws.String(arn),
 		})
+		if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+			continue
+		}
 		if err != nil {
 			return err
 		}

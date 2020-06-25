@@ -1,12 +1,12 @@
 ---
+subcategory: "Batch"
 layout: "aws"
-page_title: "AWS: batch"
-sidebar_current: "docs-aws-resource-batch-job-definition"
+page_title: "AWS: aws_batch_job_definition"
 description: |-
   Provides a Batch Job Definition resource.
 ---
 
-# aws_batch_job_definition
+# Resource: aws_batch_job_definition
 
 Provides a Batch Job Definition resource.
 
@@ -14,9 +14,10 @@ Provides a Batch Job Definition resource.
 
 ```hcl
 resource "aws_batch_job_definition" "test" {
-	name = "tf_test_batch_job_definition"
-	type = "container"
-	container_properties = <<CONTAINER_PROPERTIES
+  name = "tf_test_batch_job_definition"
+  type = "container"
+
+  container_properties = <<CONTAINER_PROPERTIES
 {
 	"command": ["ls", "-la"],
 	"image": "busybox",
@@ -83,3 +84,11 @@ In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name of the job definition.
 * `revision` - The revision of the job definition.
+
+## Import
+
+Batch Job Definition can be imported using the `arn`, e.g.
+
+```
+$ terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
+```

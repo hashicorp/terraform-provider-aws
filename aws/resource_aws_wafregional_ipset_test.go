@@ -2,51 +2,57 @@ package aws
 
 import (
 	"fmt"
+	"net"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 )
 
 func TestAccAWSWafRegionalIPSet_basic(t *testing.T) {
+	resourceName := "aws_wafregional_ipset.ipset"
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafRegionalIPSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSWafRegionalIPSetConfig(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &v),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "name", ipsetName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
-					resource.TestMatchResourceAttr("aws_wafregional_ipset.ipset", "arn",
-						regexp.MustCompile(`^arn:[\w-]+:waf-regional:[^:]+:\d{12}:ipset/.+$`)),
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "waf-regional", regexp.MustCompile("ipset/.+$")),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
+	resourceName := "aws_wafregional_ipset.ipset"
 	var v waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -54,7 +60,7 @@ func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalIPSetConfig(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &v),
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &v),
 					testAccCheckAWSWafRegionalIPSetDisappears(&v),
 				),
 				ExpectNonEmptyPlan: true,
@@ -64,89 +70,135 @@ func TestAccAWSWafRegionalIPSet_disappears(t *testing.T) {
 }
 
 func TestAccAWSWafRegionalIPSet_changeNameForceNew(t *testing.T) {
+	resourceName := "aws_wafregional_ipset.ipset"
 	var before, after waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 	ipsetNewName := fmt.Sprintf("ip-set-new-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafRegionalIPSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalIPSetConfig(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &before),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "name", ipsetName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalIPSetConfigChangeName(ipsetNewName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &after),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "name", ipsetNewName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", ipsetNewName),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSWafRegionalIPSet_changeDescriptors(t *testing.T) {
+	resourceName := "aws_wafregional_ipset.ipset"
 	var before, after waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAWSWafRegionalIPSetDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSWafRegionalIPSetConfig(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &before),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "name", ipsetName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.type", "IPV4"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.4037960608.value", "192.0.7.0/24"),
 				),
 			},
 			{
 				Config: testAccAWSWafRegionalIPSetConfigChangeIPSetDescriptors(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &after),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "name", ipsetName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "1"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.115741513.type", "IPV4"),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.115741513.value", "192.0.8.0/24"),
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &after),
+					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.115741513.type", "IPV4"),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.115741513.value", "192.0.8.0/24"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSWafRegionalIPSet_IpSetDescriptors_1000UpdateLimit(t *testing.T) {
+	var ipset waf.IPSet
+	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
+	resourceName := "aws_wafregional_ipset.ipset"
+
+	incrementIP := func(ip net.IP) {
+		for j := len(ip) - 1; j >= 0; j-- {
+			ip[j]++
+			if ip[j] > 0 {
+				break
+			}
+		}
+	}
+
+	// Generate 2048 IPs
+	ip, ipnet, err := net.ParseCIDR("10.0.0.0/21")
+	if err != nil {
+		t.Fatal(err)
+	}
+	ipSetDescriptors := make([]string, 0, 2048)
+	for ip := ip.Mask(ipnet.Mask); ipnet.Contains(ip); incrementIP(ip) {
+		ipSetDescriptors = append(ipSetDescriptors, fmt.Sprintf("ip_set_descriptor {\ntype=\"IPV4\"\nvalue=\"%s/32\"\n}", ip))
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSWafRegionalIPSetConfig_IpSetDescriptors(ipsetName, strings.Join(ipSetDescriptors, "\n")),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &ipset),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "2048"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
 func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
+	resourceName := "aws_wafregional_ipset.ipset"
 	var ipset waf.IPSet
 	ipsetName := fmt.Sprintf("ip-set-%s", acctest.RandString(5))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSWafRegionalIPSetDestroy,
@@ -154,12 +206,15 @@ func TestAccAWSWafRegionalIPSet_noDescriptors(t *testing.T) {
 			{
 				Config: testAccAWSWafRegionalIPSetConfig_noDescriptors(ipsetName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAWSWafRegionalIPSetExists("aws_wafregional_ipset.ipset", &ipset),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "name", ipsetName),
-					resource.TestCheckResourceAttr(
-						"aws_wafregional_ipset.ipset", "ip_set_descriptor.#", "0"),
+					testAccCheckAWSWafRegionalIPSetExists(resourceName, &ipset),
+					resource.TestCheckResourceAttr(resourceName, "name", ipsetName),
+					resource.TestCheckResourceAttr(resourceName, "ip_set_descriptor.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -169,7 +224,7 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 	testCases := []struct {
 		Old             []interface{}
 		New             []interface{}
-		ExpectedUpdates []*waf.IPSetUpdate
+		ExpectedUpdates [][]*waf.IPSetUpdate
 	}{
 		{
 			// Change
@@ -179,19 +234,21 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 			New: []interface{}{
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
-			ExpectedUpdates: []*waf.IPSetUpdate{
-				&waf.IPSetUpdate{
-					Action: aws.String(wafregional.ChangeActionDelete),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.7.0/24"),
+			ExpectedUpdates: [][]*waf.IPSetUpdate{
+				{
+					{
+						Action: aws.String(wafregional.ChangeActionDelete),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.7.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(wafregional.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.8.0/24"),
+					{
+						Action: aws.String(wafregional.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.8.0/24"),
+						},
 					},
 				},
 			},
@@ -204,26 +261,28 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "10.0.2.0/24"},
 				map[string]interface{}{"type": "IPV4", "value": "10.0.3.0/24"},
 			},
-			ExpectedUpdates: []*waf.IPSetUpdate{
-				&waf.IPSetUpdate{
-					Action: aws.String(wafregional.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("10.0.1.0/24"),
+			ExpectedUpdates: [][]*waf.IPSetUpdate{
+				{
+					{
+						Action: aws.String(wafregional.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("10.0.1.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(wafregional.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("10.0.2.0/24"),
+					{
+						Action: aws.String(wafregional.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("10.0.2.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(wafregional.ChangeActionInsert),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("10.0.3.0/24"),
+					{
+						Action: aws.String(wafregional.ChangeActionInsert),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("10.0.3.0/24"),
+						},
 					},
 				},
 			},
@@ -235,19 +294,21 @@ func TestDiffWafRegionalIpSetDescriptors(t *testing.T) {
 				map[string]interface{}{"type": "IPV4", "value": "192.0.8.0/24"},
 			},
 			New: []interface{}{},
-			ExpectedUpdates: []*waf.IPSetUpdate{
-				&waf.IPSetUpdate{
-					Action: aws.String(wafregional.ChangeActionDelete),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.7.0/24"),
+			ExpectedUpdates: [][]*waf.IPSetUpdate{
+				{
+					{
+						Action: aws.String(wafregional.ChangeActionDelete),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.7.0/24"),
+						},
 					},
-				},
-				&waf.IPSetUpdate{
-					Action: aws.String(wafregional.ChangeActionDelete),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  aws.String("IPV4"),
-						Value: aws.String("192.0.8.0/24"),
+					{
+						Action: aws.String(wafregional.ChangeActionDelete),
+						IPSetDescriptor: &waf.IPSetDescriptor{
+							Type:  aws.String("IPV4"),
+							Value: aws.String("192.0.8.0/24"),
+						},
 					},
 				},
 			},
@@ -371,35 +432,53 @@ func testAccAWSWafRegionalIPSetConfig(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfigChangeName(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.7.0/24"
   }
-}`, name)
+}
+`, name)
 }
 
 func testAccAWSWafRegionalIPSetConfigChangeIPSetDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
   name = "%s"
+
   ip_set_descriptor {
-    type = "IPV4"
+    type  = "IPV4"
     value = "192.0.8.0/24"
   }
-}`, name)
+}
+`, name)
+}
+
+func testAccAWSWafRegionalIPSetConfig_IpSetDescriptors(name, ipSetDescriptors string) string {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
+  name = "%s"
+%s
+}
+`, name, ipSetDescriptors)
 }
 
 func testAccAWSWafRegionalIPSetConfig_noDescriptors(name string) string {
-	return fmt.Sprintf(`resource "aws_wafregional_ipset" "ipset" {
+	return fmt.Sprintf(`
+resource "aws_wafregional_ipset" "ipset" {
    name = "%s"
  }`, name)
 }

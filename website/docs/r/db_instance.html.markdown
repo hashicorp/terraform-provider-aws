@@ -1,12 +1,12 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_instance"
-sidebar_current: "docs-aws-resource-db-instance"
 description: |-
   Provides an RDS instance resource.
 ---
 
-# aws_db_instance
+# Resource: aws_db_instance
 
 Provides an RDS instance resource.  A DB instance is an isolated database
 environment in the cloud.  A DB instance can contain multiple user-created
@@ -36,9 +36,11 @@ about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/Use
 
 ## Example Usage
 
+### Basic Usage
+
 ```hcl
 resource "aws_db_instance" "default" {
-  allocated_storage    = 10
+  allocated_storage    = 20
   storage_type         = "gp2"
   engine               = "mysql"
   engine_version       = "5.7"
@@ -50,6 +52,19 @@ resource "aws_db_instance" "default" {
 }
 ```
 
+### Storage Autoscaling
+
+To enable Storage Autoscaling with instances that support the feature, define the `max_allocated_storage` argument higher than the `allocated_storage` argument. Terraform will automatically hide differences with the `allocated_storage` argument value if autoscaling occurs.
+
+```hcl
+resource "aws_db_instance" "example" {
+  # ... other configuration ...
+
+  allocated_storage     = 50
+  max_allocated_storage = 100
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to the [AWS official
@@ -57,8 +72,7 @@ documentation](http://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_Crea
 
 The following arguments are supported:
 
-* `allocated_storage` - (Required unless a `snapshot_identifier` or
-`replicate_source_db` is provided) The allocated storage in gibibytes.
+* `allocated_storage` - (Required unless a `snapshot_identifier` or `replicate_source_db` is provided) The allocated storage in gibibytes. If `max_allocated_storage` is configured, this argument represents the initial storage allocation and differences from the configuration will be ignored automatically when Storage Autoscaling occurs.
 * `allow_major_version_upgrade` - (Optional) Indicates that major version
 upgrades are allowed. Changing this parameter does not result in an outage and
 the change is asynchronously applied as soon as possible.
@@ -66,33 +80,33 @@ the change is asynchronously applied as soon as possible.
 are applied immediately, or during the next maintenance window. Default is
 `false`. See [Amazon RDS Documentation for more
 information.](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html)
-for more information.
 * `auto_minor_version_upgrade` - (Optional) Indicates that minor engine upgrades
 will be applied automatically to the DB instance during the maintenance window.
 Defaults to true.
 * `availability_zone` - (Optional) The AZ for the RDS instance.
 * `backup_retention_period` - (Optional) The days to retain backups for. Must be
-`1` or greater to be a source for a [Read Replica][1].
+between `0` and `35`. Must be greater than `0` if the database is used as a source for a Read Replica. [See Read Replica][1].
 * `backup_window` - (Optional) The daily time range (in UTC) during which
 automated backups are created if they are enabled. Example: "09:46-10:16". Must
 not overlap with `maintenance_window`.
+* `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
 * `character_set_name` - (Optional) The character set name to use for DB
-encoding in Oracle instances. This can't be changed. See [Oracle Character Sets
-Supported in Amazon
-RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
-for more information.
-* `copy_tags_to_snapshot` – (Optional, boolean) On delete, copy all Instance
-`tags` to the final snapshot (if `final_snapshot_identifier` is specified).
-Default is `false`.
+encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
+Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
+or [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
+* `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `db_subnet_group_name` - (Optional) Name of [DB subnet group](/docs/providers/aws/r/db_subnet_group.html). DB instance will
 be created in the VPC associated with the DB subnet group. If unspecified, will
 be created in the `default` VPC, or in EC2 Classic, if available. When working
-with read replicas, it needs to be specified only if the source database
+with read replicas, it should be specified only if the source database
 specifies an instance in another AWS Region. See [DBSubnetGroupName in API
 action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstanceReadReplica.html)
-for additonal read replica contraints.
-* `enabled_cloudwatch_logs_exports` - (Optional) Name list of enable log type for exporting to cloudwatch logs. If omitted, any logs will not be exported to cloudwatch logs.
-   Either of the following is supported: `audit`, `error`, `general`, `slowquery`.
+for additional read replica contraints.
+* `delete_automated_backups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
+* `deletion_protection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
+* `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
+* `domain_iam_role_name` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
+* `enabled_cloudwatch_logs_exports` - (Optional) List of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
 * `engine` - (Required unless a `snapshot_identifier` or `replicate_source_db`
 is provided) The database engine to use.  For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'.
@@ -105,14 +119,15 @@ this attribute will ignore differences in the patch version automatically (e.g. 
 For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `final_snapshot_identifier` - (Optional) The name of your final DB snapshot
-when this DB instance is deleted. If omitted, no final snapshot will be made.
+when this DB instance is deleted. Must be provided if `skip_final_snapshot` is
+set to `false`.
 * `iam_database_authentication_enabled` - (Optional) Specifies whether or
 mappings of AWS Identity and Access Management (IAM) accounts to database
 accounts is enabled.
 * `identifier` - (Optional, Forces new resource) The name of the RDS instance,
 if omitted, Terraform will assign a random, unique identifier.
 * `identifier_prefix` - (Optional, Forces new resource) Creates a unique
-identifier beginning with the specified prefix. Conflicts with `identifer`.
+identifier beginning with the specified prefix. Conflicts with `identifier`.
 * `instance_class` - (Required) The instance type of the RDS instance.
 * `iops` - (Optional) The amount of provisioned IOPS. Setting this implies a
 storage_type of "io1".
@@ -125,6 +140,7 @@ Syntax: "ddd:hh24:mi-ddd:hh24:mi". Eg: "Mon:00:00-Mon:03:00". See [RDS
 Maintenance Window
 docs](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_UpgradeDBInstance.Maintenance.html#AdjustingTheMaintenanceWindow)
 for more information.
+* `max_allocated_storage` - (Optional) When configured, the upper limit to which Amazon RDS can automatically scale the storage of the DB instance. Configuring this will automatically ignore differences to `allocated_storage`. Must be greater than or equal to `allocated_storage` or `0` to disable Storage Autoscaling.
 * `monitoring_interval` - (Optional) The interval, in seconds, between points
 when Enhanced Monitoring metrics are collected for the DB instance. To disable
 collecting Enhanced Monitoring metrics, specify 0. The default is 0. Valid
@@ -147,7 +163,9 @@ logs, and it will be stored in the state file.
 accessible. Default is `false`.
 * `replicate_source_db` - (Optional) Specifies that this resource is a Replicate
 database, and to use this value as the source database. This correlates to the
-`identifier` of another Amazon RDS Database to replicate. Note that if you are
+`identifier` of another Amazon RDS Database to replicate (if replicating within
+a single region) or ARN of the Amazon RDS Database to replicate (if replicating
+cross-region). Note that if you are
 creating a cross-region replica of an encrypted database you will also need to
 specify a `kms_key_id`. See [DB Instance Replication][1] and [Working with
 PostgreSQL and MySQL Read Replicas](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ReadRepl.html)
@@ -169,9 +187,8 @@ is ignored and you should instead declare `kms_key_id` with a valid ARN. The
 default is `false` if not specified.
 * `storage_type` - (Optional) One of "standard" (magnetic), "gp2" (general
 purpose SSD), or "io1" (provisioned IOPS SSD). The default is "io1" if `iops` is
-specified, "standard" if not. Note that this behaviour is different from the AWS
-web console, where the default is "gp2".
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+specified, "gp2" if not.
+* `tags` - (Optional) A map of tags to assign to the resource.
 * `timezone` - (Optional) Time zone of the DB instance. `timezone` is currently
 only supported by Microsoft SQL Server. The `timezone` can only be set on
 creation. See [MSSQL User
@@ -182,6 +199,9 @@ is provided) Username for the master DB user.
 * `vpc_security_group_ids` - (Optional) List of VPC security groups to
 associate.
 * `s3_import` - (Optional) Restore from a Percona Xtrabackup in S3.  See [Importing Data into an Amazon RDS MySQL DB Instance](http://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/MySQL.Procedural.Importing.html)
+* `performance_insights_enabled` - (Optional) Specifies whether Performance Insights are enabled. Defaults to false.
+* `performance_insights_kms_key_id` - (Optional) The ARN for the KMS key to encrypt Performance Insights data. When specifying `performance_insights_kms_key_id`, `performance_insights_enabled` needs to be set to true. Once KMS key is set, it can never be changed.
+* `performance_insights_retention_period` - (Optional) The amount of time in days to retain Performance Insights data. Either 7 (7 days) or 731 (2 years). When specifying `performance_insights_retention_period`, `performance_insights_enabled` needs to be set to true. Defaults to '7'.
 
 ~> **NOTE:** Removing the `replicate_source_db` attribute from an existing RDS
 Replicate database managed by Terraform will promote the database to a fully
@@ -194,11 +214,11 @@ Full details on the core parameters and impacts are in the API Docs: [RestoreDBI
 ```hcl
 resource "aws_db_instance" "db" {
   s3_import {
-    source_engine = "mysql"
+    source_engine         = "mysql"
     source_engine_version = "5.6"
-    bucket_name = "mybucket"
-    bucket_prefix = "backups"
-    ingestion_role = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
+    bucket_name           = "mybucket"
+    bucket_prefix         = "backups"
+    ingestion_role        = "arn:aws:iam::1234567890:role/role-xtrabackup-rds-restore"
   }
 }
 ```
@@ -239,6 +259,8 @@ In addition to all arguments above, the following attributes are exported:
 * `backup_window` - The backup window.
 * `ca_cert_identifier` - Specifies the identifier of the CA certificate for the
 DB instance.
+* `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
+* `domain_iam_role_name` - The name of the IAM role to be used when making API calls to the Directory Service.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
 * `engine_version` - The database engine version.
@@ -255,9 +277,9 @@ in a Route 53 Alias record).
 * `storage_encrypted` - Specifies whether the DB instance is encrypted.
 * `username` - The master username for the database.
 
-On Oracle instances the following is exported additionally:
+On Oracle and Microsoft SQL instances the following is exported additionally:
 
-* `character_set_name` - The character set used on Oracle instances.
+* `character_set_name` - The character set (collation) used on Oracle and Microsoft SQL instances.
 
 ## Import
 

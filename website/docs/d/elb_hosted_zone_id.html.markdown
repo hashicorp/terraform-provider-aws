@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb_hosted_zone_id"
-sidebar_current: "docs-aws-datasource-elb-hosted-zone-id"
 description: |-
   Get AWS Elastic Load Balancing Hosted Zone Id
 ---

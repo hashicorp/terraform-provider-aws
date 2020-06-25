@@ -1,12 +1,12 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_identity_pool_roles_attachment"
-sidebar_current: "docs-aws-resource-cognito-identity-pool-roles-attachment"
 description: |-
   Provides an AWS Cognito Identity Pool Roles Attachment.
 ---
 
-# aws_cognito_identity_pool_roles_attachment
+# Resource: aws_cognito_identity_pool_roles_attachment
 
 Provides an AWS Cognito Identity Pool Roles Attachment.
 
@@ -17,7 +17,7 @@ resource "aws_cognito_identity_pool" "main" {
   identity_pool_name               = "identity pool"
   allow_unauthenticated_identities = false
 
-  supported_login_providers {
+  supported_login_providers = {
     "graph.facebook.com" = "7346241598935555"
   }
 }
@@ -89,7 +89,7 @@ resource "aws_cognito_identity_pool_roles_attachment" "main" {
     }
   }
 
-  roles {
+  roles = {
     "authenticated" = "${aws_iam_role.authenticated.arn}"
   }
 }
@@ -125,3 +125,11 @@ In addition to the arguments, which are exported, the following attributes are e
 * `identity_pool_id` (Required) - An identity pool ID in the format REGION:GUID.
 * `role_mapping` (Optional) - The List of [Role Mapping](#role-mappings).
 * `roles` (Required) - The map of roles associated with this pool. For a given role, the key will be either "authenticated" or "unauthenticated" and the value will be the Role ARN.
+
+## Import
+
+Cognito Identity Pool Roles Attachment can be imported using the Identity Pool id, e.g.
+
+```
+$ terraform import aws_cognito_identity_pool_roles_attachment.example <identity-pool-id>
+```

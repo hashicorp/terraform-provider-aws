@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/private/protocol"
@@ -60,6 +61,14 @@ func (b *xmlBuilder) buildValue(value reflect.Value, current *XMLNode, tag refle
 		return nil
 	}
 
+	xml := tag.Get("xml")
+	if len(xml) != 0 {
+		name := strings.SplitAfterN(xml, ",", 2)[0]
+		if name == "-" {
+			return nil
+		}
+	}
+
 	t := tag.Get("type")
 	if t == "" {
 		switch value.Kind() {
@@ -87,14 +96,12 @@ func (b *xmlBuilder) buildValue(value reflect.Value, current *XMLNode, tag refle
 	}
 }
 
-// buildStruct adds a struct and its fields to the current XMLNode. All fields any any nested
+// buildStruct adds a struct and its fields to the current XMLNode. All fields and any nested
 // types are converted to XMLNodes also.
 func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag reflect.StructTag) error {
 	if !value.IsValid() {
 		return nil
 	}
-
-	fieldAdded := false
 
 	// unwrap payloads
 	if payload := tag.Get("payload"); payload != "" {
@@ -123,6 +130,8 @@ func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag refl
 		child.Attr = append(child.Attr, ns)
 	}
 
+	var payloadFields, nonPayloadFields int
+
 	t := value.Type()
 	for i := 0; i < value.NumField(); i++ {
 		member := elemOf(value.Field(i))
@@ -137,8 +146,10 @@ func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag refl
 
 		mTag := field.Tag
 		if mTag.Get("location") != "" { // skip non-body members
+			nonPayloadFields++
 			continue
 		}
+		payloadFields++
 
 		if protocol.CanSetIdempotencyToken(value.Field(i), field) {
 			token := protocol.GetIdempotencyToken()
@@ -153,11 +164,11 @@ func (b *xmlBuilder) buildStruct(value reflect.Value, current *XMLNode, tag refl
 		if err := b.buildValue(member, child, mTag); err != nil {
 			return err
 		}
-
-		fieldAdded = true
 	}
 
-	if fieldAdded { // only append this child if we have one ore more valid members
+	// Only case where the child shape is not added is if the shape only contains
+	// non-payload fields, e.g headers/query.
+	if !(payloadFields == 0 && nonPayloadFields > 0) {
 		current.AddChild(child)
 	}
 

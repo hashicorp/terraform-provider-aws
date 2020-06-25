@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb"
-sidebar_current: "docs-aws-resource-elb"
 description: |-
   Provides an Elastic Load Balancer resource.
 ---
 
-# aws_elb
+# Resource: aws_elb
 
 Provides an Elastic Load Balancer resource, also known as a "Classic
 Load Balancer" after the release of
@@ -62,7 +62,7 @@ resource "aws_elb" "bar" {
   connection_draining         = true
   connection_draining_timeout = 400
 
-  tags {
+  tags = {
     Name = "foobar-terraform-elb"
   }
 }
@@ -88,7 +88,7 @@ The following arguments are supported:
 * `idle_timeout` - (Optional) The time in seconds that the connection is allowed to be idle. Default: `60`
 * `connection_draining` - (Optional) Boolean to enable connection draining. Default: `false`
 * `connection_draining_timeout` - (Optional) The time in seconds to allow for connections to drain. Default: `300`
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Exactly one of `availability_zones` or `subnets` must be specified: this
 determines if the ELB exists in a VPC or in EC2-classic.

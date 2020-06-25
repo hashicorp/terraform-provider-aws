@@ -9,8 +9,8 @@
 //
 // For more information about this product, go to the AWS Elastic Beanstalk
 // (http://aws.amazon.com/elasticbeanstalk/) details page. The location of the
-// latest AWS Elastic Beanstalk WSDL is http://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl
-// (http://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl).
+// latest AWS Elastic Beanstalk WSDL is https://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl
+// (https://elasticbeanstalk.s3.amazonaws.com/doc/2010-12-01/AWSElasticBeanstalk.wsdl).
 // To install the Software Development Kits (SDKs), Integrated Development Environment
 // (IDE) Toolkits, and command line tools that enable you to access the API,
 // go to Tools for Amazon Web Services (http://aws.amazon.com/tools/).
@@ -18,7 +18,7 @@
 // Endpoints
 //
 // For a list of region-specific endpoints that AWS Elastic Beanstalk supports,
-// go to Regions and Endpoints (http://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region)
+// go to Regions and Endpoints (https://docs.aws.amazon.com/general/latest/gr/rande.html#elasticbeanstalk_region)
 // in the Amazon Web Services Glossary.
 //
 // See https://docs.aws.amazon.com/goto/WebAPI/elasticbeanstalk-2010-12-01 for more information on this service.

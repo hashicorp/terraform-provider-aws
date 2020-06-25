@@ -6,20 +6,22 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
-func TestAccAwsSecretsManagerSecretVersion_Basic(t *testing.T) {
+func TestAccAwsSecretsManagerSecretVersion_BasicString(t *testing.T) {
 	var version secretsmanager.GetSecretValueOutput
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecretsManagerSecretVersionConfig_SecretString(rName),
@@ -29,6 +31,39 @@ func TestAccAwsSecretsManagerSecretVersion_Basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.3070137", "AWSCURRENT"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", secretResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAwsSecretsManagerSecretVersion_Base64Binary(t *testing.T) {
+	var version secretsmanager.GetSecretValueOutput
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		DisableBinaryDriver: true,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsSecretsManagerSecretVersionConfig_SecretBinary(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsSecretsManagerSecretVersionExists(resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_binary", base64Encode([]byte("test-binary"))),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.3070137", "AWSCURRENT"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", secretResourceName, "arn"),
 				),
 			},
 			{
@@ -45,10 +80,11 @@ func TestAccAwsSecretsManagerSecretVersion_VersionStages(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_secretsmanager_secret_version.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsSecretsManagerSecretVersionDestroy,
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSSecretsManager(t) },
+		Providers:           testAccProviders,
+		CheckDestroy:        testAccCheckAwsSecretsManagerSecretVersionDestroy,
+		DisableBinaryDriver: true,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsSecretsManagerSecretVersionConfig_VersionStages_Single(rName),
@@ -114,7 +150,7 @@ func testAccCheckAwsSecretsManagerSecretVersionDestroy(s *terraform.State) error
 			if isAWSErr(err, secretsmanager.ErrCodeResourceNotFoundException, "") {
 				return nil
 			}
-			if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+			if isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") || isAWSErr(err, secretsmanager.ErrCodeInvalidRequestException, "was marked for deletion") {
 				return nil
 			}
 			return err
@@ -183,6 +219,19 @@ resource "aws_secretsmanager_secret" "test" {
 resource "aws_secretsmanager_secret_version" "test" {
   secret_id     = "${aws_secretsmanager_secret.test.id}"
   secret_string = "test-string"
+}
+`, rName)
+}
+
+func testAccAwsSecretsManagerSecretVersionConfig_SecretBinary(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = "%s"
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = "${aws_secretsmanager_secret.test.id}"
+  secret_binary = "${base64encode("test-binary")}"
 }
 `, rName)
 }

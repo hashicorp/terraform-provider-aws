@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpc"
-sidebar_current: "docs-aws-datasource-vpc-x"
 description: |-
     Provides details about a specific VPC
 ---
@@ -54,7 +54,7 @@ VPC whose data will be exported as attributes.
 * `state` - (Optional) The current state of the desired VPC.
   Can be either `"pending"` or `"available"`.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired VPC.
 
 More complex filters can be expressed using one or more `filter` sub-blocks,
@@ -76,12 +76,14 @@ the selected VPC.
 The following attribute is additionally exported:
 
 * `arn` - Amazon Resource Name (ARN) of VPC
+* `enable_dns_support` - Whether or not the VPC has DNS support
+* `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
 * `instance_tenancy` - The allowed tenancy of instances launched into the
   selected VPC. May be any of `"default"`, `"dedicated"`, or `"host"`.
 * `ipv6_association_id` - The association ID for the IPv6 CIDR block.
 * `ipv6_cidr_block` - The IPv6 CIDR block.
-* `enable_dns_support` - Whether or not the VPC has DNS support
-* `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
+* `main_route_table_id` - The ID of the main route table associated with this VPC.
+* `owner_id` - The ID of the AWS account that owns the VPC.
 
 `cidr_block_associations` is also exported with the following attributes:
 

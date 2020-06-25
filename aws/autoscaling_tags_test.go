@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestDiffAutoscalingTags(t *testing.T) {
@@ -155,4 +155,34 @@ func TestIgnoringTagsAutoscaling(t *testing.T) {
 			t.Fatalf("Tag %v with value %v not ignored, but should be!", *tag.Key, *tag.Value)
 		}
 	}
+}
+
+// autoscalingTagsToMap turns the list of tags into a map.
+func autoscalingTagsToMap(ts []*autoscaling.Tag) map[string]interface{} {
+	tags := make(map[string]interface{})
+	for _, t := range ts {
+		tag := map[string]interface{}{
+			"key":                 *t.Key,
+			"value":               *t.Value,
+			"propagate_at_launch": *t.PropagateAtLaunch,
+		}
+		tags[*t.Key] = tag
+	}
+
+	return tags
+}
+
+// autoscalingTagDescriptionsToMap turns the list of tags into a map.
+func autoscalingTagDescriptionsToMap(ts *[]*autoscaling.TagDescription) map[string]map[string]interface{} {
+	tags := make(map[string]map[string]interface{})
+	for _, t := range *ts {
+		tag := map[string]interface{}{
+			"key":                 *t.Key,
+			"value":               *t.Value,
+			"propagate_at_launch": *t.PropagateAtLaunch,
+		}
+		tags[*t.Key] = tag
+	}
+
+	return tags
 }

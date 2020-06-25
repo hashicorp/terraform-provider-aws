@@ -31,6 +31,20 @@ const (
 	// The authorization quota for the cluster security group has been reached.
 	ErrCodeAuthorizationQuotaExceededFault = "AuthorizationQuotaExceeded"
 
+	// ErrCodeBatchDeleteRequestSizeExceededFault for service response error code
+	// "BatchDeleteRequestSizeExceeded".
+	//
+	// The maximum number for a batch delete of snapshots has been reached. The
+	// limit is 100.
+	ErrCodeBatchDeleteRequestSizeExceededFault = "BatchDeleteRequestSizeExceeded"
+
+	// ErrCodeBatchModifyClusterSnapshotsLimitExceededFault for service response error code
+	// "BatchModifyClusterSnapshotsLimitExceededFault".
+	//
+	// The maximum number for snapshot identifiers has been reached. The limit is
+	// 100.
+	ErrCodeBatchModifyClusterSnapshotsLimitExceededFault = "BatchModifyClusterSnapshotsLimitExceededFault"
+
 	// ErrCodeBucketNotFoundFault for service response error code
 	// "BucketNotFoundFault".
 	//
@@ -72,7 +86,7 @@ const (
 	//
 	// The request would result in the user exceeding the allowed number of cluster
 	// parameter groups. For information about increasing your quota, go to Limits
-	// in Amazon Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// in Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeClusterParameterGroupQuotaExceededFault = "ClusterParameterGroupQuotaExceeded"
 
@@ -81,7 +95,7 @@ const (
 	//
 	// The request would exceed the allowed number of cluster instances for this
 	// account. For information about increasing your quota, go to Limits in Amazon
-	// Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeClusterQuotaExceededFault = "ClusterQuotaExceeded"
 
@@ -103,7 +117,7 @@ const (
 	//
 	// The request would result in the user exceeding the allowed number of cluster
 	// security groups. For information about increasing your quota, go to Limits
-	// in Amazon Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// in Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeClusterSecurityGroupQuotaExceededFault = "QuotaExceeded.ClusterSecurityGroup"
 
@@ -145,7 +159,7 @@ const (
 	//
 	// The request would result in user exceeding the allowed number of cluster
 	// subnet groups. For information about increasing your quota, go to Limits
-	// in Amazon Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// in Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeClusterSubnetGroupQuotaExceededFault = "ClusterSubnetGroupQuotaExceeded"
 
@@ -154,7 +168,7 @@ const (
 	//
 	// The request would result in user exceeding the allowed number of subnets
 	// in a cluster subnet groups. For information about increasing your quota,
-	// go to Limits in Amazon Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// go to Limits in Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeClusterSubnetQuotaExceededFault = "ClusterSubnetQuotaExceededFault"
 
@@ -183,7 +197,7 @@ const (
 	//
 	// The request would exceed the allowed number of event subscriptions for this
 	// account. For information about increasing your quota, go to Limits in Amazon
-	// Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeEventSubscriptionQuotaExceededFault = "EventSubscriptionQuotaExceeded"
 
@@ -204,7 +218,7 @@ const (
 	// "HsmClientCertificateQuotaExceededFault".
 	//
 	// The quota for HSM client certificates has been reached. For information about
-	// increasing your quota, go to Limits in Amazon Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// increasing your quota, go to Limits in Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeHsmClientCertificateQuotaExceededFault = "HsmClientCertificateQuotaExceededFault"
 
@@ -225,7 +239,7 @@ const (
 	// "HsmConfigurationQuotaExceededFault".
 	//
 	// The quota for HSM configurations has been reached. For information about
-	// increasing your quota, go to Limits in Amazon Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// increasing your quota, go to Limits in Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeHsmConfigurationQuotaExceededFault = "HsmConfigurationQuotaExceededFault"
 
@@ -269,6 +283,12 @@ const (
 	// The state of the cluster security group is not available.
 	ErrCodeInvalidClusterSecurityGroupStateFault = "InvalidClusterSecurityGroupState"
 
+	// ErrCodeInvalidClusterSnapshotScheduleStateFault for service response error code
+	// "InvalidClusterSnapshotScheduleState".
+	//
+	// The cluster snapshot schedule state is not valid.
+	ErrCodeInvalidClusterSnapshotScheduleStateFault = "InvalidClusterSnapshotScheduleState"
+
 	// ErrCodeInvalidClusterSnapshotStateFault for service response error code
 	// "InvalidClusterSnapshotState".
 	//
@@ -293,6 +313,12 @@ const (
 	//
 	// The state of the subnet is invalid.
 	ErrCodeInvalidClusterSubnetStateFault = "InvalidClusterSubnetStateFault"
+
+	// ErrCodeInvalidClusterTrackFault for service response error code
+	// "InvalidClusterTrack".
+	//
+	// The provided cluster track name is not valid.
+	ErrCodeInvalidClusterTrackFault = "InvalidClusterTrack"
 
 	// ErrCodeInvalidElasticIpFault for service response error code
 	// "InvalidElasticIpFault".
@@ -326,11 +352,19 @@ const (
 	// The restore is invalid.
 	ErrCodeInvalidRestoreFault = "InvalidRestore"
 
+	// ErrCodeInvalidRetentionPeriodFault for service response error code
+	// "InvalidRetentionPeriodFault".
+	//
+	// The retention period specified is either in the past or is not a valid value.
+	//
+	// The value must be either -1 or an integer between 1 and 3,653.
+	ErrCodeInvalidRetentionPeriodFault = "InvalidRetentionPeriodFault"
+
 	// ErrCodeInvalidS3BucketNameFault for service response error code
 	// "InvalidS3BucketNameFault".
 	//
 	// The S3 bucket name is invalid. For more information about naming rules, go
-	// to Bucket Restrictions and Limitations (http://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html)
+	// to Bucket Restrictions and Limitations (https://docs.aws.amazon.com/AmazonS3/latest/dev/BucketRestrictions.html)
 	// in the Amazon Simple Storage Service (S3) Developer Guide.
 	ErrCodeInvalidS3BucketNameFault = "InvalidS3BucketNameFault"
 
@@ -340,6 +374,18 @@ const (
 	// The string specified for the logging S3 key prefix does not comply with the
 	// documented constraints.
 	ErrCodeInvalidS3KeyPrefixFault = "InvalidS3KeyPrefixFault"
+
+	// ErrCodeInvalidScheduleFault for service response error code
+	// "InvalidSchedule".
+	//
+	// The schedule you submitted isn't valid.
+	ErrCodeInvalidScheduleFault = "InvalidSchedule"
+
+	// ErrCodeInvalidScheduledActionFault for service response error code
+	// "InvalidScheduledAction".
+	//
+	// The scheduled action is not valid.
+	ErrCodeInvalidScheduledActionFault = "InvalidScheduledAction"
 
 	// ErrCodeInvalidSnapshotCopyGrantStateFault for service response error code
 	// "InvalidSnapshotCopyGrantStateFault".
@@ -375,6 +421,12 @@ const (
 	// The tag is invalid.
 	ErrCodeInvalidTagFault = "InvalidTagFault"
 
+	// ErrCodeInvalidUsageLimitFault for service response error code
+	// "InvalidUsageLimit".
+	//
+	// The usage limit is not valid.
+	ErrCodeInvalidUsageLimitFault = "InvalidUsageLimit"
+
 	// ErrCodeInvalidVPCNetworkStateFault for service response error code
 	// "InvalidVPCNetworkStateFault".
 	//
@@ -398,7 +450,7 @@ const (
 	//
 	// The operation would exceed the number of nodes allotted to the account. For
 	// information about increasing your quota, go to Limits in Amazon Redshift
-	// (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeNumberOfNodesQuotaExceededFault = "NumberOfNodesQuotaExceeded"
 
@@ -430,7 +482,7 @@ const (
 	// "ReservedNodeQuotaExceeded".
 	//
 	// Request would exceed the user's compute node quota. For information about
-	// increasing your quota, go to Limits in Amazon Redshift (http://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
+	// increasing your quota, go to Limits in Amazon Redshift (https://docs.aws.amazon.com/redshift/latest/mgmt/amazon-redshift-limits.html)
 	// in the Amazon Redshift Cluster Management Guide.
 	ErrCodeReservedNodeQuotaExceededFault = "ReservedNodeQuotaExceeded"
 
@@ -465,6 +517,36 @@ const (
 	// An Amazon SNS topic with the specified Amazon Resource Name (ARN) does not
 	// exist.
 	ErrCodeSNSTopicArnNotFoundFault = "SNSTopicArnNotFound"
+
+	// ErrCodeScheduleDefinitionTypeUnsupportedFault for service response error code
+	// "ScheduleDefinitionTypeUnsupported".
+	//
+	// The definition you submitted is not supported.
+	ErrCodeScheduleDefinitionTypeUnsupportedFault = "ScheduleDefinitionTypeUnsupported"
+
+	// ErrCodeScheduledActionAlreadyExistsFault for service response error code
+	// "ScheduledActionAlreadyExists".
+	//
+	// The scheduled action already exists.
+	ErrCodeScheduledActionAlreadyExistsFault = "ScheduledActionAlreadyExists"
+
+	// ErrCodeScheduledActionNotFoundFault for service response error code
+	// "ScheduledActionNotFound".
+	//
+	// The scheduled action cannot be found.
+	ErrCodeScheduledActionNotFoundFault = "ScheduledActionNotFound"
+
+	// ErrCodeScheduledActionQuotaExceededFault for service response error code
+	// "ScheduledActionQuotaExceeded".
+	//
+	// The quota for scheduled actions exceeded.
+	ErrCodeScheduledActionQuotaExceededFault = "ScheduledActionQuotaExceeded"
+
+	// ErrCodeScheduledActionTypeUnsupportedFault for service response error code
+	// "ScheduledActionTypeUnsupported".
+	//
+	// The action type specified for a scheduled action is not supported.
+	ErrCodeScheduledActionTypeUnsupportedFault = "ScheduledActionTypeUnsupported"
 
 	// ErrCodeSnapshotCopyAlreadyDisabledFault for service response error code
 	// "SnapshotCopyAlreadyDisabledFault".
@@ -504,6 +586,30 @@ const (
 	// The AWS account has exceeded the maximum number of snapshot copy grants in
 	// this region.
 	ErrCodeSnapshotCopyGrantQuotaExceededFault = "SnapshotCopyGrantQuotaExceededFault"
+
+	// ErrCodeSnapshotScheduleAlreadyExistsFault for service response error code
+	// "SnapshotScheduleAlreadyExists".
+	//
+	// The specified snapshot schedule already exists.
+	ErrCodeSnapshotScheduleAlreadyExistsFault = "SnapshotScheduleAlreadyExists"
+
+	// ErrCodeSnapshotScheduleNotFoundFault for service response error code
+	// "SnapshotScheduleNotFound".
+	//
+	// We could not find the specified snapshot schedule.
+	ErrCodeSnapshotScheduleNotFoundFault = "SnapshotScheduleNotFound"
+
+	// ErrCodeSnapshotScheduleQuotaExceededFault for service response error code
+	// "SnapshotScheduleQuotaExceeded".
+	//
+	// You have exceeded the quota of snapshot schedules.
+	ErrCodeSnapshotScheduleQuotaExceededFault = "SnapshotScheduleQuotaExceeded"
+
+	// ErrCodeSnapshotScheduleUpdateInProgressFault for service response error code
+	// "SnapshotScheduleUpdateInProgress".
+	//
+	// The specified snapshot schedule is already being updated.
+	ErrCodeSnapshotScheduleUpdateInProgressFault = "SnapshotScheduleUpdateInProgress"
 
 	// ErrCodeSourceNotFoundFault for service response error code
 	// "SourceNotFound".
@@ -569,8 +675,7 @@ const (
 	// ErrCodeTagLimitExceededFault for service response error code
 	// "TagLimitExceededFault".
 	//
-	// The number of tables in your source cluster exceeds the limit for the target
-	// cluster. Resize to a larger cluster node type.
+	// You have exceeded the number of tags allowed.
 	ErrCodeTagLimitExceededFault = "TagLimitExceededFault"
 
 	// ErrCodeUnauthorizedOperation for service response error code
@@ -596,4 +701,16 @@ const (
 	//
 	// A request option was specified that is not supported.
 	ErrCodeUnsupportedOptionFault = "UnsupportedOptionFault"
+
+	// ErrCodeUsageLimitAlreadyExistsFault for service response error code
+	// "UsageLimitAlreadyExists".
+	//
+	// The usage limit already exists.
+	ErrCodeUsageLimitAlreadyExistsFault = "UsageLimitAlreadyExists"
+
+	// ErrCodeUsageLimitNotFoundFault for service response error code
+	// "UsageLimitNotFound".
+	//
+	// The usage limit identifier can't be found.
+	ErrCodeUsageLimitNotFoundFault = "UsageLimitNotFound"
 )

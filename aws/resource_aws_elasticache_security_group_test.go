@@ -4,15 +4,14 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -33,12 +32,6 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 	}
 	conn := client.(*AWSClient).elasticacheconn
 
-	prefixes := []string{
-		"tf-",
-		"tf-test-",
-		"tf-acc-test-",
-	}
-
 	err = conn.DescribeCacheSecurityGroupsPages(&elasticache.DescribeCacheSecurityGroupsInput{}, func(page *elasticache.DescribeCacheSecurityGroupsOutput, isLast bool) bool {
 		if len(page.CacheSecurityGroups) == 0 {
 			log.Print("[DEBUG] No Elasticache Cache Security Groups to sweep")
@@ -47,17 +40,12 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 
 		for _, securityGroup := range page.CacheSecurityGroups {
 			name := aws.StringValue(securityGroup.CacheSecurityGroupName)
-			skip := true
-			for _, prefix := range prefixes {
-				if strings.HasPrefix(name, prefix) {
-					skip = false
-					break
-				}
-			}
-			if skip {
+
+			if name == "default" {
 				log.Printf("[INFO] Skipping Elasticache Cache Security Group: %s", name)
 				continue
 			}
+
 			log.Printf("[INFO] Deleting Elasticache Cache Security Group: %s", name)
 			_, err := conn.DeleteCacheSecurityGroup(&elasticache.DeleteCacheSecurityGroupInput{
 				CacheSecurityGroupName: aws.String(name),
@@ -79,40 +67,28 @@ func testSweepElasticacheCacheSecurityGroups(region string) error {
 }
 
 func TestAccAWSElasticacheSecurityGroup_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAWSElasticacheSecurityGroupConfig,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSElasticacheSecurityGroupExists("aws_elasticache_security_group.bar"),
-					resource.TestCheckResourceAttr(
-						"aws_elasticache_security_group.bar", "description", "Managed by Terraform"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSElasticacheSecurityGroup_Import(t *testing.T) {
 	// Use EC2-Classic enabled us-east-1 for testing
 	oldRegion := os.Getenv("AWS_DEFAULT_REGION")
 	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
 	defer os.Setenv("AWS_DEFAULT_REGION", oldRegion)
 
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_elasticache_security_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSElasticacheSecurityGroupDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSElasticacheSecurityGroupConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSElasticacheSecurityGroupExists(resourceName),
+					resource.TestCheckResourceAttr(
+						resourceName, "description", "Managed by Terraform"),
+				),
 			},
-
-			resource.TestStep{
-				ResourceName:      "aws_elasticache_security_group.bar",
+			{
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -169,7 +145,7 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_security_group" "bar" {
+resource "aws_security_group" "test" {
   name = "tf-test-security-group-%03d"
 
   ingress {
@@ -180,8 +156,8 @@ resource "aws_security_group" "bar" {
   }
 }
 
-resource "aws_elasticache_security_group" "bar" {
+resource "aws_elasticache_security_group" "test" {
   name                 = "tf-test-security-group-%03d"
-  security_group_names = ["${aws_security_group.bar.name}"]
+  security_group_names = ["${aws_security_group.test.name}"]
 }
 `, acctest.RandInt(), acctest.RandInt())

@@ -5,26 +5,32 @@ import (
 	"os"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
+// sweeperAwsClients is a shared cache of regional AWSClient
+// This prevents client re-initialization for every resource with no benefit.
+var sweeperAwsClients map[string]interface{}
+
 func TestMain(m *testing.M) {
+	sweeperAwsClients = make(map[string]interface{})
 	resource.TestMain(m)
 }
 
 // sharedClientForRegion returns a common AWSClient setup needed for the sweeper
 // functions for a given region
 func sharedClientForRegion(region string) (interface{}, error) {
-	if os.Getenv("AWS_ACCESS_KEY_ID") == "" {
-		return nil, fmt.Errorf("empty AWS_ACCESS_KEY_ID")
+	if client, ok := sweeperAwsClients[region]; ok {
+		return client, nil
 	}
 
-	if os.Getenv("AWS_SECRET_ACCESS_KEY") == "" {
-		return nil, fmt.Errorf("empty AWS_SECRET_ACCESS_KEY")
+	if os.Getenv("AWS_PROFILE") == "" && (os.Getenv("AWS_ACCESS_KEY_ID") == "" || os.Getenv("AWS_SECRET_ACCESS_KEY") == "") {
+		return nil, fmt.Errorf("must provide environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY or environment variable AWS_PROFILE")
 	}
 
 	conf := &Config{
-		Region: region,
+		MaxRetries: 5,
+		Region:     region,
 	}
 
 	// configures a default client for the region, using the above env vars
@@ -32,6 +38,8 @@ func sharedClientForRegion(region string) (interface{}, error) {
 	if err != nil {
 		return nil, fmt.Errorf("error getting AWS client")
 	}
+
+	sweeperAwsClients[region] = client
 
 	return client, nil
 }

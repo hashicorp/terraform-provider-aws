@@ -5,11 +5,16 @@ import (
 	"fmt"
 	"log"
 	"regexp"
+	"sort"
+	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsAmi() *schema.Resource {
@@ -17,30 +22,34 @@ func dataSourceAwsAmi() *schema.Resource {
 		Read: dataSourceAwsAmiRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": dataSourceFiltersSchema(),
 			"executable_users": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"name_regex": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.ValidateRegexp,
+				ValidateFunc: validation.StringIsValidRegExp,
 			},
 			"most_recent": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
-				ForceNew: true,
 			},
 			"owners": {
 				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Required: true,
+				MinItems: 1,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.NoZeroValues,
+				},
 			},
 			// Computed values.
 			"architecture": {
@@ -145,6 +154,7 @@ func dataSourceAwsAmi() *schema.Resource {
 						"ebs": {
 							Type:     schema.TypeMap,
 							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -169,6 +179,7 @@ func dataSourceAwsAmi() *schema.Resource {
 			"state_reason": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tagsSchemaComputed(),
 		},
@@ -179,28 +190,15 @@ func dataSourceAwsAmi() *schema.Resource {
 func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	executableUsers, executableUsersOk := d.GetOk("executable_users")
-	filters, filtersOk := d.GetOk("filter")
-	nameRegex, nameRegexOk := d.GetOk("name_regex")
-	owners, ownersOk := d.GetOk("owners")
-
-	if !executableUsersOk && !filtersOk && !nameRegexOk && !ownersOk {
-		return fmt.Errorf("One of executable_users, filters, name_regex, or owners must be assigned")
+	params := &ec2.DescribeImagesInput{
+		Owners: expandStringList(d.Get("owners").([]interface{})),
 	}
 
-	params := &ec2.DescribeImagesInput{}
-	if executableUsersOk {
-		params.ExecutableUsers = expandStringList(executableUsers.([]interface{}))
+	if v, ok := d.GetOk("executable_users"); ok {
+		params.ExecutableUsers = expandStringList(v.([]interface{}))
 	}
-	if filtersOk {
-		params.Filters = buildAwsDataSourceFilters(filters.(*schema.Set))
-	}
-	if ownersOk {
-		o := expandStringList(owners.([]interface{}))
-
-		if len(o) > 0 {
-			params.Owners = o
-		}
+	if v, ok := d.GetOk("filter"); ok {
+		params.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
 
 	log.Printf("[DEBUG] Reading AMI: %s", params)
@@ -210,19 +208,19 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	var filteredImages []*ec2.Image
-	if nameRegexOk {
+	if nameRegex, ok := d.GetOk("name_regex"); ok {
 		r := regexp.MustCompile(nameRegex.(string))
 		for _, image := range resp.Images {
 			// Check for a very rare case where the response would include no
 			// image name. No name means nothing to attempt a match against,
 			// therefore we are skipping such image.
-			if image.Name == nil || *image.Name == "" {
+			if image.Name == nil || aws.StringValue(image.Name) == "" {
 				log.Printf("[WARN] Unable to find AMI name to match against "+
 					"for image ID %q owned by %q, nothing to do.",
-					*image.ImageId, *image.OwnerId)
+					aws.StringValue(image.ImageId), aws.StringValue(image.OwnerId))
 				continue
 			}
-			if r.MatchString(*image.Name) {
+			if r.MatchString(aws.StringValue(image.Name)) {
 				filteredImages = append(filteredImages, image)
 			}
 		}
@@ -230,38 +228,31 @@ func dataSourceAwsAmiRead(d *schema.ResourceData, meta interface{}) error {
 		filteredImages = resp.Images[:]
 	}
 
-	var image *ec2.Image
 	if len(filteredImages) < 1 {
 		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	if len(filteredImages) > 1 {
-		recent := d.Get("most_recent").(bool)
-		log.Printf("[DEBUG] aws_ami - multiple results found and `most_recent` is set to: %t", recent)
-		if recent {
-			image = mostRecentAmi(filteredImages)
-		} else {
+		if !d.Get("most_recent").(bool) {
 			return fmt.Errorf("Your query returned more than one result. Please try a more " +
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
-	} else {
-		// Query returned single result.
-		image = filteredImages[0]
+		sort.Slice(filteredImages, func(i, j int) bool {
+			itime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[i].CreationDate))
+			jtime, _ := time.Parse(time.RFC3339, aws.StringValue(filteredImages[j].CreationDate))
+			return itime.Unix() > jtime.Unix()
+		})
 	}
 
-	log.Printf("[DEBUG] aws_ami - Single AMI found: %s", *image.ImageId)
-	return amiDescriptionAttributes(d, image)
-}
-
-// Returns the most recent AMI out of a slice of images.
-func mostRecentAmi(images []*ec2.Image) *ec2.Image {
-	return sortImages(images)[0]
+	return amiDescriptionAttributes(d, filteredImages[0], meta)
 }
 
 // populate the numerous fields that the image description returns.
-func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image) error {
+func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image, meta interface{}) error {
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	// Simple attributes first
-	d.SetId(*image.ImageId)
+	d.SetId(aws.StringValue(image.ImageId))
 	d.Set("architecture", image.Architecture)
 	d.Set("creation_date", image.CreationDate)
 	if image.Description != nil {
@@ -306,9 +297,19 @@ func amiDescriptionAttributes(d *schema.ResourceData, image *ec2.Image) error {
 	if err := d.Set("state_reason", amiStateReason(image.StateReason)); err != nil {
 		return err
 	}
-	if err := d.Set("tags", tagsToMap(image.Tags)); err != nil {
-		return err
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(image.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
+
+	imageArn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("image/%s", d.Id()),
+		Service:   "ec2",
+	}.String()
+
+	d.Set("arn", imageArn)
+
 	return nil
 }
 
@@ -319,31 +320,23 @@ func amiBlockDeviceMappings(m []*ec2.BlockDeviceMapping) *schema.Set {
 	}
 	for _, v := range m {
 		mapping := map[string]interface{}{
-			"device_name": *v.DeviceName,
+			"device_name":  aws.StringValue(v.DeviceName),
+			"virtual_name": aws.StringValue(v.VirtualName),
 		}
+
 		if v.Ebs != nil {
 			ebs := map[string]interface{}{
-				"delete_on_termination": fmt.Sprintf("%t", *v.Ebs.DeleteOnTermination),
-				"encrypted":             fmt.Sprintf("%t", *v.Ebs.Encrypted),
-				"volume_size":           fmt.Sprintf("%d", *v.Ebs.VolumeSize),
-				"volume_type":           *v.Ebs.VolumeType,
-			}
-			// Iops is not always set
-			if v.Ebs.Iops != nil {
-				ebs["iops"] = fmt.Sprintf("%d", *v.Ebs.Iops)
-			} else {
-				ebs["iops"] = "0"
-			}
-			// snapshot id may not be set
-			if v.Ebs.SnapshotId != nil {
-				ebs["snapshot_id"] = *v.Ebs.SnapshotId
+				"delete_on_termination": fmt.Sprintf("%t", aws.BoolValue(v.Ebs.DeleteOnTermination)),
+				"encrypted":             fmt.Sprintf("%t", aws.BoolValue(v.Ebs.Encrypted)),
+				"iops":                  fmt.Sprintf("%d", aws.Int64Value(v.Ebs.Iops)),
+				"volume_size":           fmt.Sprintf("%d", aws.Int64Value(v.Ebs.VolumeSize)),
+				"snapshot_id":           aws.StringValue(v.Ebs.SnapshotId),
+				"volume_type":           aws.StringValue(v.Ebs.VolumeType),
 			}
 
 			mapping["ebs"] = ebs
 		}
-		if v.VirtualName != nil {
-			mapping["virtual_name"] = *v.VirtualName
-		}
+
 		log.Printf("[DEBUG] aws_ami - adding block device mapping: %v", mapping)
 		s.Add(mapping)
 	}
@@ -357,8 +350,8 @@ func amiProductCodes(m []*ec2.ProductCode) *schema.Set {
 	}
 	for _, v := range m {
 		code := map[string]interface{}{
-			"product_code_id":   *v.ProductCodeId,
-			"product_code_type": *v.ProductCodeType,
+			"product_code_id":   aws.StringValue(v.ProductCodeId),
+			"product_code_type": aws.StringValue(v.ProductCodeType),
 		}
 		s.Add(code)
 	}
@@ -371,11 +364,12 @@ func amiRootSnapshotId(image *ec2.Image) string {
 		return ""
 	}
 	for _, bdm := range image.BlockDeviceMappings {
-		if bdm.DeviceName == nil || *bdm.DeviceName != *image.RootDeviceName {
+		if bdm.DeviceName == nil ||
+			aws.StringValue(bdm.DeviceName) != aws.StringValue(image.RootDeviceName) {
 			continue
 		}
 		if bdm.Ebs != nil && bdm.Ebs.SnapshotId != nil {
-			return *bdm.Ebs.SnapshotId
+			return aws.StringValue(bdm.Ebs.SnapshotId)
 		}
 	}
 	return ""
@@ -385,8 +379,8 @@ func amiRootSnapshotId(image *ec2.Image) string {
 func amiStateReason(m *ec2.StateReason) map[string]interface{} {
 	s := make(map[string]interface{})
 	if m != nil {
-		s["code"] = *m.Code
-		s["message"] = *m.Message
+		s["code"] = aws.StringValue(m.Code)
+		s["message"] = aws.StringValue(m.Message)
 	} else {
 		s["code"] = "UNSET"
 		s["message"] = "UNSET"

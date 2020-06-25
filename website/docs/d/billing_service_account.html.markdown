@@ -1,7 +1,7 @@
 ---
+subcategory: ""
 layout: "aws"
 page_title: "AWS: aws_billing_service_account"
-sidebar_current: "docs-aws-datasource-billing-service-account"
 description: |-
   Get AWS Billing Service Account
 ---

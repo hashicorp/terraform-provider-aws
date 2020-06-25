@@ -9,35 +9,35 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elb"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSLoadBalancerListenerPolicy_basic(t *testing.T) {
 	rChar := acctest.RandStringFromCharSet(6, acctest.CharSetAlpha)
-	lbName := fmt.Sprintf("%s", rChar)
-	mcName := fmt.Sprintf("%s", rChar)
-	resource.Test(t, resource.TestCase{
+	lbName := rChar
+	mcName := rChar
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLoadBalancerListenerPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
 					testAccCheckAWSLoadBalancerListenerPolicyState(lbName, int64(80), mcName, true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.magic-cookie-sticky"),
 					testAccCheckAWSLoadBalancerListenerPolicyState(lbName, int64(80), mcName, true),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSLoadBalancerListenerPolicyState(lbName, int64(80), mcName, false),
@@ -90,7 +90,7 @@ func testAccCheckAWSLoadBalancerListenerPolicyDestroy(s *terraform.State) error 
 				return err
 			}
 			policyNames := []string{}
-			for k, _ := range rs.Primary.Attributes {
+			for k := range rs.Primary.Attributes {
 				if strings.HasPrefix(k, "policy_names.") && strings.HasSuffix(k, ".name") {
 					value_key := fmt.Sprintf("%s.value", strings.TrimSuffix(k, ".name"))
 					policyNames = append(policyNames, rs.Primary.Attributes[value_key])
@@ -149,27 +149,28 @@ func testAccCheckAWSLoadBalancerListenerPolicyState(loadBalancerName string, loa
 func testAccAWSLoadBalancerListenerPolicyConfig_basic0(lbName, mcName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name = "%s"
+  name               = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
-    instance_port = 80
+    instance_port     = 80
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
 
 resource "aws_load_balancer_policy" "magic-cookie-sticky" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "%s"
-  policy_type_name = "AppCookieStickinessPolicyType"
-  policy_attribute = {
-    name = "CookieName"
+  policy_name        = "%s"
+  policy_type_name   = "AppCookieStickinessPolicyType"
+
+  policy_attribute {
+    name  = "CookieName"
     value = "magic_cookie"
   }
 }
@@ -177,36 +178,39 @@ resource "aws_load_balancer_policy" "magic-cookie-sticky" {
 resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   load_balancer_port = 80
+
   policy_names = [
     "${aws_load_balancer_policy.magic-cookie-sticky.policy_name}",
   ]
-}`, lbName, mcName)
+}
+`, lbName, mcName)
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic1(lbName, mcName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name = "%s"
+  name               = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
-    instance_port = 80
+    instance_port     = 80
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
 }
 
 resource "aws_load_balancer_policy" "magic-cookie-sticky" {
   load_balancer_name = "${aws_elb.test-lb.name}"
-  policy_name = "%s"
-  policy_type_name = "AppCookieStickinessPolicyType"
-  policy_attribute = {
-    name = "CookieName"
+  policy_name        = "%s"
+  policy_type_name   = "AppCookieStickinessPolicyType"
+
+  policy_attribute {
+    name  = "CookieName"
     value = "unicorn_cookie"
   }
 }
@@ -214,27 +218,30 @@ resource "aws_load_balancer_policy" "magic-cookie-sticky" {
 resource "aws_load_balancer_listener_policy" "test-lb-listener-policies-80" {
   load_balancer_name = "${aws_elb.test-lb.name}"
   load_balancer_port = 80
+
   policy_names = [
-    "${aws_load_balancer_policy.magic-cookie-sticky.policy_name}"
+    "${aws_load_balancer_policy.magic-cookie-sticky.policy_name}",
   ]
-}`, lbName, mcName)
+}
+`, lbName, mcName)
 }
 
 func testAccAWSLoadBalancerListenerPolicyConfig_basic2(lbName string) string {
 	return fmt.Sprintf(`
 resource "aws_elb" "test-lb" {
-  name = "%s"
+  name               = "%s"
   availability_zones = ["us-west-2a"]
 
   listener {
-    instance_port = 80
+    instance_port     = 80
     instance_protocol = "http"
-    lb_port = 80
-    lb_protocol = "http"
+    lb_port           = 80
+    lb_protocol       = "http"
   }
 
-  tags {
+  tags = {
     Name = "tf-acc-test"
   }
-}`, lbName)
+}
+`, lbName)
 }

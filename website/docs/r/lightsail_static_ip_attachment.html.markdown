@@ -1,12 +1,12 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_static_ip_attachment"
-sidebar_current: "docs-aws-resource-lightsail-static-ip-attachment"
 description: |-
   Provides an Lightsail Static IP Attachment
 ---
 
-# aws_lightsail_static_ip_attachment
+# Resource: aws_lightsail_static_ip_attachment
 
 Provides a static IP address attachment - relationship between a Lightsail static IP & Lightsail instance.
 
@@ -16,8 +16,8 @@ Provides a static IP address attachment - relationship between a Lightsail stati
 
 ```hcl
 resource "aws_lightsail_static_ip_attachment" "test" {
-  static_ip_name = "${aws_lightsail_static_ip.test.name}"
-  instance_name = "${aws_lightsail_instance.test.name}"
+  static_ip_name = "${aws_lightsail_static_ip.test.id}"
+  instance_name  = "${aws_lightsail_instance.test.id}"
 }
 
 resource "aws_lightsail_static_ip" "test" {
@@ -44,6 +44,4 @@ The following arguments are supported:
 
 The following attributes are exported in addition to the arguments listed above:
 
-* `arn` - The ARN of the Lightsail static IP
 * `ip_address` - The allocated static IP address
-* `support_code` - The support code.

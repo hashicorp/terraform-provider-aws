@@ -6,15 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resourceName := "aws_dax_subnet_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSDax(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
 		Steps: []resource.TestStep{
@@ -35,23 +37,7 @@ func TestAccAwsDaxSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_dax_subnet_group.test", "vpc_id"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAwsDaxSubnetGroup_import(t *testing.T) {
-	resourceName := "aws_dax_subnet_group.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDaxSubnetGroupDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccDaxSubnetGroupConfig(acctest.RandString(5)),
-			},
-
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -93,11 +79,8 @@ func testAccCheckAwsDaxSubnetGroupExists(name string) resource.TestCheckFunc {
 		_, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
 			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
 		})
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -109,16 +92,17 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test1" {
   cidr_block = "10.0.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 }
 
 resource "aws_subnet" "test2" {
   cidr_block = "10.0.2.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 }
 
 resource "aws_dax_subnet_group" "test" {
   name = "%s"
+
   subnet_ids = [
     "${aws_subnet.test1.id}",
     "${aws_subnet.test2.id}",
@@ -135,22 +119,23 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test1" {
   cidr_block = "10.0.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 }
 
 resource "aws_subnet" "test2" {
   cidr_block = "10.0.2.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 }
 
 resource "aws_subnet" "test3" {
   cidr_block = "10.0.3.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id     = "${aws_vpc.test.id}"
 }
 
 resource "aws_dax_subnet_group" "test" {
-  name = "%s"
+  name        = "%s"
   description = "update"
+
   subnet_ids = [
     "${aws_subnet.test1.id}",
     "${aws_subnet.test2.id}",

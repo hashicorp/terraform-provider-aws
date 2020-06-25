@@ -1,7 +1,7 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_local_disk"
-sidebar_current: "docs-aws-datasource-storagegateway-local-disk"
 description: |-
   Retrieve information about a Storage Gateway local disk
 ---
@@ -21,8 +21,9 @@ data "aws_storagegateway_local_disk" "test" {
 
 ## Argument Reference
 
-* `disk_path` - (Required) The device path of the local disk to retrieve. For example, `/dev/sdb` or `/dev/xvdb`.
 * `gateway_arn` - (Required) The Amazon Resource Name (ARN) of the gateway.
+* `disk_node` - (Optional) The device node of the local disk to retrieve. For example, `/dev/sdb`.
+* `disk_path` - (Optional) The device path of the local disk to retrieve. For example, `/dev/xvdb` or `/dev/nvme1n1`.
 
 ## Attributes Reference
 

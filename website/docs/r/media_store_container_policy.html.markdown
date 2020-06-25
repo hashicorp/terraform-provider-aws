@@ -1,12 +1,12 @@
 ---
+subcategory: "MediaStore"
 layout: "aws"
 page_title: "AWS: aws_media_store_container_policy"
-sidebar_current: "docs-aws-resource-media-store-container-policy"
 description: |-
   Provides a MediaStore Container Policy.
 ---
 
-# aws_media_store_container_policy
+# Resource: aws_media_store_container_policy
 
 Provides a MediaStore Container Policy.
 
@@ -23,6 +23,7 @@ resource "aws_media_store_container" "example" {
 
 resource "aws_media_store_container_policy" "example" {
   container_name = "${aws_media_store_container.example.name}"
+
   policy = <<EOF
 {
 	"Version": "2012-10-17",
@@ -31,7 +32,7 @@ resource "aws_media_store_container_policy" "example" {
 		"Action": [ "mediastore:*" ],
 		"Principal": {"AWS" : "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"},
 		"Effect": "Allow",
-		"Resource": "arn:aws:mediastore:${data.aws_caller_identity.current.account_id}:${data.aws_region.current.name}:container/${aws_media_store_container.example.name}/*",
+		"Resource": "arn:aws:mediastore:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:container/${aws_media_store_container.example.name}/*",
 		"Condition": {
 			"Bool": { "aws:SecureTransport": "true" }
 		}
@@ -46,7 +47,7 @@ EOF
 The following arguments are supported:
 
 * `container_name` - (Required) The name of the container.
-* `policy` - (Required) The contents of the policy.
+* `policy` - (Required) The contents of the policy. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
 ## Import
 

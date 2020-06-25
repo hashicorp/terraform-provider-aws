@@ -3,13 +3,16 @@ package aws
 import (
 	"fmt"
 	"os"
+	"regexp"
+	"strconv"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
@@ -18,29 +21,51 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 	if connectionId == "" {
 		t.Skipf("Environment variable %s is not set", key)
 	}
-	key = "DX_HOSTED_VIF_OWNER_ACCOUNT"
-	ownerAccountId := os.Getenv(key)
-	if ownerAccountId == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-	vifName := fmt.Sprintf("terraform-testacc-dxvif-%s", acctest.RandString(5))
-	bgpAsn := randIntRange(64512, 65534)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
+	var providers []*schema.Provider
+	var vif directconnect.VirtualInterface
+	resourceName := "aws_dx_hosted_private_virtual_interface.test"
+	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
+	vpnGatewayResourceName := "aws_vpn_gateway.test"
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(9))
+	bgpAsn := randIntRange(64512, 65534)
+	vlan := randIntRange(2049, 4094)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, ownerAccountId, vifName, bgpAsn),
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists("aws_dx_hosted_private_virtual_interface.foo"),
-					resource.TestCheckResourceAttr("aws_dx_hosted_private_virtual_interface.foo", "name", vifName),
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
+					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
+					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
+					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
+					// Accepter's attributes:
+					resource.TestCheckResourceAttrSet(accepterResourceName, "arn"),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrPair(accepterResourceName, "virtual_interface_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(accepterResourceName, "vpn_gateway_id", vpnGatewayResourceName, "id"),
 				),
 			},
 			// Test import.
 			{
-				ResourceName:      "aws_dx_hosted_private_virtual_interface.foo",
+				Config:            testAccDxHostedPrivateVirtualInterfaceConfig_basic(connectionId, rName, bgpAsn, vlan),
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -48,52 +73,166 @@ func TestAccAwsDxHostedPrivateVirtualInterface_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsDxHostedPrivateVirtualInterface_AccepterTags(t *testing.T) {
+	key := "DX_CONNECTION_ID"
+	connectionId := os.Getenv(key)
+	if connectionId == "" {
+		t.Skipf("Environment variable %s is not set", key)
+	}
+
+	var providers []*schema.Provider
+	var vif directconnect.VirtualInterface
+	resourceName := "aws_dx_hosted_private_virtual_interface.test"
+	accepterResourceName := "aws_dx_hosted_private_virtual_interface_accepter.test"
+	vpnGatewayResourceName := "aws_vpn_gateway.test"
+	rName := fmt.Sprintf("tf-testacc-private-vif-%s", acctest.RandString(9))
+	bgpAsn := randIntRange(64512, 65534)
+	vlan := randIntRange(2049, 4094)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccAlternateAccountPreCheck(t)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(connectionId, rName, bgpAsn, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
+					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
+					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
+					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
+					// Accepter's attributes:
+					resource.TestCheckResourceAttrSet(accepterResourceName, "arn"),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key1", "Value1"),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2a"),
+					resource.TestCheckResourceAttrPair(accepterResourceName, "virtual_interface_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(accepterResourceName, "vpn_gateway_id", vpnGatewayResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(connectionId, rName, bgpAsn, vlan),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(resourceName, &vif),
+					resource.TestCheckResourceAttr(resourceName, "address_family", "ipv4"),
+					resource.TestCheckResourceAttrSet(resourceName, "amazon_side_asn"),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexp.MustCompile(fmt.Sprintf("dxvif/%s", aws.StringValue(vif.VirtualInterfaceId)))),
+					resource.TestCheckResourceAttrSet(resourceName, "aws_device"),
+					resource.TestCheckResourceAttr(resourceName, "bgp_asn", strconv.Itoa(bgpAsn)),
+					resource.TestCheckResourceAttrSet(resourceName, "bgp_auth_key"),
+					resource.TestCheckResourceAttr(resourceName, "connection_id", connectionId),
+					resource.TestCheckResourceAttr(resourceName, "jumbo_frame_capable", "true"),
+					resource.TestCheckResourceAttr(resourceName, "mtu", "1500"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "owner_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "vlan", strconv.Itoa(vlan)),
+					// Accepter's attributes:
+					resource.TestCheckResourceAttrSet(accepterResourceName, "arn"),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key2", "Value2b"),
+					resource.TestCheckResourceAttr(accepterResourceName, "tags.Key3", "Value3"),
+					resource.TestCheckResourceAttrPair(accepterResourceName, "virtual_interface_id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(accepterResourceName, "vpn_gateway_id", vpnGatewayResourceName, "id"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAwsDxHostedPrivateVirtualInterfaceDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).dxconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dx_hosted_private_virtual_interface" {
-			continue
-		}
-
-		input := &directconnect.DescribeVirtualInterfacesInput{
-			VirtualInterfaceId: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeVirtualInterfaces(input)
-		if err != nil {
-			return err
-		}
-		for _, v := range resp.VirtualInterfaces {
-			if *v.VirtualInterfaceId == rs.Primary.ID && !(*v.VirtualInterfaceState == directconnect.VirtualInterfaceStateDeleted) {
-				return fmt.Errorf("[DESTROY ERROR] Dx Private VIF (%s) not deleted", rs.Primary.ID)
-			}
-		}
-	}
-	return nil
+	return testAccCheckDxVirtualInterfaceDestroy(s, "aws_dx_hosted_private_virtual_interface")
 }
 
-func testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		return nil
-	}
+func testAccCheckAwsDxHostedPrivateVirtualInterfaceExists(name string, vif *directconnect.VirtualInterface) resource.TestCheckFunc {
+	return testAccCheckDxVirtualInterfaceExists(name, vif)
 }
 
-func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, ownerAcctId, n string, bgpAsn int) string {
-	return fmt.Sprintf(`
-resource "aws_dx_hosted_private_virtual_interface" "foo" {
-  connection_id    = "%s"
-  owner_account_id = "%s"
+func testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName string, bgpAsn, vlan int) string {
+	return testAccAlternateAccountProviderConfig() + fmt.Sprintf(`
+# Creator
+resource "aws_dx_hosted_private_virtual_interface" "test" {
+  address_family   = "ipv4"
+  bgp_asn          = %[3]d
+  connection_id    = %[1]q
+  name             = %[2]q
+  owner_account_id = "${data.aws_caller_identity.accepter.account_id}"
+  vlan             = %[4]d
 
-  name           = "%s"
-  vlan           = 4094
-  address_family = "ipv4"
-  bgp_asn        = %d
+  # The aws_dx_hosted_private_virtual_interface
+  # must be destroyed before the aws_vpn_gateway.
+  depends_on = ["aws_vpn_gateway.test"]
 }
-`, cid, ownerAcctId, n, bgpAsn)
+
+# Accepter
+data "aws_caller_identity" "accepter" {
+  provider = "aws.alternate"
+}
+
+resource "aws_vpn_gateway" "test" {
+  provider = "aws.alternate"
+
+  tags = {
+    Name = %[2]q
+  }
+}
+`, cid, rName, bgpAsn, vlan)
+}
+
+func testAccDxHostedPrivateVirtualInterfaceConfig_basic(cid, rName string, bgpAsn, vlan int) string {
+	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
+resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
+  provider = "aws.alternate"
+
+  virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
+  vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
+}
+`)
+}
+
+func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTags(cid, rName string, bgpAsn, vlan int) string {
+	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
+resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
+  provider = "aws.alternate"
+
+  virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
+  vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
+
+  tags = {
+    Name = %[1]q
+    Key1 = "Value1"
+    Key2 = "Value2a"
+  }
+}
+`, rName)
+}
+
+func testAccDxHostedPrivateVirtualInterfaceConfig_accepterTagsUpdated(cid, rName string, bgpAsn, vlan int) string {
+	return testAccDxHostedPrivateVirtualInterfaceConfig_base(cid, rName, bgpAsn, vlan) + fmt.Sprintf(`
+resource "aws_dx_hosted_private_virtual_interface_accepter" "test" {
+  provider = "aws.alternate"
+
+  virtual_interface_id = "${aws_dx_hosted_private_virtual_interface.test.id}"
+  vpn_gateway_id       = "${aws_vpn_gateway.test.id}"
+
+  tags = {
+    Name = %[1]q
+    Key2 = "Value2b"
+    Key3 = "Value3"
+  }
+}
+`, rName)
 }

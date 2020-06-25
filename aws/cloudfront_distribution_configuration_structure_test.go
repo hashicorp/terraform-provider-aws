@@ -6,14 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func defaultCacheBehaviorConf() map[string]interface{} {
 	return map[string]interface{}{
 		"viewer_protocol_policy":      "allow-all",
 		"target_origin_id":            "myS3Origin",
-		"forwarded_values":            schema.NewSet(forwardedValuesHash, []interface{}{forwardedValuesConf()}),
+		"forwarded_values":            []interface{}{forwardedValuesConf()},
 		"min_ttl":                     0,
 		"trusted_signers":             trustedSignersConf(),
 		"lambda_function_association": lambdaFunctionAssociationsConf(),
@@ -27,22 +27,6 @@ func defaultCacheBehaviorConf() map[string]interface{} {
 	}
 }
 
-func cacheBehaviorConf1() map[string]interface{} {
-	cb := defaultCacheBehaviorConf()
-	cb["path_pattern"] = "/path1"
-	return cb
-}
-
-func cacheBehaviorConf2() map[string]interface{} {
-	cb := defaultCacheBehaviorConf()
-	cb["path_pattern"] = "/path2"
-	return cb
-}
-
-func cacheBehaviorsConf() *schema.Set {
-	return schema.NewSet(cacheBehaviorHash, []interface{}{cacheBehaviorConf1(), cacheBehaviorConf2()})
-}
-
 func trustedSignersConf() []interface{} {
 	return []interface{}{"1234567890EX", "1234567891EX"}
 }
@@ -50,12 +34,14 @@ func trustedSignersConf() []interface{} {
 func lambdaFunctionAssociationsConf() *schema.Set {
 	x := []interface{}{
 		map[string]interface{}{
-			"event_type": "viewer-request",
-			"lambda_arn": "arn:aws:lambda:us-east-1:999999999:function1:alias",
+			"event_type":   "viewer-request",
+			"lambda_arn":   "arn:aws:lambda:us-east-1:999999999:function1:alias",
+			"include_body": true,
 		},
 		map[string]interface{}{
-			"event_type": "origin-response",
-			"lambda_arn": "arn:aws:lambda:us-east-1:999999999:function2:alias",
+			"event_type":   "origin-response",
+			"lambda_arn":   "arn:aws:lambda:us-east-1:999999999:function2:alias",
+			"include_body": true,
 		},
 	}
 
@@ -66,13 +52,13 @@ func forwardedValuesConf() map[string]interface{} {
 	return map[string]interface{}{
 		"query_string":            true,
 		"query_string_cache_keys": queryStringCacheKeysConf(),
-		"cookies":                 schema.NewSet(cookiePreferenceHash, []interface{}{cookiePreferenceConf()}),
+		"cookies":                 []interface{}{cookiePreferenceConf()},
 		"headers":                 headersConf(),
 	}
 }
 
-func headersConf() []interface{} {
-	return []interface{}{"X-Example1", "X-Example2"}
+func headersConf() *schema.Set {
+	return schema.NewSet(schema.HashString, []interface{}{"X-Example1", "X-Example2"})
 }
 
 func queryStringCacheKeysConf() []interface{} {
@@ -86,16 +72,16 @@ func cookiePreferenceConf() map[string]interface{} {
 	}
 }
 
-func cookieNamesConf() []interface{} {
-	return []interface{}{"Example1", "Example2"}
+func cookieNamesConf() *schema.Set {
+	return schema.NewSet(schema.HashString, []interface{}{"Example1", "Example2"})
 }
 
-func allowedMethodsConf() []interface{} {
-	return []interface{}{"DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"}
+func allowedMethodsConf() *schema.Set {
+	return schema.NewSet(schema.HashString, []interface{}{"DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"})
 }
 
-func cachedMethodsConf() []interface{} {
-	return []interface{}{"GET", "HEAD", "OPTIONS"}
+func cachedMethodsConf() *schema.Set {
+	return schema.NewSet(schema.HashString, []interface{}{"GET", "HEAD", "OPTIONS"})
 }
 
 func originCustomHeadersConf() *schema.Set {
@@ -127,8 +113,8 @@ func customOriginConf() map[string]interface{} {
 	}
 }
 
-func customOriginSslProtocolsConf() []interface{} {
-	return []interface{}{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"}
+func customOriginSslProtocolsConf() *schema.Set {
+	return schema.NewSet(schema.HashString, []interface{}{"SSLv3", "TLSv1", "TLSv1.1", "TLSv1.2"})
 }
 
 func s3OriginConf() map[string]interface{} {
@@ -142,7 +128,7 @@ func originWithCustomConf() map[string]interface{} {
 		"origin_id":            "CustomOrigin",
 		"domain_name":          "www.example.com",
 		"origin_path":          "/",
-		"custom_origin_config": schema.NewSet(customOriginConfigHash, []interface{}{customOriginConf()}),
+		"custom_origin_config": []interface{}{customOriginConf()},
 		"custom_header":        originCustomHeadersConf(),
 	}
 }
@@ -151,7 +137,7 @@ func originWithS3Conf() map[string]interface{} {
 		"origin_id":        "S3Origin",
 		"domain_name":      "s3.example.com",
 		"origin_path":      "/",
-		"s3_origin_config": schema.NewSet(s3OriginConfigHash, []interface{}{s3OriginConf()}),
+		"s3_origin_config": []interface{}{s3OriginConf()},
 		"custom_header":    originCustomHeadersConf(),
 	}
 }
@@ -160,16 +146,42 @@ func multiOriginConf() *schema.Set {
 	return schema.NewSet(originHash, []interface{}{originWithCustomConf(), originWithS3Conf()})
 }
 
+func originGroupMembers() []interface{} {
+	return []interface{}{map[string]interface{}{
+		"origin_id": "S3origin",
+	}, map[string]interface{}{
+		"origin_id": "S3failover",
+	}}
+}
+
+func failoverStatusCodes() map[string]interface{} {
+	return map[string]interface{}{
+		"status_codes": schema.NewSet(schema.HashInt, []interface{}{503, 504}),
+	}
+}
+
+func originGroupConf() map[string]interface{} {
+	return map[string]interface{}{
+		"origin_id":         "groupS3",
+		"failover_criteria": []interface{}{failoverStatusCodes()},
+		"member":            originGroupMembers(),
+	}
+}
+
+func originGroupsConf() *schema.Set {
+	return schema.NewSet(originGroupHash, []interface{}{originGroupConf()})
+}
+
 func geoRestrictionWhitelistConf() map[string]interface{} {
 	return map[string]interface{}{
 		"restriction_type": "whitelist",
-		"locations":        []interface{}{"CA", "GB", "US"},
+		"locations":        schema.NewSet(schema.HashString, []interface{}{"CA", "GB", "US"}),
 	}
 }
 
 func geoRestrictionsConf() map[string]interface{} {
 	return map[string]interface{}{
-		"geo_restriction": schema.NewSet(geoRestrictionHash, []interface{}{geoRestrictionWhitelistConf()}),
+		"geo_restriction": []interface{}{geoRestrictionWhitelistConf()},
 	}
 }
 
@@ -253,13 +265,13 @@ func viewerCertificateConfSetACM() map[string]interface{} {
 	}
 }
 
-func TestCloudFrontStructure_expandDefaultCacheBehavior(t *testing.T) {
+func TestCloudFrontStructure_expandCloudFrontDefaultCacheBehavior(t *testing.T) {
 	data := defaultCacheBehaviorConf()
-	dcb := expandDefaultCacheBehavior(data)
+	dcb := expandCloudFrontDefaultCacheBehavior(data)
 	if dcb == nil {
 		t.Fatalf("ExpandDefaultCacheBehavior returned nil")
 	}
-	if *dcb.Compress != true {
+	if !*dcb.Compress {
 		t.Fatalf("Expected Compress to be true, got %v", *dcb.Compress)
 	}
 	if *dcb.ViewerProtocolPolicy != "allow-all" {
@@ -268,19 +280,19 @@ func TestCloudFrontStructure_expandDefaultCacheBehavior(t *testing.T) {
 	if *dcb.TargetOriginId != "myS3Origin" {
 		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
 	}
-	if reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, expandStringList(headersConf())) != true {
+	if !reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, expandStringSet(headersConf())) {
 		t.Fatalf("Expected Items to be %v, got %v", headersConf(), dcb.ForwardedValues.Headers.Items)
 	}
 	if *dcb.MinTTL != 0 {
 		t.Fatalf("Expected MinTTL to be 0, got %v", *dcb.MinTTL)
 	}
-	if reflect.DeepEqual(dcb.TrustedSigners.Items, expandStringList(trustedSignersConf())) != true {
+	if !reflect.DeepEqual(dcb.TrustedSigners.Items, expandStringList(trustedSignersConf())) {
 		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), dcb.TrustedSigners.Items)
 	}
 	if *dcb.MaxTTL != 31536000 {
 		t.Fatalf("Expected MaxTTL to be 31536000, got %v", *dcb.MaxTTL)
 	}
-	if *dcb.SmoothStreaming != false {
+	if *dcb.SmoothStreaming {
 		t.Fatalf("Expected SmoothStreaming to be false, got %v", *dcb.SmoothStreaming)
 	}
 	if *dcb.DefaultTTL != 86400 {
@@ -289,147 +301,11 @@ func TestCloudFrontStructure_expandDefaultCacheBehavior(t *testing.T) {
 	if *dcb.LambdaFunctionAssociations.Quantity != 2 {
 		t.Fatalf("Expected LambdaFunctionAssociations to be 2, got %v", *dcb.LambdaFunctionAssociations.Quantity)
 	}
-	if reflect.DeepEqual(dcb.AllowedMethods.Items, expandStringList(allowedMethodsConf())) != true {
-		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf(), dcb.AllowedMethods.Items)
+	if !reflect.DeepEqual(dcb.AllowedMethods.Items, expandStringList(allowedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf().List(), dcb.AllowedMethods.Items)
 	}
-	if reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf())) != true {
-		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf(), dcb.AllowedMethods.CachedMethods.Items)
-	}
-}
-
-func TestCloudFrontStructure_flattenDefaultCacheBehavior(t *testing.T) {
-	in := defaultCacheBehaviorConf()
-	dcb := expandDefaultCacheBehavior(in)
-	out := flattenDefaultCacheBehavior(dcb)
-	diff := schema.NewSet(defaultCacheBehaviorHash, []interface{}{in}).Difference(out)
-
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
-	}
-}
-
-func TestCloudFrontStructure_expandCacheBehavior(t *testing.T) {
-	data := cacheBehaviorConf1()
-	cb := expandCacheBehaviorDeprecated(data)
-	if *cb.Compress != true {
-		t.Fatalf("Expected Compress to be true, got %v", *cb.Compress)
-	}
-	if *cb.ViewerProtocolPolicy != "allow-all" {
-		t.Fatalf("Expected ViewerProtocolPolicy to be allow-all, got %v", *cb.ViewerProtocolPolicy)
-	}
-	if *cb.TargetOriginId != "myS3Origin" {
-		t.Fatalf("Expected TargetOriginId to be myS3Origin, got %v", *cb.TargetOriginId)
-	}
-	if reflect.DeepEqual(cb.ForwardedValues.Headers.Items, expandStringList(headersConf())) != true {
-		t.Fatalf("Expected Items to be %v, got %v", headersConf(), cb.ForwardedValues.Headers.Items)
-	}
-	if *cb.MinTTL != 0 {
-		t.Fatalf("Expected MinTTL to be 0, got %v", *cb.MinTTL)
-	}
-	if reflect.DeepEqual(cb.TrustedSigners.Items, expandStringList(trustedSignersConf())) != true {
-		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), cb.TrustedSigners.Items)
-	}
-	if *cb.MaxTTL != 31536000 {
-		t.Fatalf("Expected MaxTTL to be 31536000, got %v", *cb.MaxTTL)
-	}
-	if *cb.SmoothStreaming != false {
-		t.Fatalf("Expected SmoothStreaming to be false, got %v", *cb.SmoothStreaming)
-	}
-	if *cb.DefaultTTL != 86400 {
-		t.Fatalf("Expected DefaultTTL to be 86400, got %v", *cb.DefaultTTL)
-	}
-	if *cb.LambdaFunctionAssociations.Quantity != 2 {
-		t.Fatalf("Expected LambdaFunctionAssociations to be 2, got %v", *cb.LambdaFunctionAssociations.Quantity)
-	}
-	if reflect.DeepEqual(cb.AllowedMethods.Items, expandStringList(allowedMethodsConf())) != true {
-		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf(), cb.AllowedMethods.Items)
-	}
-	if reflect.DeepEqual(cb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf())) != true {
-		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf(), cb.AllowedMethods.CachedMethods.Items)
-	}
-	if *cb.PathPattern != "/path1" {
-		t.Fatalf("Expected PathPattern to be /path1, got %v", *cb.PathPattern)
-	}
-}
-
-func TestCloudFrontStructure_flattenCacheBehavior(t *testing.T) {
-	in := cacheBehaviorConf1()
-	cb := expandCacheBehaviorDeprecated(in)
-	out := flattenCacheBehaviorDeprecated(cb)
-	var diff *schema.Set
-	if out["compress"] != true {
-		t.Fatalf("Expected out[compress] to be true, got %v", out["compress"])
-	}
-	if out["viewer_protocol_policy"] != "allow-all" {
-		t.Fatalf("Expected out[viewer_protocol_policy] to be allow-all, got %v", out["viewer_protocol_policy"])
-	}
-	if out["target_origin_id"] != "myS3Origin" {
-		t.Fatalf("Expected out[target_origin_id] to be myS3Origin, got %v", out["target_origin_id"])
-	}
-
-	var outSet, ok = out["lambda_function_association"].(*schema.Set)
-	if !ok {
-		t.Fatalf("out['lambda_function_association'] is not a slice as expected: %#v", out["lambda_function_association"])
-	}
-
-	inSet, ok := in["lambda_function_association"].(*schema.Set)
-	if !ok {
-		t.Fatalf("in['lambda_function_association'] is not a set as expected: %#v", in["lambda_function_association"])
-	}
-
-	if !inSet.Equal(outSet) {
-		t.Fatalf("in / out sets are not equal, in: \n%#v\n\nout: \n%#v\n", inSet, outSet)
-	}
-
-	diff = out["forwarded_values"].(*schema.Set).Difference(in["forwarded_values"].(*schema.Set))
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out[forwarded_values] to be %v, got %v, diff: %v", out["forwarded_values"], in["forwarded_values"], diff)
-	}
-	if out["min_ttl"] != int(0) {
-		t.Fatalf("Expected out[min_ttl] to be 0 (int), got %v", out["min_ttl"])
-	}
-	if reflect.DeepEqual(out["trusted_signers"], in["trusted_signers"]) != true {
-		t.Fatalf("Expected out[trusted_signers] to be %v, got %v", in["trusted_signers"], out["trusted_signers"])
-	}
-	if out["max_ttl"] != int(31536000) {
-		t.Fatalf("Expected out[max_ttl] to be 31536000 (int), got %v", out["max_ttl"])
-	}
-	if out["smooth_streaming"] != false {
-		t.Fatalf("Expected out[smooth_streaming] to be false, got %v", out["smooth_streaming"])
-	}
-	if out["default_ttl"] != int(86400) {
-		t.Fatalf("Expected out[default_ttl] to be 86400 (int), got %v", out["default_ttl"])
-	}
-	if reflect.DeepEqual(out["allowed_methods"], in["allowed_methods"]) != true {
-		t.Fatalf("Expected out[allowed_methods] to be %v, got %v", in["allowed_methods"], out["allowed_methods"])
-	}
-	if reflect.DeepEqual(out["cached_methods"], in["cached_methods"]) != true {
-		t.Fatalf("Expected out[cached_methods] to be %v, got %v", in["cached_methods"], out["cached_methods"])
-	}
-	if out["path_pattern"] != "/path1" {
-		t.Fatalf("Expected out[path_pattern] to be /path1, got %v", out["path_pattern"])
-	}
-}
-
-func TestCloudFrontStructure_expandCacheBehaviors(t *testing.T) {
-	data := cacheBehaviorsConf()
-	cbs := expandCacheBehaviorsDeprecated(data)
-	if *cbs.Quantity != 2 {
-		t.Fatalf("Expected Quantity to be 2, got %v", *cbs.Quantity)
-	}
-	if *cbs.Items[0].TargetOriginId != "myS3Origin" {
-		t.Fatalf("Expected first Item's TargetOriginId to be 	myS3Origin, got %v", *cbs.Items[0].TargetOriginId)
-	}
-}
-
-func TestCloudFrontStructure_flattenCacheBehaviors(t *testing.T) {
-	in := cacheBehaviorsConf()
-	cbs := expandCacheBehaviorsDeprecated(in)
-	out := flattenCacheBehaviorsDeprecated(cbs)
-	diff := in.Difference(out)
-
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
+	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, expandStringList(cachedMethodsConf().List())) {
+		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
 	}
 }
 
@@ -439,10 +315,10 @@ func TestCloudFrontStructure_expandTrustedSigners(t *testing.T) {
 	if *ts.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *ts.Quantity)
 	}
-	if *ts.Enabled != true {
+	if !*ts.Enabled {
 		t.Fatalf("Expected Enabled to be true, got %v", *ts.Enabled)
 	}
-	if reflect.DeepEqual(ts.Items, expandStringList(data)) != true {
+	if !reflect.DeepEqual(ts.Items, expandStringList(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, ts.Items)
 	}
 }
@@ -452,7 +328,7 @@ func TestCloudFrontStructure_flattenTrustedSigners(t *testing.T) {
 	ts := expandTrustedSigners(in)
 	out := flattenTrustedSigners(ts)
 
-	if reflect.DeepEqual(in, out) != true {
+	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -463,7 +339,7 @@ func TestCloudFrontStructure_expandTrustedSigners_empty(t *testing.T) {
 	if *ts.Quantity != 0 {
 		t.Fatalf("Expected Quantity to be 0, got %v", *ts.Quantity)
 	}
-	if *ts.Enabled != false {
+	if *ts.Enabled {
 		t.Fatalf("Expected Enabled to be true, got %v", *ts.Enabled)
 	}
 	if ts.Items != nil {
@@ -493,7 +369,7 @@ func TestCloudFrontStructure_flattenlambdaFunctionAssociations(t *testing.T) {
 	lfa := expandLambdaFunctionAssociations(in.List())
 	out := flattenLambdaFunctionAssociations(lfa)
 
-	if reflect.DeepEqual(in.List(), out.List()) != true {
+	if !reflect.DeepEqual(in.List(), out.List()) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -507,7 +383,7 @@ func TestCloudFrontStructure_expandlambdaFunctionAssociations_empty(t *testing.T
 	if len(lfa.Items) != 0 {
 		t.Fatalf("Expected Items to be len 0, got %v", len(lfa.Items))
 	}
-	if reflect.DeepEqual(lfa.Items, []*cloudfront.LambdaFunctionAssociation{}) != true {
+	if !reflect.DeepEqual(lfa.Items, []*cloudfront.LambdaFunctionAssociation{}) {
 		t.Fatalf("Expected Items to be empty, got %v", lfa.Items)
 	}
 }
@@ -515,13 +391,13 @@ func TestCloudFrontStructure_expandlambdaFunctionAssociations_empty(t *testing.T
 func TestCloudFrontStructure_expandForwardedValues(t *testing.T) {
 	data := forwardedValuesConf()
 	fv := expandForwardedValues(data)
-	if *fv.QueryString != true {
+	if !*fv.QueryString {
 		t.Fatalf("Expected QueryString to be true, got %v", *fv.QueryString)
 	}
-	if reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, expandStringList(cookieNamesConf())) != true {
+	if !reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, expandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected Cookies.WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), fv.Cookies.WhitelistedNames.Items)
 	}
-	if reflect.DeepEqual(fv.Headers.Items, expandStringList(headersConf())) != true {
+	if !reflect.DeepEqual(fv.Headers.Items, expandStringSet(headersConf())) {
 		t.Fatalf("Expected Headers.Items to be %v, got %v", headersConf(), fv.Headers.Items)
 	}
 }
@@ -531,34 +407,28 @@ func TestCloudFrontStructure_flattenForwardedValues(t *testing.T) {
 	fv := expandForwardedValues(in)
 	out := flattenForwardedValues(fv)
 
-	if out["query_string"] != true {
+	if !out["query_string"].(bool) {
 		t.Fatalf("Expected out[query_string] to be true, got %v", out["query_string"])
-	}
-	if out["cookies"].(*schema.Set).Equal(in["cookies"].(*schema.Set)) != true {
-		t.Fatalf("Expected out[cookies] to be %v, got %v", in["cookies"], out["cookies"])
-	}
-	if reflect.DeepEqual(out["headers"], in["headers"]) != true {
-		t.Fatalf("Expected out[headers] to be %v, got %v", in["headers"], out["headers"])
 	}
 }
 
 func TestCloudFrontStructure_expandHeaders(t *testing.T) {
 	data := headersConf()
-	h := expandHeaders(data)
+	h := expandHeaders(data.List())
 	if *h.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *h.Quantity)
 	}
-	if reflect.DeepEqual(h.Items, expandStringList(data)) != true {
+	if !reflect.DeepEqual(h.Items, expandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, h.Items)
 	}
 }
 
 func TestCloudFrontStructure_flattenHeaders(t *testing.T) {
 	in := headersConf()
-	h := expandHeaders(in)
-	out := flattenHeaders(h)
+	h := expandHeaders(in.List())
+	out := schema.NewSet(schema.HashString, flattenHeaders(h))
 
-	if reflect.DeepEqual(in, out) != true {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -569,7 +439,7 @@ func TestCloudFrontStructure_expandQueryStringCacheKeys(t *testing.T) {
 	if *k.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *k.Quantity)
 	}
-	if reflect.DeepEqual(k.Items, expandStringList(data)) != true {
+	if !reflect.DeepEqual(k.Items, expandStringList(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, k.Items)
 	}
 }
@@ -579,7 +449,7 @@ func TestCloudFrontStructure_flattenQueryStringCacheKeys(t *testing.T) {
 	k := expandQueryStringCacheKeys(in)
 	out := flattenQueryStringCacheKeys(k)
 
-	if reflect.DeepEqual(in, out) != true {
+	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -590,7 +460,7 @@ func TestCloudFrontStructure_expandCookiePreference(t *testing.T) {
 	if *cp.Forward != "whitelist" {
 		t.Fatalf("Expected Forward to be whitelist, got %v", *cp.Forward)
 	}
-	if reflect.DeepEqual(cp.WhitelistedNames.Items, expandStringList(cookieNamesConf())) != true {
+	if !reflect.DeepEqual(cp.WhitelistedNames.Items, expandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), cp.WhitelistedNames.Items)
 	}
 }
@@ -600,70 +470,70 @@ func TestCloudFrontStructure_flattenCookiePreference(t *testing.T) {
 	cp := expandCookiePreference(in)
 	out := flattenCookiePreference(cp)
 
-	if reflect.DeepEqual(in, out) != true {
-		t.Fatalf("Expected out to be %v, got %v", in, out)
+	if e, a := in["forward"], out["forward"]; e != a {
+		t.Fatalf("Expected forward to be %v, got %v", e, a)
 	}
 }
 
 func TestCloudFrontStructure_expandCookieNames(t *testing.T) {
 	data := cookieNamesConf()
-	cn := expandCookieNames(data)
+	cn := expandCookieNames(data.List())
 	if *cn.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *cn.Quantity)
 	}
-	if reflect.DeepEqual(cn.Items, expandStringList(data)) != true {
+	if !reflect.DeepEqual(cn.Items, expandStringSet(data)) {
 		t.Fatalf("Expected Items to be %v, got %v", data, cn.Items)
 	}
 }
 
 func TestCloudFrontStructure_flattenCookieNames(t *testing.T) {
 	in := cookieNamesConf()
-	cn := expandCookieNames(in)
-	out := flattenCookieNames(cn)
+	cn := expandCookieNames(in.List())
+	out := schema.NewSet(schema.HashString, flattenCookieNames(cn))
 
-	if reflect.DeepEqual(in, out) != true {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
 
 func TestCloudFrontStructure_expandAllowedMethods(t *testing.T) {
 	data := allowedMethodsConf()
-	am := expandAllowedMethodsDeprecated(data)
+	am := expandAllowedMethods(data)
 	if *am.Quantity != 7 {
 		t.Fatalf("Expected Quantity to be 7, got %v", *am.Quantity)
 	}
-	if reflect.DeepEqual(am.Items, expandStringList(data)) != true {
+	if !reflect.DeepEqual(am.Items, expandStringList(data.List())) {
 		t.Fatalf("Expected Items to be %v, got %v", data, am.Items)
 	}
 }
 
 func TestCloudFrontStructure_flattenAllowedMethods(t *testing.T) {
 	in := allowedMethodsConf()
-	am := expandAllowedMethodsDeprecated(in)
-	out := flattenAllowedMethodsDeprecated(am)
+	am := expandAllowedMethods(in)
+	out := flattenAllowedMethods(am)
 
-	if reflect.DeepEqual(in, out) != true {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
 
 func TestCloudFrontStructure_expandCachedMethods(t *testing.T) {
 	data := cachedMethodsConf()
-	cm := expandCachedMethodsDeprecated(data)
+	cm := expandCachedMethods(data)
 	if *cm.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *cm.Quantity)
 	}
-	if reflect.DeepEqual(cm.Items, expandStringList(data)) != true {
+	if !reflect.DeepEqual(cm.Items, expandStringList(data.List())) {
 		t.Fatalf("Expected Items to be %v, got %v", data, cm.Items)
 	}
 }
 
 func TestCloudFrontStructure_flattenCachedMethods(t *testing.T) {
 	in := cachedMethodsConf()
-	cm := expandCachedMethodsDeprecated(in)
-	out := flattenCachedMethodsDeprecated(cm)
+	cm := expandCachedMethods(in)
+	out := flattenCachedMethods(cm)
 
-	if reflect.DeepEqual(in, out) != true {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -683,6 +553,53 @@ func TestCloudFrontStructure_flattenOrigins(t *testing.T) {
 	in := multiOriginConf()
 	origins := expandOrigins(in)
 	out := flattenOrigins(origins)
+	diff := in.Difference(out)
+
+	if len(diff.List()) > 0 {
+		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
+	}
+}
+
+func TestCloudFrontStructure_expandOriginGroups(t *testing.T) {
+	in := originGroupsConf()
+	groups := expandOriginGroups(in)
+
+	if *groups.Quantity != 1 {
+		t.Fatalf("Expected origin group quantity to be %v, got %v", 1, *groups.Quantity)
+	}
+	originGroup := groups.Items[0]
+	if *originGroup.Id != "groupS3" {
+		t.Fatalf("Expected origin group id to be %v, got %v", "groupS3", *originGroup.Id)
+	}
+	if *originGroup.FailoverCriteria.StatusCodes.Quantity != 2 {
+		t.Fatalf("Expected 2 origin group status codes, got %v", *originGroup.FailoverCriteria.StatusCodes.Quantity)
+	}
+	statusCodes := originGroup.FailoverCriteria.StatusCodes.Items
+	for _, code := range statusCodes {
+		if *code != 503 && *code != 504 {
+			t.Fatalf("Expected origin group failover status code to either 503 or 504 got %v", *code)
+		}
+	}
+
+	if *originGroup.Members.Quantity > 2 {
+		t.Fatalf("Expected origin group member quantity to be 2, got %v", *originGroup.Members.Quantity)
+	}
+
+	members := originGroup.Members.Items
+	if len(members) > 2 {
+		t.Fatalf("Expected 2 origin group members, got %v", len(members))
+	}
+	for _, member := range members {
+		if *member.OriginId != "S3failover" && *member.OriginId != "S3origin" {
+			t.Fatalf("Expected origin group member to either S3failover or s3origin got %v", *member.OriginId)
+		}
+	}
+}
+
+func TestCloudFrontStructure_flattenOriginGroups(t *testing.T) {
+	in := originGroupsConf()
+	groups := expandOriginGroups(in)
+	out := flattenOriginGroups(groups)
 	diff := in.Difference(out)
 
 	if len(diff.List()) > 0 {
@@ -723,9 +640,6 @@ func TestCloudFrontStructure_flattenOrigin(t *testing.T) {
 	}
 	if out["origin_path"] != "/" {
 		t.Fatalf("Expected out[origin_path] to be /, got %v", out["origin_path"])
-	}
-	if out["custom_origin_config"].(*schema.Set).Equal(in["custom_origin_config"].(*schema.Set)) != true {
-		t.Fatalf("Expected out[custom_origin_config] to be %v, got %v", in["custom_origin_config"], out["custom_origin_config"])
 	}
 }
 
@@ -801,28 +715,40 @@ func TestCloudFrontStructure_flattenCustomOriginConfig(t *testing.T) {
 	co := expandCustomOriginConfig(in)
 	out := flattenCustomOriginConfig(co)
 
-	if reflect.DeepEqual(in, out) != true {
-		t.Fatalf("Expected out to be %v, got %v", in, out)
+	if e, a := in["http_port"], out["http_port"]; e != a {
+		t.Fatalf("Expected http_port to be %v, got %v", e, a)
+	}
+	if e, a := in["https_port"], out["https_port"]; e != a {
+		t.Fatalf("Expected https_port to be %v, got %v", e, a)
+	}
+	if e, a := in["origin_keepalive_timeout"], out["origin_keepalive_timeout"]; e != a {
+		t.Fatalf("Expected origin_keepalive_timeout to be %v, got %v", e, a)
+	}
+	if e, a := in["origin_protocol_policy"], out["origin_protocol_policy"]; e != a {
+		t.Fatalf("Expected origin_protocol_policy to be %v, got %v", e, a)
+	}
+	if e, a := in["origin_read_timeout"], out["origin_read_timeout"]; e != a {
+		t.Fatalf("Expected origin_read_timeout to be %v, got %v", e, a)
+	}
+	if e, a := in["origin_ssl_protocols"].(*schema.Set), out["origin_ssl_protocols"].(*schema.Set); !e.Equal(a) {
+		t.Fatalf("Expected origin_ssl_protocols to be %v, got %v", e, a)
 	}
 }
 
 func TestCloudFrontStructure_expandCustomOriginConfigSSL(t *testing.T) {
 	in := customOriginSslProtocolsConf()
-	ocs := expandCustomOriginConfigSSL(in)
+	ocs := expandCustomOriginConfigSSL(in.List())
 	if *ocs.Quantity != 4 {
 		t.Fatalf("Expected Quantity to be 4, got %v", *ocs.Quantity)
-	}
-	if *ocs.Items[0] != "SSLv3" {
-		t.Fatalf("Expected first Item to be SSLv3, got %v", *ocs.Items[0])
 	}
 }
 
 func TestCloudFrontStructure_flattenCustomOriginConfigSSL(t *testing.T) {
 	in := customOriginSslProtocolsConf()
-	ocs := expandCustomOriginConfigSSL(in)
+	ocs := expandCustomOriginConfigSSL(in.List())
 	out := flattenCustomOriginConfigSSL(ocs)
 
-	if reflect.DeepEqual(in, out) != true {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -840,7 +766,7 @@ func TestCloudFrontStructure_flattenS3OriginConfig(t *testing.T) {
 	s3o := expandS3OriginConfig(in)
 	out := flattenS3OriginConfig(s3o)
 
-	if reflect.DeepEqual(in, out) != true {
+	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -861,7 +787,7 @@ func TestCloudFrontStructure_flattenCustomErrorResponses(t *testing.T) {
 	ers := expandCustomErrorResponses(in)
 	out := flattenCustomErrorResponses(ers)
 
-	if in.Equal(out) != true {
+	if !in.Equal(out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -899,7 +825,7 @@ func TestCloudFrontStructure_flattenCustomErrorResponse(t *testing.T) {
 	er := expandCustomErrorResponse(in)
 	out := flattenCustomErrorResponse(er)
 
-	if reflect.DeepEqual(in, out) != true {
+	if !reflect.DeepEqual(in, out) {
 		t.Fatalf("Expected out to be %v, got %v", in, out)
 	}
 }
@@ -908,7 +834,7 @@ func TestCloudFrontStructure_expandLoggingConfig(t *testing.T) {
 	data := loggingConfigConf()
 
 	lc := expandLoggingConfig(data)
-	if *lc.Enabled != true {
+	if !*lc.Enabled {
 		t.Fatalf("Expected Enabled to be true, got %v", *lc.Enabled)
 	}
 	if *lc.Prefix != "myprefix" {
@@ -917,14 +843,14 @@ func TestCloudFrontStructure_expandLoggingConfig(t *testing.T) {
 	if *lc.Bucket != "mylogs.s3.amazonaws.com" {
 		t.Fatalf("Expected Bucket to be mylogs.s3.amazonaws.com, got %v", *lc.Bucket)
 	}
-	if *lc.IncludeCookies != false {
+	if *lc.IncludeCookies {
 		t.Fatalf("Expected IncludeCookies to be false, got %v", *lc.IncludeCookies)
 	}
 }
 
 func TestCloudFrontStructure_expandLoggingConfig_nilValue(t *testing.T) {
 	lc := expandLoggingConfig(nil)
-	if *lc.Enabled != false {
+	if *lc.Enabled {
 		t.Fatalf("Expected Enabled to be false, got %v", *lc.Enabled)
 	}
 	if *lc.Prefix != "" {
@@ -933,19 +859,8 @@ func TestCloudFrontStructure_expandLoggingConfig_nilValue(t *testing.T) {
 	if *lc.Bucket != "" {
 		t.Fatalf("Expected Bucket to be blank, got %v", *lc.Bucket)
 	}
-	if *lc.IncludeCookies != false {
+	if *lc.IncludeCookies {
 		t.Fatalf("Expected IncludeCookies to be false, got %v", *lc.IncludeCookies)
-	}
-}
-
-func TestCloudFrontStructure_flattenLoggingConfig(t *testing.T) {
-	in := loggingConfigConf()
-	lc := expandLoggingConfig(in)
-	out := flattenLoggingConfig(lc)
-	diff := schema.NewSet(loggingConfigHash, []interface{}{in}).Difference(out)
-
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
 	}
 }
 
@@ -955,7 +870,7 @@ func TestCloudFrontStructure_expandAliases(t *testing.T) {
 	if *a.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *a.Quantity)
 	}
-	if reflect.DeepEqual(a.Items, expandStringList(data.List())) != true {
+	if !reflect.DeepEqual(a.Items, expandStringList(data.List())) {
 		t.Fatalf("Expected Items to be [example.com www.example.com], got %v", a.Items)
 	}
 }
@@ -979,17 +894,6 @@ func TestCloudFrontStructure_expandRestrictions(t *testing.T) {
 	}
 }
 
-func TestCloudFrontStructure_flattenRestrictions(t *testing.T) {
-	in := geoRestrictionsConf()
-	r := expandRestrictions(in)
-	out := flattenRestrictions(r)
-	diff := schema.NewSet(restrictionsHash, []interface{}{in}).Difference(out)
-
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
-	}
-}
-
 func TestCloudFrontStructure_expandGeoRestriction_whitelist(t *testing.T) {
 	data := geoRestrictionWhitelistConf()
 	gr := expandGeoRestriction(data)
@@ -999,8 +903,8 @@ func TestCloudFrontStructure_expandGeoRestriction_whitelist(t *testing.T) {
 	if *gr.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *gr.Quantity)
 	}
-	if reflect.DeepEqual(gr.Items, aws.StringSlice([]string{"CA", "GB", "US"})) != true {
-		t.Fatalf("Expected Items be [CA, GB, US], got %v", gr.Items)
+	if !reflect.DeepEqual(aws.StringValueSlice(gr.Items), []string{"GB", "US", "CA"}) {
+		t.Fatalf("Expected Items be [CA, GB, US], got %v", aws.StringValueSlice(gr.Items))
 	}
 }
 
@@ -1009,8 +913,11 @@ func TestCloudFrontStructure_flattenGeoRestriction_whitelist(t *testing.T) {
 	gr := expandGeoRestriction(in)
 	out := flattenGeoRestriction(gr)
 
-	if reflect.DeepEqual(in, out) != true {
-		t.Fatalf("Expected out to be %v, got %v", in, out)
+	if e, a := in["restriction_type"], out["restriction_type"]; e != a {
+		t.Fatalf("Expected restriction_type to be %s, got %s", e, a)
+	}
+	if e, a := in["locations"].(*schema.Set), out["locations"].(*schema.Set); !e.Equal(a) {
+		t.Fatalf("Expected out to be %v, got %v", e, a)
 	}
 }
 
@@ -1033,8 +940,11 @@ func TestCloudFrontStructure_flattenGeoRestriction_no_items(t *testing.T) {
 	gr := expandGeoRestriction(in)
 	out := flattenGeoRestriction(gr)
 
-	if reflect.DeepEqual(in, out) != true {
-		t.Fatalf("Expected out to be %v, got %v", in, out)
+	if e, a := in["restriction_type"], out["restriction_type"]; e != a {
+		t.Fatalf("Expected restriction_type to be %s, got %s", e, a)
+	}
+	if out["locations"] != nil {
+		t.Fatalf("Expected locations to be nil, got %v", out["locations"])
 	}
 }
 
@@ -1044,7 +954,7 @@ func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certific
 	if vc.ACMCertificateArn != nil {
 		t.Fatalf("Expected ACMCertificateArn to be unset, got %v", *vc.ACMCertificateArn)
 	}
-	if *vc.CloudFrontDefaultCertificate != true {
+	if !*vc.CloudFrontDefaultCertificate {
 		t.Fatalf("Expected CloudFrontDefaultCertificate to be true, got %v", *vc.CloudFrontDefaultCertificate)
 	}
 	if vc.IAMCertificateId != nil {
@@ -1055,17 +965,6 @@ func TestCloudFrontStructure_expandViewerCertificate_cloudfront_default_certific
 	}
 	if vc.MinimumProtocolVersion != nil {
 		t.Fatalf("Expected IAMCertificateId to not be set, got %v", *vc.MinimumProtocolVersion)
-	}
-}
-
-func TestCloudFrontStructure_flattenViewerCertificate_cloudfront_default_certificate(t *testing.T) {
-	in := viewerCertificateConfSetCloudFrontDefault()
-	vc := expandViewerCertificate(in)
-	out := flattenViewerCertificate(vc)
-	diff := schema.NewSet(viewerCertificateHash, []interface{}{in}).Difference(out)
-
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
 	}
 }
 
@@ -1106,57 +1005,5 @@ func TestCloudFrontStructure_expandViewerCertificate_acm_certificate_arn(t *test
 	}
 	if *vc.MinimumProtocolVersion != "TLSv1" {
 		t.Fatalf("Expected IAMCertificateId to be TLSv1, got %v", *vc.MinimumProtocolVersion)
-	}
-}
-
-func TestCloudFrontStructure_falttenViewerCertificate_iam_certificate_id(t *testing.T) {
-	in := viewerCertificateConfSetIAM()
-	vc := expandViewerCertificate(in)
-	out := flattenViewerCertificate(vc)
-	diff := schema.NewSet(viewerCertificateHash, []interface{}{in}).Difference(out)
-
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
-	}
-}
-
-func TestCloudFrontStructure_falttenViewerCertificate_acm_certificate_arn(t *testing.T) {
-	in := viewerCertificateConfSetACM()
-	vc := expandViewerCertificate(in)
-	out := flattenViewerCertificate(vc)
-	diff := schema.NewSet(viewerCertificateHash, []interface{}{in}).Difference(out)
-
-	if len(diff.List()) > 0 {
-		t.Fatalf("Expected out to be %v, got %v, diff: %v", in, out, diff)
-	}
-}
-
-func TestCloudFrontStructure_viewerCertificateHash_IAM(t *testing.T) {
-	in := viewerCertificateConfSetIAM()
-	out := viewerCertificateHash(in)
-	expected := 1157261784
-
-	if expected != out {
-		t.Fatalf("Expected %v, got %v", expected, out)
-	}
-}
-
-func TestCloudFrontStructure_viewerCertificateHash_ACM(t *testing.T) {
-	in := viewerCertificateConfSetACM()
-	out := viewerCertificateHash(in)
-	expected := 2883600425
-
-	if expected != out {
-		t.Fatalf("Expected %v, got %v", expected, out)
-	}
-}
-
-func TestCloudFrontStructure_viewerCertificateHash_default(t *testing.T) {
-	in := viewerCertificateConfSetCloudFrontDefault()
-	out := viewerCertificateHash(in)
-	expected := 69840937
-
-	if expected != out {
-		t.Fatalf("Expected %v, got %v", expected, out)
 	}
 }

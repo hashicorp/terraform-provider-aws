@@ -6,11 +6,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsEipAssociation() *schema.Resource {
@@ -23,41 +23,41 @@ func resourceAwsEipAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"allocation_id": &schema.Schema{
+			"allocation_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"allow_reassociation": &schema.Schema{
+			"allow_reassociation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				ForceNew: true,
 			},
 
-			"instance_id": &schema.Schema{
+			"instance_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"network_interface_id": &schema.Schema{
+			"network_interface_id": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"private_ip_address": &schema.Schema{
+			"private_ip_address": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
 			},
 
-			"public_ip": &schema.Schema{
+			"public_ip": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
@@ -105,6 +105,9 @@ func resourceAwsEipAssociationCreate(d *schema.ResourceData, meta interface{}) e
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		resp, err = conn.AssociateAddress(request)
+	}
 	if err != nil {
 		return fmt.Errorf("Error associating EIP: %s", err)
 	}
@@ -215,11 +218,11 @@ func describeAddressesById(id string, supportedPlatforms []string) (*ec2.Describ
 
 		return &ec2.DescribeAddressesInput{
 			Filters: []*ec2.Filter{
-				&ec2.Filter{
+				{
 					Name:   aws.String("public-ip"),
 					Values: []*string{aws.String(id)},
 				},
-				&ec2.Filter{
+				{
 					Name:   aws.String("domain"),
 					Values: []*string{aws.String("standard")},
 				},
@@ -229,7 +232,7 @@ func describeAddressesById(id string, supportedPlatforms []string) (*ec2.Describ
 
 	return &ec2.DescribeAddressesInput{
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("association-id"),
 				Values: []*string{aws.String(id)},
 			},

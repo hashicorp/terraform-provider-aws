@@ -1,12 +1,12 @@
 ---
+subcategory: "S3"
 layout: "aws"
 page_title: "AWS: aws_s3_bucket_metric"
-sidebar_current: "docs-aws-resource-s3-bucket-metric"
 description: |-
   Provides a S3 bucket metrics configuration resource.
 ---
 
-# aws_s3_bucket_metric
+# Resource: aws_s3_bucket_metric
 
 Provides a S3 bucket [metrics configuration](http://docs.aws.amazon.com/AmazonS3/latest/dev/metrics-configurations.html) resource.
 
@@ -39,9 +39,9 @@ resource "aws_s3_bucket_metric" "example-filtered" {
   filter {
     prefix = "documents/"
 
-    tags {
+    tags = {
       priority = "high"
-      class = "blue"
+      class    = "blue"
     }
   }
 }

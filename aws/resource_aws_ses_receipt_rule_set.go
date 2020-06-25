@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsSesReceiptRuleSet() *schema.Resource {
@@ -19,7 +19,7 @@ func resourceAwsSesReceiptRuleSet() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"rule_set_name": &schema.Schema{
+			"rule_set_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -29,7 +29,7 @@ func resourceAwsSesReceiptRuleSet() *schema.Resource {
 }
 
 func resourceAwsSesReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	ruleSetName := d.Get("rule_set_name").(string)
 
@@ -48,16 +48,22 @@ func resourceAwsSesReceiptRuleSetCreate(d *schema.ResourceData, meta interface{}
 }
 
 func resourceAwsSesReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) error {
-	ruleSetExists, err := findRuleSet(d.Id(), nil, meta)
+	conn := meta.(*AWSClient).sesconn
 
-	if !ruleSetExists {
-		log.Printf("[WARN] SES Receipt Rule Set (%s) not found", d.Id())
+	input := &ses.DescribeReceiptRuleSetInput{
+		RuleSetName: aws.String(d.Id()),
+	}
+
+	_, err := conn.DescribeReceiptRuleSet(input)
+
+	if isAWSErr(err, ses.ErrCodeRuleSetDoesNotExistException, "") {
+		log.Printf("[WARN] SES Receipt Rule Set (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
 	if err != nil {
-		return err
+		return fmt.Errorf("error describing SES Receipt Rule Set (%s): %s", d.Id(), err)
 	}
 
 	d.Set("rule_set_name", d.Id())
@@ -66,43 +72,12 @@ func resourceAwsSesReceiptRuleSetRead(d *schema.ResourceData, meta interface{}) 
 }
 
 func resourceAwsSesReceiptRuleSetDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).sesConn
+	conn := meta.(*AWSClient).sesconn
 
 	log.Printf("[DEBUG] SES Delete Receipt Rule Set: %s", d.Id())
 	_, err := conn.DeleteReceiptRuleSet(&ses.DeleteReceiptRuleSetInput{
 		RuleSetName: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func findRuleSet(name string, token *string, meta interface{}) (bool, error) {
-	conn := meta.(*AWSClient).sesConn
-
-	ruleSetExists := false
-
-	listOpts := &ses.ListReceiptRuleSetsInput{
-		NextToken: token,
-	}
-
-	response, err := conn.ListReceiptRuleSets(listOpts)
-	for _, element := range response.RuleSets {
-		if *element.Name == name {
-			ruleSetExists = true
-		}
-	}
-
-	if err != nil && !ruleSetExists && response.NextToken != nil {
-		ruleSetExists, err = findRuleSet(name, response.NextToken, meta)
-	}
-
-	if err != nil {
-		return false, err
-	}
-
-	return ruleSetExists, nil
+	return err
 }

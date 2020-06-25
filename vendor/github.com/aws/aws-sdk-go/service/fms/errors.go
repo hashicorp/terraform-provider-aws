@@ -2,6 +2,10 @@
 
 package fms
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeInternalErrorException for service response error code
@@ -25,12 +29,18 @@ const (
 	// you submitted was already set as the AWS Firewall Manager administrator.
 	ErrCodeInvalidOperationException = "InvalidOperationException"
 
+	// ErrCodeInvalidTypeException for service response error code
+	// "InvalidTypeException".
+	//
+	// The value of the Type parameter is invalid.
+	ErrCodeInvalidTypeException = "InvalidTypeException"
+
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
 	// The operation exceeds a resource limit, for example, the maximum number of
 	// policy objects that you can create for an AWS account. For more information,
-	// see Firewall Manager Limits (http://docs.aws.amazon.com/waf/latest/developerguide/fms-limits.html)
+	// see Firewall Manager Limits (https://docs.aws.amazon.com/waf/latest/developerguide/fms-limits.html)
 	// in the AWS WAF Developer Guide.
 	ErrCodeLimitExceededException = "LimitExceededException"
 
@@ -40,3 +50,12 @@ const (
 	// The specified resource was not found.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"InternalErrorException":    newErrorInternalErrorException,
+	"InvalidInputException":     newErrorInvalidInputException,
+	"InvalidOperationException": newErrorInvalidOperationException,
+	"InvalidTypeException":      newErrorInvalidTypeException,
+	"LimitExceededException":    newErrorLimitExceededException,
+	"ResourceNotFoundException": newErrorResourceNotFoundException,
+}

@@ -1,12 +1,12 @@
 ---
+subcategory: "KMS"
 layout: "aws"
 page_title: "AWS: aws_kms_alias"
-sidebar_current: "docs-aws-resource-kms-alias"
 description: |-
   Provides a display name for a customer master key.
 ---
 
-# aws_kms_alias
+# Resource: aws_kms_alias
 
 Provides an alias for a KMS customer master key. AWS Console enforces 1-to-1 mapping between aliases & keys,
 but API (hence Terraform too) allows you to create as many aliases as

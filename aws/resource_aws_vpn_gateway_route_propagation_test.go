@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 	var rtID, gwID string
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
 		IDRefreshName: "aws_vpn_gateway_route_propagation.foo",
 		Providers:     testAccProviders,
@@ -73,7 +73,7 @@ func TestAccAWSVPNGatewayRoutePropagation_basic(t *testing.T) {
 const testAccAWSVPNGatewayRoutePropagation_basic = `
 resource "aws_vpc" "foo" {
 	cidr_block = "10.1.0.0/16"
-	tags {
+	tags = {
 		Name = "terraform-testacc-vpn-gateway-route-propagation"
 	}
 }

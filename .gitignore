@@ -20,10 +20,12 @@ website/node_modules
 *~
 .*.swp
 .idea
+.vscode
 *.iml
 *.test
 *.iml
-
+log.txt
+markdown-link-check*.txt
 website/vendor
 
 # Test exclusions
@@ -33,3 +35,4 @@ website/vendor
 # Keep windows files with windows line endings
 *.winfile eol=crlf
 /.vs
+node_modules

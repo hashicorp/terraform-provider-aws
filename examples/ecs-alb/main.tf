@@ -53,7 +53,7 @@ resource "aws_autoscaling_group" "app" {
 data "template_file" "cloud_config" {
   template = "${file("${path.module}/cloud-config.yml")}"
 
-  vars {
+  vars = {
     aws_region         = "${var.aws_region}"
     ecs_cluster_name   = "${aws_ecs_cluster.main.name}"
     ecs_log_level      = "info"
@@ -143,8 +143,8 @@ resource "aws_security_group" "instance_sg" {
 
   ingress {
     protocol  = "tcp"
-    from_port = 8080
-    to_port   = 8080
+    from_port = 32768
+    to_port   = 61000
 
     security_groups = [
       "${aws_security_group.lb_sg.id}",
@@ -168,7 +168,7 @@ resource "aws_ecs_cluster" "main" {
 data "template_file" "task_definition" {
   template = "${file("${path.module}/task-definition.json")}"
 
-  vars {
+  vars = {
     image_url        = "ghost:latest"
     container_name   = "ghost"
     log_group_region = "${var.aws_region}"
@@ -185,7 +185,7 @@ resource "aws_ecs_service" "test" {
   name            = "tf-example-ecs-ghost"
   cluster         = "${aws_ecs_cluster.main.id}"
   task_definition = "${aws_ecs_task_definition.ghost.arn}"
-  desired_count   = 1
+  desired_count   = "${var.service_desired}"
   iam_role        = "${aws_iam_role.ecs_service.name}"
 
   load_balancer {
@@ -275,7 +275,7 @@ EOF
 data "template_file" "instance_profile" {
   template = "${file("${path.module}/instance-profile-policy.json")}"
 
-  vars {
+  vars = {
     app_log_group_arn = "${aws_cloudwatch_log_group.app.arn}"
     ecs_log_group_arn = "${aws_cloudwatch_log_group.ecs.arn}"
   }

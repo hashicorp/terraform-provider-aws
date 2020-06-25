@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_instance"
-sidebar_current: "docs-aws-resource-instance"
 description: |-
   Provides an EC2 instance resource. This allows instances to be created, updated, and deleted. Instances also support provisioning.
 ---
 
-# aws_instance
+# Resource: aws_instance
 
 Provides an EC2 instance resource. This allows instances to be created, updated,
 and deleted. Instances also support [provisioning](/docs/provisioners/index.html).
@@ -40,7 +40,7 @@ resource "aws_instance" "web" {
   ami           = "${data.aws_ami.ubuntu.id}"
   instance_type = "t2.micro"
 
-  tags {
+  tags = {
     Name = "HelloWorld"
   }
 }
@@ -54,12 +54,13 @@ The following arguments are supported:
 * `availability_zone` - (Optional) The AZ to start the instance in.
 * `placement_group` - (Optional) The Placement Group to start the instance in.
 * `tenancy` - (Optional) The tenancy of the instance (if the instance is running in a VPC). An instance with a tenancy of dedicated runs on single-tenant hardware. The host tenancy is not supported for the import-instance command.
-* `cpu_core_count` - (Optional) Sets the number of CPU cores for an instance. This option is 
-  only supported on creation of instance type that support CPU Options 
+* `host_id` - (optional) The Id of a dedicated host that the instance will be assigned to. Use when an instance is to be launched on a specific dedicated host.
+* `cpu_core_count` - (Optional) Sets the number of CPU cores for an instance. This option is
+  only supported on creation of instance type that support CPU Options
   [CPU Cores and Threads Per CPU Core Per Instance Type](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html#cpu-options-supported-instances-values) - specifying this option for unsupported instance types will return an error from the EC2 API.
-* `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set)  If set to to 1, hyperthreading is disabled on the launcehd instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
+* `cpu_threads_per_core` - (Optional - has no effect unless `cpu_core_count` is also set)  If set to to 1, hyperthreading is disabled on the launched instance. Defaults to 2 if not set. See [Optimizing CPU Options](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html) for more information.
 
--> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed dand re-created.
+-> **NOTE:** Changing `cpu_core_count` and/or `cpu_threads_per_core` will cause the resource to be destroyed and re-created.
 
 * `ebs_optimized` - (Optional) If true, the launched EC2 instance will be EBS-optimized.
      Note that if this is not set on an instance type that is optimized by default then
@@ -77,7 +78,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 
 * `get_password_data` - (Optional) If true, wait for password data to become available and retrieve it. Useful for getting the administrator password for instances running Microsoft Windows. The password data is exported to the `password_data` attribute. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.
 * `monitoring` - (Optional) If true, the launched EC2 instance will have detailed monitoring enabled. (Available since v0.6.0)
-* `security_groups` - (Optional, EC2-Classic and default VPC only) A list of security group names to associate with.
+* `security_groups` - (Optional, EC2-Classic and default VPC only) A list of security group names (EC2-Classic) or IDs (default VPC) to associate with.
 
 -> **NOTE:** If you are creating Instances in a VPC, use `vpc_security_group_ids` instead.
 
@@ -94,16 +95,18 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
   launch the instance with. Specified as the name of the Instance Profile. Ensure your credentials have the correct permission to assign the instance profile according to the [EC2 documentation](http://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html#roles-usingrole-ec2instance-permissions), notably `iam:PassRole`.
 * `ipv6_address_count`- (Optional) A number of IPv6 addresses to associate with the primary network interface. Amazon EC2 chooses the IPv6 addresses from the range of your subnet.
 * `ipv6_addresses` - (Optional) Specify one or more IPv6 addresses from the range of the subnet to associate with the primary network interface
-* `tags` - (Optional) A mapping of tags to assign to the resource.
-* `volume_tags` - (Optional) A mapping of tags to assign to the devices created by the instance at launch time.
+* `tags` - (Optional) A map of tags to assign to the resource.
+* `volume_tags` - (Optional) A map of tags to assign to the devices created by the instance at launch time.
 * `root_block_device` - (Optional) Customize details about the root block
   device of the instance. See [Block Devices](#block-devices) below for details.
 * `ebs_block_device` - (Optional) Additional EBS block devices to attach to the
-  instance.  See [Block Devices](#block-devices) below for details.
+  instance.  Block device configurations only apply on resource creation. See [Block Devices](#block-devices) below for details on attributes and drift detection.
 * `ephemeral_block_device` - (Optional) Customize Ephemeral (also known as
   "Instance Store") volumes on the instance. See [Block Devices](#block-devices) below for details.
 * `network_interface` - (Optional) Customize network interfaces to be attached at instance boot time. See [Network Interfaces](#network-interfaces) below for more details.
 * `credit_specification` - (Optional) Customize the credit specification of the instance. See [Credit Specification](#credit-specification) below for more details.
+* `hibernation` - (Optional) If true, the launched EC2 instance will support hibernation.
+* `metadata_options` - (Optional) Customize the metadata options of the instance. See [Metadata Options](#metadata-options) below for more details.
 
 ### Timeouts
 
@@ -115,33 +118,34 @@ The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/d
 
 ### Block devices
 
-Each of the `*_block_device` attributes controls a portion of the AWS
+Each of the `*_block_device` attributes control a portion of the AWS
 Instance's "Block Device Mapping". It's a good idea to familiarize yourself with [AWS's Block Device
 Mapping docs](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/block-device-mapping-concepts.html)
 to understand the implications of using these attributes.
 
 The `root_block_device` mapping supports the following:
 
-* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
-  or `"io1"`. (Default: `"standard"`).
-* `volume_size` - (Optional) The size of the volume in gigabytes.
+* `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`, `"io1"`, `"sc1"`, or `"st1"`. (Default: `"standard"`).
+* `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This is only valid for `volume_type` of `"io1"`, and must be specified if
   using that type
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed
   on instance termination (Default: `true`).
+* `encrypted` - (Optional) Enable volume encryption. (Default: `false`). Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 
-Modifying any of the `root_block_device` settings requires resource
+Modifying any of the `root_block_device` settings other than `volume_size` requires resource
 replacement.
 
 Each `ebs_block_device` supports the following:
 
-* `device_name` - The name of the device to mount.
+* `device_name` - (Required) The name of the device to mount.
 * `snapshot_id` - (Optional) The Snapshot ID to mount.
 * `volume_type` - (Optional) The type of volume. Can be `"standard"`, `"gp2"`,
-  or `"io1"`. (Default: `"standard"`).
-* `volume_size` - (Optional) The size of the volume in gigabytes.
+  or `"io1"`. (Default: `"gp2"`).
+* `volume_size` - (Optional) The size of the volume in gibibytes (GiB).
 * `iops` - (Optional) The amount of provisioned
   [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
   This must be set with a `volume_type` of `"io1"`.
@@ -149,11 +153,10 @@ Each `ebs_block_device` supports the following:
   on instance termination (Default: `true`).
 * `encrypted` - (Optional) Enables [EBS
   encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
-  on the volume (Default: `false`). Cannot be used with `snapshot_id`.
+  on the volume (Default: `false`). Cannot be used with `snapshot_id`. Must be configured to perform drift detection.
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) of the KMS Key to use when encrypting the volume. Must be configured to perform drift detection.
 
-Modifying any `ebs_block_device` currently requires resource replacement.
-
-~> **NOTE on EBS block devices:** If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, and treats additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` + `aws_volume_attachment` resources for a given instance.
+~> **NOTE:** Currently, changes to the `ebs_block_device` configuration of _existing_ resources cannot be automatically detected by Terraform. To manage changes and attachments of an EBS block to an instance, use the `aws_ebs_volume` and `aws_volume_attachment` resources instead. If you use `ebs_block_device` on an `aws_instance`, Terraform will assume management over the full set of non-root EBS block devices for the instance, treating additional block devices as drift. For this reason, `ebs_block_device` cannot be mixed with external `aws_ebs_volume` and `aws_volume_attachment` resources for a given instance.
 
 Each `ephemeral_block_device` supports the following:
 
@@ -168,11 +171,6 @@ available for attachment. AWS [publishes a
 list](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#StorageOnInstanceTypes)
 of which ephemeral devices are available on each type. The devices are always
 identified by the `virtual_name` in the format `"ephemeral{0..N}"`.
-
-~> **NOTE:** Currently, changes to `*_block_device` configuration of _existing_
-resources cannot be automatically detected by Terraform. After making updates
-to block device configuration, resource recreation can be manually triggered by
-using the [`taint` command](/docs/commands/taint.html).
 
 ### Network Interfaces
 
@@ -192,45 +190,67 @@ Each `network_interface` block supports the following:
 
 ### Credit Specification
 
+~> **NOTE:** Removing this configuration on existing instances will only stop managing it. It will not change the configuration back to the default for the instance type.
+
 Credit specification can be applied/modified to the EC2 Instance at any time.
 
 The `credit_specification` block supports the following:
 
-* `cpu_credits` - (Optional) The credit option for CPU usage.
+* `cpu_credits` - (Optional) The credit option for CPU usage. Can be `"standard"` or `"unlimited"`. T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
+
+### Metadata Options
+
+Metadata options can be applied/modified to the EC2 Instance at any time.
+
+The `metadata_options` block supports the following:
+
+* `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
+* `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
+* `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
+
+For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
 ### Example
 
 ```hcl
 resource "aws_vpc" "my_vpc" {
   cidr_block = "172.16.0.0/16"
-  tags {
+
+  tags = {
     Name = "tf-example"
   }
 }
 
 resource "aws_subnet" "my_subnet" {
-  vpc_id = "${aws_vpc.my_vpc.id}"
-  cidr_block = "172.16.10.0/24"
+  vpc_id            = "${aws_vpc.my_vpc.id}"
+  cidr_block        = "172.16.10.0/24"
   availability_zone = "us-west-2a"
-  tags {
+
+  tags = {
     Name = "tf-example"
   }
 }
 
 resource "aws_network_interface" "foo" {
-  subnet_id = "${aws_subnet.my_subnet.id}"
+  subnet_id   = "${aws_subnet.my_subnet.id}"
   private_ips = ["172.16.10.100"]
-  tags {
+
+  tags = {
     Name = "primary_network_interface"
   }
 }
 
 resource "aws_instance" "foo" {
-	ami = "ami-22b9a343" # us-west-2
-	instance_type = "t2.micro"
-	network_interface {
-	 network_interface_id = "${aws_network_interface.foo.id}"
-	 device_index = 0
+  ami           = "ami-22b9a343" # us-west-2
+  instance_type = "t2.micro"
+
+  network_interface {
+    network_interface_id = "${aws_network_interface.foo.id}"
+    device_index         = 0
+  }
+
+  credit_specification {
+    cpu_credits = "unlimited"
   }
 }
 ```
@@ -240,6 +260,7 @@ resource "aws_instance" "foo" {
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The instance ID.
+* `arn` - The ARN of the instance.
 * `availability_zone` - The availability zone of the instance.
 * `placement_group` - The placement group of the instance.
 * `key_name` - The key name of the instance
@@ -252,7 +273,6 @@ In addition to all arguments above, the following attributes are exported:
   is only available if you've enabled DNS hostnames for your VPC
 * `public_ip` - The public IP address assigned to the instance, if applicable. **NOTE**: If you are using an [`aws_eip`](/docs/providers/aws/r/eip.html) with your instance, you should refer to the EIP's address directly and not use `public_ip`, as this field will change after the EIP is attached.
 * `ipv6_addresses` - A list of assigned IPv6 addresses, if any
-* `network_interface_id` - The ID of the network interface that was created with the instance.
 * `primary_network_interface_id` - The ID of the instance's primary network interface.
 * `private_dns` - The private DNS name assigned to the instance. Can only be
   used inside the Amazon EC2, and only available if you've enabled DNS hostnames
@@ -261,10 +281,14 @@ In addition to all arguments above, the following attributes are exported:
 * `security_groups` - The associated security groups.
 * `vpc_security_group_ids` - The associated security groups in non-default VPC
 * `subnet_id` - The VPC subnet ID.
+* `outpost_arn` - The ARN of the Outpost the instance is assigned to.
 * `credit_specification` - Credit specification of instance.
+* `instance_state` - The state of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 
 For any `root_block_device` and `ebs_block_device` the `volume_id` is exported.
 e.g. `aws_instance.web.root_block_device.0.volume_id`
+
+For the `root_block_device` the `device_name` is exported.
 
 ## Import
 

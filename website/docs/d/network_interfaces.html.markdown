@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_network_interfaces"
-sidebar_current: "docs-aws-datasource-network-interfaces"
 description: |-
     Provides a list of network interface ids
 ---
@@ -24,7 +24,7 @@ The following example retrieves a list of all network interface ids with a custo
 
 ```hcl
 data "aws_network_interfaces" "example" {
-  tags {
+  tags = {
     Name = "test"
   }
 }
@@ -40,7 +40,7 @@ with specific subnet.
 ```hcl
 data "aws_network_interfaces" "example" {
   filter {
-    name = "subnet-id"
+    name   = "subnet-id"
     values = ["${aws_subnet.test.id}"]
   }
 }
@@ -52,7 +52,7 @@ output "example" {
 
 ## Argument Reference
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired network interfaces.
 
 * `filter` - (Optional) Custom filter block as described below.

@@ -6,7 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsRedshiftCluster() *schema.Resource {
@@ -170,6 +171,7 @@ func dataSourceAwsRedshiftCluster() *schema.Resource {
 
 func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	cluster := d.Get("cluster_identifier").(string)
 
@@ -207,7 +209,7 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 		csg = append(csg, *g.ClusterSecurityGroupName)
 	}
 	if err := d.Set("cluster_security_groups", csg); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving Cluster Security Group Names to state for Redshift Cluster (%s): %s", cluster, err)
+		return fmt.Errorf("Error saving Cluster Security Group Names to state for Redshift Cluster (%s): %s", cluster, err)
 	}
 
 	d.Set("cluster_subnet_group_name", rsc.ClusterSubnetGroupName)
@@ -238,7 +240,7 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 		iamRoles = append(iamRoles, *i.IamRoleArn)
 	}
 	if err := d.Set("iam_roles", iamRoles); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving IAM Roles to state for Redshift Cluster (%s): %s", cluster, err)
+		return fmt.Errorf("Error saving IAM Roles to state for Redshift Cluster (%s): %s", cluster, err)
 	}
 
 	d.Set("kms_key_id", rsc.KmsKeyId)
@@ -248,7 +250,11 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("port", rsc.Endpoint.Port)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
 	d.Set("publicly_accessible", rsc.PubliclyAccessible)
-	d.Set("tags", tagsToMapRedshift(rsc.Tags))
+
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(rsc.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	d.Set("vpc_id", rsc.VpcId)
 
 	var vpcg []string
@@ -256,7 +262,7 @@ func dataSourceAwsRedshiftClusterRead(d *schema.ResourceData, meta interface{}) 
 		vpcg = append(vpcg, *g.VpcSecurityGroupId)
 	}
 	if err := d.Set("vpc_security_group_ids", vpcg); err != nil {
-		return fmt.Errorf("[DEBUG] Error saving VPC Security Group IDs to state for Redshift Cluster (%s): %s", cluster, err)
+		return fmt.Errorf("Error saving VPC Security Group IDs to state for Redshift Cluster (%s): %s", cluster, err)
 	}
 
 	log.Printf("[INFO] Reading Redshift Cluster Logging Status: %s", cluster)

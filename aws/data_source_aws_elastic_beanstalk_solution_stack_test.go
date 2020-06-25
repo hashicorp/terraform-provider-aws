@@ -5,12 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSElasticBeanstalkSolutionStackDataSource(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -23,10 +23,6 @@ func TestAccAWSElasticBeanstalkSolutionStackDataSource(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceDestroy(s *terraform.State) error {
-	return nil
 }
 
 func testAccCheckAwsElasticBeanstalkSolutionStackDataSourceID(n string) resource.TestCheckFunc {

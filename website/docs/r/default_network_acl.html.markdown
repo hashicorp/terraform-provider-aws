@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_network_acl"
-sidebar_current: "docs-aws-resource-default-network-acl"
 description: |-
   Manage the default Network ACL resource.
 ---
 
-# aws_default_network_acl
+# Resource: aws_default_network_acl
 
 Provides a resource to manage the default AWS Network ACL. VPC Only.
 
@@ -45,13 +45,13 @@ resource "aws_vpc" "mainvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.mainvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.mainvpc.default_network_acl_id
 
   ingress {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = aws_vpc.mainvpc.cidr_block
     from_port  = 0
     to_port    = 0
   }
@@ -78,20 +78,20 @@ resource "aws_vpc" "mainvpc" {
 }
 
 resource "aws_default_network_acl" "default" {
-  default_network_acl_id = "${aws_vpc.mainvpc.default_network_acl_id}"
+  default_network_acl_id = aws_vpc.mainvpc.default_network_acl_id
 
   ingress {
     protocol   = -1
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = aws_vpc.mainvpc.cidr_block
     from_port  = 0
     to_port    = 0
   }
 }
 ```
 
-## Example config to deny all traffic to any Subnet in the Default Network ACL:
+## Example config to deny all traffic to any Subnet in the Default Network ACL
 
 This config denies all traffic in the Default ACL. This can be useful if you
 want a locked down default to force all resources in the VPC to assign a
@@ -119,7 +119,7 @@ attribute is exported from `aws_vpc`, or manually found via the AWS Console.
 notes below on managing Subnets in the Default Network ACL
 * `ingress` - (Optional) Specifies an ingress rule. Parameters defined below.
 * `egress` - (Optional) Specifies an egress rule. Parameters defined below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Both `egress` and `ingress` support the following keys:
 
@@ -135,7 +135,7 @@ valid network mask.
 * `icmp_type` - (Optional) The ICMP type to be used. Default 0.
 * `icmp_code` - (Optional) The ICMP type code to be used. Default 0.
 
-~> Note: For more information on ICMP types and codes, see here: http://www.nthelp.com/icmp.html
+~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
 ### Managing Subnets in the Default Network ACL
 
@@ -160,6 +160,14 @@ adopted by the Default Network ACL. In order to avoid a reoccurring plan, they
 will need to be reassigned, destroyed, or added to the `subnet_ids` attribute of
 the `aws_default_network_acl` entry.
 
+As an alternative to the above, you can also specify the following lifecycle configuration in your `aws_default_network_acl` resource:
+
+```hcl
+lifecycle {
+  ignore_changes = [subnet_ids]
+}
+```
+
 ### Removing `aws_default_network_acl` from your configuration
 
 Each AWS VPC comes with a Default Network ACL that cannot be deleted. The `aws_default_network_acl`
@@ -174,9 +182,19 @@ can resume managing them via the AWS Console.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Default Network ACL
+* `arn` - The ARN of the Default Network ACL
 * `vpc_id` -  The ID of the associated VPC
 * `ingress` - Set of ingress rules
 * `egress` - Set of egress rules
 * `subnet_ids` – IDs of associated Subnets
+* `owner_id` - The ID of the AWS account that owns the Default Network ACL
 
 [aws-network-acls]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_ACLs.html
+
+## Import
+
+Default Network ACLs can be imported using the `id`, e.g.
+
+```
+$ terraform import aws_default_network_acl.sample acl-7aaabd18
+```

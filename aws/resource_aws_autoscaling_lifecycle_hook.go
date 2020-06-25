@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"log"
 	"strings"
 	"time"
@@ -8,9 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
@@ -19,6 +19,10 @@ func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
 		Read:   resourceAwsAutoscalingLifecycleHookRead,
 		Update: resourceAwsAutoscalingLifecycleHookPut,
 		Delete: resourceAwsAutoscalingLifecycleHookDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsAutoscalingLifecycleHookImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -61,19 +65,26 @@ func resourceAwsAutoscalingLifecycleHook() *schema.Resource {
 
 func resourceAwsAutoscalingLifecycleHookPutOp(conn *autoscaling.AutoScaling, params *autoscaling.PutLifecycleHookInput) error {
 	log.Printf("[DEBUG] AutoScaling PutLifecyleHook: %s", params)
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.PutLifecycleHook(params)
 
 		if err != nil {
 			if awsErr, ok := err.(awserr.Error); ok {
 				if strings.Contains(awsErr.Message(), "Unable to publish test message to notification target") {
-					return resource.RetryableError(errwrap.Wrapf("[DEBUG] Retrying AWS AutoScaling Lifecycle Hook: {{err}}", awsErr))
+					return resource.RetryableError(fmt.Errorf("Retrying AWS AutoScaling Lifecycle Hook: %s", awsErr))
 				}
 			}
-			return resource.NonRetryableError(errwrap.Wrapf("Error putting lifecycle hook: {{err}}", err))
+			return resource.NonRetryableError(fmt.Errorf("Error putting lifecycle hook: %s", err))
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.PutLifecycleHook(params)
+	}
+	if err != nil {
+		return fmt.Errorf("Error putting autoscaling lifecycle hook: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsAutoscalingLifecycleHookPut(d *schema.ResourceData, meta interface{}) error {
@@ -128,7 +139,7 @@ func resourceAwsAutoscalingLifecycleHookDelete(d *schema.ResourceData, meta inte
 		LifecycleHookName:    aws.String(d.Get("name").(string)),
 	}
 	if _, err := autoscalingconn.DeleteLifecycleHook(&params); err != nil {
-		return errwrap.Wrapf("Autoscaling Lifecycle Hook: {{err}}", err)
+		return fmt.Errorf("Autoscaling Lifecycle Hook: %s", err)
 	}
 
 	return nil
@@ -178,7 +189,7 @@ func getAwsAutoscalingLifecycleHook(d *schema.ResourceData, meta interface{}) (*
 	log.Printf("[DEBUG] AutoScaling Lifecycle Hook Describe Params: %#v", params)
 	resp, err := autoscalingconn.DescribeLifecycleHooks(&params)
 	if err != nil {
-		return nil, errwrap.Wrapf("Error retrieving lifecycle hooks: {{err}}", err)
+		return nil, fmt.Errorf("Error retrieving lifecycle hooks: %s", err)
 	}
 
 	// find lifecycle hooks
@@ -191,4 +202,20 @@ func getAwsAutoscalingLifecycleHook(d *schema.ResourceData, meta interface{}) (*
 
 	// lifecycle hook not found
 	return nil, nil
+}
+
+func resourceAwsAutoscalingLifecycleHookImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.SplitN(d.Id(), "/", 2)
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("unexpected format (%q), expected <asg-name>/<lifecycle-hook-name>", d.Id())
+	}
+
+	asgName := idParts[0]
+	lifecycleHookName := idParts[1]
+
+	d.Set("name", lifecycleHookName)
+	d.Set("autoscaling_group_name", asgName)
+	d.SetId(lifecycleHookName)
+
+	return []*schema.ResourceData{d}, nil
 }

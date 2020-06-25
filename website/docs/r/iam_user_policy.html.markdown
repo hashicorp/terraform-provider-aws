@@ -1,12 +1,12 @@
 ---
+subcategory: "IAM"
 layout: "aws"
 page_title: "AWS: aws_iam_user_policy"
-sidebar_current: "docs-aws-resource-iam-user-policy"
 description: |-
   Provides an IAM policy attached to a user.
 ---
 
-# aws_iam_user_policy
+# Resource: aws_iam_user_policy
 
 Provides an IAM policy attached to a user.
 
@@ -47,8 +47,7 @@ resource "aws_iam_access_key" "lb" {
 
 The following arguments are supported:
 
-* `policy` - (Required) The policy document. This is a JSON formatted string.
-	The heredoc syntax or `file` function is helpful here.
+* `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 * `name` - (Optional) The name of the policy. If omitted, Terraform will assign a random, unique name.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `user` - (Required) IAM user to which to attach this policy.

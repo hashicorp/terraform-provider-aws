@@ -6,54 +6,40 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSMediaStoreContainerPolicy_basic(t *testing.T) {
 	rname := acctest.RandString(5)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerPolicyExists("aws_media_store_container_policy.test"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "container_name"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "policy"),
-				),
-			},
-			{
-				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsMediaStoreContainerPolicyExists("aws_media_store_container_policy.test"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "container_name"),
-					resource.TestCheckResourceAttrSet("aws_media_store_container_policy.test", "policy"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSMediaStoreContainerPolicy_import(t *testing.T) {
 	resourceName := "aws_media_store_container_policy.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaStore(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaStoreContainerPolicyDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccMediaStoreContainerPolicyConfig(acctest.RandString(5), acctest.RandString(5)),
+			{
+				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMediaStoreContainerPolicyConfig(rname, acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaStoreContainerPolicyExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "container_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
 			},
 		},
 	})
@@ -104,11 +90,8 @@ func testAccCheckAwsMediaStoreContainerPolicyExists(name string) resource.TestCh
 		}
 
 		_, err := conn.GetContainerPolicy(input)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
@@ -124,6 +107,7 @@ resource "aws_media_store_container" "test" {
 
 resource "aws_media_store_container_policy" "test" {
   container_name = "${aws_media_store_container.test.name}"
+
   policy = <<EOF
 {
   "Version": "2012-10-17",

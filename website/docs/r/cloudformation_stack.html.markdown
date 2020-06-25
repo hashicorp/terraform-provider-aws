@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudFormation"
 layout: "aws"
 page_title: "AWS: aws_cloudformation_stack"
-sidebar_current: "docs-aws-resource-cloudformation-stack"
 description: |-
   Provides a CloudFormation Stack resource.
 ---
 
-# aws_cloudformation_stack
+# Resource: aws_cloudformation_stack
 
 Provides a CloudFormation Stack resource.
 
@@ -16,7 +16,7 @@ Provides a CloudFormation Stack resource.
 resource "aws_cloudformation_stack" "network" {
   name = "networking-stack"
 
-  parameters {
+  parameters = {
     VPCCidr = "10.0.0.0/16"
   }
 
@@ -30,7 +30,7 @@ resource "aws_cloudformation_stack" "network" {
     }
   },
   "Resources" : {
-    "my-vpc": {
+    "myVpc": {
       "Type" : "AWS::EC2::VPC",
       "Properties" : {
         "CidrBlock" : { "Ref" : "VPCCidr" },
@@ -53,13 +53,13 @@ The following arguments are supported:
 * `template_body` - (Optional) Structure containing the template body (max size: 51,200 bytes).
 * `template_url` - (Optional) Location of a file containing the template body (max size: 460,800 bytes).
 * `capabilities` - (Optional) A list of capabilities.
-  Valid values: `CAPABILITY_IAM` or `CAPABILITY_NAMED_IAM`
+  Valid values: `CAPABILITY_IAM`, `CAPABILITY_NAMED_IAM`, or `CAPABILITY_AUTO_EXPAND`
 * `disable_rollback` - (Optional) Set to true to disable rollback of the stack if stack creation failed.
   Conflicts with `on_failure`.
 * `notification_arns` - (Optional) A list of SNS topic ARNs to publish stack related events.
 * `on_failure` - (Optional) Action to be taken if stack creation fails. This must be
   one of: `DO_NOTHING`, `ROLLBACK`, or `DELETE`. Conflicts with `disable_rollback`.
-* `parameters` - (Optional) A list of Parameter structures that specify input parameters for the stack.
+* `parameters` - (Optional) A map of Parameter structures that specify input parameters for the stack.
 * `policy_body` - (Optional) Structure containing the stack policy body.
   Conflicts w/ `policy_url`.
 * `policy_url` - (Optional) Location of a file containing the stack policy.
@@ -84,8 +84,6 @@ Cloudformation Stacks can be imported using the `name`, e.g.
 $ terraform import aws_cloudformation_stack.stack networking-stack
 ```
 
-
-<a id="timeouts"></a>
 ## Timeouts
 
 `aws_cloudformation_stack` provides the following

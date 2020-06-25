@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_instances"
-sidebar_current: "docs-aws-datasource-instances"
 description: |-
   Get information on an Amazon EC2 instances.
 ---
@@ -25,26 +25,27 @@ and you'd need to re-run `apply` every time an instance comes up or dies.
 
 ```hcl
 data "aws_instances" "test" {
-  instance_tags {
+  instance_tags = {
     Role = "HardWorker"
   }
+
   filter {
     name   = "instance.group-id"
     values = ["sg-12345678"]
   }
-  
-  instance_state_names = [ "running", "stopped" ]
+
+  instance_state_names = ["running", "stopped"]
 }
 
 resource "aws_eip" "test" {
-  count = "${length(data.aws_instances.test.ids)}"
+  count    = "${length(data.aws_instances.test.ids)}"
   instance = "${data.aws_instances.test.ids[count.index]}"
 }
 ```
 
 ## Argument Reference
 
-* `instance_tags` - (Optional) A mapping of tags, each pair of which must
+* `instance_tags` - (Optional) A map of tags, each pair of which must
 exactly match a pair on desired instances.
 
 * `instance_state_names` - (Optional) A list of instance states that should be applicable to the desired instances. The permitted values are: `pending, running, shutting-down, stopped, stopping, terminated`. The default value is `running`.

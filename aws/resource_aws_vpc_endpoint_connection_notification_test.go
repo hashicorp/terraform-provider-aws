@@ -8,36 +8,42 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSVpcEndpointConnectionNotification_basic(t *testing.T) {
 	lbName := fmt.Sprintf("testaccawsnlb-basic-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	resourceName := "aws_vpc_endpoint_connection_notification.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_vpc_endpoint_connection_notification.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckVpcEndpointConnectionNotificationDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccVpcEndpointConnectionNotificationBasicConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointConnectionNotificationExists("aws_vpc_endpoint_connection_notification.foo"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "connection_events.#", "2"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "state", "Enabled"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "notification_type", "Topic"),
+					testAccCheckVpcEndpointConnectionNotificationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 				),
 			},
-			resource.TestStep{
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccVpcEndpointConnectionNotificationModifiedConfig(lbName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckVpcEndpointConnectionNotificationExists("aws_vpc_endpoint_connection_notification.foo"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "connection_events.#", "1"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "state", "Enabled"),
-					resource.TestCheckResourceAttr("aws_vpc_endpoint_connection_notification.foo", "notification_type", "Topic"),
+					testAccCheckVpcEndpointConnectionNotificationExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "connection_events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "state", "Enabled"),
+					resource.TestCheckResourceAttr(resourceName, "notification_type", "Topic"),
 				),
 			},
 		},
@@ -105,7 +111,7 @@ func testAccVpcEndpointConnectionNotificationBasicConfig(lbName string) string {
 resource "aws_vpc" "nlb_test" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-vpc-endpoint-connection-notification"
   }
 }
@@ -123,7 +129,7 @@ resource "aws_lb" "nlb_test" {
   idle_timeout               = 60
   enable_deletion_protection = false
 
-  tags {
+  tags = {
     Name = "testAccVpcEndpointConnectionNotificationBasicConfig_nlb"
   }
 }
@@ -133,7 +139,7 @@ resource "aws_subnet" "nlb_test_1" {
   cidr_block        = "10.0.1.0/24"
   availability_zone = "us-west-2a"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-connection-notification-1"
   }
 }
@@ -143,14 +149,14 @@ resource "aws_subnet" "nlb_test_2" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "us-west-2b"
 
-  tags {
+  tags = {
     Name = "tf-acc-vpc-endpoint-connection-notification-2"
   }
 }
 
 data "aws_caller_identity" "current" {}
 
-resource "aws_vpc_endpoint_service" "foo" {
+resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = false
 
   network_load_balancer_arns = [
@@ -180,12 +186,12 @@ resource "aws_sns_topic" "topic" {
 POLICY
 }
 
-resource "aws_vpc_endpoint_connection_notification" "foo" {
-  vpc_endpoint_service_id = "${aws_vpc_endpoint_service.foo.id}"
+resource "aws_vpc_endpoint_connection_notification" "test" {
+  vpc_endpoint_service_id = "${aws_vpc_endpoint_service.test.id}"
   connection_notification_arn = "${aws_sns_topic.topic.arn}"
   connection_events = ["Accept", "Reject"]
 }
-	`, lbName)
+`, lbName)
 }
 
 func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) string {
@@ -194,7 +200,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 		resource "aws_vpc" "nlb_test" {
 			cidr_block = "10.0.0.0/16"
 
-			tags {
+	tags = {
 				Name = "terraform-testacc-vpc-endpoint-connection-notification"
 			}
 		}
@@ -212,7 +218,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			idle_timeout               = 60
 			enable_deletion_protection = false
 
-			tags {
+	tags = {
 				Name = "testAccVpcEndpointConnectionNotificationBasicConfig_nlb"
 			}
 		}
@@ -222,7 +228,7 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			cidr_block        = "10.0.1.0/24"
 			availability_zone = "us-west-2a"
 
-			tags {
+	tags = {
 				Name = "tf-acc-vpc-endpoint-connection-notification-1"
 			}
 		}
@@ -232,14 +238,14 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 			cidr_block        = "10.0.2.0/24"
 			availability_zone = "us-west-2b"
 
-			tags {
+	tags = {
 				Name = "tf-acc-vpc-endpoint-connection-notification-2"
 			}
 		}
 
 		data "aws_caller_identity" "current" {}
 
-		resource "aws_vpc_endpoint_service" "foo" {
+		resource "aws_vpc_endpoint_service" "test" {
 			acceptance_required = false
 
 			network_load_balancer_arns = [
@@ -269,10 +275,10 @@ func testAccVpcEndpointConnectionNotificationModifiedConfig(lbName string) strin
 		POLICY
 		}
 
-		resource "aws_vpc_endpoint_connection_notification" "foo" {
-			vpc_endpoint_service_id = "${aws_vpc_endpoint_service.foo.id}"
+		resource "aws_vpc_endpoint_connection_notification" "test" {
+			vpc_endpoint_service_id = "${aws_vpc_endpoint_service.test.id}"
 			connection_notification_arn = "${aws_sns_topic.topic.arn}"
 			connection_events = ["Accept"]
 		}
-	`, lbName)
+`, lbName)
 }

@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
@@ -21,19 +21,37 @@ func TestAccAWSIAMGroupPolicyAttachment_basic(t *testing.T) {
 	policyName2 := fmt.Sprintf("tf-acc-policy-gpa-basic-2-%s", rString)
 	policyName3 := fmt.Sprintf("tf-acc-policy-gpa-basic-3-%s", rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSGroupPolicyAttachmentDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSGroupPolicyAttachConfig(groupName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 1, &out),
 					testAccCheckAWSGroupPolicyAttachmentAttributes([]string{policyName}, &out),
 				),
 			},
-			resource.TestStep{
+			{
+				ResourceName:      "aws_iam_group_policy_attachment.test-attach",
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSIAMGroupPolicyAttachmentImportStateIdFunc("aws_iam_group_policy_attachment.test-attach"),
+				// We do not have a way to align IDs since the Create function uses resource.PrefixedUniqueId()
+				// Failed state verification, resource with ID GROUP-POLICYARN not found
+				// ImportStateVerify: true,
+				ImportStateCheck: func(s []*terraform.InstanceState) error {
+					if len(s) != 1 {
+						return fmt.Errorf("expected 1 state: %#v", s)
+					}
+					rs := s[0]
+					if !strings.HasPrefix(rs.Attributes["policy_arn"], "arn:") {
+						return fmt.Errorf("expected policy_arn attribute to be set and begin with arn:, received: %s", rs.Attributes["policy_arn"])
+					}
+					return nil
+				},
+			},
+			{
 				Config: testAccAWSGroupPolicyAttachConfigUpdate(groupName, policyName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSGroupPolicyAttachmentExists("aws_iam_group_policy_attachment.test-attach", 2, &out),
@@ -98,13 +116,14 @@ func testAccCheckAWSGroupPolicyAttachmentAttributes(policies []string, out *iam.
 func testAccAWSGroupPolicyAttachConfig(groupName, policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-    name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -121,8 +140,8 @@ EOF
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
-    group = "${aws_iam_group.group.name}"
-    policy_arn = "${aws_iam_policy.policy.arn}"
+  group      = "${aws_iam_group.group.name}"
+  policy_arn = "${aws_iam_policy.policy.arn}"
 }
 `, groupName, policyName)
 }
@@ -130,13 +149,14 @@ resource "aws_iam_group_policy_attachment" "test-attach" {
 func testAccAWSGroupPolicyAttachConfigUpdate(groupName, policyName, policyName2, policyName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_group" "group" {
-    name = "%s"
+  name = "%s"
 }
 
 resource "aws_iam_policy" "policy" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -153,9 +173,10 @@ EOF
 }
 
 resource "aws_iam_policy" "policy2" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -172,9 +193,10 @@ EOF
 }
 
 resource "aws_iam_policy" "policy3" {
-    name = "%s"
-    description = "A test policy"
-    policy = <<EOF
+  name        = "%s"
+  description = "A test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -191,13 +213,23 @@ EOF
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach" {
-    group = "${aws_iam_group.group.name}"
-    policy_arn = "${aws_iam_policy.policy2.arn}"
+  group      = "${aws_iam_group.group.name}"
+  policy_arn = "${aws_iam_policy.policy2.arn}"
 }
 
 resource "aws_iam_group_policy_attachment" "test-attach2" {
-    group = "${aws_iam_group.group.name}"
-    policy_arn = "${aws_iam_policy.policy3.arn}"
+  group      = "${aws_iam_group.group.name}"
+  policy_arn = "${aws_iam_policy.policy3.arn}"
 }
 `, groupName, policyName, policyName2, policyName3)
+}
+
+func testAccAWSIAMGroupPolicyAttachmentImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+		return fmt.Sprintf("%s/%s", rs.Primary.Attributes["group"], rs.Primary.Attributes["policy_arn"]), nil
+	}
 }

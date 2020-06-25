@@ -1,12 +1,12 @@
 ---
+subcategory: "Storage Gateway"
 layout: "aws"
 page_title: "AWS: aws_storagegateway_nfs_file_share"
-sidebar_current: "docs-aws-resource-storagegateway-nfs-file-share"
 description: |-
   Manages an AWS Storage Gateway NFS File Share
 ---
 
-# aws_storagegateway_nfs_file_share
+# Resource: aws_storagegateway_nfs_file_share
 
 Manages an AWS Storage Gateway NFS File Share.
 
@@ -17,7 +17,7 @@ resource "aws_storagegateway_nfs_file_share" "example" {
   client_list  = ["0.0.0.0/0"]
   gateway_arn  = "${aws_storagegateway_gateway.example.arn}"
   location_arn = "${aws_s3_bucket.example.arn}"
-  role_arn     = "${aws_s3_bucket.example.arn}"
+  role_arn     = "${aws_iam_role.example.arn}"
 }
 ```
 
@@ -38,6 +38,7 @@ The following arguments are supported:
 * `read_only` - (Optional) Boolean to indicate write status of file share. File share does not accept writes if `true`. Defaults to `false`.
 * `requester_pays` - (Optional) Boolean who pays the cost of the request and the data download from the Amazon S3 bucket. Set this value to `true` if you want the requester to pay instead of the bucket owner. Defaults to `false`.
 * `squash` - (Optional) Maps a user to anonymous user. Defaults to `RootSquash`. Valid values: `RootSquash` (only root is mapped to anonymous user), `NoSquash` (no one is mapped to anonymous user), `AllSquash` (everyone is mapped to anonymous user)
+* `tags` - (Optional) Key-value map of resource tags
 
 ### nfs_file_share_defaults
 

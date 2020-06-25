@@ -1,7 +1,7 @@
 ---
+subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_broker"
-sidebar_current: "docs-aws-datasource-mq_broker"
 description: |-
   Provides a MQ Broker data source.
 ---

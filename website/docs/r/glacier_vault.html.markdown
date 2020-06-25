@@ -1,12 +1,12 @@
 ---
+subcategory: "Glacier"
 layout: "aws"
 page_title: "AWS: aws_glacier_vault"
-sidebar_current: "docs-aws-resource-glacier-vault"
 description: |-
   Provides a Glacier Vault.
 ---
 
-# aws_glacier_vault
+# Resource: aws_glacier_vault
 
 Provides a Glacier Vault Resource. You can refer to the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/working-with-vaults.html) for a full explanation of the Glacier Vault functionality
 
@@ -45,7 +45,7 @@ resource "aws_glacier_vault" "my_archive" {
 }
 EOF
 
-  tags {
+  tags = {
     Test = "MyArchive"
   }
 }
@@ -59,7 +59,7 @@ The following arguments are supported:
 * `access_policy` - (Optional) The policy document. This is a JSON formatted string.
   The heredoc syntax or `file` function is helpful here. Use the [Glacier Developer Guide](https://docs.aws.amazon.com/amazonglacier/latest/dev/vault-access-policy.html) for more information on Glacier Vault Policy
 * `notification` - (Optional) The notifications for the Vault. Fields documented below.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 **notification** supports the following:
 

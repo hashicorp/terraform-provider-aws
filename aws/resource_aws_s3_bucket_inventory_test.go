@@ -9,9 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSS3BucketInventory_basic(t *testing.T) {
@@ -22,12 +22,12 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfig(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
@@ -44,13 +44,13 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.bucket_arn", "arn:aws:s3:::"+bucketName),
-					resource.TestCheckResourceAttrSet(resourceName, "destination.0.bucket.0.account_id"),
+					testAccCheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", bucketName),
+					testAccCheckResourceAttrAccountID(resourceName, "destination.0.bucket.0.account_id"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.format", "ORC"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.prefix", "inventory"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -60,8 +60,6 @@ func TestAccAWSS3BucketInventory_basic(t *testing.T) {
 }
 
 func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
-	t.Skip("SSE-S3 is not supported by the SDK.")
-
 	var conf s3.InventoryConfiguration
 	rString := acctest.RandString(8)
 	resourceName := "aws_s3_bucket_inventory.test"
@@ -69,19 +67,19 @@ func TestAccAWSS3BucketInventory_encryptWithSSES3(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -98,12 +96,12 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSS3BucketInventoryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSS3BucketInventoryConfigExists(resourceName, &conf),
@@ -111,7 +109,7 @@ func TestAccAWSS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexp.MustCompile("^arn:aws:kms:")),
 				),
 			},
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -193,21 +191,20 @@ func testAccCheckAWSS3BucketInventoryDestroy(s *terraform.State) error {
 
 func testAccAWSS3BucketInventoryConfigBucket(name string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "bucket" {
-  bucket = "%s"
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
   acl    = "private"
 }
 `, name)
 }
 
 func testAccAWSS3BucketInventoryConfig(bucketName, inventoryName string) string {
-	return fmt.Sprintf(`
-%s
+	return testAccAWSS3BucketInventoryConfigBucket(bucketName) + fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket_inventory" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-  name   = "%s"
+  bucket = "${aws_s3_bucket.test.id}"
+  name   = %[1]q
 
   included_object_versions = "All"
 
@@ -226,22 +223,21 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "ORC"
-      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+      format     = "ORC"
+      bucket_arn = "${aws_s3_bucket.test.arn}"
       account_id = "${data.aws_caller_identity.current.account_id}"
-      prefix = "inventory"
+      prefix     = "inventory"
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), inventoryName)
+`, inventoryName)
 }
 
 func testAccAWSS3BucketInventoryConfigEncryptWithSSES3(bucketName, inventoryName string) string {
-	return fmt.Sprintf(`
-%s
+	return testAccAWSS3BucketInventoryConfigBucket(bucketName) + fmt.Sprintf(`
 resource "aws_s3_bucket_inventory" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-  name   = "%s"
+  bucket = "${aws_s3_bucket.test.id}"
+  name   = %[1]q
 
   included_object_versions = "Current"
 
@@ -251,8 +247,8 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "CSV"
-      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+      format     = "CSV"
+      bucket_arn = "${aws_s3_bucket.test.arn}"
 
       encryption {
         sse_s3 {}
@@ -260,20 +256,19 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), inventoryName)
+`, inventoryName)
 }
 
 func testAccAWSS3BucketInventoryConfigEncryptWithSSEKMS(bucketName, inventoryName string) string {
-	return fmt.Sprintf(`
-%s
-resource "aws_kms_key" "inventory" {
-  description             = "Terraform acc test S3 inventory SSE-KMS encryption: %s"
+	return testAccAWSS3BucketInventoryConfigBucket(bucketName) + fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = "Terraform acc test S3 inventory SSE-KMS encryption: %[1]s"
   deletion_window_in_days = 7
 }
 
 resource "aws_s3_bucket_inventory" "test" {
-  bucket = "${aws_s3_bucket.bucket.id}"
-  name   = "%s"
+  bucket = "${aws_s3_bucket.test.id}"
+  name   = %[2]q
 
   included_object_versions = "Current"
 
@@ -283,16 +278,16 @@ resource "aws_s3_bucket_inventory" "test" {
 
   destination {
     bucket {
-      format = "ORC"
-      bucket_arn = "${aws_s3_bucket.bucket.arn}"
+      format     = "Parquet"
+      bucket_arn = "${aws_s3_bucket.test.arn}"
 
       encryption {
         sse_kms {
-          key_id = "${aws_kms_key.inventory.arn}"
+          key_id = "${aws_kms_key.test.arn}"
         }
       }
     }
   }
 }
-`, testAccAWSS3BucketMetricsConfigBucket(bucketName), bucketName, inventoryName)
+`, bucketName, inventoryName)
 }

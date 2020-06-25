@@ -1,13 +1,13 @@
 package aws
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 type WafRegionalRetryer struct {
@@ -22,13 +22,13 @@ func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{
 	defer awsMutexKV.Unlock(t.Region)
 
 	var out interface{}
+	var tokenOut *waf.GetChangeTokenOutput
 	err := resource.Retry(15*time.Minute, func() *resource.RetryError {
 		var err error
-		var tokenOut *waf.GetChangeTokenOutput
 
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 		if err != nil {
-			return resource.NonRetryableError(errwrap.Wrapf("Failed to acquire change token: {{err}}", err))
+			return resource.NonRetryableError(fmt.Errorf("Failed to acquire change token: %s", err))
 		}
 
 		out, err = f(tokenOut.ChangeToken)
@@ -41,8 +41,19 @@ func (t *WafRegionalRetryer) RetryWithToken(f withRegionalTokenFunc) (interface{
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 
-	return out, err
+		if err != nil {
+			return nil, fmt.Errorf("error getting WAF Regional change token: %s", err)
+		}
+
+		out, err = f(tokenOut.ChangeToken)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func newWafRegionalRetryer(conn *wafregional.WAFRegional, region string) *WafRegionalRetryer {

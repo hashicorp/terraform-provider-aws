@@ -1,16 +1,42 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_resource_policy"
-sidebar_current: "docs-aws-resource-cloudwatch-log-resource-policy"
 description: |-
   Provides a resource to manage a CloudWatch log resource policy
 ---
 
-# aws_cloudwatch_log_resource_policy
+# Resource: aws_cloudwatch_log_resource_policy
 
 Provides a resource to manage a CloudWatch log resource policy.
 
 ## Example Usage
+
+### Elasticsearch Log Publishing
+
+```hcl
+data "aws_iam_policy_document" "elasticsearch-log-publishing-policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:PutLogEventsBatch",
+    ]
+
+    resources = ["arn:aws:logs:*"]
+
+    principals {
+      identifiers = ["es.amazonaws.com"]
+      type        = "Service"
+    }
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "elasticsearch-log-publishing-policy" {
+  policy_document = "${data.aws_iam_policy_document.elasticsearch-log-publishing-policy.json}"
+  policy_name     = "elasticsearch-log-publishing-policy"
+}
+```
 
 ### Route53 Query Logging
 

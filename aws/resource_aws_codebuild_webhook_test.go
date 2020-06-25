@@ -2,23 +2,55 @@ package aws
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func TestAccAWSCodeBuildWebhook_Bitbucket(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_Bitbucket(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					resource.TestCheckResourceAttr(resourceName, "branch_filter", ""),
+					resource.TestCheckResourceAttr(resourceName, "project_name", rName),
+					resource.TestMatchResourceAttr(resourceName, "payload_url", regexp.MustCompile(`^https://`)),
+					resource.TestCheckResourceAttr(resourceName, "secret", ""),
+					resource.TestMatchResourceAttr(resourceName, "url", regexp.MustCompile(`^https://`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
 
 func TestAccAWSCodeBuildWebhook_GitHub(t *testing.T) {
 	var webhook codebuild.Webhook
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
@@ -48,8 +80,8 @@ func TestAccAWSCodeBuildWebhook_GitHubEnterprise(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
@@ -96,8 +128,8 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_webhook.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
 		Steps: []resource.TestStep{
@@ -123,6 +155,67 @@ func TestAccAWSCodeBuildWebhook_BranchFilter(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccAWSCodeBuildWebhook_FilterGroup(t *testing.T) {
+	var webhook codebuild.Webhook
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_webhook.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildWebhookDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildWebhookConfig_FilterGroup(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildWebhookExists(resourceName, &webhook),
+					testAccCheckAWSCodeBuildWebhookFilter(&webhook, [][]*codebuild.WebhookFilter{
+						{
+							{
+								Type:                  aws.String("EVENT"),
+								Pattern:               aws.String("PUSH"),
+								ExcludeMatchedPattern: aws.Bool(false),
+							},
+							{
+								Type:                  aws.String("HEAD_REF"),
+								Pattern:               aws.String("refs/heads/master"),
+								ExcludeMatchedPattern: aws.Bool(true),
+							},
+						},
+						{
+							{
+								Type:                  aws.String("EVENT"),
+								Pattern:               aws.String("PULL_REQUEST_UPDATED"),
+								ExcludeMatchedPattern: aws.Bool(false),
+							},
+						},
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"secret"},
+			},
+		},
+	})
+}
+
+func testAccCheckAWSCodeBuildWebhookFilter(webhook *codebuild.Webhook, expectedFilters [][]*codebuild.WebhookFilter) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if webhook == nil {
+			return fmt.Errorf("webhook missing")
+		}
+
+		if !reflect.DeepEqual(webhook.FilterGroups, expectedFilters) {
+			return fmt.Errorf("expected webhook filter configuration (%v), got: %v", expectedFilters, webhook.FilterGroups)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckAWSCodeBuildWebhookDestroy(s *terraform.State) error {
@@ -189,6 +282,14 @@ func testAccCheckAWSCodeBuildWebhookExists(name string, webhook *codebuild.Webho
 	}
 }
 
+func testAccAWSCodeBuildWebhookConfig_Bitbucket(rName string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_Source_Type_Bitbucket(rName) + `
+resource "aws_codebuild_webhook" "test" {
+  project_name = "${aws_codebuild_project.test.name}"
+}
+`)
+}
+
 func testAccAWSCodeBuildWebhookConfig_GitHub(rName string) string {
 	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
 resource "aws_codebuild_webhook" "test" {
@@ -233,4 +334,32 @@ resource "aws_codebuild_webhook" "test" {
   project_name  = "${aws_codebuild_project.test.name}"
 }
 `, branchFilter)
+}
+
+func testAccAWSCodeBuildWebhookConfig_FilterGroup(rName string) string {
+	return fmt.Sprintf(testAccAWSCodeBuildProjectConfig_basic(rName) + `
+resource "aws_codebuild_webhook" "test" {
+	project_name = "${aws_codebuild_project.test.name}"
+
+	filter_group {
+		filter {
+			type = "EVENT"
+			pattern = "PUSH"
+		}
+
+		filter {
+			type = "HEAD_REF"
+			pattern = "refs/heads/master"
+			exclude_matched_pattern = true
+		}
+	}
+
+	filter_group {
+		filter {
+			type = "EVENT"
+			pattern = "PULL_REQUEST_UPDATED"
+		}
+	}
+}
+`)
 }

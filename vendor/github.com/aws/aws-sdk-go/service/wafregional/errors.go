@@ -2,13 +2,47 @@
 
 package wafregional
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
+
+	// ErrCodeWAFBadRequestException for service response error code
+	// "WAFBadRequestException".
+	ErrCodeWAFBadRequestException = "WAFBadRequestException"
 
 	// ErrCodeWAFDisallowedNameException for service response error code
 	// "WAFDisallowedNameException".
 	//
 	// The name specified is invalid.
 	ErrCodeWAFDisallowedNameException = "WAFDisallowedNameException"
+
+	// ErrCodeWAFEntityMigrationException for service response error code
+	// "WAFEntityMigrationException".
+	//
+	// The operation failed due to a problem with the migration. The failure cause
+	// is provided in the exception, in the MigrationErrorType:
+	//
+	//    * ENTITY_NOT_SUPPORTED - The web ACL has an unsupported entity but the
+	//    IgnoreUnsupportedType is not set to true.
+	//
+	//    * ENTITY_NOT_FOUND - The web ACL doesn't exist.
+	//
+	//    * S3_BUCKET_NO_PERMISSION - You don't have permission to perform the PutObject
+	//    action to the specified Amazon S3 bucket.
+	//
+	//    * S3_BUCKET_NOT_ACCESSIBLE - The bucket policy doesn't allow AWS WAF to
+	//    perform the PutObject action in the bucket.
+	//
+	//    * S3_BUCKET_NOT_FOUND - The S3 bucket doesn't exist.
+	//
+	//    * S3_BUCKET_INVALID_REGION - The S3 bucket is not in the same Region as
+	//    the web ACL.
+	//
+	//    * S3_INTERNAL_ERROR - AWS WAF failed to create the template in the S3
+	//    bucket for another reason.
+	ErrCodeWAFEntityMigrationException = "WAFEntityMigrationException"
 
 	// ErrCodeWAFInternalErrorException for service response error code
 	// "WAFInternalErrorException".
@@ -41,9 +75,6 @@ const (
 	//    * You tried to add a Rule to a WebACL, but the Rule already exists in
 	//    the specified WebACL.
 	//
-	//    * You tried to add an IP address to an IPSet, but the IP address already
-	//    exists in the specified IPSet.
-	//
 	//    * You tried to add a ByteMatchTuple to a ByteMatchSet, but the ByteMatchTuple
 	//    already exists in the specified WebACL.
 	ErrCodeWAFInvalidOperationException = "WAFInvalidOperationException"
@@ -61,16 +92,16 @@ const (
 	//    * You tried to update an object (ByteMatchSet, IPSet, Rule, or WebACL)
 	//    using an action other than INSERT or DELETE.
 	//
-	//    * You tried to create a WebACL with a DefaultActionType other than ALLOW,
+	//    * You tried to create a WebACL with a DefaultAction Type other than ALLOW,
 	//    BLOCK, or COUNT.
 	//
 	//    * You tried to create a RateBasedRule with a RateKey value other than
 	//    IP.
 	//
-	//    * You tried to update a WebACL with a WafActionType other than ALLOW,
+	//    * You tried to update a WebACL with a WafAction Type other than ALLOW,
 	//    BLOCK, or COUNT.
 	//
-	//    * You tried to update a ByteMatchSet with a FieldToMatchType other than
+	//    * You tried to update a ByteMatchSet with a FieldToMatch Type other than
 	//    HEADER, METHOD, QUERY_STRING, URI, or BODY.
 	//
 	//    * You tried to update a ByteMatchSet with a Field of HEADER but no value
@@ -93,8 +124,9 @@ const (
 	//
 	//    * Effect must specify Allow.
 	//
-	//    * The Action in the policy must be waf:UpdateWebACL or waf-regional:UpdateWebACL.
-	//    Any extra or wildcard actions in the policy will be rejected.
+	//    * The Action in the policy must be waf:UpdateWebACL, waf-regional:UpdateWebACL,
+	//    waf:GetRuleGroup and waf-regional:GetRuleGroup . Any extra or wildcard
+	//    actions in the policy will be rejected.
 	//
 	//    * The policy cannot include a Resource parameter.
 	//
@@ -117,7 +149,7 @@ const (
 	//
 	// The operation exceeds a resource limit, for example, the maximum number of
 	// WebACL objects that you can create for an AWS account. For more information,
-	// see Limits (http://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
+	// see Limits (https://docs.aws.amazon.com/waf/latest/developerguide/limits.html)
 	// in the AWS WAF Developer Guide.
 	ErrCodeWAFLimitsExceededException = "WAFLimitsExceededException"
 
@@ -174,6 +206,19 @@ const (
 	//    * You tried to delete a Rule that is still referenced by a WebACL.
 	ErrCodeWAFReferencedItemException = "WAFReferencedItemException"
 
+	// ErrCodeWAFServiceLinkedRoleErrorException for service response error code
+	// "WAFServiceLinkedRoleErrorException".
+	//
+	// AWS WAF is not able to access the service linked role. This can be caused
+	// by a previous PutLoggingConfiguration request, which can lock the service
+	// linked role for about 20 seconds. Please try your request again. The service
+	// linked role can also be locked by a previous DeleteServiceLinkedRole request,
+	// which can lock the role for 15 minutes or more. If you recently made a DeleteServiceLinkedRole,
+	// wait at least 15 minutes and try the request again. If you receive this same
+	// exception again, you will have to wait additional time until the role is
+	// unlocked.
+	ErrCodeWAFServiceLinkedRoleErrorException = "WAFServiceLinkedRoleErrorException"
+
 	// ErrCodeWAFStaleDataException for service response error code
 	// "WAFStaleDataException".
 	//
@@ -187,6 +232,14 @@ const (
 	// The specified subscription does not exist.
 	ErrCodeWAFSubscriptionNotFoundException = "WAFSubscriptionNotFoundException"
 
+	// ErrCodeWAFTagOperationException for service response error code
+	// "WAFTagOperationException".
+	ErrCodeWAFTagOperationException = "WAFTagOperationException"
+
+	// ErrCodeWAFTagOperationInternalErrorException for service response error code
+	// "WAFTagOperationInternalErrorException".
+	ErrCodeWAFTagOperationInternalErrorException = "WAFTagOperationInternalErrorException"
+
 	// ErrCodeWAFUnavailableEntityException for service response error code
 	// "WAFUnavailableEntityException".
 	//
@@ -194,3 +247,26 @@ const (
 	// Retry your request.
 	ErrCodeWAFUnavailableEntityException = "WAFUnavailableEntityException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"WAFBadRequestException":                newErrorWAFBadRequestException,
+	"WAFDisallowedNameException":            newErrorWAFDisallowedNameException,
+	"WAFEntityMigrationException":           newErrorWAFEntityMigrationException,
+	"WAFInternalErrorException":             newErrorWAFInternalErrorException,
+	"WAFInvalidAccountException":            newErrorWAFInvalidAccountException,
+	"WAFInvalidOperationException":          newErrorWAFInvalidOperationException,
+	"WAFInvalidParameterException":          newErrorWAFInvalidParameterException,
+	"WAFInvalidPermissionPolicyException":   newErrorWAFInvalidPermissionPolicyException,
+	"WAFInvalidRegexPatternException":       newErrorWAFInvalidRegexPatternException,
+	"WAFLimitsExceededException":            newErrorWAFLimitsExceededException,
+	"WAFNonEmptyEntityException":            newErrorWAFNonEmptyEntityException,
+	"WAFNonexistentContainerException":      newErrorWAFNonexistentContainerException,
+	"WAFNonexistentItemException":           newErrorWAFNonexistentItemException,
+	"WAFReferencedItemException":            newErrorWAFReferencedItemException,
+	"WAFServiceLinkedRoleErrorException":    newErrorWAFServiceLinkedRoleErrorException,
+	"WAFStaleDataException":                 newErrorWAFStaleDataException,
+	"WAFSubscriptionNotFoundException":      newErrorWAFSubscriptionNotFoundException,
+	"WAFTagOperationException":              newErrorWAFTagOperationException,
+	"WAFTagOperationInternalErrorException": newErrorWAFTagOperationInternalErrorException,
+	"WAFUnavailableEntityException":         newErrorWAFUnavailableEntityException,
+}

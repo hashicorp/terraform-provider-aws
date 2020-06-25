@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestFindRegionByEc2Endpoint(t *testing.T) {
@@ -82,15 +82,14 @@ func TestAccDataSourceAwsRegion_basic(t *testing.T) {
 
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_empty,
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", "ec2.us-east-1.amazonaws.com"),
 					resource.TestCheckResourceAttr(resourceName, "name", "us-east-1"),
 					resource.TestCheckResourceAttr(resourceName, "description", "US East (N. Virginia)"),
@@ -114,31 +113,29 @@ func TestAccDataSourceAwsRegion_endpoint(t *testing.T) {
 	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpoint(endpoint1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpoint(endpoint2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint2),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_endpoint("does-not-exist"),
 				ExpectError: regexp.MustCompile(`region not found for endpoint: does-not-exist`),
 			},
@@ -160,45 +157,42 @@ func TestAccDataSourceAwsRegion_endpointAndName(t *testing.T) {
 	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpointAndName(endpoint1, name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpointAndName(endpoint2, name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint2),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_endpointAndName(endpoint1, name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_endpointAndName(endpoint1, name2),
 				ExpectError: regexp.MustCompile(`multiple regions matched`),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_endpointAndName(endpoint2, name1),
 				ExpectError: regexp.MustCompile(`multiple regions matched`),
 			},
@@ -220,31 +214,29 @@ func TestAccDataSourceAwsRegion_name(t *testing.T) {
 	description2 := "US East (Ohio)"
 	resourceName := "data.aws_region.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_name(name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "true"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint1),
 					resource.TestCheckResourceAttr(resourceName, "name", name1),
 					resource.TestCheckResourceAttr(resourceName, "description", description1),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccDataSourceAwsRegionConfig_name(name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccDataSourceAwsRegionCheck(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "current", "false"),
 					resource.TestCheckResourceAttr(resourceName, "endpoint", endpoint2),
 					resource.TestCheckResourceAttr(resourceName, "name", name2),
 					resource.TestCheckResourceAttr(resourceName, "description", description2),
 				),
 			},
-			resource.TestStep{
+			{
 				Config:      testAccDataSourceAwsRegionConfig_name("does-not-exist"),
 				ExpectError: regexp.MustCompile(`region not found for name: does-not-exist`),
 			},

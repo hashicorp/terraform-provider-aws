@@ -2,11 +2,11 @@ package aws
 
 import (
 	"fmt"
-
-	"github.com/hashicorp/terraform/helper/schema"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsCloudWatchLogDestinationPolicy() *schema.Resource {
@@ -24,13 +24,13 @@ func resourceAwsCloudWatchLogDestinationPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"destination_name": &schema.Schema{
+			"destination_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
 
-			"access_policy": &schema.Schema{
+			"access_policy": {
 				Type:     schema.TypeString,
 				Required: true,
 			},
@@ -67,17 +67,13 @@ func resourceAwsCloudWatchLogDestinationPolicyRead(d *schema.ResourceData, meta 
 		return err
 	}
 
-	if !exists {
+	if !exists || destination.AccessPolicy == nil {
+		log.Printf("[WARN] CloudWatch Log Destination Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	if destination.AccessPolicy != nil {
-		d.SetId(destination_name)
-		d.Set("access_policy", *destination.AccessPolicy)
-	} else {
-		d.SetId("")
-	}
+	d.Set("access_policy", destination.AccessPolicy)
 
 	return nil
 }

@@ -2,6 +2,10 @@
 
 package inspector
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeAccessDeniedException for service response error code
@@ -65,6 +69,12 @@ const (
 	// an exclusions preview.
 	ErrCodePreviewGenerationInProgressException = "PreviewGenerationInProgressException"
 
+	// ErrCodeServiceTemporarilyUnavailableException for service response error code
+	// "ServiceTemporarilyUnavailableException".
+	//
+	// The serice is temporary unavailable.
+	ErrCodeServiceTemporarilyUnavailableException = "ServiceTemporarilyUnavailableException"
+
 	// ErrCodeUnsupportedFeatureException for service response error code
 	// "UnsupportedFeatureException".
 	//
@@ -75,3 +85,17 @@ const (
 	// Inspector became available.
 	ErrCodeUnsupportedFeatureException = "UnsupportedFeatureException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"AccessDeniedException":                   newErrorAccessDeniedException,
+	"AgentsAlreadyRunningAssessmentException": newErrorAgentsAlreadyRunningAssessmentException,
+	"AssessmentRunInProgressException":        newErrorAssessmentRunInProgressException,
+	"InternalException":                       newErrorInternalException,
+	"InvalidCrossAccountRoleException":        newErrorInvalidCrossAccountRoleException,
+	"InvalidInputException":                   newErrorInvalidInputException,
+	"LimitExceededException":                  newErrorLimitExceededException,
+	"NoSuchEntityException":                   newErrorNoSuchEntityException,
+	"PreviewGenerationInProgressException":    newErrorPreviewGenerationInProgressException,
+	"ServiceTemporarilyUnavailableException":  newErrorServiceTemporarilyUnavailableException,
+	"UnsupportedFeatureException":             newErrorUnsupportedFeatureException,
+}

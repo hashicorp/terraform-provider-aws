@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDbSnapshotDataSource_basic(t *testing.T) {
 	rInt := acctest.RandInt()
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -42,33 +42,33 @@ func testAccCheckAwsDbSnapshotDataSourceID(n string) resource.TestCheckFunc {
 func testAccCheckAwsDbSnapshotDataSourceConfig(rInt int) string {
 	return fmt.Sprintf(`
 resource "aws_db_instance" "bar" {
-	allocated_storage = 10
-	engine = "MySQL"
-	engine_version = "5.6.35"
-	instance_class = "db.t2.micro"
-	name = "baz"
-	password = "barbarbarbar"
-	username = "foo"
-	skip_final_snapshot = true
+  allocated_storage   = 10
+  engine              = "MySQL"
+  engine_version      = "5.6.35"
+  instance_class      = "db.t2.micro"
+  name                = "baz"
+  password            = "barbarbarbar"
+  username            = "foo"
+  skip_final_snapshot = true
 
-	# Maintenance Window is stored in lower case in the API, though not strictly
-	# documented. Terraform will downcase this to match (as opposed to throw a
-	# validation error).
-	maintenance_window = "Fri:09:00-Fri:09:30"
+  # Maintenance Window is stored in lower case in the API, though not strictly
+  # documented. Terraform will downcase this to match (as opposed to throw a
+  # validation error).
+  maintenance_window = "Fri:09:00-Fri:09:30"
 
-	backup_retention_period = 0
+  backup_retention_period = 0
 
-	parameter_group_name = "default.mysql5.6"
+  parameter_group_name = "default.mysql5.6"
 }
 
 data "aws_db_snapshot" "snapshot" {
-	most_recent = "true"
-	db_snapshot_identifier = "${aws_db_snapshot.test.id}"
+  most_recent            = "true"
+  db_snapshot_identifier = "${aws_db_snapshot.test.id}"
 }
 
-
 resource "aws_db_snapshot" "test" {
-	db_instance_identifier = "${aws_db_instance.bar.id}"
-	db_snapshot_identifier = "testsnapshot%d"
-}`, rInt)
+  db_instance_identifier = "${aws_db_instance.bar.id}"
+  db_snapshot_identifier = "testsnapshot%d"
+}
+`, rInt)
 }

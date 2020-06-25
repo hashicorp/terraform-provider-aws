@@ -2,12 +2,12 @@ package aws
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
@@ -16,31 +16,29 @@ func resourceAwsIamOpenIDConnectProvider() *schema.Resource {
 		Read:   resourceAwsIamOpenIDConnectProviderRead,
 		Update: resourceAwsIamOpenIDConnectProviderUpdate,
 		Delete: resourceAwsIamOpenIDConnectProviderDelete,
-		Exists: resourceAwsIamOpenIDConnectProviderExists,
 		Importer: &schema.ResourceImporter{
 			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"url": &schema.Schema{
+			"url": {
 				Type:             schema.TypeString,
-				Computed:         false,
 				Required:         true,
 				ForceNew:         true,
 				ValidateFunc:     validateOpenIdURL,
 				DiffSuppressFunc: suppressOpenIdURL,
 			},
-			"client_id_list": &schema.Schema{
+			"client_id_list": {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Type:     schema.TypeList,
 				Required: true,
 				ForceNew: true,
 			},
-			"thumbprint_list": &schema.Schema{
+			"thumbprint_list": {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Type:     schema.TypeList,
 				Required: true,
@@ -60,10 +58,10 @@ func resourceAwsIamOpenIDConnectProviderCreate(d *schema.ResourceData, meta inte
 
 	out, err := iamconn.CreateOpenIDConnectProvider(input)
 	if err != nil {
-		return err
+		return fmt.Errorf("error creating IAM OIDC Provider: %w", err)
 	}
 
-	d.SetId(*out.OpenIDConnectProviderArn)
+	d.SetId(aws.StringValue(out.OpenIDConnectProviderArn))
 
 	return resourceAwsIamOpenIDConnectProviderRead(d, meta)
 }
@@ -75,8 +73,13 @@ func resourceAwsIamOpenIDConnectProviderRead(d *schema.ResourceData, meta interf
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
 	out, err := iamconn.GetOpenIDConnectProvider(input)
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		log.Printf("[WARN] IAM OIDC Provider (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading IAM OIDC Provider (%s): %w", d.Id(), err)
 	}
 
 	d.Set("arn", d.Id())
@@ -98,7 +101,7 @@ func resourceAwsIamOpenIDConnectProviderUpdate(d *schema.ResourceData, meta inte
 
 		_, err := iamconn.UpdateOpenIDConnectProviderThumbprint(input)
 		if err != nil {
-			return err
+			return fmt.Errorf("error updating IAM OIDC Provider (%s) thumbprint: %w", d.Id(), err)
 		}
 	}
 
@@ -112,30 +115,12 @@ func resourceAwsIamOpenIDConnectProviderDelete(d *schema.ResourceData, meta inte
 		OpenIDConnectProviderArn: aws.String(d.Id()),
 	}
 	_, err := iamconn.DeleteOpenIDConnectProvider(input)
-
+	if isAWSErr(err, iam.ErrCodeNoSuchEntityException, "") {
+		return nil
+	}
 	if err != nil {
-		if err, ok := err.(awserr.Error); ok && err.Code() == "NoSuchEntity" {
-			return nil
-		}
-		return fmt.Errorf("Error deleting platform application %s", err)
+		return fmt.Errorf("error deleting IAM OIDC Provider (%s): %w", d.Id(), err)
 	}
 
 	return nil
-}
-
-func resourceAwsIamOpenIDConnectProviderExists(d *schema.ResourceData, meta interface{}) (bool, error) {
-	iamconn := meta.(*AWSClient).iamconn
-
-	input := &iam.GetOpenIDConnectProviderInput{
-		OpenIDConnectProviderArn: aws.String(d.Id()),
-	}
-	_, err := iamconn.GetOpenIDConnectProvider(input)
-	if err != nil {
-		if err, ok := err.(awserr.Error); ok && err.Code() == "NoSuchEntity" {
-			return false, nil
-		}
-		return true, err
-	}
-
-	return true, nil
 }

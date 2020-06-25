@@ -8,38 +8,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSVpnConnectionRoute_basic(t *testing.T) {
 	rBgpAsn := acctest.RandIntRange(64512, 65534)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccAwsVpnConnectionRouteDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccAwsVpnConnectionRouteConfig(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionRoute(
-						"aws_vpn_gateway.vpn_gateway",
-						"aws_customer_gateway.customer_gateway",
-						"aws_vpn_connection.vpn_connection",
-						"aws_vpn_connection_route.foo",
-					),
+					testAccAwsVpnConnectionRoute("aws_vpn_connection_route.foo"),
 				),
 			},
-			resource.TestStep{
+			{
 				Config: testAccAwsVpnConnectionRouteConfigUpdate(rBgpAsn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccAwsVpnConnectionRoute(
-						"aws_vpn_gateway.vpn_gateway",
-						"aws_customer_gateway.customer_gateway",
-						"aws_vpn_connection.vpn_connection",
-						"aws_vpn_connection_route.foo",
-					),
+					testAccAwsVpnConnectionRoute("aws_vpn_connection_route.foo"),
 				),
 			},
 		},
@@ -56,11 +46,11 @@ func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
 		cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(rs.Primary.ID)
 
 		routeFilters := []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("route.destination-cidr-block"),
 				Values: []*string{aws.String(cidrBlock)},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("vpn-connection-id"),
 				Values: []*string{aws.String(vpnConnectionId)},
 			},
@@ -100,11 +90,7 @@ func testAccAwsVpnConnectionRouteDestroy(s *terraform.State) error {
 	return fmt.Errorf("Fall through error, Check Destroy criteria not met")
 }
 
-func testAccAwsVpnConnectionRoute(
-	vpnGatewayResource string,
-	customerGatewayResource string,
-	vpnConnectionResource string,
-	vpnConnectionRouteResource string) resource.TestCheckFunc {
+func testAccAwsVpnConnectionRoute(vpnConnectionRouteResource string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[vpnConnectionRouteResource]
 		if !ok {
@@ -122,11 +108,11 @@ func testAccAwsVpnConnectionRoute(
 		cidrBlock, vpnConnectionId := resourceAwsVpnConnectionRouteParseId(route.Primary.ID)
 
 		routeFilters := []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("route.destination-cidr-block"),
 				Values: []*string{aws.String(cidrBlock)},
 			},
-			&ec2.Filter{
+			{
 				Name:   aws.String("vpn-connection-id"),
 				Values: []*string{aws.String(vpnConnectionId)},
 			},
@@ -137,67 +123,63 @@ func testAccAwsVpnConnectionRoute(
 		_, err := ec2conn.DescribeVpnConnections(&ec2.DescribeVpnConnectionsInput{
 			Filters: routeFilters,
 		})
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccAwsVpnConnectionRouteConfig(rBgpAsn int) string {
 	return fmt.Sprintf(`
-	resource "aws_vpn_gateway" "vpn_gateway" {
-		tags {
-			Name = "vpn_gateway"
-		}
-	}
+resource "aws_vpn_gateway" "vpn_gateway" {
+  tags = {
+    Name = "vpn_gateway"
+  }
+}
 
-	resource "aws_customer_gateway" "customer_gateway" {
-		bgp_asn = %d
-		ip_address = "182.0.0.1"
-		type = "ipsec.1"
-	}
+resource "aws_customer_gateway" "customer_gateway" {
+  bgp_asn    = %d
+  ip_address = "182.0.0.1"
+  type       = "ipsec.1"
+}
 
-	resource "aws_vpn_connection" "vpn_connection" {
-		vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
-		customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-		type = "ipsec.1"
-		static_routes_only = true
-	}
+resource "aws_vpn_connection" "vpn_connection" {
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
+  customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
+  type                = "ipsec.1"
+  static_routes_only  = true
+}
 
-	resource "aws_vpn_connection_route" "foo" {
-	    destination_cidr_block = "172.168.10.0/24"
-	    vpn_connection_id = "${aws_vpn_connection.vpn_connection.id}"
-	}
-	`, rBgpAsn)
+resource "aws_vpn_connection_route" "foo" {
+  destination_cidr_block = "172.168.10.0/24"
+  vpn_connection_id      = "${aws_vpn_connection.vpn_connection.id}"
+}
+`, rBgpAsn)
 }
 
 // Change destination_cidr_block
 func testAccAwsVpnConnectionRouteConfigUpdate(rBgpAsn int) string {
 	return fmt.Sprintf(`
-	resource "aws_vpn_gateway" "vpn_gateway" {
-		tags {
-			Name = "vpn_gateway"
-		}
-	}
+resource "aws_vpn_gateway" "vpn_gateway" {
+  tags = {
+    Name = "vpn_gateway"
+  }
+}
 
-	resource "aws_customer_gateway" "customer_gateway" {
-		bgp_asn = %d
-		ip_address = "182.0.0.1"
-		type = "ipsec.1"
-	}
+resource "aws_customer_gateway" "customer_gateway" {
+  bgp_asn    = %d
+  ip_address = "182.0.0.1"
+  type       = "ipsec.1"
+}
 
-	resource "aws_vpn_connection" "vpn_connection" {
-		vpn_gateway_id = "${aws_vpn_gateway.vpn_gateway.id}"
-		customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
-		type = "ipsec.1"
-		static_routes_only = true
-	}
+resource "aws_vpn_connection" "vpn_connection" {
+  vpn_gateway_id      = "${aws_vpn_gateway.vpn_gateway.id}"
+  customer_gateway_id = "${aws_customer_gateway.customer_gateway.id}"
+  type                = "ipsec.1"
+  static_routes_only  = true
+}
 
-	resource "aws_vpn_connection_route" "foo" {
-		destination_cidr_block = "172.168.20.0/24"
-		vpn_connection_id = "${aws_vpn_connection.vpn_connection.id}"
-	}
-	`, rBgpAsn)
+resource "aws_vpn_connection_route" "foo" {
+  destination_cidr_block = "172.168.20.0/24"
+  vpn_connection_id      = "${aws_vpn_connection.vpn_connection.id}"
+}
+`, rBgpAsn)
 }

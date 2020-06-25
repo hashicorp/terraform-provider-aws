@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsRouteTables(t *testing.T) {
 	rInt := acctest.RandIntRange(0, 256)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
@@ -36,7 +36,7 @@ func testAccDataSourceAwsRouteTablesConfigWithDataSource(rInt int) string {
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-route-tables-data-source"
   }
 }
@@ -44,47 +44,47 @@ resource "aws_vpc" "test" {
 resource "aws_vpc" "test2" {
   cidr_block = "172.%d.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-test2acc-route-tables-data-source"
   }
 }
 
 resource "aws_route_table" "test_public_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-public-a"
-    Tier = "Public"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-public-a"
+    Tier      = "Public"
     Component = "Frontend"
   }
 }
 
 resource "aws_route_table" "test_private_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-private-a"
-    Tier = "Private"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-private-a"
+    Tier      = "Private"
     Component = "Database"
   }
 }
 
 resource "aws_route_table" "test_private_b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-private-b"
-    Tier = "Private"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-private-b"
+    Tier      = "Private"
     Component = "Backend-1"
   }
 }
 
 resource "aws_route_table" "test_private_c" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-private-c"
-    Tier = "Private"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-private-c"
+    Tier      = "Private"
     Component = "Backend-2"
   }
 }
@@ -99,7 +99,8 @@ data "aws_route_tables" "test2" {
 
 data "aws_route_tables" "private" {
   vpc_id = "${aws_vpc.test.id}"
-  tags {
+
+  tags = {
     Tier = "Private"
   }
 }
@@ -108,7 +109,7 @@ data "aws_route_tables" "filter_test" {
   vpc_id = "${aws_vpc.test.id}"
 
   filter {
-    name = "tag:Component"
+    name   = "tag:Component"
     values = ["Backend*"]
   }
 }
@@ -120,47 +121,47 @@ func testAccDataSourceAwsRouteTablesConfig(rInt int) string {
 resource "aws_vpc" "test" {
   cidr_block = "172.%d.0.0/16"
 
-  tags {
+  tags = {
     Name = "terraform-testacc-route-tables-data-source"
   }
 }
 
 resource "aws_route_table" "test_public_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-public-a"
-    Tier = "Public"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-public-a"
+    Tier      = "Public"
     Component = "Frontend"
   }
 }
 
 resource "aws_route_table" "test_private_a" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-private-a"
-    Tier = "Private"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-private-a"
+    Tier      = "Private"
     Component = "Database"
   }
 }
 
 resource "aws_route_table" "test_private_b" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-private-b"
-    Tier = "Private"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-private-b"
+    Tier      = "Private"
     Component = "Backend-1"
   }
 }
 
 resource "aws_route_table" "test_private_c" {
-  vpc_id            = "${aws_vpc.test.id}"
+  vpc_id = "${aws_vpc.test.id}"
 
-  tags {
-    Name = "tf-acc-route-tables-data-source-private-c"
-    Tier = "Private"
+  tags = {
+    Name      = "tf-acc-route-tables-data-source-private-c"
+    Tier      = "Private"
     Component = "Backend-2"
   }
 }

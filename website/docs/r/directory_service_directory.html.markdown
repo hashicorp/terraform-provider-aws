@@ -1,12 +1,12 @@
 ---
+subcategory: "Directory Service"
 layout: "aws"
 page_title: "AWS: aws_directory_service_directory"
-sidebar_current: "docs-aws-resource-directory-service-directory"
 description: |-
   Provides a directory in AWS Directory Service.
 ---
 
-# aws_directory_service_directory
+# Resource: aws_directory_service_directory
 
 Provides a Simple or Managed Microsoft directory in AWS Directory Service.
 
@@ -28,7 +28,7 @@ resource "aws_directory_service_directory" "bar" {
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
 
-  tags {
+  tags = {
     Project = "foo"
   }
 }
@@ -64,7 +64,7 @@ resource "aws_directory_service_directory" "bar" {
     subnet_ids = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
   }
 
-  tags {
+  tags = {
     Project = "foo"
   }
 }
@@ -97,7 +97,7 @@ resource "aws_directory_service_directory" "connector" {
 
   connect_settings {
     customer_dns_ips  = ["A.B.C.D"]
-    customer_username = "Administrator"
+    customer_username = "Admin"
     subnet_ids        = ["${aws_subnet.foo.id}", "${aws_subnet.bar.id}"]
     vpc_id            = "${aws_vpc.main.id}"
   }
@@ -135,7 +135,7 @@ The following arguments are supported:
 * `enable_sso` - (Optional) Whether to enable single-sign on for the directory. Requires `alias`. Defaults to `false`.
 * `type` (Optional) - The directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD` are accepted values). Defaults to `SimpleAD`.
 * `edition` - (Optional) The MicrosoftAD edition (`Standard` or `Enterprise`). Defaults to `Enterprise` (applies to MicrosoftAD type only).
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 **vpc_settings** supports the following:
 
@@ -156,8 +156,11 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The directory identifier.
 * `access_url` - The access URL for the directory, such as `http://alias.awsapps.com`.
 * `dns_ip_addresses` - A list of IP addresses of the DNS servers for the directory or connector.
-* `security_group_id` - The ID of the security group created by the directory (`SimpleAD` or `MicrosoftAD` only).
+* `security_group_id` - The ID of the security group created by the directory.
 
+`connect_settings` (for `ADConnector`) is also exported with the following attributes:
+
+ * `connect_ips` - The IP addresses of the AD Connector servers.
 
 ## Import
 

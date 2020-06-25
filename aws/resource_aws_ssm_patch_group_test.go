@@ -6,14 +6,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ssm"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSSSMPatchGroup_basic(t *testing.T) {
 	name := acctest.RandString(10)
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSSMPatchGroupDestroy,
@@ -88,9 +88,8 @@ func testAccCheckAWSSSMPatchGroupDestroy(s *terraform.State) error {
 
 func testAccAWSSSMPatchGroupBasicConfig(rName string) string {
 	return fmt.Sprintf(`
-
 resource "aws_ssm_patch_baseline" "foo" {
-  name  = "patch-baseline-%s"
+  name             = "patch-baseline-%s"
   approved_patches = ["KB123456"]
 }
 
@@ -98,6 +97,5 @@ resource "aws_ssm_patch_group" "patchgroup" {
   baseline_id = "${aws_ssm_patch_baseline.foo.id}"
   patch_group = "patch-group"
 }
-
 `, rName)
 }

@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 	rString := acctest.RandString(7)
-	prefix := "tf-acctest-d-mq-broker"
+	prefix := "tf-acc-test-d-mq-broker"
 	brokerName := fmt.Sprintf("%s-%s", prefix, rString)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
@@ -36,6 +36,12 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 						"data.aws_mq_broker.by_id", "configuration.#",
 						"aws_mq_broker.acctest", "configuration.#"),
 					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "encryption_options.#",
+						"aws_mq_broker.acctest", "encryption_options.#"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "encryption_options.0.use_aws_owned_key",
+						"aws_mq_broker.acctest", "encryption_options.0.use_aws_owned_key"),
+					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "engine_type",
 						"aws_mq_broker.acctest", "engine_type"),
 					resource.TestCheckResourceAttrPair(
@@ -48,6 +54,9 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 						"data.aws_mq_broker.by_id", "instances.#",
 						"aws_mq_broker.acctest", "instances.#"),
 					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "logs.#",
+						"aws_mq_broker.acctest", "logs.#"),
+					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "maintenance_window_start_time.#",
 						"aws_mq_broker.acctest", "maintenance_window_start_time.#"),
 					resource.TestCheckResourceAttrPair(
@@ -59,6 +68,9 @@ func TestAccDataSourceAWSMqBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "subnet_ids.#",
 						"aws_mq_broker.acctest", "subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(
+						"data.aws_mq_broker.by_id", "tags.%",
+						"aws_mq_broker.acctest", "tags.%"),
 					resource.TestCheckResourceAttrPair(
 						"data.aws_mq_broker.by_id", "user.#",
 						"aws_mq_broker.acctest", "user.#"),
@@ -85,12 +97,19 @@ variable "prefix" {
   default = "%s"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "acctest" {
   cidr_block = "10.0.0.0/16"
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 }
@@ -114,7 +133,7 @@ resource "aws_subnet" "acctest" {
   availability_zone = "${data.aws_availability_zones.available.names[count.index]}"
   vpc_id            = "${aws_vpc.acctest.id}"
 
-  tags {
+  tags = {
     Name = "${var.prefix}"
   }
 }
@@ -165,8 +184,8 @@ resource "aws_mq_broker" "acctest" {
   }
 
   publicly_accessible = true
-  security_groups     = ["${aws_security_group.acctest.*.id}"]
-  subnet_ids          = ["${aws_subnet.acctest.*.id}"]
+  security_groups     = ["${aws_security_group.acctest.0.id}", "${aws_security_group.acctest.1.id}"]
+  subnet_ids          = ["${aws_subnet.acctest.0.id}", "${aws_subnet.acctest.1.id}"]
 
   user {
     username = "Ender"

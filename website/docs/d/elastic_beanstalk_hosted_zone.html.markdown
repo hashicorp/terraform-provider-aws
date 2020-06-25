@@ -1,7 +1,7 @@
 ---
+subcategory: "Elastic Beanstalk"
 layout: "aws"
 page_title: "AWS: aws_elastic_beanstalk_hosted_zone"
-sidebar_current: "docs-aws-datasource-elastic-beanstalk-hosted-zone"
 description: |-
   Get an elastic beanstalk hosted zone.
 ---

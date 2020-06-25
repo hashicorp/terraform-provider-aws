@@ -1,13 +1,13 @@
 package aws
 
 import (
+	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/errwrap"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsRdsCluster() *schema.Resource {
@@ -29,6 +29,11 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 				Set:      schema.HashString,
+			},
+
+			"backtrack_window": {
+				Type:     schema.TypeInt,
+				Computed: true,
 			},
 
 			"backup_retention_period": {
@@ -119,12 +124,6 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 			"preferred_maintenance_window": {
 				Type:     schema.TypeString,
 				Computed: true,
-				StateFunc: func(val interface{}) string {
-					if val == nil {
-						return ""
-					}
-					return strings.ToLower(val.(string))
-				},
 			},
 
 			"port": {
@@ -133,6 +132,11 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 			},
 
 			"reader_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
+			"hosted_zone_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -161,18 +165,114 @@ func dataSourceAwsRdsCluster() *schema.Resource {
 
 func dataSourceAwsRdsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).rdsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
+	dbClusterIdentifier := d.Get("cluster_identifier").(string)
 
 	params := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(d.Get("cluster_identifier").(string)),
+		DBClusterIdentifier: aws.String(dbClusterIdentifier),
 	}
 	log.Printf("[DEBUG] Reading RDS Cluster: %s", params)
 	resp, err := conn.DescribeDBClusters(params)
 
 	if err != nil {
-		return errwrap.Wrapf("Error retrieving RDS cluster: {{err}}", err)
+		return fmt.Errorf("Error retrieving RDS cluster: %s", err)
 	}
 
-	d.SetId(*resp.DBClusters[0].DBClusterIdentifier)
+	if resp == nil {
+		return fmt.Errorf("Error retrieving RDS cluster: empty response for: %s", params)
+	}
 
-	return flattenAwsRdsClusterResource(d, meta, resp.DBClusters[0])
+	var dbc *rds.DBCluster
+	for _, c := range resp.DBClusters {
+		if aws.StringValue(c.DBClusterIdentifier) == dbClusterIdentifier {
+			dbc = c
+			break
+		}
+	}
+
+	if dbc == nil {
+		return fmt.Errorf("Error retrieving RDS cluster: cluster not found in response for: %s", params)
+	}
+
+	d.SetId(aws.StringValue(dbc.DBClusterIdentifier))
+
+	if err := d.Set("availability_zones", aws.StringValueSlice(dbc.AvailabilityZones)); err != nil {
+		return fmt.Errorf("error setting availability_zones: %s", err)
+	}
+
+	arn := dbc.DBClusterArn
+	d.Set("arn", arn)
+	d.Set("backtrack_window", int(aws.Int64Value(dbc.BacktrackWindow)))
+	d.Set("backup_retention_period", dbc.BackupRetentionPeriod)
+	d.Set("cluster_identifier", dbc.DBClusterIdentifier)
+
+	var cm []string
+	for _, m := range dbc.DBClusterMembers {
+		cm = append(cm, aws.StringValue(m.DBInstanceIdentifier))
+	}
+	if err := d.Set("cluster_members", cm); err != nil {
+		return fmt.Errorf("error setting cluster_members: %s", err)
+	}
+
+	d.Set("cluster_resource_id", dbc.DbClusterResourceId)
+
+	// Only set the DatabaseName if it is not nil. There is a known API bug where
+	// RDS accepts a DatabaseName but does not return it, causing a perpetual
+	// diff.
+	//	See https://github.com/hashicorp/terraform/issues/4671 for backstory
+	if dbc.DatabaseName != nil {
+		d.Set("database_name", dbc.DatabaseName)
+	}
+
+	d.Set("db_cluster_parameter_group_name", dbc.DBClusterParameterGroup)
+	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
+
+	if err := d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports)); err != nil {
+		return fmt.Errorf("error setting enabled_cloudwatch_logs_exports: %s", err)
+	}
+
+	d.Set("endpoint", dbc.Endpoint)
+	d.Set("engine_version", dbc.EngineVersion)
+	d.Set("engine", dbc.Engine)
+	d.Set("hosted_zone_id", dbc.HostedZoneId)
+	d.Set("iam_database_authentication_enabled", dbc.IAMDatabaseAuthenticationEnabled)
+
+	var roles []string
+	for _, r := range dbc.AssociatedRoles {
+		roles = append(roles, aws.StringValue(r.RoleArn))
+	}
+	if err := d.Set("iam_roles", roles); err != nil {
+		return fmt.Errorf("error setting iam_roles: %s", err)
+	}
+
+	d.Set("kms_key_id", dbc.KmsKeyId)
+	d.Set("master_username", dbc.MasterUsername)
+	d.Set("port", dbc.Port)
+	d.Set("preferred_backup_window", dbc.PreferredBackupWindow)
+	d.Set("preferred_maintenance_window", dbc.PreferredMaintenanceWindow)
+	d.Set("reader_endpoint", dbc.ReaderEndpoint)
+	d.Set("replication_source_identifier", dbc.ReplicationSourceIdentifier)
+
+	d.Set("storage_encrypted", dbc.StorageEncrypted)
+
+	var vpcg []string
+	for _, g := range dbc.VpcSecurityGroups {
+		vpcg = append(vpcg, aws.StringValue(g.VpcSecurityGroupId))
+	}
+	if err := d.Set("vpc_security_group_ids", vpcg); err != nil {
+		return fmt.Errorf("error setting vpc_security_group_ids: %s", err)
+	}
+
+	tags, err := keyvaluetags.RdsListTags(conn, *arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for RDS Cluster (%s): %s", *arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	return nil
 }

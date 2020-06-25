@@ -4,18 +4,18 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSVpc_coreMismatchedDiffs(t *testing.T) {
 	var vpc ec2.Vpc
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckVpcDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testMatchedDiffs,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVpcExists("aws_vpc.test", &vpc),
@@ -31,7 +31,7 @@ func TestAccAWSVpc_coreMismatchedDiffs(t *testing.T) {
 const testMatchedDiffs = `resource "aws_vpc" "test" {
     cidr_block = "10.0.0.0/16"
 
-    tags {
+  tags = {
         Name = "terraform-testacc-repro-GH-4965"
     }
 

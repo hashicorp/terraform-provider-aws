@@ -3,26 +3,43 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	expectedAccountID := cloudTrailServiceAccountPerRegionMap[testAccGetRegion()]
+
+	dataSourceName := "data.aws_cloudtrail_service_account.main"
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
-			resource.TestStep{
+			{
 				Config: testAccCheckAwsCloudTrailServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.main", "id", "113285607260"),
-					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.main", "arn", "arn:aws:iam::113285607260:root"),
+					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
+					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
 				),
 			},
-			resource.TestStep{
-				Config: testAccCheckAwsCloudTrailServiceAccountExplicitRegionConfig,
+		},
+	})
+}
+
+func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
+	expectedAccountID := cloudTrailServiceAccountPerRegionMap[testAccGetRegion()]
+
+	dataSourceName := "data.aws_cloudtrail_service_account.regional"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCheckAwsCloudTrailServiceAccountConfigRegion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.regional", "id", "282025262664"),
-					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.regional", "arn", "arn:aws:iam::282025262664:root"),
+					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
+					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
 				),
 			},
 		},
@@ -33,8 +50,10 @@ const testAccCheckAwsCloudTrailServiceAccountConfig = `
 data "aws_cloudtrail_service_account" "main" { }
 `
 
-const testAccCheckAwsCloudTrailServiceAccountExplicitRegionConfig = `
+const testAccCheckAwsCloudTrailServiceAccountConfigRegion = `
+data "aws_region" "current" {}
+
 data "aws_cloudtrail_service_account" "regional" {
-	region = "eu-west-2"
+  region = "${data.aws_region.current.name}"
 }
 `

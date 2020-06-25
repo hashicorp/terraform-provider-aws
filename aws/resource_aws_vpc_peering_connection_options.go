@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsVpcPeeringConnectionOptions() *schema.Resource {
@@ -40,7 +41,7 @@ func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta int
 
 	pcRaw, _, err := vpcPeeringConnectionRefreshState(conn, d.Id())()
 	if err != nil {
-		return fmt.Errorf("Error reading VPC Peering Connection: %s", err.Error())
+		return fmt.Errorf("error reading VPC Peering Connection: %s", err)
 	}
 
 	if pcRaw == nil {
@@ -53,26 +54,38 @@ func resourceAwsVpcPeeringConnectionOptionsRead(d *schema.ResourceData, meta int
 
 	d.Set("vpc_peering_connection_id", pc.VpcPeeringConnectionId)
 
-	if pc != nil && pc.AccepterVpcInfo != nil && pc.AccepterVpcInfo.PeeringOptions != nil {
-		err := d.Set("accepter", flattenVpcPeeringConnectionOptions(pc.AccepterVpcInfo.PeeringOptions))
-		if err != nil {
-			return fmt.Errorf("Error setting VPC Peering Connection Options accepter information: %s", err.Error())
-		}
+	if err := d.Set("accepter", flattenVpcPeeringConnectionOptions(pc.AccepterVpcInfo.PeeringOptions)); err != nil {
+		return fmt.Errorf("error setting VPC Peering Connection Options accepter information: %s", err)
 	}
-
-	if pc != nil && pc.RequesterVpcInfo != nil && pc.RequesterVpcInfo.PeeringOptions != nil {
-		err := d.Set("requester", flattenVpcPeeringConnectionOptions(pc.RequesterVpcInfo.PeeringOptions))
-		if err != nil {
-			return fmt.Errorf("Error setting VPC Peering Connection Options requester information: %s", err.Error())
-		}
+	if err := d.Set("requester", flattenVpcPeeringConnectionOptions(pc.RequesterVpcInfo.PeeringOptions)); err != nil {
+		return fmt.Errorf("error setting VPC Peering Connection Options requester information: %s", err)
 	}
 
 	return nil
 }
 
 func resourceAwsVpcPeeringConnectionOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
-	if err := resourceAwsVpcPeeringConnectionModifyOptions(d, meta); err != nil {
-		return fmt.Errorf("Error modifying VPC Peering Connection Options: %s", err.Error())
+	conn := meta.(*AWSClient).ec2conn
+
+	pcRaw, _, err := vpcPeeringConnectionRefreshState(conn, d.Id())()
+	if err != nil {
+		return fmt.Errorf("error reading VPC Peering Connection (%s): %s", d.Id(), err)
+	}
+
+	if pcRaw == nil {
+		log.Printf("[WARN] VPC Peering Connection (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	pc := pcRaw.(*ec2.VpcPeeringConnection)
+
+	crossRegionPeering := false
+	if aws.StringValue(pc.RequesterVpcInfo.Region) != aws.StringValue(pc.AccepterVpcInfo.Region) {
+		crossRegionPeering = true
+	}
+	if err := resourceAwsVpcPeeringConnectionModifyOptions(d, meta, crossRegionPeering); err != nil {
+		return fmt.Errorf("error modifying VPC Peering Connection (%s) Options: %s", d.Id(), err)
 	}
 
 	return resourceAwsVpcPeeringConnectionOptionsRead(d, meta)

@@ -6,16 +6,17 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 	randString := acctest.RandString(10)
 	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
+	resourceName := "aws_ecr_lifecycle_policy.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
@@ -23,28 +24,10 @@ func TestAccAWSEcrLifecyclePolicy_basic(t *testing.T) {
 			{
 				Config: testAccEcrLifecyclePolicyConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrLifecyclePolicyExists("aws_ecr_lifecycle_policy.foo"),
+					testAccCheckAWSEcrLifecyclePolicyExists(resourceName),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSEcrLifecyclePolicy_import(t *testing.T) {
-	resourceName := "aws_ecr_lifecycle_policy.foo"
-	randString := acctest.RandString(10)
-	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSEcrLifecyclePolicyDestroy,
-		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccEcrLifecyclePolicyConfig(rName),
-			},
-
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -94,21 +77,19 @@ func testAccCheckAWSEcrLifecyclePolicyExists(name string) resource.TestCheckFunc
 		}
 
 		_, err := conn.GetLifecyclePolicy(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccEcrLifecyclePolicyConfig(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecr_repository" "foo" {
+resource "aws_ecr_repository" "test" {
   name = "%s"
 }
-resource "aws_ecr_lifecycle_policy" "foo" {
-	repository = "${aws_ecr_repository.foo.name}"
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = "${aws_ecr_repository.test.name}"
+
   policy = <<EOF
 {
   "rules": [

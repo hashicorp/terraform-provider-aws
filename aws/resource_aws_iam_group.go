@@ -8,7 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/iam"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsIamGroup() *schema.Resource {
@@ -22,20 +23,23 @@ func resourceAwsIamGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": &schema.Schema{
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"unique_id": &schema.Schema{
+			"unique_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": &schema.Schema{
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validateAwsIamGroupName,
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.StringMatch(
+					regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`),
+					fmt.Sprintf("must only contain alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs"),
+				),
 			},
-			"path": &schema.Schema{
+			"path": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Default:  "/",
@@ -98,7 +102,7 @@ func resourceAwsIamGroupReadResult(d *schema.ResourceData, group *iam.Group) err
 }
 
 func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	if d.HasChange("name") || d.HasChange("path") {
+	if d.HasChanges("name", "path") {
 		iamconn := meta.(*AWSClient).iamconn
 		on, nn := d.GetChange("name")
 		_, np := d.GetChange("path")
@@ -112,6 +116,7 @@ func resourceAwsIamGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		if err != nil {
 			return fmt.Errorf("Error updating IAM Group %s: %s", d.Id(), err)
 		}
+		d.SetId(nn.(string))
 		return resourceAwsIamGroupRead(d, meta)
 	}
 	return nil
@@ -128,14 +133,4 @@ func resourceAwsIamGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("Error deleting IAM Group %s: %s", d.Id(), err)
 	}
 	return nil
-}
-
-func validateAwsIamGroupName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9A-Za-z=,.@\-_+]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters, hyphens, underscores, commas, periods, @ symbols, plus and equals signs allowed in %q: %q",
-			k, value))
-	}
-	return
 }

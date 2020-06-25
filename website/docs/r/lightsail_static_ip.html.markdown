@@ -1,12 +1,12 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_static_ip"
-sidebar_current: "docs-aws-resource-lightsail-static-ip"
 description: |-
   Provides an Lightsail Static IP
 ---
 
-# aws_lightsail_static_ip
+# Resource: aws_lightsail_static_ip
 
 Allocates a static IP address.
 

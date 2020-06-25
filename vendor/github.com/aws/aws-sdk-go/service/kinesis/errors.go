@@ -2,6 +2,10 @@
 
 package kinesis
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeExpiredIteratorException for service response error code
@@ -13,9 +17,12 @@ const (
 	// ErrCodeExpiredNextTokenException for service response error code
 	// "ExpiredNextTokenException".
 	//
-	// The pagination token passed to the ListShards operation is expired. For more
-	// information, see ListShardsInput$NextToken.
+	// The pagination token passed to the operation is expired.
 	ErrCodeExpiredNextTokenException = "ExpiredNextTokenException"
+
+	// ErrCodeInternalFailureException for service response error code
+	// "InternalFailureException".
+	ErrCodeInternalFailureException = "InternalFailureException"
 
 	// ErrCodeInvalidArgumentException for service response error code
 	// "InvalidArgumentException".
@@ -100,3 +107,20 @@ const (
 	// correctly.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ExpiredIteratorException":               newErrorExpiredIteratorException,
+	"ExpiredNextTokenException":              newErrorExpiredNextTokenException,
+	"InternalFailureException":               newErrorInternalFailureException,
+	"InvalidArgumentException":               newErrorInvalidArgumentException,
+	"KMSAccessDeniedException":               newErrorKMSAccessDeniedException,
+	"KMSDisabledException":                   newErrorKMSDisabledException,
+	"KMSInvalidStateException":               newErrorKMSInvalidStateException,
+	"KMSNotFoundException":                   newErrorKMSNotFoundException,
+	"KMSOptInRequired":                       newErrorKMSOptInRequired,
+	"KMSThrottlingException":                 newErrorKMSThrottlingException,
+	"LimitExceededException":                 newErrorLimitExceededException,
+	"ProvisionedThroughputExceededException": newErrorProvisionedThroughputExceededException,
+	"ResourceInUseException":                 newErrorResourceInUseException,
+	"ResourceNotFoundException":              newErrorResourceNotFoundException,
+}

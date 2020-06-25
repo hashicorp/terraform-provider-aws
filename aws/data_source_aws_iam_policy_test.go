@@ -2,29 +2,28 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
+	resourceName := "data.aws_iam_policy.test"
 	policyName := fmt.Sprintf("test-policy-%s", acctest.RandString(10))
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsDataSourceIamPolicyConfig(policyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_iam_policy.test", "name", policyName),
-					resource.TestCheckResourceAttr("data.aws_iam_policy.test", "description", "My test policy"),
-					resource.TestCheckResourceAttr("data.aws_iam_policy.test", "path", "/"),
-					resource.TestCheckResourceAttrSet("data.aws_iam_policy.test", "policy"),
-					resource.TestMatchResourceAttr("data.aws_iam_policy.test", "arn",
-						regexp.MustCompile(`^arn:[\w-]+:([a-zA-Z0-9\-])+:([a-z]{2}-(gov-)?[a-z]+-\d{1})?:(\d{12})?:(.*)$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", policyName),
+					resource.TestCheckResourceAttr(resourceName, "description", "My test policy"),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_iam_policy.test_policy", "arn"),
 				),
 			},
 		},
@@ -35,10 +34,11 @@ func TestAccAWSDataSourceIAMPolicy_basic(t *testing.T) {
 func testAccAwsDataSourceIamPolicyConfig(policyName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test_policy" {
-    name = "%s"
-    path = "/"
-    description = "My test policy"
-    policy = <<EOF
+  name        = "%s"
+  path        = "/"
+  description = "My test policy"
+
+  policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -55,7 +55,7 @@ EOF
 }
 
 data "aws_iam_policy" "test" {
-	arn = "${aws_iam_policy.test_policy.arn}"
+  arn = "${aws_iam_policy.test_policy.arn}"
 }
 `, policyName)
 }

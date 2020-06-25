@@ -6,13 +6,15 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
-	resource.Test(t, resource.TestCase{
+	resourceName := "aws_athena_named_query.test"
+
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
@@ -20,26 +22,33 @@ func TestAccAWSAthenaNamedQuery_basic(t *testing.T) {
 			{
 				Config: testAccAthenaNamedQueryConfig(acctest.RandInt(), acctest.RandString(5)),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAthenaNamedQueryExists("aws_athena_named_query.foo"),
+					testAccCheckAWSAthenaNamedQueryExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func TestAccAWSAthenaNamedQuery_import(t *testing.T) {
-	resourceName := "aws_athena_named_query.foo"
+func TestAccAWSAthenaNamedQuery_withWorkGroup(t *testing.T) {
+	resourceName := "aws_athena_named_query.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSAthenaNamedQueryDestroy,
 		Steps: []resource.TestStep{
-			resource.TestStep{
-				Config: testAccAthenaNamedQueryConfig(acctest.RandInt(), acctest.RandString(5)),
+			{
+				Config: testAccAthenaNamedWorkGroupQueryConfig(acctest.RandInt(), acctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAthenaNamedQueryExists(resourceName),
+				),
 			},
-
-			resource.TestStep{
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -87,31 +96,53 @@ func testAccCheckAWSAthenaNamedQueryExists(name string) resource.TestCheckFunc {
 		}
 
 		_, err := conn.GetNamedQuery(input)
-		if err != nil {
-			return err
-		}
-
-		return nil
+		return err
 	}
 }
 
 func testAccAthenaNamedQueryConfig(rInt int, rName string) string {
 	return fmt.Sprintf(`
-resource "aws_s3_bucket" "hoge" {
-	bucket = "tf-athena-db-%s-%d"
-	force_destroy = true
+resource "aws_s3_bucket" "test" {
+  bucket        = "tf-test-athena-db-%s-%d"
+  force_destroy = true
 }
 
-resource "aws_athena_database" "hoge" {
-	name = "%s"
-	bucket = "${aws_s3_bucket.hoge.bucket}"
+resource "aws_athena_database" "test" {
+  name   = "%s"
+  bucket = "${aws_s3_bucket.test.bucket}"
 }
 
-resource "aws_athena_named_query" "foo" {
-  name = "tf-athena-named-query-%s"
-  database = "${aws_athena_database.hoge.name}"
-  query = "SELECT * FROM ${aws_athena_database.hoge.name} limit 10;"
+resource "aws_athena_named_query" "test" {
+  name        = "tf-athena-named-query-%s"
+  database    = "${aws_athena_database.test.name}"
+  query       = "SELECT * FROM ${aws_athena_database.test.name} limit 10;"
   description = "tf test"
 }
-		`, rName, rInt, rName, rName)
+`, rName, rInt, rName, rName)
+}
+
+func testAccAthenaNamedWorkGroupQueryConfig(rInt int, rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket        = "tf-test-athena-db-%s-%d"
+  force_destroy = true
+}
+
+resource "aws_athena_workgroup" "test" {
+  name = "tf-athena-workgroup-%s-%d"
+}
+
+resource "aws_athena_database" "test" {
+  name   = "%s"
+  bucket = "${aws_s3_bucket.test.bucket}"
+}
+
+resource "aws_athena_named_query" "test" {
+  name        = "tf-athena-named-query-%s"
+  workgroup   = "${aws_athena_workgroup.test.id}"
+  database    = "${aws_athena_database.test.name}"
+  query       = "SELECT * FROM ${aws_athena_database.test.name} limit 10;"
+  description = "tf test"
+}
+`, rName, rInt, rName, rInt, rName, rName)
 }

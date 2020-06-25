@@ -3,7 +3,7 @@ package aws
 import (
 	"testing"
 
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAWSElasticBeanstalkEnvironmentMigrateState(t *testing.T) {
@@ -47,7 +47,7 @@ func TestAWSElasticBeanstalkEnvironmentMigrateState(t *testing.T) {
 			ID:         "e-abcde12345",
 			Attributes: tc.Attributes,
 		}
-		is, err := resourceAwsElasticBeanstalkEnvironmentMigrateState(
+		_, err := resourceAwsElasticBeanstalkEnvironmentMigrateState(
 			tc.StateVersion, is, tc.Meta)
 
 		if err != nil {

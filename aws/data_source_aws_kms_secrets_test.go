@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSKmsSecretsDataSource_basic(t *testing.T) {
@@ -96,9 +96,9 @@ data "aws_kms_secrets" "test" {
     name    = "secret1"
     payload = %q
 
-     context {
-       name = "value"
-     }
+    context = {
+      name = "value"
+    }
   }
 }
 `, payload)

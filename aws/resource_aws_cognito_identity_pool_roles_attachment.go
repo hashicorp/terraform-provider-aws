@@ -3,17 +3,11 @@ package aws
 import (
 	"fmt"
 	"log"
-	"time"
-
-	"bytes"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
@@ -22,6 +16,9 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 		Read:   resourceAwsCognitoIdentityPoolRolesAttachmentRead,
 		Update: resourceAwsCognitoIdentityPoolRolesAttachmentUpdate,
 		Delete: resourceAwsCognitoIdentityPoolRolesAttachmentDelete,
+		Importer: &schema.ResourceImporter{
+			State: schema.ImportStatePassthrough,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"identity_pool_id": {
@@ -97,19 +94,9 @@ func resourceAwsCognitoIdentityPoolRolesAttachment() *schema.Resource {
 				Type:     schema.TypeMap,
 				Required: true,
 				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"authenticated": {
-							Type:         schema.TypeString,
-							ValidateFunc: validateArn,
-							Optional:     true, // Required if unauthenticated isn't defined.
-						},
-						"unauthenticated": {
-							Type:         schema.TypeString,
-							ValidateFunc: validateArn,
-							Optional:     true, // Required if authenticated isn't defined.
-						},
-					},
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validateArn,
 				},
 			},
 		},
@@ -121,7 +108,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentCreate(d *schema.ResourceData,
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles"); len(errors) > 0 {
+	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
 		return fmt.Errorf("Error validating Roles: %v", errors)
 	}
 
@@ -156,10 +143,10 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 	log.Printf("[DEBUG] Reading Cognito Identity Pool Roles Association: %s", d.Id())
 
 	ip, err := conn.GetIdentityPoolRoles(&cognitoidentity.GetIdentityPoolRolesInput{
-		IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
+		IdentityPoolId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if awsErr, ok := err.(awserr.Error); ok && awsErr.Code() == "ResourceNotFoundException" {
+		if isAWSErr(err, cognitoidentity.ErrCodeResourceNotFoundException, "") {
 			log.Printf("[WARN] Cognito Identity Pool Roles Association %s not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
@@ -167,12 +154,14 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentRead(d *schema.ResourceData, m
 		return err
 	}
 
+	d.Set("identity_pool_id", ip.IdentityPoolId)
+
 	if err := d.Set("roles", flattenCognitoIdentityPoolRoles(ip.Roles)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting roles error: %#v", err)
+		return fmt.Errorf("Error setting roles error: %#v", err)
 	}
 
 	if err := d.Set("role_mapping", flattenCognitoIdentityPoolRoleMappingsAttachment(ip.RoleMappings)); err != nil {
-		return fmt.Errorf("[DEBUG] Error setting role mappings error: %#v", err)
+		return fmt.Errorf("Error setting role mappings error: %#v", err)
 	}
 
 	return nil
@@ -183,7 +172,7 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentUpdate(d *schema.ResourceData,
 
 	// Validates role keys to be either authenticated or unauthenticated,
 	// since ValidateFunc validates only the value not the key.
-	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{}), "roles"); len(errors) > 0 {
+	if errors := validateCognitoRoles(d.Get("roles").(map[string]interface{})); len(errors) > 0 {
 		return fmt.Errorf("Error validating Roles: %v", errors)
 	}
 
@@ -225,19 +214,17 @@ func resourceAwsCognitoIdentityPoolRolesAttachmentDelete(d *schema.ResourceData,
 	conn := meta.(*AWSClient).cognitoconn
 	log.Printf("[DEBUG] Deleting Cognito Identity Pool Roles Association: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
-			IdentityPoolId: aws.String(d.Get("identity_pool_id").(string)),
-			Roles:          expandCognitoIdentityPoolRoles(make(map[string]interface{})),
-			RoleMappings:   expandCognitoIdentityPoolRoleMappingsAttachment([]interface{}{}),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.SetIdentityPoolRoles(&cognitoidentity.SetIdentityPoolRolesInput{
+		IdentityPoolId: aws.String(d.Id()),
+		Roles:          expandCognitoIdentityPoolRoles(make(map[string]interface{})),
+		RoleMappings:   expandCognitoIdentityPoolRoleMappingsAttachment([]interface{}{}),
 	})
+
+	if err != nil {
+		return fmt.Errorf("Error deleting Cognito identity pool roles association: %s", err)
+	}
+
+	return nil
 }
 
 // Validating that each role_mapping ambiguous_role_resolution
@@ -262,36 +249,4 @@ func validateRoleMappings(roleMappings []interface{}) []error {
 	}
 
 	return errors
-}
-
-func cognitoRoleMappingHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["identity_provider"].(string)))
-
-	return hashcode.String(buf.String())
-}
-
-func cognitoRoleMappingValueHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(fmt.Sprintf("%s-", m["type"].(string)))
-	if d, ok := m["ambiguous_role_resolution"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", d.(string)))
-	}
-
-	return hashcode.String(buf.String())
-}
-
-func cognitoRoleMappingRulesConfigurationHash(v interface{}) int {
-	var buf bytes.Buffer
-	for _, rule := range v.([]interface{}) {
-		r := rule.(map[string]interface{})
-		buf.WriteString(fmt.Sprintf("%s-", r["claim"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", r["match_type"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", r["role_arn"].(string)))
-		buf.WriteString(fmt.Sprintf("%s-", r["value"].(string)))
-	}
-
-	return hashcode.String(buf.String())
 }

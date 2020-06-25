@@ -6,9 +6,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func dataSourceAwsInstances() *schema.Resource {
@@ -69,7 +70,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	params := &ec2.DescribeInstancesInput{
 		Filters: []*ec2.Filter{
-			&ec2.Filter{
+			{
 				Name:   aws.String("instance-state-name"),
 				Values: instanceStateNames,
 			},
@@ -82,7 +83,7 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 	}
 	if tagsOk {
 		params.Filters = append(params.Filters, buildEC2TagFilterList(
-			tagsFromMap(tags.(map[string]interface{})),
+			keyvaluetags.New(tags.(map[string]interface{})).Ec2Tags(),
 		)...)
 	}
 
@@ -125,9 +126,5 @@ func dataSourceAwsInstancesRead(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	err = d.Set("public_ips", publicIps)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
