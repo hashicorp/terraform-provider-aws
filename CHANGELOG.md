@@ -1,5 +1,9 @@
 ## 2.68.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_wafv2_web_acl_logging_configuration` [GH-13892]
+
 ENHANCEMENTS:
 
 * data-soruce/aws_ami: Add `arn` attribute [GH-12038]
