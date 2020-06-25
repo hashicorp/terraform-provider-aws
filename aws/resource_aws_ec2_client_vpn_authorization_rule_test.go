@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func TestAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
@@ -34,6 +35,28 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	})
 }
 
+func TestAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
+	var v ec2.AuthorizationRule
+	rStr := acctest.RandString(5)
+	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEc2ClientVpnAuthorizationRuleConfigBasic(rStr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnAuthorizationRule(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
@@ -42,9 +65,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 			continue
 		}
 
-		endpointID, _, _, err := ec2ClientVpnAuthorizationRuleParseID(rs.Primary.ID)
-		// targetNetworkCidr := parts[1]
-		// accessGroupID := parts[2]
+		endpointID, _ /*targetNetworkCidr*/, _ /*accessGroupID*/, err := tfec2.ClientVpnAuthorizationRuleParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -59,7 +80,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 		if err == nil {
 			return fmt.Errorf("Client VPN authorization rule (%s) still exists", rs.Primary.ID)
 		}
-		if isAWSErr(err, errCodeClientVpnEndpointAuthorizationRuleNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+		if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
 			continue
 		}
 		return err

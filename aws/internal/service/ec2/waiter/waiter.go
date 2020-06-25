@@ -50,3 +50,9 @@ func LocalGatewayRouteTableVpcAssociationDisassociated(conn *ec2.EC2, localGatew
 
 	return nil, err
 }
+
+const (
+	ClientVpnEndpointAuthorizationRuleActiveTimeout = 1 * time.Minute
+
+	ClientVpnEndpointAuthorizationRuleRevokedTimeout = 1 * time.Minute
+)

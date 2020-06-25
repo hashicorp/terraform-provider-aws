@@ -3,11 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsEc2ClientVpnAuthorizationRule() *schema.Resource {
@@ -74,33 +76,23 @@ func resourceAwsEc2ClientVpnAuthorizationRuleCreate(d *schema.ResourceData, meta
 		input.Description = aws.String(v.(string))
 	}
 
+	id := tfec2.ClientVpnAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID)
+
 	log.Printf("[DEBUG] Creating Client VPN authorization rule: %#v", input)
 	_, err := conn.AuthorizeClientVpnIngress(input)
 	if err != nil {
-		return fmt.Errorf("Error creating Client VPN authorization rule: %s", err)
+		return fmt.Errorf("error creating Client VPN authorization rule %q: %w", id, err)
 	}
 
-	// TODO wait
+	_, err = ClientVpnAuthorizationRuleAuthorized(conn, id)
+	if err != nil {
+		return fmt.Errorf("error waiting for Client VPN authorization rule %q to be active: %w", id, err)
+	}
 
-	d.SetId(ec2ClientVpnAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID))
-
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending: []string{ec2.AssociationStatusCodeAssociating},
-	// 	Target:  []string{ec2.AssociationStatusCodeAssociated},
-	// 	Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
-	// 	Timeout: d.Timeout(schema.TimeoutCreate),
-	// }
-
-	// log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", d.Id())
-	// _, err = stateConf.WaitForState()
-	// if err != nil {
-	// 	return fmt.Errorf("Error waiting for Client VPN endpoint to associate with target network: %s", err)
-	// }
+	d.SetId(id)
 
 	return resourceAwsEc2ClientVpnAuthorizationRuleRead(d, meta)
 }
-
-const errCodeClientVpnEndpointAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
 
 func resourceAwsEc2ClientVpnAuthorizationRuleRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
@@ -111,14 +103,13 @@ func resourceAwsEc2ClientVpnAuthorizationRuleRead(d *schema.ResourceData, meta i
 
 	result, err := conn.DescribeClientVpnAuthorizationRules(input)
 
-	if isAWSErr(err, errCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
+	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN authorization rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
-
 	if err != nil {
-		return fmt.Errorf("Error reading Client VPN authorization rule: %w", err)
+		return fmt.Errorf("error reading Client VPN authorization rule: %w", err)
 	}
 
 	if result == nil || len(result.AuthorizationRules) == 0 || result.AuthorizationRules[0] == nil {
@@ -149,78 +140,93 @@ func resourceAwsEc2ClientVpnAuthorizationRuleDelete(d *schema.ResourceData, meta
 		input.RevokeAllGroups = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.RevokeClientVpnIngress(input)
-
-	if isAWSErr(err, errCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
-		return nil
-	}
-
+	log.Printf("[DEBUG] Revoking Client VPN authorization rule %q", d.Id())
+	err := deleteClientVpnAuthorizationRule(conn, input)
 	if err != nil {
-		return fmt.Errorf("error deleting Client VPN authorization rule: %w", err)
+		return fmt.Errorf("error revoking Client VPN authorization rule %q: %w", d.Id(), err)
 	}
-
-	// WAIT
-	// stateConf := &resource.StateChangeConf{
-	// 	Pending: []string{ec2.AssociationStatusCodeDisassociating},
-	// 	Target:  []string{ec2.AssociationStatusCodeDisassociated},
-	// 	Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
-	// 	Timeout: d.Timeout(schema.TimeoutDelete),
-	// }
-
-	// log.Printf("[DEBUG] Waiting to revoke Client VPN authorization rule (%s)", d.Id())
-	// _, err = stateConf.WaitForState()
-	// if err != nil {
-	// 	return fmt.Errorf("error waiting to revoke Client VPN authorization rule (%s): %w", d.Id(), err)
-	// }
 
 	return nil
 }
 
-// func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
-// 	return func() (interface{}, string, error) {
-// 		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
-// 			ClientVpnEndpointId: aws.String(cvepID),
-// 			AssociationIds:      []*string{aws.String(cvnaID)},
-// 		})
+func deleteClientVpnAuthorizationRule(conn *ec2.EC2, input *ec2.RevokeClientVpnIngressInput) error {
+	id := tfec2.ClientVpnAuthorizationRuleCreateID(aws.StringValue(input.ClientVpnEndpointId), aws.StringValue(input.TargetNetworkCidr), aws.StringValue(input.AccessGroupId))
 
-// 		if isAWSErr(err, "InvalidClientVpnAssociationId.NotFound", "") || isAWSErr(err, clientVpnEndpointIdNotFoundError, "") {
-// 			return 42, ec2.AssociationStatusCodeDisassociated, nil
-// 		}
-
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-
-// 		if resp == nil || len(resp.ClientVpnTargetNetworks) == 0 || resp.ClientVpnTargetNetworks[0] == nil {
-// 			return 42, ec2.AssociationStatusCodeDisassociated, nil
-// 		}
-
-// 		return resp.ClientVpnTargetNetworks[0], aws.StringValue(resp.ClientVpnTargetNetworks[0].Status.Code), nil
-// 	}
-// }
-
-const ec2ClientVpnAuthorizationRuleIDSeparator = ","
-
-func ec2ClientVpnAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGroupID string) string {
-	parts := []string{endpointID, targetNetworkCidr}
-	if accessGroupID != "" {
-		parts = append(parts, accessGroupID)
+	_, err := conn.RevokeClientVpnIngress(input)
+	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
+		return nil
 	}
-	id := strings.Join(parts, ec2ClientVpnAuthorizationRuleIDSeparator)
-	return id
+
+	_, err = ClientVpnAuthorizationRuleRevoked(conn, id)
+
+	return err
 }
 
-func ec2ClientVpnAuthorizationRuleParseID(id string) (string, string, string, error) {
-	parts := strings.Split(id, ec2ClientVpnAuthorizationRuleIDSeparator)
-	if len(parts) == 2 {
-		return parts[0], parts[1], "", nil
-	}
-	if len(parts) == 3 {
-		return parts[0], parts[1], parts[2], nil
+func ClientVpnAuthorizationRuleAuthorized(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeAuthorizing},
+		Target:  []string{ec2.ClientVpnAuthorizationRuleStatusCodeActive},
+		Refresh: ClientVpnAuthorizationRuleStatus(conn, authorizationRuleID),
+		Timeout: waiter.ClientVpnEndpointAuthorizationRuleActiveTimeout,
 	}
 
-	return "", "", "",
-		fmt.Errorf("unexpected format for ID (%q), expected endpoint-id"+ec2ClientVpnAuthorizationRuleIDSeparator+
-			"target-network-cidr or endpoint-id"+ec2ClientVpnAuthorizationRuleIDSeparator+"target-network-cidr"+
-			ec2ClientVpnAuthorizationRuleIDSeparator+"group-id", id)
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AuthorizationRule); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeRevoking},
+		Target:  []string{},
+		Refresh: ClientVpnAuthorizationRuleStatus(conn, authorizationRuleID),
+		Timeout: waiter.ClientVpnEndpointAuthorizationRuleRevokedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AuthorizationRule); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+// ClientVpnAuthorizationRuleStatus fetches the Client VPN authorization rule and its Status
+// This should be in the waiters package, but has a dependency on isAWSErr()
+func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		endpointID, _ /*targetNetworkCidr*/, _ /*accessGroupID*/, err := tfec2.ClientVpnAuthorizationRuleParseID(authorizationRuleID)
+		if err != nil {
+			return nil, waiter.ClientVpnAuthorizationRuleStatusUnknown, err
+		}
+
+		input := &ec2.DescribeClientVpnAuthorizationRulesInput{
+			ClientVpnEndpointId: aws.String(endpointID),
+			// TODO: filters
+		}
+
+		result, err := conn.DescribeClientVpnAuthorizationRules(input)
+		if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
+			return nil, waiter.ClientVpnAuthorizationRuleStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, waiter.ClientVpnAuthorizationRuleStatusUnknown, err
+		}
+
+		if result == nil || len(result.AuthorizationRules) == 0 || result.AuthorizationRules[0] == nil {
+			return nil, waiter.ClientVpnAuthorizationRuleStatusNotFound, nil
+		}
+
+		rule := result.AuthorizationRules[0]
+		if rule.Status == nil || rule.Status.Code == nil {
+			return rule, waiter.ClientVpnAuthorizationRuleStatusUnknown, nil
+		}
+
+		return rule, aws.StringValue(rule.Status.Code), nil
+	}
 }

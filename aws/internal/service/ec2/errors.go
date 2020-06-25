@@ -1,0 +1,3 @@
+package ec2
+
+const ErrCodeClientVpnEndpointAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"

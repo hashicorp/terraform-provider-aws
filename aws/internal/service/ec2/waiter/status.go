@@ -39,3 +39,9 @@ func LocalGatewayRouteTableVpcAssociationState(conn *ec2.EC2, localGatewayRouteT
 		return association, aws.StringValue(association.State), nil
 	}
 }
+
+const (
+	ClientVpnAuthorizationRuleStatusNotFound = "NotFound"
+
+	ClientVpnAuthorizationRuleStatusUnknown = "Unknown"
+)
