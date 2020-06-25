@@ -45,7 +45,6 @@ The following arguments are supported:
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
 * `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
 * `connection_log_options` - (Required) Information about the client connection logging options.
-* `route` - (Optional)  Information about routes to add to a Client VPN endpoint.  Multiple definitions of this parameter can be supplied.
 * `tags` - (Optional) A mapping of tags to assign to the resource.
 
 
@@ -64,14 +63,6 @@ One of the following arguments must be supplied:
 * `enabled` - (Required) Indicates whether connection logging is enabled.
 * `cloudwatch_log_group` - (Optional) The name of the CloudWatch Logs log group.
 * `cloudwatch_log_stream` - (Optional) The name of the CloudWatch Logs log stream to which the connection data is published.
-
-### `route` Argument Reference
-
-One of the following arguments must be supplied:
-
-* `description` - (Optional) A brief description of the route.
-* `destination_network_cidr` - (Required) The IPv4 address range, in CIDR notation, of the route destination.
-* `subnet_id` - (Required) The ID of the subnet through which you want to route traffic. The specified subnet must be an existing target network of the Client VPN endpoint.
 
 ## Attributes Reference
 
