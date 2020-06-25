@@ -144,13 +144,21 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 			continue
 		}
 
-		endpointID, _, _, err := tfec2.ClientVpnAuthorizationRuleParseID(rs.Primary.ID)
+		endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
+		filters := map[string]string{
+			"destination-cidr": targetNetworkCidr,
+		}
+		if accessGroupID != "" {
+			filters["group-id"] = accessGroupID
+		}
+
 		input := &ec2.DescribeClientVpnAuthorizationRulesInput{
 			ClientVpnEndpointId: aws.String(endpointID),
+			Filters:             buildEC2AttributeFilterList(filters),
 		}
 
 		_, err = conn.DescribeClientVpnAuthorizationRules(input)
