@@ -116,7 +116,6 @@ resource "aws_subnet" "example" {
 The following arguments are required:
 
 * `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
-* `node_group_name` – (Required) Name of the EKS Node Group.
 * `node_role_arn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Node Group.
 * `scaling_config` - (Required) Configuration block with scaling settings. Detailed below.
 * `subnet_ids` – (Required) Identifiers of EC2 Subnets to associate with the EKS Node Group. These subnets must have the following resource tag: `kubernetes.io/cluster/CLUSTER_NAME` (where `CLUSTER_NAME` is replaced with the name of the EKS Cluster).
@@ -130,6 +129,8 @@ The following arguments are optional:
 * `instance_types` - (Optional) List of instance types associated with the EKS Node Group. Defaults to `["t3.medium"]`. Terraform will only perform drift detection if a configuration value is provided.
 * `labels` - (Optional) Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
 * `launch_template` - (Optional) Configuration block with Launch Template settings. Detailed below.
+* `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name.
+* `node_group_name_prefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
 * `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
 * `remote_access` - (Optional) Configuration block with remote access settings. Detailed below.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://www.terraform.io/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

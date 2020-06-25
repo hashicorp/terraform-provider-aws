@@ -115,10 +115,19 @@ func resourceAwsEksNodeGroup() *schema.Resource {
 				},
 			},
 			"node_group_name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.NoZeroValues,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				Computed:      true,
+				ConflictsWith: []string{"node_group_name_prefix"},
+				ValidateFunc:  validation.NoZeroValues,
+			},
+			"node_group_name_prefix": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"node_group_name"},
+				ValidateFunc:  validation.NoZeroValues,
 			},
 			"node_role_arn": {
 				Type:         schema.TypeString,
@@ -227,7 +236,16 @@ func resourceAwsEksNodeGroupCreate(d *schema.ResourceData, meta interface{}) err
 	defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
 	tags := defaultTagsConfig.MergeTags(keyvaluetags.New(d.Get("tags").(map[string]interface{})))
 	clusterName := d.Get("cluster_name").(string)
-	nodeGroupName := d.Get("node_group_name").(string)
+
+	var nodeGroupName string
+
+	if v, ok := d.GetOk("node_group_name"); ok {
+		nodeGroupName = v.(string)
+	} else if v, ok := d.GetOk("node_group_name_prefix"); ok {
+		nodeGroupName = resource.PrefixedUniqueId(v.(string))
+	} else {
+		nodeGroupName = resource.PrefixedUniqueId("tf-")
+	}
 
 	input := &eks.CreateNodegroupInput{
 		ClientRequestToken: aws.String(resource.UniqueId()),

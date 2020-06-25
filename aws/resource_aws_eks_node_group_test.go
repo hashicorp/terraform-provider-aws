@@ -135,6 +135,34 @@ func TestAccAWSEksNodeGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSEksNodeGroup_NamePrefix(t *testing.T) {
+	var nodeGroup eks.Nodegroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	rNamePrefix := "tf-acc-test"
+	resourceName := "aws_eks_node_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksNodeGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, rNamePrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksNodeGroupExists(resourceName, &nodeGroup),
+					resource.TestCheckResourceAttr(resourceName, "node_group_name_prefix", rNamePrefix),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"node_group_name_prefix"},
+			},
+		},
+	})
+}
+
 func TestAccAWSEksNodeGroup_disappears(t *testing.T) {
 	var nodeGroup eks.Nodegroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -1114,6 +1142,29 @@ resource "aws_eks_node_group" "test" {
   ]
 }
 `, rName)
+}
+
+func testAccAWSEksNodeGroupConfigNodeGroupNamePrefix(rName, rNamePrefix string) string {
+	return testAccAWSEksNodeGroupConfigBase(rName) + fmt.Sprintf(`
+resource "aws_eks_node_group" "test" {
+  cluster_name    				= aws_eks_cluster.test.name
+  node_group_name_prefix 	= %[1]q
+  node_role_arn   				= aws_iam_role.node.arn
+  subnet_ids      				= aws_subnet.test[*].id
+
+  scaling_config {
+    desired_size = 1
+    max_size     = 1
+    min_size     = 1
+  }
+
+  depends_on = [
+    "aws_iam_role_policy_attachment.node-AmazonEKSWorkerNodePolicy",
+    "aws_iam_role_policy_attachment.node-AmazonEKS_CNI_Policy",
+    "aws_iam_role_policy_attachment.node-AmazonEC2ContainerRegistryReadOnly",
+  ]
+}
+`, rNamePrefix)
 }
 
 func testAccAWSEksNodeGroupConfigAmiType(rName, amiType string) string {
