@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
@@ -83,11 +82,40 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_security_group" "test" {
-<<<<<<< HEAD
-  vpc_id = aws_vpc.test.id
-  name   = "test-%d"
-=======
   vpc_id = aws_vpc.test.id
   name   = %[1]q
->>>>>>> 5d0742b09 (use aws sdk wrappers, refactor tests)
 
+  tags = {
+    Name = %[1]q
+  }
+
+  description = "sg description"
+}
+
+data "aws_security_group" "by_id" {
+  id = aws_security_group.test.id
+}
+
+data "aws_security_group" "by_name" {
+  name = aws_security_group.test.name
+}
+
+data "aws_security_group" "default_by_name" {
+  vpc_id = aws_vpc.test.id
+  name   = "default"
+}
+
+data "aws_security_group" "by_tag" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_security_group" "by_filter" {
+  filter {
+    name   = "group-name"
+    values = [aws_security_group.test.name]
+  }
+}
+`, rName)
+}
