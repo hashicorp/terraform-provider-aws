@@ -1694,18 +1694,21 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing
 	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
 	resourceName := "aws_codebuild_project.test"
 
+	artifactIdentifier1 := "artifactIdentifier1"
+	artifactIdentifier2 := "artifactIdentifier2"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, bName, "artifactIdentifier1"),
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, bName, artifactIdentifier1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"artifact_identifier": "artifactIdentifier1",
+						"artifact_identifier": artifactIdentifier1,
 					}),
 				),
 			},
@@ -1715,12 +1718,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, bName, "artifactIdentifier2"),
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, bName, artifactIdentifier2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"artifact_identifier": "artifactIdentifier2",
+						"artifact_identifier": artifactIdentifier2,
 					}),
 				),
 			},
@@ -1857,18 +1860,21 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
 	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
 	resourceName := "aws_codebuild_project.test"
 
+	name1 := "name1"
+	name2 := "name2"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName, bName, "name1"),
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName, bName, name1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"name": "name1",
+						"name": name1,
 					}),
 				),
 			},
@@ -1878,12 +1884,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName, bName, "name2"),
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Name(rName, bName, name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"name": "name2",
+						"name": name2,
 					}),
 				),
 			},
@@ -1974,18 +1980,21 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
+	path1 := "path1"
+	path2 := "path2"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, "path1"),
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, path1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"path": "path1",
+						"path": path1,
 					}),
 				),
 			},
@@ -1995,12 +2004,12 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, "path2"),
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, path2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
-						"path": "path2",
+						"path": path2,
 					}),
 				),
 			},
