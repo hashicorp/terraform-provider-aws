@@ -801,7 +801,7 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	resourceName := "aws_elasticsearch_domain.test"
-	rInt := acctest.RandInt()
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
@@ -809,7 +809,7 @@ func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
 		CheckDestroy: testAccCheckESDomainDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccESDomainConfigWithDisabledEBSAndVolumeType(rInt, ""),
+				Config: testAccESDomainConfigWithDisabledEBSAndVolumeType(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckESDomainExists(resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
@@ -824,7 +824,7 @@ func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateId:     resourceId,
+				ImportStateId:     rName,
 				ImportStateVerify: true,
 			},
 		},
@@ -1086,10 +1086,10 @@ resource "aws_elasticsearch_domain" "test" {
 `, randInt)
 }
 
-func testAccESDomainConfigWithDisabledEBSAndVolumeType(rInt int, volumeType string) string {
+func testAccESDomainConfigWithDisabledEBSAndVolumeType(rName, volumeType string) string {
 	return fmt.Sprintf(`
 resource "aws_elasticsearch_domain" "test" {
-  domain_name = "tf-test-%d"
+  domain_name = "%s"
   elasticsearch_version = "6.0"
   
   cluster_config {
@@ -1103,7 +1103,7 @@ resource "aws_elasticsearch_domain" "test" {
     volume_type = "%s"
   }
 }
-`, rInt, volumeType)
+`, rName, volumeType)
 }
 
 func testAccESDomainConfig_DomainEndpointOptions(randInt int, enforceHttps bool, tlsSecurityPolicy string) string {
