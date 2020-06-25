@@ -66,6 +66,7 @@ func resourceAwsBatchComputeEnvironment() *schema.Resource {
 						"desired_vcpus": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							Computed: true,
 						},
 						"ec2_key_pair": {
 							Type:     schema.TypeString,
@@ -264,7 +265,7 @@ func resourceAwsBatchComputeEnvironmentCreate(d *schema.ResourceData, meta inter
 		if v, ok := computeResource["bid_percentage"]; ok {
 			input.ComputeResources.BidPercentage = aws.Int64(int64(v.(int)))
 		}
-		if v, ok := computeResource["desired_vcpus"]; ok {
+		if v, ok := computeResource["desired_vcpus"]; ok && v.(int) > 0 {
 			input.ComputeResources.DesiredvCpus = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := computeResource["ec2_key_pair"]; ok {
@@ -432,7 +433,10 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 		}
 		computeResource := computeResources[0].(map[string]interface{})
 
-		input.ComputeResources.DesiredvCpus = aws.Int64(int64(computeResource["desired_vcpus"].(int)))
+		if d.HasChange("compute_resources.0.desired_vcpus") {
+			input.ComputeResources.DesiredvCpus = aws.Int64(int64(computeResource["desired_vcpus"].(int)))
+		}
+
 		input.ComputeResources.MaxvCpus = aws.Int64(int64(computeResource["max_vcpus"].(int)))
 		input.ComputeResources.MinvCpus = aws.Int64(int64(computeResource["min_vcpus"].(int)))
 	}
@@ -440,7 +444,19 @@ func resourceAwsBatchComputeEnvironmentUpdate(d *schema.ResourceData, meta inter
 	log.Printf("[DEBUG] Update compute environment %s.\n", input)
 
 	if _, err := conn.UpdateComputeEnvironment(input); err != nil {
-		return err
+		return fmt.Errorf("error updating Batch Compute Environment (%s): %w", d.Id(), err)
+	}
+
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{batch.CEStatusUpdating},
+		Target:     []string{batch.CEStatusValid},
+		Refresh:    resourceAwsBatchComputeEnvironmentStatusRefreshFunc(computeEnvironmentName, conn),
+		Timeout:    d.Timeout(schema.TimeoutUpdate),
+		MinTimeout: 5 * time.Second,
+	}
+
+	if _, err := stateConf.WaitForState(); err != nil {
+		return fmt.Errorf("error waiting for Batch Compute Environment (%s) update: %w", d.Id(), err)
 	}
 
 	return resourceAwsBatchComputeEnvironmentRead(d, meta)
