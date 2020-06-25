@@ -332,13 +332,17 @@ func resourceAwsBatchComputeEnvironmentRead(d *schema.ResourceData, meta interfa
 	log.Printf("[DEBUG] Read compute environment %s.\n", input)
 
 	result, err := conn.DescribeComputeEnvironments(input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading Batch Compute Environment (%s): %w", d.Id(), err)
 	}
 
 	if len(result.ComputeEnvironments) == 0 {
-		return fmt.Errorf("One compute environment is expected, but AWS return no compute environment")
+		log.Printf("[WARN] Batch Compute Environment (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
 	}
+
 	computeEnvironment := result.ComputeEnvironments[0]
 
 	d.Set("service_role", computeEnvironment.ServiceRole)
