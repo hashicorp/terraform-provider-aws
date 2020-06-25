@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -55,6 +56,28 @@ func TestAccAWSRoute_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_disappears(t *testing.T) {
+	var route ec2.Route
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteBasicConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists("aws_route.bar", &route),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute(), "aws_route.bar"),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_ipv6Support(t *testing.T) {
 	var route ec2.Route
 
@@ -86,6 +109,7 @@ func TestAccAWSRoute_ipv6Support(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists("aws_route.bar", &route),
 					testCheck,
+					resource.TestCheckResourceAttr("aws_route.bar", "destination_ipv6_cidr_block", "::/0"),
 				),
 			},
 			{
@@ -93,6 +117,10 @@ func TestAccAWSRoute_ipv6Support(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.bar"),
 				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccAWSRouteConfigIpv6Expanded,
+				PlanOnly: true,
 			},
 		},
 	})
@@ -145,6 +173,10 @@ func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.internal-default-route-ipv6"),
 				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccAWSRouteConfigIpv6InstanceExpanded,
+				PlanOnly: true,
 			},
 		},
 	})
@@ -407,6 +439,42 @@ func TestAccAWSRoute_TransitGatewayID_DestinationCidrBlock(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_ConditionalCidrBlock(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigConditionalIpv4Ipv6(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigConditionalIpv4Ipv6(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", "::/0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -470,8 +538,8 @@ func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateI
 		}
 
 		destination := rs.Primary.Attributes["destination_cidr_block"]
-		if _, ok := rs.Primary.Attributes["destination_ipv6_cidr_block"]; ok {
-			destination = rs.Primary.Attributes["destination_ipv6_cidr_block"]
+		if v, ok := rs.Primary.Attributes["destination_ipv6_cidr_block"]; ok && v != "" {
+			destination = v
 		}
 
 		return fmt.Sprintf("%s_%s", rs.Primary.Attributes["route_table_id"], destination), nil
@@ -548,7 +616,14 @@ resource "aws_vpc" "examplevpc" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_internet_gateway" "internet" {
   vpc_id = "${aws_vpc.examplevpc.id}"
@@ -657,7 +732,14 @@ resource "aws_vpc" "examplevpc" {
   }
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_internet_gateway" "internet" {
   vpc_id = "${aws_vpc.examplevpc.id}"
@@ -742,7 +824,110 @@ resource "aws_route" "internal-default-route-ipv6" {
   destination_ipv6_cidr_block = "::/0"
   instance_id = "${aws_instance.test-router.id}"
 }
+`)
 
+var testAccAWSRouteConfigIpv6InstanceExpanded = fmt.Sprintf(`
+resource "aws_vpc" "examplevpc" {
+  cidr_block = "10.100.0.0/16"
+  enable_dns_hostnames = true
+  assign_generated_ipv6_cidr_block = true
+  tags = {
+    Name = "terraform-testacc-route-ipv6-instance"
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_internet_gateway" "internet" {
+  vpc_id = "${aws_vpc.examplevpc.id}"
+
+  tags = {
+    Name = "terraform-testacc-route-ipv6-instance"
+  }
+}
+
+resource "aws_route" "igw" {
+  route_table_id = "${aws_vpc.examplevpc.main_route_table_id}"
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id = "${aws_internet_gateway.internet.id}"
+}
+
+resource "aws_route" "igw-ipv6" {
+  route_table_id = "${aws_vpc.examplevpc.main_route_table_id}"
+  destination_ipv6_cidr_block = "::0/0"
+  gateway_id = "${aws_internet_gateway.internet.id}"
+}
+
+resource "aws_subnet" "router-network" {
+  cidr_block = "10.100.1.0/24"
+  vpc_id = "${aws_vpc.examplevpc.id}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 1)}"
+  assign_ipv6_address_on_creation = true
+  map_public_ip_on_launch = true
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  tags = {
+    Name = "tf-acc-route-ipv6-instance-router"
+  }
+}
+
+resource "aws_subnet" "client-network" {
+  cidr_block = "10.100.10.0/24"
+  vpc_id = "${aws_vpc.examplevpc.id}"
+  ipv6_cidr_block = "${cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 2)}"
+  assign_ipv6_address_on_creation = true
+  map_public_ip_on_launch = false
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  tags = {
+    Name = "tf-acc-route-ipv6-instance-client"
+  }
+}
+
+resource "aws_route_table" "client-routes" {
+  vpc_id = "${aws_vpc.examplevpc.id}"
+}
+
+resource "aws_route_table_association" "client-routes" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  subnet_id = "${aws_subnet.client-network.id}"
+}
+
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  filter {
+      name   = "name"
+      values = ["ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"]
+  }
+  filter {
+      name   = "virtualization-type"
+      values = ["hvm"]
+  }
+  owners = ["099720109477"]
+}
+
+resource "aws_instance" "test-router" {
+  ami = "${data.aws_ami.ubuntu.image_id}"
+  instance_type = "t2.small"
+  subnet_id = "${aws_subnet.router-network.id}"
+}
+
+resource "aws_route" "internal-default-route" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  destination_cidr_block = "0.0.0.0/0"
+  instance_id = "${aws_instance.test-router.id}"
+}
+
+resource "aws_route" "internal-default-route-ipv6" {
+  route_table_id = "${aws_route_table.client-routes.id}"
+  destination_ipv6_cidr_block = "::0/0"
+  instance_id = "${aws_instance.test-router.id}"
+}
 `)
 
 var testAccAWSRouteConfigIpv6PeeringConnection = fmt.Sprintf(`
@@ -779,28 +964,52 @@ resource "aws_route" "pc" {
 
 var testAccAWSRouteConfigIpv6 = fmt.Sprintf(`
 resource "aws_vpc" "foo" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+
   tags = {
     Name = "terraform-testacc-route-ipv6"
   }
 }
 
 resource "aws_egress_only_internet_gateway" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_route_table" "foo" {
-	vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.foo.id}"
 }
 
 resource "aws_route" "bar" {
-	route_table_id = "${aws_route_table.foo.id}"
-	destination_ipv6_cidr_block = "::/0"
-	egress_only_gateway_id = "${aws_egress_only_internet_gateway.foo.id}"
+  route_table_id              = "${aws_route_table.foo.id}"
+  destination_ipv6_cidr_block = "::/0"
+  egress_only_gateway_id      = "${aws_egress_only_internet_gateway.foo.id}"
+}
+`)
+
+var testAccAWSRouteConfigIpv6Expanded = fmt.Sprintf(`
+resource "aws_vpc" "foo" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = "terraform-testacc-route-ipv6"
+  }
 }
 
+resource "aws_egress_only_internet_gateway" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+}
 
+resource "aws_route_table" "foo" {
+  vpc_id = "${aws_vpc.foo.id}"
+}
+
+resource "aws_route" "bar" {
+  route_table_id              = "${aws_route_table.foo.id}"
+  destination_ipv6_cidr_block = "::0/0"
+  egress_only_gateway_id      = "${aws_egress_only_internet_gateway.foo.id}"
+}
 `)
 
 var testAccAWSRouteBasicConfigChangeCidr = fmt.Sprint(`
@@ -831,6 +1040,17 @@ resource "aws_route" "bar" {
 `)
 
 var testAccAWSRouteNoopChange = fmt.Sprint(`
+data "aws_availability_zones" "available" {
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.10.0.0/16"
   tags = {
@@ -843,6 +1063,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_subnet" "test" {
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   vpc_id = "${aws_vpc.test.id}"
   cidr_block = "10.10.10.0/24"
   tags = {
@@ -959,6 +1180,11 @@ data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   blacklisted_zone_ids = ["usw2-az4"]
   state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -993,4 +1219,56 @@ resource "aws_route" "test" {
   transit_gateway_id     = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
 }
 `)
+}
+
+func testAccAWSRouteConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+locals {
+  ipv6             = %[2]t
+  destination      = "0.0.0.0/0"
+  destination_ipv6 = "::/0"
+}
+
+resource "aws_route" "test" {
+  route_table_id = "${aws_route_table.test.id}"
+  gateway_id     = "${aws_internet_gateway.test.id}"
+
+  destination_cidr_block      = "${local.ipv6 ? "" : local.destination}"
+  destination_ipv6_cidr_block = "${local.ipv6 ? local.destination_ipv6 : ""}"
+}
+`, rName, ipv6Route)
 }

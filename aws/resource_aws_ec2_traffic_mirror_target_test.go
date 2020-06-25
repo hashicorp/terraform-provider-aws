@@ -28,13 +28,13 @@ func TestAccAWSEc2TrafficMirrorTarget_nlb(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
-			//create
 			{
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`traffic-mirror-target/tmt-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
-					resource.TestMatchResourceAttr(resourceName, "network_load_balancer_arn", regexp.MustCompile("arn:aws:elasticloadbalancing:.*")),
+					resource.TestCheckResourceAttrPair(resourceName, "network_load_balancer_arn", "aws_lb.lb", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -61,7 +61,6 @@ func TestAccAWSEc2TrafficMirrorTarget_eni(t *testing.T) {
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEc2TrafficMirrorTargetDestroy,
 		Steps: []resource.TestStep{
-			//create
 			{
 				Config: testAccTrafficMirrorTargetConfigEni(rName, description),
 				Check: resource.ComposeTestCheckFunc(
@@ -146,7 +145,7 @@ func TestAccAWSEc2TrafficMirrorTarget_disappears(t *testing.T) {
 				Config: testAccTrafficMirrorTargetConfigNlb(rName, description),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TrafficMirrorTargetExists(resourceName, &v),
-					testAccCheckAWSEc2TrafficMirrorTargetDisappears(&v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2TrafficMirrorTarget(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -185,21 +184,15 @@ func testAccCheckAWSEc2TrafficMirrorTargetExists(name string, target *ec2.Traffi
 	}
 }
 
-func testAccCheckAWSEc2TrafficMirrorTargetDisappears(target *ec2.TrafficMirrorTarget) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		_, err := conn.DeleteTrafficMirrorTarget(&ec2.DeleteTrafficMirrorTargetInput{
-			TrafficMirrorTargetId: target.TrafficMirrorTargetId,
-		})
-
-		return err
-	}
-}
-
 func testAccTrafficMirrorTargetConfigBase(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "azs" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "vpc" {
