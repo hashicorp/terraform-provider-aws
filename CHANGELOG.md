@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_efs_access_points` [GH-13918]
 * **New Resource:** `aws_wafv2_web_acl_logging_configuration` [GH-13892]
 
 ENHANCEMENTS:
