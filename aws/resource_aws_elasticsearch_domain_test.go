@@ -1122,61 +1122,40 @@ resource "aws_elasticsearch_domain" "test" {
 }
 
 func testAccESDomainConfigWarm(rName, warmType string, enabled bool, warmCnt int) string {
+	warmConfig := ""
 	if enabled {
-		return fmt.Sprintf(`
-resource "aws_elasticsearch_domain" "test" {
-  domain_name           = %[1]q
-  elasticsearch_version = "6.8"
-
-  cluster_config {
-    zone_awareness_enabled   = true
-    instance_type            = "c5.large.elasticsearch"
-    instance_count           = "3"
-    dedicated_master_enabled = true
-    dedicated_master_count   = "3"
-    dedicated_master_type    = "c5.large.elasticsearch"
-    warm_enabled             = true
-    warm_count               = %[2]d
-    warm_type                = %[3]q
-
-    zone_awareness_config {
-      availability_zone_count = 3
-    }
-  }
-
-  ebs_options {
-    ebs_enabled = true
-    volume_size = 10
-  }
-}
-`, rName, warmCnt, warmType)
-	} else {
-		return fmt.Sprintf(`
-resource "aws_elasticsearch_domain" "test" {
-  domain_name           = %[1]q
-  elasticsearch_version = "6.8"
-
-  cluster_config {
-    zone_awareness_enabled   = true
-    instance_type            = "c5.large.elasticsearch"
-    instance_count           = "3"
-    dedicated_master_enabled = true
-    dedicated_master_count   = "3"
-    dedicated_master_type    = "c5.large.elasticsearch"
-    warm_enabled             = false
-
-    zone_awareness_config {
-      availability_zone_count = 3
-    }
-  }
-
-  ebs_options {
-    ebs_enabled = true
-    volume_size = 10
-  }
-}
-`, rName)
+		warmConfig = fmt.Sprintf(`
+    warm_count = %[1]d
+    warm_type = %[2]q
+`, warmCnt, warmType)
 	}
+
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = %[1]q
+  elasticsearch_version = "6.8"
+
+  cluster_config {
+    zone_awareness_enabled   = true
+    instance_type            = "c5.large.elasticsearch"
+    instance_count           = "3"
+    dedicated_master_enabled = true
+    dedicated_master_count   = "3"
+    dedicated_master_type    = "c5.large.elasticsearch"
+    warm_enabled             = %[2]t
+    %[3]s
+
+    zone_awareness_config {
+      availability_zone_count = 3
+    }
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, rName, enabled, warmConfig)
 }
 
 func testAccESDomainConfig_WithDedicatedClusterMaster(randInt int, enabled bool) string {
