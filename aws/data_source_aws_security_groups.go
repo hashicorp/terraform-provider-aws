@@ -102,6 +102,13 @@ func dataSourceAwsSecurityGroupsRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
-	err = d.Set("vpcIds", vpcIds)
-	return err
+	if err = d.Set("vpc_ids", vpcIds); err != nil {
+		return fmt.Errorf("error setting vpc_ids: %s", err)
+	}
+
+	if err = d.Set("arns", arns); err != nil {
+		return fmt.Errorf("error setting arns: %s", err)
+	}
+
+	return nil
 }
