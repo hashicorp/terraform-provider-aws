@@ -163,33 +163,7 @@ func TestAccAWSBatchComputeEnvironment_createUnmanaged(t *testing.T) {
 	})
 }
 
-func TestAccAWSBatchComputeEnvironment_updateMinvCpus(t *testing.T) {
-	rInt := acctest.RandInt()
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.min_vcpus", "0"),
-				),
-			},
-			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateMinvCpus(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr("aws_batch_compute_environment.ec2", "compute_resources.0.min_vcpus", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
+func TestAccAWSBatchComputeEnvironment_ComputeResources_DesiredVcpus_Computed(t *testing.T) {
 	rInt := acctest.RandInt()
 	resourceName := "aws_batch_compute_environment.ec2"
 
@@ -199,17 +173,99 @@ func TestAccAWSBatchComputeEnvironment_updateMaxvCpus(t *testing.T) {
 		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 8, 4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "16"),
 				),
 			},
 			{
-				Config: testAccAWSBatchComputeEnvironmentConfigEC2UpdateMaxvCpus(rInt),
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 4, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsBatchComputeEnvironmentExists(),
-					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "32"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 8, 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_ComputeResources_MinVcpus(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 4, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "0"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 4, 4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "4"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 4, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.min_vcpus", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSBatchComputeEnvironment_ComputeResources_MaxVcpus(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 4, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "4"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 8, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "8"),
+				),
+			},
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt, 2, 0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					resource.TestCheckResourceAttr(resourceName, "compute_resources.0.max_vcpus", "2"),
 				),
 			},
 			{
@@ -757,17 +813,15 @@ resource "aws_batch_compute_environment" "unmanaged" {
 `, rInt)
 }
 
-func testAccAWSBatchComputeEnvironmentConfigEC2UpdateMinvCpus(rInt int) string {
+func testAccAWSBatchComputeEnvironmentConfigComputeResourcesMaxVcpusMinVcpus(rInt int, maxVcpus int, minVcpus int) string {
 	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
 resource "aws_batch_compute_environment" "ec2" {
-  compute_environment_name = "tf_acc_test_%d"
+  compute_environment_name = "tf_acc_test_%[1]d"
   compute_resources {
     instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
-    instance_type = [
-      "c4.large",
-    ]
-    max_vcpus = 16
-    min_vcpus = 1
+    instance_type = ["optimal"]
+    max_vcpus = %[2]d
+    min_vcpus = %[3]d
     security_group_ids = [
       "${aws_security_group.test_acc.id}"
     ]
@@ -780,33 +834,7 @@ resource "aws_batch_compute_environment" "ec2" {
   type = "MANAGED"
   depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
 }
-`, rInt)
-}
-
-func testAccAWSBatchComputeEnvironmentConfigEC2UpdateMaxvCpus(rInt int) string {
-	return testAccAWSBatchComputeEnvironmentConfigBase(rInt) + fmt.Sprintf(`
-resource "aws_batch_compute_environment" "ec2" {
-  compute_environment_name = "tf_acc_test_%d"
-  compute_resources {
-    instance_role = "${aws_iam_instance_profile.ecs_instance_role.arn}"
-    instance_type = [
-      "c4.large",
-    ]
-    max_vcpus = 32
-    min_vcpus = 0
-    security_group_ids = [
-      "${aws_security_group.test_acc.id}"
-    ]
-    subnets = [
-      "${aws_subnet.test_acc.id}"
-    ]
-    type = "EC2"
-  }
-  service_role = "${aws_iam_role.aws_batch_service_role.arn}"
-  type = "MANAGED"
-  depends_on = ["aws_iam_role_policy_attachment.aws_batch_service_role"]
-}
-`, rInt)
+`, rInt, maxVcpus, minVcpus)
 }
 
 func testAccAWSBatchComputeEnvironmentConfigEC2UpdateInstanceType(rInt int) string {
