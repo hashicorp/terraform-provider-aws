@@ -59,6 +59,17 @@ behavior "deprecated_import_commenter" "sdkv1" {
   EOF
 }
 
+behavior "deprecated_import_commenter" "sdkv1_deprecated" {
+  import_regexp = "github.com/hashicorp/terraform-plugin-sdk/helper/(hashcode|mutexkv|encryption)"
+  marker_label  = "terraform-plugin-sdk-v1"
+
+  message = <<-EOF
+    Hello, and thank you for your contribution!
+    This pull request appears to include the Go import path `${var.import_path}`, which was deprecated after upgrading to [V2 of the Terraform Plugin SDK](https://www.terraform.io/docs/extend/guides/v2-upgrade-guide.html).
+    You may use a now internalized version of the package found in `github.com/terraform-providers/terraform-provider-aws/aws/internal/PACKAGE`.
+  EOF
+}
+
 behavior "opened_pull_request_labeler" "triage" {
   labels             = ["needs-triage"]
   skip_collaborators = true
