@@ -298,7 +298,7 @@ resource "aws_s3_bucket" "bucket" {
 }
 
 resource "aws_s3_bucket_object" "template1" {
-  bucket  = "${aws_s3_bucket.bucket.id}"
+  bucket  = aws_s3_bucket.bucket.id
   key     = "test_templates_for_terraform_sc_dev1.json"
   content = <<EOF
 {

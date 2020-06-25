@@ -61,7 +61,7 @@ resource "aws_s3_bucket" "my_product_template_bucket" {
 }
 
 resource "aws_s3_bucket_object" "my_product_template_object" {
-  bucket  = "${aws_s3_bucket.my_product_template_bucket.id}"
+  bucket  = aws_s3_bucket.my_product_template_bucket.id
   key     = "my_product_template.json"
   content = <<EOF
 {
