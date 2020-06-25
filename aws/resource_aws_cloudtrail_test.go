@@ -499,7 +499,7 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "ReadOnly"),
 				),
 			},
-      {
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
