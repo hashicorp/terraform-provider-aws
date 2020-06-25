@@ -797,6 +797,40 @@ func TestAccAWSElasticSearchDomain_update_volume_type(t *testing.T) {
 		}})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13867
+func TestAccAWSElasticSearchDomain_WithVolumeType_Missing(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	resourceName := "aws_elasticsearch_domain.test"
+	rName := fmt.Sprintf("tf-acc-test-%s", acctest.RandStringFromCharSet(16, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfigWithDisabledEBSAndVolumeType(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_type", "i3.xlarge.elasticsearch"),
+					resource.TestCheckResourceAttr(resourceName, "cluster_config.0.instance_count", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.ebs_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_size", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_options.0.volume_type", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_update_version(t *testing.T) {
 	var domain1, domain2, domain3 elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
@@ -1050,6 +1084,26 @@ resource "aws_elasticsearch_domain" "test" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfigWithDisabledEBSAndVolumeType(rName, volumeType string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name = "%s"
+  elasticsearch_version = "6.0"
+  
+  cluster_config {
+    instance_type  = "i3.xlarge.elasticsearch"
+    instance_count = 1
+  }
+
+  ebs_options {
+    ebs_enabled = false
+    volume_size = 0
+    volume_type = "%s"
+  }
+}
+`, rName, volumeType)
 }
 
 func testAccESDomainConfig_DomainEndpointOptions(randInt int, enforceHttps bool, tlsSecurityPolicy string) string {
