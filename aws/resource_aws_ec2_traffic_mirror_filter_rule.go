@@ -49,12 +49,12 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 						"from_port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
+							ValidateFunc: validation.IsPortNumberOrZero,
 						},
 						"to_port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
+							ValidateFunc: validation.IsPortNumberOrZero,
 						},
 					},
 				},
@@ -89,12 +89,12 @@ func resourceAwsEc2TrafficMirrorFilterRule() *schema.Resource {
 						"from_port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
+							ValidateFunc: validation.IsPortNumberOrZero,
 						},
 						"to_port": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ValidateFunc: validation.IsPortNumber,
+							ValidateFunc: validation.IsPortNumberOrZero,
 						},
 					},
 				},
