@@ -101,7 +101,7 @@ func TestAccAWSEc2TrafficMirrorFilterRule_basic(t *testing.T) {
 }
 
 func TestAccAWSEc2TrafficMirrorFilterRule_disappears(t *testing.T) {
-	resourceName := "aws_ec2_traffic_mirror_session_rule.test"
+	resourceName := "aws_ec2_traffic_mirror_filter_rule.test"
 	dstCidr := "10.0.0.0/8"
 	srcCidr := "0.0.0.0/0"
 	ruleNum := 1
