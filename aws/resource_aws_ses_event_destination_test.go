@@ -34,6 +34,9 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(cloudwatchDestinationResourceName, &v1),
 					testAccCheckAwsSESEventDestinationExists(kinesisDestinationResourceName, &v2),
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
+					testAccCheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:event-destination/%s", rName1, rName1)),
+					testAccCheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:event-destination/%s", rName1, rName2)),
+					testAccCheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:event-destination/%s", rName1, rName3)),
 					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, "name", rName1),
 					resource.TestCheckResourceAttr(kinesisDestinationResourceName, "name", rName2),
 					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
@@ -109,7 +112,7 @@ func testAccCheckSESEventDestinationDestroy(s *terraform.State) error {
 
 		found := false
 		for _, element := range response.ConfigurationSets {
-			if *element.Name == rs.Primary.ID {
+			if aws.StringValue(element.Name) == rs.Primary.ID {
 				found = true
 			}
 		}
