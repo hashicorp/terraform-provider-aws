@@ -190,10 +190,9 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 	rBgpAsn := randIntRange(64512, 65534)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAwsDxGatewayAssociationDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDxGatewayAssociationConfig_deprecatedSingleAccount(rName, rBgpAsn),
@@ -207,7 +206,7 @@ func TestAccAwsDxGatewayAssociation_deprecatedSingleAccount(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "associated_gateway_owner_account_id"),
 					testAccCheckResourceAttrAccountID(resourceName, "dx_gateway_owner_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "allowed_prefixes.1216997074", "10.255.255.0/28"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "allowed_prefixes.*", "10.255.255.0/28"),
 					testAccCheckAwsDxGatewayAssociationStateUpgradeV0(resourceName),
 				),
 			},
