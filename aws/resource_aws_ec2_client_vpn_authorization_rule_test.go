@@ -19,7 +19,7 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
@@ -133,7 +133,7 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
@@ -175,7 +175,7 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy,
 		Steps: []resource.TestStep{
@@ -193,6 +193,8 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 
 func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_authorization_rule" {

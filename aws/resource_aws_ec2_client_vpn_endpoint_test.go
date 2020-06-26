@@ -11,7 +11,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
+
+const clientVpnEndpointDefaultLimit = 5
+
+var testAccEc2ClientVpnEndpointSemaphore tfawsresource.Semaphore
+
+func init() {
+	testAccEc2ClientVpnEndpointSemaphore = tfawsresource.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVpnEndpointDefaultLimit)
+}
 
 func init() {
 	resource.AddTestSweepers("aws_ec2_client_vpn_endpoint", &resource.Sweeper{
@@ -79,7 +88,7 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -108,7 +117,7 @@ func TestAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -130,7 +139,7 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -157,7 +166,7 @@ func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -185,7 +194,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -220,7 +229,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -246,7 +255,7 @@ func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	rStr := acctest.RandString(5)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -288,7 +297,7 @@ func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnEndpointDestroy,
 		Steps: []resource.TestStep{
@@ -315,8 +324,14 @@ func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	})
 }
 
+func testAccPreCheckClientVPNSyncronize(t *testing.T) {
+	tfawsresource.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
+}
+
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_client_vpn_endpoint" {
