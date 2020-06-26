@@ -101,9 +101,7 @@ func resourceAwsEMRManagedScalingPolicyCreate(d *schema.ResourceData, meta inter
 	}
 
 	d.SetId(d.Get("cluster_id").(string))
-
 	return nil
-	// return resourceAwsEMRManagedScalingPolicyRead(d, meta)
 }
 
 func resourceAwsEMRManagedScalingPolicyRead(d *schema.ResourceData, meta interface{}) error {
