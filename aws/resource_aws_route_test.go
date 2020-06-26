@@ -138,29 +138,30 @@ func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 
 func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
 	var route ec2.Route
+	resourceName := "aws_route.test"
+	instanceResourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigIpv6Instance(),
+				Config: testAccAWSRouteConfigIpv6Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.internal-default-route-ipv6", &route),
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteInstanceRoute(instanceResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 				),
 			},
 			{
-				ResourceName:      "aws_route.internal-default-route-ipv6",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.internal-default-route-ipv6"),
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
-			},
-			{
-				Config:   testAccAWSRouteConfigIpv6InstanceExpanded(),
-				PlanOnly: true,
 			},
 		},
 	})
@@ -456,6 +457,25 @@ func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
+func testAccCheckAWSRouteEgressOnlyInternetGatewayRoute(n string, route *ec2.Route) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s\n", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if gwId := aws.StringValue(route.EgressOnlyInternetGatewayId); gwId != rs.Primary.ID {
+			return fmt.Errorf("Egress Only Internet Gateway ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSRouteGatewayRoute(n string, route *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -475,7 +495,7 @@ func testAccCheckAWSRouteGatewayRoute(n string, route *ec2.Route) resource.TestC
 	}
 }
 
-func testAccCheckAWSRouteEgressOnlyInternetGatewayRoute(n string, route *ec2.Route) resource.TestCheckFunc {
+func testAccCheckAWSRouteInstanceRoute(n string, route *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -486,8 +506,8 @@ func testAccCheckAWSRouteEgressOnlyInternetGatewayRoute(n string, route *ec2.Rou
 			return fmt.Errorf("No ID is set")
 		}
 
-		if gwId := aws.StringValue(route.EgressOnlyInternetGatewayId); gwId != rs.Primary.ID {
-			return fmt.Errorf("Egress Only Internet Gateway ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
+		if gwId := aws.StringValue(route.InstanceId); gwId != rs.Primary.ID {
+			return fmt.Errorf("Instance ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
 		}
 
 		return nil
@@ -690,22 +710,15 @@ resource "aws_route" "internal-default-route-ipv6" {
 `)
 }
 
-func testAccAWSRouteConfigIpv6Instance() string {
-	return testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.router-network.availability_zone", "t2.small", "t3.small") +
-		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
+func testAccAWSRouteConfigIpv6Instance(rName, destinationCidr string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-resource "aws_vpc" "examplevpc" {
-  cidr_block                       = "10.100.0.0/16"
-  enable_dns_hostnames             = true
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = "terraform-testacc-route-ipv6-instance"
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
 
   filter {
     name   = "opt-in-status"
@@ -713,177 +726,52 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_internet_gateway" "internet" {
-  vpc_id = aws_vpc.examplevpc.id
-
-  tags = {
-    Name = "terraform-testacc-route-ipv6-instance"
-  }
-}
-
-resource "aws_route" "igw" {
-  route_table_id         = aws_vpc.examplevpc.main_route_table_id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.internet.id
-}
-
-resource "aws_route" "igw-ipv6" {
-  route_table_id              = aws_vpc.examplevpc.main_route_table_id
-  destination_ipv6_cidr_block = "::/0"
-  gateway_id                  = aws_internet_gateway.internet.id
-}
-
-resource "aws_subnet" "router-network" {
-  cidr_block                      = "10.100.1.0/24"
-  vpc_id                          = aws_vpc.examplevpc.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 1)
-  assign_ipv6_address_on_creation = true
-  map_public_ip_on_launch         = true
-  availability_zone               = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-route-ipv6-instance-router"
-  }
-}
-
-resource "aws_subnet" "client-network" {
-  cidr_block                      = "10.100.10.0/24"
-  vpc_id                          = aws_vpc.examplevpc.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 2)
-  assign_ipv6_address_on_creation = true
-  map_public_ip_on_launch         = false
-  availability_zone               = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-route-ipv6-instance-client"
-  }
-}
-
-resource "aws_route_table" "client-routes" {
-  vpc_id = aws_vpc.examplevpc.id
-}
-
-resource "aws_route_table_association" "client-routes" {
-  route_table_id = aws_route_table.client-routes.id
-  subnet_id      = aws_subnet.client-network.id
-}
-
-resource "aws_instance" "test-router" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
-  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.router-network.id
-}
-
-resource "aws_route" "internal-default-route" {
-  route_table_id         = aws_route_table.client-routes.id
-  destination_cidr_block = "0.0.0.0/0"
-  instance_id            = aws_instance.test-router.id
-}
-
-resource "aws_route" "internal-default-route-ipv6" {
-  route_table_id              = aws_route_table.client-routes.id
-  destination_ipv6_cidr_block = "::/0"
-  instance_id                 = aws_instance.test-router.id
-}
-`)
-}
-
-func testAccAWSRouteConfigIpv6InstanceExpanded() string {
-	return testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.router-network.availability_zone", "t2.small", "t3.small") +
-		testAccLatestAmazonLinuxHvmEbsAmiConfig() +
-		fmt.Sprintf(`
-resource "aws_vpc" "examplevpc" {
-  cidr_block                       = "10.100.0.0/16"
-  enable_dns_hostnames             = true
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-route-ipv6-instance"
+    Name = %[1]q
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_internet_gateway" "internet" {
-  vpc_id = aws_vpc.examplevpc.id
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.current.names[0]
+  ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
-    Name = "terraform-testacc-route-ipv6-instance"
+    Name = %[1]q
   }
 }
 
-resource "aws_route" "igw" {
-  route_table_id         = aws_vpc.examplevpc.main_route_table_id
-  destination_cidr_block = "0.0.0.0/0"
-  gateway_id             = aws_internet_gateway.internet.id
-}
-
-resource "aws_route" "igw-ipv6" {
-  route_table_id              = aws_vpc.examplevpc.main_route_table_id
-  destination_ipv6_cidr_block = "::0/0"
-  gateway_id                  = aws_internet_gateway.internet.id
-}
-
-resource "aws_subnet" "router-network" {
-  cidr_block                      = "10.100.1.0/24"
-  vpc_id                          = aws_vpc.examplevpc.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 1)
-  assign_ipv6_address_on_creation = true
-  map_public_ip_on_launch         = true
-  availability_zone               = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-route-ipv6-instance-router"
-  }
-}
-
-resource "aws_subnet" "client-network" {
-  cidr_block                      = "10.100.10.0/24"
-  vpc_id                          = aws_vpc.examplevpc.id
-  ipv6_cidr_block                 = cidrsubnet(aws_vpc.examplevpc.ipv6_cidr_block, 8, 2)
-  assign_ipv6_address_on_creation = true
-  map_public_ip_on_launch         = false
-  availability_zone               = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-route-ipv6-instance-client"
-  }
-}
-
-resource "aws_route_table" "client-routes" {
-  vpc_id = aws_vpc.examplevpc.id
-}
-
-resource "aws_route_table_association" "client-routes" {
-  route_table_id = aws_route_table.client-routes.id
-  subnet_id      = aws_subnet.client-network.id
-}
-
-resource "aws_instance" "test-router" {
+resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.router-network.id
+  subnet_id     = aws_subnet.test.id
+
+  ipv6_address_count = 1
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route" "internal-default-route" {
-  route_table_id         = aws_route_table.client-routes.id
-  destination_cidr_block = "0.0.0.0/0"
-  instance_id            = aws_instance.test-router.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route" "internal-default-route-ipv6" {
-  route_table_id              = aws_route_table.client-routes.id
-  destination_ipv6_cidr_block = "::0/0"
-  instance_id                 = aws_instance.test-router.id
+resource "aws_route" "test" {
+  route_table_id              = aws_route_table.test.id
+  destination_ipv6_cidr_block = %[2]q
+  instance_id                 = aws_instance.test.id
 }
-`)
+`, rName, destinationCidr))
 }
 
 func testAccAWSRouteConfigIpv6PeeringConnection() string {
