@@ -309,6 +309,39 @@ func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_IPv4_To_NetworkInterface(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	eniResourceName := "aws_network_interface.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv4NetworkInterface(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteNetworkInterfaceRoute(eniResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
@@ -371,10 +404,12 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_LocalGatewayID(t *testing.T) {
+func TestAccAWSRoute_IPv4_To_LocalGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	localGatewayDataSourceName := "data.aws_ec2_local_gateway.first"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "172.16.1.0/24"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
@@ -382,9 +417,11 @@ func TestAccAWSRoute_LocalGatewayID(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteResourceConfigLocalGatewayID(),
+				Config: testAccAWSRouteResourceConfigIpv4LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "local_gateway_id", localGatewayDataSourceName, "id"),
 				),
 			},
@@ -1121,14 +1158,69 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_route" "test" {
-  route_table_id              = aws_route_table.test.id
-  destination_cidr_block      = %[2]q
-  instance_id                 = aws_instance.test.id
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  instance_id            = aws_instance.test.id
 }
 `, rName, destinationCidr))
 }
 
-func testAccAWSRouteResourceConfigLocalGatewayID() string {
+func testAccAWSRouteConfigIpv4NetworkInterface(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.current.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  network_interface_id   = aws_network_interface.test.id
+}
+`, rName, destinationCidr)
+}
+
+func testAccAWSRouteResourceConfigIpv4LocalGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 data "aws_ec2_local_gateways" "all" {}
 
@@ -1144,22 +1236,35 @@ data "aws_ec2_local_gateway_route_table" "first" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.first.id
   vpc_id                       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id     = aws_vpc.test.id
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]
 }
 
 resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
-  destination_cidr_block = "172.16.1.0/24"
+  destination_cidr_block = %[2]q
   local_gateway_id       = data.aws_ec2_local_gateway.first.id
 }
-`)
+`, rName, destinationCidr)
 }
