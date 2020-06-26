@@ -69,7 +69,7 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
+func TestAccAWSRoute_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
@@ -105,7 +105,7 @@ func TestAccAWSRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
+func TestAccAWSRoute_IPv6_To_InternetGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
@@ -136,7 +136,7 @@ func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
+func TestAccAWSRoute_IPv6_To_Instance(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	instanceResourceName := "aws_instance.test"
@@ -167,7 +167,7 @@ func TestAccAWSRoute_ipv6ToInstance(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ipv6ToNetworkInterface(t *testing.T) {
+func TestAccAWSRoute_IPv6_To_NetworkInterface(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	eniResourceName := "aws_network_interface.test"
@@ -200,7 +200,7 @@ func TestAccAWSRoute_ipv6ToNetworkInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ipv6ToVpcPeeringConnection(t *testing.T) {
+func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	pcxResourceName := "aws_vpc_peering_connection.test"
@@ -231,7 +231,7 @@ func TestAccAWSRoute_ipv6ToVpcPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ipv4ToInternetGateway(t *testing.T) {
+func TestAccAWSRoute_IPv4_To_InternetGateway(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
@@ -278,7 +278,7 @@ func TestAccAWSRoute_ipv4ToInternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_doesNotCrashWithVpcEndpoint(t *testing.T) {
+func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
@@ -308,10 +308,12 @@ func TestAccAWSRoute_doesNotCrashWithVpcEndpoint(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_TransitGatewayID_DestinationCidrBlock(t *testing.T) {
+func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -319,9 +321,12 @@ func TestAccAWSRoute_TransitGatewayID_DestinationCidrBlock(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock(),
+				Config: testAccAWSRouteConfigIpv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteTransitGatewayRoute(transitGatewayResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 				),
 			},
@@ -512,6 +517,25 @@ func testAccCheckAWSRouteNetworkInterfaceRoute(n string, route *ec2.Route) resou
 
 		if gwId := aws.StringValue(route.NetworkInterfaceId); gwId != rs.Primary.ID {
 			return fmt.Errorf("Network Interface ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSRouteTransitGatewayRoute(n string, route *ec2.Route) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s\n", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if gwId := aws.StringValue(route.TransitGatewayId); gwId != rs.Primary.ID {
+			return fmt.Errorf("Transit Gateway ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
 		}
 
 		return nil
@@ -872,16 +896,24 @@ resource "aws_vpc_endpoint" "test" {
 `, rName)
 }
 
-func testAccAWSRouteConfigTransitGatewayIDDestinatationCidrBlock() string {
-	return testAccAvailableAZsNoOptInDefaultExcludeConfig() +
-		fmt.Sprintf(`
-# IncorrectState: Transit Gateway is not available in availability zone usw2-az4
+func testAccAWSRouteConfigIpv4TransitGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-route-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
@@ -891,24 +923,40 @@ resource "aws_subnet" "test" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-route-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   subnet_ids         = [aws_subnet.test.id]
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route" "test" {
-  destination_cidr_block = "0.0.0.0/0"
-  route_table_id         = aws_vpc.test.default_route_table_id
+  destination_cidr_block = %[2]q
+  route_table_id         = aws_route_table.test.id
   transit_gateway_id     = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
 }
-`)
+`, rName, destinationCidr)
 }
 
 func testAccAWSRouteConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {
