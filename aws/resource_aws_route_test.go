@@ -342,6 +342,37 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	pcxResourceName := "aws_vpc_peering_connection.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv4VpcPeeringConnection(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteVpcPeeringConnectionRoute(pcxResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
@@ -1186,6 +1217,50 @@ resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = %[2]q
   network_interface_id   = aws_network_interface.test.id
+}
+`, rName, destinationCidr)
+}
+
+func testAccAWSRouteConfigIpv4VpcPeeringConnection(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "source" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "target" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = aws_vpc.source.id
+  peer_vpc_id = aws_vpc.target.id
+  auto_accept = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.source.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id            = aws_route_table.test.id
+  destination_cidr_block    = %[2]q
+  vpc_peering_connection_id = aws_vpc_peering_connection.test.id
 }
 `, rName, destinationCidr)
 }
