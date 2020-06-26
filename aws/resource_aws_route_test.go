@@ -13,10 +13,12 @@ import (
 
 func TestAccAWSRoute_basic(t *testing.T) {
 	var route ec2.Route
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
+	rtResourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	cidr := "10.3.0.0/16"
+	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -24,11 +26,13 @@ func TestAccAWSRoute_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigBasic(rName, cidr),
+				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					testAccCheckAWSRouteInternetGatewayRoute(igwResourceName, &route),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", cidr),
+					testAccCheckAWSRouteGatewayRoute(igwResourceName, &route),
+					testAccCheckRouteTableExists(rtResourceName, &routeTable),
+					testAccCheckAWSRouteNumberOfRoutes(&routeTable, 2),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 				),
 			},
@@ -46,7 +50,7 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	cidr := "10.3.0.0/16"
+	destinationCidr := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -54,7 +58,7 @@ func TestAccAWSRoute_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigBasic(rName, cidr),
+				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute(), resourceName),
@@ -70,7 +74,7 @@ func TestAccAWSRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 	resourceName := "aws_route.test"
 	eoigwResourceName := "aws_egress_only_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	cidr := "::/0"
+	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -78,12 +82,12 @@ func TestAccAWSRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, cidr),
+				Config: testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckAWSRouteEgressOnlyInternetGatewayRoute(eoigwResourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", cidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 				),
 			},
 			{
@@ -93,6 +97,7 @@ func TestAccAWSRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				// Verify that expanded form of the destination CIDR causes no diff.
 				Config:   testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, "::0/0"),
 				PlanOnly: true,
 			},
@@ -102,24 +107,29 @@ func TestAccAWSRoute_ipv6ToEgressOnlyInternetGateway(t *testing.T) {
 
 func TestAccAWSRoute_ipv6ToInternetGateway(t *testing.T) {
 	var route ec2.Route
+	resourceName := "aws_route.test"
+	igwResourceName := "aws_internet_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigIpv6InternetGateway(),
+				Config: testAccAWSRouteConfigIpv6InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.igw", &route),
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteGatewayRoute(igwResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 				),
 			},
 			{
-				ResourceName:      "aws_route.igw",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.igw"),
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -208,15 +218,15 @@ func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_changeCidr(t *testing.T) {
+func TestAccAWSRoute_ipv4ToInternetGateway(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
 	igwResourceName := "aws_internet_gateway.test"
 	rtResourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
-	cidr := "10.3.0.0/16"
-	changedCidr := "10.2.0.0/16"
+	destinationCidr := "10.3.0.0/16"
+	changedDestinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -224,24 +234,24 @@ func TestAccAWSRoute_changeCidr(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigBasic(rName, cidr),
+				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					testAccCheckAWSRouteInternetGatewayRoute(igwResourceName, &route),
+					testAccCheckAWSRouteGatewayRoute(igwResourceName, &route),
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckAWSRouteNumberOfRoutes(&routeTable, 2),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", cidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 				),
 			},
 			{
-				Config: testAccAWSRouteConfigBasic(rName, changedCidr),
+				Config: testAccAWSRouteConfigIpv4InternetGateway(rName, changedDestinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					testAccCheckAWSRouteInternetGatewayRoute(igwResourceName, &route),
+					testAccCheckAWSRouteGatewayRoute(igwResourceName, &route),
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
 					testAccCheckAWSRouteNumberOfRoutes(&routeTable, 2),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", changedCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", changedDestinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 				),
 			},
@@ -255,9 +265,11 @@ func TestAccAWSRoute_changeCidr(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
+func TestAccAWSRoute_doesNotCrashWithVpcEndpoint(t *testing.T) {
 	var route ec2.Route
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route.test"
+	rtResourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -266,9 +278,11 @@ func TestAccAWSRoute_doesNotCrashWithVPCEndpoint(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteWithVPCEndpoint(rName),
+				Config: testAccAWSRouteConfigWithVpcEndpoint(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckRouteTableExists(rtResourceName, &routeTable),
+					testAccCheckAWSRouteNumberOfRoutes(&routeTable, 3),
 				),
 			},
 			{
@@ -415,7 +429,7 @@ func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateI
 	}
 }
 
-func testAccCheckAWSRouteInternetGatewayRoute(n string, route *ec2.Route) resource.TestCheckFunc {
+func testAccCheckAWSRouteGatewayRoute(n string, route *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -463,7 +477,7 @@ func testAccCheckAWSRouteNumberOfRoutes(routeTable *ec2.RouteTable, n int) resou
 	}
 }
 
-func testAccAWSRouteConfigBasic(rName, cidr string) string {
+func testAccAWSRouteConfigIpv4InternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -494,42 +508,50 @@ resource "aws_route" "test" {
   destination_cidr_block = %[2]q
   gateway_id             = aws_internet_gateway.test.id
 }
-`, rName, cidr)
+`, rName, destinationCidr)
 }
 
-func testAccAWSRouteConfigIpv6InternetGateway() string {
+func testAccAWSRouteConfigIpv6InternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-route-ipv6-igw"
+    Name = %[1]q
   }
 }
 
-resource "aws_egress_only_internet_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
-}
-
-resource "aws_internet_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "terraform-testacc-route-ipv6-igw"
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "external" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route" "igw" {
-  route_table_id              = aws_route_table.external.id
-  destination_ipv6_cidr_block = "::/0"
-  gateway_id                  = aws_internet_gateway.foo.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`)
+
+resource "aws_route" "test" {
+  route_table_id              = aws_route_table.test.id
+  destination_ipv6_cidr_block = %[2]q
+  gateway_id                  = aws_internet_gateway.test.id
+}
+`, rName, destinationCidr)
 }
 
 func testAccAWSRouteConfigIpv6NetworkInterface() string {
@@ -871,7 +893,7 @@ resource "aws_route" "pc" {
 `)
 }
 
-func testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, cidr string) string {
+func testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
@@ -903,37 +925,10 @@ resource "aws_route" "test" {
   destination_ipv6_cidr_block = %[2]q
   egress_only_gateway_id      = aws_egress_only_internet_gateway.test.id
 }
-`, rName, cidr)
+`, rName, destinationCidr)
 }
 
-func testAccAWSRouteConfigIpv6Expanded() string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
-  cidr_block                       = "10.1.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = "terraform-testacc-route-ipv6"
-  }
-}
-
-resource "aws_egress_only_internet_gateway" "foo" {
-  vpc_id = aws_vpc.foo.id
-}
-
-resource "aws_route_table" "foo" {
-  vpc_id = aws_vpc.foo.id
-}
-
-resource "aws_route" "bar" {
-  route_table_id              = aws_route_table.foo.id
-  destination_ipv6_cidr_block = "::0/0"
-  egress_only_gateway_id      = aws_egress_only_internet_gateway.foo.id
-}
-`)
-}
-
-func testAccAWSRouteWithVPCEndpoint(rName string) string {
+func testAccAWSRouteConfigWithVpcEndpoint(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
