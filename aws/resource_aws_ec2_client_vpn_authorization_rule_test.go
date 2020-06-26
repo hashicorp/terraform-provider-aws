@@ -266,8 +266,8 @@ func testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName string) string {
 	return testAccEc2ClientVpnEndpointComposeConfig(rName,
 		testAccEc2ClientVpnEndpointConfigVpcBase(rName, 1), `
 resource "aws_ec2_client_vpn_authorization_rule" "test" {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  target_network_cidr    = "${aws_subnet.test[0].cidr_block}"
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  target_network_cidr    = aws_subnet.test[0].cidr_block
   authorize_all_groups   = true
 }
 `)
@@ -278,8 +278,8 @@ func testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName string, groupNames m
 	for k, v := range groupNames {
 		fmt.Fprintf(&b, `
 resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  target_network_cidr    = "${aws_subnet.test[0].cidr_block}"
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  target_network_cidr    = aws_subnet.test[0].cidr_block
   access_group_id        = %[2]q
 }
 `, k, v)
@@ -295,8 +295,8 @@ func testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName string, subnetCount
 	for k, v := range groupNames {
 		fmt.Fprintf(&b, `
 resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  target_network_cidr    = "${aws_subnet.test[%[2]d].cidr_block}"
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  target_network_cidr    = aws_subnet.test[%[2]d].cidr_block
   authorize_all_groups   = true
 }
 `, k, v)
@@ -332,7 +332,7 @@ resource "aws_subnet" "test" {
   count                   = %[2]d
   availability_zone       = data.aws_availability_zones.available.names[count.index]
   cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  vpc_id                  = "${aws_vpc.test.id}"
+  vpc_id                  = aws_vpc.test.id
   map_public_ip_on_launch = true
 
   tags = {

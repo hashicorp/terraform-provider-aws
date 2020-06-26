@@ -110,55 +110,11 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 }
 
 func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
-	return testAccEc2ClientVpnEndpointConfigAcmCertificateBase() + fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-subnet-%s"
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone       = data.aws_availability_zones.available.names[0]
-  cidr_block              = "10.1.1.0/24"
-  vpc_id                  = "${aws_vpc.test.id}"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "tf-acc-subnet-%s"
-  }
-}
-
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
-  }
-
-  connection_log_options {
-    enabled = false
-  }
-}
-
+	return testAccEc2ClientVpnEndpointComposeConfig(rName,
+		testAccEc2ClientVpnEndpointConfigVpcBase(rName, 1), `
 resource "aws_ec2_client_vpn_network_association" "test" {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  subnet_id              = "${aws_subnet.test.id}"
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test[0].id
 }
-`, rName, rName, rName)
+`)
 }
