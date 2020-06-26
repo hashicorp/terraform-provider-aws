@@ -263,8 +263,8 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName string) string {
-	return testAccEc2ClientVpnEndpointComposeConfig(rName,
-		testAccEc2ClientVpnEndpointConfigVpcBase(rName, 1), `
+	return testAccEc2ClientVpnComposeConfig(rName,
+		testAccEc2ClientVpnVpcBase(rName, 1), `
 resource "aws_ec2_client_vpn_authorization_rule" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   target_network_cidr    = aws_subnet.test[0].cidr_block
@@ -285,8 +285,8 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return testAccEc2ClientVpnEndpointComposeConfig(rName,
-		testAccEc2ClientVpnEndpointConfigVpcBase(rName, 1),
+	return testAccEc2ClientVpnComposeConfig(rName,
+		testAccEc2ClientVpnVpcBase(rName, 1),
 		b.String())
 }
 
@@ -302,12 +302,12 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return testAccEc2ClientVpnEndpointComposeConfig(rName,
-		testAccEc2ClientVpnEndpointConfigVpcBase(rName, subnetCount),
+	return testAccEc2ClientVpnComposeConfig(rName,
+		testAccEc2ClientVpnVpcBase(rName, subnetCount),
 		b.String())
 }
 
-func testAccEc2ClientVpnEndpointConfigVpcBase(rName string, subnetCount int) string {
+func testAccEc2ClientVpnVpcBase(rName string, subnetCount int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
@@ -342,7 +342,7 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount)
 }
 
-func testAccEc2ClientVpnEndpointComposeConfig(rName string, config ...string) string {
+func testAccEc2ClientVpnComposeConfig(rName string, config ...string) string {
 	return composeConfig(
 		append(
 			config,
