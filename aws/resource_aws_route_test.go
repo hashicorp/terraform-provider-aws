@@ -278,6 +278,37 @@ func TestAccAWSRoute_IPv4_To_InternetGateway(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_IPv4_To_Instance(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	instanceResourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv4Instance(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteInstanceRoute(instanceResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
@@ -1008,4 +1039,64 @@ resource "aws_route" "test" {
   destination_ipv6_cidr_block = local.ipv6 ? local.destination_ipv6 : ""
 }
 `, rName, ipv6Route)
+}
+
+func testAccAWSRouteConfigIpv4Instance(rName, destinationCidr string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.current.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id              = aws_route_table.test.id
+  destination_cidr_block      = %[2]q
+  instance_id                 = aws_instance.test.id
+}
+`, rName, destinationCidr))
 }
