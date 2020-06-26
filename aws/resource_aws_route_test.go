@@ -373,6 +373,37 @@ func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	ngwResourceName := "aws_nat_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv4NatGateway(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteNatGatewayRoute(ngwResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
@@ -593,6 +624,25 @@ func testAccCheckAWSRouteInstanceRoute(n string, route *ec2.Route) resource.Test
 
 		if gwId := aws.StringValue(route.InstanceId); gwId != rs.Primary.ID {
 			return fmt.Errorf("Instance ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckAWSRouteNatGatewayRoute(n string, route *ec2.Route) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s\n", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if gwId := aws.StringValue(route.NatGatewayId); gwId != rs.Primary.ID {
+			return fmt.Errorf("NAT Gateway ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
 		}
 
 		return nil
@@ -1261,6 +1311,70 @@ resource "aws_route" "test" {
   route_table_id            = aws_route_table.test.id
   destination_cidr_block    = %[2]q
   vpc_peering_connection_id = aws_vpc_peering_connection.test.id
+}
+`, rName, destinationCidr)
+}
+
+func testAccAWSRouteConfigIpv4NatGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.1.1.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_nat_gateway" "test" {
+  allocation_id = aws_eip.test.id
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  nat_gateway_id         = aws_nat_gateway.test.id
 }
 `, rName, destinationCidr)
 }
