@@ -931,8 +931,8 @@ data "aws_ami" "test" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -2418,8 +2418,8 @@ resource "aws_internet_gateway" "gw" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -2523,8 +2523,8 @@ resource "aws_internet_gateway" "gw" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -3491,8 +3491,8 @@ resource "aws_vpc" "test" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -3778,8 +3778,8 @@ data "aws_ami" "test" {
 
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
@@ -4202,8 +4202,8 @@ func testAccAWSAutoScalingGroupPartitionConfig(rName string) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # t2.micro is not supported in us-west-2d
-  blacklisted_zone_ids = ["usw2-az4"]
-  state                = "available"
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
     name   = "opt-in-status"
