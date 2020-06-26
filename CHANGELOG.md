@@ -1,4 +1,9 @@
 ## 2.69.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument validation continues to work for Terraform 0.11 support [GH-13958]
+
 ## 2.68.0 (June 25, 2020)
 
 FEATURES:
