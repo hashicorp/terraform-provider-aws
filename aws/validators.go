@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/cognitoidentity"
 	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go/service/emr"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
@@ -1148,6 +1149,14 @@ func validateAwsEmrCustomAmiId(v interface{}, k string) (ws []string, errors []e
 	}
 
 	return
+}
+
+func validateAwsEmrComputeLimitsUnitType() schema.SchemaValidateFunc {
+	return validation.StringInSlice([]string{
+		emr.ComputeLimitsUnitTypeInstanceFleetUnits,
+		emr.ComputeLimitsUnitTypeInstances,
+		emr.ComputeLimitsUnitTypeVcpu,
+	}, false)
 }
 
 func validateSfnStateMachineName(v interface{}, k string) (ws []string, errors []error) {
