@@ -818,8 +818,6 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 
 	// Create new version only if content has changed since previous version
 	var defaultVersion string
-	var output *ec2.CreateLaunchTemplateVersionOutput
-
 	description := d.Get("description").(string)
 	latestVersionDescription := aws.StringValue(dltv.LaunchTemplateVersions[0].VersionDescription)
 
@@ -834,7 +832,7 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			launchTemplateVersionOpts.VersionDescription = aws.String(description)
 		}
 
-		output, err = conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+		output, err := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
 		if err != nil {
 			return fmt.Errorf("Error creating new Launch Template Version for Launch Template(%s): %w", d.Id(), err)
 		}
