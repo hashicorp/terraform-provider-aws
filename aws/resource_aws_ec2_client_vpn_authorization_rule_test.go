@@ -5,7 +5,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -200,25 +199,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 			continue
 		}
 
-		endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		filters := map[string]string{
-			"destination-cidr": targetNetworkCidr,
-		}
-		if accessGroupID != "" {
-			filters["group-id"] = accessGroupID
-		}
-
-		input := &ec2.DescribeClientVpnAuthorizationRulesInput{
-			ClientVpnEndpointId: aws.String(endpointID),
-			Filters:             buildEC2AttributeFilterList(filters),
-		}
-
-		_, err = conn.DescribeClientVpnAuthorizationRules(input)
-
+		_, err := findClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Client VPN authorization rule (%s) still exists", rs.Primary.ID)
 		}
@@ -244,11 +225,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		input := &ec2.DescribeClientVpnAuthorizationRulesInput{
-			ClientVpnEndpointId: aws.String(rs.Primary.Attributes["client_vpn_endpoint_id"]),
-		}
-		result, err := conn.DescribeClientVpnAuthorizationRules(input)
-
+		result, err := findClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading Client VPN authorization rule (%s): %w", rs.Primary.ID, err)
 		}
