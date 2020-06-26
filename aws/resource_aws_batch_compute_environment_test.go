@@ -63,6 +63,27 @@ func testSweepBatchComputeEnvironments(region string) error {
 	return nil
 }
 
+func TestAccAWSBatchComputeEnvironment_disappears(t *testing.T) {
+	rInt := acctest.RandInt()
+	resourceName := "aws_batch_compute_environment.ec2"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBatch(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckBatchComputeEnvironmentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSBatchComputeEnvironmentConfigEC2(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBatchComputeEnvironmentExists(),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBatchComputeEnvironment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSBatchComputeEnvironment_createEc2(t *testing.T) {
 	rInt := acctest.RandInt()
 

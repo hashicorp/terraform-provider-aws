@@ -451,6 +451,15 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	}
 
 	eventSelectors := expandAwsCloudTrailEventSelector(d.Get("event_selector").([]interface{}))
+	// If no defined selectors revert to the single default selector
+	if len(eventSelectors) == 0 {
+		es := &cloudtrail.EventSelector{
+			IncludeManagementEvents: aws.Bool(true),
+			ReadWriteType:           aws.String("All"),
+			DataResources:           make([]*cloudtrail.DataResource, 0),
+		}
+		eventSelectors = append(eventSelectors, es)
+	}
 	input.EventSelectors = eventSelectors
 
 	if err := input.Validate(); err != nil {
@@ -510,7 +519,7 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" {
 		return eventSelectors
 	}
 

@@ -505,6 +505,14 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
+				Config: testAccAWSCloudTrailConfig_eventSelectorReadWriteType(cloudTrailRandInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.include_management_events", "true"),
+					resource.TestCheckResourceAttr(resourceName, "event_selector.0.read_write_type", "WriteOnly"),
+				),
+			},
+			{
 				Config: testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "2"),
@@ -1333,6 +1341,51 @@ resource "aws_s3_bucket" "bar" {
   force_destroy = true
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfig_eventSelectorReadWriteType(cloudTrailRandInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "foobar" {
+    name = "tf-trail-foobar-%d"
+    s3_bucket_name = "${aws_s3_bucket.foo.id}"
+
+	event_selector {
+		read_write_type = "WriteOnly"
+		include_management_events = true
+	}
+}
+
+resource "aws_s3_bucket" "foo" {
+	bucket = "tf-test-trail-%d"
+	force_destroy = true
+	policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+			"Sid": "AWSCloudTrailAclCheck",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:GetBucketAcl",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d"
+		},
+		{
+			"Sid": "AWSCloudTrailWrite",
+			"Effect": "Allow",
+			"Principal": "*",
+			"Action": "s3:PutObject",
+			"Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+			"Condition": {
+				"StringEquals": {
+					"s3:x-amz-acl": "bucket-owner-full-control"
+				}
+			}
+		}
+	]
+}
+POLICY
+}
+`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
 
 func testAccAWSCloudTrailConfig_eventSelectorModified(cloudTrailRandInt int) string {

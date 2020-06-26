@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
@@ -764,19 +765,24 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1861191586.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1861191586.git_submodules_config.0.fetch_submodules", "true"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.55827772.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.55827772.git_submodules_config.0.fetch_submodules", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier":                        "secondarySource1",
+						"git_submodules_config.#":                  "1",
+						"git_submodules_config.0.fetch_submodules": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier":                        "secondarySource2",
+						"git_submodules_config.#":                  "1",
+						"git_submodules_config.0.fetch_submodules": "true",
+					}),
 				),
 			},
 			{
@@ -788,10 +794,16 @@ func TestAccAWSCodeBuildProject_SecondarySources_GitSubmodulesConfig_CodeCommit(
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_GitSubmodulesConfig_CodeCommit(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1497918817.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1497918817.git_submodules_config.0.fetch_submodules", "false"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1887486300.git_submodules_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.1887486300.git_submodules_config.0.fetch_submodules", "false"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier":                        "secondarySource1",
+						"git_submodules_config.#":                  "1",
+						"git_submodules_config.0.fetch_submodules": "false",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier":                        "secondarySource2",
+						"git_submodules_config.#":                  "1",
+						"git_submodules_config.0.fetch_submodules": "false",
+					}),
 				),
 			},
 		},
@@ -1686,21 +1698,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing
 	artifactIdentifier1 := "artifactIdentifier1"
 	artifactIdentifier2 := "artifactIdentifier2"
 
-	hash1 := artifactHash(artifactIdentifier1, "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash(artifactIdentifier2, "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_ArtifactIdentifier(rName, bName, artifactIdentifier1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.artifact_identifier", hash1), artifactIdentifier1),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"artifact_identifier": artifactIdentifier1,
+					}),
 				),
 			},
 			{
@@ -1713,7 +1723,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_ArtifactIdentifier(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.artifact_identifier", hash2), artifactIdentifier2),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"artifact_identifier": artifactIdentifier2,
+					}),
 				),
 			},
 		},
@@ -1726,21 +1738,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_OverrideArtifactName(t *testi
 	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
 	resourceName := "aws_codebuild_project.test"
 
-	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "true", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_OverrideArtifactName(rName, bName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.override_artifact_name", hash1), "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"override_artifact_name": "true",
+					}),
 				),
 			},
 			{
@@ -1753,7 +1763,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_OverrideArtifactName(t *testi
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.override_artifact_name", hash2), "false"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"override_artifact_name": "false",
+					}),
 				),
 			},
 		},
@@ -1766,21 +1778,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_EncryptionDisabled(t *testing
 	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
 	resourceName := "aws_codebuild_project.test"
 
-	hash1 := artifactHash("secondaryArtifact1", "true", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_EncryptionDisabled(rName, bName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.encryption_disabled", hash1), "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"encryption_disabled": "true",
+					}),
 				),
 			},
 			{
@@ -1793,7 +1803,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_EncryptionDisabled(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.encryption_disabled", hash2), "false"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"encryption_disabled": "false",
+					}),
 				),
 			},
 		},
@@ -1807,21 +1819,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
 	bName2 := acctest.RandomWithPrefix("tf-acc-test-bucket2")
 	resourceName := "aws_codebuild_project.test"
 
-	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash("secondaryArtifact1", "false", bName2, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Location(rName, bName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.location", hash1), bName),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"location": bName,
+					}),
 				),
 			},
 			{
@@ -1834,7 +1844,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Location(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.location", hash2), bName2),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"location": bName2,
+					}),
 				),
 			},
 		},
@@ -1852,9 +1864,6 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
 	name1 := "name1"
 	name2 := "name2"
 
-	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
 		Providers:    testAccProviders,
@@ -1865,7 +1874,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.name", hash1), name1),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"name": name1,
+					}),
 				),
 			},
 			{
@@ -1878,7 +1889,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Name(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.name", hash2), name2),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"name": name2,
+					}),
 				),
 			},
 		},
@@ -1890,21 +1903,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_NamespaceType(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
-	hash1 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceBuildId, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_NamespaceType(rName, codebuild.ArtifactNamespaceBuildId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.namespace_type", hash1), codebuild.ArtifactNamespaceBuildId),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"namespace_type": codebuild.ArtifactNamespaceBuildId,
+					}),
 				),
 			},
 			{
@@ -1917,7 +1928,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_NamespaceType(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.namespace_type", hash2), codebuild.ArtifactNamespaceNone),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"namespace_type": codebuild.ArtifactNamespaceNone,
+					}),
 				),
 			},
 		},
@@ -1929,21 +1942,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Packaging(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_project.test"
 
-	hash1 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingZip, "", codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Packaging(rName, codebuild.ArtifactPackagingZip),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.packaging", hash1), codebuild.ArtifactPackagingZip),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"packaging": codebuild.ArtifactPackagingZip,
+					}),
 				),
 			},
 			{
@@ -1956,7 +1967,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Packaging(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.packaging", hash2), codebuild.ArtifactPackagingNone),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"packaging": codebuild.ArtifactPackagingNone,
+					}),
 				),
 			},
 		},
@@ -1971,21 +1984,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
 	path1 := "path1"
 	path2 := "path2"
 
-	hash1 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, path1, codebuild.ArtifactsTypeS3)
-	hash2 := artifactHash("secondaryArtifact1", "false", rName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, path2, codebuild.ArtifactsTypeS3)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Path(rName, path1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.path", hash1), path1),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"path": path1,
+					}),
 				),
 			},
 			{
@@ -1998,7 +2009,9 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Path(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.path", hash2), path2),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"path": path2,
+					}),
 				),
 			},
 		},
@@ -2011,22 +2024,19 @@ func TestAccAWSCodeBuildProject_SecondaryArtifacts_Type(t *testing.T) {
 	bName := acctest.RandomWithPrefix("tf-acc-test-bucket")
 	resourceName := "aws_codebuild_project.test"
 
-	type1 := codebuild.ArtifactsTypeS3
-
-	hash1 := artifactHash("secondaryArtifact1", "false", bName, codebuild.ArtifactNamespaceNone, "false", codebuild.ArtifactPackagingNone, "", type1)
-
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Type(rName, bName, type1),
+				Config: testAccAWSCodebuildProjectConfig_SecondaryArtifacts_Type(rName, bName, codebuild.ArtifactsTypeS3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, fmt.Sprintf("secondary_artifacts.%d.type", hash1), type1),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_artifacts.*", map[string]string{
+						"type": codebuild.ArtifactsTypeS3,
+					}),
 				),
 			},
 			{
@@ -2044,18 +2054,21 @@ func TestAccAWSCodeBuildProject_SecondarySources_CodeCommit(t *testing.T) {
 	resourceName := "aws_codebuild_project.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSCodeBuildProjectDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildProjectDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSCodeBuildProjectConfig_SecondarySources_CodeCommit(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildProjectExists(resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "CODECOMMIT"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.2212771807.source_identifier", "secondarySource1"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.3160583991.source_identifier", "secondarySource2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "secondary_sources.*", map[string]string{
+						"source_identifier": "secondarySource2",
+					}),
 				),
 			},
 			{
@@ -4139,12 +4152,4 @@ resource "aws_codebuild_project" "test" {
   }
 }
 `, rName)
-}
-
-func artifactHash(artifactIdentifier, encryptionDisabled, location, nameSpaceType, overrideArtifactName,
-	packaging, path, artifactType string) int {
-	buf := fmt.Sprintf("%s-%s-%s-%s-%s-%s-%s-%s-", artifactIdentifier,
-		encryptionDisabled, location, nameSpaceType, overrideArtifactName, packaging, path, artifactType)
-	hash := hashcode.String(buf)
-	return hash
 }

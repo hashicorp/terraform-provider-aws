@@ -141,11 +141,14 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Computed: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								elasticsearch.VolumeTypeStandard,
-								elasticsearch.VolumeTypeGp2,
-								elasticsearch.VolumeTypeIo1,
-							}, false),
+							ValidateFunc: validation.Any(
+								validation.StringIsEmpty,
+								validation.StringInSlice([]string{
+									elasticsearch.VolumeTypeStandard,
+									elasticsearch.VolumeTypeGp2,
+									elasticsearch.VolumeTypeIo1,
+								}, false),
+							),
 						},
 					},
 				},
@@ -242,7 +245,6 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 						"warm_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
-							ForceNew: true,
 						},
 						"warm_count": {
 							Type:         schema.TypeInt,
