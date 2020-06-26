@@ -596,3 +596,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
 }
 `, rName, splitTunnel)
 }
+
+func testAccEc2ClientVpnComposeConfig(rName string, config ...string) string {
+	return composeConfig(
+		append(
+			config,
+			testAccEc2ClientVpnEndpointConfig(rName),
+		)...,
+	)
+}

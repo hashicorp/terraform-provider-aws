@@ -263,8 +263,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName string) string {
-	return testAccEc2ClientVpnComposeConfig(rName,
-		testAccEc2ClientVpnVpcBase(rName, 1), `
+	return testAccEc2ClientVpnVpcComposeConfig(rName, 1, `
 resource "aws_ec2_client_vpn_authorization_rule" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   target_network_cidr    = aws_subnet.test[0].cidr_block
@@ -285,9 +284,7 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return testAccEc2ClientVpnComposeConfig(rName,
-		testAccEc2ClientVpnVpcBase(rName, 1),
-		b.String())
+	return testAccEc2ClientVpnVpcComposeConfig(rName, 1, b.String())
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName string, subnetCount int, groupNames map[string]int) string {
@@ -302,9 +299,7 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return testAccEc2ClientVpnComposeConfig(rName,
-		testAccEc2ClientVpnVpcBase(rName, subnetCount),
-		b.String())
+	return testAccEc2ClientVpnVpcComposeConfig(rName, subnetCount, b.String())
 }
 
 func testAccEc2ClientVpnVpcBase(rName string, subnetCount int) string {
@@ -342,11 +337,11 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount)
 }
 
-func testAccEc2ClientVpnComposeConfig(rName string, config ...string) string {
-	return composeConfig(
+func testAccEc2ClientVpnVpcComposeConfig(rName string, subnetCount int, config ...string) string {
+	return testAccEc2ClientVpnComposeConfig(rName,
 		append(
 			config,
-			testAccEc2ClientVpnEndpointConfig(rName),
+			testAccEc2ClientVpnVpcBase(rName, subnetCount),
 		)...,
 	)
 }

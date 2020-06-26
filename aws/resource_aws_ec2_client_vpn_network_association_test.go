@@ -110,8 +110,7 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 }
 
 func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
-	return testAccEc2ClientVpnComposeConfig(rName,
-		testAccEc2ClientVpnVpcBase(rName, 1), `
+	return testAccEc2ClientVpnVpcComposeConfig(rName, 1, `
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test[0].id
