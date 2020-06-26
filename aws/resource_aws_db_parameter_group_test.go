@@ -617,7 +617,7 @@ func TestAccAWSDBParameterGroup_withApplyMethod(t *testing.T) {
 						"apply_method": "immediate",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
-						"name":         "character_set_server",
+						"name":         "character_set_client",
 						"value":        "utf8",
 						"apply_method": "pending-reboot",
 					}),
