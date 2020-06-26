@@ -13,8 +13,8 @@ import (
 
 func TestAccAWSSESEventDestination_basic(t *testing.T) {
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
-	rName3 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test-kinesis")
+	rName3 := acctest.RandomWithPrefix("tf-acc-test-sns")
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
@@ -36,7 +36,7 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 					testAccCheckAwsSESEventDestinationExists(snsDestinationResourceName, &v3),
 					testAccCheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:event-destination/%s", rName1, rName1)),
 					testAccCheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:event-destination/%s", rName1, rName2)),
-					testAccCheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:event-destination/%s", rName1, rName3)),
+					testAccCheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("receipt-rule-set/%s:event-destination/%s", rName1, rName3)),
 					resource.TestCheckResourceAttr(cloudwatchDestinationResourceName, "name", rName1),
 					resource.TestCheckResourceAttr(kinesisDestinationResourceName, "name", rName2),
 					resource.TestCheckResourceAttr(snsDestinationResourceName, "name", rName3),
@@ -66,8 +66,8 @@ func TestAccAWSSESEventDestination_basic(t *testing.T) {
 
 func TestAccAWSSESEventDestination_disappears(t *testing.T) {
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-	rName2 := acctest.RandomWithPrefix("tf-acc-test")
-	rName3 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test-kinesis")
+	rName3 := acctest.RandomWithPrefix("tf-acc-test-sns")
 	cloudwatchDestinationResourceName := "aws_ses_event_destination.cloudwatch"
 	kinesisDestinationResourceName := "aws_ses_event_destination.kinesis"
 	snsDestinationResourceName := "aws_ses_event_destination.sns"
