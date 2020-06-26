@@ -82,6 +82,7 @@ func TestAccAWSFlowLog_VPCID(t *testing.T) {
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`vpc-flow-log/fl-.+`)),
 					testAccCheckAWSFlowLogAttributes(&flowLog),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination", ""),
@@ -338,7 +339,7 @@ func TestAccAWSFlowLog_disappears(t *testing.T) {
 				Config: testAccFlowLogConfig_VPCID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFlowLogExists(resourceName, &flowLog),
-					testAccCheckFlowLogDisappears(&flowLog),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsFlowLog(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -371,18 +372,6 @@ func testAccCheckFlowLogExists(n string, flowLog *ec2.FlowLog) resource.TestChec
 			return nil
 		}
 		return fmt.Errorf("No Flow Logs found for id (%s)", rs.Primary.ID)
-	}
-}
-
-func testAccCheckFlowLogDisappears(flowLog *ec2.FlowLog) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		input := &ec2.DeleteFlowLogsInput{
-			FlowLogIds: []*string{flowLog.FlowLogId},
-		}
-		_, err := conn.DeleteFlowLogs(input)
-
-		return err
 	}
 }
 
@@ -603,15 +592,14 @@ resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
 }
 resource "aws_s3_bucket" "test" {
-	bucket        = %[1]q
-	force_destroy = true
-  }
-
+  bucket        = %[1]q
+  force_destroy = true
+}
 
 resource "aws_flow_log" "test" {
   log_destination      = "${aws_s3_bucket.test.arn}"
   log_destination_type = "s3"
-  iam_role_arn   = "${aws_iam_role.test.arn}"
+  iam_role_arn         = "${aws_iam_role.test.arn}"
 
   traffic_type   = "ALL"
   vpc_id         = "${aws_vpc.test.id}"

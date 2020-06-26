@@ -48,6 +48,7 @@ resource "aws_instance" "foo" {
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Internet Gateway.
+* `arn` - The ARN of the Internet Gateway.
 * `owner_id` - The ID of the AWS account that owns the internet gateway.
 
 

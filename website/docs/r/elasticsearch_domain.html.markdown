@@ -256,6 +256,9 @@ The following arguments are supported:
 * `dedicated_master_count` - (Optional) Number of dedicated master nodes in the cluster
 * `zone_awareness_config` - (Optional) Configuration block containing zone awareness settings. Documented below.
 * `zone_awareness_enabled` - (Optional) Indicates whether zone awareness is enabled, set to `true` for multi-az deployment. To enable awareness with three Availability Zones, the `availability_zone_count` within the `zone_awareness_config` must be set to `3`.
+* `warm_enabled` - (Optional) Indicates whether to enable warm storage.
+* `warm_count` - (Optional) The number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
+* `warm_type` - (Optional) The instance type for the Elasticsearch cluster's warm nodes. Valid values are `ultrawarm1.medium.elasticsearch`, `ultrawarm1.large.elasticsearch` and `ultrawarm1.xlarge.elasticsearch`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
 
 **zone_awareness_config** supports the following attributes:
 

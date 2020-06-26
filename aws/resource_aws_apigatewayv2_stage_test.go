@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
@@ -431,10 +432,9 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettings(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAPIGatewayV2StageDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2StageConfig_routeSettings(rName),
@@ -456,18 +456,22 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettings(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.detailed_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.route_key", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.throttling_burst_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.throttling_rate_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.data_trace_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.detailed_metrics_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.logging_level", "ERROR"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.route_key", "$connect"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.throttling_burst_limit", "2222"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.throttling_rate_limit", "8888"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+						"data_trace_enabled":       "false",
+						"detailed_metrics_enabled": "false",
+						"logging_level":            "OFF",
+						"route_key":                "$default",
+						"throttling_burst_limit":   "0",
+						"throttling_rate_limit":    "0",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+						"data_trace_enabled":       "true",
+						"detailed_metrics_enabled": "true",
+						"logging_level":            "ERROR",
+						"route_key":                "$connect",
+						"throttling_burst_limit":   "2222",
+						"throttling_rate_limit":    "8888",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),

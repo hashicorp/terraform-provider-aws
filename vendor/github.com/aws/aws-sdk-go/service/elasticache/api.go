@@ -6842,6 +6842,9 @@ func (s *BatchStopUpdateActionOutput) SetUnprocessedUpdateActions(v []*Unprocess
 type CacheCluster struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the cache cluster.
+	ARN *string `type:"string"`
+
 	// A flag that enables encryption at-rest when set to true.
 	//
 	// You cannot modify the value of AtRestEncryptionEnabled after the cluster
@@ -7028,6 +7031,12 @@ func (s CacheCluster) String() string {
 // GoString returns the string representation
 func (s CacheCluster) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *CacheCluster) SetARN(v string) *CacheCluster {
+	s.ARN = &v
+	return s
 }
 
 // SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
@@ -7596,6 +7605,9 @@ func (s *CacheNodeUpdateStatus) SetNodeUpdateStatusModifiedDate(v time.Time) *Ca
 type CacheParameterGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the cache parameter group.
+	ARN *string `type:"string"`
+
 	// The name of the cache parameter group family that this cache parameter group
 	// is compatible with.
 	//
@@ -7621,6 +7633,12 @@ func (s CacheParameterGroup) String() string {
 // GoString returns the string representation
 func (s CacheParameterGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *CacheParameterGroup) SetARN(v string) *CacheParameterGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetCacheParameterGroupFamily sets the CacheParameterGroupFamily field's value.
@@ -7728,6 +7746,9 @@ func (s *CacheParameterGroupStatus) SetParameterApplyStatus(v string) *CachePara
 type CacheSecurityGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the cache security group.
+	ARN *string `type:"string"`
+
 	// The name of the cache security group.
 	CacheSecurityGroupName *string `type:"string"`
 
@@ -7750,6 +7771,12 @@ func (s CacheSecurityGroup) String() string {
 // GoString returns the string representation
 func (s CacheSecurityGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *CacheSecurityGroup) SetARN(v string) *CacheSecurityGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetCacheSecurityGroupName sets the CacheSecurityGroupName field's value.
@@ -7819,6 +7846,9 @@ func (s *CacheSecurityGroupMembership) SetStatus(v string) *CacheSecurityGroupMe
 type CacheSubnetGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the cache subnet group.
+	ARN *string `type:"string"`
+
 	// The description of the cache subnet group.
 	CacheSubnetGroupDescription *string `type:"string"`
 
@@ -7841,6 +7871,12 @@ func (s CacheSubnetGroup) String() string {
 // GoString returns the string representation
 func (s CacheSubnetGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *CacheSubnetGroup) SetARN(v string) *CacheSubnetGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetCacheSubnetGroupDescription sets the CacheSubnetGroupDescription field's value.
@@ -9089,6 +9125,8 @@ type CreateReplicationGroupInput struct {
 	// The ID of the KMS key used to encrypt the disk in the cluster.
 	KmsKeyId *string `type:"string"`
 
+	MultiAZEnabled *bool `type:"boolean"`
+
 	// A list of node group (shard) configuration options. Each node group (shard)
 	// configuration has the following members: PrimaryAvailabilityZone, ReplicaAvailabilityZones,
 	// ReplicaCount, and Slots.
@@ -9107,7 +9145,7 @@ type CreateReplicationGroupInput struct {
 	// The Amazon SNS topic owner must be the same as the cluster owner.
 	NotificationTopicArn *string `type:"string"`
 
-	// The number of clusters this replication group initially has.
+	// The number of nodes in the cluster.
 	//
 	// This parameter is not used if there is more than one node group (shard).
 	// You should use ReplicasPerNodeGroup instead.
@@ -9375,6 +9413,12 @@ func (s *CreateReplicationGroupInput) SetGlobalReplicationGroupId(v string) *Cre
 // SetKmsKeyId sets the KmsKeyId field's value.
 func (s *CreateReplicationGroupInput) SetKmsKeyId(v string) *CreateReplicationGroupInput {
 	s.KmsKeyId = &v
+	return s
+}
+
+// SetMultiAZEnabled sets the MultiAZEnabled field's value.
+func (s *CreateReplicationGroupInput) SetMultiAZEnabled(v bool) *CreateReplicationGroupInput {
+	s.MultiAZEnabled = &v
 	return s
 }
 
@@ -12468,6 +12512,9 @@ func (s *GlobalNodeGroup) SetSlots(v string) *GlobalNodeGroup {
 type GlobalReplicationGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the global replication group.
+	ARN *string `type:"string"`
+
 	// A flag that enables encryption at rest when set to true.
 	//
 	// You cannot modify the value of AtRestEncryptionEnabled after the replication
@@ -12527,6 +12574,12 @@ func (s GlobalReplicationGroup) String() string {
 // GoString returns the string representation
 func (s GlobalReplicationGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *GlobalReplicationGroup) SetARN(v string) *GlobalReplicationGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
@@ -13803,6 +13856,8 @@ type ModifyReplicationGroupInput struct {
 	// and create it anew with the earlier engine version.
 	EngineVersion *string `type:"string"`
 
+	MultiAZEnabled *bool `type:"boolean"`
+
 	// Deprecated. This parameter is not used.
 	//
 	// Deprecated: NodeGroupId has been deprecated
@@ -13962,6 +14017,12 @@ func (s *ModifyReplicationGroupInput) SetCacheSecurityGroupNames(v []*string) *M
 // SetEngineVersion sets the EngineVersion field's value.
 func (s *ModifyReplicationGroupInput) SetEngineVersion(v string) *ModifyReplicationGroupInput {
 	s.EngineVersion = &v
+	return s
+}
+
+// SetMultiAZEnabled sets the MultiAZEnabled field's value.
+func (s *ModifyReplicationGroupInput) SetMultiAZEnabled(v bool) *ModifyReplicationGroupInput {
+	s.MultiAZEnabled = &v
 	return s
 }
 
@@ -15342,6 +15403,9 @@ func (s *RemoveTagsFromResourceInput) SetTagKeys(v []*string) *RemoveTagsFromRes
 type ReplicationGroup struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the replication group.
+	ARN *string `type:"string"`
+
 	// A flag that enables encryption at-rest when set to true.
 	//
 	// You cannot modify the value of AtRestEncryptionEnabled after the cluster
@@ -15402,6 +15466,8 @@ type ReplicationGroup struct {
 
 	// The names of all the cache clusters that are part of this replication group.
 	MemberClusters []*string `locationNameList:"ClusterId" type:"list"`
+
+	MultiAZ *string `type:"string" enum:"MultiAZStatus"`
 
 	// A list of node groups in this replication group. For Redis (cluster mode
 	// disabled) replication groups, this is a single-element list. For Redis (cluster
@@ -15464,6 +15530,12 @@ func (s ReplicationGroup) String() string {
 // GoString returns the string representation
 func (s ReplicationGroup) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *ReplicationGroup) SetARN(v string) *ReplicationGroup {
+	s.ARN = &v
+	return s
 }
 
 // SetAtRestEncryptionEnabled sets the AtRestEncryptionEnabled field's value.
@@ -15529,6 +15601,12 @@ func (s *ReplicationGroup) SetKmsKeyId(v string) *ReplicationGroup {
 // SetMemberClusters sets the MemberClusters field's value.
 func (s *ReplicationGroup) SetMemberClusters(v []*string) *ReplicationGroup {
 	s.MemberClusters = v
+	return s
+}
+
+// SetMultiAZ sets the MultiAZ field's value.
+func (s *ReplicationGroup) SetMultiAZ(v string) *ReplicationGroup {
+	s.MultiAZ = &v
 	return s
 }
 
@@ -16358,6 +16436,9 @@ func (s *SlotMigration) SetProgressPercentage(v float64) *SlotMigration {
 type Snapshot struct {
 	_ struct{} `type:"structure"`
 
+	// The ARN (Amazon Resource Name) of the snapshot.
+	ARN *string `type:"string"`
+
 	// This parameter is currently disabled.
 	AutoMinorVersionUpgrade *bool `type:"boolean"`
 
@@ -16527,6 +16608,12 @@ func (s Snapshot) String() string {
 // GoString returns the string representation
 func (s Snapshot) GoString() string {
 	return s.String()
+}
+
+// SetARN sets the ARN field's value.
+func (s *Snapshot) SetARN(v string) *Snapshot {
+	s.ARN = &v
+	return s
 }
 
 // SetAutoMinorVersionUpgrade sets the AutoMinorVersionUpgrade field's value.
@@ -17243,6 +17330,14 @@ const (
 
 	// ChangeTypeRequiresReboot is a ChangeType enum value
 	ChangeTypeRequiresReboot = "requires-reboot"
+)
+
+const (
+	// MultiAZStatusEnabled is a MultiAZStatus enum value
+	MultiAZStatusEnabled = "enabled"
+
+	// MultiAZStatusDisabled is a MultiAZStatus enum value
+	MultiAZStatusDisabled = "disabled"
 )
 
 const (
