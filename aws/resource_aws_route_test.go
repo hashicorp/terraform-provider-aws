@@ -200,26 +200,31 @@ func TestAccAWSRoute_ipv6ToNetworkInterface(t *testing.T) {
 	})
 }
 
-func TestAccAWSRoute_ipv6ToPeeringConnection(t *testing.T) {
+func TestAccAWSRoute_ipv6ToVpcPeeringConnection(t *testing.T) {
 	var route ec2.Route
+	resourceName := "aws_route.test"
+	pcxResourceName := "aws_vpc_peering_connection.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			testAccPreCheck(t)
-		},
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteConfigIpv6PeeringConnection(),
+				Config: testAccAWSRouteConfigIpv6VpcPeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists("aws_route.pc", &route),
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteVpcPeeringConnectionRoute(pcxResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
 				),
 			},
 			{
-				ResourceName:      "aws_route.pc",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc("aws_route.pc"),
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
@@ -513,6 +518,25 @@ func testAccCheckAWSRouteNetworkInterfaceRoute(n string, route *ec2.Route) resou
 	}
 }
 
+func testAccCheckAWSRouteVpcPeeringConnectionRoute(n string, route *ec2.Route) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s\n", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		if gwId := aws.StringValue(route.VpcPeeringConnectionId); gwId != rs.Primary.ID {
+			return fmt.Errorf("VPC Peering Connection ID (Expected=%s, Actual=%s)\n", rs.Primary.ID, gwId)
+		}
+
+		return nil
+	}
+}
+
 func testAccCheckAWSRouteNumberOfRoutes(routeTable *ec2.RouteTable, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len := len(routeTable.Routes); len != n {
@@ -722,38 +746,50 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-func testAccAWSRouteConfigIpv6PeeringConnection() string {
+func testAccAWSRouteConfigIpv6VpcPeeringConnection(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "source" {
   cidr_block                       = "10.0.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-route-ipv6-peering-connection"
+    Name = %[1]q
   }
 }
 
-resource "aws_vpc" "bar" {
+resource "aws_vpc" "target" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_vpc_peering_connection" "foo" {
-  vpc_id      = aws_vpc.foo.id
-  peer_vpc_id = aws_vpc.bar.id
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = aws_vpc.source.id
+  peer_vpc_id = aws_vpc.target.id
   auto_accept = true
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route_table" "peering" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.source.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_route" "pc" {
-  route_table_id              = aws_route_table.peering.id
-  destination_ipv6_cidr_block = aws_vpc.bar.ipv6_cidr_block
-  vpc_peering_connection_id   = aws_vpc_peering_connection.foo.id
+resource "aws_route" "test" {
+  route_table_id              = aws_route_table.test.id
+  destination_ipv6_cidr_block = %[2]q
+  vpc_peering_connection_id   = aws_vpc_peering_connection.test.id
 }
-`)
+`, rName, destinationCidr)
 }
 
 func testAccAWSRouteConfigIpv6EgressOnlyInternetGateway(rName, destinationCidr string) string {
