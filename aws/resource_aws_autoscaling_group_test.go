@@ -4409,10 +4409,10 @@ func TestAccAWSAutoScalingGroup_InstanceRefresh_Triggers(t *testing.T) {
 		UsePlacementGroup       bool
 		ExpectRefreshCount      int
 	}{
-		{2, 0, "t3.nano", true, false, false, false, 0},  // create asg
-		{1, 0, "t3.nano", true, false, false, false, 1},  // drop 1 subnet
-		{0, 2, "t3.nano", true, false, false, false, 2},  // add 2 vpcs, drop subnets
-		{0, 1, "t3.nano", true, false, false, false, 3},  // drop 1 vpc
+		{2, 0, "t3.nano", true, false, false, false, 0},  // create asg with 2 az-s
+		{1, 0, "t3.nano", true, false, false, false, 1},  // drop 1 az
+		{0, 2, "t3.nano", true, false, false, false, 2},  // add 2 subnets, drop az-s
+		{0, 1, "t3.nano", true, false, false, false, 3},  // drop 1 subnet
 		{0, 1, "t3.nano", false, true, false, false, 4},  // drop launch config, add template
 		{0, 1, "t3.micro", false, true, false, false, 5}, // update template
 		{0, 1, "t3.micro", false, false, true, false, 6}, // drop template, add mixed policy
