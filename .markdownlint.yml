@@ -9,7 +9,8 @@ default: true
 MD001: false
 MD004: false
 MD006: false
-MD007: false
+MD007:
+  indent: 4 
 MD009: false
 MD010: false
 MD012: false
