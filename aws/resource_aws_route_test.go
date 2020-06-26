@@ -404,6 +404,106 @@ func TestAccAWSRoute_IPv4_To_NatGateway(t *testing.T) {
 	})
 }
 
+/*
+func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	vgwResourceName := "aws_vpn_gateway.test"
+	instanceResourceName := "aws_instance.test"
+	igwResourceName := "aws_internet_gateway.test"
+	eniResourceName := "aws_network_interface.test"
+	pcxResourceName := "aws_vpc_peering_connection.test"
+	ngwResourceName := "aws_nat_gateway.test"
+	//tgwResourceName := "aws_ec2_transit_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteGatewayRoute(vgwResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "instance_id", instanceResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteInstanceRoute(instanceResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteGatewayRoute(igwResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", igwResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "network_interface_id", eniResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteNetworkInterfaceRoute(eniResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "vpc_peering_connection_id", pcxResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteVpcPeeringConnectionRoute(pcxResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_peering_connection_id", pcxResourceName, "id"),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "nat_gateway_id", ngwResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					testAccCheckAWSRouteNatGatewayRoute(ngwResourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "nat_gateway_id", ngwResourceName, "id"),
+				),
+			},
+			// {
+			// 	Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "transit_gateway_id", tgwResourceName),
+			// 	Check: resource.ComposeTestCheckFunc(
+			// 		testAccCheckAWSRouteExists(resourceName, &route),
+			// 		testAccCheckAWSRouteTransitGatewayRoute(tgwResourceName, &route),
+			// 		resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+			// 		resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+			//      resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
+			// 	),
+			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+*/
+
 func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 	var route ec2.Route
 	var routeTable ec2.RouteTable
@@ -437,7 +537,7 @@ func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
-	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.3.0.0/16"
 
@@ -450,10 +550,10 @@ func TestAccAWSRoute_IPv4_To_TransitGateway(t *testing.T) {
 				Config: testAccAWSRouteConfigIpv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
-					testAccCheckAWSRouteTransitGatewayRoute(transitGatewayResourceName, &route),
+					testAccCheckAWSRouteTransitGatewayRoute(tgwResourceName, &route),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", tgwResourceName, "id"),
 				),
 			},
 			{
@@ -865,7 +965,6 @@ resource "aws_network_interface" "test" {
   }
 }
 
-
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -948,16 +1047,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv6VpcPeeringConnection(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "source" {
-  cidr_block                       = "10.0.0.0/16"
-  assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "target" {
+resource "aws_vpc" "test" {
   cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
@@ -966,8 +1056,17 @@ resource "aws_vpc" "target" {
   }
 }
 
+resource "aws_vpc" "target" {
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id      = aws_vpc.source.id
+  vpc_id      = aws_vpc.test.id
   peer_vpc_id = aws_vpc.target.id
   auto_accept = true
 
@@ -977,7 +1076,7 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.source.id
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -1086,7 +1185,7 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
     Name = %[1]q
@@ -1095,7 +1194,7 @@ resource "aws_vpc" "test" {
 
 resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
+  cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
 
   tags = {
@@ -1352,15 +1451,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv4VpcPeeringConnection(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
-resource "aws_vpc" "source" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "target" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
@@ -1368,8 +1459,16 @@ resource "aws_vpc" "target" {
   }
 }
 
+resource "aws_vpc" "target" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id      = aws_vpc.source.id
+  vpc_id      = aws_vpc.test.id
   peer_vpc_id = aws_vpc.target.id
   auto_accept = true
 
@@ -1379,7 +1478,7 @@ resource "aws_vpc_peering_connection" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.source.id
+  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -1457,3 +1556,146 @@ resource "aws_route" "test" {
 }
 `, rName, destinationCidr)
 }
+
+/*
+func testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, targetAttribute, targetValue string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  blacklisted_zone_ids = ["usw2-az4"]
+  state                = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.current.names[0]
+
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+// resource "aws_ec2_transit_gateway" "test" {
+//   tags = {
+//     Name = %[1]q
+//   }
+// }
+
+// resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
+//   subnet_ids         = [aws_subnet.test.id]
+//   transit_gateway_id = aws_ec2_transit_gateway.test.id
+//   vpc_id             = aws_vpc.test.id
+
+//   tags = {
+//     Name = %[1]q
+//   }
+// }
+
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "target" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.target.id
+  auto_accept = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_eip" "test" {
+  vpc = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_nat_gateway" "test" {
+  allocation_id = aws_eip.test.id
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+
+  %[3]s = %[4]s.id
+}
+`, rName, destinationCidr, targetAttribute, targetValue))
+}
+*/
