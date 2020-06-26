@@ -322,6 +322,10 @@ func dataSourceAwsLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"partition_number": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
 					},
 				},
 			},

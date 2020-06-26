@@ -56,9 +56,12 @@ docscheck:
 		-require-resource-subcategory
 	@misspell -error -source text CHANGELOG.md
 
-lint:
-	@echo "==> Checking source code against linters..."
+lint: golangci-lint awsproviderlint
+
+golangci-lint:
 	@golangci-lint run ./$(PKG_NAME)/...
+
+awsproviderlint:
 	@awsproviderlint \
 		-c 1 \
 		-AT001 \
@@ -67,15 +70,18 @@ lint:
 		-AT006 \
 		-AT007 \
 		-AT008 \
+		-AWSAT001 \
 		-AWSR001 \
 		-AWSR002 \
 		-R002 \
 		-R003 \
 		-R004 \
+		-R005 \
 		-R006 \
 		-R007 \
 		-R008 \
 		-R009 \
+		-R011 \
 		-R012 \
 		-R013 \
 		-R014 \
@@ -84,6 +90,7 @@ lint:
 		-S003 \
 		-S004 \
 		-S005 \
+		-S006 \
 		-S007 \
 		-S008 \
 		-S009 \
@@ -95,9 +102,11 @@ lint:
 		-S015 \
 		-S016 \
 		-S017 \
+		-S018 \
 		-S019 \
 		-S020 \
 		-S021 \
+		-S022 \
 		-S023 \
 		-S024 \
 		-S025 \
@@ -176,5 +185,5 @@ ifeq (,$(wildcard $(GOPATH)/src/$(WEBSITE_REPO)))
 endif
 	@$(MAKE) -C $(GOPATH)/src/$(WEBSITE_REPO) website-provider-test PROVIDER_PATH=$(shell pwd) PROVIDER_NAME=$(PKG_NAME)
 
-.PHONY: build gen sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
+.PHONY: awsproviderlint build gen golangci-lint sweep test testacc fmt fmtcheck lint tools test-compile website website-link-check website-lint website-lint-fix website-test depscheck docscheck
 

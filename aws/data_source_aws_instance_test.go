@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -23,7 +22,7 @@ func TestAccAWSInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ami", resourceName, "ami"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "instance_type", resourceName, "instance_type"),
-					testAccMatchResourceAttrRegionalARN(datasourceName, "arn", "ec2", regexp.MustCompile(`instance/i-.+`)),
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckNoResourceAttr(datasourceName, "user_data_base64"),
 					resource.TestCheckResourceAttr(datasourceName, "outpost_arn", ""),
 				),
@@ -502,17 +501,17 @@ resource "aws_instance" "test" {
 
   tags = {
     Name     = "HelloWorld"
-    TestSeed = "%d"
+    TestSeed = "%[1]d"
   }
 }
 
 data "aws_instance" "test" {
   instance_tags = {
     Name     = "${aws_instance.test.tags["Name"]}"
-    TestSeed = "%d"
+    TestSeed = "%[1]d"
   }
 }
-`, rInt, rInt)
+`, rInt)
 }
 
 // filter on tag, populate more attributes

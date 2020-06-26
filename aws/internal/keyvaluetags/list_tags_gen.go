@@ -38,6 +38,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/aws/aws-sdk-go/service/docdb"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -75,6 +76,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/mediastore"
 	"github.com/aws/aws-sdk-go/service/mq"
 	"github.com/aws/aws-sdk-go/service/neptune"
+	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/aws/aws-sdk-go/service/organizations"
 	"github.com/aws/aws-sdk-go/service/pinpoint"
@@ -86,6 +88,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/aws/aws-sdk-go/service/sfn"
 	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/aws/aws-sdk-go/service/sqs"
@@ -96,6 +99,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 )
 
@@ -675,6 +679,28 @@ func DynamodbListTags(conn *dynamodb.DynamoDB, identifier string) (KeyValueTags,
 	}
 
 	return DynamodbKeyValueTags(output.Tags), nil
+}
+
+// Ec2ListTags lists ec2 service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func Ec2ListTags(conn *ec2.EC2, identifier string) (KeyValueTags, error) {
+	input := &ec2.DescribeTagsInput{
+		Filters: []*ec2.Filter{
+			{
+				Name:   aws.String("resource-id"),
+				Values: []*string{aws.String(identifier)},
+			},
+		},
+	}
+
+	output, err := conn.DescribeTags(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return Ec2KeyValueTags(output.Tags), nil
 }
 
 // EcrListTags lists ecr service tags.
@@ -1306,6 +1332,23 @@ func NeptuneListTags(conn *neptune.Neptune, identifier string) (KeyValueTags, er
 	return NeptuneKeyValueTags(output.TagList), nil
 }
 
+// NetworkmanagerListTags lists networkmanager service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func NetworkmanagerListTags(conn *networkmanager.NetworkManager, identifier string) (KeyValueTags, error) {
+	input := &networkmanager.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return NetworkmanagerKeyValueTags(output.TagList), nil
+}
+
 // OpsworksListTags lists opsworks service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1494,6 +1537,23 @@ func SecurityhubListTags(conn *securityhub.SecurityHub, identifier string) (KeyV
 	return SecurityhubKeyValueTags(output.Tags), nil
 }
 
+// ServicediscoveryListTags lists servicediscovery service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func ServicediscoveryListTags(conn *servicediscovery.ServiceDiscovery, identifier string) (KeyValueTags, error) {
+	input := &servicediscovery.ListTagsForResourceInput{
+		ResourceARN: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return ServicediscoveryKeyValueTags(output.Tags), nil
+}
+
 // SfnListTags lists sfn service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -1663,6 +1723,23 @@ func Wafv2ListTags(conn *wafv2.WAFV2, identifier string) (KeyValueTags, error) {
 	}
 
 	return Wafv2KeyValueTags(output.TagInfoForResource.TagList), nil
+}
+
+// WorklinkListTags lists worklink service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func WorklinkListTags(conn *worklink.WorkLink, identifier string) (KeyValueTags, error) {
+	input := &worklink.ListTagsForResourceInput{
+		ResourceArn: aws.String(identifier),
+	}
+
+	output, err := conn.ListTagsForResource(input)
+
+	if err != nil {
+		return New(nil), err
+	}
+
+	return WorklinkKeyValueTags(output.Tags), nil
 }
 
 // WorkspacesListTags lists workspaces service tags.

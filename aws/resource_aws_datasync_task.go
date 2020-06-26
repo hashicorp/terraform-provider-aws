@@ -139,6 +139,7 @@ func resourceAwsDataSyncTask() *schema.Resource {
 							ValidateFunc: validation.StringInSlice([]string{
 								datasync.VerifyModeNone,
 								datasync.VerifyModePointInTimeConsistent,
+								datasync.VerifyModeOnlyFilesTransferred,
 							}, false),
 						},
 					},
@@ -277,7 +278,7 @@ func resourceAwsDataSyncTaskRead(d *schema.ResourceData, meta interface{}) error
 func resourceAwsDataSyncTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
 
-	if d.HasChange("options") || d.HasChange("name") {
+	if d.HasChanges("options", "name") {
 		input := &datasync.UpdateTaskInput{
 			Options: expandDataSyncOptions(d.Get("options").([]interface{})),
 			Name:    aws.String(d.Get("name").(string)),

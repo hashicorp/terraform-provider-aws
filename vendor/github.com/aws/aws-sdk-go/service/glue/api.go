@@ -11279,6 +11279,98 @@ func (c *Glue) StopTriggerWithContext(ctx aws.Context, input *StopTriggerInput, 
 	return out, req.Send()
 }
 
+const opStopWorkflowRun = "StopWorkflowRun"
+
+// StopWorkflowRunRequest generates a "aws/request.Request" representing the
+// client's request for the StopWorkflowRun operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See StopWorkflowRun for more information on using the StopWorkflowRun
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the StopWorkflowRunRequest method.
+//    req, resp := client.StopWorkflowRunRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopWorkflowRun
+func (c *Glue) StopWorkflowRunRequest(input *StopWorkflowRunInput) (req *request.Request, output *StopWorkflowRunOutput) {
+	op := &request.Operation{
+		Name:       opStopWorkflowRun,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &StopWorkflowRunInput{}
+	}
+
+	output = &StopWorkflowRunOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// StopWorkflowRun API operation for AWS Glue.
+//
+// Stops the execution of the specified workflow run.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation StopWorkflowRun for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * IllegalWorkflowStateException
+//   The workflow is in an invalid state to perform a requested operation.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/StopWorkflowRun
+func (c *Glue) StopWorkflowRun(input *StopWorkflowRunInput) (*StopWorkflowRunOutput, error) {
+	req, out := c.StopWorkflowRunRequest(input)
+	return out, req.Send()
+}
+
+// StopWorkflowRunWithContext is the same as StopWorkflowRun with the addition of
+// the ability to pass a context and additional request options.
+//
+// See StopWorkflowRun for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) StopWorkflowRunWithContext(ctx aws.Context, input *StopWorkflowRunInput, opts ...request.Option) (*StopWorkflowRunOutput, error) {
+	req, out := c.StopWorkflowRunRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opTagResource = "TagResource"
 
 // TagResourceRequest generates a "aws/request.Request" representing the
@@ -14843,8 +14935,9 @@ type Condition struct {
 	// A logical operator.
 	LogicalOperator *string `type:"string" enum:"LogicalOperator"`
 
-	// The condition state. Currently, the values supported are SUCCEEDED, STOPPED,
-	// TIMEOUT, and FAILED.
+	// The condition state. Currently, the only job states that a trigger can listen
+	// for are SUCCEEDED, STOPPED, FAILED, and TIMEOUT. The only crawler states
+	// that a trigger can listen for are SUCCEEDED, FAILED, and CANCELLED.
 	State *string `type:"string" enum:"JobRunState"`
 }
 
@@ -15467,7 +15560,7 @@ type Crawler struct {
 
 	// Crawler configuration information. This versioned JSON string allows users
 	// to specify aspects of a crawler's behavior. For more information, see Configuring
-	// a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// a Crawler (https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// If the crawler is running, contains the total time elapsed since the last
@@ -16157,9 +16250,9 @@ type CreateCrawlerInput struct {
 	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
-	// The crawler configuration information. This versioned JSON string allows
-	// users to specify aspects of a crawler's behavior. For more information, see
-	// Configuring a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// Crawler configuration information. This versioned JSON string allows users
+	// to specify aspects of a crawler's behavior. For more information, see Configuring
+	// a Crawler (https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure to be used by this crawler.
@@ -16182,10 +16275,10 @@ type CreateCrawlerInput struct {
 	// Role is a required field
 	Role *string `type:"string" required:"true"`
 
-	// A cron expression used to specify the schedule. For more information, see
-	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// A cron expression used to specify the schedule (see Time-Based Schedules
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
 
 	// The policy for the crawler's update and deletion behavior.
@@ -16194,8 +16287,10 @@ type CreateCrawlerInput struct {
 	// The table prefix used for catalog tables that are created.
 	TablePrefix *string `type:"string"`
 
-	// The tags to use with this crawler request. You can use tags to limit access
-	// to the crawler. For more information, see AWS Tags in AWS Glue (http://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html).
+	// The tags to use with this crawler request. You may use tags to limit access
+	// to the crawler. For more information about tags in AWS Glue, see AWS Tags
+	// in AWS Glue (https://docs.aws.amazon.com/glue/latest/dg/monitor-tags.html)
+	// in the developer guide.
 	Tags map[string]*string `type:"map"`
 
 	// A list of collection of targets to crawl.
@@ -20218,6 +20313,25 @@ type DynamoDBTarget struct {
 
 	// The name of the DynamoDB table to crawl.
 	Path *string `type:"string"`
+
+	// Indicates whether to scan all the records, or to sample rows from the table.
+	// Scanning all the records can take a long time when the table is not a high
+	// throughput table.
+	//
+	// A value of true means to scan all records, while a value of false means to
+	// sample the records. If no value is specified, the value defaults to true.
+	ScanAll *bool `locationName:"scanAll" type:"boolean"`
+
+	// The percentage of the configured read capacity units to use by the AWS Glue
+	// crawler. Read capacity units is a term defined by DynamoDB, and is a numeric
+	// value that acts as rate limiter for the number of reads that can be performed
+	// on that table per second.
+	//
+	// The valid values are null or a value between 0.1 to 1.5. A null value is
+	// used when user does not provide a value, and defaults to 0.5 of the configured
+	// Read Capacity Unit (for provisioned tables), or 0.25 of the max configured
+	// Read Capacity Unit (for tables using on-demand mode).
+	ScanRate *float64 `locationName:"scanRate" type:"double"`
 }
 
 // String returns the string representation
@@ -20233,6 +20347,18 @@ func (s DynamoDBTarget) GoString() string {
 // SetPath sets the Path field's value.
 func (s *DynamoDBTarget) SetPath(v string) *DynamoDBTarget {
 	s.Path = &v
+	return s
+}
+
+// SetScanAll sets the ScanAll field's value.
+func (s *DynamoDBTarget) SetScanAll(v bool) *DynamoDBTarget {
+	s.ScanAll = &v
+	return s
+}
+
+// SetScanRate sets the ScanRate field's value.
+func (s *DynamoDBTarget) SetScanRate(v float64) *DynamoDBTarget {
+	s.ScanRate = &v
 	return s
 }
 
@@ -24489,7 +24615,9 @@ type GetUserDefinedFunctionsInput struct {
 	// If none is provided, the AWS account ID is used by default.
 	CatalogId *string `min:"1" type:"string"`
 
-	// The name of the catalog database where the functions are located.
+	// The name of the catalog database where the functions are located. If none
+	// is provided, functions from all the databases across the catalog will be
+	// returned.
 	DatabaseName *string `min:"1" type:"string"`
 
 	// The maximum number of functions to return in one response.
@@ -24965,11 +25093,11 @@ type GrokClassifier struct {
 	CreationTime *time.Time `type:"timestamp"`
 
 	// Optional custom grok patterns defined by this classifier. For more information,
-	// see custom patterns in Writing Custom Classifiers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
+	// see custom patterns in Writing Custom Classifiers (https://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
 	CustomPatterns *string `type:"string"`
 
 	// The grok pattern applied to a data store by this classifier. For more information,
-	// see built-in patterns in Writing Custom Classifiers (http://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
+	// see built-in patterns in Writing Custom Classifiers (https://docs.aws.amazon.com/glue/latest/dg/custom-classifier.html).
 	//
 	// GrokPattern is a required field
 	GrokPattern *string `min:"1" type:"string" required:"true"`
@@ -25092,6 +25220,63 @@ func (s *IdempotentParameterMismatchException) StatusCode() int {
 
 // RequestID returns the service's response RequestID for request.
 func (s *IdempotentParameterMismatchException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The workflow is in an invalid state to perform a requested operation.
+type IllegalWorkflowStateException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A message describing the problem.
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s IllegalWorkflowStateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s IllegalWorkflowStateException) GoString() string {
+	return s.String()
+}
+
+func newErrorIllegalWorkflowStateException(v protocol.ResponseMetadata) error {
+	return &IllegalWorkflowStateException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *IllegalWorkflowStateException) Code() string {
+	return "IllegalWorkflowStateException"
+}
+
+// Message returns the exception's message.
+func (s *IllegalWorkflowStateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *IllegalWorkflowStateException) OrigErr() error {
+	return nil
+}
+
+func (s *IllegalWorkflowStateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *IllegalWorkflowStateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *IllegalWorkflowStateException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
@@ -25302,7 +25487,7 @@ type JdbcTarget struct {
 	ConnectionName *string `type:"string"`
 
 	// A list of glob patterns used to exclude from the crawl. For more information,
-	// see Catalog Tables with a Crawler (http://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
+	// see Catalog Tables with a Crawler (https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
 	Exclusions []*string `type:"list"`
 
 	// The path of the JDBC target.
@@ -25833,7 +26018,8 @@ type JobRun struct {
 	// The name of the job definition being used in this run.
 	JobName *string `min:"1" type:"string"`
 
-	// The current state of the job run.
+	// The current state of the job run. For more information about the statuses
+	// of jobs that have terminated abnormally, see AWS Glue Job Run Statuses (https://docs.aws.amazon.com/glue/latest/dg/job-run-statuses.html).
 	JobRunState *string `type:"string" enum:"JobRunState"`
 
 	// The last time that this job run was modified.
@@ -28696,7 +28882,7 @@ type S3Target struct {
 	_ struct{} `type:"structure"`
 
 	// A list of glob patterns used to exclude from the crawl. For more information,
-	// see Catalog Tables with a Crawler (http://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
+	// see Catalog Tables with a Crawler (https://docs.aws.amazon.com/glue/latest/dg/add-crawler.html).
 	Exclusions []*string `type:"list"`
 
 	// The path to the Amazon S3 target.
@@ -28729,10 +28915,10 @@ func (s *S3Target) SetPath(v string) *S3Target {
 type Schedule struct {
 	_ struct{} `type:"structure"`
 
-	// A cron expression used to specify the schedule. For more information, see
-	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// A cron expression used to specify the schedule (see Time-Based Schedules
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	ScheduleExpression *string `type:"string"`
 
 	// The state of the schedule.
@@ -30300,6 +30486,78 @@ func (s StopTriggerOutput) GoString() string {
 func (s *StopTriggerOutput) SetName(v string) *StopTriggerOutput {
 	s.Name = &v
 	return s
+}
+
+type StopWorkflowRunInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the workflow to stop.
+	//
+	// Name is a required field
+	Name *string `min:"1" type:"string" required:"true"`
+
+	// The ID of the workflow run to stop.
+	//
+	// RunId is a required field
+	RunId *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s StopWorkflowRunInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopWorkflowRunInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StopWorkflowRunInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StopWorkflowRunInput"}
+	if s.Name == nil {
+		invalidParams.Add(request.NewErrParamRequired("Name"))
+	}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.RunId == nil {
+		invalidParams.Add(request.NewErrParamRequired("RunId"))
+	}
+	if s.RunId != nil && len(*s.RunId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("RunId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *StopWorkflowRunInput) SetName(v string) *StopWorkflowRunInput {
+	s.Name = &v
+	return s
+}
+
+// SetRunId sets the RunId field's value.
+func (s *StopWorkflowRunInput) SetRunId(v string) *StopWorkflowRunInput {
+	s.RunId = &v
+	return s
+}
+
+type StopWorkflowRunOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s StopWorkflowRunOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StopWorkflowRunOutput) GoString() string {
+	return s.String()
 }
 
 // Describes the physical storage of table data.
@@ -32068,9 +32326,9 @@ type UpdateCrawlerInput struct {
 	// always override the default classifiers for a given classification.
 	Classifiers []*string `type:"list"`
 
-	// The crawler configuration information. This versioned JSON string allows
-	// users to specify aspects of a crawler's behavior. For more information, see
-	// Configuring a Crawler (http://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
+	// Crawler configuration information. This versioned JSON string allows users
+	// to specify aspects of a crawler's behavior. For more information, see Configuring
+	// a Crawler (https://docs.aws.amazon.com/glue/latest/dg/crawler-configuration.html).
 	Configuration *string `type:"string"`
 
 	// The name of the SecurityConfiguration structure to be used by this crawler.
@@ -32091,10 +32349,10 @@ type UpdateCrawlerInput struct {
 	// the new crawler to access customer resources.
 	Role *string `type:"string"`
 
-	// A cron expression used to specify the schedule. For more information, see
-	// Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// A cron expression used to specify the schedule (see Time-Based Schedules
+	// for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
 
 	// The policy for the crawler's update and deletion behavior.
@@ -32226,10 +32484,10 @@ type UpdateCrawlerScheduleInput struct {
 	// CrawlerName is a required field
 	CrawlerName *string `min:"1" type:"string" required:"true"`
 
-	// The updated cron expression used to specify the schedule. For more information,
-	// see Time-Based Schedules for Jobs and Crawlers (http://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
-	// For example, to run something every day at 12:15 UTC, specify cron(15 12
-	// * * ? *).
+	// The updated cron expression used to specify the schedule (see Time-Based
+	// Schedules for Jobs and Crawlers (https://docs.aws.amazon.com/glue/latest/dg/monitor-data-warehouse-schedule.html).
+	// For example, to run something every day at 12:15 UTC, you would specify:
+	// cron(15 12 * * ? *).
 	Schedule *string `type:"string"`
 }
 
@@ -33571,6 +33829,9 @@ type UserDefinedFunction struct {
 	// The time at which the function was created.
 	CreateTime *time.Time `type:"timestamp"`
 
+	// The name of the database where the function resides.
+	DatabaseName *string `min:"1" type:"string"`
+
 	// The name of the function.
 	FunctionName *string `min:"1" type:"string"`
 
@@ -33603,6 +33864,12 @@ func (s *UserDefinedFunction) SetClassName(v string) *UserDefinedFunction {
 // SetCreateTime sets the CreateTime field's value.
 func (s *UserDefinedFunction) SetCreateTime(v time.Time) *UserDefinedFunction {
 	s.CreateTime = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *UserDefinedFunction) SetDatabaseName(v string) *UserDefinedFunction {
+	s.DatabaseName = &v
 	return s
 }
 
@@ -34291,11 +34558,14 @@ const (
 	// CrawlStateRunning is a CrawlState enum value
 	CrawlStateRunning = "RUNNING"
 
-	// CrawlStateSucceeded is a CrawlState enum value
-	CrawlStateSucceeded = "SUCCEEDED"
+	// CrawlStateCancelling is a CrawlState enum value
+	CrawlStateCancelling = "CANCELLING"
 
 	// CrawlStateCancelled is a CrawlState enum value
 	CrawlStateCancelled = "CANCELLED"
+
+	// CrawlStateSucceeded is a CrawlState enum value
+	CrawlStateSucceeded = "SUCCEEDED"
 
 	// CrawlStateFailed is a CrawlState enum value
 	CrawlStateFailed = "FAILED"
@@ -34654,4 +34924,10 @@ const (
 
 	// WorkflowRunStatusCompleted is a WorkflowRunStatus enum value
 	WorkflowRunStatusCompleted = "COMPLETED"
+
+	// WorkflowRunStatusStopping is a WorkflowRunStatus enum value
+	WorkflowRunStatusStopping = "STOPPING"
+
+	// WorkflowRunStatusStopped is a WorkflowRunStatus enum value
+	WorkflowRunStatusStopped = "STOPPED"
 )

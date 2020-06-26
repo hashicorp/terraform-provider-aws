@@ -9,6 +9,9 @@ import (
 )
 
 func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
+	resourceName := "aws_ebs_volume.test"
+	dataSourceName := "data.aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -16,12 +19,12 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsEbsVolumeDataSourceConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsVolumeDataSourceID("data.aws_ebs_volume.ebs_volume"),
-					resource.TestCheckResourceAttrSet("data.aws_ebs_volume.ebs_volume", "arn"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "size", "40"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.%", "1"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.Name", "External Volume"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "outpost_arn", ""),
+					testAccCheckAwsEbsVolumeDataSourceID(dataSourceName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "outpost_arn", resourceName, "outpost_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "multi_attach_enabled", resourceName, "multi_attach_enabled"),
 				),
 			},
 		},
@@ -29,6 +32,9 @@ func TestAccAWSEbsVolumeDataSource_basic(t *testing.T) {
 }
 
 func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
+	resourceName := "aws_ebs_volume.test"
+	dataSourceName := "data.aws_ebs_volume.test"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -36,11 +42,10 @@ func TestAccAWSEbsVolumeDataSource_multipleFilters(t *testing.T) {
 			{
 				Config: testAccCheckAwsEbsVolumeDataSourceConfigWithMultipleFilters,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEbsVolumeDataSourceID("data.aws_ebs_volume.ebs_volume"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "size", "10"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "volume_type", "gp2"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.%", "1"),
-					resource.TestCheckResourceAttr("data.aws_ebs_volume.ebs_volume", "tags.Name", "External Volume 1"),
+					testAccCheckAwsEbsVolumeDataSourceID(dataSourceName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "size", resourceName, "size"),
+					resource.TestCheckResourceAttr(dataSourceName, "volume_type", "gp2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 				),
 			},
 		},
@@ -71,7 +76,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_ebs_volume" "example" {
+resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 40
@@ -80,7 +85,7 @@ resource "aws_ebs_volume" "example" {
   }
 }
 
-data "aws_ebs_volume" "ebs_volume" {
+data "aws_ebs_volume" "test" {
   most_recent = true
   filter {
     name = "tag:Name"
@@ -88,7 +93,7 @@ data "aws_ebs_volume" "ebs_volume" {
   }
   filter {
     name = "volume-type"
-    values = ["${aws_ebs_volume.example.type}"]
+    values = ["${aws_ebs_volume.test.type}"]
   }
 }
 `
@@ -103,7 +108,7 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_ebs_volume" "external1" {
+resource "aws_ebs_volume" "test" {
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
   type = "gp2"
   size = 10
@@ -112,7 +117,7 @@ resource "aws_ebs_volume" "external1" {
   }
 }
 
-data "aws_ebs_volume" "ebs_volume" {
+data "aws_ebs_volume" "test" {
   most_recent = true
   filter {
     name = "tag:Name"
@@ -120,11 +125,11 @@ data "aws_ebs_volume" "ebs_volume" {
   }
   filter {
     name = "size"
-    values = ["${aws_ebs_volume.external1.size}"]
+    values = ["${aws_ebs_volume.test.size}"]
   }
   filter {
     name = "volume-type"
-    values = ["${aws_ebs_volume.external1.type}"]
+    values = ["${aws_ebs_volume.test.type}"]
   }
 }
 `

@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
@@ -157,33 +156,15 @@ func TestAccDataSourceAwsEip_Instance(t *testing.T) {
 }
 
 func TestAccDataSourceAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
-	// Hide Outposts testing behind consistent environment variable
-	outpostArn := os.Getenv("AWS_OUTPOST_ARN")
-	if outpostArn == "" {
-		t.Skip(
-			"Environment variable AWS_OUTPOST_ARN is not set. " +
-				"This environment variable must be set to the ARN of " +
-				"a deployed Outpost to enable this test.")
-	}
-
-	// Local Gateway Route Table ID filtering in DescribeCoipPools is not currently working
-	poolId := os.Getenv("AWS_COIP_POOL_ID")
-	if poolId == "" {
-		t.Skip(
-			"Environment variable AWS_COIP_POOL_ID is not set. " +
-				"This environment variable must be set to the ID of " +
-				"a deployed Coip Pool to enable this test.")
-	}
-
 	dataSourceName := "data.aws_eip.test"
 	resourceName := "aws_eip.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool(poolId),
+				Config: testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ipv4_pool", dataSourceName, "customer_owned_ipv4_pool"),
 					resource.TestCheckResourceAttrPair(resourceName, "customer_owned_ip", dataSourceName, "customer_owned_ip"),
@@ -193,17 +174,19 @@ func TestAccDataSourceAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
 	})
 }
 
-func testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool(customerOwnedIpv4Pool string) string {
-	return fmt.Sprintf(`
+func testAccDataSourceAWSEIPConfigCustomerOwnedIpv4Pool() string {
+	return `
+data "aws_ec2_coip_pools" "test" {}
+
 resource "aws_eip" "test" {
-  customer_owned_ipv4_pool = %[1]q
+  customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
   vpc                      = true
 }
 
 data "aws_eip" "test" {
   id = aws_eip.test.id
 }
-`, customerOwnedIpv4Pool)
+`
 }
 
 func testAccDataSourceAwsEipConfigFilter(rName string) string {

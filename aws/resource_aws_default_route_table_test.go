@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
@@ -247,6 +248,46 @@ func TestAccAWSDefaultRouteTable_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_default_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDefaultRouteTableConfigConditionalIpv4Ipv6(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      "0.0.0.0/0",
+						"ipv6_cidr_block": "",
+					}),
+				),
+			},
+			{
+				Config: testAccAWSDefaultRouteTableConfigConditionalIpv4Ipv6(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      "",
+						"ipv6_cidr_block": "::/0",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSDefaultRouteTableImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -611,6 +652,57 @@ resource "aws_default_route_table" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccAWSDefaultRouteTableConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+locals {
+  ipv6             = %[2]t
+  destination      = "0.0.0.0/0"
+  destination_ipv6 = "::/0"
+}
+
+resource "aws_default_route_table" "test" {
+  default_route_table_id = "${aws_vpc.test.default_route_table_id}"
+
+  route {
+    cidr_block      = "${local.ipv6 ? "" : local.destination}"
+    ipv6_cidr_block = "${local.ipv6 ? local.destination_ipv6 : ""}"
+    gateway_id      = "${aws_internet_gateway.test.id}"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipv6Route)
 }
 
 func testAccAWSDefaultRouteTableImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {

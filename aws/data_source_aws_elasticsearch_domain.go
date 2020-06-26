@@ -22,6 +22,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 			"advanced_options": {
 				Type:     schema.TypeMap,
 				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"domain_name": {
 				Type:     schema.TypeString,
@@ -136,6 +137,18 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 							Type:     schema.TypeBool,
 							Computed: true,
 						},
+						"warm_enabled": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"warm_count": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"warm_type": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -237,7 +250,7 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 			},
 			"processing": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeBool,
 				Computed: true,
 			},
 

@@ -38,6 +38,7 @@ func resourceAwsGlueTrigger() *schema.Resource {
 						"arguments": {
 							Type:     schema.TypeMap,
 							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"crawler_name": {
 							Type:     schema.TypeString,
@@ -302,10 +303,7 @@ func resourceAwsGlueTriggerRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsGlueTriggerUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).glueconn
 
-	if d.HasChange("actions") ||
-		d.HasChange("description") ||
-		d.HasChange("predicate") ||
-		d.HasChange("schedule") {
+	if d.HasChanges("actions", "description", "predicate", "schedule") {
 		triggerUpdate := &glue.TriggerUpdate{
 			Actions: expandGlueActions(d.Get("actions").([]interface{})),
 		}
