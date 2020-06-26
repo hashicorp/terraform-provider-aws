@@ -438,7 +438,7 @@ func TestAccAwsWafv2WebACL_Tags(t *testing.T) {
 }
 
 // Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/13862
-func TestAccAwsWafv2WebACL_MaxNestedStatements(t *testing.T) {
+func TestAccAwsWafv2WebACL_MaxNestedRateBasedStatements(t *testing.T) {
 	var v wafv2.WebACL
 	webACLName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_wafv2_web_acl.test"
@@ -449,7 +449,7 @@ func TestAccAwsWafv2WebACL_MaxNestedStatements(t *testing.T) {
 		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAwsWafv2WebACLConfig_multipleNestedStatements(webACLName),
+				Config: testAccAwsWafv2WebACLConfig_multipleNestedRateBasedStatements(webACLName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
@@ -467,6 +467,48 @@ func TestAccAwsWafv2WebACL_MaxNestedStatements(t *testing.T) {
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "2",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#":            "1",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsWafv2WebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
+func TestAccAwsWafv2WebACL_MaxNestedOperatorStatements(t *testing.T) {
+	var v wafv2.WebACL
+	webACLName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsWafv2WebACLDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAwsWafv2WebACLConfig_multipleNestedOperatorStatements(webACLName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsWafv2WebACLExists(resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                                                                    "1",
+						"statement.0.and_statement.#":                                                                    "1",
+						"statement.0.and_statement.0.statement.#":                                                        "2",
+						"statement.0.and_statement.0.statement.0.not_statement.#":                                        "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.#":                            "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.#":             "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "2",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
+						"statement.0.and_statement.0.statement.0.not_statement.0.statement.0.or_statement.0.statement.1.ip_set_reference_statement.#":            "1",
+						"statement.0.and_statement.0.statement.1.geo_match_statement.#":                                                                          "1",
+						"statement.0.and_statement.0.statement.1.geo_match_statement.0.country_codes.0":                                                          "NL",
 					}),
 				),
 			},
@@ -1152,7 +1194,7 @@ resource "aws_wafv2_web_acl" "test" {
 `, name, tag1Key, tag1Value, tag2Key, tag2Value)
 }
 
-func testAccAwsWafv2WebACLConfig_multipleNestedStatements(name string) string {
+func testAccAwsWafv2WebACLConfig_multipleNestedRateBasedStatements(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
 	name = "%[1]s"
@@ -1216,6 +1258,91 @@ resource "aws_wafv2_web_acl" "test" {
             }
           }
         }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "waf"
+    sampled_requests_enabled   = false
+  }
+}
+`, name)
+}
+
+func testAccAwsWafv2WebACLConfig_multipleNestedOperatorStatements(name string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_regex_pattern_set" "test" {
+	name = "%[1]s"
+	scope = "REGIONAL"
+	regular_expression {
+		regex_string = "one"
+	}
+}
+
+resource "aws_wafv2_ip_set" "test" {
+	name = "%[1]s"
+	scope = "REGIONAL"
+	ip_address_version = "IPV4"
+	addresses = ["1.2.3.4/32", "5.6.7.8/32"]
+}
+
+resource "aws_wafv2_web_acl" "test" {
+  name        = "%[1]s"
+  description = "%[1]s"
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule"
+    priority = 0
+
+    action {
+      block {}
+    }
+
+    statement {
+      and_statement {
+		statement {
+  		  not_statement {
+            statement {
+              or_statement {
+                statement {
+                  regex_pattern_set_reference_statement {
+                    arn = aws_wafv2_regex_pattern_set.test.arn
+                    field_to_match {
+                      uri_path {}
+                    }
+                    text_transformation {
+                      type     = "LOWERCASE"
+                      priority = 1
+                    }
+                  }
+                }
+                statement {
+                  ip_set_reference_statement {
+                    arn = aws_wafv2_ip_set.test.arn
+                  }
+                }
+              }
+            }
+          }
+        }
+        statement {
+		  geo_match_statement {
+       	    country_codes = ["NL"]
+          }
+		}
       }
     }
 
