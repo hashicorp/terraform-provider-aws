@@ -160,7 +160,7 @@ In addition to all arguments above, the following attributes are exported:
 
 `connect_settings` (for `ADConnector`) is also exported with the following attributes:
 
- * `connect_ips` - The IP addresses of the AD Connector servers.
+* `connect_ips` - The IP addresses of the AD Connector servers.
 
 ## Import
 
