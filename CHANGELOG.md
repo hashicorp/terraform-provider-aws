@@ -1,5 +1,13 @@
 ## 2.69.0 (Unreleased)
 
+NOTES:
+
+* data-source/aws_availability_zones: The `blacklisted_names` and `blacklisted_zone_ids` arguments have been deprecated in preference for `exclude_names` and `exclude_zone_ids` respectively. [GH-13771]
+
+ENHANCEMENTS:
+
+* data-source/aws_availability_zones: Add `exclude_names` and `exclude_zone_ids` arguments [GH-13771]
+
 BUG FIXES:
 
 * resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state [GH-13928]
