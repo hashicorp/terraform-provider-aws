@@ -1197,18 +1197,18 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_multipleNestedRateBasedStatements(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-	name = "%[1]s"
-	scope = "REGIONAL"
-	regular_expression {
-		regex_string = "one"
-	}
+  name  = "%[1]s"
+  scope = "REGIONAL"
+  regular_expression {
+    regex_string = "one"
+  }
 }
 
 resource "aws_wafv2_ip_set" "test" {
-	name = "%[1]s"
-	scope = "REGIONAL"
-	ip_address_version = "IPV4"
-	addresses = ["1.2.3.4/32", "5.6.7.8/32"]
+  name               = "%[1]s"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 }
 
 resource "aws_wafv2_web_acl" "test" {
@@ -1234,7 +1234,7 @@ resource "aws_wafv2_web_acl" "test" {
         aggregate_key_type = "IP"
 
         scope_down_statement {
-  		  not_statement {
+          not_statement {
             statement {
               or_statement {
                 statement {
@@ -1280,18 +1280,18 @@ resource "aws_wafv2_web_acl" "test" {
 func testAccAwsWafv2WebACLConfig_multipleNestedOperatorStatements(name string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_regex_pattern_set" "test" {
-	name = "%[1]s"
-	scope = "REGIONAL"
-	regular_expression {
-		regex_string = "one"
-	}
+  name  = "%[1]s"
+  scope = "REGIONAL"
+  regular_expression {
+    regex_string = "one"
+  }
 }
 
 resource "aws_wafv2_ip_set" "test" {
-	name = "%[1]s"
-	scope = "REGIONAL"
-	ip_address_version = "IPV4"
-	addresses = ["1.2.3.4/32", "5.6.7.8/32"]
+  name               = "%[1]s"
+  scope              = "REGIONAL"
+  ip_address_version = "IPV4"
+  addresses          = ["1.2.3.4/32", "5.6.7.8/32"]
 }
 
 resource "aws_wafv2_web_acl" "test" {
@@ -1313,8 +1313,8 @@ resource "aws_wafv2_web_acl" "test" {
 
     statement {
       and_statement {
-		statement {
-  		  not_statement {
+        statement {
+          not_statement {
             statement {
               or_statement {
                 statement {
@@ -1339,10 +1339,10 @@ resource "aws_wafv2_web_acl" "test" {
           }
         }
         statement {
-		  geo_match_statement {
-       	    country_codes = ["NL"]
+          geo_match_statement {
+            country_codes = ["NL"]
           }
-		}
+        }
       }
     }
 
