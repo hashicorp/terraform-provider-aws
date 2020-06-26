@@ -9,7 +9,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -808,30 +807,40 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 
 	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
 		LaunchTemplateId: aws.String(d.Id()),
-		MaxResults:       aws.Int64(1),
+		Versions:         aws.StringSlice([]string{"$Latest"}),
 	})
 	if err != nil {
-		return err
+		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template(%s): %w", d.Id(), err)
+	}
+	if dltv == nil || len(dltv.LaunchTemplateVersions) == 0 {
+		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template(%s): empty output", d.Id())
 	}
 
-	defaultVersion := strconv.FormatInt(aws.Int64Value(dltv.LaunchTemplateVersions[0].VersionNumber), 10)
-	if awsutil.Prettify(launchTemplateData) != awsutil.Prettify(dltv.LaunchTemplateVersions[0].LaunchTemplateData) {
+	// Create new version only if content has changed since previous version
+	var defaultVersion string
+	var output *ec2.CreateLaunchTemplateVersionOutput
+
+	description := d.Get("description").(string)
+	latestVersionDescription := aws.StringValue(dltv.LaunchTemplateVersions[0].VersionDescription)
+
+	if (launchTemplateData.String() != dltv.LaunchTemplateVersions[0].LaunchTemplateData.String()) || (description != latestVersionDescription) {
 		launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
 			ClientToken:        aws.String(resource.UniqueId()),
 			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
 		}
 
-		if v, ok := d.GetOk("description"); ok && v.(string) != "" {
-			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
+		if description != "" {
+			launchTemplateVersionOpts.VersionDescription = aws.String(description)
 		}
 
-		createVersion, createErr := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
-		if createErr != nil {
-			return createErr
+		output, err = conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
+		if err != nil {
+			return fmt.Errorf("Error creating new Launch Template Version for Launch Template(%s): %w", d.Id(), err)
 		}
-		if v, vOk := d.GetOk("update_default_version"); vOk && v.(bool) {
-			defaultVersion = strconv.FormatInt(aws.Int64Value(createVersion.LaunchTemplateVersion.VersionNumber), 10)
+
+		if v, ok := d.GetOk("update_default_version"); ok && v.(bool) {
+			defaultVersion = strconv.FormatInt(aws.Int64Value(output.LaunchTemplateVersion.VersionNumber), 10)
 		}
 	}
 
@@ -839,13 +848,15 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 		defaultVersion = strconv.Itoa(d.Get("default_version").(int))
 	}
 
-	modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
-		LaunchTemplateId: aws.String(d.Id()),
-		DefaultVersion:   aws.String(defaultVersion),
-	}
-	_, modifyErr := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
-	if modifyErr != nil {
-		return modifyErr
+	if defaultVersion != "" {
+		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
+			LaunchTemplateId: aws.String(d.Id()),
+			DefaultVersion:   aws.String(defaultVersion),
+		}
+		_, err = conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+		if err != nil {
+			return fmt.Errorf("Error updating launch template (%s): %w", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("tags") {
