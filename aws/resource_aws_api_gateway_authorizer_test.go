@@ -255,30 +255,6 @@ func TestAccAWSAPIGatewayAuthorizer_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAWSAPIGatewayAuthorizerDisappears(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No resource ID is set")
-		}
-		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
-		authorizerId := rs.Primary.ID
-		restApiId := rs.Primary.Attributes["rest_api_id"]
-
-		input := &apigateway.DeleteAuthorizerInput{
-			AuthorizerId: aws.String(authorizerId),
-			RestApiId:    aws.String(restApiId),
-		}
-		_, err := conn.DeleteAuthorizer(input)
-
-		return err
-	}
-}
-
 func testAccCheckAWSAPIGatewayAuthorizerExists(n string, res *apigateway.Authorizer) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
