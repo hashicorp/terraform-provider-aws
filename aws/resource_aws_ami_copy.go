@@ -222,22 +222,6 @@ func resourceAwsAmiCopy() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"product_codes": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"product_code_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"product_code_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
 		},
 
 		// The remaining operations are shared with the generic aws_ami resource,
