@@ -31,7 +31,6 @@ In addition to the arguments, which are exported, the following attributes are e
 * `id` - The SES receipt rule set name.
 * `arn` - The SES receipt rule set ARN.
 
-
 ## Import
 
 SES receipt rule sets can be imported using the rule set name.
