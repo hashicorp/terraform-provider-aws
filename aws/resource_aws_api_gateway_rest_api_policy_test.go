@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"testing"
-	
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
