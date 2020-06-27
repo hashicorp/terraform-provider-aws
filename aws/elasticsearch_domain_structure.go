@@ -9,32 +9,34 @@ func expandAdvancedSecurityOptions(m []interface{}) *elasticsearch.AdvancedSecur
 	config := elasticsearch.AdvancedSecurityOptionsInput{}
 	group := m[0].(map[string]interface{})
 
-	if v, ok := group["enabled"].(bool); ok {
-		config.Enabled = aws.Bool(v)
-	}
+	if advancedSecurityEnabled, ok := group["enabled"]; ok {
+		config.Enabled = aws.Bool(advancedSecurityEnabled.(bool))
 
-	if v, ok := group["internal_user_database_enabled"].(bool); ok {
-		config.InternalUserDatabaseEnabled = aws.Bool(v)
-	}
-
-	if v, ok := group["master_user_options"].([]interface{}); ok {
-		if len(v) > 0 && v[0] != nil {
-			muo := elasticsearch.MasterUserOptions{}
-			masterUserOptions := v[0].(map[string]interface{})
-
-			if v, ok := masterUserOptions["master_user_arn"].(string); ok && v != "" {
-				muo.MasterUserARN = aws.String(v)
+		if advancedSecurityEnabled.(bool) {
+			if v, ok := group["internal_user_database_enabled"].(bool); ok {
+				config.InternalUserDatabaseEnabled = aws.Bool(v)
 			}
 
-			if v, ok := masterUserOptions["master_user_name"].(string); ok && v != "" {
-				muo.MasterUserName = aws.String(v)
-			}
+			if v, ok := group["master_user_options"].([]interface{}); ok {
+				if len(v) > 0 && v[0] != nil {
+					muo := elasticsearch.MasterUserOptions{}
+					masterUserOptions := v[0].(map[string]interface{})
 
-			if v, ok := masterUserOptions["master_user_password"].(string); ok && v != "" {
-				muo.MasterUserPassword = aws.String(v)
-			}
+					if v, ok := masterUserOptions["master_user_arn"].(string); ok && v != "" {
+						muo.MasterUserARN = aws.String(v)
+					}
 
-			config.SetMasterUserOptions(&muo)
+					if v, ok := masterUserOptions["master_user_name"].(string); ok && v != "" {
+						muo.MasterUserName = aws.String(v)
+					}
+
+					if v, ok := masterUserOptions["master_user_password"].(string); ok && v != "" {
+						muo.MasterUserPassword = aws.String(v)
+					}
+
+					config.SetMasterUserOptions(&muo)
+				}
+			}
 		}
 	}
 
