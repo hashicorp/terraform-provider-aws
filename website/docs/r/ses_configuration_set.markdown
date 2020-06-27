@@ -43,6 +43,13 @@ The `delivery_options` configuration block supports the following argument:
 
 * `tls_policy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). If the value is `Require`, messages are only delivered if a TLS connection can be established. If the value is `Optional`, messages can be delivered in plain text if a TLS connection can't be established. Valid values: `Require` or `Optional`. Defaults to `Optional`.
 
+## Attributes Reference
+
+In addition to the arguments, which are exported, the following attributes are exported:
+
+* `id` - The SES configuration set name.
+* `arn` - The SES configuration set ARN.
+
 ## Import
 
 SES Configuration Sets can be imported using their `name`, e.g.
