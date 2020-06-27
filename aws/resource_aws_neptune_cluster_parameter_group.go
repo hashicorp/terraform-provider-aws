@@ -195,10 +195,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
-		parameters, err := expandNeptuneParameters(ns.Difference(os).List())
-		if err != nil {
-			return err
-		}
+		parameters := expandNeptuneParameters(ns.Difference(os).List())
 
 		if len(parameters) > 0 {
 			// We can only modify 20 parameters at a time, so walk them until
@@ -217,7 +214,7 @@ func resourceAwsNeptuneClusterParameterGroupUpdate(d *schema.ResourceData, meta 
 				}
 
 				log.Printf("[DEBUG] Modify Neptune Cluster Parameter Group: %s", modifyOpts)
-				_, err = conn.ModifyDBClusterParameterGroup(&modifyOpts)
+				_, err := conn.ModifyDBClusterParameterGroup(&modifyOpts)
 				if err != nil {
 					return fmt.Errorf("Error modifying Neptune Cluster Parameter Group: %s", err)
 				}

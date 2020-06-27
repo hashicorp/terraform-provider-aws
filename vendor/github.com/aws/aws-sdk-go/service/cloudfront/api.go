@@ -87,7 +87,7 @@ func (c *CloudFront) CreateCloudFrontOriginAccessIdentityRequest(input *CreateCl
 //   access identities allowed.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -234,7 +234,7 @@ func (c *CloudFront) CreateDistributionRequest(input *CreateDistributionInput) (
 //   A response code is not valid.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidRequiredProtocol "InvalidRequiredProtocol"
 //   This operation requires the HTTPS protocol. Ensure that you specify the HTTPS
@@ -462,7 +462,7 @@ func (c *CloudFront) CreateDistributionWithTagsRequest(input *CreateDistribution
 //   A response code is not valid.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidRequiredProtocol "InvalidRequiredProtocol"
 //   This operation requires the HTTPS protocol. Ensure that you specify the HTTPS
@@ -643,7 +643,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionConfigRequest(input *CreateFieldL
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchFieldLevelEncryptionProfile "NoSuchFieldLevelEncryptionProfile"
 //   The specified profile for field-level encryption doesn't exist.
@@ -746,7 +746,7 @@ func (c *CloudFront) CreateFieldLevelEncryptionProfileRequest(input *CreateField
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchPublicKey "NoSuchPublicKey"
 //   The specified public key doesn't exist.
@@ -852,7 +852,7 @@ func (c *CloudFront) CreateInvalidationRequest(input *CreateInvalidationInput) (
 //   header is set.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchDistribution "NoSuchDistribution"
 //   The specified distribution does not exist.
@@ -948,7 +948,7 @@ func (c *CloudFront) CreatePublicKeyRequest(input *CreatePublicKeyInput) (req *r
 //   The specified public key already exists.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeTooManyPublicKeys "TooManyPublicKeys"
 //   The maximum number of public keys for field-level encryption have been created.
@@ -1092,7 +1092,7 @@ func (c *CloudFront) CreateStreamingDistributionRequest(input *CreateStreamingDi
 //   distributions allowed.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -1208,7 +1208,7 @@ func (c *CloudFront) CreateStreamingDistributionWithTagsRequest(input *CreateStr
 //   distributions allowed.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -1303,7 +1303,7 @@ func (c *CloudFront) DeleteCloudFrontOriginAccessIdentityRequest(input *DeleteCl
 //   The specified origin access identity does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeOriginAccessIdentityInUse "CloudFrontOriginAccessIdentityInUse"
@@ -1400,7 +1400,7 @@ func (c *CloudFront) DeleteDistributionRequest(input *DeleteDistributionInput) (
 //   The specified distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteDistribution
@@ -1490,7 +1490,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionConfigRequest(input *DeleteFieldL
 //   The specified configuration for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeFieldLevelEncryptionConfigInUse "FieldLevelEncryptionConfigInUse"
@@ -1583,7 +1583,7 @@ func (c *CloudFront) DeleteFieldLevelEncryptionProfileRequest(input *DeleteField
 //   The specified profile for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeFieldLevelEncryptionProfileInUse "FieldLevelEncryptionProfileInUse"
@@ -1679,7 +1679,7 @@ func (c *CloudFront) DeletePublicKeyRequest(input *DeletePublicKeyInput) (req *r
 //   The specified public key doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeletePublicKey
@@ -1808,7 +1808,7 @@ func (c *CloudFront) DeleteStreamingDistributionRequest(input *DeleteStreamingDi
 //   The specified streaming distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/DeleteStreamingDistribution
@@ -2964,7 +2964,7 @@ func (c *CloudFront) ListCloudFrontOriginAccessIdentitiesRequest(input *ListClou
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListCloudFrontOriginAccessIdentities
 func (c *CloudFront) ListCloudFrontOriginAccessIdentities(input *ListCloudFrontOriginAccessIdentitiesInput) (*ListCloudFrontOriginAccessIdentitiesOutput, error) {
@@ -3101,7 +3101,7 @@ func (c *CloudFront) ListDistributionsRequest(input *ListDistributionsInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListDistributions
 func (c *CloudFront) ListDistributions(input *ListDistributionsInput) (*ListDistributionsOutput, error) {
@@ -3232,7 +3232,7 @@ func (c *CloudFront) ListDistributionsByWebACLIdRequest(input *ListDistributions
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidWebACLId "InvalidWebACLId"
 //   A web ACL ID specified is not valid. To specify a web ACL created using the
@@ -3318,7 +3318,7 @@ func (c *CloudFront) ListFieldLevelEncryptionConfigsRequest(input *ListFieldLeve
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionConfigs
 func (c *CloudFront) ListFieldLevelEncryptionConfigs(input *ListFieldLevelEncryptionConfigsInput) (*ListFieldLevelEncryptionConfigsOutput, error) {
@@ -3398,7 +3398,7 @@ func (c *CloudFront) ListFieldLevelEncryptionProfilesRequest(input *ListFieldLev
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListFieldLevelEncryptionProfiles
 func (c *CloudFront) ListFieldLevelEncryptionProfiles(input *ListFieldLevelEncryptionProfilesInput) (*ListFieldLevelEncryptionProfilesOutput, error) {
@@ -3483,7 +3483,7 @@ func (c *CloudFront) ListInvalidationsRequest(input *ListInvalidationsInput) (re
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeNoSuchDistribution "NoSuchDistribution"
 //   The specified distribution does not exist.
@@ -3620,7 +3620,7 @@ func (c *CloudFront) ListPublicKeysRequest(input *ListPublicKeysInput) (req *req
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListPublicKeys
 func (c *CloudFront) ListPublicKeys(input *ListPublicKeysInput) (*ListPublicKeysOutput, error) {
@@ -3705,7 +3705,7 @@ func (c *CloudFront) ListStreamingDistributionsRequest(input *ListStreamingDistr
 //
 // Returned Error Codes:
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/ListStreamingDistributions
 func (c *CloudFront) ListStreamingDistributions(input *ListStreamingDistributionsInput) (*ListStreamingDistributionsOutput, error) {
@@ -3839,7 +3839,7 @@ func (c *CloudFront) ListTagsForResourceRequest(input *ListTagsForResourceInput)
 //   Access denied.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
 //   The tagging specified is not valid.
@@ -3928,7 +3928,7 @@ func (c *CloudFront) TagResourceRequest(input *TagResourceInput) (req *request.R
 //   Access denied.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
 //   The tagging specified is not valid.
@@ -4017,7 +4017,7 @@ func (c *CloudFront) UntagResourceRequest(input *UntagResourceInput) (req *reque
 //   Access denied.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidTagging "InvalidTagging"
 //   The tagging specified is not valid.
@@ -4118,11 +4118,11 @@ func (c *CloudFront) UpdateCloudFrontOriginAccessIdentityRequest(input *UpdateCl
 //   The specified origin access identity does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInconsistentQuantities "InconsistentQuantities"
 //   The value of Quantity and the size of Items don't match.
@@ -4286,7 +4286,7 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   The specified distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeTooManyDistributionCNAMEs "TooManyDistributionCNAMEs"
@@ -4306,7 +4306,7 @@ func (c *CloudFront) UpdateDistributionRequest(input *UpdateDistributionInput) (
 //   A response code is not valid.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidOriginAccessIdentity "InvalidOriginAccessIdentity"
 //   The origin access identity is not valid or doesn't exist.
@@ -4501,7 +4501,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldL
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
 //   The If-Match version is missing or not valid for the distribution.
@@ -4513,7 +4513,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionConfigRequest(input *UpdateFieldL
 //   The specified configuration for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeTooManyFieldLevelEncryptionQueryArgProfiles "TooManyFieldLevelEncryptionQueryArgProfiles"
@@ -4616,7 +4616,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateField
 //   The value of Quantity and the size of Items don't match.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
 //   The If-Match version is missing or not valid for the distribution.
@@ -4628,7 +4628,7 @@ func (c *CloudFront) UpdateFieldLevelEncryptionProfileRequest(input *UpdateField
 //   The specified profile for field-level encryption doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeFieldLevelEncryptionProfileSizeExceeded "FieldLevelEncryptionProfileSizeExceeded"
@@ -4726,7 +4726,7 @@ func (c *CloudFront) UpdatePublicKeyRequest(input *UpdatePublicKeyInput) (req *r
 //   You can't change the value of a public key.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidIfMatchVersion "InvalidIfMatchVersion"
 //   The If-Match version is missing or not valid for the distribution.
@@ -4738,7 +4738,7 @@ func (c *CloudFront) UpdatePublicKeyRequest(input *UpdatePublicKeyInput) (req *r
 //   The specified public key doesn't exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/cloudfront-2019-03-26/UpdatePublicKey
@@ -4837,14 +4837,14 @@ func (c *CloudFront) UpdateStreamingDistributionRequest(input *UpdateStreamingDi
 //   The specified streaming distribution does not exist.
 //
 //   * ErrCodePreconditionFailed "PreconditionFailed"
-//   The precondition given in one or more of the request-header fields evaluated
+//   The precondition given in one or more of the request header fields evaluated
 //   to false.
 //
 //   * ErrCodeTooManyStreamingDistributionCNAMEs "TooManyStreamingDistributionCNAMEs"
 //   Your request contains more CNAMEs than are allowed per distribution.
 //
 //   * ErrCodeInvalidArgument "InvalidArgument"
-//   The argument is invalid.
+//   An argument is invalid.
 //
 //   * ErrCodeInvalidOriginAccessIdentity "InvalidOriginAccessIdentity"
 //   The origin access identity is not valid or doesn't exist.
@@ -5147,19 +5147,19 @@ func (s *AllowedMethods) SetQuantity(v int64) *AllowedMethods {
 // A complex type that describes how CloudFront processes requests.
 //
 // You must create at least as many cache behaviors (including the default cache
-// behavior) as you have origins if you want CloudFront to distribute objects
-// from all of the origins. Each cache behavior specifies the one origin from
-// which you want CloudFront to get objects. If you have two origins and only
-// the default cache behavior, the default cache behavior will cause CloudFront
+// behavior) as you have origins if you want CloudFront to serve objects from
+// all of the origins. Each cache behavior specifies the one origin from which
+// you want CloudFront to get objects. If you have two origins and only the
+// default cache behavior, the default cache behavior will cause CloudFront
 // to get objects from one of the origins, but the other origin is never used.
 //
-// For the current limit on the number of cache behaviors that you can add to
-// a distribution, see Amazon CloudFront Limits (https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_cloudfront)
-// in the AWS General Reference.
+// For the current quota (formerly known as limit) on the number of cache behaviors
+// that you can add to a distribution, see Quotas (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html)
+// in the Amazon CloudFront Developer Guide.
 //
-// If you don't want to specify any cache behaviors, include only an empty CacheBehaviors
-// element. Don't include an empty CacheBehavior element, or CloudFront returns
-// a MalformedXML error.
+// If you don’t want to specify any cache behaviors, include only an empty
+// CacheBehaviors element. Don’t include an empty CacheBehavior element because
+// this is invalid.
 //
 // To delete all cache behaviors in an existing distribution, update the distribution
 // configuration and include only an empty CacheBehaviors element.
@@ -5168,7 +5168,7 @@ func (s *AllowedMethods) SetQuantity(v int64) *AllowedMethods {
 // configuration and specify all of the cache behaviors that you want to include
 // in the updated distribution.
 //
-// For more information about cache behaviors, see Cache Behaviors (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesCacheBehavior)
+// For more information about cache behaviors, see Cache Behavior Settings (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesCacheBehavior)
 // in the Amazon CloudFront Developer Guide.
 type CacheBehavior struct {
 	_ struct{} `type:"structure"`
@@ -5206,8 +5206,7 @@ type CacheBehavior struct {
 	DefaultTTL *int64 `type:"long"`
 
 	// The value of ID for the field-level encryption configuration that you want
-	// CloudFront to use for encrypting specific fields of data for a cache behavior
-	// or for the default cache behavior in your distribution.
+	// CloudFront to use for encrypting specific fields of data for this cache behavior.
 	FieldLevelEncryptionId *string `type:"string"`
 
 	// A complex type that specifies how CloudFront handles query strings, cookies,
@@ -5269,8 +5268,7 @@ type CacheBehavior struct {
 	SmoothStreaming *bool `type:"boolean"`
 
 	// The value of ID for the origin that you want CloudFront to route requests
-	// to when a request matches the path pattern either for a cache behavior or
-	// for the default cache behavior in your distribution.
+	// to when they match this cache behavior.
 	//
 	// TargetOriginId is a required field
 	TargetOriginId *string `type:"string" required:"true"`
@@ -5281,14 +5279,15 @@ type CacheBehavior struct {
 	// If you want to require signed URLs in requests for objects in the target
 	// origin that match the PathPattern for this cache behavior, specify true for
 	// Enabled, and specify the applicable values for Quantity and Items. For more
-	// information, see Serving Private Content through CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
+	// information, see Serving Private Content with Signed URLs and Signed Cookies
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
-	// If you don't want to require signed URLs in requests for objects that match
+	// If you don’t want to require signed URLs in requests for objects that match
 	// PathPattern, specify false for Enabled and 0 for Quantity. Omit Items.
 	//
 	// To add, change, or remove one or more trusted signers, change Enabled to
-	// true (if it's currently false), change Quantity as applicable, and specify
+	// true (if it’s currently false), change Quantity as applicable, and specify
 	// all of the trusted signers that you want to include in the updated distribution.
 	//
 	// TrustedSigners is a required field
@@ -5307,18 +5306,17 @@ type CacheBehavior struct {
 	//    * https-only: If a viewer sends an HTTP request, CloudFront returns an
 	//    HTTP status code of 403 (Forbidden).
 	//
-	// For more information about requiring the HTTPS protocol, see Using an HTTPS
-	// Connection to Access Your Objects (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/SecureConnections.html)
+	// For more information about requiring the HTTPS protocol, see Requiring HTTPS
+	// Between Viewers and CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// The only way to guarantee that viewers retrieve an object that was fetched
 	// from the origin using HTTPS is never to use any other protocol to fetch the
 	// object. If you have recently changed from HTTP to HTTPS, we recommend that
-	// you clear your objects' cache because cached objects are protocol agnostic.
+	// you clear your objects’ cache because cached objects are protocol agnostic.
 	// That means that an edge location will return an object from the cache regardless
 	// of whether the current request protocol matches the protocol used previously.
-	// For more information, see Managing How Long Content Stays in an Edge Cache
-	// (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
+	// For more information, see Managing Cache Expiration (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// ViewerProtocolPolicy is a required field
@@ -6938,45 +6936,61 @@ func (s *CustomHeaders) SetQuantity(v int64) *CustomHeaders {
 	return s
 }
 
-// A custom origin or an Amazon S3 bucket configured as a website endpoint.
+// A custom origin. A custom origin is any origin that is not an Amazon S3 bucket,
+// with one exception. An Amazon S3 bucket that is configured with static website
+// hosting (https://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteHosting.html)
+// is a custom origin.
 type CustomOriginConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The HTTP port the custom origin listens on.
+	// The HTTP port that CloudFront uses to connect to the origin. Specify the
+	// HTTP port that the origin listens on.
 	//
 	// HTTPPort is a required field
 	HTTPPort *int64 `type:"integer" required:"true"`
 
-	// The HTTPS port the custom origin listens on.
+	// The HTTPS port that CloudFront uses to connect to the origin. Specify the
+	// HTTPS port that the origin listens on.
 	//
 	// HTTPSPort is a required field
 	HTTPSPort *int64 `type:"integer" required:"true"`
 
-	// You can create a custom keep-alive timeout. All timeout units are in seconds.
-	// The default keep-alive timeout is 5 seconds, but you can configure custom
-	// timeout lengths using the CloudFront API. The minimum timeout length is 1
-	// second; the maximum is 60 seconds.
+	// Specifies how long, in seconds, CloudFront persists its connection to the
+	// origin. The minimum timeout is 1 second, the maximum is 60 seconds, and the
+	// default (if you don’t specify otherwise) is 5 seconds.
 	//
-	// If you need to increase the maximum time limit, contact the AWS Support Center
-	// (https://console.aws.amazon.com/support/home#/).
+	// For more information, see Origin Keep-alive Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginKeepaliveTimeout)
+	// in the Amazon CloudFront Developer Guide.
 	OriginKeepaliveTimeout *int64 `type:"integer"`
 
-	// The origin protocol policy to apply to your origin.
+	// Specifies the protocol (HTTP or HTTPS) that CloudFront uses to connect to
+	// the origin. Valid values are:
+	//
+	//    * http-only – CloudFront always uses HTTP to connect to the origin.
+	//
+	//    * match-viewer – CloudFront connects to the origin using the same protocol
+	//    that the viewer used to connect to CloudFront.
+	//
+	//    * https-only – CloudFront always uses HTTPS to connect to the origin.
 	//
 	// OriginProtocolPolicy is a required field
 	OriginProtocolPolicy *string `type:"string" required:"true" enum:"OriginProtocolPolicy"`
 
-	// You can create a custom origin read timeout. All timeout units are in seconds.
-	// The default origin read timeout is 30 seconds, but you can configure custom
-	// timeout lengths using the CloudFront API. The minimum timeout length is 4
-	// seconds; the maximum is 60 seconds.
+	// Specifies how long, in seconds, CloudFront waits for a response from the
+	// origin. This is also known as the origin response timeout. The minimum timeout
+	// is 1 second, the maximum is 60 seconds, and the default (if you don’t specify
+	// otherwise) is 30 seconds.
 	//
-	// If you need to increase the maximum time limit, contact the AWS Support Center
-	// (https://console.aws.amazon.com/support/home#/).
+	// For more information, see Origin Response Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginResponseTimeout)
+	// in the Amazon CloudFront Developer Guide.
 	OriginReadTimeout *int64 `type:"integer"`
 
-	// The SSL/TLS protocols that you want CloudFront to use when communicating
-	// with your origin over HTTPS.
+	// Specifies the minimum SSL/TLS protocol that CloudFront uses when connecting
+	// to your origin over HTTPS. Valid values include SSLv3, TLSv1, TLSv1.1, and
+	// TLSv1.2.
+	//
+	// For more information, see Minimum Origin SSL Protocol (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginSSLProtocols)
+	// in the Amazon CloudFront Developer Guide.
 	OriginSslProtocols *OriginSslProtocols `type:"structure"`
 }
 
@@ -7050,9 +7064,10 @@ func (s *CustomOriginConfig) SetOriginSslProtocols(v *OriginSslProtocols) *Custo
 	return s
 }
 
-// A complex type that describes the default cache behavior if you don't specify
-// a CacheBehavior element or if files don't match any of the values of PathPattern
-// in CacheBehavior elements. You must create exactly one default cache behavior.
+// A complex type that describes the default cache behavior if you don’t specify
+// a CacheBehavior element or if request URLs don’t match any of the values
+// of PathPattern in CacheBehavior elements. You must create exactly one default
+// cache behavior.
 type DefaultCacheBehavior struct {
 	_ struct{} `type:"structure"`
 
@@ -7089,8 +7104,8 @@ type DefaultCacheBehavior struct {
 	DefaultTTL *int64 `type:"long"`
 
 	// The value of ID for the field-level encryption configuration that you want
-	// CloudFront to use for encrypting specific fields of data for a cache behavior
-	// or for the default cache behavior in your distribution.
+	// CloudFront to use for encrypting specific fields of data for the default
+	// cache behavior.
 	FieldLevelEncryptionId *string `type:"string"`
 
 	// A complex type that specifies how CloudFront handles query strings, cookies,
@@ -7133,8 +7148,7 @@ type DefaultCacheBehavior struct {
 	SmoothStreaming *bool `type:"boolean"`
 
 	// The value of ID for the origin that you want CloudFront to route requests
-	// to when a request matches the path pattern either for a cache behavior or
-	// for the default cache behavior in your distribution.
+	// to when they use the default cache behavior.
 	//
 	// TargetOriginId is a required field
 	TargetOriginId *string `type:"string" required:"true"`
@@ -7145,14 +7159,15 @@ type DefaultCacheBehavior struct {
 	// If you want to require signed URLs in requests for objects in the target
 	// origin that match the PathPattern for this cache behavior, specify true for
 	// Enabled, and specify the applicable values for Quantity and Items. For more
-	// information, see Serving Private Content through CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
+	// information, see Serving Private Content with Signed URLs and Signed Cookies
+	// (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/PrivateContent.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
-	// If you don't want to require signed URLs in requests for objects that match
+	// If you don’t want to require signed URLs in requests for objects that match
 	// PathPattern, specify false for Enabled and 0 for Quantity. Omit Items.
 	//
 	// To add, change, or remove one or more trusted signers, change Enabled to
-	// true (if it's currently false), change Quantity as applicable, and specify
+	// true (if it’s currently false), change Quantity as applicable, and specify
 	// all of the trusted signers that you want to include in the updated distribution.
 	//
 	// TrustedSigners is a required field
@@ -7171,18 +7186,17 @@ type DefaultCacheBehavior struct {
 	//    * https-only: If a viewer sends an HTTP request, CloudFront returns an
 	//    HTTP status code of 403 (Forbidden).
 	//
-	// For more information about requiring the HTTPS protocol, see Using an HTTPS
-	// Connection to Access Your Objects (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/SecureConnections.html)
+	// For more information about requiring the HTTPS protocol, see Requiring HTTPS
+	// Between Viewers and CloudFront (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// The only way to guarantee that viewers retrieve an object that was fetched
 	// from the origin using HTTPS is never to use any other protocol to fetch the
 	// object. If you have recently changed from HTTP to HTTPS, we recommend that
-	// you clear your objects' cache because cached objects are protocol agnostic.
+	// you clear your objects’ cache because cached objects are protocol agnostic.
 	// That means that an edge location will return an object from the cache regardless
 	// of whether the current request protocol matches the protocol used previously.
-	// For more information, see Managing How Long Content Stays in an Edge Cache
-	// (Expiration) (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
+	// For more information, see Managing Cache Expiration (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html)
 	// in the Amazon CloudFront Developer Guide.
 	//
 	// ViewerProtocolPolicy is a required field
@@ -11780,96 +11794,89 @@ func (s *LoggingConfig) SetPrefix(v string) *LoggingConfig {
 	return s
 }
 
-// A complex type that describes the Amazon S3 bucket, HTTP server (for example,
-// a web server), Amazon MediaStore, or other server from which CloudFront gets
-// your files. This can also be an origin group, if you've created an origin
-// group. You must specify at least one origin or origin group.
+// An origin.
 //
-// For the current limit on the number of origins or origin groups that you
-// can specify for a distribution, see Amazon CloudFront Limits (https://docs.aws.amazon.com/general/latest/gr/aws_service_limits.html#limits_cloudfront)
-// in the AWS General Reference.
+// An origin is the location where content is stored, and from which CloudFront
+// gets content to serve to viewers. To specify an origin:
+//
+//    * Use the S3OriginConfig type to specify an Amazon S3 bucket that is not
+//    configured with static website hosting.
+//
+//    * Use the CustomOriginConfig type to specify various other kinds of content
+//    containers or HTTP servers, including: An Amazon S3 bucket that is configured
+//    with static website hosting An Elastic Load Balancing load balancer An
+//    AWS Elemental MediaPackage origin An AWS Elemental MediaStore container
+//    Any other HTTP server, running on an Amazon EC2 instance or any other
+//    kind of host
+//
+// For the current maximum number of origins that you can specify per distribution,
+// see General Quotas on Web Distributions (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/cloudfront-limits.html#limits-web-distributions)
+// in the Amazon CloudFront Developer Guide (quotas were formerly referred to
+// as limits).
 type Origin struct {
 	_ struct{} `type:"structure"`
 
-	// A complex type that contains names and values for the custom headers that
-	// you want.
+	// The number of times that CloudFront attempts to connect to the origin. The
+	// minimum number is 1, the maximum is 3, and the default (if you don’t specify
+	// otherwise) is 3.
+	//
+	// For a custom origin (including an Amazon S3 bucket that’s configured with
+	// static website hosting), this value also specifies the number of times that
+	// CloudFront attempts to get a response from the origin, in the case of an
+	// Origin Response Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginResponseTimeout).
+	//
+	// For more information, see Origin Connection Attempts (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#origin-connection-attempts)
+	// in the Amazon CloudFront Developer Guide.
+	ConnectionAttempts *int64 `type:"integer"`
+
+	// The number of seconds that CloudFront waits when trying to establish a connection
+	// to the origin. The minimum timeout is 1 second, the maximum is 10 seconds,
+	// and the default (if you don’t specify otherwise) is 10 seconds.
+	//
+	// For more information, see Origin Connection Timeout (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#origin-connection-timeout)
+	// in the Amazon CloudFront Developer Guide.
+	ConnectionTimeout *int64 `type:"integer"`
+
+	// A list of HTTP header names and values that CloudFront adds to requests it
+	// sends to the origin.
+	//
+	// For more information, see Adding Custom Headers to Origin Requests (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/add-origin-custom-headers.html)
+	// in the Amazon CloudFront Developer Guide.
 	CustomHeaders *CustomHeaders `type:"structure"`
 
-	// A complex type that contains information about a custom origin. If the origin
-	// is an Amazon S3 bucket, use the S3OriginConfig element instead.
+	// Use this type to specify an origin that is a content container or HTTP server,
+	// including an Amazon S3 bucket that is configured with static website hosting.
+	// To specify an Amazon S3 bucket that is not configured with static website
+	// hosting, use the S3OriginConfig type instead.
 	CustomOriginConfig *CustomOriginConfig `type:"structure"`
 
-	// Amazon S3 origins: The DNS name of the Amazon S3 bucket from which you want
-	// CloudFront to get objects for this origin, for example, myawsbucket.s3.amazonaws.com.
-	// If you set up your bucket to be configured as a website endpoint, enter the
-	// Amazon S3 static website hosting endpoint for the bucket.
+	// The domain name for the origin.
 	//
-	// For more information about specifying this value for different types of origins,
-	// see Origin Domain Name (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesDomainName)
+	// For more information, see Origin Domain Name (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesDomainName)
 	// in the Amazon CloudFront Developer Guide.
-	//
-	// Constraints for Amazon S3 origins:
-	//
-	//    * If you configured Amazon S3 Transfer Acceleration for your bucket, don't
-	//    specify the s3-accelerate endpoint for DomainName.
-	//
-	//    * The bucket name must be between 3 and 63 characters long (inclusive).
-	//
-	//    * The bucket name must contain only lowercase characters, numbers, periods,
-	//    underscores, and dashes.
-	//
-	//    * The bucket name must not contain adjacent periods.
-	//
-	// Custom Origins: The DNS domain name for the HTTP server from which you want
-	// CloudFront to get objects for this origin, for example, www.example.com.
-	//
-	// Constraints for custom origins:
-	//
-	//    * DomainName must be a valid DNS name that contains only a-z, A-Z, 0-9,
-	//    dot (.), hyphen (-), or underscore (_) characters.
-	//
-	//    * The name cannot exceed 128 characters.
 	//
 	// DomainName is a required field
 	DomainName *string `type:"string" required:"true"`
 
-	// A unique identifier for the origin or origin group. The value of Id must
-	// be unique within the distribution.
+	// A unique identifier for the origin. This value must be unique within the
+	// distribution.
 	//
-	// When you specify the value of TargetOriginId for the default cache behavior
-	// or for another cache behavior, you indicate the origin to which you want
-	// the cache behavior to route requests by specifying the value of the Id element
-	// for that origin. When a request matches the path pattern for that cache behavior,
-	// CloudFront routes the request to the specified origin. For more information,
-	// see Cache Behavior Settings (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesCacheBehavior)
-	// in the Amazon CloudFront Developer Guide.
+	// Use this value to specify the TargetOriginId in a CacheBehavior or DefaultCacheBehavior.
 	//
 	// Id is a required field
 	Id *string `type:"string" required:"true"`
 
-	// An optional element that causes CloudFront to request your content from a
-	// directory in your Amazon S3 bucket or your custom origin. When you include
-	// the OriginPath element, specify the directory name, beginning with a /. CloudFront
-	// appends the directory name to the value of DomainName, for example, example.com/production.
-	// Do not include a / at the end of the directory name.
+	// An optional path that CloudFront appends to the origin domain name when CloudFront
+	// requests content from the origin.
 	//
-	// For example, suppose you've specified the following values for your distribution:
-	//
-	//    * DomainName: An Amazon S3 bucket named myawsbucket.
-	//
-	//    * OriginPath: /production
-	//
-	//    * CNAME: example.com
-	//
-	// When a user enters example.com/index.html in a browser, CloudFront sends
-	// a request to Amazon S3 for myawsbucket/production/index.html.
-	//
-	// When a user enters example.com/acme/index.html in a browser, CloudFront sends
-	// a request to Amazon S3 for myawsbucket/production/acme/index.html.
+	// For more information, see Origin Path (https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/distribution-web-values-specify.html#DownloadDistValuesOriginPath)
+	// in the Amazon CloudFront Developer Guide.
 	OriginPath *string `type:"string"`
 
-	// A complex type that contains information about the Amazon S3 origin. If the
-	// origin is a custom origin, use the CustomOriginConfig element instead.
+	// Use this type to specify an origin that is an Amazon S3 bucket that is not
+	// configured with static website hosting. To specify any other type of origin,
+	// including an Amazon S3 bucket that is configured with static website hosting,
+	// use the CustomOriginConfig type instead.
 	S3OriginConfig *S3OriginConfig `type:"structure"`
 }
 
@@ -11912,6 +11919,18 @@ func (s *Origin) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetConnectionAttempts sets the ConnectionAttempts field's value.
+func (s *Origin) SetConnectionAttempts(v int64) *Origin {
+	s.ConnectionAttempts = &v
+	return s
+}
+
+// SetConnectionTimeout sets the ConnectionTimeout field's value.
+func (s *Origin) SetConnectionTimeout(v int64) *Origin {
+	s.ConnectionTimeout = &v
+	return s
 }
 
 // SetCustomHeaders sets the CustomHeaders field's value.
@@ -13326,7 +13345,8 @@ func (s *S3Origin) SetOriginAccessIdentity(v string) *S3Origin {
 }
 
 // A complex type that contains information about the Amazon S3 origin. If the
-// origin is a custom origin, use the CustomOriginConfig element instead.
+// origin is a custom origin or an S3 bucket that is configured as a website
+// endpoint, use the CustomOriginConfig element instead.
 type S3OriginConfig struct {
 	_ struct{} `type:"structure"`
 

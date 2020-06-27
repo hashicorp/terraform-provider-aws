@@ -6970,7 +6970,9 @@ type UntagResourceInput struct {
 
 	// The keys of the key:value tag pairs that you want to remove from the specified
 	// EFS resource.
-	TagKeys []*string `min:"1" type:"list"`
+	//
+	// TagKeys is a required field
+	TagKeys []*string `location:"querystring" locationName:"tagKeys" min:"1" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -6991,6 +6993,9 @@ func (s *UntagResourceInput) Validate() error {
 	}
 	if s.ResourceId != nil && len(*s.ResourceId) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ResourceId", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
 	}
 	if s.TagKeys != nil && len(s.TagKeys) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TagKeys", 1))

@@ -17,6 +17,7 @@ import (
 )
 
 func resourceAwsSpotFleetRequest() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSpotFleetRequestCreate,
 		Read:   resourceAwsSpotFleetRequestRead,
@@ -311,6 +312,7 @@ func resourceAwsSpotFleetRequest() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -764,7 +766,7 @@ func buildAwsSpotFleetLaunchSpecifications(
 	return specs, nil
 }
 
-func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateConfig, error) {
+func buildLaunchTemplateConfigs(d *schema.ResourceData) []*ec2.LaunchTemplateConfig {
 	launchTemplateConfigs := d.Get("launch_template_config").(*schema.Set)
 	configs := make([]*ec2.LaunchTemplateConfig, 0)
 
@@ -838,7 +840,7 @@ func buildLaunchTemplateConfigs(d *schema.ResourceData) ([]*ec2.LaunchTemplateCo
 		configs = append(configs, ltc)
 	}
 
-	return configs, nil
+	return configs
 }
 
 func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{}) error {
@@ -869,10 +871,7 @@ func resourceAwsSpotFleetRequestCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if launchTemplateConfigsOk {
-		launchTemplates, err := buildLaunchTemplateConfigs(d)
-		if err != nil {
-			return err
-		}
+		launchTemplates := buildLaunchTemplateConfigs(d)
 		spotFleetConfig.LaunchTemplateConfigs = launchTemplates
 	}
 
@@ -1605,11 +1604,11 @@ func hashLaunchSpecification(v interface{}) int {
 	var buf bytes.Buffer
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%s-", m["ami"].(string)))
-	if m["availability_zone"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["availability_zone"].(string)))
+	if v, ok := m["availability_zone"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
-	if m["subnet_id"] != "" {
-		buf.WriteString(fmt.Sprintf("%s-", m["subnet_id"].(string)))
+	if v, ok := m["subnet_id"].(string); ok && v != "" {
+		buf.WriteString(fmt.Sprintf("%s-", v))
 	}
 	buf.WriteString(fmt.Sprintf("%s-", m["instance_type"].(string)))
 	buf.WriteString(fmt.Sprintf("%s-", m["spot_price"].(string)))

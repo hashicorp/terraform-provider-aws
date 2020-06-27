@@ -12569,6 +12569,10 @@ func (s *ActivitiesResponse) SetNextToken(v string) *ActivitiesResponse {
 type Activity struct {
 	_ struct{} `type:"structure"`
 
+	// The settings for a custom message activity. This type of activity calls an
+	// AWS Lambda function or web hook that sends messages to participants.
+	CUSTOM *CustomMessageActivity `type:"structure"`
+
 	// The settings for a yes/no split activity. This type of activity sends participants
 	// down one of two paths in a journey, based on conditions that you specify.
 	ConditionalSplit *ConditionalSplitActivity `type:"structure"`
@@ -12589,10 +12593,18 @@ type Activity struct {
 	// path) in a journey, based on conditions that you specify.
 	MultiCondition *MultiConditionalSplitActivity `type:"structure"`
 
+	// The settings for a push notification activity. This type of activity sends
+	// a push notification to participants.
+	PUSH *PushMessageActivity `type:"structure"`
+
 	// The settings for a random split activity. This type of activity randomly
 	// sends specified percentages of participants down one of as many as five paths
 	// in a journey, based on conditions that you specify.
 	RandomSplit *RandomSplitActivity `type:"structure"`
+
+	// The settings for an SMS activity. This type of activity sends a text message
+	// to participants.
+	SMS *SMSMessageActivity `type:"structure"`
 
 	// The settings for a wait activity. This type of activity waits for a certain
 	// amount of time or until a specific date and time before moving participants
@@ -12635,6 +12647,12 @@ func (s *Activity) Validate() error {
 	return nil
 }
 
+// SetCUSTOM sets the CUSTOM field's value.
+func (s *Activity) SetCUSTOM(v *CustomMessageActivity) *Activity {
+	s.CUSTOM = v
+	return s
+}
+
 // SetConditionalSplit sets the ConditionalSplit field's value.
 func (s *Activity) SetConditionalSplit(v *ConditionalSplitActivity) *Activity {
 	s.ConditionalSplit = v
@@ -12665,9 +12683,21 @@ func (s *Activity) SetMultiCondition(v *MultiConditionalSplitActivity) *Activity
 	return s
 }
 
+// SetPUSH sets the PUSH field's value.
+func (s *Activity) SetPUSH(v *PushMessageActivity) *Activity {
+	s.PUSH = v
+	return s
+}
+
 // SetRandomSplit sets the RandomSplit field's value.
 func (s *Activity) SetRandomSplit(v *RandomSplitActivity) *Activity {
 	s.RandomSplit = v
+	return s
+}
+
+// SetSMS sets the SMS field's value.
+func (s *Activity) SetSMS(v *SMSMessageActivity) *Activity {
+	s.SMS = v
 	return s
 }
 
@@ -14452,10 +14482,10 @@ type CampaignSmsMessage struct {
 	// The body of the SMS message.
 	Body *string `type:"string"`
 
-	// The type of SMS message. Valid values are: TRANSACTIONAL, the message is
-	// critical or time-sensitive, such as a one-time password that supports a customer
-	// transaction; and, PROMOTIONAL, the message isn't critical or time-sensitive,
-	// such as a marketing message.
+	// The SMS message type. Valid values are TRANSACTIONAL (for messages that are
+	// critical or time-sensitive, such as a one-time passwords) and PROMOTIONAL
+	// (for messsages that aren't critical or time-sensitive, such as marketing
+	// messages).
 	MessageType *string `type:"string" enum:"MessageType"`
 
 	// The sender ID to display on recipients' devices when they receive the SMS
@@ -16026,6 +16056,97 @@ func (s *CustomDeliveryConfiguration) SetDeliveryUri(v string) *CustomDeliveryCo
 // SetEndpointTypes sets the EndpointTypes field's value.
 func (s *CustomDeliveryConfiguration) SetEndpointTypes(v []*string) *CustomDeliveryConfiguration {
 	s.EndpointTypes = v
+	return s
+}
+
+// The settings for a custom message activity. This type of activity calls an
+// AWS Lambda function or web hook that sends messages to participants.
+type CustomMessageActivity struct {
+	_ struct{} `type:"structure"`
+
+	// The destination to send the custom message to. This value can be one of the
+	// following:
+	//
+	//    * The name or Amazon Resource Name (ARN) of an AWS Lambda function to
+	//    invoke to handle delivery of the custom message.
+	//
+	//    * The URL for a web application or service that supports HTTPS and can
+	//    receive the message. The URL has to be a full URL, including the HTTPS
+	//    protocol.
+	DeliveryUri *string `type:"string"`
+
+	// The types of endpoints to send the custom message to. Each valid value maps
+	// to a type of channel that you can associate with an endpoint by using the
+	// ChannelType property of an endpoint.
+	EndpointTypes []*string `type:"list"`
+
+	// Specifies the message data included in a custom channel message that's sent
+	// to participants in a journey.
+	MessageConfig *JourneyCustomMessage `type:"structure"`
+
+	// The unique identifier for the next activity to perform, after Amazon Pinpoint
+	// calls the AWS Lambda function or web hook.
+	NextActivity *string `type:"string"`
+
+	// The name of the custom message template to use for the message. If specified,
+	// this value must match the name of an existing message template.
+	TemplateName *string `type:"string"`
+
+	// The unique identifier for the version of the message template to use for
+	// the message. If specified, this value must match the identifier for an existing
+	// template version. To retrieve a list of versions and version identifiers
+	// for a template, use the Template Versions resource.
+	//
+	// If you don't specify a value for this property, Amazon Pinpoint uses the
+	// active version of the template. The active version is typically the version
+	// of a template that's been most recently reviewed and approved for use, depending
+	// on your workflow. It isn't necessarily the latest version of a template.
+	TemplateVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s CustomMessageActivity) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CustomMessageActivity) GoString() string {
+	return s.String()
+}
+
+// SetDeliveryUri sets the DeliveryUri field's value.
+func (s *CustomMessageActivity) SetDeliveryUri(v string) *CustomMessageActivity {
+	s.DeliveryUri = &v
+	return s
+}
+
+// SetEndpointTypes sets the EndpointTypes field's value.
+func (s *CustomMessageActivity) SetEndpointTypes(v []*string) *CustomMessageActivity {
+	s.EndpointTypes = v
+	return s
+}
+
+// SetMessageConfig sets the MessageConfig field's value.
+func (s *CustomMessageActivity) SetMessageConfig(v *JourneyCustomMessage) *CustomMessageActivity {
+	s.MessageConfig = v
+	return s
+}
+
+// SetNextActivity sets the NextActivity field's value.
+func (s *CustomMessageActivity) SetNextActivity(v string) *CustomMessageActivity {
+	s.NextActivity = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *CustomMessageActivity) SetTemplateName(v string) *CustomMessageActivity {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateVersion sets the TemplateVersion field's value.
+func (s *CustomMessageActivity) SetTemplateVersion(v string) *CustomMessageActivity {
+	s.TemplateVersion = &v
 	return s
 }
 
@@ -18218,14 +18339,16 @@ func (s *EmailMessage) SetSubstitutions(v map[string][]*string) *EmailMessage {
 type EmailMessageActivity struct {
 	_ struct{} `type:"structure"`
 
-	// The "From" address to use for the message.
+	// Specifies the sender address for an email message that's sent to participants
+	// in the journey.
 	MessageConfig *JourneyEmailMessage `type:"structure"`
 
 	// The unique identifier for the next activity to perform, after the message
 	// is sent.
 	NextActivity *string `type:"string"`
 
-	// The name of the email template to use for the message.
+	// The name of the email message template to use for the message. If specified,
+	// this value must match the name of an existing message template.
 	TemplateName *string `type:"string"`
 
 	// The unique identifier for the version of the email template to use for the
@@ -25025,6 +25148,31 @@ func (s *ItemResponse) SetEventsItemResponse(v map[string]*EventItemResponse) *I
 	return s
 }
 
+// Specifies the message content for a custom channel message that's sent to
+// participants in a journey.
+type JourneyCustomMessage struct {
+	_ struct{} `type:"structure"`
+
+	// The message content that's passed to an AWS Lambda function or to a web hook.
+	Data *string `type:"string"`
+}
+
+// String returns the string representation
+func (s JourneyCustomMessage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JourneyCustomMessage) GoString() string {
+	return s.String()
+}
+
+// SetData sets the Data field's value.
+func (s *JourneyCustomMessage) SetData(v string) *JourneyCustomMessage {
+	s.Data = &v
+	return s
+}
+
 // Provides the results of a query that retrieved the data for a standard engagement
 // metric that applies to a journey, and provides information about that query.
 type JourneyDateRangeKpiResponse struct {
@@ -25200,7 +25348,7 @@ type JourneyExecutionActivityMetricsResponse struct {
 
 	// A JSON object that contains the results of the query. The results vary depending
 	// on the type of activity (ActivityType). For information about the structure
-	// and contents of the results, see the Amazon Pinpoint Developer Guide (https://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html).
+	// and contents of the results, see the Amazon Pinpoint Developer Guide (https://docs.aws.amazon.com/pinpoint/latest/developerguide/analytics-standard-metrics.html).
 	//
 	// Metrics is a required field
 	Metrics map[string]*string `type:"map" required:"true"`
@@ -25275,7 +25423,7 @@ type JourneyExecutionMetricsResponse struct {
 
 	// A JSON object that contains the results of the query. For information about
 	// the structure and contents of the results, see the Amazon Pinpoint Developer
-	// Guide (https://docs.aws.amazon.com/pinpoint/latest/developerguide/welcome.html).
+	// Guide (https://docs.aws.amazon.com/pinpoint/latest/developerguide/analytics-standard-metrics.html).
 	//
 	// Metrics is a required field
 	Metrics map[string]*string `type:"map" required:"true"`
@@ -25358,6 +25506,39 @@ func (s *JourneyLimits) SetEndpointReentryCap(v int64) *JourneyLimits {
 // SetMessagesPerSecond sets the MessagesPerSecond field's value.
 func (s *JourneyLimits) SetMessagesPerSecond(v int64) *JourneyLimits {
 	s.MessagesPerSecond = &v
+	return s
+}
+
+// Specifies the message configuration for a push notification that's sent to
+// participants in a journey.
+type JourneyPushMessage struct {
+	_ struct{} `type:"structure"`
+
+	// The number of seconds that the push notification service should keep the
+	// message, if the service is unable to deliver the notification the first time.
+	// This value is converted to an expiration value when it's sent to a push-notification
+	// service. If this value is 0, the service treats the notification as if it
+	// expires immediately and the service doesn't store or try to deliver the notification
+	// again.
+	//
+	// This value doesn't apply to messages that are sent through the Amazon Device
+	// Messaging (ADM) service.
+	TimeToLive *string `type:"string"`
+}
+
+// String returns the string representation
+func (s JourneyPushMessage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JourneyPushMessage) GoString() string {
+	return s.String()
+}
+
+// SetTimeToLive sets the TimeToLive field's value.
+func (s *JourneyPushMessage) SetTimeToLive(v string) *JourneyPushMessage {
+	s.TimeToLive = &v
 	return s
 }
 
@@ -25556,6 +25737,46 @@ func (s *JourneyResponse) SetState(v string) *JourneyResponse {
 // SetTags sets the Tags field's value.
 func (s *JourneyResponse) SetTags(v map[string]*string) *JourneyResponse {
 	s.Tags = v
+	return s
+}
+
+// Specifies the sender ID and message type for an SMS message that's sent to
+// participants in a journey.
+type JourneySMSMessage struct {
+	_ struct{} `type:"structure"`
+
+	// The SMS message type. Valid values are TRANSACTIONAL (for messages that are
+	// critical or time-sensitive, such as a one-time passwords) and PROMOTIONAL
+	// (for messsages that aren't critical or time-sensitive, such as marketing
+	// messages).
+	MessageType *string `type:"string" enum:"MessageType"`
+
+	// The sender ID to display as the sender of the message on a recipient's device.
+	// Support for sender IDs varies by country or region. For more information,
+	// see Supported Countries and Regions (https://docs.aws.amazon.com.amazon.com/pinpoint/latest/userguide/channels-sms-countries.html)
+	// in the Amazon Pinpoint User Guide.
+	SenderId *string `type:"string"`
+}
+
+// String returns the string representation
+func (s JourneySMSMessage) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s JourneySMSMessage) GoString() string {
+	return s.String()
+}
+
+// SetMessageType sets the MessageType field's value.
+func (s *JourneySMSMessage) SetMessageType(v string) *JourneySMSMessage {
+	s.MessageType = &v
+	return s
+}
+
+// SetSenderId sets the SenderId field's value.
+func (s *JourneySMSMessage) SetSenderId(v string) *JourneySMSMessage {
+	s.SenderId = &v
 	return s
 }
 
@@ -27280,6 +27501,69 @@ func (s *PublicEndpoint) SetUser(v *EndpointUser) *PublicEndpoint {
 	return s
 }
 
+// Specifies the settings for a push notification activity in a journey. This
+// type of activity sends a push notification to participants.
+type PushMessageActivity struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the time to live (TTL) value for push notifications that are sent
+	// to participants in a journey.
+	MessageConfig *JourneyPushMessage `type:"structure"`
+
+	// The unique identifier for the next activity to perform, after the message
+	// is sent.
+	NextActivity *string `type:"string"`
+
+	// The name of the push notification template to use for the message. If specified,
+	// this value must match the name of an existing message template.
+	TemplateName *string `type:"string"`
+
+	// The unique identifier for the version of the push notification template to
+	// use for the message. If specified, this value must match the identifier for
+	// an existing template version. To retrieve a list of versions and version
+	// identifiers for a template, use the Template Versions resource.
+	//
+	// If you don't specify a value for this property, Amazon Pinpoint uses the
+	// active version of the template. The active version is typically the version
+	// of a template that's been most recently reviewed and approved for use, depending
+	// on your workflow. It isn't necessarily the latest version of a template.
+	TemplateVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PushMessageActivity) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PushMessageActivity) GoString() string {
+	return s.String()
+}
+
+// SetMessageConfig sets the MessageConfig field's value.
+func (s *PushMessageActivity) SetMessageConfig(v *JourneyPushMessage) *PushMessageActivity {
+	s.MessageConfig = v
+	return s
+}
+
+// SetNextActivity sets the NextActivity field's value.
+func (s *PushMessageActivity) SetNextActivity(v string) *PushMessageActivity {
+	s.NextActivity = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *PushMessageActivity) SetTemplateName(v string) *PushMessageActivity {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateVersion sets the TemplateVersion field's value.
+func (s *PushMessageActivity) SetTemplateVersion(v string) *PushMessageActivity {
+	s.TemplateVersion = &v
+	return s
+}
+
 // Specifies the content and settings for a message template that can be used
 // in messages that are sent through a push notification channel.
 type PushNotificationTemplateRequest struct {
@@ -28499,10 +28783,10 @@ type SMSMessage struct {
 	// The URL of an image or video to display in the SMS message.
 	MediaUrl *string `type:"string"`
 
-	// The SMS message type. Valid values are: TRANSACTIONAL, the message is critical
-	// or time-sensitive, such as a one-time password that supports a customer transaction;
-	// and, PROMOTIONAL, the message is not critical or time-sensitive, such as
-	// a marketing message.
+	// The SMS message type. Valid values are TRANSACTIONAL (for messages that are
+	// critical or time-sensitive, such as a one-time passwords) and PROMOTIONAL
+	// (for messsages that aren't critical or time-sensitive, such as marketing
+	// messages).
 	MessageType *string `type:"string" enum:"MessageType"`
 
 	// The number to send the SMS message from. This value should be one of the
@@ -28569,6 +28853,69 @@ func (s *SMSMessage) SetSenderId(v string) *SMSMessage {
 // SetSubstitutions sets the Substitutions field's value.
 func (s *SMSMessage) SetSubstitutions(v map[string][]*string) *SMSMessage {
 	s.Substitutions = v
+	return s
+}
+
+// Specifies the settings for an SMS activity in a journey. This type of activity
+// sends a text message to participants.
+type SMSMessageActivity struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the sender ID and message type for an SMS message that's sent to
+	// participants in a journey.
+	MessageConfig *JourneySMSMessage `type:"structure"`
+
+	// The unique identifier for the next activity to perform, after the message
+	// is sent.
+	NextActivity *string `type:"string"`
+
+	// The name of the SMS message template to use for the message. If specified,
+	// this value must match the name of an existing message template.
+	TemplateName *string `type:"string"`
+
+	// The unique identifier for the version of the SMS template to use for the
+	// message. If specified, this value must match the identifier for an existing
+	// template version. To retrieve a list of versions and version identifiers
+	// for a template, use the Template Versions resource.
+	//
+	// If you don't specify a value for this property, Amazon Pinpoint uses the
+	// active version of the template. The active version is typically the version
+	// of a template that's been most recently reviewed and approved for use, depending
+	// on your workflow. It isn't necessarily the latest version of a template.
+	TemplateVersion *string `type:"string"`
+}
+
+// String returns the string representation
+func (s SMSMessageActivity) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s SMSMessageActivity) GoString() string {
+	return s.String()
+}
+
+// SetMessageConfig sets the MessageConfig field's value.
+func (s *SMSMessageActivity) SetMessageConfig(v *JourneySMSMessage) *SMSMessageActivity {
+	s.MessageConfig = v
+	return s
+}
+
+// SetNextActivity sets the NextActivity field's value.
+func (s *SMSMessageActivity) SetNextActivity(v string) *SMSMessageActivity {
+	s.NextActivity = &v
+	return s
+}
+
+// SetTemplateName sets the TemplateName field's value.
+func (s *SMSMessageActivity) SetTemplateName(v string) *SMSMessageActivity {
+	s.TemplateName = &v
+	return s
+}
+
+// SetTemplateVersion sets the TemplateVersion field's value.
+func (s *SMSMessageActivity) SetTemplateVersion(v string) *SMSMessageActivity {
+	s.TemplateVersion = &v
 	return s
 }
 
@@ -34642,6 +34989,9 @@ const (
 )
 
 const (
+	// ChannelTypePush is a ChannelType enum value
+	ChannelTypePush = "PUSH"
+
 	// ChannelTypeGcm is a ChannelType enum value
 	ChannelTypeGcm = "GCM"
 
@@ -34722,6 +35072,9 @@ const (
 )
 
 const (
+	// EndpointTypesElementPush is a EndpointTypesElement enum value
+	EndpointTypesElementPush = "PUSH"
+
 	// EndpointTypesElementGcm is a EndpointTypesElement enum value
 	EndpointTypesElementGcm = "GCM"
 

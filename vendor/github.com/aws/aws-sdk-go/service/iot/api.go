@@ -7203,6 +7203,9 @@ func (c *IoT) DescribeDomainConfigurationRequest(input *DescribeDomainConfigurat
 //   * ThrottlingException
 //   The rate exceeds the limit.
 //
+//   * InvalidRequestException
+//   The request is not valid.
+//
 //   * UnauthorizedException
 //   You are not authorized to perform this operation.
 //
@@ -14853,6 +14856,103 @@ func (c *IoT) RegisterCertificateWithContext(ctx aws.Context, input *RegisterCer
 	return out, req.Send()
 }
 
+const opRegisterCertificateWithoutCA = "RegisterCertificateWithoutCA"
+
+// RegisterCertificateWithoutCARequest generates a "aws/request.Request" representing the
+// client's request for the RegisterCertificateWithoutCA operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RegisterCertificateWithoutCA for more information on using the RegisterCertificateWithoutCA
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RegisterCertificateWithoutCARequest method.
+//    req, resp := client.RegisterCertificateWithoutCARequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *IoT) RegisterCertificateWithoutCARequest(input *RegisterCertificateWithoutCAInput) (req *request.Request, output *RegisterCertificateWithoutCAOutput) {
+	op := &request.Operation{
+		Name:       opRegisterCertificateWithoutCA,
+		HTTPMethod: "POST",
+		HTTPPath:   "/certificate/register-no-ca",
+	}
+
+	if input == nil {
+		input = &RegisterCertificateWithoutCAInput{}
+	}
+
+	output = &RegisterCertificateWithoutCAOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RegisterCertificateWithoutCA API operation for AWS IoT.
+//
+// Register a certificate that does not have a certificate authority (CA).
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS IoT's
+// API operation RegisterCertificateWithoutCA for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceAlreadyExistsException
+//   The resource already exists.
+//
+//   * InvalidRequestException
+//   The request is not valid.
+//
+//   * CertificateStateException
+//   The certificate operation is not allowed.
+//
+//   * CertificateValidationException
+//   The certificate is invalid.
+//
+//   * ThrottlingException
+//   The rate exceeds the limit.
+//
+//   * UnauthorizedException
+//   You are not authorized to perform this operation.
+//
+//   * ServiceUnavailableException
+//   The service is temporarily unavailable.
+//
+//   * InternalFailureException
+//   An unexpected error has occurred.
+//
+func (c *IoT) RegisterCertificateWithoutCA(input *RegisterCertificateWithoutCAInput) (*RegisterCertificateWithoutCAOutput, error) {
+	req, out := c.RegisterCertificateWithoutCARequest(input)
+	return out, req.Send()
+}
+
+// RegisterCertificateWithoutCAWithContext is the same as RegisterCertificateWithoutCA with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RegisterCertificateWithoutCA for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *IoT) RegisterCertificateWithoutCAWithContext(ctx aws.Context, input *RegisterCertificateWithoutCAInput, opts ...request.Option) (*RegisterCertificateWithoutCAOutput, error) {
+	req, out := c.RegisterCertificateWithoutCARequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opRegisterThing = "RegisterThing"
 
 // RegisterThingRequest generates a "aws/request.Request" representing the
@@ -15186,6 +15286,10 @@ func (c *IoT) RemoveThingFromThingGroupRequest(input *RemoveThingFromThingGroupI
 // RemoveThingFromThingGroup API operation for AWS IoT.
 //
 // Remove the specified thing from the specified group.
+//
+// You must specify either a thingGroupArn or a thingGroupName to identify the
+// thing group and either a thingArn or a thingName to identify the thing to
+// remove from the thing group.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -15759,9 +15863,6 @@ func (c *IoT) SetV2LoggingLevelRequest(input *SetV2LoggingLevelInput) (req *requ
 //
 //   * ServiceUnavailableException
 //   The service is temporarily unavailable.
-//
-//   * LimitExceededException
-//   A limit has been exceeded.
 //
 func (c *IoT) SetV2LoggingLevel(input *SetV2LoggingLevelInput) (*SetV2LoggingLevelOutput, error) {
 	req, out := c.SetV2LoggingLevelRequest(input)
@@ -18662,11 +18763,11 @@ func (c *IoT) ValidateSecurityProfileBehaviorsWithContext(ctx aws.Context, input
 	return out, req.Send()
 }
 
-// Details of abort criteria to abort the job.
+// The criteria that determine when and how a job abort takes place.
 type AbortConfig struct {
 	_ struct{} `type:"structure"`
 
-	// The list of abort criteria to define rules to abort the job.
+	// The list of criteria that determine when and how to abort the job.
 	//
 	// CriteriaList is a required field
 	CriteriaList []*AbortCriteria `locationName:"criteriaList" min:"1" type:"list" required:"true"`
@@ -18714,27 +18815,28 @@ func (s *AbortConfig) SetCriteriaList(v []*AbortCriteria) *AbortConfig {
 	return s
 }
 
-// Details of abort criteria to define rules to abort the job.
+// The criteria that determine when and how a job abort takes place.
 type AbortCriteria struct {
 	_ struct{} `type:"structure"`
 
-	// The type of abort action to initiate a job abort.
+	// The type of job action to take to initiate the job abort.
 	//
 	// Action is a required field
 	Action *string `locationName:"action" type:"string" required:"true" enum:"AbortAction"`
 
-	// The type of job execution failure to define a rule to initiate a job abort.
+	// The type of job execution failures that can initiate a job abort.
 	//
 	// FailureType is a required field
 	FailureType *string `locationName:"failureType" type:"string" required:"true" enum:"JobExecutionFailureType"`
 
-	// Minimum number of executed things before evaluating an abort rule.
+	// The minimum number of things which must receive job execution notifications
+	// before the job can be aborted.
 	//
 	// MinNumberOfExecutedThings is a required field
 	MinNumberOfExecutedThings *int64 `locationName:"minNumberOfExecutedThings" min:"1" type:"integer" required:"true"`
 
-	// The threshold as a percentage of the total number of executed things that
-	// will initiate a job abort.
+	// The minimum percentage of job execution failures that must occur to initiate
+	// the job abort.
 	//
 	// AWS IoT supports up to two digits after the decimal (for example, 10.9 and
 	// 10.99, but not 10.999).
@@ -19850,7 +19952,7 @@ type AttachPolicyInput struct {
 	// PolicyName is a required field
 	PolicyName *string `location:"uri" locationName:"policyName" min:"1" type:"string" required:"true"`
 
-	// The identity (https://docs.aws.amazon.com/iot/latest/developerguide/iot-security-identity.html)
+	// The identity (https://docs.aws.amazon.com/iot/latest/developerguide/security-iam.html)
 	// to which the policy is attached.
 	//
 	// Target is a required field
@@ -20678,7 +20780,9 @@ type AuthInfo struct {
 
 	// The resources for which the principal is being authorized to perform the
 	// specified action.
-	Resources []*string `locationName:"resources" type:"list"`
+	//
+	// Resources is a required field
+	Resources []*string `locationName:"resources" type:"list" required:"true"`
 }
 
 // String returns the string representation
@@ -20689,6 +20793,19 @@ func (s AuthInfo) String() string {
 // GoString returns the string representation
 func (s AuthInfo) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AuthInfo) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AuthInfo"}
+	if s.Resources == nil {
+		invalidParams.Add(request.NewErrParamRequired("Resources"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetActionType sets the ActionType field's value.
@@ -20943,9 +21060,154 @@ func (s *AuthorizerSummary) SetAuthorizerName(v string) *AuthorizerSummary {
 	return s
 }
 
+// The criteria that determine when and how a job abort takes place.
+type AwsJobAbortConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The list of criteria that determine when and how to abort the job.
+	//
+	// AbortCriteriaList is a required field
+	AbortCriteriaList []*AwsJobAbortCriteria `locationName:"abortCriteriaList" min:"1" type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobAbortConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobAbortConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobAbortConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobAbortConfig"}
+	if s.AbortCriteriaList == nil {
+		invalidParams.Add(request.NewErrParamRequired("AbortCriteriaList"))
+	}
+	if s.AbortCriteriaList != nil && len(s.AbortCriteriaList) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AbortCriteriaList", 1))
+	}
+	if s.AbortCriteriaList != nil {
+		for i, v := range s.AbortCriteriaList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AbortCriteriaList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAbortCriteriaList sets the AbortCriteriaList field's value.
+func (s *AwsJobAbortConfig) SetAbortCriteriaList(v []*AwsJobAbortCriteria) *AwsJobAbortConfig {
+	s.AbortCriteriaList = v
+	return s
+}
+
+// The criteria that determine when and how a job abort takes place.
+type AwsJobAbortCriteria struct {
+	_ struct{} `type:"structure"`
+
+	// The type of job action to take to initiate the job abort.
+	//
+	// Action is a required field
+	Action *string `locationName:"action" type:"string" required:"true" enum:"AwsJobAbortCriteriaAbortAction"`
+
+	// The type of job execution failures that can initiate a job abort.
+	//
+	// FailureType is a required field
+	FailureType *string `locationName:"failureType" type:"string" required:"true" enum:"AwsJobAbortCriteriaFailureType"`
+
+	// The minimum number of things which must receive job execution notifications
+	// before the job can be aborted.
+	//
+	// MinNumberOfExecutedThings is a required field
+	MinNumberOfExecutedThings *int64 `locationName:"minNumberOfExecutedThings" min:"1" type:"integer" required:"true"`
+
+	// The minimum percentage of job execution failures that must occur to initiate
+	// the job abort.
+	//
+	// AWS IoT supports up to two digits after the decimal (for example, 10.9 and
+	// 10.99, but not 10.999).
+	//
+	// ThresholdPercentage is a required field
+	ThresholdPercentage *float64 `locationName:"thresholdPercentage" type:"double" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobAbortCriteria) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobAbortCriteria) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobAbortCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobAbortCriteria"}
+	if s.Action == nil {
+		invalidParams.Add(request.NewErrParamRequired("Action"))
+	}
+	if s.FailureType == nil {
+		invalidParams.Add(request.NewErrParamRequired("FailureType"))
+	}
+	if s.MinNumberOfExecutedThings == nil {
+		invalidParams.Add(request.NewErrParamRequired("MinNumberOfExecutedThings"))
+	}
+	if s.MinNumberOfExecutedThings != nil && *s.MinNumberOfExecutedThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("MinNumberOfExecutedThings", 1))
+	}
+	if s.ThresholdPercentage == nil {
+		invalidParams.Add(request.NewErrParamRequired("ThresholdPercentage"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAction sets the Action field's value.
+func (s *AwsJobAbortCriteria) SetAction(v string) *AwsJobAbortCriteria {
+	s.Action = &v
+	return s
+}
+
+// SetFailureType sets the FailureType field's value.
+func (s *AwsJobAbortCriteria) SetFailureType(v string) *AwsJobAbortCriteria {
+	s.FailureType = &v
+	return s
+}
+
+// SetMinNumberOfExecutedThings sets the MinNumberOfExecutedThings field's value.
+func (s *AwsJobAbortCriteria) SetMinNumberOfExecutedThings(v int64) *AwsJobAbortCriteria {
+	s.MinNumberOfExecutedThings = &v
+	return s
+}
+
+// SetThresholdPercentage sets the ThresholdPercentage field's value.
+func (s *AwsJobAbortCriteria) SetThresholdPercentage(v float64) *AwsJobAbortCriteria {
+	s.ThresholdPercentage = &v
+	return s
+}
+
 // Configuration for the rollout of OTA updates.
 type AwsJobExecutionsRolloutConfig struct {
 	_ struct{} `type:"structure"`
+
+	// The rate of increase for a job rollout. This parameter allows you to define
+	// an exponential rate increase for a job rollout.
+	ExponentialRate *AwsJobExponentialRolloutRate `locationName:"exponentialRate" type:"structure"`
 
 	// The maximum number of OTA update job executions started per minute.
 	MaximumPerMinute *int64 `locationName:"maximumPerMinute" min:"1" type:"integer"`
@@ -20967,6 +21229,11 @@ func (s *AwsJobExecutionsRolloutConfig) Validate() error {
 	if s.MaximumPerMinute != nil && *s.MaximumPerMinute < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("MaximumPerMinute", 1))
 	}
+	if s.ExponentialRate != nil {
+		if err := s.ExponentialRate.Validate(); err != nil {
+			invalidParams.AddNested("ExponentialRate", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -20974,9 +21241,97 @@ func (s *AwsJobExecutionsRolloutConfig) Validate() error {
 	return nil
 }
 
+// SetExponentialRate sets the ExponentialRate field's value.
+func (s *AwsJobExecutionsRolloutConfig) SetExponentialRate(v *AwsJobExponentialRolloutRate) *AwsJobExecutionsRolloutConfig {
+	s.ExponentialRate = v
+	return s
+}
+
 // SetMaximumPerMinute sets the MaximumPerMinute field's value.
 func (s *AwsJobExecutionsRolloutConfig) SetMaximumPerMinute(v int64) *AwsJobExecutionsRolloutConfig {
 	s.MaximumPerMinute = &v
+	return s
+}
+
+// The rate of increase for a job rollout. This parameter allows you to define
+// an exponential rate increase for a job rollout.
+type AwsJobExponentialRolloutRate struct {
+	_ struct{} `type:"structure"`
+
+	// The minimum number of things that will be notified of a pending job, per
+	// minute, at the start of the job rollout. This is the initial rate of the
+	// rollout.
+	//
+	// BaseRatePerMinute is a required field
+	BaseRatePerMinute *int64 `locationName:"baseRatePerMinute" min:"1" type:"integer" required:"true"`
+
+	// The rate of increase for a job rollout. The number of things notified is
+	// multiplied by this factor.
+	//
+	// IncrementFactor is a required field
+	IncrementFactor *float64 `locationName:"incrementFactor" type:"double" required:"true"`
+
+	// The criteria to initiate the increase in rate of rollout for a job.
+	//
+	// AWS IoT supports up to one digit after the decimal (for example, 1.5, but
+	// not 1.55).
+	//
+	// RateIncreaseCriteria is a required field
+	RateIncreaseCriteria *AwsJobRateIncreaseCriteria `locationName:"rateIncreaseCriteria" type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AwsJobExponentialRolloutRate) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobExponentialRolloutRate) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobExponentialRolloutRate) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobExponentialRolloutRate"}
+	if s.BaseRatePerMinute == nil {
+		invalidParams.Add(request.NewErrParamRequired("BaseRatePerMinute"))
+	}
+	if s.BaseRatePerMinute != nil && *s.BaseRatePerMinute < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("BaseRatePerMinute", 1))
+	}
+	if s.IncrementFactor == nil {
+		invalidParams.Add(request.NewErrParamRequired("IncrementFactor"))
+	}
+	if s.RateIncreaseCriteria == nil {
+		invalidParams.Add(request.NewErrParamRequired("RateIncreaseCriteria"))
+	}
+	if s.RateIncreaseCriteria != nil {
+		if err := s.RateIncreaseCriteria.Validate(); err != nil {
+			invalidParams.AddNested("RateIncreaseCriteria", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBaseRatePerMinute sets the BaseRatePerMinute field's value.
+func (s *AwsJobExponentialRolloutRate) SetBaseRatePerMinute(v int64) *AwsJobExponentialRolloutRate {
+	s.BaseRatePerMinute = &v
+	return s
+}
+
+// SetIncrementFactor sets the IncrementFactor field's value.
+func (s *AwsJobExponentialRolloutRate) SetIncrementFactor(v float64) *AwsJobExponentialRolloutRate {
+	s.IncrementFactor = &v
+	return s
+}
+
+// SetRateIncreaseCriteria sets the RateIncreaseCriteria field's value.
+func (s *AwsJobExponentialRolloutRate) SetRateIncreaseCriteria(v *AwsJobRateIncreaseCriteria) *AwsJobExponentialRolloutRate {
+	s.RateIncreaseCriteria = v
 	return s
 }
 
@@ -21004,6 +21359,89 @@ func (s AwsJobPresignedUrlConfig) GoString() string {
 // SetExpiresInSec sets the ExpiresInSec field's value.
 func (s *AwsJobPresignedUrlConfig) SetExpiresInSec(v int64) *AwsJobPresignedUrlConfig {
 	s.ExpiresInSec = &v
+	return s
+}
+
+// The criteria to initiate the increase in rate of rollout for a job.
+type AwsJobRateIncreaseCriteria struct {
+	_ struct{} `type:"structure"`
+
+	// When this number of things have been notified, it will initiate an increase
+	// in the rollout rate.
+	NumberOfNotifiedThings *int64 `locationName:"numberOfNotifiedThings" min:"1" type:"integer"`
+
+	// When this number of things have succeeded in their job execution, it will
+	// initiate an increase in the rollout rate.
+	NumberOfSucceededThings *int64 `locationName:"numberOfSucceededThings" min:"1" type:"integer"`
+}
+
+// String returns the string representation
+func (s AwsJobRateIncreaseCriteria) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobRateIncreaseCriteria) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AwsJobRateIncreaseCriteria) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AwsJobRateIncreaseCriteria"}
+	if s.NumberOfNotifiedThings != nil && *s.NumberOfNotifiedThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NumberOfNotifiedThings", 1))
+	}
+	if s.NumberOfSucceededThings != nil && *s.NumberOfSucceededThings < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("NumberOfSucceededThings", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNumberOfNotifiedThings sets the NumberOfNotifiedThings field's value.
+func (s *AwsJobRateIncreaseCriteria) SetNumberOfNotifiedThings(v int64) *AwsJobRateIncreaseCriteria {
+	s.NumberOfNotifiedThings = &v
+	return s
+}
+
+// SetNumberOfSucceededThings sets the NumberOfSucceededThings field's value.
+func (s *AwsJobRateIncreaseCriteria) SetNumberOfSucceededThings(v int64) *AwsJobRateIncreaseCriteria {
+	s.NumberOfSucceededThings = &v
+	return s
+}
+
+// Specifies the amount of time each device has to finish its execution of the
+// job. A timer is started when the job execution status is set to IN_PROGRESS.
+// If the job execution status is not set to another terminal state before the
+// timer expires, it will be automatically set to TIMED_OUT.
+type AwsJobTimeoutConfig struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the amount of time, in minutes, this device has to finish execution
+	// of this job. The timeout interval can be anywhere between 1 minute and 7
+	// days (1 to 10080 minutes). The in progress timer can't be updated and will
+	// apply to all job executions for the job. Whenever a job execution remains
+	// in the IN_PROGRESS status for longer than this interval, the job execution
+	// will fail and switch to the terminal TIMED_OUT status.
+	InProgressTimeoutInMinutes *int64 `locationName:"inProgressTimeoutInMinutes" type:"long"`
+}
+
+// String returns the string representation
+func (s AwsJobTimeoutConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AwsJobTimeoutConfig) GoString() string {
+	return s.String()
+}
+
+// SetInProgressTimeoutInMinutes sets the InProgressTimeoutInMinutes field's value.
+func (s *AwsJobTimeoutConfig) SetInProgressTimeoutInMinutes(v int64) *AwsJobTimeoutConfig {
+	s.InProgressTimeoutInMinutes = &v
 	return s
 }
 
@@ -21810,6 +22248,9 @@ type Certificate struct {
 	// the certificate ID.)
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
 
+	// The mode of the certificate.
+	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"CertificateMode"`
+
 	// The date and time the certificate was created.
 	CreationDate *time.Time `locationName:"creationDate" type:"timestamp"`
 
@@ -21838,6 +22279,12 @@ func (s *Certificate) SetCertificateArn(v string) *Certificate {
 // SetCertificateId sets the CertificateId field's value.
 func (s *Certificate) SetCertificateId(v string) *Certificate {
 	s.CertificateId = &v
+	return s
+}
+
+// SetCertificateMode sets the CertificateMode field's value.
+func (s *Certificate) SetCertificateMode(v string) *Certificate {
+	s.CertificateMode = &v
 	return s
 }
 
@@ -21925,6 +22372,9 @@ type CertificateDescription struct {
 	// The ID of the certificate.
 	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
 
+	// The mode of the certificate.
+	CertificateMode *string `locationName:"certificateMode" type:"string" enum:"CertificateMode"`
+
 	// The certificate data, in PEM format.
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string"`
 
@@ -21981,6 +22431,12 @@ func (s *CertificateDescription) SetCertificateArn(v string) *CertificateDescrip
 // SetCertificateId sets the CertificateId field's value.
 func (s *CertificateDescription) SetCertificateId(v string) *CertificateDescription {
 	s.CertificateId = &v
+	return s
+}
+
+// SetCertificateMode sets the CertificateMode field's value.
+func (s *CertificateDescription) SetCertificateMode(v string) *CertificateDescription {
+	s.CertificateMode = &v
 	return s
 }
 
@@ -22732,6 +23188,15 @@ type CreateAuthorizerInput struct {
 	// The status of the create authorizer request.
 	Status *string `locationName:"status" type:"string" enum:"AuthorizerStatus"`
 
+	// Metadata which can be used to manage the custom authorizer.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The name of the token key used to extract the token from the HTTP headers.
 	TokenKeyName *string `locationName:"tokenKeyName" min:"1" type:"string"`
 
@@ -22765,6 +23230,16 @@ func (s *CreateAuthorizerInput) Validate() error {
 	if s.TokenKeyName != nil && len(*s.TokenKeyName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TokenKeyName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -22793,6 +23268,12 @@ func (s *CreateAuthorizerInput) SetSigningDisabled(v bool) *CreateAuthorizerInpu
 // SetStatus sets the Status field's value.
 func (s *CreateAuthorizerInput) SetStatus(v string) *CreateAuthorizerInput {
 	s.Status = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateAuthorizerInput) SetTags(v []*Tag) *CreateAuthorizerInput {
+	s.Tags = v
 	return s
 }
 
@@ -22873,6 +23354,16 @@ func (s *CreateBillingGroupInput) Validate() error {
 	}
 	if s.BillingGroupName != nil && len(*s.BillingGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("BillingGroupName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23097,6 +23588,16 @@ func (s *CreateDimensionInput) Validate() error {
 	if s.Type == nil {
 		invalidParams.Add(request.NewErrParamRequired("Type"))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23186,7 +23687,18 @@ type CreateDomainConfigurationInput struct {
 	ServerCertificateArns []*string `locationName:"serverCertificateArns" type:"list"`
 
 	// The type of service delivered by the endpoint.
+	//
+	// AWS IoT Core currently supports only the DATA service type.
 	ServiceType *string `locationName:"serviceType" type:"string" enum:"ServiceType"`
+
+	// Metadata which can be used to manage the domain configuration.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
 
 	// The certificate used to validate the server certificate and prove domain
 	// name ownership. This certificate must be signed by a public certificate authority.
@@ -23224,6 +23736,16 @@ func (s *CreateDomainConfigurationInput) Validate() error {
 			invalidParams.AddNested("AuthorizerConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23258,6 +23780,12 @@ func (s *CreateDomainConfigurationInput) SetServerCertificateArns(v []*string) *
 // SetServiceType sets the ServiceType field's value.
 func (s *CreateDomainConfigurationInput) SetServiceType(v string) *CreateDomainConfigurationInput {
 	s.ServiceType = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateDomainConfigurationInput) SetTags(v []*Tag) *CreateDomainConfigurationInput {
+	s.Tags = v
 	return s
 }
 
@@ -23360,6 +23888,16 @@ func (s *CreateDynamicThingGroupInput) Validate() error {
 	}
 	if s.ThingGroupName != nil && len(*s.ThingGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ThingGroupName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -23573,6 +24111,16 @@ func (s *CreateJobInput) Validate() error {
 	if s.PresignedUrlConfig != nil {
 		if err := s.PresignedUrlConfig.Validate(); err != nil {
 			invalidParams.AddNested("PresignedUrlConfig", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
 		}
 	}
 
@@ -23821,6 +24369,16 @@ func (s *CreateMitigationActionInput) Validate() error {
 			invalidParams.AddNested("ActionParams", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -23890,11 +24448,20 @@ type CreateOTAUpdateInput struct {
 	// A list of additional OTA update parameters which are name-value pairs.
 	AdditionalParameters map[string]*string `locationName:"additionalParameters" type:"map"`
 
+	// The criteria that determine when and how a job abort takes place.
+	AwsJobAbortConfig *AwsJobAbortConfig `locationName:"awsJobAbortConfig" type:"structure"`
+
 	// Configuration for the rollout of OTA updates.
 	AwsJobExecutionsRolloutConfig *AwsJobExecutionsRolloutConfig `locationName:"awsJobExecutionsRolloutConfig" type:"structure"`
 
 	// Configuration information for pre-signed URLs.
 	AwsJobPresignedUrlConfig *AwsJobPresignedUrlConfig `locationName:"awsJobPresignedUrlConfig" type:"structure"`
+
+	// Specifies the amount of time each device has to finish its execution of the
+	// job. A timer is started when the job execution status is set to IN_PROGRESS.
+	// If the job execution status is not set to another terminal state before the
+	// timer expires, it will be automatically set to TIMED_OUT.
+	AwsJobTimeoutConfig *AwsJobTimeoutConfig `locationName:"awsJobTimeoutConfig" type:"structure"`
 
 	// The description of the OTA update.
 	Description *string `locationName:"description" type:"string"`
@@ -23914,7 +24481,8 @@ type CreateOTAUpdateInput struct {
 	// can choose the protocol.
 	Protocols []*string `locationName:"protocols" min:"1" type:"list"`
 
-	// The IAM role that allows access to the AWS IoT Jobs service.
+	// The IAM role that grants AWS IoT access to the Amazon S3, AWS IoT jobs and
+	// AWS Code Signing resources to create an OTA update job.
 	//
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
@@ -23930,7 +24498,7 @@ type CreateOTAUpdateInput struct {
 	// by all things originally in the group. Valid values: CONTINUOUS | SNAPSHOT.
 	TargetSelection *string `locationName:"targetSelection" type:"string" enum:"TargetSelection"`
 
-	// The targeted devices to receive OTA updates.
+	// The devices targeted to receive OTA updates.
 	//
 	// Targets is a required field
 	Targets []*string `locationName:"targets" min:"1" type:"list" required:"true"`
@@ -23976,6 +24544,11 @@ func (s *CreateOTAUpdateInput) Validate() error {
 	if s.Targets != nil && len(s.Targets) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Targets", 1))
 	}
+	if s.AwsJobAbortConfig != nil {
+		if err := s.AwsJobAbortConfig.Validate(); err != nil {
+			invalidParams.AddNested("AwsJobAbortConfig", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.AwsJobExecutionsRolloutConfig != nil {
 		if err := s.AwsJobExecutionsRolloutConfig.Validate(); err != nil {
 			invalidParams.AddNested("AwsJobExecutionsRolloutConfig", err.(request.ErrInvalidParams))
@@ -23988,6 +24561,16 @@ func (s *CreateOTAUpdateInput) Validate() error {
 			}
 			if err := v.Validate(); err != nil {
 				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Files", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
 			}
 		}
 	}
@@ -24004,6 +24587,12 @@ func (s *CreateOTAUpdateInput) SetAdditionalParameters(v map[string]*string) *Cr
 	return s
 }
 
+// SetAwsJobAbortConfig sets the AwsJobAbortConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobAbortConfig(v *AwsJobAbortConfig) *CreateOTAUpdateInput {
+	s.AwsJobAbortConfig = v
+	return s
+}
+
 // SetAwsJobExecutionsRolloutConfig sets the AwsJobExecutionsRolloutConfig field's value.
 func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecutionsRolloutConfig) *CreateOTAUpdateInput {
 	s.AwsJobExecutionsRolloutConfig = v
@@ -24013,6 +24602,12 @@ func (s *CreateOTAUpdateInput) SetAwsJobExecutionsRolloutConfig(v *AwsJobExecuti
 // SetAwsJobPresignedUrlConfig sets the AwsJobPresignedUrlConfig field's value.
 func (s *CreateOTAUpdateInput) SetAwsJobPresignedUrlConfig(v *AwsJobPresignedUrlConfig) *CreateOTAUpdateInput {
 	s.AwsJobPresignedUrlConfig = v
+	return s
+}
+
+// SetAwsJobTimeoutConfig sets the AwsJobTimeoutConfig field's value.
+func (s *CreateOTAUpdateInput) SetAwsJobTimeoutConfig(v *AwsJobTimeoutConfig) *CreateOTAUpdateInput {
+	s.AwsJobTimeoutConfig = v
 	return s
 }
 
@@ -24137,6 +24732,15 @@ type CreatePolicyInput struct {
 	//
 	// PolicyName is a required field
 	PolicyName *string `location:"uri" locationName:"policyName" min:"1" type:"string" required:"true"`
+
+	// Metadata which can be used to manage the policy.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -24161,6 +24765,16 @@ func (s *CreatePolicyInput) Validate() error {
 	if s.PolicyName != nil && len(*s.PolicyName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("PolicyName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24177,6 +24791,12 @@ func (s *CreatePolicyInput) SetPolicyDocument(v string) *CreatePolicyInput {
 // SetPolicyName sets the PolicyName field's value.
 func (s *CreatePolicyInput) SetPolicyName(v string) *CreatePolicyInput {
 	s.PolicyName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreatePolicyInput) SetTags(v []*Tag) *CreatePolicyInput {
+	s.Tags = v
 	return s
 }
 
@@ -24450,6 +25070,9 @@ type CreateProvisioningTemplateInput struct {
 	// True to enable the fleet provisioning template, otherwise false.
 	Enabled *bool `locationName:"enabled" type:"boolean"`
 
+	// Creates a pre-provisioning hook template.
+	PreProvisioningHook *ProvisioningHook `locationName:"preProvisioningHook" type:"structure"`
+
 	// The role ARN for the role associated with the fleet provisioning template.
 	// This IoT role grants permission to provision a device.
 	//
@@ -24504,6 +25127,21 @@ func (s *CreateProvisioningTemplateInput) Validate() error {
 	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
 	}
+	if s.PreProvisioningHook != nil {
+		if err := s.PreProvisioningHook.Validate(); err != nil {
+			invalidParams.AddNested("PreProvisioningHook", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24520,6 +25158,12 @@ func (s *CreateProvisioningTemplateInput) SetDescription(v string) *CreateProvis
 // SetEnabled sets the Enabled field's value.
 func (s *CreateProvisioningTemplateInput) SetEnabled(v bool) *CreateProvisioningTemplateInput {
 	s.Enabled = &v
+	return s
+}
+
+// SetPreProvisioningHook sets the PreProvisioningHook field's value.
+func (s *CreateProvisioningTemplateInput) SetPreProvisioningHook(v *ProvisioningHook) *CreateProvisioningTemplateInput {
+	s.PreProvisioningHook = v
 	return s
 }
 
@@ -24719,6 +25363,15 @@ type CreateRoleAliasInput struct {
 	//
 	// RoleArn is a required field
 	RoleArn *string `locationName:"roleArn" min:"20" type:"string" required:"true"`
+
+	// Metadata which can be used to manage the role alias.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
 }
 
 // String returns the string representation
@@ -24749,6 +25402,16 @@ func (s *CreateRoleAliasInput) Validate() error {
 	if s.RoleArn != nil && len(*s.RoleArn) < 20 {
 		invalidParams.Add(request.NewErrParamMinLen("RoleArn", 20))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -24771,6 +25434,12 @@ func (s *CreateRoleAliasInput) SetRoleAlias(v string) *CreateRoleAliasInput {
 // SetRoleArn sets the RoleArn field's value.
 func (s *CreateRoleAliasInput) SetRoleArn(v string) *CreateRoleAliasInput {
 	s.RoleArn = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateRoleAliasInput) SetTags(v []*Tag) *CreateRoleAliasInput {
+	s.Tags = v
 	return s
 }
 
@@ -24868,6 +25537,16 @@ func (s *CreateScheduledAuditInput) Validate() error {
 	}
 	if s.TargetCheckNames == nil {
 		invalidParams.Add(request.NewErrParamRequired("TargetCheckNames"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -25022,6 +25701,16 @@ func (s *CreateSecurityProfileInput) Validate() error {
 			}
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -25170,6 +25859,16 @@ func (s *CreateStreamInput) Validate() error {
 			}
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -25297,6 +25996,16 @@ func (s *CreateThingGroupInput) Validate() error {
 	if s.ThingGroupName != nil && len(*s.ThingGroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ThingGroupName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -25383,6 +26092,10 @@ type CreateThingInput struct {
 	BillingGroupName *string `locationName:"billingGroupName" min:"1" type:"string"`
 
 	// The name of the thing to create.
+	//
+	// You can't change a thing's name after you create it. To change a thing's
+	// name, you must create a new thing, give it the new name, and then delete
+	// the old thing.
 	//
 	// ThingName is a required field
 	ThingName *string `location:"uri" locationName:"thingName" min:"1" type:"string" required:"true"`
@@ -25525,6 +26238,16 @@ func (s *CreateThingTypeInput) Validate() error {
 	}
 	if s.ThingTypeName != nil && len(*s.ThingTypeName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("ThingTypeName", 1))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -26558,10 +27281,10 @@ type DeleteOTAUpdateInput struct {
 	DeleteStream *bool `location:"querystring" locationName:"deleteStream" type:"boolean"`
 
 	// Specifies if the AWS Job associated with the OTA update should be deleted
-	// with the OTA update is deleted.
+	// when the OTA update is deleted.
 	ForceDeleteAWSJob *bool `location:"querystring" locationName:"forceDeleteAWSJob" type:"boolean"`
 
-	// The OTA update ID to delete.
+	// The ID of the OTA update to delete.
 	//
 	// OtaUpdateId is a required field
 	OtaUpdateId *string `location:"uri" locationName:"otaUpdateId" min:"1" type:"string" required:"true"`
@@ -29115,6 +29838,9 @@ type DescribeProvisioningTemplateOutput struct {
 	// The date when the fleet provisioning template was last modified.
 	LastModifiedDate *time.Time `locationName:"lastModifiedDate" type:"timestamp"`
 
+	// Gets information about a pre-provisioned hook.
+	PreProvisioningHook *ProvisioningHook `locationName:"preProvisioningHook" type:"structure"`
+
 	// The ARN of the role associated with the provisioning template. This IoT role
 	// grants permission to provision a device.
 	ProvisioningRoleArn *string `locationName:"provisioningRoleArn" min:"20" type:"string"`
@@ -29166,6 +29892,12 @@ func (s *DescribeProvisioningTemplateOutput) SetEnabled(v bool) *DescribeProvisi
 // SetLastModifiedDate sets the LastModifiedDate field's value.
 func (s *DescribeProvisioningTemplateOutput) SetLastModifiedDate(v time.Time) *DescribeProvisioningTemplateOutput {
 	s.LastModifiedDate = &v
+	return s
+}
+
+// SetPreProvisioningHook sets the PreProvisioningHook field's value.
+func (s *DescribeProvisioningTemplateOutput) SetPreProvisioningHook(v *ProvisioningHook) *DescribeProvisioningTemplateOutput {
+	s.PreProvisioningHook = v
 	return s
 }
 
@@ -29896,7 +30628,14 @@ type DescribeThingOutput struct {
 	// The name of the billing group the thing belongs to.
 	BillingGroupName *string `locationName:"billingGroupName" min:"1" type:"string"`
 
-	// The default client ID.
+	// The default MQTT client ID. For a typical device, the thing name is also
+	// used as the default MQTT client ID. Although we don’t require a mapping
+	// between a thing's registry name and its use of MQTT client IDs, certificates,
+	// or shadow state, we recommend that you choose a thing name and use it as
+	// the MQTT client ID for the registry and the Device Shadow service.
+	//
+	// This lets you better organize your AWS IoT fleet without removing the flexibility
+	// of the underlying device certificate model or shadows.
 	DefaultClientId *string `locationName:"defaultClientId" type:"string"`
 
 	// The ARN of the thing to describe.
@@ -39301,8 +40040,8 @@ type MetricDimension struct {
 	DimensionName *string `locationName:"dimensionName" min:"1" type:"string" required:"true"`
 
 	// Defines how the dimensionValues of a dimension are interpreted. For example,
-	// for DimensionType TOPIC_FILTER, with IN operator, a message will be counted
-	// only if its topic matches one of the topic filters. With NOT_IN Operator,
+	// for dimension type TOPIC_FILTER, the IN operator, a message will be counted
+	// only if its topic matches one of the topic filters. With NOT_IN operator,
 	// a message will be counted only if it doesn't match any of the topic filters.
 	// The operator is optional: if it's not provided (is null), it will be interpreted
 	// as IN.
@@ -40385,6 +41124,61 @@ func (s *PresignedUrlConfig) SetRoleArn(v string) *PresignedUrlConfig {
 	return s
 }
 
+// Structure that contains payloadVersion and targetArn.
+type ProvisioningHook struct {
+	_ struct{} `type:"structure"`
+
+	// The payload that was sent to the target function.
+	//
+	// Note: Only Lambda functions are currently supported.
+	PayloadVersion *string `locationName:"payloadVersion" min:"10" type:"string"`
+
+	// The ARN of the target function.
+	//
+	// Note: Only Lambda functions are currently supported.
+	//
+	// TargetArn is a required field
+	TargetArn *string `locationName:"targetArn" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ProvisioningHook) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ProvisioningHook) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ProvisioningHook) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ProvisioningHook"}
+	if s.PayloadVersion != nil && len(*s.PayloadVersion) < 10 {
+		invalidParams.Add(request.NewErrParamMinLen("PayloadVersion", 10))
+	}
+	if s.TargetArn == nil {
+		invalidParams.Add(request.NewErrParamRequired("TargetArn"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPayloadVersion sets the PayloadVersion field's value.
+func (s *ProvisioningHook) SetPayloadVersion(v string) *ProvisioningHook {
+	s.PayloadVersion = &v
+	return s
+}
+
+// SetTargetArn sets the TargetArn field's value.
+func (s *ProvisioningHook) SetTargetArn(v string) *ProvisioningHook {
+	s.TargetArn = &v
+	return s
+}
+
 // A summary of information about a fleet provisioning template.
 type ProvisioningTemplateSummary struct {
 	_ struct{} `type:"structure"`
@@ -40746,6 +41540,15 @@ type RegisterCACertificateInput struct {
 	// A boolean value that specifies if the CA certificate is set to active.
 	SetAsActive *bool `location:"querystring" locationName:"setAsActive" type:"boolean"`
 
+	// Metadata which can be used to manage the CA certificate.
+	//
+	// For URI Request parameters use format: ...key1=value1&key2=value2...
+	//
+	// For the CLI command-line parameter use format: &&tags "key1=value1&key2=value2..."
+	//
+	// For the cli-input-json file use format: "tags": "key1=value1&key2=value2..."
+	Tags []*Tag `locationName:"tags" type:"list"`
+
 	// The private key verification certificate.
 	//
 	// VerificationCertificate is a required field
@@ -40782,6 +41585,16 @@ func (s *RegisterCACertificateInput) Validate() error {
 			invalidParams.AddNested("RegistrationConfig", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -40810,6 +41623,12 @@ func (s *RegisterCACertificateInput) SetRegistrationConfig(v *RegistrationConfig
 // SetSetAsActive sets the SetAsActive field's value.
 func (s *RegisterCACertificateInput) SetSetAsActive(v bool) *RegisterCACertificateInput {
 	s.SetAsActive = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *RegisterCACertificateInput) SetTags(v []*Tag) *RegisterCACertificateInput {
+	s.Tags = v
 	return s
 }
 
@@ -40959,10 +41778,93 @@ func (s *RegisterCertificateOutput) SetCertificateId(v string) *RegisterCertific
 	return s
 }
 
+type RegisterCertificateWithoutCAInput struct {
+	_ struct{} `type:"structure"`
+
+	// The certificate data, in PEM format.
+	//
+	// CertificatePem is a required field
+	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string" required:"true"`
+
+	// The status of the register certificate request.
+	Status *string `locationName:"status" type:"string" enum:"CertificateStatus"`
+}
+
+// String returns the string representation
+func (s RegisterCertificateWithoutCAInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegisterCertificateWithoutCAInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RegisterCertificateWithoutCAInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RegisterCertificateWithoutCAInput"}
+	if s.CertificatePem == nil {
+		invalidParams.Add(request.NewErrParamRequired("CertificatePem"))
+	}
+	if s.CertificatePem != nil && len(*s.CertificatePem) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CertificatePem", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCertificatePem sets the CertificatePem field's value.
+func (s *RegisterCertificateWithoutCAInput) SetCertificatePem(v string) *RegisterCertificateWithoutCAInput {
+	s.CertificatePem = &v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *RegisterCertificateWithoutCAInput) SetStatus(v string) *RegisterCertificateWithoutCAInput {
+	s.Status = &v
+	return s
+}
+
+type RegisterCertificateWithoutCAOutput struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the registered certificate.
+	CertificateArn *string `locationName:"certificateArn" type:"string"`
+
+	// The ID of the registered certificate. (The last part of the certificate ARN
+	// contains the certificate ID.
+	CertificateId *string `locationName:"certificateId" min:"64" type:"string"`
+}
+
+// String returns the string representation
+func (s RegisterCertificateWithoutCAOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RegisterCertificateWithoutCAOutput) GoString() string {
+	return s.String()
+}
+
+// SetCertificateArn sets the CertificateArn field's value.
+func (s *RegisterCertificateWithoutCAOutput) SetCertificateArn(v string) *RegisterCertificateWithoutCAOutput {
+	s.CertificateArn = &v
+	return s
+}
+
+// SetCertificateId sets the CertificateId field's value.
+func (s *RegisterCertificateWithoutCAOutput) SetCertificateId(v string) *RegisterCertificateWithoutCAOutput {
+	s.CertificateId = &v
+	return s
+}
+
 type RegisterThingInput struct {
 	_ struct{} `type:"structure"`
 
-	// The parameters for provisioning a thing. See Programmatic Provisioning (https://docs.aws.amazon.com/iot/latest/developerguide/programmatic-provisioning.html)
+	// The parameters for provisioning a thing. See Provisioning Templates (https://docs.aws.amazon.com/iot/latest/developerguide/provision-template.html)
 	// for more information.
 	Parameters map[string]*string `locationName:"parameters" type:"map"`
 
@@ -41012,7 +41914,7 @@ func (s *RegisterThingInput) SetTemplateBody(v string) *RegisterThingInput {
 type RegisterThingOutput struct {
 	_ struct{} `type:"structure"`
 
-	// .
+	// The certificate data, in PEM format.
 	CertificatePem *string `locationName:"certificatePem" min:"1" type:"string"`
 
 	// ARNs for the generated resources.
@@ -44040,10 +44942,12 @@ type Tag struct {
 	_ struct{} `type:"structure"`
 
 	// The tag's key.
-	Key *string `type:"string"`
+	//
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
 
 	// The tag's value.
-	Value *string `type:"string"`
+	Value *string `min:"1" type:"string"`
 }
 
 // String returns the string representation
@@ -44054,6 +44958,25 @@ func (s Tag) String() string {
 // GoString returns the string representation
 func (s Tag) GoString() string {
 	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value != nil && len(*s.Value) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Value", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
 }
 
 // SetKey sets the Key field's value.
@@ -44100,6 +45023,16 @@ func (s *TagResourceInput) Validate() error {
 	}
 	if s.Tags == nil {
 		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
 	}
 
 	if invalidParams.Len() > 0 {
@@ -44379,6 +45312,16 @@ func (s *TestAuthorizationInput) Validate() error {
 	if s.AuthInfos != nil && len(s.AuthInfos) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("AuthInfos", 1))
 	}
+	if s.AuthInfos != nil {
+		for i, v := range s.AuthInfos {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AuthInfos", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -44466,7 +45409,7 @@ type TestInvokeAuthorizerInput struct {
 	Token *string `locationName:"token" min:"1" type:"string"`
 
 	// The signature made with the token and your custom authentication service's
-	// private key.
+	// private key. This value must be Base-64-encoded.
 	TokenSignature *string `locationName:"tokenSignature" min:"1" type:"string"`
 }
 
@@ -47411,9 +48354,15 @@ type UpdateProvisioningTemplateInput struct {
 	// True to enable the fleet provisioning template, otherwise false.
 	Enabled *bool `locationName:"enabled" type:"boolean"`
 
+	// Updates the pre-provisioning hook template.
+	PreProvisioningHook *ProvisioningHook `locationName:"preProvisioningHook" type:"structure"`
+
 	// The ARN of the role associated with the provisioning template. This IoT role
 	// grants permission to provision a device.
 	ProvisioningRoleArn *string `locationName:"provisioningRoleArn" min:"20" type:"string"`
+
+	// Removes pre-provisioning hook template.
+	RemovePreProvisioningHook *bool `locationName:"removePreProvisioningHook" type:"boolean"`
 
 	// The name of the fleet provisioning template.
 	//
@@ -47443,6 +48392,11 @@ func (s *UpdateProvisioningTemplateInput) Validate() error {
 	if s.TemplateName != nil && len(*s.TemplateName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("TemplateName", 1))
 	}
+	if s.PreProvisioningHook != nil {
+		if err := s.PreProvisioningHook.Validate(); err != nil {
+			invalidParams.AddNested("PreProvisioningHook", err.(request.ErrInvalidParams))
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -47468,9 +48422,21 @@ func (s *UpdateProvisioningTemplateInput) SetEnabled(v bool) *UpdateProvisioning
 	return s
 }
 
+// SetPreProvisioningHook sets the PreProvisioningHook field's value.
+func (s *UpdateProvisioningTemplateInput) SetPreProvisioningHook(v *ProvisioningHook) *UpdateProvisioningTemplateInput {
+	s.PreProvisioningHook = v
+	return s
+}
+
 // SetProvisioningRoleArn sets the ProvisioningRoleArn field's value.
 func (s *UpdateProvisioningTemplateInput) SetProvisioningRoleArn(v string) *UpdateProvisioningTemplateInput {
 	s.ProvisioningRoleArn = &v
+	return s
+}
+
+// SetRemovePreProvisioningHook sets the RemovePreProvisioningHook field's value.
+func (s *UpdateProvisioningTemplateInput) SetRemovePreProvisioningHook(v bool) *UpdateProvisioningTemplateInput {
+	s.RemovePreProvisioningHook = &v
 	return s
 }
 
@@ -48308,6 +49274,9 @@ type UpdateThingInput struct {
 
 	// The name of the thing to update.
 	//
+	// You can't change a thing's name. To change a thing's name, you must create
+	// a new thing, give it the new name, and then delete the old thing.
+	//
 	// ThingName is a required field
 	ThingName *string `location:"uri" locationName:"thingName" min:"1" type:"string" required:"true"`
 
@@ -48940,6 +49909,25 @@ const (
 )
 
 const (
+	// AwsJobAbortCriteriaAbortActionCancel is a AwsJobAbortCriteriaAbortAction enum value
+	AwsJobAbortCriteriaAbortActionCancel = "CANCEL"
+)
+
+const (
+	// AwsJobAbortCriteriaFailureTypeFailed is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeFailed = "FAILED"
+
+	// AwsJobAbortCriteriaFailureTypeRejected is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeRejected = "REJECTED"
+
+	// AwsJobAbortCriteriaFailureTypeTimedOut is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeTimedOut = "TIMED_OUT"
+
+	// AwsJobAbortCriteriaFailureTypeAll is a AwsJobAbortCriteriaFailureType enum value
+	AwsJobAbortCriteriaFailureTypeAll = "ALL"
+)
+
+const (
 	// CACertificateStatusActive is a CACertificateStatus enum value
 	CACertificateStatusActive = "ACTIVE"
 
@@ -48976,6 +49964,14 @@ const (
 
 	// CannedAccessControlListLogDeliveryWrite is a CannedAccessControlList enum value
 	CannedAccessControlListLogDeliveryWrite = "log-delivery-write"
+)
+
+const (
+	// CertificateModeDefault is a CertificateMode enum value
+	CertificateModeDefault = "DEFAULT"
+
+	// CertificateModeSniOnly is a CertificateMode enum value
+	CertificateModeSniOnly = "SNI_ONLY"
 )
 
 const (

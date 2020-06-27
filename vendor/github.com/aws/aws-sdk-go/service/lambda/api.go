@@ -2420,6 +2420,20 @@ func (c *Lambda) InvokeRequest(input *InvokeInput) (req *request.Request, output
 //   specified as part of Lambda function configuration, because the limit for
 //   network interfaces has been reached.
 //
+//   * EFSMountConnectivityException
+//   The function couldn't make a network connection to the configured file system.
+//
+//   * EFSMountFailureException
+//   The function couldn't mount the configured file system due to a permission
+//   or configuration issue.
+//
+//   * EFSMountTimeoutException
+//   The function was able to make a network connection to the configured file
+//   system, but the mount operation timed out.
+//
+//   * EFSIOException
+//   An error occured when reading from or writing to a connected file system.
+//
 //   * EC2ThrottledException
 //   AWS Lambda was throttled by Amazon EC2 during Lambda function initialization
 //   using the execution role provided for the Lambda function.
@@ -4211,7 +4225,7 @@ func (c *Lambda) PutFunctionEventInvokeConfigRequest(input *PutFunctionEventInvo
 // on a function, version, or alias. If a configuration already exists for a
 // function, version, or alias, this operation overwrites it. If you exclude
 // any settings, they are removed. To set one option without affecting existing
-// settings for other options, use PutFunctionEventInvokeConfig.
+// settings for other options, use UpdateFunctionEventInvokeConfig.
 //
 // By default, Lambda retries an asynchronous invocation twice if the function
 // returns an error. It retains events in a queue for up to six hours. When
@@ -5756,8 +5770,7 @@ func (s *AliasConfiguration) SetRoutingConfig(v *AliasRoutingConfiguration) *Ali
 type AliasRoutingConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the second alias, and the percentage of traffic that's routed
-	// to it.
+	// The second version, and the percentage of traffic that's routed to it.
 	AdditionalVersionWeights map[string]*float64 `type:"map"`
 }
 
@@ -5868,7 +5881,7 @@ type CreateAliasInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/lambda-traffic-shifting-using-aliases.html)
+	// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html#configuring-alias-routing)
 	// of the alias.
 	RoutingConfig *AliasRoutingConfiguration `type:"structure"`
 }
@@ -6145,6 +6158,9 @@ type CreateFunctionInput struct {
 	// Environment variables that are accessible from function code during execution.
 	Environment *Environment `type:"structure"`
 
+	// Connection settings for an Amazon EFS file system.
+	FileSystemConfigs []*FileSystemConfig `type:"list"`
+
 	// The name of the Lambda function.
 	//
 	// Name formats
@@ -6258,6 +6274,16 @@ func (s *CreateFunctionInput) Validate() error {
 			invalidParams.AddNested("Code", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.FileSystemConfigs != nil {
+		for i, v := range s.FileSystemConfigs {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "FileSystemConfigs", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -6286,6 +6312,12 @@ func (s *CreateFunctionInput) SetDescription(v string) *CreateFunctionInput {
 // SetEnvironment sets the Environment field's value.
 func (s *CreateFunctionInput) SetEnvironment(v *Environment) *CreateFunctionInput {
 	s.Environment = v
+	return s
+}
+
+// SetFileSystemConfigs sets the FileSystemConfigs field's value.
+func (s *CreateFunctionInput) SetFileSystemConfigs(v []*FileSystemConfig) *CreateFunctionInput {
+	s.FileSystemConfigs = v
 	return s
 }
 
@@ -7099,6 +7131,240 @@ func (s *EC2UnexpectedException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// An error occured when reading from or writing to a connected file system.
+type EFSIOException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EFSIOException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EFSIOException) GoString() string {
+	return s.String()
+}
+
+func newErrorEFSIOException(v protocol.ResponseMetadata) error {
+	return &EFSIOException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *EFSIOException) Code() string {
+	return "EFSIOException"
+}
+
+// Message returns the exception's message.
+func (s *EFSIOException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *EFSIOException) OrigErr() error {
+	return nil
+}
+
+func (s *EFSIOException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *EFSIOException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *EFSIOException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The function couldn't make a network connection to the configured file system.
+type EFSMountConnectivityException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EFSMountConnectivityException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EFSMountConnectivityException) GoString() string {
+	return s.String()
+}
+
+func newErrorEFSMountConnectivityException(v protocol.ResponseMetadata) error {
+	return &EFSMountConnectivityException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *EFSMountConnectivityException) Code() string {
+	return "EFSMountConnectivityException"
+}
+
+// Message returns the exception's message.
+func (s *EFSMountConnectivityException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *EFSMountConnectivityException) OrigErr() error {
+	return nil
+}
+
+func (s *EFSMountConnectivityException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *EFSMountConnectivityException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *EFSMountConnectivityException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The function couldn't mount the configured file system due to a permission
+// or configuration issue.
+type EFSMountFailureException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EFSMountFailureException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EFSMountFailureException) GoString() string {
+	return s.String()
+}
+
+func newErrorEFSMountFailureException(v protocol.ResponseMetadata) error {
+	return &EFSMountFailureException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *EFSMountFailureException) Code() string {
+	return "EFSMountFailureException"
+}
+
+// Message returns the exception's message.
+func (s *EFSMountFailureException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *EFSMountFailureException) OrigErr() error {
+	return nil
+}
+
+func (s *EFSMountFailureException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *EFSMountFailureException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *EFSMountFailureException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The function was able to make a network connection to the configured file
+// system, but the mount operation timed out.
+type EFSMountTimeoutException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	Type *string `type:"string"`
+}
+
+// String returns the string representation
+func (s EFSMountTimeoutException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s EFSMountTimeoutException) GoString() string {
+	return s.String()
+}
+
+func newErrorEFSMountTimeoutException(v protocol.ResponseMetadata) error {
+	return &EFSMountTimeoutException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *EFSMountTimeoutException) Code() string {
+	return "EFSMountTimeoutException"
+}
+
+// Message returns the exception's message.
+func (s *EFSMountTimeoutException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *EFSMountTimeoutException) OrigErr() error {
+	return nil
+}
+
+func (s *EFSMountTimeoutException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *EFSMountTimeoutException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *EFSMountTimeoutException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // AWS Lambda was not able to create an elastic network interface in the VPC,
 // specified as part of Lambda function configuration, because the limit for
 // network interfaces has been reached.
@@ -7399,6 +7665,61 @@ func (s *EventSourceMappingConfiguration) SetUUID(v string) *EventSourceMappingC
 	return s
 }
 
+// Details about the connection between a Lambda function and an Amazon EFS
+// file system.
+type FileSystemConfig struct {
+	_ struct{} `type:"structure"`
+
+	// The Amazon Resource Name (ARN) of the Amazon EFS access point that provides
+	// access to the file system.
+	//
+	// Arn is a required field
+	Arn *string `type:"string" required:"true"`
+
+	// The path where the function can access the file system, starting with /mnt/.
+	//
+	// LocalMountPath is a required field
+	LocalMountPath *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s FileSystemConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FileSystemConfig) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *FileSystemConfig) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "FileSystemConfig"}
+	if s.Arn == nil {
+		invalidParams.Add(request.NewErrParamRequired("Arn"))
+	}
+	if s.LocalMountPath == nil {
+		invalidParams.Add(request.NewErrParamRequired("LocalMountPath"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetArn sets the Arn field's value.
+func (s *FileSystemConfig) SetArn(v string) *FileSystemConfig {
+	s.Arn = &v
+	return s
+}
+
+// SetLocalMountPath sets the LocalMountPath field's value.
+func (s *FileSystemConfig) SetLocalMountPath(v string) *FileSystemConfig {
+	s.LocalMountPath = &v
+	return s
+}
+
 // The code for the Lambda function. You can specify either an object in Amazon
 // S3, or upload a deployment package directly.
 type FunctionCode struct {
@@ -7526,6 +7847,9 @@ type FunctionConfiguration struct {
 	// The function's environment variables.
 	Environment *EnvironmentResponse `type:"structure"`
 
+	// Connection settings for an Amazon EFS file system.
+	FileSystemConfigs []*FileSystemConfig `type:"list"`
+
 	// The function's Amazon Resource Name (ARN).
 	FunctionArn *string `type:"string"`
 
@@ -7582,7 +7906,8 @@ type FunctionConfiguration struct {
 	// you can't invoke or modify the function.
 	StateReasonCode *string `type:"string" enum:"StateReasonCode"`
 
-	// The amount of time that Lambda allows a function to run before stopping it.
+	// The amount of time in seconds that Lambda allows a function to run before
+	// stopping it.
 	Timeout *int64 `min:"1" type:"integer"`
 
 	// The function's AWS X-Ray tracing configuration.
@@ -7632,6 +7957,12 @@ func (s *FunctionConfiguration) SetDescription(v string) *FunctionConfiguration 
 // SetEnvironment sets the Environment field's value.
 func (s *FunctionConfiguration) SetEnvironment(v *EnvironmentResponse) *FunctionConfiguration {
 	s.Environment = v
+	return s
+}
+
+// SetFileSystemConfigs sets the FileSystemConfigs field's value.
+func (s *FunctionConfiguration) SetFileSystemConfigs(v []*FileSystemConfig) *FunctionConfiguration {
+	s.FileSystemConfigs = v
 	return s
 }
 
@@ -12953,7 +13284,7 @@ type UpdateAliasInput struct {
 	// read it.
 	RevisionId *string `type:"string"`
 
-	// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/lambda-traffic-shifting-using-aliases.html)
+	// The routing configuration (https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html#configuring-alias-routing)
 	// of the alias.
 	RoutingConfig *AliasRoutingConfiguration `type:"structure"`
 }
@@ -13332,6 +13663,9 @@ type UpdateFunctionConfigurationInput struct {
 	// Environment variables that are accessible from function code during execution.
 	Environment *Environment `type:"structure"`
 
+	// Connection settings for an Amazon EFS file system.
+	FileSystemConfigs []*FileSystemConfig `type:"list"`
+
 	// The name of the Lambda function.
 	//
 	// Name formats
@@ -13420,6 +13754,16 @@ func (s *UpdateFunctionConfigurationInput) Validate() error {
 	if s.Timeout != nil && *s.Timeout < 1 {
 		invalidParams.Add(request.NewErrParamMinValue("Timeout", 1))
 	}
+	if s.FileSystemConfigs != nil {
+		for i, v := range s.FileSystemConfigs {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "FileSystemConfigs", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -13442,6 +13786,12 @@ func (s *UpdateFunctionConfigurationInput) SetDescription(v string) *UpdateFunct
 // SetEnvironment sets the Environment field's value.
 func (s *UpdateFunctionConfigurationInput) SetEnvironment(v *Environment) *UpdateFunctionConfigurationInput {
 	s.Environment = v
+	return s
+}
+
+// SetFileSystemConfigs sets the FileSystemConfigs field's value.
+func (s *UpdateFunctionConfigurationInput) SetFileSystemConfigs(v []*FileSystemConfig) *UpdateFunctionConfigurationInput {
+	s.FileSystemConfigs = v
 	return s
 }
 

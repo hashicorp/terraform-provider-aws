@@ -132,6 +132,13 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											ec2.VolumeTypeStandard,
+											ec2.VolumeTypeGp2,
+											ec2.VolumeTypeIo1,
+											ec2.VolumeTypeSc1,
+											ec2.VolumeTypeSt1,
+										}, false),
 									},
 								},
 							},
@@ -312,6 +319,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 									"spot_instance_type": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ValidateFunc: validation.StringInSlice([]string{
+											ec2.SpotInstanceTypeOneTime,
+											ec2.SpotInstanceTypePersistent,
+										}, false),
 									},
 									"valid_until": {
 										Type:         schema.TypeString,
@@ -433,20 +444,27 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 						"ipv6_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv6Address,
+							},
 						},
 						"network_interface_id": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"private_ip_address": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.IsIPv4Address,
 						},
 						"ipv4_addresses": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.IsIPv4Address,
+							},
 						},
 						"ipv4_address_count": {
 							Type:     schema.TypeInt,
@@ -494,6 +512,10 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 								ec2.TenancyDefault,
 								ec2.TenancyHost,
 							}, false),
+						},
+						"partition_number": {
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 					},
 				},
@@ -1102,7 +1124,7 @@ func getNetworkInterfaces(n []*ec2.LaunchTemplateInstanceNetworkInterfaceSpecifi
 }
 
 func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
-	s := []interface{}{}
+	var s []interface{}
 	if p != nil {
 		s = append(s, map[string]interface{}{
 			"affinity":          aws.StringValue(p.Affinity),
@@ -1111,6 +1133,7 @@ func getPlacement(p *ec2.LaunchTemplatePlacement) []interface{} {
 			"host_id":           aws.StringValue(p.HostId),
 			"spread_domain":     aws.StringValue(p.SpreadDomain),
 			"tenancy":           aws.StringValue(p.Tenancy),
+			"partition_number":  aws.Int64Value(p.PartitionNumber),
 		})
 	}
 	return s
@@ -1142,7 +1165,7 @@ func flattenLaunchTemplateHibernationOptions(m *ec2.LaunchTemplateHibernationOpt
 }
 
 func getTagSpecifications(t []*ec2.LaunchTemplateTagSpecification) []interface{} {
-	s := []interface{}{}
+	var s []interface{}
 	for _, v := range t {
 		s = append(s, map[string]interface{}{
 			"resource_type": aws.StringValue(v.ResourceType),
@@ -1682,6 +1705,10 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 
 	if v, ok := p["tenancy"].(string); ok && v != "" {
 		placement.Tenancy = aws.String(v)
+	}
+
+	if v, ok := p["partition_number"].(int); ok && v != 0 {
+		placement.PartitionNumber = aws.Int64(int64(v))
 	}
 
 	return placement

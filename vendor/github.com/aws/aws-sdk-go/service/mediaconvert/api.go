@@ -3014,7 +3014,8 @@ func (s AssociateCertificateOutput) GoString() string {
 // codec enum that you choose, define the corresponding settings object. The
 // following lists the codec enum, settings object pairs. * AAC, AacSettings
 // * MP2, Mp2Settings * MP3, Mp3Settings * WAV, WavSettings * AIFF, AiffSettings
-// * AC3, Ac3Settings * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
+// * AC3, Ac3Settings * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings *
+// VORBIS, VorbisSettings * OPUS, OpusSettings
 type AudioCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -3053,6 +3054,14 @@ type AudioCodecSettings struct {
 	// Required when you set Codec, under AudioDescriptions>CodecSettings, to the
 	// value MP3.
 	Mp3Settings *Mp3Settings `locationName:"mp3Settings" type:"structure"`
+
+	// Required when you set Codec, under AudioDescriptions>CodecSettings, to the
+	// value OPUS.
+	OpusSettings *OpusSettings `locationName:"opusSettings" type:"structure"`
+
+	// Required when you set Codec, under AudioDescriptions>CodecSettings, to the
+	// value Vorbis.
+	VorbisSettings *VorbisSettings `locationName:"vorbisSettings" type:"structure"`
 
 	// Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
 	// the value WAV.
@@ -3105,6 +3114,16 @@ func (s *AudioCodecSettings) Validate() error {
 	if s.Mp3Settings != nil {
 		if err := s.Mp3Settings.Validate(); err != nil {
 			invalidParams.AddNested("Mp3Settings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.OpusSettings != nil {
+		if err := s.OpusSettings.Validate(); err != nil {
+			invalidParams.AddNested("OpusSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.VorbisSettings != nil {
+		if err := s.VorbisSettings.Validate(); err != nil {
+			invalidParams.AddNested("VorbisSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.WavSettings != nil {
@@ -3167,6 +3186,18 @@ func (s *AudioCodecSettings) SetMp3Settings(v *Mp3Settings) *AudioCodecSettings 
 	return s
 }
 
+// SetOpusSettings sets the OpusSettings field's value.
+func (s *AudioCodecSettings) SetOpusSettings(v *OpusSettings) *AudioCodecSettings {
+	s.OpusSettings = v
+	return s
+}
+
+// SetVorbisSettings sets the VorbisSettings field's value.
+func (s *AudioCodecSettings) SetVorbisSettings(v *VorbisSettings) *AudioCodecSettings {
+	s.VorbisSettings = v
+	return s
+}
+
 // SetWavSettings sets the WavSettings field's value.
 func (s *AudioCodecSettings) SetWavSettings(v *WavSettings) *AudioCodecSettings {
 	s.WavSettings = v
@@ -3212,7 +3243,8 @@ type AudioDescription struct {
 	// codec enum that you choose, define the corresponding settings object. The
 	// following lists the codec enum, settings object pairs. * AAC, AacSettings
 	// * MP2, Mp2Settings * MP3, Mp3Settings * WAV, WavSettings * AIFF, AiffSettings
-	// * AC3, Ac3Settings * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings
+	// * AC3, Ac3Settings * EAC3, Eac3Settings * EAC3_ATMOS, Eac3AtmosSettings *
+	// VORBIS, VorbisSettings * OPUS, OpusSettings
 	CodecSettings *AudioCodecSettings `locationName:"codecSettings" type:"structure"`
 
 	// Specify the language for this audio output track. The service puts this language
@@ -4632,23 +4664,23 @@ func (s *CaptionSelector) SetSourceSettings(v *CaptionSourceSettings) *CaptionSe
 }
 
 // Ignore this setting unless your input captions format is SCC. To have the
-// service compensate for differing framerates between your input captions and
-// input video, specify the framerate of the captions file. Specify this value
-// as a fraction, using the settings Framerate numerator (framerateNumerator)
+// service compensate for differing frame rates between your input captions
+// and input video, specify the frame rate of the captions file. Specify this
+// value as a fraction, using the settings Framerate numerator (framerateNumerator)
 // and Framerate denominator (framerateDenominator). For example, you might
 // specify 24 / 1 for 24 fps, 25 / 1 for 25 fps, 24000 / 1001 for 23.976 fps,
 // or 30000 / 1001 for 29.97 fps.
 type CaptionSourceFramerate struct {
 	_ struct{} `type:"structure"`
 
-	// Specify the denominator of the fraction that represents the framerate for
-	// the setting Caption source framerate (CaptionSourceFramerate). Use this setting
-	// along with the setting Framerate numerator (framerateNumerator).
+	// Specify the denominator of the fraction that represents the frame rate for
+	// the setting Caption source frame rate (CaptionSourceFramerate). Use this
+	// setting along with the setting Framerate numerator (framerateNumerator).
 	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
 
-	// Specify the numerator of the fraction that represents the framerate for the
-	// setting Caption source framerate (CaptionSourceFramerate). Use this setting
-	// along with the setting Framerate denominator (framerateDenominator).
+	// Specify the numerator of the fraction that represents the frame rate for
+	// the setting Caption source frame rate (CaptionSourceFramerate). Use this
+	// setting along with the setting Framerate denominator (framerateDenominator).
 	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
 }
 
@@ -5496,6 +5528,9 @@ type ContainerSettings struct {
 
 	// Settings for MP4 segments in DASH
 	MpdSettings *MpdSettings `locationName:"mpdSettings" type:"structure"`
+
+	// MXF settings
+	MxfSettings *MxfSettings `locationName:"mxfSettings" type:"structure"`
 }
 
 // String returns the string representation
@@ -5573,6 +5608,12 @@ func (s *ContainerSettings) SetMp4Settings(v *Mp4Settings) *ContainerSettings {
 // SetMpdSettings sets the MpdSettings field's value.
 func (s *ContainerSettings) SetMpdSettings(v *MpdSettings) *ContainerSettings {
 	s.MpdSettings = v
+	return s
+}
+
+// SetMxfSettings sets the MxfSettings field's value.
+func (s *ContainerSettings) SetMxfSettings(v *MxfSettings) *ContainerSettings {
+	s.MxfSettings = v
 	return s
 }
 
@@ -8266,9 +8307,9 @@ type FileSourceSettings struct {
 	Convert608To708 *string `locationName:"convert608To708" type:"string" enum:"FileSourceConvert608To708"`
 
 	// Ignore this setting unless your input captions format is SCC. To have the
-	// service compensate for differing framerates between your input captions and
-	// input video, specify the framerate of the captions file. Specify this value
-	// as a fraction, using the settings Framerate numerator (framerateNumerator)
+	// service compensate for differing frame rates between your input captions
+	// and input video, specify the frame rate of the captions file. Specify this
+	// value as a fraction, using the settings Framerate numerator (framerateNumerator)
 	// and Framerate denominator (framerateDenominator). For example, you might
 	// specify 24 / 1 for 24 fps, 25 / 1 for 25 fps, 24000 / 1001 for 23.976 fps,
 	// or 30000 / 1001 for 29.97 fps.
@@ -8878,7 +8919,8 @@ type H264Settings struct {
 	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"H264FramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+	// Optional. Specify how the transcoder performs framerate conversion. The default
+	// behavior is to use duplicate drop conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"H264FramerateConversionAlgorithm"`
 
 	// When you use the API for transcode jobs that use frame rate conversion, specify
@@ -8950,9 +8992,12 @@ type H264Settings struct {
 	// if using B-frames and/or interlaced encoding.
 	NumberReferenceFrames *int64 `locationName:"numberReferenceFrames" min:"1" type:"integer"`
 
-	// Using the API, enable ParFollowSource if you want the service to use the
-	// pixel aspect ratio from the input. Using the console, do this by choosing
-	// Follow source for Pixel aspect ratio.
+	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+	// uses the PAR from your input video for your output. To use a different PAR,
+	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+	// than Follow source. When you choose SPECIFIED for this setting, you must
+	// also specify values for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"H264ParControl"`
 
 	// Pixel Aspect Ratio denominator.
@@ -8961,9 +9006,9 @@ type H264Settings struct {
 	// Pixel Aspect Ratio numerator.
 	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
-	// Use Quality tuning level (H264QualityTuningLevel) to specifiy whether to
-	// use fast single-pass, high-quality singlepass, or high-quality multipass
-	// video encoding.
+	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+	// want to trade off encoding speed for output video quality. The default behavior
+	// is faster, lower quality, single-pass encoding.
 	QualityTuningLevel *string `locationName:"qualityTuningLevel" type:"string" enum:"H264QualityTuningLevel"`
 
 	// Settings for quality-defined variable bitrate encoding with the H.264 codec.
@@ -9425,7 +9470,7 @@ type H265Settings struct {
 	// a frame rate from the dropdown list or choose Custom. The framerates shown
 	// in the dropdown list are decimal approximations of fractions. If you choose
 	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
-	// job sepecification as a JSON file without the console, use FramerateControl
+	// job specification as a JSON file without the console, use FramerateControl
 	// to specify which value the service uses for the frame rate for this output.
 	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
 	// from the input. Choose SPECIFIED if you want the service to use the frame
@@ -9500,9 +9545,12 @@ type H265Settings struct {
 	// if using B-frames and/or interlaced encoding.
 	NumberReferenceFrames *int64 `locationName:"numberReferenceFrames" min:"1" type:"integer"`
 
-	// Using the API, enable ParFollowSource if you want the service to use the
-	// pixel aspect ratio from the input. Using the console, do this by choosing
-	// Follow source for Pixel aspect ratio.
+	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+	// uses the PAR from your input video for your output. To use a different PAR,
+	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+	// than Follow source. When you choose SPECIFIED for this setting, you must
+	// also specify values for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"H265ParControl"`
 
 	// Pixel Aspect Ratio denominator.
@@ -9511,9 +9559,9 @@ type H265Settings struct {
 	// Pixel Aspect Ratio numerator.
 	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
-	// Use Quality tuning level (H265QualityTuningLevel) to specifiy whether to
-	// use fast single-pass, high-quality singlepass, or high-quality multipass
-	// video encoding.
+	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+	// want to trade off encoding speed for output video quality. The default behavior
+	// is faster, lower quality, single-pass encoding.
 	QualityTuningLevel *string `locationName:"qualityTuningLevel" type:"string" enum:"H265QualityTuningLevel"`
 
 	// Settings for quality-defined variable bitrate encoding with the H.265 codec.
@@ -10822,8 +10870,8 @@ type ImscDestinationSettings struct {
 
 	// Keep this setting enabled to have MediaConvert use the font style and position
 	// information from the captions source in the output. This option is available
-	// only when your input captions are CFF-TT, IMSC, SMPTE-TT, or TTML. Disable
-	// this setting for simplified output captions.
+	// only when your input captions are IMSC, SMPTE-TT, or TTML. Disable this setting
+	// for simplified output captions.
 	StylePassthrough *string `locationName:"stylePassthrough" type:"string" enum:"ImscStylePassthrough"`
 }
 
@@ -10853,12 +10901,12 @@ type Input struct {
 	AudioSelectorGroups map[string]*AudioSelectorGroup `locationName:"audioSelectorGroups" type:"map"`
 
 	// Use Audio selectors (AudioSelectors) to specify a track or set of tracks
-	// from the input that you will use in your outputs. You can use mutiple Audio
+	// from the input that you will use in your outputs. You can use multiple Audio
 	// selectors per input.
 	AudioSelectors map[string]*AudioSelector `locationName:"audioSelectors" type:"map"`
 
 	// Use Captions selectors (CaptionSelectors) to specify the captions data from
-	// the input that you will use in your outputs. You can use mutiple captions
+	// the input that you will use in your outputs. You can use multiple captions
 	// selectors per input.
 	CaptionSelectors map[string]*CaptionSelector `locationName:"captionSelectors" type:"map"`
 
@@ -10869,7 +10917,7 @@ type Input struct {
 	Crop *Rectangle `locationName:"crop" type:"structure"`
 
 	// Enable Deblock (InputDeblockFilter) to produce smoother motion in the output.
-	// Default is disabled. Only manaully controllable for MPEG2 and uncompressed
+	// Default is disabled. Only manually controllable for MPEG2 and uncompressed
 	// video inputs.
 	DeblockFilter *string `locationName:"deblockFilter" type:"string" enum:"InputDeblockFilter"`
 
@@ -11301,12 +11349,12 @@ type InputTemplate struct {
 	AudioSelectorGroups map[string]*AudioSelectorGroup `locationName:"audioSelectorGroups" type:"map"`
 
 	// Use Audio selectors (AudioSelectors) to specify a track or set of tracks
-	// from the input that you will use in your outputs. You can use mutiple Audio
+	// from the input that you will use in your outputs. You can use multiple Audio
 	// selectors per input.
 	AudioSelectors map[string]*AudioSelector `locationName:"audioSelectors" type:"map"`
 
 	// Use Captions selectors (CaptionSelectors) to specify the captions data from
-	// the input that you will use in your outputs. You can use mutiple captions
+	// the input that you will use in your outputs. You can use multiple captions
 	// selectors per input.
 	CaptionSelectors map[string]*CaptionSelector `locationName:"captionSelectors" type:"map"`
 
@@ -11317,7 +11365,7 @@ type InputTemplate struct {
 	Crop *Rectangle `locationName:"crop" type:"structure"`
 
 	// Enable Deblock (InputDeblockFilter) to produce smoother motion in the output.
-	// Default is disabled. Only manaully controllable for MPEG2 and uncompressed
+	// Default is disabled. Only manually controllable for MPEG2 and uncompressed
 	// video inputs.
 	DeblockFilter *string `locationName:"deblockFilter" type:"string" enum:"InputDeblockFilter"`
 
@@ -14364,14 +14412,15 @@ type Mpeg2Settings struct {
 	// a frame rate from the dropdown list or choose Custom. The framerates shown
 	// in the dropdown list are decimal approximations of fractions. If you choose
 	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
-	// job sepecification as a JSON file without the console, use FramerateControl
+	// job specification as a JSON file without the console, use FramerateControl
 	// to specify which value the service uses for the frame rate for this output.
 	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
 	// from the input. Choose SPECIFIED if you want the service to use the frame
 	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"Mpeg2FramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+	// Optional. Specify how the transcoder performs framerate conversion. The default
+	// behavior is to use duplicate drop conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"Mpeg2FramerateConversionAlgorithm"`
 
 	// Frame rate denominator.
@@ -14436,9 +14485,12 @@ type Mpeg2Settings struct {
 	// Number of B-frames between reference frames.
 	NumberBFramesBetweenReferenceFrames *int64 `locationName:"numberBFramesBetweenReferenceFrames" type:"integer"`
 
-	// Using the API, enable ParFollowSource if you want the service to use the
-	// pixel aspect ratio from the input. Using the console, do this by choosing
-	// Follow source for Pixel aspect ratio.
+	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+	// uses the PAR from your input video for your output. To use a different PAR,
+	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+	// than Follow source. When you choose SPECIFIED for this setting, you must
+	// also specify values for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"Mpeg2ParControl"`
 
 	// Pixel Aspect Ratio denominator.
@@ -14447,8 +14499,9 @@ type Mpeg2Settings struct {
 	// Pixel Aspect Ratio numerator.
 	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
 
-	// Use Quality tuning level (Mpeg2QualityTuningLevel) to specifiy whether to
-	// use single-pass or multipass video encoding.
+	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+	// want to trade off encoding speed for output video quality. The default behavior
+	// is faster, lower quality, single-pass encoding.
 	QualityTuningLevel *string `locationName:"qualityTuningLevel" type:"string" enum:"Mpeg2QualityTuningLevel"`
 
 	// Use Rate control mode (Mpeg2RateControlMode) to specifiy whether the bitrate
@@ -14903,6 +14956,38 @@ func (s *MsSmoothGroupSettings) SetManifestEncoding(v string) *MsSmoothGroupSett
 	return s
 }
 
+// MXF settings
+type MxfSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. When you have AFD signaling set up in your output video stream,
+	// use this setting to choose whether to also include it in the MXF wrapper.
+	// Choose Don't copy (NO_COPY) to exclude AFD signaling from the MXF wrapper.
+	// Choose Copy from video stream (COPY_FROM_VIDEO) to copy the AFD values from
+	// the video stream for this output to the MXF wrapper. Regardless of which
+	// option you choose, the AFD values remain in the video stream. Related settings:
+	// To set up your output to include or exclude AFD values, see AfdSignaling,
+	// under VideoDescription. On the console, find AFD signaling under the output's
+	// video encoding settings.
+	AfdSignaling *string `locationName:"afdSignaling" type:"string" enum:"MxfAfdSignaling"`
+}
+
+// String returns the string representation
+func (s MxfSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MxfSettings) GoString() string {
+	return s.String()
+}
+
+// SetAfdSignaling sets the AfdSignaling field's value.
+func (s *MxfSettings) SetAfdSignaling(v string) *MxfSettings {
+	s.AfdSignaling = &v
+	return s
+}
+
 // Settings for your Nielsen configuration. If you don't do Nielsen measurement
 // and analytics, ignore these settings. When you enable Nielsen configuration
 // (nielsenConfiguration), MediaConvert enables PCM to ID3 tagging for all outputs
@@ -15117,6 +15202,12 @@ type NoiseReducerTemporalFilterSettings struct {
 	// and creates better VQ for low bitrate outputs.
 	AggressiveMode *int64 `locationName:"aggressiveMode" type:"integer"`
 
+	// Optional. When you set Noise reducer (noiseReducer) to Temporal (TEMPORAL),
+	// you can optionally use this setting to apply additional sharpening. The default
+	// behavior, Auto (AUTO) allows the transcoder to determine whether to apply
+	// filtering, depending on input type and quality.
+	PostTemporalSharpening *string `locationName:"postTemporalSharpening" type:"string" enum:"NoiseFilterPostTemporalSharpening"`
+
 	// The speed of the filter (higher number is faster). Low setting reduces bit
 	// rate at the cost of transcode time, high setting improves transcode time
 	// at the cost of bit rate.
@@ -15156,6 +15247,12 @@ func (s *NoiseReducerTemporalFilterSettings) Validate() error {
 // SetAggressiveMode sets the AggressiveMode field's value.
 func (s *NoiseReducerTemporalFilterSettings) SetAggressiveMode(v int64) *NoiseReducerTemporalFilterSettings {
 	s.AggressiveMode = &v
+	return s
+}
+
+// SetPostTemporalSharpening sets the PostTemporalSharpening field's value.
+func (s *NoiseReducerTemporalFilterSettings) SetPostTemporalSharpening(v string) *NoiseReducerTemporalFilterSettings {
+	s.PostTemporalSharpening = &v
 	return s
 }
 
@@ -15226,6 +15323,73 @@ func (s *NotFoundException) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
+// Required when you set Codec, under AudioDescriptions>CodecSettings, to the
+// value OPUS.
+type OpusSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. Specify the average bitrate in bits per second. Valid values are
+	// multiples of 8000, from 32000 through 192000. The default value is 96000,
+	// which we recommend for quality and bandwidth.
+	Bitrate *int64 `locationName:"bitrate" min:"32000" type:"integer"`
+
+	// Specify the number of channels in this output audio track. Choosing Mono
+	// on the console gives you 1 output channel; choosing Stereo gives you 2. In
+	// the API, valid values are 1 and 2.
+	Channels *int64 `locationName:"channels" min:"1" type:"integer"`
+
+	// Optional. Sample rate in hz. Valid values are 16000, 24000, and 48000. The
+	// default value is 48000.
+	SampleRate *int64 `locationName:"sampleRate" min:"16000" type:"integer"`
+}
+
+// String returns the string representation
+func (s OpusSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OpusSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *OpusSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "OpusSettings"}
+	if s.Bitrate != nil && *s.Bitrate < 32000 {
+		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 32000))
+	}
+	if s.Channels != nil && *s.Channels < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Channels", 1))
+	}
+	if s.SampleRate != nil && *s.SampleRate < 16000 {
+		invalidParams.Add(request.NewErrParamMinValue("SampleRate", 16000))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBitrate sets the Bitrate field's value.
+func (s *OpusSettings) SetBitrate(v int64) *OpusSettings {
+	s.Bitrate = &v
+	return s
+}
+
+// SetChannels sets the Channels field's value.
+func (s *OpusSettings) SetChannels(v int64) *OpusSettings {
+	s.Channels = &v
+	return s
+}
+
+// SetSampleRate sets the SampleRate field's value.
+func (s *OpusSettings) SetSampleRate(v int64) *OpusSettings {
+	s.SampleRate = &v
+	return s
+}
+
 // An output object describes the settings for a single output file or stream
 // in an output group.
 type Output struct {
@@ -15247,8 +15411,9 @@ type Output struct {
 	// Use Extension (Extension) to specify the file extension for outputs in File
 	// output groups. If you do not specify a value, the service will use default
 	// extensions by container type as follows * MPEG-2 transport stream, m2ts *
-	// Quicktime, mov * MXF container, mxf * MPEG-4 container, mp4 * No Container,
-	// the service will use codec extensions (e.g. AAC, H265, H265, AC3)
+	// Quicktime, mov * MXF container, mxf * MPEG-4 container, mp4 * WebM container,
+	// webm * No Container, the service will use codec extensions (e.g. AAC, H265,
+	// H265, AC3)
 	Extension *string `locationName:"extension" type:"string"`
 
 	// Use Name modifier (NameModifier) to have the service add a string to the
@@ -15872,14 +16037,15 @@ type ProresSettings struct {
 	// a frame rate from the dropdown list or choose Custom. The framerates shown
 	// in the dropdown list are decimal approximations of fractions. If you choose
 	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
-	// job sepecification as a JSON file without the console, use FramerateControl
+	// job specification as a JSON file without the console, use FramerateControl
 	// to specify which value the service uses for the frame rate for this output.
 	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
 	// from the input. Choose SPECIFIED if you want the service to use the frame
 	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
 	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"ProresFramerateControl"`
 
-	// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+	// Optional. Specify how the transcoder performs framerate conversion. The default
+	// behavior is to use duplicate drop conversion.
 	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"ProresFramerateConversionAlgorithm"`
 
 	// Frame rate denominator.
@@ -15904,11 +16070,12 @@ type ProresSettings struct {
 	// on which of the Follow options you chose.
 	InterlaceMode *string `locationName:"interlaceMode" type:"string" enum:"ProresInterlaceMode"`
 
-	// Use (ProresParControl) to specify how the service determines the pixel aspect
-	// ratio. Set to Follow source (INITIALIZE_FROM_SOURCE) to use the pixel aspect
-	// ratio from the input. To specify a different pixel aspect ratio: Using the
-	// console, choose it from the dropdown menu. Using the API, set ProresParControl
-	// to (SPECIFIED) and provide for (ParNumerator) and (ParDenominator).
+	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+	// uses the PAR from your input video for your output. To use a different PAR,
+	// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+	// than Follow source. When you choose SPECIFIED for this setting, you must
+	// also specify values for the parNumerator and parDenominator settings.
 	ParControl *string `locationName:"parControl" type:"string" enum:"ProresParControl"`
 
 	// Pixel Aspect Ratio denominator.
@@ -17331,7 +17498,7 @@ type TtmlDestinationSettings struct {
 	_ struct{} `type:"structure"`
 
 	// Pass through style and position information from a TTML-like input source
-	// (TTML, SMPTE-TT, CFF-TT) to the CFF-TT output or TTML output.
+	// (TTML, SMPTE-TT) to the TTML output.
 	StylePassthrough *string `locationName:"stylePassthrough" type:"string" enum:"TtmlStylePassthrough"`
 }
 
@@ -17812,7 +17979,8 @@ func (s *UpdateQueueOutput) SetQueue(v *Queue) *UpdateQueueOutput {
 // each codec enum that you choose, define the corresponding settings object.
 // The following lists the codec enum, settings object pairs. * FRAME_CAPTURE,
 // FrameCaptureSettings * AV1, Av1Settings * H_264, H264Settings * H_265, H265Settings
-// * MPEG2, Mpeg2Settings * PRORES, ProresSettings
+// * MPEG2, Mpeg2Settings * PRORES, ProresSettings * VP8, Vp8Settings * VP9,
+// Vp9Settings
 type VideoCodecSettings struct {
 	_ struct{} `type:"structure"`
 
@@ -17842,6 +18010,14 @@ type VideoCodecSettings struct {
 	// Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
 	// the value PRORES.
 	ProresSettings *ProresSettings `locationName:"proresSettings" type:"structure"`
+
+	// Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
+	// the value VP8.
+	Vp8Settings *Vp8Settings `locationName:"vp8Settings" type:"structure"`
+
+	// Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
+	// the value VP9.
+	Vp9Settings *Vp9Settings `locationName:"vp9Settings" type:"structure"`
 }
 
 // String returns the string representation
@@ -17885,6 +18061,16 @@ func (s *VideoCodecSettings) Validate() error {
 	if s.ProresSettings != nil {
 		if err := s.ProresSettings.Validate(); err != nil {
 			invalidParams.AddNested("ProresSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Vp8Settings != nil {
+		if err := s.Vp8Settings.Validate(); err != nil {
+			invalidParams.AddNested("Vp8Settings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.Vp9Settings != nil {
+		if err := s.Vp9Settings.Validate(); err != nil {
+			invalidParams.AddNested("Vp9Settings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -17936,6 +18122,18 @@ func (s *VideoCodecSettings) SetProresSettings(v *ProresSettings) *VideoCodecSet
 	return s
 }
 
+// SetVp8Settings sets the Vp8Settings field's value.
+func (s *VideoCodecSettings) SetVp8Settings(v *Vp8Settings) *VideoCodecSettings {
+	s.Vp8Settings = v
+	return s
+}
+
+// SetVp9Settings sets the Vp9Settings field's value.
+func (s *VideoCodecSettings) SetVp9Settings(v *Vp9Settings) *VideoCodecSettings {
+	s.Vp9Settings = v
+	return s
+}
+
 // Settings for video outputs
 type VideoDescription struct {
 	_ struct{} `type:"structure"`
@@ -17959,7 +18157,8 @@ type VideoDescription struct {
 	// each codec enum that you choose, define the corresponding settings object.
 	// The following lists the codec enum, settings object pairs. * FRAME_CAPTURE,
 	// FrameCaptureSettings * AV1, Av1Settings * H_264, H264Settings * H_265, H265Settings
-	// * MPEG2, Mpeg2Settings * PRORES, ProresSettings
+	// * MPEG2, Mpeg2Settings * PRORES, ProresSettings * VP8, Vp8Settings * VP9,
+	// Vp9Settings
 	CodecSettings *VideoCodecSettings `locationName:"codecSettings" type:"structure"`
 
 	// Choose Insert (INSERT) for this setting to include color metadata in this
@@ -18456,6 +18655,484 @@ func (s *VideoSelector) SetRotate(v string) *VideoSelector {
 	return s
 }
 
+// Required when you set Codec, under AudioDescriptions>CodecSettings, to the
+// value Vorbis.
+type VorbisSettings struct {
+	_ struct{} `type:"structure"`
+
+	// Optional. Specify the number of channels in this output audio track. Choosing
+	// Mono on the console gives you 1 output channel; choosing Stereo gives you
+	// 2. In the API, valid values are 1 and 2. The default value is 2.
+	Channels *int64 `locationName:"channels" min:"1" type:"integer"`
+
+	// Optional. Specify the audio sample rate in Hz. Valid values are 22050, 32000,
+	// 44100, and 48000. The default value is 48000.
+	SampleRate *int64 `locationName:"sampleRate" min:"22050" type:"integer"`
+
+	// Optional. Specify the variable audio quality of this Vorbis output from -1
+	// (lowest quality, ~45 kbit/s) to 10 (highest quality, ~500 kbit/s). The default
+	// value is 4 (~128 kbit/s). Values 5 and 6 are approximately 160 and 192 kbit/s,
+	// respectively.
+	VbrQuality *int64 `locationName:"vbrQuality" type:"integer"`
+}
+
+// String returns the string representation
+func (s VorbisSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s VorbisSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *VorbisSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "VorbisSettings"}
+	if s.Channels != nil && *s.Channels < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("Channels", 1))
+	}
+	if s.SampleRate != nil && *s.SampleRate < 22050 {
+		invalidParams.Add(request.NewErrParamMinValue("SampleRate", 22050))
+	}
+	if s.VbrQuality != nil && *s.VbrQuality < -1 {
+		invalidParams.Add(request.NewErrParamMinValue("VbrQuality", -1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetChannels sets the Channels field's value.
+func (s *VorbisSettings) SetChannels(v int64) *VorbisSettings {
+	s.Channels = &v
+	return s
+}
+
+// SetSampleRate sets the SampleRate field's value.
+func (s *VorbisSettings) SetSampleRate(v int64) *VorbisSettings {
+	s.SampleRate = &v
+	return s
+}
+
+// SetVbrQuality sets the VbrQuality field's value.
+func (s *VorbisSettings) SetVbrQuality(v int64) *VorbisSettings {
+	s.VbrQuality = &v
+	return s
+}
+
+// Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
+// the value VP8.
+type Vp8Settings struct {
+	_ struct{} `type:"structure"`
+
+	// Target bitrate in bits/second. For example, enter five megabits per second
+	// as 5000000.
+	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
+
+	// If you are using the console, use the Framerate setting to specify the frame
+	// rate for this output. If you want to keep the same frame rate as the input
+	// video, choose Follow source. If you want to do frame rate conversion, choose
+	// a frame rate from the dropdown list or choose Custom. The framerates shown
+	// in the dropdown list are decimal approximations of fractions. If you choose
+	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+	// job specification as a JSON file without the console, use FramerateControl
+	// to specify which value the service uses for the frame rate for this output.
+	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+	// from the input. Choose SPECIFIED if you want the service to use the frame
+	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
+	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"Vp8FramerateControl"`
+
+	// Optional. Specify how the transcoder performs framerate conversion. The default
+	// behavior is to use Drop duplicate (DUPLICATE_DROP) conversion. When you choose
+	// Interpolate (INTERPOLATE) instead, the conversion produces smoother motion.
+	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"Vp8FramerateConversionAlgorithm"`
+
+	// When you use the API for transcode jobs that use frame rate conversion, specify
+	// the frame rate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
+	// FramerateDenominator to specify the denominator of this fraction. In this
+	// example, use 1001 for the value of FramerateDenominator. When you use the
+	// console for transcode jobs that use frame rate conversion, provide the value
+	// as a decimal number for Framerate. In this example, specify 23.976.
+	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
+
+	// When you use the API for transcode jobs that use frame rate conversion, specify
+	// the frame rate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
+	// FramerateNumerator to specify the numerator of this fraction. In this example,
+	// use 24000 for the value of FramerateNumerator. When you use the console for
+	// transcode jobs that use frame rate conversion, provide the value as a decimal
+	// number for Framerate. In this example, specify 23.976.
+	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
+
+	// GOP Length (keyframe interval) in frames. Must be greater than zero.
+	GopSize *float64 `locationName:"gopSize" type:"double"`
+
+	// Optional. Size of buffer (HRD buffer model) in bits. For example, enter five
+	// megabits as 5000000.
+	HrdBufferSize *int64 `locationName:"hrdBufferSize" type:"integer"`
+
+	// Ignore this setting unless you set qualityTuningLevel to MULTI_PASS. Optional.
+	// Specify the maximum bitrate in bits/second. For example, enter five megabits
+	// per second as 5000000. The default behavior uses twice the target bitrate
+	// as the maximum bitrate.
+	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
+
+	// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+	// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+	// uses the PAR from your input video for your output. To specify a different
+	// PAR in the console, choose any value other than Follow source. To specify
+	// a different PAR by editing the JSON job specification, choose SPECIFIED.
+	// When you choose SPECIFIED for this setting, you must also specify values
+	// for the parNumerator and parDenominator settings.
+	ParControl *string `locationName:"parControl" type:"string" enum:"Vp8ParControl"`
+
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parDenominator is 33.
+	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
+
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parNumerator is 40.
+	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
+
+	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+	// want to trade off encoding speed for output video quality. The default behavior
+	// is faster, lower quality, multi-pass encoding.
+	QualityTuningLevel *string `locationName:"qualityTuningLevel" type:"string" enum:"Vp8QualityTuningLevel"`
+
+	// With the VP8 codec, you can use only the variable bitrate (VBR) rate control
+	// mode.
+	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"Vp8RateControlMode"`
+}
+
+// String returns the string representation
+func (s Vp8Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Vp8Settings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Vp8Settings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Vp8Settings"}
+	if s.Bitrate != nil && *s.Bitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 1000))
+	}
+	if s.FramerateDenominator != nil && *s.FramerateDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateDenominator", 1))
+	}
+	if s.FramerateNumerator != nil && *s.FramerateNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateNumerator", 1))
+	}
+	if s.MaxBitrate != nil && *s.MaxBitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxBitrate", 1000))
+	}
+	if s.ParDenominator != nil && *s.ParDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParDenominator", 1))
+	}
+	if s.ParNumerator != nil && *s.ParNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParNumerator", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBitrate sets the Bitrate field's value.
+func (s *Vp8Settings) SetBitrate(v int64) *Vp8Settings {
+	s.Bitrate = &v
+	return s
+}
+
+// SetFramerateControl sets the FramerateControl field's value.
+func (s *Vp8Settings) SetFramerateControl(v string) *Vp8Settings {
+	s.FramerateControl = &v
+	return s
+}
+
+// SetFramerateConversionAlgorithm sets the FramerateConversionAlgorithm field's value.
+func (s *Vp8Settings) SetFramerateConversionAlgorithm(v string) *Vp8Settings {
+	s.FramerateConversionAlgorithm = &v
+	return s
+}
+
+// SetFramerateDenominator sets the FramerateDenominator field's value.
+func (s *Vp8Settings) SetFramerateDenominator(v int64) *Vp8Settings {
+	s.FramerateDenominator = &v
+	return s
+}
+
+// SetFramerateNumerator sets the FramerateNumerator field's value.
+func (s *Vp8Settings) SetFramerateNumerator(v int64) *Vp8Settings {
+	s.FramerateNumerator = &v
+	return s
+}
+
+// SetGopSize sets the GopSize field's value.
+func (s *Vp8Settings) SetGopSize(v float64) *Vp8Settings {
+	s.GopSize = &v
+	return s
+}
+
+// SetHrdBufferSize sets the HrdBufferSize field's value.
+func (s *Vp8Settings) SetHrdBufferSize(v int64) *Vp8Settings {
+	s.HrdBufferSize = &v
+	return s
+}
+
+// SetMaxBitrate sets the MaxBitrate field's value.
+func (s *Vp8Settings) SetMaxBitrate(v int64) *Vp8Settings {
+	s.MaxBitrate = &v
+	return s
+}
+
+// SetParControl sets the ParControl field's value.
+func (s *Vp8Settings) SetParControl(v string) *Vp8Settings {
+	s.ParControl = &v
+	return s
+}
+
+// SetParDenominator sets the ParDenominator field's value.
+func (s *Vp8Settings) SetParDenominator(v int64) *Vp8Settings {
+	s.ParDenominator = &v
+	return s
+}
+
+// SetParNumerator sets the ParNumerator field's value.
+func (s *Vp8Settings) SetParNumerator(v int64) *Vp8Settings {
+	s.ParNumerator = &v
+	return s
+}
+
+// SetQualityTuningLevel sets the QualityTuningLevel field's value.
+func (s *Vp8Settings) SetQualityTuningLevel(v string) *Vp8Settings {
+	s.QualityTuningLevel = &v
+	return s
+}
+
+// SetRateControlMode sets the RateControlMode field's value.
+func (s *Vp8Settings) SetRateControlMode(v string) *Vp8Settings {
+	s.RateControlMode = &v
+	return s
+}
+
+// Required when you set (Codec) under (VideoDescription)>(CodecSettings) to
+// the value VP9.
+type Vp9Settings struct {
+	_ struct{} `type:"structure"`
+
+	// Target bitrate in bits/second. For example, enter five megabits per second
+	// as 5000000.
+	Bitrate *int64 `locationName:"bitrate" min:"1000" type:"integer"`
+
+	// If you are using the console, use the Framerate setting to specify the frame
+	// rate for this output. If you want to keep the same frame rate as the input
+	// video, choose Follow source. If you want to do frame rate conversion, choose
+	// a frame rate from the dropdown list or choose Custom. The framerates shown
+	// in the dropdown list are decimal approximations of fractions. If you choose
+	// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+	// job specification as a JSON file without the console, use FramerateControl
+	// to specify which value the service uses for the frame rate for this output.
+	// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+	// from the input. Choose SPECIFIED if you want the service to use the frame
+	// rate you specify in the settings FramerateNumerator and FramerateDenominator.
+	FramerateControl *string `locationName:"framerateControl" type:"string" enum:"Vp9FramerateControl"`
+
+	// Optional. Specify how the transcoder performs framerate conversion. The default
+	// behavior is to use Drop duplicate (DUPLICATE_DROP) conversion. When you choose
+	// Interpolate (INTERPOLATE) instead, the conversion produces smoother motion.
+	FramerateConversionAlgorithm *string `locationName:"framerateConversionAlgorithm" type:"string" enum:"Vp9FramerateConversionAlgorithm"`
+
+	// When you use the API for transcode jobs that use frame rate conversion, specify
+	// the frame rate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
+	// FramerateDenominator to specify the denominator of this fraction. In this
+	// example, use 1001 for the value of FramerateDenominator. When you use the
+	// console for transcode jobs that use frame rate conversion, provide the value
+	// as a decimal number for Framerate. In this example, specify 23.976.
+	FramerateDenominator *int64 `locationName:"framerateDenominator" min:"1" type:"integer"`
+
+	// When you use the API for transcode jobs that use frame rate conversion, specify
+	// the frame rate as a fraction. For example, 24000 / 1001 = 23.976 fps. Use
+	// FramerateNumerator to specify the numerator of this fraction. In this example,
+	// use 24000 for the value of FramerateNumerator. When you use the console for
+	// transcode jobs that use frame rate conversion, provide the value as a decimal
+	// number for Framerate. In this example, specify 23.976.
+	FramerateNumerator *int64 `locationName:"framerateNumerator" min:"1" type:"integer"`
+
+	// GOP Length (keyframe interval) in frames. Must be greater than zero.
+	GopSize *float64 `locationName:"gopSize" type:"double"`
+
+	// Size of buffer (HRD buffer model) in bits. For example, enter five megabits
+	// as 5000000.
+	HrdBufferSize *int64 `locationName:"hrdBufferSize" type:"integer"`
+
+	// Ignore this setting unless you set qualityTuningLevel to MULTI_PASS. Optional.
+	// Specify the maximum bitrate in bits/second. For example, enter five megabits
+	// per second as 5000000. The default behavior uses twice the target bitrate
+	// as the maximum bitrate.
+	MaxBitrate *int64 `locationName:"maxBitrate" min:"1000" type:"integer"`
+
+	// Optional. Specify how the service determines the pixel aspect ratio for this
+	// output. The default behavior is to use the same pixel aspect ratio as your
+	// input video.
+	ParControl *string `locationName:"parControl" type:"string" enum:"Vp9ParControl"`
+
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parDenominator is 33.
+	ParDenominator *int64 `locationName:"parDenominator" min:"1" type:"integer"`
+
+	// Required when you set Pixel aspect ratio (parControl) to SPECIFIED. On the
+	// console, this corresponds to any value other than Follow source. When you
+	// specify an output pixel aspect ratio (PAR) that is different from your input
+	// video PAR, provide your output PAR as a ratio. For example, for D1/DV NTSC
+	// widescreen, you would specify the ratio 40:33. In this example, the value
+	// for parNumerator is 40.
+	ParNumerator *int64 `locationName:"parNumerator" min:"1" type:"integer"`
+
+	// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+	// want to trade off encoding speed for output video quality. The default behavior
+	// is faster, lower quality, multi-pass encoding.
+	QualityTuningLevel *string `locationName:"qualityTuningLevel" type:"string" enum:"Vp9QualityTuningLevel"`
+
+	// With the VP9 codec, you can use only the variable bitrate (VBR) rate control
+	// mode.
+	RateControlMode *string `locationName:"rateControlMode" type:"string" enum:"Vp9RateControlMode"`
+}
+
+// String returns the string representation
+func (s Vp9Settings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Vp9Settings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Vp9Settings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Vp9Settings"}
+	if s.Bitrate != nil && *s.Bitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("Bitrate", 1000))
+	}
+	if s.FramerateDenominator != nil && *s.FramerateDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateDenominator", 1))
+	}
+	if s.FramerateNumerator != nil && *s.FramerateNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("FramerateNumerator", 1))
+	}
+	if s.MaxBitrate != nil && *s.MaxBitrate < 1000 {
+		invalidParams.Add(request.NewErrParamMinValue("MaxBitrate", 1000))
+	}
+	if s.ParDenominator != nil && *s.ParDenominator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParDenominator", 1))
+	}
+	if s.ParNumerator != nil && *s.ParNumerator < 1 {
+		invalidParams.Add(request.NewErrParamMinValue("ParNumerator", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBitrate sets the Bitrate field's value.
+func (s *Vp9Settings) SetBitrate(v int64) *Vp9Settings {
+	s.Bitrate = &v
+	return s
+}
+
+// SetFramerateControl sets the FramerateControl field's value.
+func (s *Vp9Settings) SetFramerateControl(v string) *Vp9Settings {
+	s.FramerateControl = &v
+	return s
+}
+
+// SetFramerateConversionAlgorithm sets the FramerateConversionAlgorithm field's value.
+func (s *Vp9Settings) SetFramerateConversionAlgorithm(v string) *Vp9Settings {
+	s.FramerateConversionAlgorithm = &v
+	return s
+}
+
+// SetFramerateDenominator sets the FramerateDenominator field's value.
+func (s *Vp9Settings) SetFramerateDenominator(v int64) *Vp9Settings {
+	s.FramerateDenominator = &v
+	return s
+}
+
+// SetFramerateNumerator sets the FramerateNumerator field's value.
+func (s *Vp9Settings) SetFramerateNumerator(v int64) *Vp9Settings {
+	s.FramerateNumerator = &v
+	return s
+}
+
+// SetGopSize sets the GopSize field's value.
+func (s *Vp9Settings) SetGopSize(v float64) *Vp9Settings {
+	s.GopSize = &v
+	return s
+}
+
+// SetHrdBufferSize sets the HrdBufferSize field's value.
+func (s *Vp9Settings) SetHrdBufferSize(v int64) *Vp9Settings {
+	s.HrdBufferSize = &v
+	return s
+}
+
+// SetMaxBitrate sets the MaxBitrate field's value.
+func (s *Vp9Settings) SetMaxBitrate(v int64) *Vp9Settings {
+	s.MaxBitrate = &v
+	return s
+}
+
+// SetParControl sets the ParControl field's value.
+func (s *Vp9Settings) SetParControl(v string) *Vp9Settings {
+	s.ParControl = &v
+	return s
+}
+
+// SetParDenominator sets the ParDenominator field's value.
+func (s *Vp9Settings) SetParDenominator(v int64) *Vp9Settings {
+	s.ParDenominator = &v
+	return s
+}
+
+// SetParNumerator sets the ParNumerator field's value.
+func (s *Vp9Settings) SetParNumerator(v int64) *Vp9Settings {
+	s.ParNumerator = &v
+	return s
+}
+
+// SetQualityTuningLevel sets the QualityTuningLevel field's value.
+func (s *Vp9Settings) SetQualityTuningLevel(v string) *Vp9Settings {
+	s.QualityTuningLevel = &v
+	return s
+}
+
+// SetRateControlMode sets the RateControlMode field's value.
+func (s *Vp9Settings) SetRateControlMode(v string) *Vp9Settings {
+	s.RateControlMode = &v
+	return s
+}
+
 // Required when you set (Codec) under (AudioDescriptions)>(CodecSettings) to
 // the value WAV.
 type WavSettings struct {
@@ -18835,6 +19512,12 @@ const (
 
 	// AudioCodecEac3Atmos is a AudioCodec enum value
 	AudioCodecEac3Atmos = "EAC3_ATMOS"
+
+	// AudioCodecVorbis is a AudioCodec enum value
+	AudioCodecVorbis = "VORBIS"
+
+	// AudioCodecOpus is a AudioCodec enum value
+	AudioCodecOpus = "OPUS"
 
 	// AudioCodecPassthrough is a AudioCodec enum value
 	AudioCodecPassthrough = "PASSTHROUGH"
@@ -19484,6 +20167,9 @@ const (
 
 	// ContainerTypeMxf is a ContainerType enum value
 	ContainerTypeMxf = "MXF"
+
+	// ContainerTypeWebm is a ContainerType enum value
+	ContainerTypeWebm = "WEBM"
 
 	// ContainerTypeRaw is a ContainerType enum value
 	ContainerTypeRaw = "RAW"
@@ -20294,7 +20980,8 @@ const (
 	H264FramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+// Optional. Specify how the transcoder performs framerate conversion. The default
+// behavior is to use duplicate drop conversion.
 const (
 	// H264FramerateConversionAlgorithmDuplicateDrop is a H264FramerateConversionAlgorithm enum value
 	H264FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -20351,9 +21038,12 @@ const (
 	H264InterlaceModeFollowBottomField = "FOLLOW_BOTTOM_FIELD"
 )
 
-// Using the API, enable ParFollowSource if you want the service to use the
-// pixel aspect ratio from the input. Using the console, do this by choosing
-// Follow source for Pixel aspect ratio.
+// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+// uses the PAR from your input video for your output. To use a different PAR,
+// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+// than Follow source. When you choose SPECIFIED for this setting, you must
+// also specify values for the parNumerator and parDenominator settings.
 const (
 	// H264ParControlInitializeFromSource is a H264ParControl enum value
 	H264ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -20362,9 +21052,9 @@ const (
 	H264ParControlSpecified = "SPECIFIED"
 )
 
-// Use Quality tuning level (H264QualityTuningLevel) to specifiy whether to
-// use fast single-pass, high-quality singlepass, or high-quality multipass
-// video encoding.
+// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+// want to trade off encoding speed for output video quality. The default behavior
+// is faster, lower quality, single-pass encoding.
 const (
 	// H264QualityTuningLevelSinglePass is a H264QualityTuningLevel enum value
 	H264QualityTuningLevelSinglePass = "SINGLE_PASS"
@@ -20614,7 +21304,7 @@ const (
 // a frame rate from the dropdown list or choose Custom. The framerates shown
 // in the dropdown list are decimal approximations of fractions. If you choose
 // Custom, specify your frame rate as a fraction. If you are creating your transcoding
-// job sepecification as a JSON file without the console, use FramerateControl
+// job specification as a JSON file without the console, use FramerateControl
 // to specify which value the service uses for the frame rate for this output.
 // Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
 // from the input. Choose SPECIFIED if you want the service to use the frame
@@ -20685,9 +21375,12 @@ const (
 	H265InterlaceModeFollowBottomField = "FOLLOW_BOTTOM_FIELD"
 )
 
-// Using the API, enable ParFollowSource if you want the service to use the
-// pixel aspect ratio from the input. Using the console, do this by choosing
-// Follow source for Pixel aspect ratio.
+// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+// uses the PAR from your input video for your output. To use a different PAR,
+// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+// than Follow source. When you choose SPECIFIED for this setting, you must
+// also specify values for the parNumerator and parDenominator settings.
 const (
 	// H265ParControlInitializeFromSource is a H265ParControl enum value
 	H265ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -20696,9 +21389,9 @@ const (
 	H265ParControlSpecified = "SPECIFIED"
 )
 
-// Use Quality tuning level (H265QualityTuningLevel) to specifiy whether to
-// use fast single-pass, high-quality singlepass, or high-quality multipass
-// video encoding.
+// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+// want to trade off encoding speed for output video quality. The default behavior
+// is faster, lower quality, single-pass encoding.
 const (
 	// H265QualityTuningLevelSinglePass is a H265QualityTuningLevel enum value
 	H265QualityTuningLevelSinglePass = "SINGLE_PASS"
@@ -21075,8 +21768,8 @@ const (
 
 // Keep this setting enabled to have MediaConvert use the font style and position
 // information from the captions source in the output. This option is available
-// only when your input captions are CFF-TT, IMSC, SMPTE-TT, or TTML. Disable
-// this setting for simplified output captions.
+// only when your input captions are IMSC, SMPTE-TT, or TTML. Disable this setting
+// for simplified output captions.
 const (
 	// ImscStylePassthroughEnabled is a ImscStylePassthrough enum value
 	ImscStylePassthroughEnabled = "ENABLED"
@@ -21086,7 +21779,7 @@ const (
 )
 
 // Enable Deblock (InputDeblockFilter) to produce smoother motion in the output.
-// Default is disabled. Only manaully controllable for MPEG2 and uncompressed
+// Default is disabled. Only manually controllable for MPEG2 and uncompressed
 // video inputs.
 const (
 	// InputDeblockFilterEnabled is a InputDeblockFilter enum value
@@ -22212,7 +22905,7 @@ const (
 // a frame rate from the dropdown list or choose Custom. The framerates shown
 // in the dropdown list are decimal approximations of fractions. If you choose
 // Custom, specify your frame rate as a fraction. If you are creating your transcoding
-// job sepecification as a JSON file without the console, use FramerateControl
+// job specification as a JSON file without the console, use FramerateControl
 // to specify which value the service uses for the frame rate for this output.
 // Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
 // from the input. Choose SPECIFIED if you want the service to use the frame
@@ -22225,7 +22918,8 @@ const (
 	Mpeg2FramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+// Optional. Specify how the transcoder performs framerate conversion. The default
+// behavior is to use duplicate drop conversion.
 const (
 	// Mpeg2FramerateConversionAlgorithmDuplicateDrop is a Mpeg2FramerateConversionAlgorithm enum value
 	Mpeg2FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -22293,9 +22987,12 @@ const (
 	Mpeg2IntraDcPrecisionIntraDcPrecision11 = "INTRA_DC_PRECISION_11"
 )
 
-// Using the API, enable ParFollowSource if you want the service to use the
-// pixel aspect ratio from the input. Using the console, do this by choosing
-// Follow source for Pixel aspect ratio.
+// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+// uses the PAR from your input video for your output. To use a different PAR,
+// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+// than Follow source. When you choose SPECIFIED for this setting, you must
+// also specify values for the parNumerator and parDenominator settings.
 const (
 	// Mpeg2ParControlInitializeFromSource is a Mpeg2ParControl enum value
 	Mpeg2ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -22304,8 +23001,9 @@ const (
 	Mpeg2ParControlSpecified = "SPECIFIED"
 )
 
-// Use Quality tuning level (Mpeg2QualityTuningLevel) to specifiy whether to
-// use single-pass or multipass video encoding.
+// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+// want to trade off encoding speed for output video quality. The default behavior
+// is faster, lower quality, single-pass encoding.
 const (
 	// Mpeg2QualityTuningLevelSinglePass is a Mpeg2QualityTuningLevel enum value
 	Mpeg2QualityTuningLevelSinglePass = "SINGLE_PASS"
@@ -22406,6 +23104,38 @@ const (
 
 	// MsSmoothManifestEncodingUtf16 is a MsSmoothManifestEncoding enum value
 	MsSmoothManifestEncodingUtf16 = "UTF16"
+)
+
+// Optional. When you have AFD signaling set up in your output video stream,
+// use this setting to choose whether to also include it in the MXF wrapper.
+// Choose Don't copy (NO_COPY) to exclude AFD signaling from the MXF wrapper.
+// Choose Copy from video stream (COPY_FROM_VIDEO) to copy the AFD values from
+// the video stream for this output to the MXF wrapper. Regardless of which
+// option you choose, the AFD values remain in the video stream. Related settings:
+// To set up your output to include or exclude AFD values, see AfdSignaling,
+// under VideoDescription. On the console, find AFD signaling under the output's
+// video encoding settings.
+const (
+	// MxfAfdSignalingNoCopy is a MxfAfdSignaling enum value
+	MxfAfdSignalingNoCopy = "NO_COPY"
+
+	// MxfAfdSignalingCopyFromVideo is a MxfAfdSignaling enum value
+	MxfAfdSignalingCopyFromVideo = "COPY_FROM_VIDEO"
+)
+
+// Optional. When you set Noise reducer (noiseReducer) to Temporal (TEMPORAL),
+// you can optionally use this setting to apply additional sharpening. The default
+// behavior, Auto (AUTO) allows the transcoder to determine whether to apply
+// filtering, depending on input type and quality.
+const (
+	// NoiseFilterPostTemporalSharpeningDisabled is a NoiseFilterPostTemporalSharpening enum value
+	NoiseFilterPostTemporalSharpeningDisabled = "DISABLED"
+
+	// NoiseFilterPostTemporalSharpeningEnabled is a NoiseFilterPostTemporalSharpening enum value
+	NoiseFilterPostTemporalSharpeningEnabled = "ENABLED"
+
+	// NoiseFilterPostTemporalSharpeningAuto is a NoiseFilterPostTemporalSharpening enum value
+	NoiseFilterPostTemporalSharpeningAuto = "AUTO"
 )
 
 // Use Noise reducer filter (NoiseReducerFilter) to select one of the following
@@ -22539,7 +23269,7 @@ const (
 // a frame rate from the dropdown list or choose Custom. The framerates shown
 // in the dropdown list are decimal approximations of fractions. If you choose
 // Custom, specify your frame rate as a fraction. If you are creating your transcoding
-// job sepecification as a JSON file without the console, use FramerateControl
+// job specification as a JSON file without the console, use FramerateControl
 // to specify which value the service uses for the frame rate for this output.
 // Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
 // from the input. Choose SPECIFIED if you want the service to use the frame
@@ -22552,7 +23282,8 @@ const (
 	ProresFramerateControlSpecified = "SPECIFIED"
 )
 
-// When set to INTERPOLATE, produces smoother motion during frame rate conversion.
+// Optional. Specify how the transcoder performs framerate conversion. The default
+// behavior is to use duplicate drop conversion.
 const (
 	// ProresFramerateConversionAlgorithmDuplicateDrop is a ProresFramerateConversionAlgorithm enum value
 	ProresFramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
@@ -22589,11 +23320,12 @@ const (
 	ProresInterlaceModeFollowBottomField = "FOLLOW_BOTTOM_FIELD"
 )
 
-// Use (ProresParControl) to specify how the service determines the pixel aspect
-// ratio. Set to Follow source (INITIALIZE_FROM_SOURCE) to use the pixel aspect
-// ratio from the input. To specify a different pixel aspect ratio: Using the
-// console, choose it from the dropdown menu. Using the API, set ProresParControl
-// to (SPECIFIED) and provide for (ParNumerator) and (ParDenominator).
+// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+// uses the PAR from your input video for your output. To use a different PAR,
+// choose (SPECIFIED). In the console, SPECIFIED corresponds to any value other
+// than Follow source. When you choose SPECIFIED for this setting, you must
+// also specify values for the parNumerator and parDenominator settings.
 const (
 	// ProresParControlInitializeFromSource is a ProresParControl enum value
 	ProresParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
@@ -22900,7 +23632,7 @@ const (
 )
 
 // Pass through style and position information from a TTML-like input source
-// (TTML, SMPTE-TT, CFF-TT) to the CFF-TT output or TTML output.
+// (TTML, SMPTE-TT) to the TTML output.
 const (
 	// TtmlStylePassthroughEnabled is a TtmlStylePassthrough enum value
 	TtmlStylePassthroughEnabled = "ENABLED"
@@ -22936,6 +23668,12 @@ const (
 
 	// VideoCodecProres is a VideoCodec enum value
 	VideoCodecProres = "PRORES"
+
+	// VideoCodecVp8 is a VideoCodec enum value
+	VideoCodecVp8 = "VP8"
+
+	// VideoCodecVp9 is a VideoCodec enum value
+	VideoCodecVp9 = "VP9"
 )
 
 // Applies only to H.264, H.265, MPEG2, and ProRes outputs. Only enable Timecode
@@ -22956,6 +23694,132 @@ const (
 
 	// VideoTimecodeInsertionPicTimingSei is a VideoTimecodeInsertion enum value
 	VideoTimecodeInsertionPicTimingSei = "PIC_TIMING_SEI"
+)
+
+// If you are using the console, use the Framerate setting to specify the frame
+// rate for this output. If you want to keep the same frame rate as the input
+// video, choose Follow source. If you want to do frame rate conversion, choose
+// a frame rate from the dropdown list or choose Custom. The framerates shown
+// in the dropdown list are decimal approximations of fractions. If you choose
+// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+// job specification as a JSON file without the console, use FramerateControl
+// to specify which value the service uses for the frame rate for this output.
+// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+// from the input. Choose SPECIFIED if you want the service to use the frame
+// rate you specify in the settings FramerateNumerator and FramerateDenominator.
+const (
+	// Vp8FramerateControlInitializeFromSource is a Vp8FramerateControl enum value
+	Vp8FramerateControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
+
+	// Vp8FramerateControlSpecified is a Vp8FramerateControl enum value
+	Vp8FramerateControlSpecified = "SPECIFIED"
+)
+
+// Optional. Specify how the transcoder performs framerate conversion. The default
+// behavior is to use Drop duplicate (DUPLICATE_DROP) conversion. When you choose
+// Interpolate (INTERPOLATE) instead, the conversion produces smoother motion.
+const (
+	// Vp8FramerateConversionAlgorithmDuplicateDrop is a Vp8FramerateConversionAlgorithm enum value
+	Vp8FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
+
+	// Vp8FramerateConversionAlgorithmInterpolate is a Vp8FramerateConversionAlgorithm enum value
+	Vp8FramerateConversionAlgorithmInterpolate = "INTERPOLATE"
+)
+
+// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+// uses the PAR from your input video for your output. To specify a different
+// PAR in the console, choose any value other than Follow source. To specify
+// a different PAR by editing the JSON job specification, choose SPECIFIED.
+// When you choose SPECIFIED for this setting, you must also specify values
+// for the parNumerator and parDenominator settings.
+const (
+	// Vp8ParControlInitializeFromSource is a Vp8ParControl enum value
+	Vp8ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
+
+	// Vp8ParControlSpecified is a Vp8ParControl enum value
+	Vp8ParControlSpecified = "SPECIFIED"
+)
+
+// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+// want to trade off encoding speed for output video quality. The default behavior
+// is faster, lower quality, multi-pass encoding.
+const (
+	// Vp8QualityTuningLevelMultiPass is a Vp8QualityTuningLevel enum value
+	Vp8QualityTuningLevelMultiPass = "MULTI_PASS"
+
+	// Vp8QualityTuningLevelMultiPassHq is a Vp8QualityTuningLevel enum value
+	Vp8QualityTuningLevelMultiPassHq = "MULTI_PASS_HQ"
+)
+
+// With the VP8 codec, you can use only the variable bitrate (VBR) rate control
+// mode.
+const (
+	// Vp8RateControlModeVbr is a Vp8RateControlMode enum value
+	Vp8RateControlModeVbr = "VBR"
+)
+
+// If you are using the console, use the Framerate setting to specify the frame
+// rate for this output. If you want to keep the same frame rate as the input
+// video, choose Follow source. If you want to do frame rate conversion, choose
+// a frame rate from the dropdown list or choose Custom. The framerates shown
+// in the dropdown list are decimal approximations of fractions. If you choose
+// Custom, specify your frame rate as a fraction. If you are creating your transcoding
+// job specification as a JSON file without the console, use FramerateControl
+// to specify which value the service uses for the frame rate for this output.
+// Choose INITIALIZE_FROM_SOURCE if you want the service to use the frame rate
+// from the input. Choose SPECIFIED if you want the service to use the frame
+// rate you specify in the settings FramerateNumerator and FramerateDenominator.
+const (
+	// Vp9FramerateControlInitializeFromSource is a Vp9FramerateControl enum value
+	Vp9FramerateControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
+
+	// Vp9FramerateControlSpecified is a Vp9FramerateControl enum value
+	Vp9FramerateControlSpecified = "SPECIFIED"
+)
+
+// Optional. Specify how the transcoder performs framerate conversion. The default
+// behavior is to use Drop duplicate (DUPLICATE_DROP) conversion. When you choose
+// Interpolate (INTERPOLATE) instead, the conversion produces smoother motion.
+const (
+	// Vp9FramerateConversionAlgorithmDuplicateDrop is a Vp9FramerateConversionAlgorithm enum value
+	Vp9FramerateConversionAlgorithmDuplicateDrop = "DUPLICATE_DROP"
+
+	// Vp9FramerateConversionAlgorithmInterpolate is a Vp9FramerateConversionAlgorithm enum value
+	Vp9FramerateConversionAlgorithmInterpolate = "INTERPOLATE"
+)
+
+// Optional. Specify how the service determines the pixel aspect ratio (PAR)
+// for this output. The default behavior, Follow source (INITIALIZE_FROM_SOURCE),
+// uses the PAR from your input video for your output. To specify a different
+// PAR in the console, choose any value other than Follow source. To specify
+// a different PAR by editing the JSON job specification, choose SPECIFIED.
+// When you choose SPECIFIED for this setting, you must also specify values
+// for the parNumerator and parDenominator settings.
+const (
+	// Vp9ParControlInitializeFromSource is a Vp9ParControl enum value
+	Vp9ParControlInitializeFromSource = "INITIALIZE_FROM_SOURCE"
+
+	// Vp9ParControlSpecified is a Vp9ParControl enum value
+	Vp9ParControlSpecified = "SPECIFIED"
+)
+
+// Optional. Use Quality tuning level (qualityTuningLevel) to choose how you
+// want to trade off encoding speed for output video quality. The default behavior
+// is faster, lower quality, multi-pass encoding.
+const (
+	// Vp9QualityTuningLevelMultiPass is a Vp9QualityTuningLevel enum value
+	Vp9QualityTuningLevelMultiPass = "MULTI_PASS"
+
+	// Vp9QualityTuningLevelMultiPassHq is a Vp9QualityTuningLevel enum value
+	Vp9QualityTuningLevelMultiPassHq = "MULTI_PASS_HQ"
+)
+
+// With the VP9 codec, you can use only the variable bitrate (VBR) rate control
+// mode.
+const (
+	// Vp9RateControlModeVbr is a Vp9RateControlMode enum value
+	Vp9RateControlModeVbr = "VBR"
 )
 
 // The service defaults to using RIFF for WAV outputs. If your output audio

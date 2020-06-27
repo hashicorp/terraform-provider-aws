@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
@@ -40,7 +41,9 @@ func TestAccAWSAutoscalingPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "metric_aggregation_type", "Minimum"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "estimated_instance_warmup", "200"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "autoscaling_group_name", name),
-					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_step", "step_adjustment.2042107634.scaling_adjustment", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs("aws_autoscaling_policy.foobar_step", "step_adjustment.*", map[string]string{
+						"scaling_adjustment": "1",
+					}),
 					testAccCheckScalingPolicyExists("aws_autoscaling_policy.foobar_target_tracking", &policy),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "policy_type", "TargetTrackingScaling"),
 					resource.TestCheckResourceAttr("aws_autoscaling_policy.foobar_target_tracking", "name", name+"-foobar_target_tracking"),

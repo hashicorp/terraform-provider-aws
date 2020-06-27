@@ -56,6 +56,11 @@ func resourceAwsEbsVolume() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validateArn,
 			},
+			"multi_attach_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 			"size": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -102,6 +107,9 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	if value, ok := d.GetOk("snapshot_id"); ok {
 		request.SnapshotId = aws.String(value.(string))
 	}
+	if value, ok := d.GetOk("multi_attach_enabled"); ok {
+		request.MultiAttachEnabled = aws.Bool(value.(bool))
+	}
 	if value, ok := d.GetOk("outpost_arn"); ok {
 		request.OutpostArn = aws.String(value.(string))
 	}
@@ -117,9 +125,9 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	}
 
 	iops := d.Get("iops").(int)
-	if t != "io1" && iops > 0 {
-		log.Printf("[WARN] IOPs is only valid for storate type io1 for EBS Volumes")
-	} else if t == "io1" {
+	if t != ec2.VolumeTypeIo1 && iops > 0 {
+		log.Printf("[WARN] IOPs is only valid on IO1 storage type for EBS Volumes")
+	} else if t == ec2.VolumeTypeIo1 {
 		// We add the iops value without validating it's size, to allow AWS to
 		// enforce a size requirement (currently 100)
 		request.Iops = aws.Int64(int64(iops))
@@ -135,8 +143,8 @@ func resourceAwsEbsVolumeCreate(d *schema.ResourceData, meta interface{}) error 
 	log.Println("[DEBUG] Waiting for Volume to become available")
 
 	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"available"},
+		Pending:    []string{ec2.VolumeStateCreating},
+		Target:     []string{ec2.VolumeStateAvailable},
 		Refresh:    volumeStateRefreshFunc(conn, *result.VolumeId),
 		Timeout:    5 * time.Minute,
 		Delay:      10 * time.Second,
@@ -185,8 +193,8 @@ func resourceAWSEbsVolumeUpdate(d *schema.ResourceData, meta interface{}) error 
 		}
 
 		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"creating", "modifying"},
-			Target:     []string{"available", "in-use"},
+			Pending:    []string{ec2.VolumeStateCreating, ec2.VolumeModificationStateModifying},
+			Target:     []string{ec2.VolumeStateAvailable, ec2.VolumeStateInUse},
 			Refresh:    volumeStateRefreshFunc(conn, *result.VolumeModification.VolumeId),
 			Timeout:    5 * time.Minute,
 			Delay:      10 * time.Second,
@@ -247,7 +255,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 
 	response, err := conn.DescribeVolumes(request)
 	if err != nil {
-		if ec2err, ok := err.(awserr.Error); ok && ec2err.Code() == "InvalidVolume.NotFound" {
+		if isAWSErr(err, "InvalidVolume.NotFound", "") {
 			d.SetId("")
 			return nil
 		}
@@ -275,6 +283,7 @@ func resourceAwsEbsVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("size", aws.Int64Value(volume.Size))
 	d.Set("snapshot_id", aws.StringValue(volume.SnapshotId))
 	d.Set("outpost_arn", aws.StringValue(volume.OutpostArn))
+	d.Set("multi_attach_enabled", volume.MultiAttachEnabled)
 
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(volume.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
