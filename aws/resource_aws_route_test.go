@@ -231,6 +231,43 @@ func TestAccAWSRoute_IPv6_To_VpcPeeringConnection(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_IPv6_To_VpnGateway(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	vgwResourceName := "aws_vpn_gateway.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "::/0"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv6VpnGateway(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_IPv4_To_VpnGateway(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
@@ -1398,6 +1435,41 @@ resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
   destination_cidr_block = %[2]q
   gateway_id             = aws_vpn_gateway.test.id
+}
+`, rName, destinationCidr)
+}
+
+func testAccAWSRouteConfigIpv6VpnGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id              = aws_route_table.test.id
+  destination_ipv6_cidr_block = %[2]q
+  gateway_id                  = aws_vpn_gateway.test.id
 }
 `, rName, destinationCidr)
 }
