@@ -111,6 +111,28 @@ func TestAccAWSRouteTable_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteTable_disappears(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRouteTable(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRouteTable_xyz(t *testing.T) {
 	var v ec2.RouteTable
 	resourceName := "aws_route_table.test"
