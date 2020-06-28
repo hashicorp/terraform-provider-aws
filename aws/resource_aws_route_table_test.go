@@ -133,52 +133,13 @@ func TestAccAWSRouteTable_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_xyz(t *testing.T) {
-	var v ec2.RouteTable
+func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
-
-	testCheck := func(*terraform.State) error {
-		if len(v.Routes) != 2 {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		routes := make(map[string]*ec2.Route)
-		for _, r := range v.Routes {
-			routes[*r.DestinationCidrBlock] = r
-		}
-
-		if _, ok := routes["10.1.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-		if _, ok := routes["10.2.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		return nil
-	}
-
-	testCheckChange := func(*terraform.State) error {
-		if len(v.Routes) != 3 {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		routes := make(map[string]*ec2.Route)
-		for _, r := range v.Routes {
-			routes[*r.DestinationCidrBlock] = r
-		}
-
-		if _, ok := routes["10.1.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-		if _, ok := routes["10.3.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-		if _, ok := routes["10.4.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		return nil
-	}
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr1 := "10.2.0.0/16"
+	destinationCidr2 := "10.3.0.0/16"
+	destinationCidr3 := "10.4.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -187,25 +148,49 @@ func TestAccAWSRouteTable_xyz(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfig,
+				Config: testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &v),
-					testCheck,
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr1,
+						"ipv6_cidr_block": "",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr2,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr2, destinationCidr3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr2,
+						"ipv6_cidr_block": "",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr3,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccRouteTableConfigChange,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &v),
-					testCheckChange,
-					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
-				),
 			},
 		},
 	})
@@ -418,63 +403,6 @@ func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
 	})
 }
 
-func testAccCheckRouteTableDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_route_table" {
-			continue
-		}
-
-		// Try to find the resource
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err == nil {
-			if len(resp.RouteTables) > 0 {
-				return fmt.Errorf("still exist.")
-			}
-
-			return nil
-		}
-
-		// Verify the error is what we want
-		if !isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
-			RouteTableIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err != nil {
-			return err
-		}
-		if len(resp.RouteTables) == 0 {
-			return fmt.Errorf("RouteTable not found")
-		}
-
-		*v = *resp.RouteTables[0]
-
-		return nil
-	}
-}
-
 // VPC Peering connections are prefixed with pcx
 // Right now there is no VPC Peering resource
 func TestAccAWSRouteTable_vpcPeering(t *testing.T) {
@@ -607,6 +535,63 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 	})
 }
 
+func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ID is set")
+		}
+
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
+			RouteTableIds: []*string{aws.String(rs.Primary.ID)},
+		})
+		if err != nil {
+			return err
+		}
+		if len(resp.RouteTables) == 0 {
+			return fmt.Errorf("RouteTable not found")
+		}
+
+		*v = *resp.RouteTables[0]
+
+		return nil
+	}
+}
+
+func testAccCheckRouteTableDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_route_table" {
+			continue
+		}
+
+		// Try to find the resource
+		resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
+			RouteTableIds: []*string{aws.String(rs.Primary.ID)},
+		})
+		if err == nil {
+			if len(resp.RouteTables) > 0 {
+				return fmt.Errorf("still exist.")
+			}
+
+			return nil
+		}
+
+		// Verify the error is what we want
+		if !isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func testAccCheckAWSRouteTableNumberOfRoutes(routeTable *ec2.RouteTable, n int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if len := len(routeTable.Routes); len != n {
@@ -633,64 +618,43 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-const testAccRouteTableConfig = `
+func testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-  	Name = "terraform-testacc-route-table"
+    Name = %[1]q
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-  	Name = "terraform-testacc-route-table"
+    Name = %[1]q
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.2.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
+    cidr_block = %[2]q
+    gateway_id = aws_internet_gateway.test.id
   }
-}
-`
 
-const testAccRouteTableConfigChange = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
+  route {
+    cidr_block = %[3]q
+    gateway_id = aws_internet_gateway.test.id
+  }
 
   tags = {
-    Name = "terraform-testacc-route-table"
+    Name = %[1]q
   }
 }
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  tags = {
-    Name = "terraform-testacc-route-table"
-  }
+`, rName, destinationCidr1, destinationCidr2)
 }
-
-resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-
-  route {
-    cidr_block = "10.3.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
-  }
-
-  route {
-    cidr_block = "10.4.0.0/16"
-    gateway_id = "${aws_internet_gateway.test.id}"
-  }
-}
-`
 
 const testAccRouteTableConfigIpv6 = `
 resource "aws_vpc" "test" {
