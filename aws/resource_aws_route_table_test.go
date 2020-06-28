@@ -82,6 +82,36 @@ func testSweepRouteTables(region string) error {
 }
 
 func TestAccAWSRouteTable_basic(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigBasic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSRouteTable_xyz(t *testing.T) {
 	var v ec2.RouteTable
 	resourceName := "aws_route_table.test"
 
@@ -553,6 +583,32 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckAWSRouteTableNumberOfRoutes(routeTable *ec2.RouteTable, n int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if len := len(routeTable.Routes); len != n {
+			return fmt.Errorf("Route Table has incorrect number of routes (Expected=%d, Actual=%d)\n", n, len)
+		}
+
+		return nil
+	}
+}
+
+func testAccAWSRouteTableConfigBasic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+}
+`, rName)
 }
 
 const testAccRouteTableConfig = `
