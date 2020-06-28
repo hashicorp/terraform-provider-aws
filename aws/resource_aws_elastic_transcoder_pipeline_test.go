@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"reflect"
+	"regexp"
 	"sort"
 	"testing"
 
@@ -28,6 +29,7 @@ func TestAccAWSElasticTranscoderPipeline_basic(t *testing.T) {
 				Config: awsElasticTranscoderPipelineConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSElasticTranscoderPipelineExists(resourceName, pipeline),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`pipeline/.+`)),
 				),
 			},
 			{
