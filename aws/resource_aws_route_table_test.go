@@ -148,7 +148,7 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2),
+				Config: testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
@@ -168,7 +168,7 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr2, destinationCidr3),
+				Config: testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr2, destinationCidr3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
@@ -280,6 +280,7 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 func TestAccAWSRouteTable_tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -288,11 +289,11 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigTags,
+				Config: testAccAWSRouteTableConfigTags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -301,11 +302,20 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRouteTableConfigTagsUpdate,
+				Config: testAccAWSRouteTableConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSRouteTableConfigTags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.bar", "baz"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -618,7 +628,7 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2 string) string {
+func testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -729,41 +739,46 @@ resource "aws_route_table" "test" {
 }
 `
 
-const testAccRouteTableConfigTags = `
+func testAccAWSRouteTableConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-tags"
+    Name = %[1]q
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    foo = "bar"
+    %[2]q = %[3]q
   }
 }
-`
+`, rName, tagKey1, tagValue1)
+}
 
-const testAccRouteTableConfigTagsUpdate = `
+func testAccAWSRouteTableConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-tags"
+    Name = %[1]q
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    bar = "baz"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
 
 // VPC Peering connections are prefixed with pcx
 const testAccRouteTableVpcPeeringConfig = `
