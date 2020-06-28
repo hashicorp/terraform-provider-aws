@@ -147,7 +147,7 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2),
+				Config: testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
@@ -167,7 +167,7 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr2, destinationCidr3),
+				Config: testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr2, destinationCidr3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
@@ -692,7 +692,7 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2 string) string {
+func testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2 string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
