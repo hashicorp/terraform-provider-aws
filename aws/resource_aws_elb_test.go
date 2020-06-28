@@ -80,7 +80,7 @@ func TestAccAWSELB_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSELBExists(resourceName, &conf),
 					testAccCheckAWSELBAttributes(&conf),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", fmt.Sprintf("loadbalancer/%s", rName)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexp.MustCompile(`loadbalancer/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "availability_zones.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "subnets.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "listener.*", map[string]string{
@@ -228,12 +228,6 @@ func TestAccAWSELB_AccessLogs_disabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.interval", "5"),
 					resource.TestCheckResourceAttr(resourceName, "access_logs.0.enabled", "false"),
 				),
-			},
-			{
-				Config:            testAccAWSELBAccessLogsDisabled(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccAWSELBAccessLogs,
