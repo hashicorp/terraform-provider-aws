@@ -340,7 +340,7 @@ func serializeFindingCriteria(findingCriteria map[string]interface{}) (*guarddut
 		case "greater_than_or_equal":
 			value, err := conditionValueToInt(typedCriterion["values"].([]interface{}))
 			if err != nil {
-				return nil, fmt.Errorf("Value seems to be not an integer: %v", typedCriterion["values"].([]interface{})[0])
+				return nil, fmt.Errorf("Value must be an integer: %v", typedCriterion["values"].([]interface{})[0])
 			}
 			if criteria[typedCriterion["field"].(string)] == nil {
 				criteria[typedCriterion["field"].(string)] = &guardduty.Condition{
