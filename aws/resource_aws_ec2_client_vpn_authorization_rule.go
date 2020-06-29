@@ -173,6 +173,9 @@ func deleteClientVpnAuthorizationRule(conn *ec2.EC2, input *ec2.RevokeClientVpnI
 	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
 		return nil
 	}
+	if err != nil {
+		return err
+	}
 
 	_, err = ClientVpnAuthorizationRuleRevoked(conn, id)
 
@@ -184,7 +187,7 @@ func ClientVpnAuthorizationRuleAuthorized(conn *ec2.EC2, authorizationRuleID str
 		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeAuthorizing},
 		Target:  []string{ec2.ClientVpnAuthorizationRuleStatusCodeActive},
 		Refresh: ClientVpnAuthorizationRuleStatus(conn, authorizationRuleID),
-		Timeout: waiter.ClientVpnEndpointAuthorizationRuleActiveTimeout,
+		Timeout: waiter.ClientVpnAuthorizationRuleActiveTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -201,7 +204,7 @@ func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string
 		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeRevoking},
 		Target:  []string{},
 		Refresh: ClientVpnAuthorizationRuleStatus(conn, authorizationRuleID),
-		Timeout: waiter.ClientVpnEndpointAuthorizationRuleRevokedTimeout,
+		Timeout: waiter.ClientVpnAuthorizationRuleRevokedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForState()
@@ -214,7 +217,7 @@ func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string
 }
 
 // ClientVpnAuthorizationRuleStatus fetches the Client VPN authorization rule and its Status
-// This should be in the waiters package, but has a dependency on isAWSErr()
+// TODO: This should be in the waiters package, but has a dependency on isAWSErr()
 func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(authorizationRuleID)

@@ -36,7 +36,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	client, err := sharedClientForRegion(region)
 
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
 
 	conn := client.(*AWSClient).ec2conn
@@ -51,24 +51,15 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 		}
 
 		if err != nil {
-			return fmt.Errorf("error retrieving Client VPN Endpoints: %s", err)
+			return fmt.Errorf("error retrieving Client VPN Endpoints: %w", err)
 		}
 
 		for _, clientVpnEndpoint := range output.ClientVpnEndpoints {
-			if clientVpnEndpoint.Status != nil && aws.StringValue(clientVpnEndpoint.Status.Code) == ec2.ClientVpnEndpointStatusCodeDeleted {
-				continue
-			}
-
 			id := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
-			input := &ec2.DeleteClientVpnEndpointInput{
-				ClientVpnEndpointId: clientVpnEndpoint.ClientVpnEndpointId,
-			}
-
 			log.Printf("[INFO] Deleting Client VPN Endpoint: %s", id)
-			_, err := conn.DeleteClientVpnEndpoint(input)
-
+			err := deleteClientVpnEndpoint(conn, id)
 			if err != nil {
-				return fmt.Errorf("error deleting Client VPN Endpoint (%s): %s", id, err)
+				return fmt.Errorf("error deleting Client VPN Endpoint (%s): %w", id, err)
 			}
 		}
 
@@ -339,13 +330,13 @@ func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
 		}
 
 		input := &ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: []*string{aws.String(rs.Primary.ID)},
+			ClientVpnEndpointIds: aws.StringSlice([]string{rs.Primary.ID}),
 		}
 
 		resp, _ := conn.DescribeClientVpnEndpoints(input)
 		for _, v := range resp.ClientVpnEndpoints {
-			if *v.ClientVpnEndpointId == rs.Primary.ID && !(*v.Status.Code == ec2.ClientVpnEndpointStatusCodeDeleted) {
-				return fmt.Errorf("[DESTROY ERROR] Client VPN endpoint (%s) not deleted", rs.Primary.ID)
+			if aws.StringValue(v.ClientVpnEndpointId) == rs.Primary.ID {
+				return fmt.Errorf("Client VPN endpoint (%s) not deleted", rs.Primary.ID)
 			}
 		}
 	}
@@ -362,7 +353,7 @@ func testAccCheckAwsEc2ClientVpnEndpointExists(name string, endpoint *ec2.Client
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
 		input := &ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: []*string{aws.String(rs.Primary.ID)},
+			ClientVpnEndpointIds: aws.StringSlice([]string{rs.Primary.ID}),
 		}
 		result, err := conn.DescribeClientVpnEndpoints(input)
 		if err != nil {

@@ -52,7 +52,11 @@ func LocalGatewayRouteTableVpcAssociationDisassociated(conn *ec2.EC2, localGatew
 }
 
 const (
-	ClientVpnEndpointAuthorizationRuleActiveTimeout = 1 * time.Minute
+	ClientVpnEndpointDeletedTimout = 5 * time.Minute
+)
 
-	ClientVpnEndpointAuthorizationRuleRevokedTimeout = 1 * time.Minute
+const (
+	ClientVpnAuthorizationRuleActiveTimeout = 1 * time.Minute
+
+	ClientVpnAuthorizationRuleRevokedTimeout = 1 * time.Minute
 )

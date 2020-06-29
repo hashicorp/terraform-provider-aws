@@ -41,6 +41,12 @@ func LocalGatewayRouteTableVpcAssociationState(conn *ec2.EC2, localGatewayRouteT
 }
 
 const (
+	ClientVpnEndpointStatusNotFound = "NotFound"
+
+	ClientVpnEndpointStatusUnknown = "Unknown"
+)
+
+const (
 	ClientVpnAuthorizationRuleStatusNotFound = "NotFound"
 
 	ClientVpnAuthorizationRuleStatusUnknown = "Unknown"
