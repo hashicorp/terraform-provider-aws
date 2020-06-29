@@ -318,6 +318,7 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 // For GH-13545, Fixes panic on an empty route config block
 func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -326,8 +327,8 @@ func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRouteTableConfigPanicEmptyRoute,
-				ExpectError: regexp.MustCompile("The request must contain the parameter destinationCidrBlock or destinationIpv6CidrBlock"),
+				Config:      testAccRouteTableConfigPanicEmptyRoute(rName),
+				ExpectError: regexp.MustCompile("The request must contain exactly one of: destinationCidrBlock, destinationIpv6CidrBlock, destinationPrefixListId"),
 			},
 		},
 	})
@@ -865,21 +866,27 @@ resource "aws_route_table" "test" {
 `
 
 // For GH-13545
-const testAccRouteTableConfigPanicEmptyRoute = `
+func testAccRouteTableConfigPanicEmptyRoute(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.2.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-panic-empty-route"
+    Name = %[1]q
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {}
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName)
+}
 
 func testAccAWSRouteTableConfigRouteConfigModeBlocks() string {
 	return `
