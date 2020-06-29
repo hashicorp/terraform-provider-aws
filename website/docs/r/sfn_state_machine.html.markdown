@@ -103,7 +103,7 @@ The following arguments are supported:
 * `definition` - (Required) The Amazon States Language definition of the state machine.
 * `role_arn` - (Required) The Amazon Resource Name (ARN) of the IAM role to use for this state machine.
 * `tags` - (Optional) Key-value map of resource tags
-* `logging_configuration` - (Optional) Defines what execution history events are logged and where they are logged. The logging_configuration parameter is only valid when type is set to EXPRESS. By default, the level is set to OFF. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
+* `logging_configuration` - (Optional) Defines what execution history events are logged and where they are logged. The `logging_configuration` parameter is only valid when `type` is set to `EXPRESS`. Defaults to `OFF`. For more information see [Logging Express Workflows](https://docs.aws.amazon.com/step-functions/latest/dg/cw-logs.html) and [Log Levels](https://docs.aws.amazon.com/step-functions/latest/dg/cloudwatch-log-level.html) in the AWS Step Functions User Guide.
 * `type` - (Optional) Determines whether a Standard or Express state machine is created. The default is STANDARD. You cannot update the type of a state machine once it has been created. Valid Values: STANDARD | EXPRESS
 
 ### `logging_configuration` Configuration Block
