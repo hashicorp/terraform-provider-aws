@@ -194,8 +194,6 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	var err error
-
 	result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
@@ -264,44 +262,9 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 func resourceAwsEc2ClientVpnEndpointDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	netAssocResult, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
-		ClientVpnEndpointId: aws.String(d.Id()),
-	})
+	err := deleteClientVpnEndpoint(conn, d.Id())
 	if err != nil {
-		return err
-	}
-
-	for _, n := range netAssocResult.ClientVpnTargetNetworks {
-		network := &ec2.DisassociateClientVpnTargetNetworkInput{}
-
-		network.ClientVpnEndpointId = aws.String(d.Id())
-		network.AssociationId = aws.String(*n.AssociationId)
-
-		log.Printf("[DEBUG] Client VPN network association opts: %s", n)
-		_, err := conn.DisassociateClientVpnTargetNetwork(network)
-		if err != nil {
-			return fmt.Errorf("D Failure removing Client VPN network associations: %s \n %s", err, n)
-		}
-
-		stateConf := &resource.StateChangeConf{
-			Pending: []string{ec2.AssociationStatusCodeDisassociating},
-			Target:  []string{ec2.AssociationStatusCodeDisassociated},
-			Refresh: clientVpnNetworkAssociationRefresh(conn, aws.StringValue(n.AssociationId), d.Id()),
-			Timeout: d.Timeout(schema.TimeoutDelete),
-		}
-
-		log.Printf("[DEBUG] Waiting for Client VPN endpoint to disassociate with target network: %s", aws.StringValue(n.AssociationId))
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %s", err)
-		}
-	}
-
-	_, err = conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
-		ClientVpnEndpointId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("Error deleting Client VPN endpoint: %s", err)
+		return fmt.Errorf("error deleting Client VPN endpoint: %w", err)
 	}
 
 	return nil
@@ -376,29 +339,6 @@ func resourceAwsEc2ClientVpnEndpointUpdate(d *schema.ResourceData, meta interfac
 	}
 
 	return resourceAwsEc2ClientVpnEndpointRead(d, meta)
-}
-
-func clientVpnNetworkAssociationRefresh(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
-			ClientVpnEndpointId: aws.String(cvepID),
-			AssociationIds:      []*string{aws.String(cvnaID)},
-		})
-
-		if isAWSErr(err, errCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
-			return 42, ec2.AssociationStatusCodeDisassociated, nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if resp == nil || len(resp.ClientVpnTargetNetworks) == 0 || resp.ClientVpnTargetNetworks[0] == nil {
-			return 42, ec2.AssociationStatusCodeDisassociated, nil
-		}
-
-		return resp.ClientVpnTargetNetworks[0], aws.StringValue(resp.ClientVpnTargetNetworks[0].Status.Code), nil
-	}
 }
 
 func flattenConnLoggingConfig(lopts *ec2.ConnectionLogResponseOptions) []map[string]interface{} {
