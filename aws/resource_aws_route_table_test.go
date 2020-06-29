@@ -502,8 +502,10 @@ func TestAccAWSRouteTable_Route_VpcEndpointId(t *testing.T) {
 }
 
 func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
-	var routeTable1 ec2.RouteTable
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "0.0.0.0/0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
@@ -511,9 +513,19 @@ func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteTableConfigRouteLocalGatewayID(),
+				Config: testAccAWSRouteTableConfigRouteIpv4LocalGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -617,6 +629,8 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.2.0.0/16"
+	destinationIpv6Cidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -624,22 +638,22 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, false),
+				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      "0.0.0.0/0",
+						"cidr_block":      destinationCidr,
 						"ipv6_cidr_block": "",
 					}),
 				),
 			},
 			{
-				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, true),
+				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"cidr_block":      "",
-						"ipv6_cidr_block": "::/0",
+						"ipv6_cidr_block": destinationIpv6Cidr,
 					}),
 				),
 			},
@@ -1312,14 +1326,16 @@ resource "aws_route_table" "test" {
 `, rName))
 }
 
-func testAccAWSRouteTableConfigRouteLocalGatewayID() string {
+func testAccAWSRouteTableConfigRouteIpv4LocalGateway(rName, destinationCidr string) string {
 	return `
 data "aws_ec2_local_gateways" "all" {}
+
 data "aws_ec2_local_gateway" "first" {
   id = tolist(data.aws_ec2_local_gateways.all.ids)[0]
 }
 
 data "aws_ec2_local_gateway_route_tables" "all" {}
+
 data "aws_ec2_local_gateway_route_table" "first" {
   local_gateway_route_table_id = tolist(data.aws_ec2_local_gateway_route_tables.all.ids)[0]
 }
@@ -1328,33 +1344,46 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_ec2_local_gateway_route_table_vpc_association" "example" {
   local_gateway_route_table_id = data.aws_ec2_local_gateway_route_table.first.id
   vpc_id                       = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block       = "0.0.0.0/0"
+    cidr_block       = %[2]q
     local_gateway_id = data.aws_ec2_local_gateway.first.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
+
   depends_on = [aws_ec2_local_gateway_route_table_vpc_association.example]
 }
 `
 }
 
-func testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {
+func testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1383,9 +1412,9 @@ resource "aws_internet_gateway" "test" {
 }
 
 locals {
-  ipv6             = %[2]t
-  destination      = "0.0.0.0/0"
-  destination_ipv6 = "::/0"
+  ipv6             = %[4]t
+  destination      = %[2]q
+  destination_ipv6 = %[3]q
 }
 
 resource "aws_route_table" "test" {
@@ -1401,7 +1430,7 @@ resource "aws_route_table" "test" {
     Name = %[1]q
   }
 }
-`, rName, ipv6Route)
+`, rName, destinationCidr, destinationIpv6Cidr, ipv6Route)
 }
 
 func testAccAWSRouteTableConfigIpv4NatGateway(rName, destinationCidr string) string {
