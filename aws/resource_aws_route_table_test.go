@@ -461,41 +461,31 @@ func TestAccAWSRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 	})
 }
 
-// VPC Peering connections are prefixed with pcx
-// Right now there is no VPC Peering resource
-func TestAccAWSRouteTable_vpcPeering(t *testing.T) {
-	var v ec2.RouteTable
+func TestAccAWSRouteTable_IPv4_To_VpcPeeringConnection(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.2.0.0/16"
 
-	testCheck := func(*terraform.State) error {
-		if len(v.Routes) != 2 {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		routes := make(map[string]*ec2.Route)
-		for _, r := range v.Routes {
-			routes[*r.DestinationCidrBlock] = r
-		}
-
-		if _, ok := routes["10.1.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-		if _, ok := routes["10.2.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		return nil
-	}
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableVpcPeeringConfig,
+				Config: testAccAWSRouteTableConfigIpv4VpcPeeringConnection(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &v),
-					testCheck,
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -848,57 +838,48 @@ resource "aws_route_table" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-// VPC Peering connections are prefixed with pcx
-const testAccRouteTableVpcPeeringConfig = `
+func testAccAWSRouteTableConfigIpv4VpcPeeringConnection(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
   tags = {
-    Name = "terraform-testacc-route-table-vpc-peering-foo"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+resource "aws_vpc" "target" {
+  cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-vpc-peering-foo"
-  }
-}
-
-resource "aws_vpc" "bar" {
-  cidr_block = "10.3.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-route-table-vpc-peering-bar"
-  }
-}
-
-resource "aws_internet_gateway" "bar" {
-  vpc_id = "${aws_vpc.bar.id}"
-
-  tags = {
-    Name = "terraform-testacc-route-table-vpc-peering-bar"
+    Name = %[1]q
   }
 }
 
 resource "aws_vpc_peering_connection" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  peer_vpc_id = "${aws_vpc.bar.id}"
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.target.id
+  auto_accept = true
 
   tags = {
-    foo = "bar"
+    Name = %[1]q
   }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.2.0.0/16"
-    vpc_peering_connection_id = "${aws_vpc_peering_connection.test.id}"
+    cidr_block                = %[2]q
+    vpc_peering_connection_id = aws_vpc_peering_connection.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`
+`, rName, destinationCidr)
+}
 
 const testAccRouteTableVgwRoutePropagationConfig = `
 resource "aws_vpc" "test" {
