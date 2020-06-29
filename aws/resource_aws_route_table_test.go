@@ -425,9 +425,11 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
-	var routeTable1 ec2.RouteTable
+func TestAccAWSRouteTable_IPv4_To_TransitGateway(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -435,9 +437,19 @@ func TestAccAWSRouteTable_Route_TransitGatewayID(t *testing.T) {
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteTableConfigRouteTransitGatewayID(),
+				Config: testAccAWSRouteTableConfigIpv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -988,8 +1000,8 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
-	return `
+func testAccAWSRouteTableConfigIpv4TransitGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -1002,40 +1014,52 @@ data "aws_availability_zones" "available" {
 }
 
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = "${aws_vpc.test.id}"
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-route-table-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
-resource "aws_ec2_transit_gateway" "test" {}
+resource "aws_ec2_transit_gateway" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = ["${aws_subnet.test.id}"]
-  transit_gateway_id = "${aws_ec2_transit_gateway.test.id}"
-  vpc_id             = "${aws_vpc.test.id}"
+  subnet_ids         = [aws_subnet.test.id]
+  transit_gateway_id = aws_ec2_transit_gateway.test.id
+  vpc_id             = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block         = "0.0.0.0/0"
-    transit_gateway_id = "${aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id}"
+    cidr_block         = %[2]q
+    transit_gateway_id = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`
+`, rName, destinationCidr)
 }
 
 func testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {
