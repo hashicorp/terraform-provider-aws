@@ -212,11 +212,15 @@ func TestAccAWSRouteTable_IPv4_To_Instance(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"cidr_block":      destinationCidr,
 						"ipv6_cidr_block": "",
 					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -245,11 +249,15 @@ func TestAccAWSRouteTable_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"cidr_block":      "",
 						"ipv6_cidr_block": destinationCidr,
 					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -350,8 +358,11 @@ func TestAccAWSRouteTable_RequireRouteTarget(t *testing.T) {
 }
 
 func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
-	var routeTable1, routeTable2, routeTable3 ec2.RouteTable
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr1 := "10.2.0.0/16"
+	destinationCidr2 := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -359,10 +370,23 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteTableConfigRouteConfigModeBlocks(),
+				Config: testAccAWSRouteTableConfigIpv4InternetGateway(rName, destinationCidr1, destinationCidr2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr1,
+						"ipv6_cidr_block": "",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr2,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -371,10 +395,23 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSRouteTableConfigRouteConfigModeNoBlocks(),
+				Config: testAccAWSRouteTableConfigRouteConfigModeNoBlocks(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable2),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr1,
+						"ipv6_cidr_block": "",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr2,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -383,10 +420,15 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSRouteTableConfigRouteConfigModeZeroed(),
+				Config: testAccAWSRouteTableConfigRouteConfigModeZeroed(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable3),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -962,87 +1004,62 @@ resource "aws_route_table" "test" {
 `, rName)
 }
 
-func testAccAWSRouteTableConfigRouteConfigModeBlocks() string {
-	return `
+func testAccAWSRouteTableConfigRouteConfigModeNoBlocks(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-route-table-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags = {
-    Name = "tf-acc-test-ec2-route-table-config-mode"
-  }
-
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
-  route {
-    cidr_block = "10.1.0.0/16"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  route {
-    cidr_block = "10.2.0.0/16"
-    gateway_id = aws_internet_gateway.test.id
+  tags = {
+    Name = %[1]q
   }
 }
-`
+`, rName)
 }
 
-func testAccAWSRouteTableConfigRouteConfigModeNoBlocks() string {
-	return `
+func testAccAWSRouteTableConfigRouteConfigModeZeroed(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-route-table-config-mode"
+    Name = %[1]q
   }
 }
 
 resource "aws_internet_gateway" "test" {
-  tags = {
-    Name = "tf-acc-test-ec2-route-table-config-mode"
-  }
-
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
-}
-`
-}
 
-func testAccAWSRouteTableConfigRouteConfigModeZeroed() string {
-	return `
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  route = []
 
   tags = {
-    Name = "tf-acc-test-ec2-route-table-config-mode"
+    Name = %[1]q
   }
 }
-
-resource "aws_internet_gateway" "test" {
-  tags = {
-    Name = "tf-acc-test-ec2-route-table-config-mode"
-  }
-
-  vpc_id = aws_vpc.test.id
-}
-
-resource "aws_route_table" "test" {
-  route  = []
-  vpc_id = aws_vpc.test.id
-}
-`
+`, rName)
 }
 
 func testAccAWSRouteTableConfigRouteTransitGatewayID() string {
