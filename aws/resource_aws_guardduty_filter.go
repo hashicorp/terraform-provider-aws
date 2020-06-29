@@ -36,8 +36,9 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(3, 64),
 			},
 			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 512),
 			},
 			"tags": tagsSchema(),
 			"finding_criteria": {
