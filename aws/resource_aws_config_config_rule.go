@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"time"
+	"unicode/utf8"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -45,9 +46,19 @@ func resourceAwsConfigConfigRule() *schema.Resource {
 				Computed: true,
 			},
 			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 256),
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: func(i interface{}, k string) (warnings []string, errors []error) {
+					v, ok := i.(string)
+					if !ok {
+						errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+						return warnings, errors
+					}
+					if utf8.RuneCountInString(v) > 256 {
+						errors = append(errors, fmt.Errorf("expected length of %s to be in the range (%d - %d), got %s", k, 0, 256, v))
+					}
+					return warnings, errors
+				},
 			},
 			"input_parameters": {
 				Type:         schema.TypeString,
