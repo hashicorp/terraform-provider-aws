@@ -1200,14 +1200,6 @@ resource "aws_vpc" "test" {
   }
 }
 
-resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -1215,7 +1207,6 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
-
 
 locals {
   ipv6             = %[4]t
