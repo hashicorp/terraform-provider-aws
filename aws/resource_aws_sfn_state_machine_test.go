@@ -89,7 +89,6 @@ func TestAccAWSSfnStateMachine_express_createUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
 					resource.TestMatchResourceAttr("aws_sfn_state_machine.foo", "definition", regexp.MustCompile(`.*\"MaxAttempts\": 10.*`)),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "role_arn"),
-					// resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "logging_configuration"),
 					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "logging_configuration.#", "1"),
 					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "logging_configuration.0.level", sfn.LogLevelOff),
 				),
