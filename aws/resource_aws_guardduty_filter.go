@@ -30,9 +30,10 @@ func resourceAwsGuardDutyFilter() *schema.Resource {
 				ForceNew: true,
 			},
 			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringLenBetween(3, 64),
 			},
 			"description": {
 				Type:     schema.TypeString,
