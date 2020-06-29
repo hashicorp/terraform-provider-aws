@@ -335,7 +335,7 @@ func TestAccAWSRouteTable_panicEmptyRoute(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccRouteTableConfigPanicEmptyRoute(rName),
+				Config:      testAccAWSRouteTableConfigPanicEmptyRoute(rName),
 				ExpectError: regexp.MustCompile("The request must contain exactly one of: destinationCidrBlock, destinationIpv6CidrBlock, destinationPrefixListId"),
 			},
 		},
@@ -498,41 +498,46 @@ func TestAccAWSRouteTable_IPv4_To_VpcPeeringConnection(t *testing.T) {
 }
 
 func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
-	var v ec2.RouteTable
-	var vgw ec2.VpnGateway
+	var routeTable ec2.RouteTable
+	var vpnGateway1, vpnGateway2 ec2.VpnGateway
 	resourceName := "aws_route_table.test"
+	vgwResourceName1 := "aws_vpn_gateway.test1"
+	vgwResourceName2 := "aws_vpn_gateway.test2"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
-	testCheck := func(*terraform.State) error {
-		if len(v.PropagatingVgws) != 1 {
-			return fmt.Errorf("bad propagating vgws: %#v", v.PropagatingVgws)
-		}
-
-		propagatingVGWs := make(map[string]*ec2.PropagatingVgw)
-		for _, gw := range v.PropagatingVgws {
-			propagatingVGWs[*gw.GatewayId] = gw
-		}
-
-		if _, ok := propagatingVGWs[*vgw.VpnGatewayId]; !ok {
-			return fmt.Errorf("bad propagating vgws: %#v", v.PropagatingVgws)
-		}
-
-		return nil
-
-	}
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		CheckDestroy: resource.ComposeTestCheckFunc(
-			testAccCheckVpnGatewayDestroy,
-			testAccCheckRouteTableDestroy,
-		),
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableVgwRoutePropagationConfig,
+				Config: testAccAWSRouteTableConfigVgwRoutePropagation(rName, vgwResourceName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &v),
-					testAccCheckVpnGatewayExists("aws_vpn_gateway.test", &vgw),
-					testCheck,
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
+					testAccCheckVpnGatewayExists(vgwResourceName1, &vpnGateway1),
+					testAccCheckVpnGatewayExists(vgwResourceName2, &vpnGateway2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "1"),
+					testAccCheckAWSRouteTablePropagatingVgw(resourceName, &vpnGateway1),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccAWSRouteTableConfigVgwRoutePropagation(rName, vgwResourceName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
+					testAccCheckVpnGatewayExists(vgwResourceName1, &vpnGateway1),
+					testAccCheckVpnGatewayExists(vgwResourceName2, &vpnGateway2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "1"),
+					testAccCheckAWSRouteTablePropagatingVgw(resourceName, &vpnGateway2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -647,6 +652,12 @@ func testAccCheckAWSRouteTableNumberOfRoutes(routeTable *ec2.RouteTable, n int) 
 		}
 
 		return nil
+	}
+}
+
+func testAccCheckAWSRouteTablePropagatingVgw(resourceName string, vpnGateway *ec2.VpnGateway) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return tfawsresource.TestCheckTypeSetElemAttr(resourceName, "propagating_vgws.*", aws.StringValue(vpnGateway.VpnGatewayId))(s)
 	}
 }
 
@@ -881,27 +892,47 @@ resource "aws_route_table" "test" {
 `, rName, destinationCidr)
 }
 
-const testAccRouteTableVgwRoutePropagationConfig = `
+func testAccAWSRouteTableConfigVgwRoutePropagation(rName, vgwResourceName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-vgw-route-propagation"
+    Name = %[1]q
   }
 }
 
-resource "aws_vpn_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+resource "aws_vpn_gateway" "test1" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway" "test2" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpn_gateway_attachment" "test" {
+  vpc_id         = aws_vpc.test.id
+  vpn_gateway_id = %[2]s.id
 }
 
 resource "aws_route_table" "test" {
-  vpc_id           = "${aws_vpc.test.id}"
-  propagating_vgws = ["${aws_vpn_gateway.test.id}"]
+  vpc_id = aws_vpc.test.id
+
+  propagating_vgws = [aws_vpn_gateway_attachment.test.vpn_gateway_id]
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName, vgwResourceName)
+}
 
 // For GH-13545
-func testAccRouteTableConfigPanicEmptyRoute(rName string) string {
+func testAccAWSRouteTableConfigPanicEmptyRoute(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
