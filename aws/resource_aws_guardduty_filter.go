@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsGuardDutyFilter() *schema.Resource {
@@ -120,15 +121,7 @@ func resourceAwsGuardDutyFilterCreate(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	tagsInterface := d.Get("tags").(map[string]interface{})
-	if len(tagsInterface) > 0 {
-		tags := make(map[string]*string, len(tagsInterface))
-		for i, v := range tagsInterface {
-			tags[i] = aws.String(v.(string))
-		}
-
-		input.Tags = tags
-	}
+	input.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).GuarddutyTags()
 
 	log.Printf("[DEBUG] Creating GuardDuty Filter: %s", input)
 	output, err := conn.CreateFilter(&input)
