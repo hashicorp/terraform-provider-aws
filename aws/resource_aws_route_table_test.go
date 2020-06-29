@@ -316,6 +316,7 @@ func TestAccAWSRouteTable_tags(t *testing.T) {
 
 func TestAccAWSRouteTable_RequireRouteDestination(t *testing.T) {
 	resourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -929,33 +930,14 @@ resource "aws_route_table" "test" {
 }
 `
 
-func testAccRouteTableConfigNoDestination() string {
-	return composeConfig(
-		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
-		testAccAvailableAZsNoOptInDefaultExcludeConfig(), `
-resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
-
-  route {
-    instance_id = aws_instance.test.id
-  }
-}
-
+// For GH-13545
+func testAccRouteTableConfigPanicEmptyRoute(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "tf-acc-route-table-no-destination"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block        = "10.1.1.0/24"
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = "tf-acc-route-table-no-destination"
+    Name = %[1]q
   }
 }
 
@@ -971,19 +953,14 @@ const testAccRouteTableConfigNoTarget = `
 resource "aws_route_table" "test" {
   vpc_id = aws_vpc.test.id
 
-  route {
-    cidr_block = "10.1.0.0/16"
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.2.0.0/16"
+  route {}
 
   tags = {
-    Name = "tf-acc-route-table-no-target"
+    Name = %[1]q
   }
 }
-`
+`, rName)
+}
 
 func testAccAWSRouteTableConfigRouteConfigModeBlocks() string {
 	return `
