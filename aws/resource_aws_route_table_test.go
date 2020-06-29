@@ -575,7 +575,6 @@ func TestAccAWSRouteTable_IPv4_To_VpcPeeringConnection(t *testing.T) {
 
 func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 	var routeTable ec2.RouteTable
-	var vpnGateway1, vpnGateway2 ec2.VpnGateway
 	resourceName := "aws_route_table.test"
 	vgwResourceName1 := "aws_vpn_gateway.test1"
 	vgwResourceName2 := "aws_vpn_gateway.test2"
@@ -591,11 +590,9 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
-					testAccCheckVpnGatewayExists(vgwResourceName1, &vpnGateway1),
-					testAccCheckVpnGatewayExists(vgwResourceName2, &vpnGateway2),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "1"),
-					testAccCheckAWSRouteTablePropagatingVgw(resourceName, &vpnGateway1),
+					testAccCheckAWSRouteTablePropagatingVgw(resourceName, vgwResourceName1),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -606,11 +603,9 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
-					testAccCheckVpnGatewayExists(vgwResourceName1, &vpnGateway1),
-					testAccCheckVpnGatewayExists(vgwResourceName2, &vpnGateway2),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "1"),
-					testAccCheckAWSRouteTablePropagatingVgw(resourceName, &vpnGateway2),
+					testAccCheckAWSRouteTablePropagatingVgw(resourceName, vgwResourceName2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -841,9 +836,18 @@ func testAccCheckAWSRouteTableNumberOfRoutes(routeTable *ec2.RouteTable, n int) 
 	}
 }
 
-func testAccCheckAWSRouteTablePropagatingVgw(resourceName string, vpnGateway *ec2.VpnGateway) resource.TestCheckFunc {
+func testAccCheckAWSRouteTablePropagatingVgw(resourceName, vgwResourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return tfawsresource.TestCheckTypeSetElemAttr(resourceName, "propagating_vgws.*", aws.StringValue(vpnGateway.VpnGatewayId))(s)
+		rs, ok := s.RootModule().Resources[vgwResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", vgwResourceName)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No VPN Gateway ID is set")
+		}
+
+		return tfawsresource.TestCheckTypeSetElemAttr(resourceName, "propagating_vgws.*", rs.Primary.ID)(s)
 	}
 }
 
