@@ -196,29 +196,11 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_instance(t *testing.T) {
-	var v ec2.RouteTable
+func TestAccAWSRouteTable_IPv4_To_Instance(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
-
-	testCheck := func(*terraform.State) error {
-		if len(v.Routes) != 2 {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		routes := make(map[string]*ec2.Route)
-		for _, r := range v.Routes {
-			routes[*r.DestinationCidrBlock] = r
-		}
-
-		if _, ok := routes["10.1.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-		if _, ok := routes["10.2.0.0/16"]; !ok {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		return nil
-	}
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -227,10 +209,15 @@ func TestAccAWSRouteTable_instance(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigInstance,
+				Config: testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &v),
-					testCheck,
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr,
+						"ipv6_cidr_block": "",
+					}),
 				),
 			},
 			{
@@ -690,19 +677,19 @@ resource "aws_route_table" "test" {
 }
 `
 
-const testAccRouteTableConfigInstance = `
-data "aws_ami" "amzn-ami-minimal-hvm" {
-  most_recent = true
-  owners      = ["amazon"]
+func testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
 
   filter {
-    name = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name = "root-device-type"
-    values = ["ebs"]
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
   }
 }
 
@@ -710,34 +697,44 @@ resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   tags = {
-  	Name = "terraform-testacc-route-table-instance"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.current.names[0]
 
   tags = {
-  	Name = "tf-acc-route-table-instance"
+    Name = %[1]q
   }
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
-  instance_type = "t2.micro"
-  subnet_id     = "${aws_subnet.test.id}"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.2.0.0/16"
-    instance_id = "${aws_instance.test.id}"
+    cidr_block  = %[2]q
+    instance_id = aws_instance.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`
+`, rName, destinationCidr))
+}
 
 func testAccAWSRouteTableConfigTags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
