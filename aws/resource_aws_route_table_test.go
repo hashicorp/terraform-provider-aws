@@ -229,18 +229,11 @@ func TestAccAWSRouteTable_IPv4_To_Instance(t *testing.T) {
 	})
 }
 
-func TestAccAWSRouteTable_ipv6(t *testing.T) {
-	var v ec2.RouteTable
+func TestAccAWSRouteTable_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
-
-	testCheck := func(*terraform.State) error {
-		// Expect 3: 2 IPv6 (local + all outbound) + 1 IPv4
-		if len(v.Routes) != 3 {
-			return fmt.Errorf("bad routes: %#v", v.Routes)
-		}
-
-		return nil
-	}
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -249,10 +242,15 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 		CheckDestroy:  testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRouteTableConfigIpv6,
+				Config: testAccAWSRouteTableConfigIpv6EgressOnlyInternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &v),
-					testCheck,
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      "",
+						"ipv6_cidr_block": destinationCidr,
+					}),
 				),
 			},
 			{
@@ -260,6 +258,14 @@ func TestAccAWSRouteTable_ipv6(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
+			/*
+				TODO Fix this.
+				{
+					// Verify that expanded form of the destination CIDR causes no diff.
+					Config: testAccAWSRouteTableConfigIpv6EgressOnlyInternetGateway(rName, "::0/0"),
+					PlanOnly: true,
+				},
+			*/
 		},
 	})
 }
@@ -653,29 +659,39 @@ resource "aws_route_table" "test" {
 `, rName, destinationCidr1, destinationCidr2)
 }
 
-const testAccRouteTableConfigIpv6 = `
+func testAccAWSRouteTableConfigIpv6EgressOnlyInternetGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-route-table-ipv6"
+    Name = %[1]q
   }
 }
 
 resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 
   route {
-    ipv6_cidr_block = "::/0"
-    egress_only_gateway_id = "${aws_egress_only_internet_gateway.test.id}"
+    ipv6_cidr_block        = %[2]q
+    egress_only_gateway_id = aws_egress_only_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
-`
+`, rName, destinationCidr)
+}
 
 func testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr string) string {
 	return composeConfig(
