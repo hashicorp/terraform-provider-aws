@@ -30,7 +30,7 @@ func TestAccAWSRoute_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
-					testAccCheckAWSRouteNumberOfRoutes(&routeTable, 2),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
 					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
@@ -556,7 +556,7 @@ func TestAccAWSRoute_DoesNotCrashWithVpcEndpoint(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
 					testAccCheckRouteTableExists(rtResourceName, &routeTable),
-					testAccCheckAWSRouteNumberOfRoutes(&routeTable, 3),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
 				),
 			},
 			{
@@ -714,16 +714,6 @@ func testAccAWSRouteImportStateIdFunc(resourceName string) resource.ImportStateI
 		}
 
 		return fmt.Sprintf("%s_%s", rs.Primary.Attributes["route_table_id"], destination), nil
-	}
-}
-
-func testAccCheckAWSRouteNumberOfRoutes(routeTable *ec2.RouteTable, n int) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if len := len(routeTable.Routes); len != n {
-			return fmt.Errorf("Route Table has incorrect number of routes (Expected=%d, Actual=%d)\n", n, len)
-		}
-
-		return nil
 	}
 }
 

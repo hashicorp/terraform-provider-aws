@@ -566,6 +566,16 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 	})
 }
 
+func testAccCheckAWSRouteTableNumberOfRoutes(routeTable *ec2.RouteTable, n int) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if len := len(routeTable.Routes); len != n {
+			return fmt.Errorf("Route Table has incorrect number of routes (Expected=%d, Actual=%d)\n", n, len)
+		}
+
+		return nil
+	}
+}
+
 const testAccRouteTableConfig = `
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
