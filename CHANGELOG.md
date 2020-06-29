@@ -13,7 +13,7 @@ BUG FIXES:
 * resource/aws_backup_selection: Correctly handle the associated backup plan being deleted outside Terraform [GH-13945]
 * resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state [GH-13928]
 * resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument continues to work for Terraform 0.11 support [GH-13958]
-
+* resource/aws_wafv2_web_acl: Support additional nested `and/or/not statement` in `rule` `statement` and `rule` `statement` `rate_based_statement` attributes [GH-13961]
 ## 2.68.0 (June 25, 2020)
 
 FEATURES:
