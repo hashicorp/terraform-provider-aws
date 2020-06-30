@@ -23,7 +23,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 				Config: testAccGuardDutyFilterConfig_full(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", "aws_guardduty_detector.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
@@ -33,7 +33,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 				Config: testAccGuardDutyFilterConfigNoop_full(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsGuardDutyFilterExists(resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "detector_id", "aws_guardduty_detector.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "NOOP"),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
