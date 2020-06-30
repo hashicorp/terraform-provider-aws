@@ -248,7 +248,7 @@ func resourceAwsWorkspacesWorkspaceUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	if d.HasChange("workspace_properties.0.running_mode_auto_stop_timeout_in_minutes") || (d.Get("workspace_properties.0.running_mode") != "ALWAYS_ON") {
+	if d.HasChange("workspace_properties.0.running_mode_auto_stop_timeout_in_minutes") || (d.Get("workspace_properties.0.running_mode") != workspaces.RunningModeAlwaysOn) {
 		if err := workspacePropertyUpdate("running_mode_auto_stop_timeout_in_minutes", conn, d); err != nil {
 			return err
 		}
@@ -366,7 +366,7 @@ func expandWorkspaceProperties(properties []interface{}) *workspaces.WorkspacePr
 
 	p := properties[0].(map[string]interface{})
 
-	if p["running_mode"] == "ALWAYS_ON" {
+	if p["running_mode"] == workspaces.RunningModeAlwaysOn {
 		return &workspaces.WorkspaceProperties{
 			ComputeTypeName:   aws.String(p["compute_type_name"].(string)),
 			RootVolumeSizeGib: aws.Int64(int64(p["root_volume_size_gib"].(int))),
