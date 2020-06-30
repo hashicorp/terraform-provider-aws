@@ -50,7 +50,7 @@ resource "aws_route53_record" "auth-cognito-A" {
     evaluate_target_health = false
     name                   = "${aws_cognito_user_pool_domain.main.cloudfront_distribution_arn}"
     // This zone_id is fixed
-    zone_id                = "Z2FDTNDATAQYW2"
+    zone_id = "Z2FDTNDATAQYW2"
   }
 }
 ```
