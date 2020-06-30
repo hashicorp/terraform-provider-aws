@@ -12,6 +12,7 @@ import (
 )
 
 func TestAccLexSlotType_basic(t *testing.T) {
+	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -23,7 +24,7 @@ func TestAccLexSlotType_basic(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					resource.TestCheckResourceAttr(rName, "description", ""),
 					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "0"),
 					resource.TestCheckResourceAttr(rName, "name", testSlotTypeID),
@@ -45,6 +46,7 @@ func TestAccLexSlotType_basic(t *testing.T) {
 }
 
 func TestAccAwsLexSlotType_createVersion(t *testing.T) {
+	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -56,7 +58,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_withoutVersion(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					testAccCheckAwsLexSlotTypeNotExists(testSlotTypeID, "1"),
 				),
 			},
@@ -69,8 +71,8 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, "1"),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
+					testAccCheckAwsLexSlotTypeExistsWithVersion(testSlotTypeID, "1", &v),
 				),
 			},
 			{
@@ -84,6 +86,7 @@ func TestAccAwsLexSlotType_createVersion(t *testing.T) {
 }
 
 func TestAccAwsLexSlotType_description(t *testing.T) {
+	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -95,7 +98,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					resource.TestCheckResourceAttr(rName, "description", ""),
 				),
 			},
@@ -108,7 +111,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeUpdateConfig_description(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					resource.TestCheckResourceAttr(rName, "description", "Types of flowers to pick up"),
 				),
 			},
@@ -123,6 +126,7 @@ func TestAccAwsLexSlotType_description(t *testing.T) {
 }
 
 func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
+	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -134,7 +138,7 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "1"),
 				),
 			},
@@ -147,7 +151,7 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_enumerationValues(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					resource.TestCheckResourceAttr(rName, "enumeration_value.#", "2"),
 				),
 			},
@@ -162,6 +166,7 @@ func TestAccAwsLexSlotType_enumerationValues(t *testing.T) {
 }
 
 func TestAccAwsLexSlotType_name(t *testing.T) {
+	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID1 := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 	testSlotTypeID2 := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
@@ -174,7 +179,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID1),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID1, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID1, &v),
 					resource.TestCheckResourceAttr(rName, "name", testSlotTypeID1),
 				),
 			},
@@ -187,7 +192,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID2),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID2, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID2, &v),
 					resource.TestCheckResourceAttr(rName, "name", testSlotTypeID2),
 				),
 			},
@@ -202,6 +207,7 @@ func TestAccAwsLexSlotType_name(t *testing.T) {
 }
 
 func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
+	var v lexmodelbuildingservice.GetSlotTypeOutput
 	rName := "aws_lex_slot_type.test"
 	testSlotTypeID := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -213,7 +219,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					resource.TestCheckResourceAttr(rName, "value_selection_strategy", lexmodelbuildingservice.SlotValueSelectionStrategyOriginalValue),
 				),
 			},
@@ -226,7 +232,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_valueSelectionStrategy(testSlotTypeID),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(testSlotTypeID, &v),
 					resource.TestCheckResourceAttr(rName, "value_selection_strategy", lexmodelbuildingservice.SlotValueSelectionStrategyTopResolution),
 				),
 			},
@@ -241,6 +247,7 @@ func TestAccAwsLexSlotType_valueSelectionStrategy(t *testing.T) {
 }
 
 func TestAccAwsLexSlotType_disappears(t *testing.T) {
+	var v lexmodelbuildingservice.GetSlotTypeOutput
 	resourceName := "aws_lex_slot_type.test"
 	rName := "test_slot_type_" + acctest.RandStringFromCharSet(8, acctest.CharSetAlpha)
 
@@ -252,7 +259,7 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 			{
 				Config: testAccAwsLexSlotTypeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsLexSlotTypeExists(rName, LexSlotTypeVersionLatest),
+					testAccCheckAwsLexSlotTypeExists(rName, &v),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsLexSlotType(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -261,11 +268,12 @@ func TestAccAwsLexSlotType_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAwsLexSlotTypeExists(slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
+func testAccCheckAwsLexSlotTypeExistsWithVersion(slotTypeName, slotTypeVersion string, output *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		var err error
 		conn := testAccProvider.Meta().(*AWSClient).lexmodelconn
 
-		_, err := conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
+		output, err = conn.GetSlotType(&lexmodelbuildingservice.GetSlotTypeInput{
 			Name:    aws.String(slotTypeName),
 			Version: aws.String(slotTypeVersion),
 		})
@@ -278,6 +286,10 @@ func testAccCheckAwsLexSlotTypeExists(slotTypeName, slotTypeVersion string) reso
 
 		return nil
 	}
+}
+
+func testAccCheckAwsLexSlotTypeExists(slotTypeName string, output *lexmodelbuildingservice.GetSlotTypeOutput) resource.TestCheckFunc {
+	return testAccCheckAwsLexSlotTypeExistsWithVersion(slotTypeName, LexSlotTypeVersionLatest, output)
 }
 
 func testAccCheckAwsLexSlotTypeNotExists(slotTypeName, slotTypeVersion string) resource.TestCheckFunc {
