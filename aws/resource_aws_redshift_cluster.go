@@ -303,27 +303,6 @@ func resourceAwsRedshiftCluster() *schema.Resource {
 				},
 			},
 
-			"enable_logging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-				Removed:  "Use `logging` configuration block `enable` argument instead",
-			},
-
-			"bucket_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				Removed:  "Use `logging` configuration block `bucket_name` argument instead",
-			},
-
-			"s3_key_prefix": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				Removed:  "Use `logging` configuration block `s3_key_prefix` argument instead",
-			},
-
 			"snapshot_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,

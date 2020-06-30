@@ -252,33 +252,6 @@ func resourceAwsEcsService() *schema.Resource {
 					},
 				},
 			},
-			"placement_strategy": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				MaxItems: 5,
-				Removed:  "Use `ordered_placement_strategy` configuration block(s) instead",
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								ecs.PlacementStrategyTypeBinpack,
-								ecs.PlacementStrategyTypeRandom,
-								ecs.PlacementStrategyTypeSpread,
-							}, false),
-						},
-						"field": {
-							Type:     schema.TypeString,
-							Optional: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								return strings.EqualFold(old, new)
-							},
-						},
-					},
-				},
-			},
 			"ordered_placement_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
