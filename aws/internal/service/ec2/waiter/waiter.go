@@ -55,6 +55,23 @@ const (
 	ClientVpnEndpointDeletedTimout = 5 * time.Minute
 )
 
+func ClientVpnEndpointDeleted(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnEndpointStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: ClientVpnEndpointStatus(conn, id),
+		Timeout: ClientVpnEndpointDeletedTimout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ClientVpnEndpoint); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	ClientVpnAuthorizationRuleActiveTimeout = 1 * time.Minute
 

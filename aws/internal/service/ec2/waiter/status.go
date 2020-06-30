@@ -4,6 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 // LocalGatewayRouteTableVpcAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
@@ -45,6 +46,32 @@ const (
 
 	ClientVpnEndpointStatusUnknown = "Unknown"
 )
+
+// ClientVpnEndpointStatus fetches the Client VPN endpoint and its Status
+func ClientVpnEndpointStatus(conn *ec2.EC2, endpointID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
+			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
+		})
+		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
+			return nil, ClientVpnEndpointStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, ClientVpnEndpointStatusUnknown, err
+		}
+
+		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
+			return nil, ClientVpnEndpointStatusNotFound, nil
+		}
+
+		endpoint := result.ClientVpnEndpoints[0]
+		if endpoint.Status == nil || endpoint.Status.Code == nil {
+			return endpoint, ClientVpnEndpointStatusUnknown, nil
+		}
+
+		return endpoint, aws.StringValue(endpoint.Status.Code), nil
+	}
+}
 
 const (
 	ClientVpnAuthorizationRuleStatusNotFound = "NotFound"

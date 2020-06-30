@@ -106,7 +106,7 @@ func resourceAwsEc2ClientVpnAuthorizationRuleRead(d *schema.ResourceData, meta i
 		d.Get("access_group_id").(string),
 	)
 
-	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
+	if isAWSErr(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN authorization rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -170,7 +170,7 @@ func deleteClientVpnAuthorizationRule(conn *ec2.EC2, input *ec2.RevokeClientVpnI
 	id := tfec2.ClientVpnAuthorizationRuleCreateID(aws.StringValue(input.ClientVpnEndpointId), aws.StringValue(input.TargetNetworkCidr), aws.StringValue(input.AccessGroupId))
 
 	_, err := conn.RevokeClientVpnIngress(input)
-	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
+	if isAWSErr(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound, "") {
 		return nil
 	}
 	if err != nil {
@@ -226,7 +226,7 @@ func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string)
 		}
 
 		result, err := findClientVpnAuthorizationRule(conn, endpointID, targetNetworkCidr, accessGroupID)
-		if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointAuthorizationRuleNotFound, "") {
+		if isAWSErr(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound, "") {
 			return nil, waiter.ClientVpnAuthorizationRuleStatusNotFound, nil
 		}
 		if err != nil {

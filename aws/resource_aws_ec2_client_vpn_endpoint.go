@@ -7,14 +7,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
-
-const errCodeClientVpnEndpointIdNotFound = "InvalidClientVpnEndpointId.NotFound"
 
 func resourceAwsEc2ClientVpnEndpoint() *schema.Resource {
 	return &schema.Resource{
@@ -199,7 +197,7 @@ func resourceAwsEc2ClientVpnEndpointRead(d *schema.ResourceData, meta interface{
 		ClientVpnEndpointIds: []*string{aws.String(d.Id())},
 	})
 
-	if isAWSErr(err, errCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -395,58 +393,14 @@ func deleteClientVpnEndpoint(conn *ec2.EC2, endpointID string) error {
 	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(endpointID),
 	})
-	if isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
+	if isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
 		return nil
 	}
 	if err != nil {
 		return err
 	}
 
-	_, err = ClientVpnEndpointDeleted(conn, endpointID)
+	_, err = waiter.ClientVpnEndpointDeleted(conn, endpointID)
 
 	return err
-}
-
-func ClientVpnEndpointDeleted(conn *ec2.EC2, id string) (*ec2.ClientVpnEndpoint, error) {
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.ClientVpnEndpointStatusCodeDeleting},
-		Target:  []string{},
-		Refresh: ClientVpnEndpointStatus(conn, id),
-		Timeout: waiter.ClientVpnEndpointDeletedTimout,
-	}
-
-	outputRaw, err := stateConf.WaitForState()
-
-	if output, ok := outputRaw.(*ec2.ClientVpnEndpoint); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-// ClientVpnEndpointStatus fetches the Client VPN endpoint and its Status
-// TODO: This should be in the waiters package, but has a dependency on isAWSErr()
-func ClientVpnEndpointStatus(conn *ec2.EC2, endpointID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
-			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
-		})
-		if isAWSErr(err, errCodeClientVpnEndpointIdNotFound, "") {
-			return nil, waiter.ClientVpnEndpointStatusNotFound, nil
-		}
-		if err != nil {
-			return nil, waiter.ClientVpnEndpointStatusUnknown, err
-		}
-
-		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
-			return nil, waiter.ClientVpnEndpointStatusNotFound, nil
-		}
-
-		endpoint := result.ClientVpnEndpoints[0]
-		if endpoint.Status == nil || endpoint.Status.Code == nil {
-			return endpoint, waiter.ClientVpnEndpointStatusUnknown, nil
-		}
-
-		return endpoint, aws.StringValue(endpoint.Status.Code), nil
-	}
 }
