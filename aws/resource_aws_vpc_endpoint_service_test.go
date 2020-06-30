@@ -115,7 +115,7 @@ func TestAccAWSVpcEndpointService_PrivateDnsName(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
 	resourceName := "aws_vpc_endpoint_service.test"
 	rName1 := acctest.RandomWithPrefix("tf-acc-test")
-    rName2 := acctest.RandomWithPrefix("tf-acc-test")
+	rName2 := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -137,7 +137,6 @@ func TestAccAWSVpcEndpointService_PrivateDnsName(t *testing.T) {
 		},
 	})
 }
-
 
 func TestAccAWSVpcEndpointService_AllowedPrincipals(t *testing.T) {
 	var svcCfg ec2.ServiceConfiguration
@@ -403,8 +402,8 @@ resource "aws_vpc_endpoint_service" "test" {
 
 func testAccVpcEndpointServiceConfig_privateDnsName(rName1, rName2 string) string {
 	return composeConfig(
-	testAccVpcEndpointServiceConfig_base(rName1, rName2),
-	fmt.Sprintf(`
+		testAccVpcEndpointServiceConfig_base(rName1, rName2),
+		fmt.Sprintf(`
 resource "aws_vpc_endpoint_service" "test" {
   acceptance_required = true
 
@@ -417,7 +416,6 @@ resource "aws_vpc_endpoint_service" "test" {
 }
 `))
 }
-
 
 func testAccVpcEndpointServiceConfig_allowedPrincipals(rName1, rName2 string) string {
 	return composeConfig(
