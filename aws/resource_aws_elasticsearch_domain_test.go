@@ -474,6 +474,102 @@ func TestAccAWSElasticSearchDomain_internetToVpcEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_UserDB(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	domainName := acctest.RandomWithPrefix("tf-test")
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsUserDb(domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, true, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     domainName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.internal_user_database_enabled",
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_IAM(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	domainName := acctest.RandomWithPrefix("tf-test")
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsIAM(domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(true, false, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     domainName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.internal_user_database_enabled",
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSElasticSearchDomain_AdvancedSecurityOptions_Disabled(t *testing.T) {
+	var domain elasticsearch.ElasticsearchDomainStatus
+	domainName := acctest.RandomWithPrefix("tf-test")
+	resourceName := "aws_elasticsearch_domain.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckESDomainDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccESDomainConfig_AdvancedSecurityOptionsDisabled(domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckESDomainExists(resourceName, &domain),
+					testAccCheckAdvancedSecurityOptions(false, false, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     domainName,
+				ImportStateVerify: true,
+				// MasterUserOptions are not returned from DescribeElasticsearchDomainConfig
+				ImportStateVerifyIgnore: []string{
+					"advanced_security_options.0.internal_user_database_enabled",
+					"advanced_security_options.0.master_user_options",
+				},
+			},
+		},
+	})
+}
+
 func TestAccAWSElasticSearchDomain_LogPublishingOptions(t *testing.T) {
 	var domain elasticsearch.ElasticsearchDomainStatus
 	ri := acctest.RandInt()
@@ -961,6 +1057,32 @@ func testAccCheckESNodetoNodeEncrypted(encrypted bool, status *elasticsearch.Ela
 		if aws.BoolValue(options.Enabled) != encrypted {
 			return fmt.Errorf("Node-to-Node Encryption not set properly. Given: %t, Expected: %t", aws.BoolValue(options.Enabled), encrypted)
 		}
+		return nil
+	}
+}
+
+func testAccCheckAdvancedSecurityOptions(enabled bool, userDbEnabled bool, status *elasticsearch.ElasticsearchDomainStatus) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conf := status.AdvancedSecurityOptions
+
+		if aws.BoolValue(conf.Enabled) != enabled {
+			return fmt.Errorf(
+				"AdvancedSecurityOptions.Enabled not set properly. Given: %t, Expected: %t",
+				aws.BoolValue(conf.Enabled),
+				enabled,
+			)
+		}
+
+		if aws.BoolValue(conf.Enabled) {
+			if aws.BoolValue(conf.InternalUserDatabaseEnabled) != userDbEnabled {
+				return fmt.Errorf(
+					"AdvancedSecurityOptions.InternalUserDatabaseEnabled not set properly. Given: %t, Expected: %t",
+					aws.BoolValue(conf.InternalUserDatabaseEnabled),
+					userDbEnabled,
+				)
+			}
+		}
+
 		return nil
 	}
 }
@@ -1756,6 +1878,129 @@ resource "aws_elasticsearch_domain" "test" {
   }
 }
 `, randInt)
+}
+
+func testAccESDomainConfig_AdvancedSecurityOptionsUserDb(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "%s"
+  elasticsearch_version = "7.1"
+
+  cluster_config {
+    instance_type = "r5.large.elasticsearch"
+  }
+
+  advanced_security_options {
+	enabled = true
+	internal_user_database_enabled = true
+	master_user_options {
+      master_user_name = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+	}
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, domainName)
+}
+
+func testAccESDomainConfig_AdvancedSecurityOptionsIAM(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_user" "es_master_user" {
+	name = "%s"
+}
+
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "%s"
+  elasticsearch_version = "7.1"
+
+  cluster_config {
+    instance_type = "r5.large.elasticsearch"
+  }
+
+  advanced_security_options {
+	enabled = true
+	internal_user_database_enabled = false
+	master_user_options {
+      master_user_arn = "${aws_iam_user.es_master_user.arn}"
+	}
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, acctest.RandomWithPrefix("es-master-user"), domainName)
+}
+
+func testAccESDomainConfig_AdvancedSecurityOptionsDisabled(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_elasticsearch_domain" "test" {
+  domain_name           = "%s"
+  elasticsearch_version = "7.1"
+
+  cluster_config {
+    instance_type = "r5.large.elasticsearch"
+  }
+
+  advanced_security_options {
+	enabled = false
+	internal_user_database_enabled = true
+	master_user_options {
+      master_user_name = "testmasteruser"
+      master_user_password = "Barbarbarbar1!"
+	}
+  }
+
+  encrypt_at_rest {
+    enabled = true
+  }
+
+  domain_endpoint_options {
+    enforce_https = true
+    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+  }
+
+  node_to_node_encryption {
+    enabled = true
+  }
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+}
+`, domainName)
 }
 
 func testAccESDomainConfig_LogPublishingOptions(randInt int) string {

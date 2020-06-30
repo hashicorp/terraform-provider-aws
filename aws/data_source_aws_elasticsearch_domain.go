@@ -24,6 +24,22 @@ func dataSourceAwsElasticSearchDomain() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"advanced_security_options": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+						"internal_user_database_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"domain_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -296,6 +312,10 @@ func dataSourceAwsElasticSearchDomainRead(d *schema.ResourceData, meta interface
 	d.Set("domain_id", ds.DomainId)
 	d.Set("endpoint", ds.Endpoint)
 	d.Set("kibana_endpoint", getKibanaEndpoint(d))
+
+	if err := d.Set("advanced_security_options", flattenAdvancedSecurityOptions(ds.AdvancedSecurityOptions)); err != nil {
+		return fmt.Errorf("error setting advanced_security_options: %w", err)
+	}
 
 	if err := d.Set("ebs_options", flattenESEBSOptions(ds.EBSOptions)); err != nil {
 		return fmt.Errorf("error setting ebs_options: %s", err)
