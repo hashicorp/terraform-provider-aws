@@ -8,10 +8,11 @@ ENHANCEMENTS:
 
 * data-source/aws_availability_zones: Add `exclude_names` and `exclude_zone_ids` arguments [GH-13771]
 * data-source/aws_elasticsearch_domain: Add `advanced_security_options` attribute [GH-12183]
+* resource/aws_ecs_service: Increase delete retry timeout from 5 to 20 minutes [GH-10452]
+* resource/aws_ecs_service: Support configurable delete timeout [GH-10452]
 * resource/aws_elasticsearch_domain: Add `advanced_security_options` configuration block [GH-12183]
 
 BUG FIXES:
-
 * resource/aws_backup_selection: Correctly handle the associated backup plan being deleted outside Terraform [GH-13945]
 * resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state [GH-13928]
 * resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument continues to work for Terraform 0.11 support [GH-13958]
