@@ -27,6 +27,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "ARCHIVE"),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "finding_criteria"),
 				),
 			},
 			{
@@ -37,6 +38,7 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
 					resource.TestCheckResourceAttr(resourceName, "action", "NOOP"),
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "finding_criteria"),
 				),
 			},
 		},
