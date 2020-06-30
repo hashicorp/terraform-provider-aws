@@ -7,6 +7,8 @@ NOTES:
 ENHANCEMENTS:
 
 * data-source/aws_availability_zones: Add `exclude_names` and `exclude_zone_ids` arguments [GH-13771]
+* data-source/aws_elasticsearch_domain: Add `advanced_security_options` attribute [GH-12183]
+* resource/aws_elasticsearch_domain: Add `advanced_security_options` configuration block [GH-12183]
 
 BUG FIXES:
 
@@ -14,6 +16,7 @@ BUG FIXES:
 * resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state [GH-13928]
 * resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument continues to work for Terraform 0.11 support [GH-13958]
 * resource/aws_wafv2_web_acl: Support additional nested `and/or/not statement` in `rule` `statement` and `rule` `statement` `rate_based_statement` attributes [GH-13961]
+
 ## 2.68.0 (June 25, 2020)
 
 FEATURES:
