@@ -189,6 +189,13 @@ In addition to all arguments above, the following attributes are exported:
 * `iam_role` - The ARN of IAM role used for ELB
 * `desired_count` - The number of instances of the task definition
 
+## Timeouts
+
+`aws_ecs_service` provides the following
+[Timeouts](/docs/configuration/resources.html#operation-timeouts) configuration options:
+
+- `delete` - (Default `20 minutes`)
+
 ## Import
 
 ECS services can be imported using the `name` together with ecs cluster `name`, e.g.
