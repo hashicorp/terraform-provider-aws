@@ -150,8 +150,12 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 }
 
 func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
-	var v ec2.RouteTable
-	resourceName := "aws_default_route_table.foo"
+	var routeTable ec2.RouteTable
+	resourceName := "aws_default_route_table.test"
+	rtResourceName := "aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr1 := "10.2.0.0/16"
+	destinationCidr2 := "10.3.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -160,10 +164,19 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTable_change,
+				Config: testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(
-						resourceName, &v),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr1,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -179,11 +192,32 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 			// this case) a diff as the table now needs to be updated to match the
 			// config
 			{
-				Config: testAccDefaultRouteTable_change_mod,
+				Config: testAccDefaultRouteTableConfigSwap(rName, destinationCidr1, destinationCidr2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(
-						resourceName, &v),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr1,
+						"ipv6_cidr_block": "",
+					}),
 				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccDefaultRouteTableConfigSwap(rName, destinationCidr1, destinationCidr2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr2,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttrPair(resourceName, "id", rtResourceName, "id"),
+				),
+				// Follow up plan will now show a diff as the destination CIDR on the aws_route_table
+				// (now also the aws_default_route_table) will change from destinationCidr1 to destinationCidr2.
 				ExpectNonEmptyPlan: true,
 			},
 		},
@@ -501,102 +535,57 @@ resource "aws_internet_gateway" "test" {
 }`, rName)
 }
 
-const testAccDefaultRouteTable_change = `
-resource "aws_vpc" "foo" {
+func testAccDefaultRouteTableConfigSwap(rName, destinationCidr1, destinationCidr2 string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-default-route-table-change"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_route_table" "foo" {
-  default_route_table_id = aws_vpc.foo.default_route_table_id
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
-    cidr_block = "10.0.1.0/32"
-    gateway_id = aws_internet_gateway.gw.id
+    cidr_block = %[2]q
+    gateway_id = aws_internet_gateway.test.id
   }
 
   tags = {
-    Name = "this was the first main"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "main-igw"
+    Name = %[1]q
   }
 }
 
-# Thing to help testing changes
-resource "aws_route_table" "r" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
 
   route {
-    cidr_block = "10.0.1.0/24"
-    gateway_id = aws_internet_gateway.gw.id
+    cidr_block = %[3]q
+    gateway_id = aws_internet_gateway.test.id
   }
 
   tags = {
-    Name = "other"
-  }
-}
-`
-
-const testAccDefaultRouteTable_change_mod = `
-resource "aws_vpc" "foo" {
-  cidr_block           = "10.1.0.0/16"
-  enable_dns_hostnames = true
-
-  tags = {
-    Name = "terraform-testacc-default-route-table-change"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_route_table" "foo" {
-  default_route_table_id = aws_vpc.foo.default_route_table_id
-
-  route {
-    cidr_block = "10.0.1.0/32"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-  tags = {
-    Name = "this was the first main"
-  }
+resource "aws_main_route_table_association" "test" {
+  vpc_id         = aws_vpc.test.id
+  route_table_id = aws_route_table.test.id
 }
-
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.foo.id
-
-  tags = {
-    Name = "main-igw"
-  }
+`, rName, destinationCidr1, destinationCidr2)
 }
-
-# Thing to help testing changes
-resource "aws_route_table" "r" {
-  vpc_id = aws_vpc.foo.id
-
-  route {
-    cidr_block = "10.0.1.0/24"
-    gateway_id = aws_internet_gateway.gw.id
-  }
-
-  tags = {
-    Name = "other"
-  }
-}
-
-resource "aws_main_route_table_association" "a" {
-  vpc_id         = aws_vpc.foo.id
-  route_table_id = aws_route_table.r.id
-}
-`
 
 func testAccAWSDefaultRouteTableConfigRouteTransitGatewayID() string {
 	return `
