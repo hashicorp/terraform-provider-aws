@@ -73,7 +73,54 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	return nil
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
+func TestAccAwsEc2ClientVpnX(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Endpoint": {
+			"basic":             testAccAwsEc2ClientVpnEndpoint_basic,
+			"disappears":        testAccAwsEc2ClientVpnEndpoint_disappears,
+			"msAD":              testAccAwsEc2ClientVpnEndpoint_msAD,
+			"mutualAuthAndMsAD": testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD,
+			"withLogGroup":      testAccAwsEc2ClientVpnEndpoint_withLogGroup,
+			"withDNSServers":    testAccAwsEc2ClientVpnEndpoint_withDNSServers,
+			"tags":              testAccAwsEc2ClientVpnEndpoint_tags,
+			"splitTunnel":       testAccAwsEc2ClientVpnEndpoint_splitTunnel,
+		},
+		"AuthorizationRule": {
+			"basic":      testAccAwsEc2ClientVpnAuthorizationRule_basic,
+			"groups":     testAccAwsEc2ClientVpnAuthorizationRule_groups,
+			"Subnets":    testAccAwsEc2ClientVpnAuthorizationRule_Subnets,
+			"disappears": testAccAwsEc2ClientVpnAuthorizationRule_disappears,
+		},
+		"NetworkAssociation": {
+			"basic":      testAccAwsEc2ClientVpnNetworkAssociation_basic,
+			"disappears": testAccAwsEc2ClientVpnNetworkAssociation_disappears,
+		},
+	}
+
+	for group, m := range testCases {
+		m := m
+		t.Run(group, func(t *testing.T) {
+			for name, tc := range m {
+				tc := tc
+				t.Run(name, func(t *testing.T) {
+					tc(t)
+				})
+			}
+		})
+	}
+}
+
+func synchronizedTest(t *testing.T, semaphore tfawsresource.Semaphore, test func(t *testing.T)) func(t *testing.T) {
+	return func(t *testing.T) {
+		semaphore.Wait()
+
+		test(t)
+
+		semaphore.Notify()
+	}
+}
+
+func testAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -102,7 +149,7 @@ func TestAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -124,7 +171,7 @@ func TestAccAwsEc2ClientVpnEndpoint_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -151,7 +198,7 @@ func TestAccAwsEc2ClientVpnEndpoint_msAD(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -179,7 +226,7 @@ func TestAccAwsEc2ClientVpnEndpoint_mutualAuthAndMsAD(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -214,7 +261,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -240,7 +287,7 @@ func TestAccAwsEc2ClientVpnEndpoint_withDNSServers(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	var v1, v2, v3 ec2.ClientVpnEndpoint
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 	rStr := acctest.RandString(5)
@@ -282,7 +329,7 @@ func TestAccAwsEc2ClientVpnEndpoint_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
+func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -410,7 +457,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_directory_service_directory" "test" {
-  name     = "corp.notexample.com"
+  name     = "vpn.notexample.com"
   password = "SuperSecretPassw0rd"
   type     = "MicrosoftAD"
 

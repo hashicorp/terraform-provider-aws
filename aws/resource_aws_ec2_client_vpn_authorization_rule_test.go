@@ -12,7 +12,7 @@ import (
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
-func TestAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
+func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	var v ec2.AuthorizationRule
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
@@ -41,7 +41,7 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
+func testAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	var v1, v2, v3, v4 ec2.AuthorizationRule
 	rStr := acctest.RandString(5)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
@@ -113,7 +113,7 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_groups(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
+func testAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
 	var v1, v2, v3 ec2.AuthorizationRule
 	rStr := acctest.RandString(5)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
@@ -169,7 +169,7 @@ func TestAccAwsEc2ClientVpnAuthorizationRule_Subnets(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
+func testAccAwsEc2ClientVpnAuthorizationRule_disappears(t *testing.T) {
 	var v ec2.AuthorizationRule
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
