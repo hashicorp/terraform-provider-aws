@@ -120,6 +120,7 @@ Defaults to `false`.
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the VPC endpoint.
+* `arn` - The Amazon Resource Name (ARN) of the VPC endpoint.
 * `cidr_blocks` - The list of CIDR blocks for the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `dns_entry` - The DNS entries for the VPC Endpoint. Applicable for endpoints of type `Interface`. DNS blocks are documented below.
 * `network_interface_ids` - One or more network interfaces for the VPC Endpoint. Applicable for endpoints of type `Interface`.

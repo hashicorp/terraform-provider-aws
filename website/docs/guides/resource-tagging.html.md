@@ -16,8 +16,8 @@ Many AWS services implement [resource tags](https://docs.aws.amazon.com/general/
 
 - [Getting Started with Resource Tags](#getting-started-with-resource-tags)
 - [Ignoring Changes to Specific Tags](#ignoring-changes-to-specific-tags)
-  - [Ignoring Changes in Individual Resources](#ignoring-changes-in-individual-resources)
-  - [Ignoring Changes in All Resources](#ignoring-changes-in-all-resources)
+    - [Ignoring Changes in Individual Resources](#ignoring-changes-in-individual-resources)
+    - [Ignoring Changes in All Resources](#ignoring-changes-in-all-resources)
 - [Managing Individual Resource Tags](#managing-individual-resource-tags)
 
 <!-- /TOC -->

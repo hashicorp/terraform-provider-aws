@@ -3367,15 +3367,26 @@ func (c *QuickSight) GetDashboardEmbedUrlRequest(input *GetDashboardEmbedUrlInpu
 
 // GetDashboardEmbedUrl API operation for Amazon QuickSight.
 //
-// Generates a server-side embeddable URL and authorization code. For this process
-// to work properly, first configure the dashboards and user permissions. For
-// more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html)
+// Generates a URL and authorization code that you can embed in your web server
+// code. Before you use this command, make sure that you have configured the
+// dashboards and permissions.
+//
+// Currently, you can use GetDashboardEmbedURL only from the server, not from
+// the user's browser. The following rules apply to the combination of URL and
+// authorization code:
+//
+//    * They must be used together.
+//
+//    * They can be used one time only.
+//
+//    * They are valid for 5 minutes after you run this command.
+//
+//    * The resulting user session is valid for 10 hours.
+//
+// For more information, see Embedding Amazon QuickSight Dashboards (https://docs.aws.amazon.com/quicksight/latest/user/embedding-dashboards.html)
 // in the Amazon QuickSight User Guide or Embedding Amazon QuickSight Dashboards
 // (https://docs.aws.amazon.com/quicksight/latest/APIReference/qs-dev-embedded-dashboards.html)
 // in the Amazon QuickSight API Reference.
-//
-// Currently, you can use GetDashboardEmbedURL only from the server, not from
-// the user’s browser.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -8186,8 +8197,7 @@ type CreateDashboardInput struct {
 	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
 	//    * VisibilityState for SheetControlsOption - This visibility state can
-	//    be either COLLAPSED or EXPANDED. The sheet controls pane is collapsed
-	//    by default when set to true. This option is COLLAPSED by default.
+	//    be either COLLAPSED or EXPANDED. This option is COLLAPSED by default.
 	DashboardPublishOptions *DashboardPublishOptions `type:"structure"`
 
 	// The display name of the dashboard.
@@ -8197,23 +8207,25 @@ type CreateDashboardInput struct {
 
 	// A structure that contains the parameters of the dashboard. These are parameter
 	// overrides for a dashboard. A dashboard can have any type of parameters, and
-	// some parameters might accept multiple values. You can use the dashboard permissions
-	// structure described following to override two string parameters that accept
-	// multiple values.
+	// some parameters might accept multiple values.
 	Parameters *Parameters `type:"structure"`
 
 	// A structure that contains the permissions of the dashboard. You can use this
 	// structure for granting permissions with principal and action information.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
-	// The source entity from which the dashboard is created. The source entity
-	// accepts the Amazon Resource Name (ARN) of the source template or analysis
-	// and also references the replacement datasets for the placeholders set when
-	// creating the template. The replacement datasets need to follow the same schema
-	// as the datasets for which placeholders were created when creating the template.
+	// The entity that you are using as a source when you create the dashboard.
+	// In SourceEntity, you specify the type of object you're using as source. You
+	// can only create a dashboard from a template, so you use a SourceTemplate
+	// entity. If you need to create a dashboard from an analysis, first convert
+	// the analysis to a template by using the CreateTemplate API operation. For
+	// SourceTemplate, specify the Amazon Resource Name (ARN) of the source template.
+	// The SourceTemplateARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
 	//
-	// If you are creating a dashboard from a source entity in a different AWS account,
-	// use the ARN of the source template.
+	// Use the DataSetReferences entity within SourceTemplate to list the replacement
+	// datasets for the placeholders listed in the original. The schema in each
+	// dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *DashboardSourceEntity `type:"structure" required:"true"`
@@ -9722,9 +9734,17 @@ type CreateTemplateInput struct {
 	// A list of resource permissions to be set on the template.
 	Permissions []*ResourcePermission `min:"1" type:"list"`
 
-	// The Amazon Resource Name (ARN) of the source entity from which this template
-	// is being created. Currently, you can create a template from an analysis or
-	// another template. If the ARN is for an analysis, include its dataset references.
+	// The entity that you are using as a source when you create the template. In
+	// SourceEntity, you specify the type of object you're using as source: SourceTemplate
+	// for a template or SourceAnalysis for an analysis. Both of these require an
+	// Amazon Resource Name (ARN). For SourceTemplate, specify the ARN of the source
+	// template. For SourceAnalysis, specify the ARN of the source analysis. The
+	// SourceTemplate ARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
+	//
+	// Use the DataSetReferences entity within SourceTemplate or SourceAnalysis
+	// to list the replacement datasets for the placeholders listed in the original.
+	// The schema in each dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *TemplateSourceEntity `type:"structure" required:"true"`
@@ -9933,6 +9953,17 @@ func (s *CreateTemplateOutput) SetVersionArn(v string) *CreateTemplateOutput {
 type CredentialPair struct {
 	_ struct{} `type:"structure"`
 
+	// A set of alternate data source parameters that you want to share for these
+	// credentials. The credentials are applied in tandem with the data source parameters
+	// when you copy a data source by using a create or update request. The API
+	// compares the DataSourceParameters structure that's in the request with the
+	// structures in the AlternateDataSourceParameters allowlist. If the structures
+	// are an exact match, the request is allowed to use the new data source with
+	// the existing credentials. If the AlternateDataSourceParameters list is null,
+	// the DataSourceParameters originally used with these Credentials is automatically
+	// allowed.
+	AlternateDataSourceParameters []*DataSourceParameters `min:"1" type:"list"`
+
 	// Password.
 	//
 	// Password is a required field
@@ -9957,6 +9988,9 @@ func (s CredentialPair) GoString() string {
 // Validate inspects the fields of the type to determine if they are valid.
 func (s *CredentialPair) Validate() error {
 	invalidParams := request.ErrInvalidParams{Context: "CredentialPair"}
+	if s.AlternateDataSourceParameters != nil && len(s.AlternateDataSourceParameters) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("AlternateDataSourceParameters", 1))
+	}
 	if s.Password == nil {
 		invalidParams.Add(request.NewErrParamRequired("Password"))
 	}
@@ -9969,11 +10003,27 @@ func (s *CredentialPair) Validate() error {
 	if s.Username != nil && len(*s.Username) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("Username", 1))
 	}
+	if s.AlternateDataSourceParameters != nil {
+		for i, v := range s.AlternateDataSourceParameters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "AlternateDataSourceParameters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetAlternateDataSourceParameters sets the AlternateDataSourceParameters field's value.
+func (s *CredentialPair) SetAlternateDataSourceParameters(v []*DataSourceParameters) *CredentialPair {
+	s.AlternateDataSourceParameters = v
+	return s
 }
 
 // SetPassword sets the Password field's value.
@@ -10240,18 +10290,18 @@ func (s *DashboardPublishOptions) SetSheetControlsOption(v *SheetControlsOption)
 type DashboardSearchFilter struct {
 	_ struct{} `type:"structure"`
 
-	// The name of the value that you want to use as a filter. For example, "Name":
+	// The name of the value that you want to use as a filter, for example, "Name":
 	// "QUICKSIGHT_USER".
 	Name *string `type:"string" enum:"DashboardFilterAttribute"`
 
-	// The comparison operator that you want to use as a filter. For example, "Operator":
+	// The comparison operator that you want to use as a filter, for example, "Operator":
 	// "StringEquals".
 	//
 	// Operator is a required field
 	Operator *string `type:"string" required:"true" enum:"FilterOperator"`
 
 	// The value of the named item, in this case QUICKSIGHT_USER, that you want
-	// to use as a filter. For example, "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1".
+	// to use as a filter, for example, "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1".
 	Value *string `type:"string"`
 }
 
@@ -10964,6 +11014,17 @@ func (s *DataSetSummary) SetRowLevelPermissionDataSet(v *RowLevelPermissionDataS
 type DataSource struct {
 	_ struct{} `type:"structure"`
 
+	// A set of alternate data source parameters that you want to share for the
+	// credentials stored with this data source. The credentials are applied in
+	// tandem with the data source parameters when you copy a data source by using
+	// a create or update request. The API compares the DataSourceParameters structure
+	// that's in the request with the structures in the AlternateDataSourceParameters
+	// allowlist. If the structures are an exact match, the request is allowed to
+	// use the credentials from this existing data source. If the AlternateDataSourceParameters
+	// list is null, the Credentials originally used with this DataSourceParameters
+	// are automatically allowed.
+	AlternateDataSourceParameters []*DataSourceParameters `min:"1" type:"list"`
+
 	// The Amazon Resource Name (ARN) of the data source.
 	Arn *string `type:"string"`
 
@@ -11013,6 +11074,12 @@ func (s DataSource) String() string {
 // GoString returns the string representation
 func (s DataSource) GoString() string {
 	return s.String()
+}
+
+// SetAlternateDataSourceParameters sets the AlternateDataSourceParameters field's value.
+func (s *DataSource) SetAlternateDataSourceParameters(v []*DataSourceParameters) *DataSource {
+	s.AlternateDataSourceParameters = v
+	return s
 }
 
 // SetArn sets the Arn field's value.
@@ -11081,11 +11148,18 @@ func (s *DataSource) SetVpcConnectionProperties(v *VpcConnectionProperties) *Dat
 	return s
 }
 
-// Data source credentials.
+// Data source credentials. This is a variant type structure. For this structure
+// to be valid, only one of the attributes can be non-null.
 type DataSourceCredentials struct {
 	_ struct{} `type:"structure" sensitive:"true"`
 
-	// Credential pair.
+	// The Amazon Resource Name (ARN) of a data source that has the credential pair
+	// that you want to use. When CopySourceArn is not null, the credential pair
+	// from the data source in the ARN is used as the credentials for the DataSourceCredentials
+	// structure.
+	CopySourceArn *string `type:"string"`
+
+	// Credential pair. For more information, see CredentialPair.
 	CredentialPair *CredentialPair `type:"structure"`
 }
 
@@ -11112,6 +11186,12 @@ func (s *DataSourceCredentials) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetCopySourceArn sets the CopySourceArn field's value.
+func (s *DataSourceCredentials) SetCopySourceArn(v string) *DataSourceCredentials {
+	s.CopySourceArn = &v
+	return s
 }
 
 // SetCredentialPair sets the CredentialPair field's value.
@@ -12245,9 +12325,10 @@ func (s *DeleteIAMPolicyAssignmentOutput) SetStatus(v int64) *DeleteIAMPolicyAss
 type DeleteTemplateAliasInput struct {
 	_ struct{} `type:"structure"`
 
-	// The name for the template alias. If you name a specific alias, you delete
-	// the version that the alias points to. You can specify the latest version
-	// of the template by providing the keyword $LATEST in the AliasName parameter.
+	// The name for the template alias. To delete a specific alias, you delete the
+	// version that the alias points to. You can specify the alias name, or specify
+	// the latest version of the template by providing the keyword $LATEST in the
+	// AliasName parameter.
 	//
 	// AliasName is a required field
 	AliasName *string `location:"uri" locationName:"AliasName" min:"1" type:"string" required:"true"`
@@ -12325,7 +12406,7 @@ type DeleteTemplateAliasOutput struct {
 	// The name for the template alias.
 	AliasName *string `min:"1" type:"string"`
 
-	// The Amazon Resource Name (ARN) of the resource.
+	// The Amazon Resource Name (ARN) of the template you want to delete.
 	Arn *string `type:"string"`
 
 	// The AWS request ID for this operation.
@@ -14574,10 +14655,10 @@ func (s *GetDashboardEmbedUrlInput) SetUserArn(v string) *GetDashboardEmbedUrlIn
 type GetDashboardEmbedUrlOutput struct {
 	_ struct{} `type:"structure"`
 
-	// An URL that you can put into your server-side webpage to embed your dashboard.
-	// This URL is valid for 5 minutes, and the resulting session is valid for 10
-	// hours. The API provides the URL with an auth_code value that enables a single
-	// sign-on session.
+	// A single-use URL that you can put into your server-side webpage to embed
+	// your dashboard. This URL is valid for 5 minutes. The API provides the URL
+	// with an auth_code value that enables one (and only one) sign-on to a user
+	// session that is valid for 10 hours.
 	EmbedUrl *string `type:"string" sensitive:"true"`
 
 	// The AWS request ID for this operation.
@@ -18702,7 +18783,7 @@ type ResourceExistsException struct {
 	// The AWS request ID for this request.
 	RequestId *string `type:"string"`
 
-	// The AWS request ID for this request.
+	// The resource type for this request.
 	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
 }
 
@@ -18764,7 +18845,7 @@ type ResourceNotFoundException struct {
 	// The AWS request ID for this request.
 	RequestId *string `type:"string"`
 
-	// The AWS request ID for this request.
+	// The resource type for this request.
 	ResourceType *string `type:"string" enum:"ExceptionResourceType"`
 }
 
@@ -19161,7 +19242,7 @@ type SearchDashboardsInput struct {
 	AwsAccountId *string `location:"uri" locationName:"AwsAccountId" min:"12" type:"string" required:"true"`
 
 	// The filters to apply to the search. Currently, you can search only by user
-	// name. For example, "Filters": [ { "Name": "QUICKSIGHT_USER", "Operator":
+	// name, for example, "Filters": [ { "Name": "QUICKSIGHT_USER", "Operator":
 	// "StringEquals", "Value": "arn:aws:quicksight:us-east-1:1:user/default/UserName1"
 	// } ]
 	//
@@ -20930,8 +21011,7 @@ type UpdateDashboardInput struct {
 	//    enabled when this is set to DISABLED. This option is ENABLED by default.
 	//
 	//    * VisibilityState for SheetControlsOption - This visibility state can
-	//    be either COLLAPSED or EXPANDED. The sheet controls pane is collapsed
-	//    by default when set to true. This option is COLLAPSED by default.
+	//    be either COLLAPSED or EXPANDED. This option is COLLAPSED by default.
 	DashboardPublishOptions *DashboardPublishOptions `type:"structure"`
 
 	// The display name of the dashboard.
@@ -20939,14 +21019,23 @@ type UpdateDashboardInput struct {
 	// Name is a required field
 	Name *string `min:"1" type:"string" required:"true"`
 
-	// A structure that contains the parameters of the dashboard.
+	// A structure that contains the parameters of the dashboard. These are parameter
+	// overrides for a dashboard. A dashboard can have any type of parameters, and
+	// some parameters might accept multiple values.
 	Parameters *Parameters `type:"structure"`
 
-	// The template or analysis from which the dashboard is created. The SouceTemplate
-	// entity accepts the Amazon Resource Name (ARN) of the template and also references
-	// to replacement datasets for the placeholders set when creating the template.
-	// The replacement datasets need to follow the same schema as the datasets for
-	// which placeholders were created when creating the template.
+	// The entity that you are using as a source when you update the dashboard.
+	// In SourceEntity, you specify the type of object you're using as source. You
+	// can only update a dashboard from a template, so you use a SourceTemplate
+	// entity. If you need to update a dashboard from an analysis, first convert
+	// the analysis to a template by using the CreateTemplate API operation. For
+	// SourceTemplate, specify the Amazon Resource Name (ARN) of the source template.
+	// The SourceTemplate ARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
+	//
+	// Use the DataSetReferences entity within SourceTemplate to list the replacement
+	// datasets for the placeholders listed in the original. The schema in each
+	// dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *DashboardSourceEntity `type:"structure" required:"true"`
@@ -22626,8 +22715,17 @@ type UpdateTemplateInput struct {
 	// The name for the template.
 	Name *string `min:"1" type:"string"`
 
-	// The source QuickSight entity from which this template is being updated. You
-	// can currently update templates from an Analysis or another template.
+	// The entity that you are using as a source when you update the template. In
+	// SourceEntity, you specify the type of object you're using as source: SourceTemplate
+	// for a template or SourceAnalysis for an analysis. Both of these require an
+	// Amazon Resource Name (ARN). For SourceTemplate, specify the ARN of the source
+	// template. For SourceAnalysis, specify the ARN of the source analysis. The
+	// SourceTemplate ARN can contain any AWS Account and any QuickSight-supported
+	// AWS Region.
+	//
+	// Use the DataSetReferences entity within SourceTemplate or SourceAnalysis
+	// to list the replacement datasets for the placeholders listed in the original.
+	// The schema in each dataset must match its placeholder.
 	//
 	// SourceEntity is a required field
 	SourceEntity *TemplateSourceEntity `type:"structure" required:"true"`
@@ -23460,6 +23558,12 @@ const (
 )
 
 const (
+	// DataSourceErrorInfoTypeAccessDenied is a DataSourceErrorInfoType enum value
+	DataSourceErrorInfoTypeAccessDenied = "ACCESS_DENIED"
+
+	// DataSourceErrorInfoTypeCopySourceNotFound is a DataSourceErrorInfoType enum value
+	DataSourceErrorInfoTypeCopySourceNotFound = "COPY_SOURCE_NOT_FOUND"
+
 	// DataSourceErrorInfoTypeTimeout is a DataSourceErrorInfoType enum value
 	DataSourceErrorInfoTypeTimeout = "TIMEOUT"
 

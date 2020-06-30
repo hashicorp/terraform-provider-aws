@@ -242,59 +242,62 @@ func wafv2XssMatchStatementSchema() *schema.Schema {
 		},
 	}
 }
+func wafv2FieldToMatchBaseSchema() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"all_query_arguments": wafv2EmptySchema(),
+			"body":                wafv2EmptySchema(),
+			"method":              wafv2EmptySchema(),
+			"query_string":        wafv2EmptySchema(),
+			"single_header": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 40),
+								// The value is returned in lower case by the API.
+								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
+								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+							),
+						},
+					},
+				},
+			},
+			"single_query_argument": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 30),
+								// The value is returned in lower case by the API.
+								// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
+								validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+							),
+						},
+					},
+				},
+			},
+			"uri_path": wafv2EmptySchema(),
+		},
+	}
+}
 
 func wafv2FieldToMatchSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
 		Optional: true,
 		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"all_query_arguments": wafv2EmptySchema(),
-				"body":                wafv2EmptySchema(),
-				"method":              wafv2EmptySchema(),
-				"query_string":        wafv2EmptySchema(),
-				"single_header": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"name": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 40),
-									// The value is returned in lower case by the API.
-									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-									validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
-								),
-							},
-						},
-					},
-				},
-				"single_query_argument": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"name": {
-								Type:     schema.TypeString,
-								Required: true,
-								ValidateFunc: validation.All(
-									validation.StringLenBetween(1, 30),
-									// The value is returned in lower case by the API.
-									// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-									validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
-								),
-							},
-						},
-					},
-				},
-				"uri_path": wafv2EmptySchema(),
-			},
-		},
+		Elem:     wafv2FieldToMatchBaseSchema(),
 	}
 }
 

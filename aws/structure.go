@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"net"
 	"reflect"
 	"regexp"
 	"sort"
@@ -159,6 +158,27 @@ func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 
 			if v, ok := config["root_directory"].(string); ok && v != "" {
 				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
+			}
+			if v, ok := config["transit_encryption"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
+			}
+
+			if v, ok := config["transit_encryption_port"].(int); ok && v > 0 {
+				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(int64(v))
+			}
+			authConfig, ok := config["authorization_config"].([]interface{})
+			if ok && len(authConfig) > 0 {
+				authconfig := authConfig[0].(map[string]interface{})
+				l.EfsVolumeConfiguration.RootDirectory = nil
+				l.EfsVolumeConfiguration.AuthorizationConfig = &ecs.EFSAuthorizationConfig{}
+
+				if v, ok := authconfig["access_point_id"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.AccessPointId = aws.String(v)
+				}
+
+				if v, ok := authconfig["iam"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String(v)
+				}
 			}
 		}
 
@@ -747,6 +767,33 @@ func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interfa
 
 		if v := config.RootDirectory; v != nil {
 			m["root_directory"] = aws.StringValue(v)
+		}
+		if v := config.TransitEncryption; v != nil {
+			m["transit_encryption"] = aws.StringValue(v)
+		}
+
+		if v := config.TransitEncryptionPort; v != nil {
+			m["transit_encryption_port"] = int(aws.Int64Value(v))
+		}
+
+		if v := config.AuthorizationConfig; v != nil {
+			m["authorization_config"] = flattenEFSVolumeAuthorizationConfig(v)
+		}
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.AccessPointId; v != nil {
+			m["access_point_id"] = aws.StringValue(v)
+		}
+		if v := config.Iam; v != nil {
+			m["iam"] = aws.StringValue(v)
 		}
 	}
 
@@ -5366,14 +5413,4 @@ func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.Targ
 	}
 
 	return vTargetIps
-}
-
-func isIpv6CidrsEquals(first, second string) bool {
-	if first == "" || second == "" {
-		return false
-	}
-	_, firstMask, _ := net.ParseCIDR(first)
-	_, secondMask, _ := net.ParseCIDR(second)
-
-	return firstMask.String() == secondMask.String()
 }

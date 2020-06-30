@@ -22,14 +22,18 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 				Optional: true,
 			},
 			"blacklisted_names": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"exclude_names"},
+				Deprecated:    "use `exclude_names` instead",
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"blacklisted_zone_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"exclude_zone_ids"},
+				Deprecated:    "use `exclude_zone_ids` instead",
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": ec2CustomFiltersSchema(),
 			"group_names": {
@@ -41,6 +45,18 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"exclude_names": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"blacklisted_names"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
+			},
+			"exclude_zone_ids": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"blacklisted_zone_ids"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -105,6 +121,9 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 
 	blacklistedNames := d.Get("blacklisted_names").(*schema.Set)
 	blacklistedZoneIDs := d.Get("blacklisted_zone_ids").(*schema.Set)
+	excludeNames := d.Get("exclude_names").(*schema.Set)
+	excludeZoneIDs := d.Get("exclude_zone_ids").(*schema.Set)
+
 	groupNames := schema.NewSet(schema.HashString, nil)
 	names := []string{}
 	zoneIds := []string{}
@@ -113,11 +132,11 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 		name := aws.StringValue(v.ZoneName)
 		zoneID := aws.StringValue(v.ZoneId)
 
-		if blacklistedNames.Contains(name) {
+		if blacklistedNames.Contains(name) || excludeNames.Contains(name) {
 			continue
 		}
 
-		if blacklistedZoneIDs.Contains(zoneID) {
+		if blacklistedZoneIDs.Contains(zoneID) || excludeZoneIDs.Contains(zoneID) {
 			continue
 		}
 

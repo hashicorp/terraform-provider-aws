@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -27,6 +28,7 @@ var ipv6IngressAcl = &ec2.NetworkAclEntry{
 
 func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -36,13 +38,14 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`network-acl/acl-.+`)),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
-					testAccCheckResourceAttrAccountID("aws_default_network_acl.default", "owner_id"),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 				),
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -52,6 +55,7 @@ func TestAccAWSDefaultNetworkAcl_basic(t *testing.T) {
 
 func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -61,12 +65,12 @@ func TestAccAWSDefaultNetworkAcl_basicIpv6Vpc(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_basicIpv6Vpc,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 4),
 				),
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -79,6 +83,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 	// not Egress. We then expect there to be 3 rules, 2 AWS defaults and 1
 	// additional Egress.
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -88,12 +93,12 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_deny_ingress,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{defaultEgressAcl}, 0, 2),
 				),
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -103,6 +108,7 @@ func TestAccAWSDefaultNetworkAcl_deny_ingress(t *testing.T) {
 
 func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -112,12 +118,12 @@ func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_includingIpv6Rule,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{ipv6IngressAcl}, 0, 2),
 				),
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -127,6 +133,7 @@ func TestAccAWSDefaultNetworkAcl_withIpv6Ingress(t *testing.T) {
 
 func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -136,12 +143,12 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
 				),
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -152,13 +159,13 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets_remove,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -168,6 +175,7 @@ func TestAccAWSDefaultNetworkAcl_SubnetRemoval(t *testing.T) {
 
 func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 	var networkAcl ec2.NetworkAcl
+	resourceName := "aws_default_network_acl.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -177,12 +185,12 @@ func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 2, 2),
 				),
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -202,12 +210,12 @@ func TestAccAWSDefaultNetworkAcl_SubnetReassign(t *testing.T) {
 			{
 				Config: testAccAWSDefaultNetworkConfig_Subnets_move,
 				Check: resource.ComposeTestCheckFunc(
-					testAccGetAWSDefaultNetworkAcl("aws_default_network_acl.default", &networkAcl),
+					testAccGetAWSDefaultNetworkAcl(resourceName, &networkAcl),
 					testAccCheckAWSDefaultACLAttributes(&networkAcl, []*ec2.NetworkAclEntry{}, 0, 2),
 				),
 			},
 			{
-				ResourceName:      "aws_default_network_acl.default",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -260,7 +268,8 @@ func testAccGetAWSDefaultNetworkAcl(n string, networkAcl *ec2.NetworkAcl) resour
 			return err
 		}
 
-		if len(resp.NetworkAcls) > 0 && *resp.NetworkAcls[0].NetworkAclId == rs.Primary.ID {
+		if len(resp.NetworkAcls) > 0 &&
+			aws.StringValue(resp.NetworkAcls[0].NetworkAclId) == rs.Primary.ID {
 			*networkAcl = *resp.NetworkAcls[0]
 			return nil
 		}
