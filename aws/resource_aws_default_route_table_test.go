@@ -79,9 +79,11 @@ func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_Route(t *testing.T) {
-	var v ec2.RouteTable
-	resourceName := "aws_default_route_table.foo"
+func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_default_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -90,10 +92,19 @@ func TestAccAWSDefaultRouteTable_Route(t *testing.T) {
 		CheckDestroy:  testAccCheckDefaultRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfig,
+				Config: testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &v),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -103,19 +114,35 @@ func TestAccAWSDefaultRouteTable_Route(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDefaultRouteTableConfig_noRouteBlock,
+				Config: testAccDefaultRouteTableConfigNoRouteBlock(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					// The route block from the previous step should still be
 					// present, because no blocks means "ignore existing blocks".
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr,
+						"ipv6_cidr_block": "",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
-				Config: testAccDefaultRouteTableConfig_routeBlocksExplicitZero,
+				Config: testAccDefaultRouteTableConfigRouteBlocksExplicitZero(rName),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 1),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					// This config uses attribute syntax to set zero routes
 					// explicitly, so should remove the one we created before.
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 		},
@@ -382,90 +409,97 @@ resource "aws_default_route_table" "test" {
 `, rName)
 }
 
-const testAccDefaultRouteTableConfig = `
-resource "aws_vpc" "foo" {
+func testAccDefaultRouteTableConfigIpv4InternetGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-default-route-table"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_route_table" "foo" {
-  default_route_table_id = aws_vpc.foo.default_route_table_id
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
-    cidr_block = "10.0.1.0/32"
-    gateway_id = aws_internet_gateway.gw.id
+    cidr_block = %[2]q
+    gateway_id = aws_internet_gateway.test.id
   }
 
   tags = {
-    Name = "tf-default-route-table-test"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-default-route-table-test"
+    Name = %[1]q
   }
-}`
+}
+`, rName, destinationCidr)
+}
 
-const testAccDefaultRouteTableConfig_noRouteBlock = `
-resource "aws_vpc" "foo" {
+func testAccDefaultRouteTableConfigNoRouteBlock(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-default-route-table"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_route_table" "foo" {
-  default_route_table_id = aws_vpc.foo.default_route_table_id
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
 
   tags = {
-    Name = "tf-default-route-table-test"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-default-route-table-test"
+    Name = %[1]q
   }
-}`
+}`, rName)
+}
 
-const testAccDefaultRouteTableConfig_routeBlocksExplicitZero = `
-resource "aws_vpc" "foo" {
+func testAccDefaultRouteTableConfigRouteBlocksExplicitZero(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block           = "10.1.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-default-route-table"
+    Name = %[1]q
   }
 }
 
-resource "aws_default_route_table" "foo" {
-  default_route_table_id = aws_vpc.foo.default_route_table_id
+resource "aws_default_route_table" "test" {
+  default_route_table_id = aws_vpc.test.default_route_table_id
 
   route = []
 
   tags = {
-    Name = "tf-default-route-table-test"
+    Name = %[1]q
   }
 }
 
-resource "aws_internet_gateway" "gw" {
-  vpc_id = aws_vpc.foo.id
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "tf-default-route-table-test"
+    Name = %[1]q
   }
-}`
+}`, rName)
+}
 
 const testAccDefaultRouteTable_change = `
 resource "aws_vpc" "foo" {
