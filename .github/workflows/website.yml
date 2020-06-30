@@ -5,6 +5,7 @@ on:
       - master
   pull_request:
     paths:
+      - .github/workflows/website.yml
       - website/docs/**
 
 env:
@@ -45,3 +46,18 @@ jobs:
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - run: go install github.com/client9/misspell/cmd/misspell
       - run: misspell -error -source text website/
+  terrafmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: actions/cache@v2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: go install github.com/katbyte/terrafmt
+      - run: terrafmt diff ./website --check --pattern '*.markdown' --quiet
