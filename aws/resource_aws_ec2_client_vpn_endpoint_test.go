@@ -73,7 +73,7 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	return nil
 }
 
-func TestAccAwsEc2ClientVpnX(t *testing.T) {
+func TestAccAwsEc2ClientVpn(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
 			"basic":             testAccAwsEc2ClientVpnEndpoint_basic,
