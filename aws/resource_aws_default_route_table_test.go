@@ -13,9 +13,10 @@ import (
 )
 
 func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
-	var routeTable1 ec2.RouteTable
+	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	vpcResourceName := "aws_vpc.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -33,9 +34,9 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 				ExpectError: regexp.MustCompile(`EC2 Default Route Table \(vpc-00000000\): not found`),
 			},
 			{
-				Config: testAccDefaultRouteTableConfigRequired(),
+				Config: testAccDefaultRouteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
@@ -54,10 +55,11 @@ func TestAccAWSDefaultRouteTable_basic(t *testing.T) {
 }
 
 func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
-	var routeTable1 ec2.RouteTable
-	var vpc1 ec2.Vpc
+	var routeTable ec2.RouteTable
+	var vpc ec2.Vpc
 	resourceName := "aws_default_route_table.test"
 	vpcResourceName := "aws_vpc.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -65,11 +67,11 @@ func TestAccAWSDefaultRouteTable_disappears_Vpc(t *testing.T) {
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDefaultRouteTableConfigRequired(),
+				Config: testAccDefaultRouteTableConfigBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
-					testAccCheckVpcExists(vpcResourceName, &vpc1),
-					testAccCheckVpcDisappears(&vpc1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckVpcExists(vpcResourceName, &vpc),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsVpc(), vpcResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -364,16 +366,20 @@ resource "aws_default_route_table" "test" {
 `, defaultRouteTableId)
 }
 
-func testAccDefaultRouteTableConfigRequired() string {
-	return `
+func testAccDefaultRouteTableConfigBasic(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_default_route_table" "test" {
   default_route_table_id = aws_vpc.test.default_route_table_id
 }
-`
+`, rName)
 }
 
 const testAccDefaultRouteTableConfig = `
