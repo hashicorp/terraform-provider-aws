@@ -110,16 +110,6 @@ func TestAccAwsEc2ClientVpn(t *testing.T) {
 	}
 }
 
-func synchronizedTest(t *testing.T, semaphore tfawsresource.Semaphore, test func(t *testing.T)) func(t *testing.T) {
-	return func(t *testing.T) {
-		semaphore.Wait()
-
-		test(t)
-
-		semaphore.Notify()
-	}
-}
-
 func testAccAwsEc2ClientVpnEndpoint_basic(t *testing.T) {
 	var v ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
