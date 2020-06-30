@@ -11056,6 +11056,9 @@ type EncoderSettings struct {
 	// Settings for caption decriptions
 	CaptionDescriptions []*CaptionDescription `locationName:"captionDescriptions" type:"list"`
 
+	// Feature Activations
+	FeatureActivations *FeatureActivations `locationName:"featureActivations" type:"structure"`
+
 	// Configuration settings that apply to the event as a whole.
 	GlobalConfiguration *GlobalConfiguration `locationName:"globalConfiguration" type:"structure"`
 
@@ -11201,6 +11204,12 @@ func (s *EncoderSettings) SetCaptionDescriptions(v []*CaptionDescription) *Encod
 	return s
 }
 
+// SetFeatureActivations sets the FeatureActivations field's value.
+func (s *EncoderSettings) SetFeatureActivations(v *FeatureActivations) *EncoderSettings {
+	s.FeatureActivations = v
+	return s
+}
+
 // SetGlobalConfiguration sets the GlobalConfiguration field's value.
 func (s *EncoderSettings) SetGlobalConfiguration(v *GlobalConfiguration) *EncoderSettings {
 	s.GlobalConfiguration = v
@@ -11228,6 +11237,33 @@ func (s *EncoderSettings) SetTimecodeConfig(v *TimecodeConfig) *EncoderSettings 
 // SetVideoDescriptions sets the VideoDescriptions field's value.
 func (s *EncoderSettings) SetVideoDescriptions(v []*VideoDescription) *EncoderSettings {
 	s.VideoDescriptions = v
+	return s
+}
+
+// Feature Activations
+type FeatureActivations struct {
+	_ struct{} `type:"structure"`
+
+	// Enables the Input Prepare feature. You can create Input Prepare actions in
+	// the schedule only if this feature is enabled.If you disable the feature on
+	// an existing schedule, make sure that you first delete all input prepare actions
+	// from the schedule.
+	InputPrepareScheduleActions *string `locationName:"inputPrepareScheduleActions" type:"string" enum:"FeatureActivationsInputPrepareScheduleActions"`
+}
+
+// String returns the string representation
+func (s FeatureActivations) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FeatureActivations) GoString() string {
+	return s.String()
+}
+
+// SetInputPrepareScheduleActions sets the InputPrepareScheduleActions field's value.
+func (s *FeatureActivations) SetInputPrepareScheduleActions(v string) *FeatureActivations {
+	s.InputPrepareScheduleActions = &v
 	return s
 }
 
@@ -14815,6 +14851,74 @@ func (s *InputLossBehavior) SetInputLossImageType(v string) *InputLossBehavior {
 // SetRepeatFrameMsec sets the RepeatFrameMsec field's value.
 func (s *InputLossBehavior) SetRepeatFrameMsec(v int64) *InputLossBehavior {
 	s.RepeatFrameMsec = &v
+	return s
+}
+
+// Action to prepare an input for a future immediate input switch.
+type InputPrepareScheduleActionSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the input attachment that should be prepared by this action.
+	// If no name is provided, the action will stop the most recent prepare (if
+	// any) when activated.
+	//
+	// InputAttachmentNameReference is a required field
+	InputAttachmentNameReference *string `locationName:"inputAttachmentNameReference" type:"string" required:"true"`
+
+	// Settings to let you create a clip of the file input, in order to set up the
+	// input to ingest only a portion of the file.
+	InputClippingSettings *InputClippingSettings `locationName:"inputClippingSettings" type:"structure"`
+
+	// The value for the variable portion of the URL for the dynamic input, for
+	// this instance of the input. Each time you use the same dynamic input in an
+	// input switch action, you can provide a different value, in order to connect
+	// the input to a different content source.
+	UrlPath []*string `locationName:"urlPath" type:"list"`
+}
+
+// String returns the string representation
+func (s InputPrepareScheduleActionSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InputPrepareScheduleActionSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *InputPrepareScheduleActionSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "InputPrepareScheduleActionSettings"}
+	if s.InputAttachmentNameReference == nil {
+		invalidParams.Add(request.NewErrParamRequired("InputAttachmentNameReference"))
+	}
+	if s.InputClippingSettings != nil {
+		if err := s.InputClippingSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputClippingSettings", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetInputAttachmentNameReference sets the InputAttachmentNameReference field's value.
+func (s *InputPrepareScheduleActionSettings) SetInputAttachmentNameReference(v string) *InputPrepareScheduleActionSettings {
+	s.InputAttachmentNameReference = &v
+	return s
+}
+
+// SetInputClippingSettings sets the InputClippingSettings field's value.
+func (s *InputPrepareScheduleActionSettings) SetInputClippingSettings(v *InputClippingSettings) *InputPrepareScheduleActionSettings {
+	s.InputClippingSettings = v
+	return s
+}
+
+// SetUrlPath sets the UrlPath field's value.
+func (s *InputPrepareScheduleActionSettings) SetUrlPath(v []*string) *InputPrepareScheduleActionSettings {
+	s.UrlPath = v
 	return s
 }
 
@@ -19996,6 +20100,9 @@ type ScheduleActionSettings struct {
 	// Action to insert HLS metadata
 	HlsTimedMetadataSettings *HlsTimedMetadataScheduleActionSettings `locationName:"hlsTimedMetadataSettings" type:"structure"`
 
+	// Action to prepare an input for a future immediate input switch
+	InputPrepareSettings *InputPrepareScheduleActionSettings `locationName:"inputPrepareSettings" type:"structure"`
+
 	// Action to switch the input
 	InputSwitchSettings *InputSwitchScheduleActionSettings `locationName:"inputSwitchSettings" type:"structure"`
 
@@ -20039,6 +20146,11 @@ func (s *ScheduleActionSettings) Validate() error {
 	if s.HlsTimedMetadataSettings != nil {
 		if err := s.HlsTimedMetadataSettings.Validate(); err != nil {
 			invalidParams.AddNested("HlsTimedMetadataSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.InputPrepareSettings != nil {
+		if err := s.InputPrepareSettings.Validate(); err != nil {
+			invalidParams.AddNested("InputPrepareSettings", err.(request.ErrInvalidParams))
 		}
 	}
 	if s.InputSwitchSettings != nil {
@@ -20087,6 +20199,12 @@ func (s *ScheduleActionSettings) SetHlsId3SegmentTaggingSettings(v *HlsId3Segmen
 // SetHlsTimedMetadataSettings sets the HlsTimedMetadataSettings field's value.
 func (s *ScheduleActionSettings) SetHlsTimedMetadataSettings(v *HlsTimedMetadataScheduleActionSettings) *ScheduleActionSettings {
 	s.HlsTimedMetadataSettings = v
+	return s
+}
+
+// SetInputPrepareSettings sets the InputPrepareSettings field's value.
+func (s *ScheduleActionSettings) SetInputPrepareSettings(v *InputPrepareScheduleActionSettings) *ScheduleActionSettings {
+	s.InputPrepareSettings = v
 	return s
 }
 
@@ -24265,6 +24383,15 @@ const (
 
 	// EmbeddedScte20DetectionOff is a EmbeddedScte20Detection enum value
 	EmbeddedScte20DetectionOff = "OFF"
+)
+
+// Feature Activations Input Prepare Schedule Actions
+const (
+	// FeatureActivationsInputPrepareScheduleActionsDisabled is a FeatureActivationsInputPrepareScheduleActions enum value
+	FeatureActivationsInputPrepareScheduleActionsDisabled = "DISABLED"
+
+	// FeatureActivationsInputPrepareScheduleActionsEnabled is a FeatureActivationsInputPrepareScheduleActions enum value
+	FeatureActivationsInputPrepareScheduleActionsEnabled = "ENABLED"
 )
 
 // Fec Output Include Fec

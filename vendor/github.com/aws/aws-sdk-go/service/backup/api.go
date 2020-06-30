@@ -1373,11 +1373,11 @@ func (c *Backup) DescribeRegionSettingsRequest(input *DescribeRegionSettingsInpu
 
 // DescribeRegionSettings API operation for AWS Backup.
 //
-// Returns the current service opt-in settings for the region. If the service
-// has a value set to true, AWS Backup will attempt to protect that service's
-// resources in this region, when included in an on-demand backup or scheduled
-// backup plan. If the value is set to false for a service, AWS Backup will
-// not attempt to protect that service's resources in this region.
+// Returns the current service opt-in settings for the Region. If the service
+// has a value set to true, AWS Backup attempts to protect that service's resources
+// in this Region, when included in an on-demand backup or scheduled backup
+// plan. If the value is set to false for a service, AWS Backup does not attempt
+// to protect that service's resources in this Region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -2367,10 +2367,6 @@ func (c *Backup) ListBackupJobsRequest(input *ListBackupJobsInput) (req *request
 //   * InvalidParameterValueException
 //   Indicates that something is wrong with a parameter's value. For example,
 //   the value is out of range.
-//
-//   * InvalidRequestException
-//   Indicates that something is wrong with the input to the request. For example,
-//   a parameter is of the wrong type.
 //
 //   * ServiceUnavailableException
 //   The request failed due to a temporary failure of the server.
@@ -5045,11 +5041,11 @@ func (c *Backup) UpdateRegionSettingsRequest(input *UpdateRegionSettingsInput) (
 
 // UpdateRegionSettings API operation for AWS Backup.
 //
-// Updates the current service opt-in settings for the region. If the service
-// has a value set to true, AWS Backup will attempt to protect that service's
-// resources in this region, when included in an on-demand backup or scheduled
-// backup plan. If the value is set to false for a service, AWS Backup will
-// not attempt to protect that service's resources in this region.
+// Updates the current service opt-in settings for the Region. If the service
+// has a value set to true, AWS Backup attempts to protect that service's resources
+// in this Region, when included in an on-demand backup or scheduled backup
+// plan. If the value is set to false for a service, AWS Backup does not attempt
+// to protect that service's resources in this Region.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -5333,6 +5329,9 @@ func (s *CopyAction) SetLifecycle(v *Lifecycle) *CopyAction {
 type CopyJob struct {
 	_ struct{} `type:"structure"`
 
+	// The account ID that owns the copy job.
+	AccountId *string `type:"string"`
+
 	// The size, in bytes, of a copy job.
 	BackupSizeInBytes *int64 `type:"long"`
 
@@ -5399,6 +5398,12 @@ func (s CopyJob) String() string {
 // GoString returns the string representation
 func (s CopyJob) GoString() string {
 	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *CopyJob) SetAccountId(v string) *CopyJob {
+	s.AccountId = &v
+	return s
 }
 
 // SetBackupSizeInBytes sets the BackupSizeInBytes field's value.
@@ -5898,7 +5903,7 @@ type DeleteBackupPlanOutput struct {
 	BackupPlanId *string `type:"string"`
 
 	// The date and time a backup plan is deleted, in Unix format and Coordinated
-	// Universal Time (UTC). The value of CreationDate is accurate to milliseconds.
+	// Universal Time (UTC). The value of DeletionDate is accurate to milliseconds.
 	// For example, the value 1516925490.087 represents Friday, January 26, 2018
 	// 12:11:30.087 AM.
 	DeletionDate *time.Time `type:"timestamp"`
@@ -6372,6 +6377,9 @@ func (s *DescribeBackupJobInput) SetBackupJobId(v string) *DescribeBackupJobInpu
 type DescribeBackupJobOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Returns the account ID that owns the backup job.
+	AccountId *string `type:"string"`
+
 	// Uniquely identifies a request to AWS Backup to back up a resource.
 	BackupJobId *string `type:"string"`
 
@@ -6393,8 +6401,8 @@ type DescribeBackupJobOutput struct {
 	BytesTransferred *int64 `type:"long"`
 
 	// The date and time that a job to create a backup job is completed, in Unix
-	// format and Coordinated Universal Time (UTC). The value of CreationDate is
-	// accurate to milliseconds. For example, the value 1516925490.087 represents
+	// format and Coordinated Universal Time (UTC). The value of CompletionDate
+	// is accurate to milliseconds. For example, the value 1516925490.087 represents
 	// Friday, January 26, 2018 12:11:30.087 AM.
 	CompletionDate *time.Time `type:"timestamp"`
 
@@ -6459,6 +6467,12 @@ func (s DescribeBackupJobOutput) String() string {
 // GoString returns the string representation
 func (s DescribeBackupJobOutput) GoString() string {
 	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *DescribeBackupJobOutput) SetAccountId(v string) *DescribeBackupJobOutput {
+	s.AccountId = &v
+	return s
 }
 
 // SetBackupJobId sets the BackupJobId field's value.
@@ -7179,6 +7193,9 @@ func (s *DescribeRestoreJobInput) SetRestoreJobId(v string) *DescribeRestoreJobI
 type DescribeRestoreJobOutput struct {
 	_ struct{} `type:"structure"`
 
+	// Returns the account ID that owns the restore job.
+	AccountId *string `type:"string"`
+
 	// The size, in bytes, of the restored resource.
 	BackupSizeInBytes *int64 `type:"long"`
 
@@ -7214,6 +7231,9 @@ type DescribeRestoreJobOutput struct {
 	// An ARN that uniquely identifies a recovery point; for example, arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45.
 	RecoveryPointArn *string `type:"string"`
 
+	// Returns metadata associated with a restore job listed by resource type.
+	ResourceType *string `type:"string"`
+
 	// Uniquely identifies the job that restores a recovery point.
 	RestoreJobId *string `type:"string"`
 
@@ -7221,7 +7241,7 @@ type DescribeRestoreJobOutput struct {
 	// to restore a recovery point.
 	Status *string `type:"string" enum:"RestoreJobStatus"`
 
-	// A detailed message explaining the status of a job to restore a recovery point.
+	// A message showing the status of a job to restore a recovery point.
 	StatusMessage *string `type:"string"`
 }
 
@@ -7233,6 +7253,12 @@ func (s DescribeRestoreJobOutput) String() string {
 // GoString returns the string representation
 func (s DescribeRestoreJobOutput) GoString() string {
 	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *DescribeRestoreJobOutput) SetAccountId(v string) *DescribeRestoreJobOutput {
+	s.AccountId = &v
+	return s
 }
 
 // SetBackupSizeInBytes sets the BackupSizeInBytes field's value.
@@ -7280,6 +7306,12 @@ func (s *DescribeRestoreJobOutput) SetPercentDone(v string) *DescribeRestoreJobO
 // SetRecoveryPointArn sets the RecoveryPointArn field's value.
 func (s *DescribeRestoreJobOutput) SetRecoveryPointArn(v string) *DescribeRestoreJobOutput {
 	s.RecoveryPointArn = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *DescribeRestoreJobOutput) SetResourceType(v string) *DescribeRestoreJobOutput {
+	s.ResourceType = &v
 	return s
 }
 
@@ -7571,7 +7603,7 @@ type GetBackupPlanOutput struct {
 	CreatorRequestId *string `type:"string"`
 
 	// The date and time that a backup plan is deleted, in Unix format and Coordinated
-	// Universal Time (UTC). The value of CreationDate is accurate to milliseconds.
+	// Universal Time (UTC). The value of DeletionDate is accurate to milliseconds.
 	// For example, the value 1516925490.087 represents Friday, January 26, 2018
 	// 12:11:30.087 AM.
 	DeletionDate *time.Time `type:"timestamp"`
@@ -8082,15 +8114,17 @@ type GetSupportedResourceTypesOutput struct {
 
 	// Contains a string with the supported AWS resource types:
 	//
+	//    * DynamoDB for Amazon DynamoDB
+	//
 	//    * EBS for Amazon Elastic Block Store
 	//
-	//    * Storage Gateway for AWS Storage Gateway
+	//    * EC2 for Amazon Elastic Compute Cloud
+	//
+	//    * EFS for Amazon Elastic File System
 	//
 	//    * RDS for Amazon Relational Database Service
 	//
-	//    * DDB for Amazon DynamoDB
-	//
-	//    * EFS for Amazon Elastic File System
+	//    * Storage Gateway for AWS Storage Gateway
 	ResourceTypes []*string `type:"list"`
 }
 
@@ -8240,6 +8274,9 @@ func (s *InvalidRequestException) RequestID() string {
 type Job struct {
 	_ struct{} `type:"structure"`
 
+	// The account ID that owns the backup job.
+	AccountId *string `type:"string"`
+
 	// Uniquely identifies a request to AWS Backup to back up a resource.
 	BackupJobId *string `type:"string"`
 
@@ -8327,6 +8364,12 @@ func (s Job) String() string {
 // GoString returns the string representation
 func (s Job) GoString() string {
 	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *Job) SetAccountId(v string) *Job {
+	s.AccountId = &v
+	return s
 }
 
 // SetBackupJobId sets the BackupJobId field's value.
@@ -8539,6 +8582,10 @@ func (s *LimitExceededException) RequestID() string {
 type ListBackupJobsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The account ID to list the jobs from. Returns only backup jobs associated
+	// with the specified account ID.
+	ByAccountId *string `location:"querystring" locationName:"accountId" type:"string"`
+
 	// Returns only backup jobs that will be stored in the specified backup vault.
 	// Backup vaults are identified by names that are unique to the account used
 	// to create them and the AWS Region where they are created. They consist of
@@ -8560,6 +8607,8 @@ type ListBackupJobsInput struct {
 	//    * DynamoDB for Amazon DynamoDB
 	//
 	//    * EBS for Amazon Elastic Block Store
+	//
+	//    * EC2 for Amazon Elastic Compute Cloud
 	//
 	//    * EFS for Amazon Elastic File System
 	//
@@ -8602,6 +8651,12 @@ func (s *ListBackupJobsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetByAccountId sets the ByAccountId field's value.
+func (s *ListBackupJobsInput) SetByAccountId(v string) *ListBackupJobsInput {
+	s.ByAccountId = &v
+	return s
 }
 
 // SetByBackupVaultName sets the ByBackupVaultName field's value.
@@ -9155,6 +9210,10 @@ func (s *ListBackupVaultsOutput) SetNextToken(v string) *ListBackupVaultsOutput 
 type ListCopyJobsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The account ID to list the jobs from. Returns only copy jobs associated with
+	// the specified account ID.
+	ByAccountId *string `location:"querystring" locationName:"accountId" type:"string"`
+
 	// Returns only copy jobs that were created after the specified date.
 	ByCreatedAfter *time.Time `location:"querystring" locationName:"createdAfter" type:"timestamp"`
 
@@ -9171,7 +9230,11 @@ type ListCopyJobsInput struct {
 
 	// Returns only backup jobs for the specified resources:
 	//
+	//    * DynamoDB for Amazon DynamoDB
+	//
 	//    * EBS for Amazon Elastic Block Store
+	//
+	//    * EC2 for Amazon Elastic Compute Cloud
 	//
 	//    * EFS for Amazon Elastic File System
 	//
@@ -9214,6 +9277,12 @@ func (s *ListCopyJobsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetByAccountId sets the ByAccountId field's value.
+func (s *ListCopyJobsInput) SetByAccountId(v string) *ListCopyJobsInput {
+	s.ByAccountId = &v
+	return s
 }
 
 // SetByCreatedAfter sets the ByCreatedAfter field's value.
@@ -9640,6 +9709,19 @@ func (s *ListRecoveryPointsByResourceOutput) SetRecoveryPoints(v []*RecoveryPoin
 type ListRestoreJobsInput struct {
 	_ struct{} `type:"structure"`
 
+	// The account ID to list the jobs from. Returns only restore jobs associated
+	// with the specified account ID.
+	ByAccountId *string `location:"querystring" locationName:"accountId" type:"string"`
+
+	// Returns only restore jobs that were created after the specified date.
+	ByCreatedAfter *time.Time `location:"querystring" locationName:"createdAfter" type:"timestamp"`
+
+	// Returns only restore jobs that were created before the specified date.
+	ByCreatedBefore *time.Time `location:"querystring" locationName:"createdBefore" type:"timestamp"`
+
+	// Returns only restore jobs associated with the specified job status.
+	ByStatus *string `location:"querystring" locationName:"status" type:"string" enum:"RestoreJobStatus"`
+
 	// The maximum number of items to be returned.
 	MaxResults *int64 `location:"querystring" locationName:"maxResults" min:"1" type:"integer"`
 
@@ -9671,6 +9753,30 @@ func (s *ListRestoreJobsInput) Validate() error {
 		return invalidParams
 	}
 	return nil
+}
+
+// SetByAccountId sets the ByAccountId field's value.
+func (s *ListRestoreJobsInput) SetByAccountId(v string) *ListRestoreJobsInput {
+	s.ByAccountId = &v
+	return s
+}
+
+// SetByCreatedAfter sets the ByCreatedAfter field's value.
+func (s *ListRestoreJobsInput) SetByCreatedAfter(v time.Time) *ListRestoreJobsInput {
+	s.ByCreatedAfter = &v
+	return s
+}
+
+// SetByCreatedBefore sets the ByCreatedBefore field's value.
+func (s *ListRestoreJobsInput) SetByCreatedBefore(v time.Time) *ListRestoreJobsInput {
+	s.ByCreatedBefore = &v
+	return s
+}
+
+// SetByStatus sets the ByStatus field's value.
+func (s *ListRestoreJobsInput) SetByStatus(v string) *ListRestoreJobsInput {
+	s.ByStatus = &v
+	return s
 }
 
 // SetMaxResults sets the MaxResults field's value.
@@ -9934,7 +10040,7 @@ func (s *Plan) SetRules(v []*Rule) *Plan {
 type PlanInput struct {
 	_ struct{} `type:"structure"`
 
-	// The display name of a backup plan.
+	// The optional display name of a backup plan.
 	//
 	// BackupPlanName is a required field
 	BackupPlanName *string `type:"string" required:"true"`
@@ -10716,6 +10822,9 @@ func (s *ResourceNotFoundException) RequestID() string {
 type RestoreJobsListMember struct {
 	_ struct{} `type:"structure"`
 
+	// The account ID that owns the restore job.
+	AccountId *string `type:"string"`
+
 	// The size, in bytes, of the restored resource.
 	BackupSizeInBytes *int64 `type:"long"`
 
@@ -10750,6 +10859,11 @@ type RestoreJobsListMember struct {
 	// An ARN that uniquely identifies a recovery point; for example, arn:aws:backup:us-east-1:123456789012:recovery-point:1EB3B5E7-9EB0-435A-A80B-108B488B0D45.
 	RecoveryPointArn *string `type:"string"`
 
+	// The resource type of the listed restore jobs; for example, an Amazon Elastic
+	// Block Store (Amazon EBS) volume or an Amazon Relational Database Service
+	// (Amazon RDS) database.
+	ResourceType *string `type:"string"`
+
 	// Uniquely identifies the job that restores a recovery point.
 	RestoreJobId *string `type:"string"`
 
@@ -10770,6 +10884,12 @@ func (s RestoreJobsListMember) String() string {
 // GoString returns the string representation
 func (s RestoreJobsListMember) GoString() string {
 	return s.String()
+}
+
+// SetAccountId sets the AccountId field's value.
+func (s *RestoreJobsListMember) SetAccountId(v string) *RestoreJobsListMember {
+	s.AccountId = &v
+	return s
 }
 
 // SetBackupSizeInBytes sets the BackupSizeInBytes field's value.
@@ -10817,6 +10937,12 @@ func (s *RestoreJobsListMember) SetPercentDone(v string) *RestoreJobsListMember 
 // SetRecoveryPointArn sets the RecoveryPointArn field's value.
 func (s *RestoreJobsListMember) SetRecoveryPointArn(v string) *RestoreJobsListMember {
 	s.RecoveryPointArn = &v
+	return s
+}
+
+// SetResourceType sets the ResourceType field's value.
+func (s *RestoreJobsListMember) SetResourceType(v string) *RestoreJobsListMember {
+	s.ResourceType = &v
 	return s
 }
 
@@ -11676,15 +11802,17 @@ type StartRestoreJobInput struct {
 
 	// Starts a job to restore a recovery point for one of the following resources:
 	//
+	//    * DynamoDB for Amazon DynamoDB
+	//
 	//    * EBS for Amazon Elastic Block Store
 	//
-	//    * Storage Gateway for AWS Storage Gateway
+	//    * EC2 for Amazon Elastic Compute Cloud
+	//
+	//    * EFS for Amazon Elastic File System
 	//
 	//    * RDS for Amazon Relational Database Service
 	//
-	//    * DDB for Amazon DynamoDB
-	//
-	//    * EFS for Amazon Elastic File System
+	//    * Storage Gateway for AWS Storage Gateway
 	ResourceType *string `type:"string"`
 }
 
