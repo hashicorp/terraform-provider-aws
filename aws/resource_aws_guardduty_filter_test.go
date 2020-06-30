@@ -29,6 +29,16 @@ func testAccAwsGuardDutyFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
 				),
 			},
+			{
+				Config: testAccGuardDutyFilterConfigNoop_full(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsGuardDutyFilterExists(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "detector_id"),
+					resource.TestCheckResourceAttr(resourceName, "name", "test-filter"),
+					resource.TestCheckResourceAttr(resourceName, "action", "NOOP"),
+					resource.TestCheckResourceAttr(resourceName, "rank", "1"),
+				),
+			},
 		},
 	})
 }
@@ -102,6 +112,44 @@ resource "aws_guardduty_filter" "test" {
   detector_id = "${aws_guardduty_detector.test.id}"
 	name        = "test-filter"
 	action      = "ARCHIVE"
+	rank        = 1
+
+  finding_criteria {
+    criterion {
+      field     = "region"
+      values    = ["eu-west-1"]
+      condition = "equals"
+    }
+
+    criterion {
+      field     = "service.additionalInfo.threatListName"
+      values    = ["some-threat", "another-threat"]
+      condition = "not_equals"
+    }
+
+    criterion {
+      field     = "updatedAt"
+      values    = ["1570744740000"]
+      condition = "less_than"
+    }
+
+    criterion {
+      field     = "updatedAt"
+      values    = ["1570744240000"]
+      condition = "greater_than"
+    }
+  }
+}`, testAccGuardDutyDetectorConfig_basic3)
+}
+
+func testAccGuardDutyFilterConfigNoop_full() string {
+	return fmt.Sprintf(`
+%[1]s
+
+resource "aws_guardduty_filter" "test" {
+  detector_id = "${aws_guardduty_detector.test.id}"
+	name        = "test-filter"
+	action      = "NOOP"
 	rank        = 1
 
   finding_criteria {
