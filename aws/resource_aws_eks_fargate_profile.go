@@ -110,7 +110,7 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
 	}
 
-  // Creation of profiles must be serialized, and can take a while, increase the timeout to a long time.
+	// Creation of profiles must be serialized, and can take a while, increase the timeout to a long time.
 	err := resource.Retry(30*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
 
@@ -238,18 +238,18 @@ func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}
 		FargateProfileName: aws.String(fargateProfileName),
 	}
 
-  // Deletion of profiles must be serialized, and can take a while, increase the timeout to a long time.
+	// Deletion of profiles must be serialized, and can take a while, increase the timeout to a long time.
 	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
-  	_, err := conn.DeleteFargateProfile(input)
-	  // Retry for ResourceInUse errors, creation needs to be serialized.
-  	if isAWSErr(err, eks.ErrCodeResourceInUseException, "") {
-  	  return resource.RetryableError(err)
-	  }
+		_, err := conn.DeleteFargateProfile(input)
+		// Retry for ResourceInUse errors, creation needs to be serialized.
+		if isAWSErr(err, eks.ErrCodeResourceInUseException, "") {
+			return resource.RetryableError(err)
+		}
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
-    return nil
-  })
+		return nil
+	})
 
 	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
 		return nil
