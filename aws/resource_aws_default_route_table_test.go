@@ -224,9 +224,11 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 	})
 }
 
-func TestAccAWSDefaultRouteTable_Route_TransitGatewayID(t *testing.T) {
-	var routeTable1 ec2.RouteTable
+func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
+	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.2.0.0/16"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -234,9 +236,15 @@ func TestAccAWSDefaultRouteTable_Route_TransitGatewayID(t *testing.T) {
 		CheckDestroy: testAccCheckRouteTableDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultRouteTableConfigRouteTransitGatewayID(),
+				Config: testAccDefaultRouteTableConfigIpv4TransitGateway(rName, destinationCidr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(resourceName, &routeTable1),
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+						"cidr_block":      destinationCidr,
+						"ipv6_cidr_block": "",
+					}),
 				),
 			},
 			{
@@ -561,28 +569,40 @@ resource "aws_main_route_table_association" "test" {
 `, rName, destinationCidr1, destinationCidr2)
 }
 
-func testAccAWSDefaultRouteTableConfigRouteTransitGatewayID() string {
-	return `
+func testAccDefaultRouteTableConfigIpv4TransitGateway(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block = "10.1.0.0/16"
 
   tags = {
-    Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
-    Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
@@ -592,7 +612,7 @@ resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
   vpc_id             = aws_vpc.test.id
 
   tags = {
-    Name = "tf-acc-test-ec2-default-route-table-transit-gateway-id"
+    Name = %[1]q
   }
 }
 
@@ -600,11 +620,15 @@ resource "aws_default_route_table" "test" {
   default_route_table_id = aws_vpc.test.default_route_table_id
 
   route {
-    cidr_block         = "0.0.0.0/0"
+    cidr_block         = %[2]q
     transit_gateway_id = aws_ec2_transit_gateway_vpc_attachment.test.transit_gateway_id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
-`
+`, rName, destinationCidr)
 }
 
 func testAccDefaultRouteTableConfigVpcEndpointAssociation(rName, destinationCidr string) string {
