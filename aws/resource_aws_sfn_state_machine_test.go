@@ -16,7 +16,7 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
 	roleResourceName := "aws_iam_role.iam_for_sfn"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -57,10 +57,10 @@ func TestAccAWSSfnStateMachine_createUpdate(t *testing.T) {
 	})
 }
 
-func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
+func TestAccAWSSfnStateMachine_tags(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -104,7 +104,7 @@ func TestAccAWSSfnStateMachine_Tags(t *testing.T) {
 func TestAccAWSSfnStateMachine_disappears(t *testing.T) {
 	var sm sfn.DescribeStateMachineOutput
 	resourceName := "aws_sfn_state_machine.test"
-	rName := acctest.RandomWithPrefix("tf-acc")
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -164,12 +164,11 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 
 		if err != nil {
 			if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
-				return nil
+				continue
 			}
-			return err
 		}
 
-		if out != nil && *out.Status != sfn.StateMachineStatusDeleting {
+		if out != nil && aws.StringValue(out.Status) != sfn.StateMachineStatusDeleting {
 			return fmt.Errorf("Expected AWS Step Function State Machine to be destroyed, but was still found")
 		}
 
@@ -182,7 +181,7 @@ func testAccCheckAWSSfnStateMachineDestroy(s *terraform.State) error {
 func testAccAWSSfnStateMachineConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda_%s"
+  name = "%[1]s-2"
 
   assume_role_policy = <<EOF
 {

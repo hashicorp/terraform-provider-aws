@@ -19,6 +19,10 @@ func StateMachineStatus(conn *sfn.SFN, stateMachineArn string) resource.StateRef
 			return nil, "", err
 		}
 
+		if output == nil {
+			return nil, "", nil
+		}
+
 		return output, aws.StringValue(output.Status), nil
 	}
 }

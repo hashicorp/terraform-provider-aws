@@ -104,7 +104,7 @@ func resourceAwsSfnStateMachineCreate(d *schema.ResourceData, meta interface{}) 
 		return fmt.Errorf("Error creating Step Function State Machine: %s", err)
 	}
 
-	d.SetId(*stateMachine.StateMachineArn)
+	d.SetId(aws.StringValue(stateMachine.StateMachineArn))
 
 	return resourceAwsSfnStateMachineRead(d, meta)
 }
@@ -121,6 +121,7 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 	if err != nil {
 
 		if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "") {
+			log.Printf("[WARN] SFN State Machine (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return nil
 		}
@@ -153,21 +154,23 @@ func resourceAwsSfnStateMachineRead(d *schema.ResourceData, meta interface{}) er
 func resourceAwsSfnStateMachineUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).sfnconn
 
-	params := &sfn.UpdateStateMachineInput{
-		StateMachineArn: aws.String(d.Id()),
-		Definition:      aws.String(d.Get("definition").(string)),
-		RoleArn:         aws.String(d.Get("role_arn").(string)),
-	}
-
-	_, err := conn.UpdateStateMachine(params)
-
-	log.Printf("[DEBUG] Updating Step Function State Machine: %#v", params)
-
-	if err != nil {
-		if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "State Machine Does Not Exist") {
-			return fmt.Errorf("Error updating Step Function State Machine: %s", err)
+	if d.HasChanges("definition", "role_arn") {
+		params := &sfn.UpdateStateMachineInput{
+			StateMachineArn: aws.String(d.Id()),
+			Definition:      aws.String(d.Get("definition").(string)),
+			RoleArn:         aws.String(d.Get("role_arn").(string)),
 		}
-		return err
+
+		_, err := conn.UpdateStateMachine(params)
+
+		log.Printf("[DEBUG] Updating Step Function State Machine: %#v", params)
+
+		if err != nil {
+			if isAWSErr(err, sfn.ErrCodeStateMachineDoesNotExist, "State Machine Does Not Exist") {
+				return fmt.Errorf("Error updating Step Function State Machine: %s", err)
+			}
+			return err
+		}
 	}
 
 	if d.HasChange("tags") {
