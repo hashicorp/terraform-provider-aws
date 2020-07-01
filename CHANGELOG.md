@@ -19,6 +19,7 @@ BUG FIXES:
 * resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state [GH-13928]
 * resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument continues to work for Terraform 0.11 support [GH-13958]
 * resource/aws_route53_record: Ensure old Route53 record is deleted when updating `name` argument [GH-11335]
+* resource/aws_route53_record: Prevent errors when `health_check_id` argument is configured and updating `set_identifier` or `type` arguments [GH-13012]
 * resource/aws_spot_fleet_request: Increase default delete timeout to 15 minutes [GH-13922]
 * resource/aws_wafv2_web_acl: Support additional nested `and/or/not statement` in `rule` `statement` and `rule` `statement` `rate_based_statement` attributes [GH-13961]
 
