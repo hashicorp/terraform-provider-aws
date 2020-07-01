@@ -315,6 +315,8 @@ func TestAccAWSDefaultRouteTable_tags(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.2.0.0/16"
+	destinationIpv6Cidr := "::/0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -361,22 +363,22 @@ func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDefaultRouteTableConfigConditionalIpv4Ipv6(rName, false),
+				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      "0.0.0.0/0",
+						"cidr_block":      destinationCidr,
 						"ipv6_cidr_block": "",
 					}),
 				),
 			},
 			{
-				Config: testAccAWSDefaultRouteTableConfigConditionalIpv4Ipv6(rName, true),
+				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"cidr_block":      "",
-						"ipv6_cidr_block": "::/0",
+						"ipv6_cidr_block": destinationIpv6Cidr,
 					}),
 				),
 			},
@@ -841,20 +843,12 @@ resource "aws_default_route_table" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccAWSDefaultRouteTableConfigConditionalIpv4Ipv6(rName string, ipv6Route bool) string {
+func testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr string, ipv6Route bool) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
   assign_generated_ipv6_cidr_block = true
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_egress_only_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
 
   tags = {
     Name = %[1]q
@@ -870,9 +864,9 @@ resource "aws_internet_gateway" "test" {
 }
 
 locals {
-  ipv6             = %[2]t
-  destination      = "0.0.0.0/0"
-  destination_ipv6 = "::/0"
+  ipv6             = %[4]t
+  destination      = %[2]q
+  destination_ipv6 = %[3]q
 }
 
 resource "aws_default_route_table" "test" {
@@ -888,7 +882,7 @@ resource "aws_default_route_table" "test" {
     Name = %[1]q
   }
 }
-`, rName, ipv6Route)
+`, rName, destinationCidr, destinationIpv6Cidr, ipv6Route)
 }
 
 func testAccAWSDefaultRouteTableImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
