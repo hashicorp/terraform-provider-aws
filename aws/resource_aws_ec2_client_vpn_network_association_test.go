@@ -17,7 +17,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -37,7 +37,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -56,6 +56,8 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
+	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_network_association" {
 			continue
@@ -67,7 +69,7 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy(s *terraform.State) er
 		})
 
 		for _, v := range resp.ClientVpnTargetNetworks {
-			if *v.AssociationId == rs.Primary.ID && !(*v.Status.Code == "Disassociated") {
+			if *v.AssociationId == rs.Primary.ID && !(*v.Status.Code == ec2.AssociationStatusCodeDisassociated) {
 				return fmt.Errorf("[DESTROY ERROR] Client VPN network association (%s) not deleted", rs.Primary.ID)
 			}
 		}
@@ -99,7 +101,7 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 		}
 
 		for _, a := range resp.ClientVpnTargetNetworks {
-			if *a.AssociationId == rs.Primary.ID && !(*a.Status.Code == "Disassociated") {
+			if *a.AssociationId == rs.Primary.ID && !(*a.Status.Code == ec2.AssociationStatusCodeDisassociated) {
 				*assoc = *a
 				return nil
 			}

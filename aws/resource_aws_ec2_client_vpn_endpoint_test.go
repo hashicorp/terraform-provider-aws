@@ -99,14 +99,12 @@ func TestAccAwsEc2ClientVpn(t *testing.T) {
 
 	for group, m := range testCases {
 		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
+		for name, tc := range m {
+			tc := tc
+			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
+				tc(t)
+			})
+		}
 	}
 }
 
