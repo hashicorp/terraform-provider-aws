@@ -144,125 +144,57 @@ func resourceAwsRoute() *schema.Resource {
 
 func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
-	var numTargets int
-	var setTarget string
-	allowedTargets := []string{
-		"egress_only_gateway_id",
-		"gateway_id",
-		"nat_gateway_id",
-		"instance_id",
-		"network_interface_id",
-		"transit_gateway_id",
-		"vpc_peering_connection_id",
+
+	destinationAttr, targetAttr, err := routeDestinationAndTargetAttributes(d)
+	if err != nil {
+		return err
 	}
 
-	// Check if more than 1 target is specified
-	for _, target := range allowedTargets {
-		if len(d.Get(target).(string)) > 0 {
-			numTargets++
-			setTarget = target
-		}
+	routeTableID := d.Get("route_table_id").(string)
+	input := &ec2.CreateRouteInput{
+		RouteTableId: aws.String(routeTableID),
 	}
 
-	if numTargets > 1 {
-		return routeTargetValidationError
-	}
-
-	createOpts := &ec2.CreateRouteInput{}
-	// Formulate CreateRouteInput based on the target type
-	switch setTarget {
-	case "gateway_id":
-		createOpts = &ec2.CreateRouteInput{
-			RouteTableId: aws.String(d.Get("route_table_id").(string)),
-			GatewayId:    aws.String(d.Get("gateway_id").(string)),
-		}
-
-		if v, ok := d.GetOk("destination_cidr_block"); ok {
-			createOpts.DestinationCidrBlock = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
-		}
-
-	case "egress_only_gateway_id":
-		createOpts = &ec2.CreateRouteInput{
-			RouteTableId:                aws.String(d.Get("route_table_id").(string)),
-			DestinationIpv6CidrBlock:    aws.String(d.Get("destination_ipv6_cidr_block").(string)),
-			EgressOnlyInternetGatewayId: aws.String(d.Get("egress_only_gateway_id").(string)),
-		}
-	case "nat_gateway_id":
-		createOpts = &ec2.CreateRouteInput{
-			RouteTableId:         aws.String(d.Get("route_table_id").(string)),
-			DestinationCidrBlock: aws.String(d.Get("destination_cidr_block").(string)),
-			NatGatewayId:         aws.String(d.Get("nat_gateway_id").(string)),
-		}
-	case "instance_id":
-		createOpts = &ec2.CreateRouteInput{
-			RouteTableId: aws.String(d.Get("route_table_id").(string)),
-			InstanceId:   aws.String(d.Get("instance_id").(string)),
-		}
-
-		if v, ok := d.GetOk("destination_cidr_block"); ok {
-			createOpts.DestinationCidrBlock = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
-		}
-
-	case "network_interface_id":
-		createOpts = &ec2.CreateRouteInput{
-			RouteTableId:       aws.String(d.Get("route_table_id").(string)),
-			NetworkInterfaceId: aws.String(d.Get("network_interface_id").(string)),
-		}
-
-		if v, ok := d.GetOk("destination_cidr_block"); ok {
-			createOpts.DestinationCidrBlock = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
-		}
-
-	case "transit_gateway_id":
-		createOpts = &ec2.CreateRouteInput{
-			RouteTableId:     aws.String(d.Get("route_table_id").(string)),
-			TransitGatewayId: aws.String(d.Get("transit_gateway_id").(string)),
-		}
-
-		if v, ok := d.GetOk("destination_cidr_block"); ok {
-			createOpts.DestinationCidrBlock = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
-		}
-
-	case "vpc_peering_connection_id":
-		createOpts = &ec2.CreateRouteInput{
-			RouteTableId:           aws.String(d.Get("route_table_id").(string)),
-			VpcPeeringConnectionId: aws.String(d.Get("vpc_peering_connection_id").(string)),
-		}
-
-		if v, ok := d.GetOk("destination_cidr_block"); ok {
-			createOpts.DestinationCidrBlock = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-			createOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
-		}
-
+	var pDestination **string
+	var routeReader func(*ec2.EC2, string, string) (*ec2.Route, error)
+	switch destinationAttr {
+	case "destination_cidr_block":
+		pDestination = &input.DestinationCidrBlock
+		routeReader = readIpv4Route
+	case "destination_ipv6_cidr_block":
+		pDestination = &input.DestinationIpv6CidrBlock
+		routeReader = readIpv6Route
 	default:
-		return fmt.Errorf("A valid target type is missing. Specify one of the following attributes: %s", strings.Join(allowedTargets, ", "))
+		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
 	}
-	log.Printf("[DEBUG] Route create config: %s", createOpts)
+	destination := d.Get(destinationAttr).(string)
+	*pDestination = aws.String(destination)
 
-	// Create the route
-	var err error
+	var pTarget **string
+	switch targetAttr {
+	case "egress_only_gateway_id":
+		pTarget = &input.EgressOnlyInternetGatewayId
+	case "gateway_id":
+		pTarget = &input.GatewayId
+	case "instance_id":
+		pTarget = &input.InstanceId
+	case "nat_gateway_id":
+		pTarget = &input.NatGatewayId
+	case "network_interface_id":
+		pTarget = &input.NetworkInterfaceId
+	case "transit_gateway_id":
+		pTarget = &input.TransitGatewayId
+	case "vpc_peering_connection_id":
+		pTarget = &input.VpcPeeringConnectionId
+	default:
+		return fmt.Errorf("unexpected target attribute: `%s`", targetAttr)
+	}
+	*pTarget = aws.String(d.Get(targetAttr).(string))
+
+	log.Printf("[DEBUG] Creating Route: %s", input)
 
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err = conn.CreateRoute(createOpts)
+		_, err = conn.CreateRoute(input)
 
 		if isAWSErr(err, "InvalidParameterException", "") {
 			return resource.RetryableError(err)
@@ -278,64 +210,43 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 
 		return nil
 	})
+
 	if isResourceTimeoutError(err) {
-		_, err = conn.CreateRoute(createOpts)
+		_, err = conn.CreateRoute(input)
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error creating route: %s", err)
+		return fmt.Errorf("error creating route: %s", err)
 	}
 
 	var route *ec2.Route
+	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+		route, err = routeReader(conn, routeTableID, destination)
 
-	if v, ok := d.GetOk("destination_cidr_block"); ok {
-		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), v.(string), "")
-			if err == nil {
-				if route != nil {
-					return nil
-				} else {
-					err = errors.New("Route not found")
-				}
-			}
-
-			return resource.RetryableError(err)
-		})
-		if isResourceTimeoutError(err) {
-			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), v.(string), "")
-		}
 		if err != nil {
-			return fmt.Errorf("Error finding route after creating it: %s", err)
+			return resource.RetryableError(err)
 		}
+
 		if route == nil {
-			return fmt.Errorf("Unable to find matching route for Route Table (%s) and destination CIDR block (%s).", d.Get("route_table_id").(string), v)
+			return resource.RetryableError(fmt.Errorf("route not found"))
 		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		route, err = routeReader(conn, routeTableID, destination)
 	}
 
-	if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), "", v.(string))
-			if err == nil {
-				if route != nil {
-					return nil
-				} else {
-					err = errors.New("Route not found")
-				}
-			}
-
-			return resource.RetryableError(err)
-		})
-		if isResourceTimeoutError(err) {
-			route, err = resourceAwsRouteFindRoute(conn, d.Get("route_table_id").(string), "", v.(string))
-		}
-		if err != nil {
-			return fmt.Errorf("Error finding route after creating it: %s", err)
-		}
-		if route == nil {
-			return fmt.Errorf("Unable to find matching route for Route Table (%s) and destination IPv6 CIDR block (%s).", d.Get("route_table_id").(string), v)
-		}
+	if err != nil {
+		return fmt.Errorf("error reading route for Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
-	d.SetId(resourceAwsRouteID(d, route))
+	if route == nil {
+		return fmt.Errorf("route in Route Table (%s) with destination (%s) not found", routeTableID, destination)
+	}
+
+	d.SetId(routeCreateID(routeTableID, destination))
 
 	return resourceAwsRouteRead(d, meta)
 }
@@ -343,22 +254,35 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	routeTableId := d.Get("route_table_id").(string)
-	destinationCidrBlock := d.Get("destination_cidr_block").(string)
-	destinationIpv6CidrBlock := d.Get("destination_ipv6_cidr_block").(string)
+	destinationAttr := routeDestinationAttr(d)
 
-	route, err := resourceAwsRouteFindRoute(conn, routeTableId, destinationCidrBlock, destinationIpv6CidrBlock)
+	routeTableID := d.Get("route_table_id").(string)
+
+	var routeReader func(*ec2.EC2, string, string) (*ec2.Route, error)
+	switch destinationAttr {
+	case "destination_cidr_block":
+		routeReader = readIpv4Route
+	case "destination_ipv6_cidr_block":
+		routeReader = readIpv6Route
+	default:
+		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
+	}
+	destination := d.Get(destinationAttr).(string)
+
+	route, err := routeReader(conn, routeTableID, destination)
+
 	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
-		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableId)
+		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableID)
 		d.SetId("")
 		return nil
 	}
+
 	if err != nil {
-		return err
+		return fmt.Errorf("error reading route for Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
 	if route == nil {
-		log.Printf("[WARN] Matching route not found, removing from state")
+		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
 		d.SetId("")
 		return nil
 	}
@@ -474,21 +398,28 @@ func resourceAwsRouteUpdate(d *schema.ResourceData, meta interface{}) error {
 func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	deleteOpts := &ec2.DeleteRouteInput{
-		RouteTableId: aws.String(d.Get("route_table_id").(string)),
+	destinationAttr := routeDestinationAttr(d)
+
+	routeTableID := d.Get("route_table_id").(string)
+	input := &ec2.DeleteRouteInput{
+		RouteTableId: aws.String(routeTableID),
 	}
-	if v, ok := d.GetOk("destination_cidr_block"); ok {
-		deleteOpts.DestinationCidrBlock = aws.String(v.(string))
+
+	var pDestination **string
+	switch destinationAttr {
+	case "destination_cidr_block":
+		pDestination = &input.DestinationCidrBlock
+	case "destination_ipv6_cidr_block":
+		pDestination = &input.DestinationIpv6CidrBlock
+	default:
+		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
 	}
-	if v, ok := d.GetOk("destination_ipv6_cidr_block"); ok {
-		deleteOpts.DestinationIpv6CidrBlock = aws.String(v.(string))
-	}
-	log.Printf("[DEBUG] Route delete opts: %s", deleteOpts)
+	destination := d.Get(destinationAttr).(string)
+	*pDestination = aws.String(destination)
 
 	err := resource.Retry(d.Timeout(schema.TimeoutDelete), func() *resource.RetryError {
-		log.Printf("[DEBUG] Trying to delete route with opts %s", deleteOpts)
-		var err error
-		_, err = conn.DeleteRoute(deleteOpts)
+		log.Printf("[DEBUG] Deleting route (%s)", d.Id())
+		_, err := conn.DeleteRoute(input)
 		if err == nil {
 			return nil
 		}
@@ -503,15 +434,20 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 
 		return resource.NonRetryableError(err)
 	})
+
 	if isResourceTimeoutError(err) {
-		_, err = conn.DeleteRoute(deleteOpts)
+		log.Printf("[DEBUG] Deleting route (%s)", d.Id())
+		_, err = conn.DeleteRoute(input)
 	}
+
 	if isAWSErr(err, "InvalidRoute.NotFound", "") {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("Error deleting route: %s", err)
+		return fmt.Errorf("error deleting route for Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
+
 	return nil
 }
 
@@ -564,4 +500,154 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 	}
 
 	return nil, nil
+}
+
+// routeDestinationAttr return the route's destination attribute name.
+// No validation is done.
+func routeDestinationAttr(d *schema.ResourceData) string {
+	destinationAttrs := []string{"destination_cidr_block", "destination_ipv6_cidr_block"}
+
+	for _, attr := range destinationAttrs {
+		if v := d.Get(attr).(string); v != "" {
+			return attr
+		}
+	}
+
+	return ""
+}
+
+// routeDestinationAndTargetAttributes return the route's destination and target attribute names.
+// It also validates the resource, returning any validation error.
+func routeDestinationAndTargetAttributes(d *schema.ResourceData) (string, string, error) {
+	destinationAttrs := map[string]struct {
+		ipv4Destination bool
+		ipv6Destination bool
+	}{
+		"destination_cidr_block":      {true, false},
+		"destination_ipv6_cidr_block": {false, true},
+	}
+
+	destinationAttr := ""
+	ipv4Destination := false
+	ipv6Destination := false
+	for attr, kind := range destinationAttrs {
+		if v := d.Get(attr).(string); v != "" {
+			if destinationAttr != "" {
+				return "", "", fmt.Errorf("`%s` conflicts with `%s`", attr, destinationAttr)
+			}
+
+			destinationAttr = attr
+			ipv4Destination = kind.ipv4Destination
+			ipv6Destination = kind.ipv6Destination
+		}
+	}
+
+	if destinationAttr == "" {
+		keys := []string{}
+		for k := range destinationAttrs {
+			keys = append(keys, k)
+		}
+
+		return "", "", fmt.Errorf("one of `%s` must be specified", strings.Join(keys, "`, `"))
+	}
+
+	targetAttrs := map[string]struct {
+		ipv4Destination bool
+		ipv6Destination bool
+	}{
+		"egress_only_gateway_id":    {false, true},
+		"gateway_id":                {true, true},
+		"instance_id":               {true, true},
+		"nat_gateway_id":            {true, false},
+		"network_interface_id":      {true, true},
+		"transit_gateway_id":        {true, false},
+		"vpc_peering_connection_id": {true, true},
+	}
+
+	targetAttr := ""
+	for attr, allowed := range targetAttrs {
+		if v := d.Get(attr).(string); v != "" {
+			if targetAttr != "" {
+				return "", "", fmt.Errorf("`%s` conflicts with `%s`", attr, targetAttr)
+			}
+
+			if (ipv4Destination && !allowed.ipv4Destination) || (ipv6Destination && !allowed.ipv6Destination) {
+				return "", "", fmt.Errorf("`%s` not allowed for `%s` target", destinationAttr, attr)
+			}
+
+			targetAttr = attr
+		}
+	}
+
+	if targetAttr == "" {
+		keys := []string{}
+		for k := range targetAttrs {
+			keys = append(keys, k)
+		}
+
+		return "", "", fmt.Errorf("one of `%s` must be specified", strings.Join(keys, "`, `"))
+	}
+
+	return destinationAttr, targetAttr, nil
+}
+
+// TODO
+// TODO Move these to a per-service internal package and auto-generate where possible.
+// TODO
+
+// readRouteTable returns the route table corresponding to the specified identifier.
+// Returns nil if no route table is found.
+func readRouteTable(conn *ec2.EC2, identifier string) (*ec2.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		RouteTableIds: aws.StringSlice([]string{identifier}),
+	}
+
+	output, err := conn.DescribeRouteTables(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
+		return nil, nil
+	}
+
+	return output.RouteTables[0], nil
+}
+
+// readIpv4Route returns the route corresponding to the specified destination.
+// Returns nil if no route is found.
+func readIpv4Route(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
+	routeTable, err := readRouteTable(conn, routeTableID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if aws.StringValue(route.DestinationCidrBlock) == destinationCidr {
+			return route, nil
+		}
+	}
+
+	return nil, nil
+}
+
+// readIpv6Route returns the route corresponding to the specified destination.
+// Returns nil if no route is found.
+func readIpv6Route(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
+	routeTable, err := readRouteTable(conn, routeTableID)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, route := range routeTable.Routes {
+		if cidrBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
+			return route, nil
+		}
+	}
+
+	return nil, nil
+}
+
+func routeCreateID(routeTableID, destination string) string {
+	return fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination))
 }
