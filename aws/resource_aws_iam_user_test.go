@@ -33,7 +33,9 @@ func testSweepIamUsers(region string) error {
 	conn := client.(*AWSClient).iamconn
 	prefixes := []string{
 		"test-user",
-		"tf-acc-test",
+		"test_user",
+		"tf-acc",
+		"tf_acc",
 	}
 	users := make([]*iam.User, 0)
 
