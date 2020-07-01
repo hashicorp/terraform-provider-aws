@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 )
 
 func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
@@ -90,21 +90,19 @@ func TestAccDataSourceAwsRouteTable_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAwsRouteTable_main(t *testing.T) {
-	dsResourceName := "data.aws_route_table.by_filter"
+	datasourceName := "data.aws_route_table.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAwsRouteTableMainRoute,
+				Config: testAccDataSourceAwsRouteTableConfigMain(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						dsResourceName, "id"),
-					resource.TestCheckResourceAttrSet(
-						dsResourceName, "vpc_id"),
-					resource.TestCheckResourceAttr(
-						dsResourceName, "associations.0.main", "true"),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "vpc_id"),
+					resource.TestCheckResourceAttr(datasourceName, "associations.0.main", "true"),
 				),
 			},
 		},
@@ -193,16 +191,17 @@ data "aws_route_table" "by_id" {
 `, rName)
 }
 
-const testAccDataSourceAwsRouteTableMainRoute = `
+func testAccDataSourceAwsRouteTableConfigMain(rName string) string {
+	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "172.16.0.0/16"
 
   tags = {
-    Name = "terraform-testacc-route-table-data-source-main-route"
+    Name = %[1]q
   }
 }
 
-data "aws_route_table" "by_filter" {
+data "aws_route_table" "test" {
   filter {
     name   = "association.main"
     values = ["true"]
@@ -213,4 +212,5 @@ data "aws_route_table" "by_filter" {
     values = [aws_vpc.test.id]
   }
 }
-`
+`, rName)
+}
