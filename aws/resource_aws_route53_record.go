@@ -318,6 +318,11 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 		}
 	}
 
+	// If health check id is present send that to AWS
+	if v, _ := d.GetChange("health_check_id"); v.(string) != "" {
+		oldRec.HealthCheckId = aws.String(v.(string))
+	}
+
 	if v, _ := d.GetChange("set_identifier"); v.(string) != "" {
 		oldRec.SetIdentifier = aws.String(v.(string))
 	}

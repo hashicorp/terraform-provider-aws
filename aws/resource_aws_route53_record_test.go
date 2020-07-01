@@ -652,6 +652,70 @@ func TestAccAWSRoute53Record_geolocation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_HealthCheckId_SetIdentifierChange(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdSetIdentifier("test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdSetIdentifier("test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_HealthCheckId_TypeChange(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdTypeCname(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdTypeA(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 	var record1, record2, record3 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.us-east-1"
@@ -1554,6 +1618,102 @@ resource "aws_route53_record" "alias" {
   }
 }
 `, rName)
+}
+
+func testAccRoute53RecordConfigHealthCheckIdSetIdentifier(setIdentifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "notexample.com"
+}
+
+resource "aws_route53_health_check" "test" {
+  failure_threshold = "2"
+  fqdn              = "test.notexample.com"
+  port              = 80
+  request_interval  = "30"
+  resource_path     = "/"
+  type              = "HTTP"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id         = aws_route53_zone.test.zone_id
+  health_check_id = aws_route53_health_check.test.id
+  name            = "test"
+  records         = ["127.0.0.1"]
+  set_identifier  = %[1]q
+  ttl             = "5"
+  type            = "A"
+
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+`, setIdentifier)
+}
+
+func testAccRoute53RecordConfigHealthCheckIdTypeA() string {
+	return `
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "notexample.com"
+}
+
+resource "aws_route53_health_check" "test" {
+  failure_threshold = "2"
+  fqdn              = "test.notexample.com"
+  port              = 80
+  request_interval  = "30"
+  resource_path     = "/"
+  type              = "HTTP"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id         = aws_route53_zone.test.zone_id
+  health_check_id = aws_route53_health_check.test.id
+  name            = "test"
+  records         = ["127.0.0.1"]
+  set_identifier  = "test"
+  ttl             = "5"
+  type            = "A"
+
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+`
+}
+
+func testAccRoute53RecordConfigHealthCheckIdTypeCname() string {
+	return `
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "notexample.com"
+}
+
+resource "aws_route53_health_check" "test" {
+  failure_threshold = "2"
+  fqdn              = "test.notexample.com"
+  port              = 80
+  request_interval  = "30"
+  resource_path     = "/"
+  type              = "HTTP"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id         = aws_route53_zone.test.zone_id
+  health_check_id = aws_route53_health_check.test.id
+  name            = "test"
+  records         = ["test1.notexample.com"]
+  set_identifier  = "test"
+  ttl             = "5"
+  type            = "CNAME"
+
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+`
 }
 
 func testAccRoute53CustomVpcEndpointBase(rName string) string {
