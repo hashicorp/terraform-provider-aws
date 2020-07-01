@@ -535,6 +535,12 @@ func testAccAWSCloudTrail_event_selector(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "event_selector.1.read_write_type", "All"),
 				),
 			},
+			{
+				Config: testAccAWSCloudTrailConfig_eventSelectorNone(cloudTrailRandInt),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "event_selector.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -1496,4 +1502,44 @@ resource "aws_lambda_function" "lambda_function_test" {
   runtime       = "nodejs12.x"
 }
 `, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
+}
+
+func testAccAWSCloudTrailConfig_eventSelectorNone(cloudTrailRandInt int) string {
+	return fmt.Sprintf(`
+resource "aws_cloudtrail" "foobar" {
+  name           = "tf-trail-foobar-%d"
+  s3_bucket_name = "${aws_s3_bucket.foo.id}"
+}
+
+resource "aws_s3_bucket" "foo" {
+  bucket        = "tf-test-trail-%d"
+  force_destroy = true
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AWSCloudTrailAclCheck",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetBucketAcl",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d"
+    },
+    {
+      "Sid": "AWSCloudTrailWrite",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::tf-test-trail-%d/*",
+      "Condition": {
+        "StringEquals": {
+          "s3:x-amz-acl": "bucket-owner-full-control"
+        }
+      }
+    }
+  ]
+}
+POLICY
+}
+`, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt, cloudTrailRandInt)
 }
