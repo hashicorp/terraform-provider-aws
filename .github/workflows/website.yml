@@ -9,6 +9,8 @@ on:
   pull_request:
     paths:
       - .github/workflows/website.yml
+      - .markdownlinkcheck.json
+      - .markdownlint.yml
       - website/docs/**
 
 env:
