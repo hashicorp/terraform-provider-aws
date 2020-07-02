@@ -136,14 +136,10 @@ func resourceAwsRoute53Record() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: func(v interface{}, k string) (ws []string, es []error) {
-								value := v.(string)
-								if value != route53.ResourceRecordSetFailoverPrimary &&
-									value != route53.ResourceRecordSetFailoverSecondary {
-									es = append(es, fmt.Errorf("Failover policy type must be PRIMARY or SECONDARY"))
-								}
-								return
-							},
+							ValidateFunc: validation.StringInSlice([]string{
+								route53.ResourceRecordSetFailoverPrimary,
+								route53.ResourceRecordSetFailoverSecondary,
+							}, false),
 						},
 					},
 				},
@@ -681,7 +677,7 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 	err = conn.ListResourceRecordSetsPages(lopts, func(resp *route53.ListResourceRecordSetsOutput, lastPage bool) bool {
 		for _, recordSet := range resp.ResourceRecordSets {
 
-			responseName := strings.ToLower(cleanRecordName(*recordSet.Name))
+			responseName := strings.ToLower(cleanRecordName(aws.StringValue(recordSet.Name)))
 			responseType := strings.ToUpper(aws.StringValue(recordSet.Type))
 
 			if recordName != responseName {
