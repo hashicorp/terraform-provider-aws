@@ -425,6 +425,34 @@ func TestAccAWSEIP_PublicIpv4Pool_default(t *testing.T) {
 	})
 }
 
+func TestAccAWSEIP_NetworkBorderGroup(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfigNetworkBorderGroup,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					testAccCheckAWSEIPAttributes(&conf),
+					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
+					resource.TestCheckResourceAttr(resourceName, "network_border_group", "us-west-2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEIP_PublicIpv4Pool_custom(t *testing.T) {
 	if os.Getenv("AWS_EC2_EIP_PUBLIC_IPV4_POOL") == "" {
 		t.Skip("Environment variable AWS_EC2_EIP_PUBLIC_IPV4_POOL is not set")
@@ -1171,3 +1199,12 @@ resource "aws_eip" "test" {
 }
 `
 }
+
+const testAccAWSEIPConfigNetworkBorderGroup = `
+data "aws_region" current {}
+
+resource "aws_eip" "test" {
+  vpc  				   = "true"
+  network_border_group = data.aws_region.current.name
+}
+`
