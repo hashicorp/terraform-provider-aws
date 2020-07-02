@@ -18,6 +18,7 @@ BUG FIXES:
 * resource/aws_autoscaling_group: Prevent unexpected differences in `tags` for Terraform 0.11 and earlier with boolean `propagate_at_launch` values [GH-13912]
 * resource/aws_backup_selection: Correctly handle the associated backup plan being deleted outside Terraform [GH-13945]
 * resource/aws_db_instance: Prevent schema version 1 upgrade panic on missing state [GH-13928]
+* resource/aws_db_instance_role_association: Prevent immediate read after creation panic [GH-13927]
 * resource/aws_efs_mount_target: Ensure empty string (`""`) validation in `ip_address` argument continues to work for Terraform 0.11 support [GH-13958]
 * resource/aws_route53_record: Ensure old Route53 record is deleted when updating `name` argument [GH-11335]
 * resource/aws_route53_record: Prevent errors when `health_check_id` argument is configured and updating `set_identifier` or `type` arguments [GH-13012]
