@@ -21,6 +21,7 @@ The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See
 | Check | Description |
 |---|---|
 | [AWSR001](passes/AWSR001/README.md) | check for `fmt.Sprintf()` calls using `.amazonaws.com` domain suffix |
+| [AWSR002](passes/AWSR002/README.md) | check for `d.Set()` of `tags` attribute that should include `IgnoreConfig()` |
 
 ## Development and Testing
 
@@ -48,4 +49,4 @@ NOTE: Provider-specific analyzers should implement their own namespace outside `
     * Add `passes/NAME/NAME_test.go` which implements `analysistest.TestData()` and `analysistest.Run()`.
     * Add `passes/NAME/testdata/src/a` directory with Go source files that implement passing and failing code based on `analysistest` framework.
     * Since the [`analysistest` package](https://godoc.org/golang.org/x/tools/go/analysis/analysistest) does not support Go Modules currently, each analyzer that implements testing must add a symlink to the top level `vendor` directory in the `testdata/src/a` directory. e.g. `ln -s ../../../../../../vendor passes/NAME/testdata/src/a/vendor`.
-* Add new `Analyzer` in `main.go`.
+* Add new link to new analyzer in `README.md` (this file).
