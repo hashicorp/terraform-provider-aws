@@ -2,6 +2,9 @@
     "ignorePatterns": [
         {
             "pattern": "^http(s)?://(?!(docs\\.aws\\.amazon\\.com|github.com|(www\\.)?terraform\\.io))"
+        },
+        {
+            "pattern": "^https://github.com/[^/]+/[^/]+/(issues|labels|pull)"
         }
     ],
     "replacementPatterns": [
