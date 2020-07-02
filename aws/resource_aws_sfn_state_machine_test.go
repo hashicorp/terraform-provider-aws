@@ -225,7 +225,7 @@ func TestAccAWSSfnStateMachine_express_LoggingConfiguration(t *testing.T) {
 			{
 				Config: testAccAWSSfnStateMachineExpressConfigLogConfiguration1(sfn.StateMachineTypeExpress, name, sfn.LogLevelAll),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo"),
+					testAccCheckAWSSfnExists("aws_sfn_state_machine.foo", &sm),
 					resource.TestCheckResourceAttr("aws_sfn_state_machine.foo", "status", sfn.StateMachineStatusActive),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "name"),
 					resource.TestCheckResourceAttrSet("aws_sfn_state_machine.foo", "creation_date"),
