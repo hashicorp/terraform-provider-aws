@@ -268,6 +268,7 @@ func resourceAwsSsmMaintenanceWindowTask() *schema.Resource {
 												"cloudwatch_log_group_name": {
 													Type:     schema.TypeString,
 													Optional: true,
+													Computed: true,
 												},
 												"cloudwatch_output_enabled": {
 													Type:     schema.TypeBool,
