@@ -108,6 +108,12 @@ func resourceAwsEip() *schema.Resource {
 				Computed: true,
 			},
 
+			"network_border_group": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+
 			"tags": tagsSchema(),
 		},
 	}
@@ -132,6 +138,10 @@ func resourceAwsEipCreate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("customer_owned_ipv4_pool"); ok {
 		allocOpts.CustomerOwnedIpv4Pool = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_border_group"); ok {
+		allocOpts.NetworkBorderGroup = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] EIP create configuration: %#v", allocOpts)
@@ -274,6 +284,7 @@ func resourceAwsEipRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 	d.Set("customer_owned_ipv4_pool", address.CustomerOwnedIpv4Pool)
 	d.Set("customer_owned_ip", address.CustomerOwnedIp)
+	d.Set("network_border_group", address.NetworkBorderGroup)
 
 	// On import (domain never set, which it must've been if we created),
 	// set the 'vpc' attribute depending on if we're in a VPC.
