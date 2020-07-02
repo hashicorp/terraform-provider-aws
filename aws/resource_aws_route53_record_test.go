@@ -211,7 +211,7 @@ func TestAccAWSRoute53Record_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53ZoneExists("aws_route53_zone.test", &zone1),
 					testAccCheckRoute53RecordExists(resourceName, &record1),
-					testAccCheckRoute53RecordDisappears(&zone1, &record1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53Record(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -237,7 +237,7 @@ func TestAccAWSRoute53Record_disappears_MultipleRecords(t *testing.T) {
 					testAccCheckRoute53RecordExists("aws_route53_record.test.2", &record3),
 					testAccCheckRoute53RecordExists("aws_route53_record.test.3", &record4),
 					testAccCheckRoute53RecordExists("aws_route53_record.test.4", &record5),
-					testAccCheckRoute53RecordDisappears(&zone1, &record1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsRoute53Record(), "aws_route53_record.test.0"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1080,41 +1080,6 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 		}
 	}
 	return nil
-}
-
-func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).r53conn
-
-		input := &route53.ChangeResourceRecordSetsInput{
-			HostedZoneId: zone.HostedZone.Id,
-			ChangeBatch: &route53.ChangeBatch{
-				Comment: aws.String("Deleted by Terraform"),
-				Changes: []*route53.Change{
-					{
-						Action:            aws.String(route53.ChangeActionDelete),
-						ResourceRecordSet: resourceRecordSet,
-					},
-				},
-			},
-		}
-
-		respRaw, err := deleteRoute53RecordSet(conn, input)
-		if err != nil {
-			return fmt.Errorf("error deleting resource record set: %s", err)
-		}
-
-		changeInfo := respRaw.(*route53.ChangeResourceRecordSetsOutput).ChangeInfo
-		if changeInfo == nil {
-			return nil
-		}
-
-		if err := waitForRoute53RecordSetToSync(conn, cleanChangeID(aws.StringValue(changeInfo.Id))); err != nil {
-			return fmt.Errorf("error waiting for resource record set deletion: %s", err)
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.ResourceRecordSet) resource.TestCheckFunc {
