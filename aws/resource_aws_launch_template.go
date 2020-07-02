@@ -61,6 +61,7 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"update_default_version"},
+				ValidateFunc:  validation.IntAtLeast(1),
 			},
 
 			"update_default_version": {
@@ -587,11 +588,24 @@ func resourceAwsLaunchTemplate() *schema.Resource {
 			},
 		},
 
+		// Enable downstream updates for resources referencing schema attributes
+		// to prevent non-empty plans after "terraform apply"
 		CustomizeDiff: customdiff.Sequence(
+			customdiff.ComputedIf("default_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
+				for _, changedKey := range diff.GetChangedKeysPrefix("") {
+					switch changedKey {
+					case "name", "name_prefix", "description":
+						continue
+					default:
+						return diff.Get("update_default_version").(bool)
+					}
+				}
+				return false
+			}),
 			customdiff.ComputedIf("latest_version", func(diff *schema.ResourceDiff, meta interface{}) bool {
 				for _, changedKey := range diff.GetChangedKeysPrefix("") {
 					switch changedKey {
-					case "name", "name_prefix", "description", "default_version", "latest_version":
+					case "name", "name_prefix", "description", "default_version", "update_default_version":
 						continue
 					default:
 						return true
@@ -800,60 +814,48 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	launchTemplateData, err := buildLaunchTemplateData(d)
-	if err != nil {
-		return err
-	}
+	version := strconv.Itoa(d.Get("default_version").(int))
 
-	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
-		LaunchTemplateId: aws.String(d.Id()),
-		Versions:         aws.StringSlice([]string{"$Latest"}),
-	})
-	if err != nil {
-		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template(%s): %w", d.Id(), err)
-	}
-	if dltv == nil || len(dltv.LaunchTemplateVersions) == 0 {
-		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template(%s): empty output", d.Id())
-	}
+	if d.HasChanges(updateKeys...) {
+		launchTemplateData, err := buildLaunchTemplateData(d)
+		if err != nil {
+			return err
+		}
 
-	// Create new version only if content has changed since previous version
-	var defaultVersion string
-	description := d.Get("description").(string)
-	latestVersionDescription := aws.StringValue(dltv.LaunchTemplateVersions[0].VersionDescription)
-
-	if (launchTemplateData.String() != dltv.LaunchTemplateVersions[0].LaunchTemplateData.String()) || (description != latestVersionDescription) {
 		launchTemplateVersionOpts := &ec2.CreateLaunchTemplateVersionInput{
 			ClientToken:        aws.String(resource.UniqueId()),
 			LaunchTemplateId:   aws.String(d.Id()),
 			LaunchTemplateData: launchTemplateData,
 		}
 
-		if description != "" {
-			launchTemplateVersionOpts.VersionDescription = aws.String(description)
+		if v, ok := d.GetOk("description"); ok {
+			launchTemplateVersionOpts.VersionDescription = aws.String(v.(string))
 		}
 
 		output, err := conn.CreateLaunchTemplateVersion(launchTemplateVersionOpts)
 		if err != nil {
-			return fmt.Errorf("Error creating new Launch Template Version for Launch Template(%s): %w", d.Id(), err)
+			return fmt.Errorf("error creating Launch Template (%s) Version: %w", d.Id(), err)
 		}
 
-		if v, ok := d.GetOk("update_default_version"); ok && v.(bool) {
-			defaultVersion = strconv.FormatInt(aws.Int64Value(output.LaunchTemplateVersion.VersionNumber), 10)
+		if output == nil || output.LaunchTemplateVersion == nil || output.LaunchTemplateVersion.VersionNumber == nil {
+			return fmt.Errorf("error creating Launch Template (%s) Version: empty output", d.Id())
 		}
+
+		version = strconv.FormatInt(aws.Int64Value(output.LaunchTemplateVersion.VersionNumber), 10)
+
 	}
 
-	if d.HasChange("default_version") {
-		defaultVersion = strconv.Itoa(d.Get("default_version").(int))
-	}
-
-	if defaultVersion != "" {
+	// Update default version iff update_default_version set to true and the version has changed
+	// OR if default_version explicitly changed
+	updateDefaultVersion := d.Get("update_default_version").(bool) && (version != strconv.Itoa(d.Get("default_version").(int)))
+	if updateDefaultVersion || d.HasChange("default_version") {
 		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
 			LaunchTemplateId: aws.String(d.Id()),
-			DefaultVersion:   aws.String(defaultVersion),
+			DefaultVersion:   aws.String(version),
 		}
-		_, err = conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
+		_, err := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
 		if err != nil {
-			return fmt.Errorf("Error updating launch template (%s): %w", d.Id(), err)
+			return fmt.Errorf("error modifying Launch Template (%s): %w", d.Id(), err)
 		}
 	}
 
@@ -1757,4 +1759,34 @@ func readPlacementFromConfig(p map[string]interface{}) *ec2.LaunchTemplatePlacem
 	}
 
 	return placement
+}
+
+var updateKeys = []string{
+	"block_device_mappings",
+	"capacity_reservation_specification",
+	"cpu_options",
+	"credit_specification",
+	"description",
+	"disable_api_termination",
+	"ebs_optimized",
+	"elastic_gpu_specifications",
+	"elastic_inference_accelerator",
+	"hibernation_options",
+	"iam_instance_profile",
+	"image_id",
+	"instance_initiated_shutdown_behavior",
+	"instance_market_options",
+	"instance_type",
+	"kernel_id",
+	"key_name",
+	"license_specification",
+	"metadata_options",
+	"monitoring",
+	"network_interfaces",
+	"placement",
+	"ram_disk_id",
+	"security_group_names",
+	"tag_specifications",
+	"user_data",
+	"vpc_security_group_ids",
 }
