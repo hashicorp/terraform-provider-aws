@@ -247,7 +247,7 @@ jobs:
       - name: goreleaser build
         uses: goreleaser/goreleaser-action@v2
         with:
-          args: build --snapshot
+          args: build -p 1 --snapshot --timeout 1h
 
   tfproviderdocs:
     needs: [terraform_providers_schema]
