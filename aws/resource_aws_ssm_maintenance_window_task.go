@@ -633,7 +633,7 @@ func flattenAwsSsmTaskInvocationCommonParameters(parameters map[string][]*string
 }
 
 func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Registering SSM Maintenance Window Task")
 
@@ -663,7 +663,7 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 		params.TaskInvocationParameters = expandAwsSsmTaskInvocationParameters(v.([]interface{}))
 	}
 
-	resp, err := ssmconn.RegisterTaskWithMaintenanceWindow(params)
+	resp, err := conn.RegisterTaskWithMaintenanceWindow(params)
 	if err != nil {
 		return err
 	}
@@ -674,14 +674,14 @@ func resourceAwsSsmMaintenanceWindowTaskCreate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.GetMaintenanceWindowTaskInput{
 		WindowId:     aws.String(windowID),
 		WindowTaskId: aws.String(d.Id()),
 	}
-	resp, err := ssmconn.GetMaintenanceWindowTask(params)
+	resp, err := conn.GetMaintenanceWindowTask(params)
 	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
@@ -715,7 +715,7 @@ func resourceAwsSsmMaintenanceWindowTaskRead(d *schema.ResourceData, meta interf
 }
 
 func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 	windowID := d.Get("window_id").(string)
 
 	params := &ssm.UpdateMaintenanceWindowTaskInput{
@@ -745,7 +745,7 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 		params.TaskInvocationParameters = expandAwsSsmTaskInvocationParameters(v.([]interface{}))
 	}
 
-	_, err := ssmconn.UpdateMaintenanceWindowTask(params)
+	_, err := conn.UpdateMaintenanceWindowTask(params)
 	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
 		log.Printf("[WARN] Maintenance Window (%s) Task (%s) not found, removing from state", windowID, d.Id())
 		d.SetId("")
@@ -760,7 +760,7 @@ func resourceAwsSsmMaintenanceWindowTaskUpdate(d *schema.ResourceData, meta inte
 }
 
 func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	ssmconn := meta.(*AWSClient).ssmconn
+	conn := meta.(*AWSClient).ssmconn
 
 	log.Printf("[INFO] Deregistering SSM Maintenance Window Task: %s", d.Id())
 
@@ -769,7 +769,7 @@ func resourceAwsSsmMaintenanceWindowTaskDelete(d *schema.ResourceData, meta inte
 		WindowTaskId: aws.String(d.Id()),
 	}
 
-	_, err := ssmconn.DeregisterTaskFromMaintenanceWindow(params)
+	_, err := conn.DeregisterTaskFromMaintenanceWindow(params)
 	if isAWSErr(err, ssm.ErrCodeDoesNotExistException, "") {
 		return nil
 	}

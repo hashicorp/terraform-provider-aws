@@ -206,7 +206,7 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParametersCloudW
 		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(name),
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(name, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", serviceRoleResourceName, "arn"),
@@ -220,6 +220,25 @@ func TestAccAWSSSMMaintenanceWindowTask_TaskInvocationRunCommandParametersCloudW
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSSSMMaintenanceWindowTaskImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(name, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", "false"),
+				),
+			},
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(name, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &task),
+					resource.TestCheckResourceAttrPair(resourceName, "service_role_arn", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.service_role_arn", serviceRoleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_log_group_name", cwResourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "task_invocation_parameters.0.run_command_parameters.0.cloudwatch_config.0.cloudwatch_output_enabled", "true"),
+				),
 			},
 		},
 	})
@@ -272,6 +291,28 @@ func TestAccAWSSSMMaintenanceWindowTask_emptyNotificationConfig(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMMaintenanceWindowTask_disappears(t *testing.T) {
+	var before ssm.MaintenanceWindowTask
+	resourceName := "aws_ssm_maintenance_window_task.test"
+
+	name := acctest.RandString(10)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMMaintenanceWindowTaskDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMMaintenanceWindowTaskBasicConfig(name),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMMaintenanceWindowTaskExists(resourceName, &before),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSsmMaintenanceWindowTask(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAwsSsmWindowsTaskNotRecreated(t *testing.T,
 	before, after *ssm.MaintenanceWindowTask) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -313,7 +354,7 @@ func testAccCheckAWSSSMMaintenanceWindowTaskExists(n string, task *ssm.Maintenan
 		}
 
 		for _, i := range resp.Tasks {
-			if *i.WindowTaskId == rs.Primary.ID {
+			if aws.StringValue(i.WindowTaskId) == rs.Primary.ID {
 				*task = *i
 				return nil
 			}
@@ -774,7 +815,7 @@ resource "aws_ssm_maintenance_window_task" "test" {
 `, rName, comment, timeoutSeconds)
 }
 
-func testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(rName string) string {
+func testAccAWSSSMMaintenanceWindowTaskRunCommandCloudWatchConfig(rName string, enabled bool) string {
 	return fmt.Sprintf(testAccAWSSSMMaintenanceWindowTaskConfigBase(rName)+`
 resource "aws_cloudwatch_log_group" "test" {
   name = %[1]q
@@ -803,12 +844,12 @@ resource "aws_ssm_maintenance_window_task" "test" {
       }
       cloudwatch_config {
        cloudwatch_log_group_name = "${aws_cloudwatch_log_group.test.name}"
-       cloudwatch_output_enabled = true
+       cloudwatch_output_enabled = %[2]t
       }
     }
   }
 }
-`, rName)
+`, rName, enabled)
 }
 
 func testAccAWSSSMMaintenanceWindowTaskStepFunctionConfig(rName string) string {
