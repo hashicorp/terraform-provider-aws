@@ -10,6 +10,10 @@ on:
       - .github/workflows/documentation.yml
       - docs/**
 
+env:
+  GO_VERSION: "1.14"
+  GO111MODULE: on
+
 jobs:
   markdown-link-check:
     runs-on: ubuntu-latest
