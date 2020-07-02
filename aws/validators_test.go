@@ -2727,6 +2727,37 @@ func TestValidateAmazonSideAsn(t *testing.T) {
 	}
 }
 
+func TestValidate4ByteAsn(t *testing.T) {
+	validAsns := []string{
+		"0",
+		"1",
+		"65534",
+		"65535",
+		"4294967294",
+		"4294967295",
+	}
+	for _, v := range validAsns {
+		_, errors := validate4ByteAsn(v, "bgp_asn")
+		if len(errors) != 0 {
+			t.Fatalf("%q should be a valid ASN: %q", v, errors)
+		}
+	}
+
+	invalidAsns := []string{
+		"-1",
+		"ABCDEFG",
+		"",
+		"4294967296",
+		"9999999999",
+	}
+	for _, v := range invalidAsns {
+		_, errors := validate4ByteAsn(v, "bgp_asn")
+		if len(errors) == 0 {
+			t.Fatalf("%q should be an invalid ASN", v)
+		}
+	}
+}
+
 func TestValidateLaunchTemplateName(t *testing.T) {
 	validNames := []string{
 		"fooBAR123",
