@@ -441,7 +441,7 @@ func TestAccAWSEIP_NetworkBorderGroup(t *testing.T) {
 					testAccCheckAWSEIPExists(resourceName, &conf),
 					testAccCheckAWSEIPAttributes(&conf),
 					resource.TestCheckResourceAttr(resourceName, "public_ipv4_pool", "amazon"),
-					resource.TestCheckResourceAttr(resourceName, "network_border_group", "us-west-2"),
+					resource.TestCheckResourceAttr(resourceName, "network_border_group", testAccGetRegion()),
 				),
 			},
 			{
