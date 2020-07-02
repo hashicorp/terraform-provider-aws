@@ -30,7 +30,7 @@ func resourceAwsCustomerGateway() *schema.Resource {
 				Type:         schema.TypeInt,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 65534),
+				ValidateFunc: validation.IntBetween(0, 4294967295),
 			},
 
 			"ip_address": {
