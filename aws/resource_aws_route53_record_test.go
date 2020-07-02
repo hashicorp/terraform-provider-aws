@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -9,8 +10,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
-
-	"regexp"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
@@ -1076,7 +1075,7 @@ func testAccCheckRoute53RecordDestroy(s *terraform.State) error {
 			return nil
 		}
 		rec := resp.ResourceRecordSets[0]
-		if FQDN(*rec.Name) == FQDN(name) && *rec.Type == rType {
+		if FQDN(aws.StringValue(rec.Name)) == FQDN(name) && aws.StringValue(rec.Type) == rType {
 			return fmt.Errorf("Record still exists: %#v", rec)
 		}
 	}
@@ -1110,7 +1109,7 @@ func testAccCheckRoute53RecordDisappears(zone *route53.GetHostedZoneOutput, reso
 			return nil
 		}
 
-		if err := waitForRoute53RecordSetToSync(conn, cleanChangeID(*changeInfo.Id)); err != nil {
+		if err := waitForRoute53RecordSetToSync(conn, cleanChangeID(aws.StringValue(changeInfo.Id))); err != nil {
 			return fmt.Errorf("error waiting for resource record set deletion: %s", err)
 		}
 
@@ -1153,8 +1152,8 @@ func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.Resour
 
 		// rec := resp.ResourceRecordSets[0]
 		for _, rec := range resp.ResourceRecordSets {
-			recName := cleanRecordName(*rec.Name)
-			if FQDN(strings.ToLower(recName)) == FQDN(strings.ToLower(en)) && *rec.Type == rType {
+			recName := cleanRecordName(aws.StringValue(rec.Name))
+			if FQDN(strings.ToLower(recName)) == FQDN(strings.ToLower(en)) && aws.StringValue(rec.Type) == rType {
 				*resourceRecordSet = *rec
 
 				return nil
@@ -1186,8 +1185,8 @@ func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName s
 
 		found := false
 		for _, rec := range resp.ResourceRecordSets {
-			recName := cleanRecordName(*rec.Name)
-			if FQDN(strings.ToLower(recName)) == FQDN(strings.ToLower(en)) && *rec.Type == recordType {
+			recName := cleanRecordName(aws.StringValue(rec.Name))
+			if FQDN(strings.ToLower(recName)) == FQDN(strings.ToLower(en)) && aws.StringValue(rec.Type) == recordType {
 				found = true
 				break
 			}
