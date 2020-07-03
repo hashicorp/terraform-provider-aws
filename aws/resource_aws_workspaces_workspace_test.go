@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
@@ -53,23 +52,20 @@ func testSweepWorkspaces(region string) error {
 }
 
 func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
-	var v workspaces.Workspace
-	rName := acctest.RandString(8)
-
-	resourceName := "aws_workspaces_workspace.test"
 	directoryResourceName := "aws_workspaces_directory.test"
 	bundleDataSourceName := "data.aws_workspaces_bundle.test"
+	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
-				Config:  testAccWorkspacesWorkspaceConfig(rName),
+				Config:  testAccWorkspacesWorkspaceConfig(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v),
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", bundleDataSourceName, "id"),
 					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
@@ -95,21 +91,18 @@ func TestAccAwsWorkspacesWorkspace_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
-	var v1, v2, v3 workspaces.Workspace
-	rName := acctest.RandString(8)
-
+func TestAccAwsWorkspacesWorkspace_Tags(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspacesWorkspaceConfig_TagsA(rName),
+				Config: testAccWorkspacesWorkspaceConfig_TagsA(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v1),
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", "1"),
@@ -121,18 +114,18 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_TagsB(rName),
+				Config: testAccWorkspacesWorkspaceConfig_TagsB(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v2),
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Beta", "2"),
 				),
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_TagsC(rName),
+				Config: testAccWorkspacesWorkspaceConfig_TagsC(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v3),
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.TerraformProviderAwsTest", "true"),
 				),
@@ -141,22 +134,19 @@ func TestAccAwsWorkspacesWorkspace_tags(t *testing.T) {
 	})
 }
 
-func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
-	var v1, v2, v3 workspaces.Workspace
-	rName := acctest.RandString(8)
-
+func TestAccAwsWorkspacesWorkspace_WorkspaceProperties(t *testing.T) {
 	resourceName := "aws_workspaces_workspace.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckHasIAMRole(t, "workspaces_DefaultRole") },
+	resource.Test(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
-				Config:  testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName),
+				Config:  testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v1),
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
@@ -171,9 +161,9 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName),
+				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v2),
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
@@ -183,9 +173,9 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName),
+				Config: testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesWorkspaceExists(resourceName, &v3),
+					testAccCheckAwsWorkspacesWorkspaceExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
@@ -199,15 +189,13 @@ func TestAccAwsWorkspacesWorkspace_workspaceProperties(t *testing.T) {
 }
 
 func TestAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
-	rName := acctest.RandString(8)
-
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName),
+				Config:      testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(),
 				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected workspace_properties.0.root_volume_size_gib to be one of [80], got 90")),
 			},
 		},
@@ -215,15 +203,13 @@ func TestAccAwsWorkspacesWorkspace_validateRootVolumeSize(t *testing.T) {
 }
 
 func TestAccAwsWorkspacesWorkspace_validateUserVolumeSize(t *testing.T) {
-	rName := acctest.RandString(8)
-
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsWorkspacesWorkspaceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName),
+				Config:      testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(),
 				ExpectError: regexp.MustCompile(regexp.QuoteMeta("workspace_properties.0.user_volume_size_gib to be one of [10 50], got 60")),
 			},
 		},
@@ -258,7 +244,7 @@ func testAccCheckAwsWorkspacesWorkspaceDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckAwsWorkspacesWorkspaceExists(n string, v *workspaces.Workspace) resource.TestCheckFunc {
+func testAccCheckAwsWorkspacesWorkspaceExists(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -267,38 +253,33 @@ func testAccCheckAwsWorkspacesWorkspaceExists(n string, v *workspaces.Workspace)
 
 		conn := testAccProvider.Meta().(*AWSClient).workspacesconn
 
-		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
+		_, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
 			WorkspaceIds: []*string{aws.String(rs.Primary.ID)},
 		})
 		if err != nil {
 			return err
 		}
 
-		if *output.Workspaces[0].WorkspaceId == rs.Primary.ID {
-			*v = *output.Workspaces[0]
-			return nil
-		}
-
-		return fmt.Errorf("workspace %q not found", rs.Primary.ID)
+		return nil
 	}
 }
 
-func testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName string) string {
+func testAccAwsWorkspacesWorkspaceConfig_Prerequisites() string {
 	return composeConfig(
-		testAccAwsWorkspacesDirectoryConfig_Prerequisites(rName),
+		testAccAwsWorkspacesDirectoryConfig_Prerequisites(""),
 		fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = "wsb-bh8rsxt14" # Value with Windows 10 (English)
 }
 
 resource "aws_workspaces_directory" "test" {
-  directory_id = "${aws_directory_service_directory.main.id}"
+ directory_id = "${aws_directory_service_directory.main.id}"
 }
 `))
 }
 
-func testAccWorkspacesWorkspaceConfig(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -306,12 +287,18 @@ resource "aws_workspaces_workspace" "test" {
   # NOTE: WorkSpaces API doesn't allow creating users in the directory.
   # However, "Administrator"" user is always present in a bare directory.
   user_name = "Administrator"
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_TagsA(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_TagsA() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id  = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -324,12 +311,18 @@ resource "aws_workspaces_workspace" "test" {
     TerraformProviderAwsTest = true
     Alpha                    = 1
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_TagsB(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_TagsB() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -342,12 +335,18 @@ resource "aws_workspaces_workspace" "test" {
     TerraformProviderAwsTest = true
     Beta                     = 2
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_TagsC(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_TagsC() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -359,12 +358,18 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesA() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -382,12 +387,18 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesB() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -404,12 +415,18 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_WorkspacePropertiesC() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -420,12 +437,18 @@ resource "aws_workspaces_workspace" "test" {
 
   workspace_properties {
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_validateRootVolumeSize() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -442,12 +465,18 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }
 
-func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize(rName string) string {
-	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites(rName) + fmt.Sprintf(`
+func testAccWorkspacesWorkspaceConfig_validateUserVolumeSize() string {
+	return testAccAwsWorkspacesWorkspaceConfig_Prerequisites() + fmt.Sprintf(`
 resource "aws_workspaces_workspace" "test" {
   bundle_id    = "${data.aws_workspaces_bundle.test.id}"
   directory_id = "${aws_workspaces_directory.test.id}"
@@ -464,6 +493,12 @@ resource "aws_workspaces_workspace" "test" {
   tags = {
     TerraformProviderAwsTest = true
   }
+
+  depends_on = [
+	# The role "workspaces_DefaultRole" requires the policy arn:aws:iam::aws:policy/AmazonWorkSpacesServiceAccess
+	# to create and delete the ENI that the Workspaces service creates for the Workspace
+    aws_iam_role_policy_attachment.workspaces-default-service-access,
+  ]
 }
 `)
 }

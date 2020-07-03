@@ -95,37 +95,43 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							Computed: true,
-							// Ideally we'd want to detect drift detection,
-							// but a DiffSuppressFunc here does not behave nicely
-							// for detecting missing configuration blocks
+							// Ignore missing configuration block
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if old == "1" && new == "0" {
+									return true
+								}
+								return false
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									// These fields are returned from calls to the API
-									// even if not provided at input time and can be omitted in requests;
-									// thus, to prevent non-empty plans, we set these
-									// to Computed and remove Defaults
 									"on_demand_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "prioritized",
+										// Reference: https://github.com/hashicorp/terraform/issues/18027
+										// ValidateFunc: validation.StringInSlice([]string{
+										// 	"prioritized",
+										// }, false),
 									},
 									"on_demand_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Computed:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"on_demand_percentage_above_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Computed:     true,
+										Default:      100,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
 									"spot_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Computed: true,
+										Default:  "lowest-price",
+										// Reference: https://github.com/hashicorp/terraform/issues/18027
+										// ValidateFunc: validation.StringInSlice([]string{
+										// 	"lowest-price",
+										// }, false),
 									},
 									"spot_instance_pools": {
 										Type:         schema.TypeInt,
@@ -390,7 +396,7 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			"tag": autoscalingTagSchema(),
 
 			"tags": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeMap,
@@ -542,7 +548,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		tags, err := autoscalingTagsFromList(v.(*schema.Set).List(), resourceID)
+		tags, err := autoscalingTagsFromList(v.([]interface{}), resourceID)
 		if err != nil {
 			return err
 		}
@@ -728,7 +734,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
 		tags := map[string]struct{}{}
-		for _, tag := range v.(*schema.Set).List() {
+		for _, tag := range v.([]interface{}) {
 			attr, ok := tag.(map[string]interface{})
 			if !ok {
 				continue

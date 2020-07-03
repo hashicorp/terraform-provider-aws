@@ -82,11 +82,6 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 					},
 				},
 			},
@@ -97,12 +92,6 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"connect_ips": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
 						"customer_username": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -112,11 +101,8 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							ForceNew: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPAddress,
-							},
-							Set: schema.HashString,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Set:      schema.HashString,
 						},
 						"subnet_ids": {
 							Type:     schema.TypeSet,
@@ -129,11 +115,6 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
-						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -166,7 +147,6 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 					directoryservice.DirectoryTypeAdconnector,
 					directoryservice.DirectoryTypeMicrosoftAd,
 					directoryservice.DirectoryTypeSimpleAd,
-					directoryservice.DirectoryTypeSharedMicrosoftAd,
 				}, false),
 			},
 			"edition": {
@@ -178,56 +158,6 @@ func resourceAwsDirectoryServiceDirectory() *schema.Resource {
 					directoryservice.DirectoryEditionEnterprise,
 					directoryservice.DirectoryEditionStandard,
 				}, false),
-			},
-			"radius_settings": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"protocol": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								directoryservice.RadiusAuthenticationProtocolPap,
-								directoryservice.RadiusAuthenticationProtocolChap,
-								directoryservice.RadiusAuthenticationProtocolMsChapv1,
-								directoryservice.RadiusAuthenticationProtocolMsChapv2,
-							}, false),
-						},
-						"label": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"port": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"retries": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"servers": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
-						"timeout": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"secret": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-						},
-						"same_username": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-					},
-				},
 			},
 		},
 	}
@@ -403,52 +333,6 @@ func enableDirectoryServiceSso(dsconn *directoryservice.DirectoryService, d *sch
 	return nil
 }
 
-func enableRadiusMfa(dsconn *directoryservice.DirectoryService, d *schema.ResourceData) error {
-	if v, ok := d.GetOk("radius_settings"); ok {
-		directoryType := d.Get("type").(string)
-
-		if directoryType == directoryservice.DirectoryTypeSimpleAd {
-			return fmt.Errorf("Multi-factor authentication is not available for Simple AD.")
-		}
-
-		settings := v.([]interface{})
-		s := settings[0].(map[string]interface{})
-
-		var radiusServers []*string
-		for _, id := range s["servers"].(*schema.Set).List() {
-			radiusServers = append(radiusServers, aws.String(id.(string)))
-		}
-
-		input := directoryservice.EnableRadiusInput{
-			DirectoryId: aws.String(d.Id()),
-			RadiusSettings: &directoryservice.RadiusSettings{
-				AuthenticationProtocol: aws.String(s["protocol"].(string)),
-				DisplayLabel:           aws.String(s["label"].(string)),
-				RadiusPort:             aws.Int64(int64(s["port"].(int))),
-				RadiusRetries:          aws.Int64(int64(s["retries"].(int))),
-				RadiusServers:          radiusServers,
-				RadiusTimeout:          aws.Int64(int64(s["timeout"].(int))),
-				SharedSecret:           aws.String(s["secret"].(string)),
-				UseSameUsername:        aws.Bool(s["same_username"].(bool)),
-			},
-		}
-
-		log.Printf("[DEBUG] Enabling Radius MFA for DS directory %q", d.Id())
-		if _, err := dsconn.EnableRadius(&input); err != nil {
-			return fmt.Errorf("Error Enabling Radius MFA for DS directory %s: %s", d.Id(), err)
-		}
-	} else {
-		log.Printf("[DEBUG] Disabling Radius MFA for DS directory %q", d.Id())
-		if _, err := dsconn.DisableRadius(&directoryservice.DisableRadiusInput{
-			DirectoryId: aws.String(d.Id()),
-		}); err != nil {
-			return fmt.Errorf("Error Disabling Radius MFA for DS directory %s: %s", d.Id(), err)
-		}
-	}
-
-	return nil
-}
-
 func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta interface{}) error {
 	dsconn := meta.(*AWSClient).dsconn
 
@@ -523,12 +407,6 @@ func resourceAwsDirectoryServiceDirectoryCreate(d *schema.ResourceData, meta int
 		}
 	}
 
-	if d.HasChange("radius_settings") {
-		if err := enableRadiusMfa(dsconn, d); err != nil {
-			return err
-		}
-	}
-
 	return resourceAwsDirectoryServiceDirectoryRead(d, meta)
 }
 
@@ -537,12 +415,6 @@ func resourceAwsDirectoryServiceDirectoryUpdate(d *schema.ResourceData, meta int
 
 	if d.HasChange("enable_sso") {
 		if err := enableDirectoryServiceSso(dsconn, d); err != nil {
-			return err
-		}
-	}
-
-	if d.HasChange("radius_settings") {
-		if err := enableRadiusMfa(dsconn, d); err != nil {
 			return err
 		}
 	}
@@ -585,36 +457,18 @@ func resourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta inter
 	d.Set("description", dir.Description)
 
 	if *dir.Type == directoryservice.DirectoryTypeAdconnector {
-		d.Set("dns_ip_addresses", flattenStringSet(dir.ConnectSettings.ConnectIps))
+		d.Set("dns_ip_addresses", schema.NewSet(schema.HashString, flattenStringList(dir.ConnectSettings.ConnectIps)))
 	} else {
-		d.Set("dns_ip_addresses", flattenStringSet(dir.DnsIpAddrs))
+		d.Set("dns_ip_addresses", schema.NewSet(schema.HashString, flattenStringList(dir.DnsIpAddrs)))
 	}
 	d.Set("name", dir.Name)
 	d.Set("short_name", dir.ShortName)
 	d.Set("size", dir.Size)
 	d.Set("edition", dir.Edition)
 	d.Set("type", dir.Type)
-
-	if err := d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings)); err != nil {
-		return fmt.Errorf("error setting VPC settings: %s", err)
-	}
-
-	if err := d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
-		return fmt.Errorf("error setting connect settings: %s", err)
-	}
-
+	d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings))
+	d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings))
 	d.Set("enable_sso", dir.SsoEnabled)
-
-	radiusSecret := aws.String("")
-	if v, ok := d.GetOk("radius_settings"); ok && len(v.([]interface{})) > 0 {
-		settings := v.([]interface{})
-		s := settings[0].(map[string]interface{})
-		radiusSecret = aws.String(s["secret"].(string))
-	}
-
-	if err := d.Set("radius_settings", flattenDSRadiusSettings(dir.RadiusSettings, radiusSecret)); err != nil {
-		return fmt.Errorf("error setting radius_settings: %s", err)
-	}
 
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {
 		d.Set("security_group_id", aws.StringValue(dir.ConnectSettings.SecurityGroupId))

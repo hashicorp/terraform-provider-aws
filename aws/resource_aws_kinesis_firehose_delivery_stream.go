@@ -74,7 +74,7 @@ func s3ConfigurationSchema() *schema.Schema {
 				"compression_format": {
 					Type:     schema.TypeString,
 					Optional: true,
-					Default:  firehose.CompressionFormatUncompressed,
+					Default:  "UNCOMPRESSED",
 				},
 
 				"kms_key_arn": {
@@ -124,18 +124,26 @@ func processingConfigurationSchema() *schema.Schema {
 										"parameter_name": {
 											Type:     schema.TypeString,
 											Required: true,
-											ValidateFunc: validation.StringInSlice([]string{
-												firehose.ProcessorParameterNameLambdaArn,
-												firehose.ProcessorParameterNameNumberOfRetries,
-												firehose.ProcessorParameterNameRoleArn,
-												firehose.ProcessorParameterNameBufferSizeInMbs,
-												firehose.ProcessorParameterNameBufferIntervalInSeconds,
-											}, false),
+											ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+												value := v.(string)
+												if value != "LambdaArn" && value != "NumberOfRetries" && value != "RoleArn" && value != "BufferSizeInMBs" && value != "BufferIntervalInSeconds" {
+													errors = append(errors, fmt.Errorf(
+														"%q must be one of 'LambdaArn', 'NumberOfRetries', 'RoleArn', 'BufferSizeInMBs', 'BufferIntervalInSeconds'", k))
+												}
+												return
+											},
 										},
 										"parameter_value": {
-											Type:         schema.TypeString,
-											Required:     true,
-											ValidateFunc: validation.StringLenBetween(1, 512),
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+												value := v.(string)
+												if len(value) < 1 || len(value) > 512 {
+													errors = append(errors, fmt.Errorf(
+														"%q must be at least one character long and at most 512 characters long", k))
+												}
+												return
+											},
 										},
 									},
 								},
@@ -143,9 +151,14 @@ func processingConfigurationSchema() *schema.Schema {
 							"type": {
 								Type:     schema.TypeString,
 								Required: true,
-								ValidateFunc: validation.StringInSlice([]string{
-									firehose.ProcessorTypeLambda,
-								}, false),
+								ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+									value := v.(string)
+									if value != "Lambda" {
+										errors = append(errors, fmt.Errorf(
+											"%q must be 'Lambda'", k))
+									}
+									return
+								},
 							},
 						},
 					},
@@ -571,19 +584,6 @@ func flattenProcessingConfiguration(pc *firehose.ProcessingConfiguration, roleAr
 	return processingConfiguration
 }
 
-func flattenFirehoseKinesisSourceConfiguration(desc *firehose.KinesisStreamSourceDescription) []interface{} {
-	if desc == nil {
-		return []interface{}{}
-	}
-
-	mDesc := map[string]interface{}{
-		"kinesis_stream_arn": aws.StringValue(desc.KinesisStreamARN),
-		"role_arn":           aws.StringValue(desc.RoleARN),
-	}
-
-	return []interface{}{mDesc}
-}
-
 func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.DeliveryStreamDescription) error {
 	d.Set("version_id", s.VersionId)
 	d.Set("arn", s.DeliveryStreamARN)
@@ -597,12 +597,6 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 	}
 	if err := d.Set("server_side_encryption", []map[string]interface{}{sseOptions}); err != nil {
 		return fmt.Errorf("error setting server_side_encryption: %s", err)
-	}
-
-	if s.Source != nil {
-		if err := d.Set("kinesis_source_configuration", flattenFirehoseKinesisSourceConfiguration(s.Source.KinesisStreamSourceDescription)); err != nil {
-			return fmt.Errorf("error setting kinesis_source_configuration: %s", err)
-		}
 	}
 
 	if len(s.Destinations) > 0 {
@@ -645,7 +639,6 @@ func flattenKinesisFirehoseDeliveryStream(d *schema.ResourceData, s *firehose.De
 		}
 		d.Set("destination_id", destination.DestinationId)
 	}
-
 	return nil
 }
 
@@ -676,10 +669,17 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 		MigrateState:  resourceAwsKinesisFirehoseMigrateState,
 		Schema: map[string]*schema.Schema{
 			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 64),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(string)
+					if len(value) > 64 {
+						errors = append(errors, fmt.Errorf(
+							"%q cannot be longer than 64 characters", k))
+					}
+					return
+				},
 			},
 
 			"tags": tagsSchema(),
@@ -734,13 +734,14 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 					value := v.(string)
 					return strings.ToLower(value)
 				},
-				ValidateFunc: validation.StringInSlice([]string{
-					"elasticsearch",
-					"extended_s3",
-					"redshift",
-					"s3",
-					"splunk",
-				}, false),
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					value := v.(string)
+					if value != "s3" && value != "extended_s3" && value != "redshift" && value != "elasticsearch" && value != "splunk" {
+						errors = append(errors, fmt.Errorf(
+							"%q must be one of 's3', 'extended_s3', 'redshift', 'elasticsearch', 'splunk'", k))
+					}
+					return
+				},
 			},
 
 			"s3_configuration": s3ConfigurationSchema(),
@@ -772,7 +773,7 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"compression_format": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  firehose.CompressionFormatUncompressed,
+							Default:  "UNCOMPRESSED",
 						},
 
 						"data_format_conversion_configuration": {
@@ -1057,11 +1058,15 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"s3_backup_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  firehose.S3BackupModeDisabled,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.S3BackupModeDisabled,
-								firehose.S3BackupModeEnabled,
-							}, false),
+							Default:  "Disabled",
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								if value != "Disabled" && value != "Enabled" {
+									errors = append(errors, fmt.Errorf(
+										"%q must be one of 'Disabled', 'Enabled'", k))
+								}
+								return
+							},
 						},
 
 						"s3_backup_configuration": s3ConfigurationSchema(),
@@ -1105,11 +1110,15 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"s3_backup_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  firehose.S3BackupModeDisabled,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.S3BackupModeDisabled,
-								firehose.S3BackupModeEnabled,
-							}, false),
+							Default:  "Disabled",
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								if value != "Disabled" && value != "Enabled" {
+									errors = append(errors, fmt.Errorf(
+										"%q must be one of 'Disabled', 'Enabled'", k))
+								}
+								return
+							},
 						},
 
 						"s3_backup_configuration": s3ConfigurationSchema(),
@@ -1195,14 +1204,15 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 						"index_rotation_period": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  firehose.ElasticsearchIndexRotationPeriodOneDay,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.ElasticsearchIndexRotationPeriodNoRotation,
-								firehose.ElasticsearchIndexRotationPeriodOneHour,
-								firehose.ElasticsearchIndexRotationPeriodOneDay,
-								firehose.ElasticsearchIndexRotationPeriodOneWeek,
-								firehose.ElasticsearchIndexRotationPeriodOneMonth,
-							}, false),
+							Default:  "OneDay",
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								if value != "NoRotation" && value != "OneHour" && value != "OneDay" && value != "OneWeek" && value != "OneMonth" {
+									errors = append(errors, fmt.Errorf(
+										"%q must be one of 'NoRotation', 'OneHour', 'OneDay', 'OneWeek', 'OneMonth'", k))
+								}
+								return
+							},
 						},
 
 						"retry_duration": {
@@ -1228,11 +1238,15 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:     schema.TypeString,
 							ForceNew: true,
 							Optional: true,
-							Default:  firehose.ElasticsearchS3BackupModeFailedDocumentsOnly,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.ElasticsearchS3BackupModeFailedDocumentsOnly,
-								firehose.ElasticsearchS3BackupModeAllDocuments,
-							}, false),
+							Default:  "FailedDocumentsOnly",
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								if value != "FailedDocumentsOnly" && value != "AllDocuments" {
+									errors = append(errors, fmt.Errorf(
+										"%q must be one of 'FailedDocumentsOnly', 'AllDocuments'", k))
+								}
+								return
+							},
 						},
 
 						"type_name": {
@@ -1277,10 +1291,14 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  firehose.HECEndpointTypeRaw,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.HECEndpointTypeRaw,
-								firehose.HECEndpointTypeEvent,
-							}, false),
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								if value != firehose.HECEndpointTypeRaw && value != firehose.HECEndpointTypeEvent {
+									errors = append(errors, fmt.Errorf(
+										"%q must be one of 'Raw', 'Event'", k))
+								}
+								return
+							},
 						},
 
 						"hec_token": {
@@ -1292,10 +1310,14 @@ func resourceAwsKinesisFirehoseDeliveryStream() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							Default:  firehose.SplunkS3BackupModeFailedEventsOnly,
-							ValidateFunc: validation.StringInSlice([]string{
-								firehose.SplunkS3BackupModeFailedEventsOnly,
-								firehose.SplunkS3BackupModeAllEvents,
-							}, false),
+							ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+								value := v.(string)
+								if value != firehose.SplunkS3BackupModeFailedEventsOnly && value != firehose.SplunkS3BackupModeAllEvents {
+									errors = append(errors, fmt.Errorf(
+										"%q must be one of 'FailedEventsOnly', 'AllEvents'", k))
+								}
+								return
+							},
 						},
 
 						"retry_duration": {

@@ -14,8 +14,8 @@ import (
 
 func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 	var v workspaces.IpGroup
-	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
-	ipGroupNewName := acctest.RandomWithPrefix("tf-acc-test-upd")
+	ipGroupName := fmt.Sprintf("terraform-acctest-%s", acctest.RandString(10))
+	ipGroupNewName := fmt.Sprintf("terraform-acctest-new-%s", acctest.RandString(10))
 	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
 	resourceName := "aws_workspaces_ip_group.test"
 
@@ -31,7 +31,10 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ipGroupName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Terraform", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.IPGroup", "Home"),
 				),
 			},
 			{
@@ -46,79 +49,15 @@ func TestAccAwsWorkspacesIpGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ipGroupNewName),
 					resource.TestCheckResourceAttr(resourceName, "description", ipGroupDescription),
 					resource.TestCheckResourceAttr(resourceName, "rules.#", "1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAwsWorkspacesIpGroup_tags(t *testing.T) {
-	var v workspaces.IpGroup
-	resourceName := "aws_workspaces_ip_group.test"
-	rName := acctest.RandomWithPrefix("tf-acc-test")
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWorkspacesIpGroupConfigTags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAwsWorkspacesIpGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.IPGroup", "Home"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Purpose", "test"),
 				),
 			},
 			{
-				Config: testAccAwsWorkspacesIpGroupConfigTags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccAwsWorkspacesIpGroup_disappears(t *testing.T) {
-	var v workspaces.IpGroup
-	ipGroupName := acctest.RandomWithPrefix("tf-acc-test")
-	ipGroupDescription := fmt.Sprintf("Terraform Acceptance Test %s", strings.Title(acctest.RandString(20)))
-	resourceName := "aws_workspaces_ip_group.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAwsWorkspacesIpGroupDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAwsWorkspacesIpGroupConfigA(ipGroupName, ipGroupDescription),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAwsWorkspacesIpGroupExists(resourceName, &v),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsWorkspacesIpGroup(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -183,8 +122,8 @@ func testAccCheckAwsWorkspacesIpGroupExists(n string, v *workspaces.IpGroup) res
 func testAccAwsWorkspacesIpGroupConfigA(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
-  description = %[2]q
+  name        = "%s"
+  description = "%s"
 
   rules {
     source = "10.0.0.0/16"
@@ -193,6 +132,12 @@ resource "aws_workspaces_ip_group" "test" {
   rules {
     source      = "10.0.0.1/16"
     description = "Home"
+  }
+
+  tags = {
+    Name = "test"
+    Terraform = true
+    IPGroup = "Home"
   }
 }
 `, name, description)
@@ -201,56 +146,18 @@ resource "aws_workspaces_ip_group" "test" {
 func testAccAwsWorkspacesIpGroupConfigB(name, description string) string {
 	return fmt.Sprintf(`
 resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
-  description = %[2]q
+  name        = "%s"
+  description = "%s"
 
   rules {
     source      = "10.0.0.1/16"
     description = "Home"
+  }
+
+  tags = {
+    Purpose   = "test"
+    IPGroup = "Home"
   }
 }
 `, name, description)
-}
-
-func testAccAwsWorkspacesIpGroupConfigTags1(name, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
-
-  rules {
-    source = "10.0.0.0/16"
-  }
-
-  rules {
-    source      = "10.0.0.1/16"
-    description = "Home"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, name, tagKey1, tagValue1)
-}
-
-func testAccAwsWorkspacesIpGroupConfigTags2(name, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-resource "aws_workspaces_ip_group" "test" {
-  name        = %[1]q
-
-  rules {
-    source = "10.0.0.0/16"
-  }
-
-  rules {
-    source      = "10.0.0.1/16"
-    description = "Home"
-  }
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, name, tagKey1, tagValue1, tagKey2, tagValue2)
 }

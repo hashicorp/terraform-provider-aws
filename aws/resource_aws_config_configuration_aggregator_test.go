@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -74,7 +75,7 @@ func TestAccAWSConfigConfigurationAggregator_account(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.account_ids.#", "1"),
-					testAccCheckResourceAttrAccountID(resourceName, "account_aggregation_source.0.account_ids.0"),
+					resource.TestMatchResourceAttr(resourceName, "account_aggregation_source.0.account_ids.0", regexp.MustCompile(`^\d{12}$`)),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "account_aggregation_source.0.regions.0", "us-west-2"),
 				),

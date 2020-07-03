@@ -100,11 +100,7 @@ func resourceAwsLoadBalancerBackendServerPoliciesRead(d *schema.ResourceData, me
 	}
 
 	d.Set("load_balancer_name", loadBalancerName)
-	instancePortVal, err := strconv.ParseInt(instancePort, 10, 64)
-	if err != nil {
-		return fmt.Errorf("error parsing instance port: %s", err)
-	}
-	d.Set("instance_port", instancePortVal)
+	d.Set("instance_port", instancePort)
 	d.Set("policy_names", flattenStringList(policyNames))
 
 	return nil

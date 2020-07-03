@@ -145,6 +145,16 @@ func TestAccAWSEcsTaskDefinition_withDockerVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.scope", "shared"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.autoprovision", "true"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.driver", "local"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.driver_opts.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.driver_opts.uid", "1000"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.driver_opts.device", "tmpfs"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.labels.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.labels.stack", "april"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.labels.environment", "test"),
 				),
 			},
 			{
@@ -174,6 +184,9 @@ func TestAccAWSEcsTaskDefinition_withDockerVolumeMinimalConfig(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.scope", "task"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.driver", "local"),
 				),
 			},
 			{
@@ -191,6 +204,7 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 
 	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume-min")
 	resourceName := "aws_ecs_task_definition.test"
+	efsResourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
@@ -203,6 +217,8 @@ func TestAccAWSEcsTaskDefinition_withEFSVolumeMinimal(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume.584193650.efs_volume_configuration.0.file_system_id", efsResourceName, "id"),
 				),
 			},
 			{
@@ -220,6 +236,7 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 
 	tdName := acctest.RandomWithPrefix("tf-acc-td-with-efs-volume")
 	resourceName := "aws_ecs_task_definition.test"
+	efsResourceName := "aws_efs_file_system.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:            func() { testAccPreCheck(t) },
@@ -232,6 +249,9 @@ func TestAccAWSEcsTaskDefinition_withEFSVolume(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "volume.584193650.efs_volume_configuration.0.file_system_id", efsResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.efs_volume_configuration.0.root_directory", "/home/test"),
 				),
 			},
 			{
@@ -262,6 +282,8 @@ func TestAccAWSEcsTaskDefinition_withTaskScopedDockerVolume(t *testing.T) {
 					testAccCheckAWSEcsTaskDefinitionExists(resourceName, &def),
 					testAccCheckAWSTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.584193650.docker_volume_configuration.0.scope", "task"),
 				),
 			},
 			{
@@ -1317,7 +1339,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithScratchVolume(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = "%s"
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1333,7 +1355,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[1]q
+    name = "database_scratch"
   }
 }
 `, tdName)
@@ -1342,7 +1364,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithDockerVolumes(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = "%s"
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1358,7 +1380,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[1]q
+    name = "database_scratch"
 
     docker_volume_configuration {
       driver = "local"
@@ -1384,7 +1406,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithDockerVolumesMinimalConfig(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = "%s"
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1400,7 +1422,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[1]q
+    name = "database_scratch"
 
     docker_volume_configuration {
       autoprovision = true
@@ -1413,7 +1435,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithTaskScopedDockerVolume(tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
+  family = "%s"
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1429,7 +1451,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[1]q
+    name = "database_scratch"
 
     docker_volume_configuration {
       scope = "task"
@@ -1462,7 +1484,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[1]q
+    name = "database_scratch"
 
     efs_volume_configuration {
       file_system_id = "${aws_efs_file_system.test.id}"
@@ -1495,7 +1517,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[1]q
+    name = "database_scratch"
 
     efs_volume_configuration {
       file_system_id = "${aws_efs_file_system.test.id}"
@@ -1509,7 +1531,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithTaskRoleArn(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "%s"
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -1530,7 +1552,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = "%s"
   role = "${aws_iam_role.test.id}"
 
   policy = <<EOF
@@ -1551,7 +1573,7 @@ EOF
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = "%s"
   task_role_arn = "${aws_iam_role.test.arn}"
 
   container_definitions = <<TASK_DEFINITION
@@ -1568,7 +1590,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[3]q
+    name = "database_scratch"
   }
 }
 `, roleName, policyName, tdName)
@@ -1577,7 +1599,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithIpcMode(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "%s"
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -1598,7 +1620,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = "%s"
   role = "${aws_iam_role.test.id}"
 
   policy = <<EOF
@@ -1619,7 +1641,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = "%s"
   task_role_arn = "${aws_iam_role.test.arn}"
   network_mode  = "bridge"
   ipc_mode      = "host"
@@ -1638,7 +1660,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[3]q
+    name = "database_scratch"
   }
 }
 `, roleName, policyName, tdName)
@@ -1647,7 +1669,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithPidMode(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "%s"
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -1668,7 +1690,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = "%s"
   role = "${aws_iam_role.test.id}"
 
   policy = <<EOF
@@ -1689,7 +1711,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = "%s"
   task_role_arn = "${aws_iam_role.test.arn}"
   network_mode  = "bridge"
   pid_mode      = "host"
@@ -1708,7 +1730,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[3]q
+    name = "database_scratch"
   }
 }
 `, roleName, policyName, tdName)
@@ -1717,7 +1739,7 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithNetworkMode(roleName, policyName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "%s"
   path = "/test/"
 
   assume_role_policy = <<EOF
@@ -1738,7 +1760,7 @@ EOF
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = %[2]q
+  name = "%s"
   role = "${aws_iam_role.test.id}"
 
   policy = <<EOF
@@ -1759,7 +1781,7 @@ resource "aws_iam_role_policy" "test" {
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family        = %[3]q
+  family        = "%s"
   task_role_arn = "${aws_iam_role.test.arn}"
   network_mode  = "bridge"
 
@@ -1777,7 +1799,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[3]q
+    name = "database_scratch"
   }
 }
 `, roleName, policyName, tdName)
@@ -1786,18 +1808,18 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithEcsService(clusterName, svcName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = "%s"
 }
 
 resource "aws_ecs_service" "test" {
-  name            = %[2]q
+  name            = "%s"
   cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.test.arn}"
   desired_count   = 1
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[3]q
+  family = "%s"
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1813,7 +1835,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[3]q
+    name = "database_scratch"
   }
 }
 `, clusterName, svcName, tdName)
@@ -1822,18 +1844,18 @@ TASK_DEFINITION
 func testAccAWSEcsTaskDefinitionWithEcsServiceModified(clusterName, svcName, tdName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
-  name = %[1]q
+  name = "%s"
 }
 
 resource "aws_ecs_service" "test" {
-  name            = %[2]q
+  name            = "%s"
   cluster         = "${aws_ecs_cluster.test.id}"
   task_definition = "${aws_ecs_task_definition.test.arn}"
   desired_count   = 1
 }
 
 resource "aws_ecs_task_definition" "test" {
-  family = %[3]q
+  family = "%s"
 
   container_definitions = <<TASK_DEFINITION
 [
@@ -1849,7 +1871,7 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name = %[3]q
+    name = "database_scratch"
   }
 }
 `, clusterName, svcName, tdName)

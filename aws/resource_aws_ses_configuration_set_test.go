@@ -68,8 +68,6 @@ func testSweepSesConfigurationSets(region string) error {
 }
 
 func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
-	var escRandomInteger = acctest.RandInt()
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheck(t)
@@ -79,7 +77,7 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 		CheckDestroy: testAccCheckSESConfigurationSetDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSSESConfigurationSetConfig(escRandomInteger),
+				Config: testAccAWSSESConfigurationSetConfig,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsSESConfigurationSetExists("aws_ses_configuration_set.test"),
 				),
@@ -91,6 +89,36 @@ func TestAccAWSSESConfigurationSet_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
+	conn := testAccProvider.Meta().(*AWSClient).sesconn
+
+	for _, rs := range s.RootModule().Resources {
+		if rs.Type != "aws_ses_configuration_set" {
+			continue
+		}
+
+		response, err := conn.ListConfigurationSets(&ses.ListConfigurationSetsInput{})
+		if err != nil {
+			return err
+		}
+
+		found := false
+		for _, element := range response.ConfigurationSets {
+			if *element.Name == fmt.Sprintf("some-configuration-set-%d", escRandomInteger) {
+				found = true
+			}
+		}
+
+		if found {
+			return fmt.Errorf("The configuration set still exists")
+		}
+
+	}
+
+	return nil
+
 }
 
 func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
@@ -106,48 +134,29 @@ func testAccCheckAwsSESConfigurationSetExists(n string) resource.TestCheckFunc {
 
 		conn := testAccProvider.Meta().(*AWSClient).sesconn
 
-		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
-			ConfigurationSetName: aws.String(rs.Primary.ID),
-		})
-
+		response, err := conn.ListConfigurationSets(&ses.ListConfigurationSetsInput{})
 		if err != nil {
 			return err
 		}
 
-		if aws.StringValue(response.ConfigurationSet.Name) != rs.Primary.ID {
+		found := false
+		for _, element := range response.ConfigurationSets {
+			if *element.Name == fmt.Sprintf("some-configuration-set-%d", escRandomInteger) {
+				found = true
+			}
+		}
+
+		if !found {
 			return fmt.Errorf("The configuration set was not created")
 		}
+
 		return nil
-
 	}
 }
 
-func testAccCheckSESConfigurationSetDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).sesconn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_configuration_set" {
-			continue
-		}
-
-		_, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
-			ConfigurationSetName: aws.String(rs.Primary.ID),
-		})
-
-		if err != nil {
-			if isAWSErr(err, ses.ErrCodeConfigurationSetDoesNotExistException, "") {
-				return nil
-			}
-			return err
-		}
-	}
-	return nil
-}
-
-func testAccAWSSESConfigurationSetConfig(escRandomInteger int) string {
-	return fmt.Sprintf(`
+var escRandomInteger = acctest.RandInt()
+var testAccAWSSESConfigurationSetConfig = fmt.Sprintf(`
 resource "aws_ses_configuration_set" "test" {
     name = "some-configuration-set-%d"
 }
 `, escRandomInteger)
-}

@@ -128,10 +128,9 @@ func TestAccAWSRedshiftCluster_withFinalSnapshot(t *testing.T) {
 func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 	var v redshift.Cluster
 
-	resourceName := "aws_redshift_cluster.default"
-	kmsResourceName := "aws_kms_key.foo"
-
 	ri := acctest.RandInt()
+	config := testAccAWSRedshiftClusterConfig_kmsKey(ri)
+	keyRegex := regexp.MustCompile(`^arn:aws:([a-zA-Z0-9\-])+:([a-z]{2}-[a-z]+-\d{1})?:(\d{12})?:(.*)$`)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -139,12 +138,14 @@ func TestAccAWSRedshiftCluster_kmsKey(t *testing.T) {
 		CheckDestroy: testAccCheckAWSRedshiftClusterDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRedshiftClusterConfig_kmsKey(ri),
+				Config: config,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRedshiftClusterExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
+					testAccCheckAWSRedshiftClusterExists("aws_redshift_cluster.default", &v),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "cluster_type", "single-node"),
+					resource.TestCheckResourceAttr(
+						"aws_redshift_cluster.default", "publicly_accessible", "true"),
+					resource.TestMatchResourceAttr("aws_redshift_cluster.default", "kms_key_id", keyRegex),
 				),
 			},
 			{

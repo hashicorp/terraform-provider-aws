@@ -38,11 +38,6 @@ func testSweepCloudTrails(region string) error {
 		for _, trail := range page.Trails {
 			name := aws.StringValue(trail.Name)
 
-			if name == "AWSMacieTrail-DO-NOT-EDIT" {
-				log.Printf("[INFO] Skipping AWSMacieTrail-DO-NOT-EDIT for Macie Classic, which is not automatically recreated by the service")
-				continue
-			}
-
 			output, err := conn.DescribeTrails(&cloudtrail.DescribeTrailsInput{
 				TrailNameList: aws.StringSlice([]string{name}),
 			})
@@ -137,7 +132,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -152,7 +147,7 @@ func testAccAWSCloudTrail_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", "prefix"),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "false"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 		},
@@ -212,7 +207,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 					// Test that "enable_logging" default works.
 					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -226,7 +221,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					testAccCheckCloudTrailLoggingEnabled(resourceName, false),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -235,7 +230,7 @@ func testAccAWSCloudTrail_enable_logging(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					testAccCheckCloudTrailLoggingEnabled(resourceName, true),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 		},
@@ -258,7 +253,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -267,7 +262,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "true"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -281,7 +276,7 @@ func testAccAWSCloudTrail_is_multi_region(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_multi_region_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 		},
@@ -304,7 +299,7 @@ func testAccAWSCloudTrail_is_organization(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "true"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -318,7 +313,7 @@ func testAccAWSCloudTrail_is_organization(t *testing.T) {
 					testAccCheckCloudTrailExists(resourceName, &trail),
 					resource.TestCheckResourceAttr(resourceName, "is_organization_trail", "false"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 		},
@@ -342,7 +337,7 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, true, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -357,7 +352,7 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 		},
@@ -367,9 +362,8 @@ func testAccAWSCloudTrail_logValidation(t *testing.T) {
 func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 	var trail cloudtrail.Trail
 	cloudTrailRandInt := acctest.RandInt()
-
+	keyRegex := regexp.MustCompile(`^arn:aws:([a-zA-Z0-9\-])+:([a-z]{2}-[a-z]+-\d{1})?:(\d{12})?:(.*)$`)
 	resourceName := "aws_cloudtrail.foobar"
-	kmsResourceName := "aws_kms_key.foo"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -383,7 +377,7 @@ func testAccAWSCloudTrail_kmsKey(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "s3_key_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "include_global_service_events", "true"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsResourceName, "arn"),
+					resource.TestMatchResourceAttr(resourceName, "kms_key_id", keyRegex),
 				),
 			},
 			{
@@ -416,7 +410,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Foo", "moo"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -434,7 +428,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Moo", "boom"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Pooh", "hi"),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 			{
@@ -444,7 +438,7 @@ func testAccAWSCloudTrail_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					testAccCheckCloudTrailLoadTags(&trail, &trailTagsModified),
 					testAccCheckCloudTrailLogValidationEnabled(resourceName, false, &trail),
-					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
+					testAccCheckCloudTrailKmsKeyIdEquals(resourceName, "", &trail),
 				),
 			},
 		},
@@ -604,6 +598,43 @@ func testAccCheckCloudTrailLogValidationEnabled(n string, desired bool, trail *c
 		desiredInString := fmt.Sprintf("%t", desired)
 		if enabled != desiredInString {
 			return fmt.Errorf("Expected log validation status %s, saved %s", desiredInString, enabled)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckCloudTrailKmsKeyIdEquals(n string, desired string, trail *cloudtrail.Trail) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if desired != "" && trail.KmsKeyId == nil {
+			return fmt.Errorf("No KmsKeyId attribute present in trail: %s, expected %s",
+				trail, desired)
+		}
+
+		// work around string pointer
+		var kmsKeyIdInString string
+		if trail.KmsKeyId == nil {
+			kmsKeyIdInString = ""
+		} else {
+			kmsKeyIdInString = *trail.KmsKeyId
+		}
+
+		if kmsKeyIdInString != desired {
+			return fmt.Errorf("Expected KMS Key ID %q to equal %q",
+				*trail.KmsKeyId, desired)
+		}
+
+		kmsKeyId, ok := rs.Primary.Attributes["kms_key_id"]
+		if desired != "" && !ok {
+			return fmt.Errorf("No kms_key_id attribute defined for %s", n)
+		}
+		if kmsKeyId != desired {
+			return fmt.Errorf("Expected KMS Key ID %q, saved %q", desired, kmsKeyId)
 		}
 
 		return nil
