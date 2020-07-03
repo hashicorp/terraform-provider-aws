@@ -208,7 +208,7 @@ func testAccCheckAwsLambdaAliasAttributes(mapping *lambda.AliasConfiguration) re
 func testAccCheckAwsLambdaAliasInvokeArn(name string, mapping *lambda.AliasConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arn := aws.StringValue(mapping.AliasArn)
-		return testAccCheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "lambda", "apigateway", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
+		return testAccCheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
 	}
 }
 

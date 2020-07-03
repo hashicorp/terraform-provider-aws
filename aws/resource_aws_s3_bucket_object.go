@@ -454,7 +454,7 @@ func resourceAwsS3BucketObjectUpdate(d *schema.ResourceData, meta interface{}) e
 		}
 	}
 
-	if d.HasChange("object_lock_mode") || d.HasChange("object_lock_retain_until_date") {
+	if d.HasChanges("object_lock_mode", "object_lock_retain_until_date") {
 		req := &s3.PutObjectRetentionInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),

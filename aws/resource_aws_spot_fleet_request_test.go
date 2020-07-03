@@ -39,7 +39,7 @@ func testSweepSpotFleetRequests(region string) error {
 			id := aws.StringValue(config.SpotFleetRequestId)
 
 			log.Printf("[INFO] Deleting Spot Fleet Request: %s", id)
-			err := deleteSpotFleetRequest(id, true, 5*time.Minute, conn)
+			err := deleteSpotFleetRequest(id, true, 15*time.Minute, conn)
 			if err != nil {
 				log.Printf("[ERROR] Failed to delete Spot Fleet Request (%s): %s", id, err)
 			}
@@ -261,7 +261,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -302,7 +302,7 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	resourceName := "aws_spot_fleet_request.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
@@ -1146,7 +1146,7 @@ func TestAccAWSSpotFleetRequest_disappears(t *testing.T) {
 				Config: testAccAWSSpotFleetRequestConfig(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
-					testAccCheckAWSSpotFleetRequestDisappears(&sfr),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsSpotFleetRequest(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -1194,16 +1194,6 @@ func testAccCheckAWSSpotFleetRequestExists(
 		*sfr = *resp.SpotFleetRequestConfigs[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSSpotFleetRequestDisappears(sfr *ec2.SpotFleetRequestConfig) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		sfrId := aws.StringValue(sfr.SpotFleetRequestId)
-		err := deleteSpotFleetRequest(sfrId, true, 5*time.Minute, conn)
-
-		return err
 	}
 }
 

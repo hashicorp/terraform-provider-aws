@@ -113,10 +113,10 @@ The following arguments are supported:
 * `data_source` - (Optional) The DataSource name.
 * `kind`  - (Optional) The resolver type. Valid values are `UNIT` and `PIPELINE`.
 * `pipeline_config` - (Optional) The PipelineConfig.
-  * `functions` - (Required) The list of Function ID.
+    * `functions` - (Required) The list of Function ID.
 * `caching_config` - (Optional) The CachingConfig.
-  * `caching_keys` - (Optional) The list of caching key.
-  * `ttl` - (Optional) The TTL in seconds.
+    * `caching_keys` - (Optional) The list of caching key.
+    * `ttl` - (Optional) The TTL in seconds.
 
 ## Attributes Reference
 

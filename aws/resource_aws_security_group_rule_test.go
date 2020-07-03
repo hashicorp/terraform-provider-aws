@@ -159,6 +159,8 @@ func TestAccAWSSecurityGroupRule_Ingress_Source_With_Account_Id(t *testing.T) {
 
 	rInt := acctest.RandInt()
 
+	ruleName := "aws_security_group_rule.allow_self"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -168,6 +170,18 @@ func TestAccAWSSecurityGroupRule_Ingress_Source_With_Account_Id(t *testing.T) {
 				Config: testAccAWSSecurityGroupRule_Ingress_Source_with_AccountId(rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSecurityGroupRuleExists("aws_security_group.web", &group),
+					resource.TestCheckResourceAttrPair(
+						ruleName, "security_group_id", "aws_security_group.web", "id"),
+					resource.TestMatchResourceAttr(
+						ruleName, "source_security_group_id", regexp.MustCompile("^[0-9]{12}/sg-[0-9a-z]{17}$")),
+					resource.TestCheckResourceAttr(
+						ruleName, "description", "some description"),
+					resource.TestCheckResourceAttr(
+						ruleName, "from_port", "0"),
+					resource.TestCheckResourceAttr(
+						ruleName, "to_port", "0"),
+					resource.TestCheckResourceAttr(
+						ruleName, "protocol", "-1"),
 				),
 			},
 		},
@@ -2089,6 +2103,7 @@ resource "aws_security_group_rule" "allow_self" {
   from_port                = 0
   to_port                  = 0
   protocol                 = "-1"
+  description              = "some description"
   security_group_id        = "${aws_security_group.web.id}"
   source_security_group_id = "${data.aws_caller_identity.current.account_id}/${aws_security_group.web.id}"
 }

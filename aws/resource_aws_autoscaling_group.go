@@ -1,13 +1,16 @@
 package aws
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
@@ -95,43 +98,37 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							// Ignore missing configuration block
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "1" && new == "0" {
-									return true
-								}
-								return false
-							},
+							Computed: true,
+							// Ideally we'd want to detect drift detection,
+							// but a DiffSuppressFunc here does not behave nicely
+							// for detecting missing configuration blocks
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									// These fields are returned from calls to the API
+									// even if not provided at input time and can be omitted in requests;
+									// thus, to prevent non-empty plans, we set these
+									// to Computed and remove Defaults
 									"on_demand_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  "prioritized",
-										// Reference: https://github.com/hashicorp/terraform/issues/18027
-										// ValidateFunc: validation.StringInSlice([]string{
-										// 	"prioritized",
-										// }, false),
+										Computed: true,
 									},
 									"on_demand_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"on_demand_percentage_above_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Default:      100,
+										Computed:     true,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
 									"spot_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  "lowest-price",
-										// Reference: https://github.com/hashicorp/terraform/issues/18027
-										// ValidateFunc: validation.StringInSlice([]string{
-										// 	"lowest-price",
-										// }, false),
+										Computed: true,
 									},
 									"spot_instance_pools": {
 										Type:         schema.TypeInt,
@@ -396,13 +393,48 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			"tag": autoscalingTagSchema(),
 
 			"tags": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeMap,
 					Elem: &schema.Schema{Type: schema.TypeString},
 				},
 				ConflictsWith: []string{"tag"},
+				// Terraform 0.11 and earlier can provide incorrect type
+				// information during difference handling, in which boolean
+				// values are represented as "0" and "1". This Set function
+				// normalizes these hashing variations, while the Terraform
+				// Plugin SDK automatically suppresses the boolean/string
+				// difference in the value itself.
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+
+					m, ok := v.(map[string]interface{})
+
+					if !ok {
+						return 0
+					}
+
+					if v, ok := m["key"].(string); ok {
+						buf.WriteString(fmt.Sprintf("%s-", v))
+					}
+
+					if v, ok := m["value"].(string); ok {
+						buf.WriteString(fmt.Sprintf("%s-", v))
+					}
+
+					if v, ok := m["propagate_at_launch"].(bool); ok {
+						buf.WriteString(fmt.Sprintf("%t-", v))
+					} else if v, ok := m["propagate_at_launch"].(string); ok {
+						if b, err := strconv.ParseBool(v); err == nil {
+							buf.WriteString(fmt.Sprintf("%t-", b))
+						} else {
+							buf.WriteString(fmt.Sprintf("%s-", v))
+						}
+					}
+
+					return hashcode.String(buf.String())
+				},
 			},
 
 			"service_linked_role_arn": {
@@ -548,7 +580,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		tags, err := autoscalingTagsFromList(v.([]interface{}), resourceID)
+		tags, err := autoscalingTagsFromList(v.(*schema.Set).List(), resourceID)
 		if err != nil {
 			return err
 		}
@@ -734,7 +766,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
 		tags := map[string]struct{}{}
-		for _, tag := range v.([]interface{}) {
+		for _, tag := range v.(*schema.Set).List() {
 			attr, ok := tag.(map[string]interface{})
 			if !ok {
 				continue

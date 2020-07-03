@@ -652,6 +652,70 @@ func TestAccAWSRoute53Record_geolocation_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute53Record_HealthCheckId_SetIdentifierChange(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdSetIdentifier("test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdSetIdentifier("test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_HealthCheckId_TypeChange(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdTypeCname(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+			{
+				Config: testAccRoute53RecordConfigHealthCheckIdTypeA(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute53Record_latency_basic(t *testing.T) {
 	var record1, record2, record3 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.us-east-1"
@@ -707,6 +771,41 @@ func TestAccAWSRoute53Record_TypeChange(t *testing.T) {
 				Config: testAccRoute53RecordTypeChangePost,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record2),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSRoute53Record_NameChange(t *testing.T) {
+	var record1, record2 route53.ResourceRecordSet
+	resourceName := "aws_route53_record.sample"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoute53RecordNameChangePre,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record1),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"allow_overwrite", "weight"},
+			},
+
+			// Cause a change, which will trigger a refresh
+			{
+				Config: testAccRoute53RecordNameChangePost,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoute53RecordExists(resourceName, &record2),
+					testAccCheckRoute53RecordDoesNotExist("aws_route53_zone.main", "sample", "CNAME"),
 				),
 			},
 		},
@@ -1000,6 +1099,43 @@ func testAccCheckRoute53RecordExists(n string, resourceRecordSet *route53.Resour
 			}
 		}
 		return fmt.Errorf("Record does not exist: %#v", rs.Primary.ID)
+	}
+}
+
+func testAccCheckRoute53RecordDoesNotExist(zoneResourceName string, recordName string, recordType string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).r53conn
+		zoneResource, ok := s.RootModule().Resources[zoneResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", zoneResourceName)
+		}
+
+		zoneId := zoneResource.Primary.ID
+		en := expandRecordName(recordName, zoneResource.Primary.Attributes["zone_id"])
+
+		lopts := &route53.ListResourceRecordSetsInput{
+			HostedZoneId: aws.String(cleanZoneID(zoneId)),
+		}
+
+		resp, err := conn.ListResourceRecordSets(lopts)
+		if err != nil {
+			return err
+		}
+
+		found := false
+		for _, rec := range resp.ResourceRecordSets {
+			recName := cleanRecordName(*rec.Name)
+			if FQDN(strings.ToLower(recName)) == FQDN(strings.ToLower(en)) && *rec.Type == recordType {
+				found = true
+				break
+			}
+		}
+
+		if found {
+			return fmt.Errorf("Record exists but should not: %s", en)
+		}
+
+		return nil
 	}
 }
 
@@ -1378,6 +1514,15 @@ resource "aws_route53_record" "ap-northeast-1" {
 `
 
 const testAccRoute53RecordConfigAliasElb = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
@@ -1396,7 +1541,7 @@ resource "aws_route53_record" "alias" {
 
 resource "aws_elb" "main" {
   name = "foobar-terraform-elb-%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
   listener {
     instance_port = 80
@@ -1408,6 +1553,15 @@ resource "aws_elb" "main" {
 `
 
 const testAccRoute53RecordConfigAliasElbUppercase = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
@@ -1426,7 +1580,7 @@ resource "aws_route53_record" "alias" {
 
 resource "aws_elb" "main" {
   name = "FOOBAR-TERRAFORM-ELB-%s"
-  availability_zones = ["us-west-2a"]
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
   listener {
     instance_port = 80
@@ -1464,6 +1618,102 @@ resource "aws_route53_record" "alias" {
   }
 }
 `, rName)
+}
+
+func testAccRoute53RecordConfigHealthCheckIdSetIdentifier(setIdentifier string) string {
+	return fmt.Sprintf(`
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "notexample.com"
+}
+
+resource "aws_route53_health_check" "test" {
+  failure_threshold = "2"
+  fqdn              = "test.notexample.com"
+  port              = 80
+  request_interval  = "30"
+  resource_path     = "/"
+  type              = "HTTP"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id         = aws_route53_zone.test.zone_id
+  health_check_id = aws_route53_health_check.test.id
+  name            = "test"
+  records         = ["127.0.0.1"]
+  set_identifier  = %[1]q
+  ttl             = "5"
+  type            = "A"
+
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+`, setIdentifier)
+}
+
+func testAccRoute53RecordConfigHealthCheckIdTypeA() string {
+	return `
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "notexample.com"
+}
+
+resource "aws_route53_health_check" "test" {
+  failure_threshold = "2"
+  fqdn              = "test.notexample.com"
+  port              = 80
+  request_interval  = "30"
+  resource_path     = "/"
+  type              = "HTTP"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id         = aws_route53_zone.test.zone_id
+  health_check_id = aws_route53_health_check.test.id
+  name            = "test"
+  records         = ["127.0.0.1"]
+  set_identifier  = "test"
+  ttl             = "5"
+  type            = "A"
+
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+`
+}
+
+func testAccRoute53RecordConfigHealthCheckIdTypeCname() string {
+	return `
+resource "aws_route53_zone" "test" {
+  force_destroy = true
+  name          = "notexample.com"
+}
+
+resource "aws_route53_health_check" "test" {
+  failure_threshold = "2"
+  fqdn              = "test.notexample.com"
+  port              = 80
+  request_interval  = "30"
+  resource_path     = "/"
+  type              = "HTTP"
+}
+
+resource "aws_route53_record" "test" {
+  zone_id         = aws_route53_zone.test.zone_id
+  health_check_id = aws_route53_health_check.test.id
+  name            = "test"
+  records         = ["test1.notexample.com"]
+  set_identifier  = "test"
+  ttl             = "5"
+  type            = "CNAME"
+
+  weighted_routing_policy {
+    weight = 1
+  }
+}
+`
 }
 
 func testAccRoute53CustomVpcEndpointBase(rName string) string {
@@ -1553,13 +1803,22 @@ resource "aws_route53_record" "test" {
 }
 
 const testAccRoute53WeightedElbAliasRecord = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_route53_zone" "main" {
   name = "notexample.com"
 }
 
 resource "aws_elb" "live" {
   name = "foobar-terraform-elb-live"
-  availability_zones = ["us-west-2a"]
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
   listener {
     instance_port = 80
@@ -1588,7 +1847,7 @@ resource "aws_route53_record" "elb_weighted_alias_live" {
 
 resource "aws_elb" "dev" {
   name = "foobar-terraform-elb-dev"
-  availability_zones = ["us-west-2a"]
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
   listener {
     instance_port = 80
@@ -1700,6 +1959,34 @@ resource "aws_route53_record" "sample" {
 }
 `
 
+const testAccRoute53RecordNameChangePre = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "sample" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "sample"
+  type = "CNAME"
+  ttl = "30"
+  records = ["www.terraform.io"]
+}
+`
+
+const testAccRoute53RecordNameChangePost = `
+resource "aws_route53_zone" "main" {
+	name = "notexample.com"
+}
+
+resource "aws_route53_record" "sample" {
+  zone_id = "${aws_route53_zone.main.zone_id}"
+  name = "sample-new"
+  type = "CNAME"
+  ttl = "30"
+  records = ["www.terraform.io"]
+}
+`
+
 const testAccRoute53RecordSetIdentifierChangePre = `
 resource "aws_route53_zone" "main" {
 	name = "notexample.com"
@@ -1733,13 +2020,22 @@ resource "aws_route53_record" "basic_to_weighted" {
 `
 
 const testAccRoute53RecordAliasChangePre = `
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_route53_zone" "main" {
 	name = "notexample.com"
 }
 
 resource "aws_elb" "alias_change" {
   name = "foobar-tf-elb-alias-change"
-  availability_zones = ["us-west-2a"]
+  availability_zones = slice(data.aws_availability_zones.available.names, 0, 1)
 
   listener {
     instance_port = 80

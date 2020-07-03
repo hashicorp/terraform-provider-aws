@@ -11,9 +11,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
-func TestAccAWSAPIGatewayV2Stage_basic(t *testing.T) {
+func TestAccAWSAPIGatewayV2Stage_basicWebSocket(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
 	resourceName := "aws_apigatewayv2_stage.test"
@@ -25,7 +26,7 @@ func TestAccAWSAPIGatewayV2Stage_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -58,6 +59,96 @@ func TestAccAWSAPIGatewayV2Stage_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayV2Stage_basicHttp(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2StageConfig_basicHttp(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(fmt.Sprintf("/apis/.+/stages/%s", rName))),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "execution_arn", ""),
+					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayV2Stage_defaultHttpStage(t *testing.T) {
+	var apiId string
+	var v apigatewayv2.GetStageOutput
+	resourceName := "aws_apigatewayv2_stage.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayV2StageConfig_defaultHttpStage(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
+					testAccMatchResourceAttrRegionalARNNoAccount(resourceName, "arn", "apigateway", regexp.MustCompile(`/apis/.+/stages/\$default`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_deploy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "client_certificate_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.data_trace_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.detailed_metrics_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.logging_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_burst_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_route_settings.0.throttling_rate_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "deployment_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "execution_arn", ""),
+					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("https://.+\\.execute-api\\.%s.amazonaws\\.com/", testAccGetRegion()))),
+					resource.TestCheckResourceAttr(resourceName, "name", "$default"),
+					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateIdFunc: testAccAWSAPIGatewayV2StageImportStateIdFunc(resourceName),
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSAPIGatewayV2Stage_disappears(t *testing.T) {
 	var apiId string
 	var v apigatewayv2.GetStageOutput
@@ -70,7 +161,7 @@ func TestAccAWSAPIGatewayV2Stage_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					testAccCheckAWSAPIGatewayV2StageDisappears(&apiId, &v),
@@ -264,7 +355,7 @@ func TestAccAWSAPIGatewayV2Stage_DefaultRouteSettings(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -341,10 +432,9 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettings(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSAPIGatewayV2StageDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayV2StageDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSAPIGatewayV2StageConfig_routeSettings(rName),
@@ -366,18 +456,22 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettings(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "invoke_url", regexp.MustCompile(fmt.Sprintf("wss://.+\\.execute-api\\.%s.amazonaws\\.com/%s", testAccGetRegion(), rName))),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "route_settings.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.data_trace_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.detailed_metrics_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.logging_level", "OFF"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.route_key", "$default"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.throttling_burst_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.4093656941.throttling_rate_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.data_trace_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.detailed_metrics_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.logging_level", "ERROR"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.route_key", "$connect"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.throttling_burst_limit", "2222"),
-					resource.TestCheckResourceAttr(resourceName, "route_settings.3867839051.throttling_rate_limit", "8888"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+						"data_trace_enabled":       "false",
+						"detailed_metrics_enabled": "false",
+						"logging_level":            "OFF",
+						"route_key":                "$default",
+						"throttling_burst_limit":   "0",
+						"throttling_rate_limit":    "0",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route_settings.*", map[string]string{
+						"data_trace_enabled":       "true",
+						"detailed_metrics_enabled": "true",
+						"logging_level":            "ERROR",
+						"route_key":                "$connect",
+						"throttling_burst_limit":   "2222",
+						"throttling_rate_limit":    "8888",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "stage_variables.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -389,7 +483,7 @@ func TestAccAWSAPIGatewayV2Stage_RouteSettings(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -457,7 +551,7 @@ func TestAccAWSAPIGatewayV2Stage_StageVariables(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -525,7 +619,7 @@ func TestAccAWSAPIGatewayV2Stage_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSAPIGatewayV2StageConfig_basic(rName),
+				Config: testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayV2StageExists(resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_log_settings.#", "0"),
@@ -642,7 +736,7 @@ func testAccCheckAWSAPIGatewayV2StageAccessLogDestinationArn(resourceName, resou
 	}
 }
 
-func testAccAWSAPIGatewayV2StageConfig_api(rName string) string {
+func testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apigatewayv2_api" "test" {
   name                       = %[1]q
@@ -652,8 +746,17 @@ resource "aws_apigatewayv2_api" "test" {
 `, rName)
 }
 
-func testAccAWSAPIGatewayV2StageConfig_basic(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+func testAccAWSAPIGatewayV2StageConfig_apiHttp(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_apigatewayv2_api" "test" {
+  name          = %[1]q
+  protocol_type = "HTTP"
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayV2StageConfig_basicWebSocket(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
@@ -661,8 +764,26 @@ resource "aws_apigatewayv2_stage" "test" {
 `, rName)
 }
 
+func testAccAWSAPIGatewayV2StageConfig_basicHttp(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
+  name   = %[1]q
+}
+`, rName)
+}
+
+func testAccAWSAPIGatewayV2StageConfig_defaultHttpStage(rName string) string {
+	return testAccAWSAPIGatewayV2StageConfig_apiHttp(rName) + fmt.Sprintf(`
+resource "aws_apigatewayv2_stage" "test" {
+  api_id = "${aws_apigatewayv2_api.test.id}"
+  name   = "$default"
+}
+`)
+}
+
 func testAccAWSAPIGatewayV2StageConfig_accessLogSettings(rName, format string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -725,7 +846,7 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescription(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = %[1]q
 }
@@ -741,7 +862,7 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_clientCertificateIdAndDescriptionUpdated(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_api_gateway_client_certificate" "test" {
   description = %[1]q
 }
@@ -757,7 +878,7 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_defaultRouteSettings(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
@@ -785,7 +906,7 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_routeSettings(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
@@ -808,7 +929,7 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_stageVariables(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q
@@ -822,7 +943,7 @@ resource "aws_apigatewayv2_stage" "test" {
 }
 
 func testAccAWSAPIGatewayV2StageConfig_tags(rName string) string {
-	return testAccAWSAPIGatewayV2StageConfig_api(rName) + fmt.Sprintf(`
+	return testAccAWSAPIGatewayV2StageConfig_apiWebSocket(rName) + fmt.Sprintf(`
 resource "aws_apigatewayv2_stage" "test" {
   api_id = "${aws_apigatewayv2_api.test.id}"
   name   = %[1]q

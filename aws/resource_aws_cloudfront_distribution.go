@@ -15,6 +15,7 @@ import (
 )
 
 func resourceAwsCloudFrontDistribution() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsCloudFrontDistributionCreate,
 		Read:   resourceAwsCloudFrontDistributionRead,
