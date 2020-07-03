@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 	"time"
 
@@ -16,7 +17,6 @@ import (
 func TestAccAWSServiceCatalogLaunchNotificationConstraint_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_launch_notification_constraint.test"
 	salt := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
-	var dco servicecatalog.DescribeConstraintOutput
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -25,14 +25,14 @@ func TestAccAWSServiceCatalogLaunchNotificationConstraint_basic(t *testing.T) {
 			{
 				Config: testAccAWSServiceCatalogLaunchNotificationConstraintConfig(salt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchNotificationConstraint(resourceName, &dco),
+					testAccCheckLaunchNotificationConstraint(resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "portfolio_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "product_id"),
 					resource.TestCheckResourceAttr(resourceName, "description", "description"),
 					resource.TestCheckResourceAttr(resourceName, "type", "NOTIFICATION"),
-					//TODO fields to check
-					//resource.TestCheckResourceAttrSet(roleArnResourceName, "role_arn"),
-					//resource.TestCheckResourceAttr(roleArnResourceName, "local_role_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "2"),
+					resource.TestMatchResourceAttr(resourceName, "notification_arns.0", regexp.MustCompile(fmt.Sprintf(`^arn:[^:]+:sns:[^:]+:[^:]+:topic-1-%[1]s$`, salt))),
+					resource.TestMatchResourceAttr(resourceName, "notification_arns.1", regexp.MustCompile(fmt.Sprintf(`^arn:[^:]+:sns:[^:]+:[^:]+:topic-2-%[1]s$`, salt))),
 				),
 			},
 			{
@@ -66,42 +66,47 @@ func TestAccAWSServiceCatalogLaunchNotificationConstraint_disappears(t *testing.
 	})
 }
 
-//func TestAccAWSServiceCatalogLaunchNotificationConstraint_updateParameters(t *testing.T) {
-//	resourceName := "aws_servicecatalog_launch_notification_constraint.test"
-//	roleArnResourceName := resourceName + "_a_role_arn"
-//	localRoleNameResourceName := resourceName + "_b_local_role_name"
-//	salt := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
-//	resource.ParallelTest(t, resource.TestCase{
-//		PreCheck:     func() { testAccPreCheck(t) },
-//		Providers:    testAccProviders,
-//		CheckDestroy: testAccCheckServiceCatalogLaunchNotificationConstraintDestroy,
-//		Steps: []resource.TestStep{
-//			{
-//				Config: testAccAWSServiceCatalogLaunchNotificationConstraintConfig(salt),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttrSet(roleArnResourceName, "role_arn"),
-//					resource.TestCheckResourceAttr(roleArnResourceName, "local_role_name", ""),
-//
-//					resource.TestCheckResourceAttrSet(localRoleNameResourceName, "local_role_name"),
-//					resource.TestCheckResourceAttr(localRoleNameResourceName, "role_arn", ""),
-//				),
-//			},
-//			{
-//				// now swap the local_role_name and role_arn on each launch role constraint
-//				Config: testAccAWSServiceCatalogLaunchNotificationConstraintConfig(salt),
-//				Check: resource.ComposeTestCheckFunc(
-//					resource.TestCheckResourceAttrSet(roleArnResourceName, "local_role_name"),
-//					resource.TestCheckResourceAttr(roleArnResourceName, "role_arn", ""),
-//
-//					resource.TestCheckResourceAttrSet(localRoleNameResourceName, "role_arn"),
-//					resource.TestCheckResourceAttr(localRoleNameResourceName, "local_role_name", ""),
-//				),
-//			},
-//		},
-//	})
-//}
+func TestAccAWSServiceCatalogLaunchNotificationConstraint_updateNotificationArns(t *testing.T) {
+	resourceName := "aws_servicecatalog_launch_notification_constraint.test"
+	salt := acctest.RandStringFromCharSet(5, acctest.CharSetAlpha)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckServiceCatalogLaunchNotificationConstraintDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSServiceCatalogLaunchNotificationConstraintConfig(salt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchNotificationConstraint(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "portfolio_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "product_id"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, "type", "NOTIFICATION"),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "2"),
+					resource.TestMatchResourceAttr(resourceName, "notification_arns.0", regexp.MustCompile(fmt.Sprintf(`^arn:[^:]+:sns:[^:]+:[^:]+:topic-1-%[1]s$`, salt))),
+					resource.TestMatchResourceAttr(resourceName, "notification_arns.1", regexp.MustCompile(fmt.Sprintf(`^arn:[^:]+:sns:[^:]+:[^:]+:topic-2-%[1]s$`, salt))),
+				),
+			},
+			{
+				// now add a third sns topic
+				Config: testAccAWSServiceCatalogLaunchNotificationConstraintConfig_updated(salt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLaunchNotificationConstraint(resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "portfolio_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "product_id"),
+					resource.TestCheckResourceAttr(resourceName, "description", "description"),
+					resource.TestCheckResourceAttr(resourceName, "type", "NOTIFICATION"),
+					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "3"),
+					resource.TestMatchResourceAttr(resourceName, "notification_arns.0", regexp.MustCompile(fmt.Sprintf(`^arn:[^:]+:sns:[^:]+:[^:]+:topic-1-%[1]s$`, salt))),
+					resource.TestMatchResourceAttr(resourceName, "notification_arns.1", regexp.MustCompile(fmt.Sprintf(`^arn:[^:]+:sns:[^:]+:[^:]+:topic-2-%[1]s$`, salt))),
+					resource.TestMatchResourceAttr(resourceName, "notification_arns.2", regexp.MustCompile(fmt.Sprintf(`^arn:[^:]+:sns:[^:]+:[^:]+:topic-3-%[1]s$`, salt))),
+				),
+			},
+		},
+	})
+}
 
-func testAccCheckLaunchNotificationConstraint(resourceName string, dco *servicecatalog.DescribeConstraintOutput) resource.TestCheckFunc {
+func testAccCheckLaunchNotificationConstraint(resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -114,11 +119,10 @@ func testAccCheckLaunchNotificationConstraint(resourceName string, dco *servicec
 			Id: aws.String(rs.Primary.ID),
 		}
 		conn := testAccProvider.Meta().(*AWSClient).scconn
-		resp, err := conn.DescribeConstraint(&input)
+		_, err := conn.DescribeConstraint(&input)
 		if err != nil {
 			return err
 		}
-		*dco = *resp
 		return nil
 	}
 }
@@ -140,13 +144,31 @@ resource "aws_servicecatalog_launch_notification_constraint" "test" {
 	return config
 }
 
+func testAccAWSServiceCatalogLaunchNotificationConstraintConfig_updated(salt string) string {
+	config := composeConfig(
+		testAccAWSServiceCatalogLaunchNotificationConstraintConfigRequirements(salt),
+		`
+resource "aws_servicecatalog_launch_notification_constraint" "test" {
+  description = "description"
+  portfolio_id = aws_servicecatalog_portfolio.test.id
+  product_id = aws_servicecatalog_product.test.id
+  notification_arns = [
+    aws_sns_topic.test1.arn,
+    aws_sns_topic.test2.arn,
+    aws_sns_topic.test3.arn
+  ]
+}
+`)
+	return config
+}
+
 func testAccAWSServiceCatalogLaunchNotificationConstraintConfigRequirements(salt string) string {
 	return composeConfig(
 		testAccAWSServiceCatalogLaunchNotificationConstraintConfig_role(salt),
 		testAccAWSServiceCatalogLaunchNotificationConstraintConfig_portfolios(salt),
 		testAccAWSServiceCatalogLaunchNotificationConstraintConfig_product(salt),
 		testAccAWSServiceCatalogLaunchNotificationConstraintConfig_portfolioProductAssociations(),
-		testAccAWSServiceCatalogLaunchNotificationConstraintConfig_sns_topic(),
+		testAccAWSServiceCatalogLaunchNotificationConstraintConfig_sns_topic(salt),
 	)
 }
 
@@ -243,13 +265,18 @@ resource "aws_servicecatalog_portfolio_product_association" "test" {
 `
 }
 
-func testAccAWSServiceCatalogLaunchNotificationConstraintConfig_sns_topic() string {
-	return `
+func testAccAWSServiceCatalogLaunchNotificationConstraintConfig_sns_topic(salt string) string {
+	return fmt.Sprintf(`
 resource "aws_sns_topic" "test1" {
+  name = "topic-1-%[1]s"
 }
 resource "aws_sns_topic" "test2" {
+  name = "topic-2-%[1]s"
 }
-`
+resource "aws_sns_topic" "test3" {
+  name = "topic-3-%[1]s"
+}
+`, salt)
 }
 
 func testAccCheckServiceCatalogLaunchNotificationConstraintDestroy(s *terraform.State) error {
@@ -304,7 +331,7 @@ func testAccCheckServiceCatalogLaunchNotificationConstraintDisappears(describeCo
 			return nil
 		})
 		if err != nil {
-			return fmt.Errorf("could not delete launch role constraint: #{err}")
+			return fmt.Errorf("could not delete launch notification constraint: #{err}")
 		}
 		if err := waitForServiceCatalogLaunchNotificationConstraintDeletion(conn,
 			aws.StringValue(constraintId)); err != nil {

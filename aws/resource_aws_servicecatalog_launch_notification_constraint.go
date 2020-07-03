@@ -128,9 +128,6 @@ func resourceAwsServiceCatalogLaunchNotificationConstraintRead(d *schema.Resourc
 	if constraint == nil {
 		return nil
 	}
-	d.Set("description", constraint.ConstraintDetail.Description)
-	d.Set("portfolio_id", constraint.ConstraintDetail.PortfolioId)
-	d.Set("product_id", constraint.ConstraintDetail.ProductId)
 	arns, err := flattenAwsServiceCatalogLaunchNotificationConstraintArnsJson(constraint.ConstraintParameters)
 	if err != nil {
 		return err
@@ -162,7 +159,7 @@ func flattenAwsServiceCatalogLaunchNotificationConstraintArns(arns []string) []i
 
 func resourceAwsServiceCatalogLaunchNotificationConstraintUpdate(d *schema.ResourceData, meta interface{}) error {
 	input := servicecatalog.UpdateConstraintInput{}
-	if d.HasChanges("launch_role_arn", "role_arn") {
+	if d.HasChanges("notification_arns") {
 		parameters, err := resourceAwsServiceCatalogLaunchNotificationConstraintJsonParameters(d)
 		if err != nil {
 			return err
