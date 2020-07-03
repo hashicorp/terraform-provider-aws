@@ -34,7 +34,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraint() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"rule": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -47,7 +47,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraint() *schema.Resource {
 							Optional: true,
 						},
 						"assertion": {
-							Type:     schema.TypeSet,
+							Type:     schema.TypeList,
 							Required: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -140,7 +140,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintJsonParameters(d *schema.R
 	if err := resourceAwsServiceCatalogLaunchTemplateConstraintParseRules(d, &constraint); err != nil {
 		return "", err
 	}
-	marshal, err := json.Marshal(constraint)
+	marshal, err := json.Marshal(constraint.Rules)
 	if err != nil {
 		return "", err
 	}
@@ -150,7 +150,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintJsonParameters(d *schema.R
 func resourceAwsServiceCatalogLaunchTemplateConstraintParseRules(d *schema.ResourceData, constraint *awsServiceCatalogLaunchTemplateConstraint) error {
 	constraint.Rules = map[string]awsServiceCatalogLaunchTemplateConstraintRule{}
 	if rules, ok := d.GetOk("rule"); ok {
-		for _, ruleMap := range rules.(*schema.Set).List() {
+		for _, ruleMap := range rules.([]interface{}) {
 			name, rule, err := resourceAwsServiceCatalogLaunchTemplateConstraintParseRule(ruleMap.(map[string]interface{}))
 			if err != nil {
 				return err
@@ -173,7 +173,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintParseRule(m map[string]int
 				return "", nil, err
 			}
 		} else if k == "assertion" {
-			for _, assertMap := range v.(*schema.Set).List() {
+			for _, assertMap := range v.([]interface{}) {
 				assert, err := resourceAwsServiceCatalogLaunchTemplateConstraintParseRuleAsserts(assertMap.(map[string]interface{}))
 				if err != nil {
 					return "", nil, err
@@ -214,55 +214,53 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintRead(d *schema.ResourceDat
 	d.Set("description", constraint.ConstraintDetail.Description)
 	d.Set("portfolio_id", constraint.ConstraintDetail.PortfolioId)
 	d.Set("product_id", constraint.ConstraintDetail.ProductId)
-	rule, err := resourceAwsServiceCatalogLaunchTemplateConstraintReadParameters(constraint)
+	rule, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadParameters(constraint.ConstraintParameters)
+	d.Set("rule", rule)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Rule parsed as: %s\n", rule)
-	d.Set("rule", rule)
 	return nil
 }
 
-func resourceAwsServiceCatalogLaunchTemplateConstraintReadParameters(constraint *servicecatalog.DescribeConstraintOutput) ([]interface{}, error) {
+func flattenAwsServiceCatalogLaunchTemplateConstraintReadParameters(configured *string) ([]map[string]interface{}, error) {
 	// ConstraintParameters is returned from AWS as a JSON string
-	var bytes = []byte(*constraint.ConstraintParameters)
-	var parameters awsServiceCatalogLaunchTemplateConstraint
-	err := json.Unmarshal(bytes, &parameters)
+	var bytes = []byte(*configured)
+	var constraint awsServiceCatalogLaunchTemplateConstraint
+	err := json.Unmarshal(bytes, &constraint)
 	if err != nil {
 		return nil, err
 	}
-	rules, err := resourceAwsServiceCatalogLaunchTemplateConstraintReadRules(parameters.Rules)
+	rules, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadRules(constraint.Rules)
 	if err != nil {
 		return nil, err
 	}
 	return rules, nil
 }
 
-func resourceAwsServiceCatalogLaunchTemplateConstraintReadRules(rules map[string]awsServiceCatalogLaunchTemplateConstraintRule) ([]interface{}, error) {
-	m := make([]map[string]interface{}, 0, len(rules))
-	for name, rule := range rules {
-		readRule, err := resourceAwsServiceCatalogLaunchTemplateConstraintReadRule(name, rule)
+func flattenAwsServiceCatalogLaunchTemplateConstraintReadRules(configured map[string]awsServiceCatalogLaunchTemplateConstraintRule) ([]map[string]interface{}, error) {
+	rules := make([]map[string]interface{}, 0, len(configured))
+	for name, item := range configured {
+		rule, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadRule(name, item)
 		if err != nil {
 			return nil, err
 		}
-		m = append(m, readRule)
+		rules = append(rules, rule)
 	}
-	return m, nil
+	return rules, nil
 }
 
-func resourceAwsServiceCatalogLaunchTemplateConstraintReadRule(name string, rule awsServiceCatalogLaunchTemplateConstraintRule) (map[string]interface{}, error) {
+func flattenAwsServiceCatalogLaunchTemplateConstraintReadRule(name string, configured awsServiceCatalogLaunchTemplateConstraintRule) (map[string]interface{}, error) {
 	m := make(map[string]interface{})
 	m["name"] = name
-	var ruleCondition = rule.RuleCondition
-	if ruleCondition != nil {
-		jsonDoc, err := json.Marshal(ruleCondition)
+	if configured.RuleCondition != nil {
+		jsonDoc, err := json.Marshal(configured.RuleCondition)
 		if err != nil {
 			return nil, err
 		}
 		fmt.Printf("Marshalled rule_condition as: %s\n", jsonDoc)
 		m["rule_condition"] = jsonDoc
 	}
-	assertions, err := resourceAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertions(rule.Assertions)
+	assertions, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertions(configured.Assertions)
 	if err != nil {
 		return nil, err
 	}
@@ -270,10 +268,10 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintReadRule(name string, rule
 	return m, nil
 }
 
-func resourceAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertions(assertions []awsServiceCatalogLaunchTemplateConstraintRuleAssert) ([]map[string]interface{}, error) {
+func flattenAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertions(assertions []awsServiceCatalogLaunchTemplateConstraintRuleAssert) ([]map[string]interface{}, error) {
 	m := make([]map[string]interface{}, 0, len(assertions))
 	for _, assertion := range assertions {
-		ruleAssertion, err := resourceAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertion(assertion)
+		ruleAssertion, err := flattenAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertion(assertion)
 		if err != nil {
 			return nil, err
 		}
@@ -282,7 +280,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertions(asserti
 	return m, nil
 }
 
-func resourceAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertion(assertion awsServiceCatalogLaunchTemplateConstraintRuleAssert) (map[string]interface{}, error) {
+func flattenAwsServiceCatalogLaunchTemplateConstraintReadRuleAssertion(assertion awsServiceCatalogLaunchTemplateConstraintRuleAssert) (map[string]interface{}, error) {
 	m := make(map[string]interface{})
 	if assertion.AssertDescription != "" {
 		m["assert_description"] = assertion.AssertDescription
