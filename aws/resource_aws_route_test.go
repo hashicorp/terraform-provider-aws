@@ -820,6 +820,25 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
 				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", igwResourceName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSRouteExists(resourceName, &route),
@@ -915,25 +934,6 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
-					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
-				),
-			},
-			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
@@ -973,6 +973,25 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
 					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
@@ -1056,25 +1075,6 @@ func TestAccAWSRoute_IPv6_Update_Target(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, "gateway_id", vgwResourceName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSRouteExists(resourceName, &route),
-					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", ""),
-					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", destinationCidr),
-					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
-					resource.TestCheckResourceAttrPair(resourceName, "gateway_id", vgwResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "network_interface_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
-					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
-				),
-			},
-			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
@@ -1096,22 +1096,24 @@ func testAccCheckAWSRouteExists(n string, res *ec2.Route) resource.TestCheckFunc
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		r, err := resourceAwsRouteFindRoute(
-			conn,
-			rs.Primary.Attributes["route_table_id"],
-			rs.Primary.Attributes["destination_cidr_block"],
-			rs.Primary.Attributes["destination_ipv6_cidr_block"],
-		)
+
+		var route *ec2.Route
+		var err error
+		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
+			route, err = readIpv4Route(conn, rs.Primary.Attributes["route_table_id"], v)
+		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
+			route, err = readIpv6Route(conn, rs.Primary.Attributes["route_table_id"], v)
+		}
 
 		if err != nil {
 			return err
 		}
 
-		if r == nil {
+		if route == nil {
 			return fmt.Errorf("Route not found")
 		}
 
-		*res = *r
+		*res = *route
 
 		return nil
 	}
@@ -1124,12 +1126,14 @@ func testAccCheckAWSRouteDestroy(s *terraform.State) error {
 		}
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-		route, err := resourceAwsRouteFindRoute(
-			conn,
-			rs.Primary.Attributes["route_table_id"],
-			rs.Primary.Attributes["destination_cidr_block"],
-			rs.Primary.Attributes["destination_ipv6_cidr_block"],
-		)
+
+		var route *ec2.Route
+		var err error
+		if v := rs.Primary.Attributes["destination_cidr_block"]; v != "" {
+			route, err = readIpv4Route(conn, rs.Primary.Attributes["route_table_id"], v)
+		} else if v := rs.Primary.Attributes["destination_ipv6_cidr_block"]; v != "" {
+			route, err = readIpv6Route(conn, rs.Primary.Attributes["route_table_id"], v)
+		}
 
 		if route == nil && err == nil {
 			return nil
