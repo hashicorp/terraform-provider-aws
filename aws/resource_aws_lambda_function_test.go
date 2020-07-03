@@ -1795,7 +1795,7 @@ func testAccCheckAwsLambdaFunctionExists(res, funcName string, function *lambda.
 func testAccCheckAwsLambdaFunctionInvokeArn(name string, function *lambda.GetFunctionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		arn := aws.StringValue(function.Configuration.FunctionArn)
-		return testAccCheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "lambda", "apigateway", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
+		return testAccCheckResourceAttrRegionalARNAccountID(name, "invoke_arn", "apigateway", "lambda", fmt.Sprintf("path/2015-03-31/functions/%s/invocations", arn))(s)
 	}
 }
 

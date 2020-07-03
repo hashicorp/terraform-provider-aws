@@ -2,8 +2,8 @@
 
 - [Pull Request Lifecycle](#pull-request-lifecycle)
 - [Branch Prefixes](#branch-prefixes)
-- [Common Review Items](#common-review-items)    
-  - [Go Coding Style](#go-coding-style)    
+- [Common Review Items](#common-review-items)
+  - [Go Coding Style](#go-coding-style)
   - [Resource Contribution Guidelines](#resource-contribution-guidelines)
 
 We appreciate direct contributions to the provider codebase. Here's what to
@@ -131,7 +131,23 @@ The below are style-based items that _may_ be noted during review and are recomm
 - [ ] __Implements Error Message Context__: Returning errors from resource `Create`, `Read`, `Update`, and `Delete` functions should include additional messaging about the location or cause of the error for operators and code maintainers by wrapping with [`fmt.Errorf()`](https://godoc.org/golang.org/x/exp/errors/fmt#Errorf).
   - An example `Delete` API error: `return fmt.Errorf("error deleting {SERVICE} {THING} (%s): %s", d.Id(), err)`
   - An example `d.Set()` error: `return fmt.Errorf("error setting {ATTRIBUTE}: %s", err)`
-- [ ] __Implements arn Attribute__: APIs that return an Amazon Resource Name (ARN), should implement `arn` as an attribute.
+- [ ] __Implements arn Attribute__: APIs that return an Amazon Resource Name (ARN) should implement `arn` as an attribute. Alternatively, the ARN can be synthesized using the AWS Go SDK [`arn.ARN`](https://docs.aws.amazon.com/sdk-for-go/api/aws/arn/#ARN) structure. For example:
+
+  ```go
+  // Direct Connect Virtual Interface ARN.
+  // See https://docs.aws.amazon.com/directconnect/latest/UserGuide/security_iam_service-with-iam.html#security_iam_service-with-iam-id-based-policies-resources.
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Region:    meta.(*AWSClient).region,
+		Service:   "directconnect",
+		AccountID: meta.(*AWSClient).accountid,
+		Resource:  fmt.Sprintf("dxvif/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+  ```
+
+  When the `arn` attribute is synthesized this way, add the resource to the [list](https://www.terraform.io/docs/providers/aws/index.html#argument-reference) of those affected by the provider's `skip_requesting_account_id` attribute.
+
 - [ ] __Implements Warning Logging With Resource State Removal__: If a resource is removed outside of Terraform (e.g. via different tool, API, or web UI), `d.SetId("")` and `return nil` can be used in the resource `Read` function to trigger resource recreation. When this occurs, a warning log message should be printed beforehand: `log.Printf("[WARN] {SERVICE} {THING} (%s) not found, removing from state", d.Id())`
 - [ ] __Uses isAWSErr() with AWS Go SDK Error Objects__: Use the available `isAWSErr(err error, code string, message string)` helper function instead of the `awserr` package to compare error code and message contents.
 - [ ] __Uses %s fmt Verb with AWS Go SDK Objects__: AWS Go SDK objects implement `String()` so using the `%v`, `%#v`, or `%+v` fmt verbs with the object are extraneous or provide unhelpful detail.
