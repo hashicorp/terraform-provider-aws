@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAwsWafv2RuleGroup_Basic(t *testing.T) {
@@ -516,8 +517,11 @@ func TestAccAwsWafv2RuleGroup_IpSetReferenceStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2IpSetRefStatementIndex(&v, &idx),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.#", &idx, "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.ip_set_reference_statement.#": "1",
+					}),
+					// TODO: TypeSet check need regex helper
 					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.ip_set_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/ipset/.+$`)),
 				),
 			},
@@ -645,10 +649,13 @@ func TestAccAwsWafv2RuleGroup_RegexPatternSetReferenceStatement(t *testing.T) {
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexp.MustCompile(`regional/rulegroup/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2RegexSetRefStatementIndex(&v, &idx),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.field_to_match.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.text_transformation.#", &idx, "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#": "1",
+						"statement.0.regex_pattern_set_reference_statement.#":                       "1",
+						"statement.0.regex_pattern_set_reference_statement.0.field_to_match.#":      "1",
+						"statement.0.regex_pattern_set_reference_statement.0.text_transformation.#": "1",
+					}),
+					// TODO: TypeSet check need regex helper
 					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.regex_pattern_set_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/regexpatternset/.+$`)),
 				),
 			},

@@ -2,9 +2,10 @@ package aws
 
 import (
 	"fmt"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 	"regexp"
 	"testing"
+
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
@@ -349,14 +350,17 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2RuleGroupRefStatementIndex(&v, &idx, []interface{}{}),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.name", &idx, "rule-1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.count.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.none.#", &idx, "0"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.#", &idx, "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                             "rule-1",
+						"override_action.#":                "1",
+						"override_action.0.count.#":        "1",
+						"rule.%d.override_action.0.none.#": "0",
+						"rule.%d.statement.#":              "1",
+						"rule.%d.statement.0.rule_group_reference_statement.#":       "1",
+						"statement.0.rule_group_reference_statement.excluded_rule.#": "0",
+					}),
+					// TODO: TypeSet check need helper for regex
 					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/rulegroup/.+$`)),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.excluded_rule.#", &idx, "0"),
 				),
 			},
 			{
@@ -367,16 +371,19 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					computeWafv2RuleGroupRefStatementIndex(&v, &idx, excludedRules),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.name", &idx, "rule-1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.count.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.override_action.0.none.#", &idx, "0"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.#", &idx, "1"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.#", &idx, "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"name":                             "rule-1",
+						"override_action.#":                "1",
+						"override_action.0.count.#":        "1",
+						"rule.%d.override_action.0.none.#": "0",
+						"rule.%d.statement.#":              "1",
+						"rule.%d.statement.0.rule_group_reference_statement.#":              "1",
+						"statement.0.rule_group_reference_statement.excluded_rule.#":        "2",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.0.name": "rule-to-exclude-b",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.1.name": "rule-to-exclude-a",
+					}),
+					// TODO: TypeSet check need helper for regex
 					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/rulegroup/.+$`)),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.#", &idx, "2"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.0.name", &idx, "rule-to-exclude-b"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.excluded_rule.1.name", &idx, "rule-to-exclude-a"),
 				),
 			},
 			{
