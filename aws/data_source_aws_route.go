@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
@@ -189,4 +190,14 @@ func getRoutes(table *ec2.RouteTable, d *schema.ResourceData) []*ec2.Route {
 		routes = append(routes, r)
 	}
 	return routes
+}
+
+// Helper: Create an ID for a route
+func resourceAwsRouteID(d *schema.ResourceData, r *ec2.Route) string {
+
+	if r.DestinationIpv6CidrBlock != nil && *r.DestinationIpv6CidrBlock != "" {
+		return fmt.Sprintf("r-%s%d", d.Get("route_table_id").(string), hashcode.String(*r.DestinationIpv6CidrBlock))
+	}
+
+	return fmt.Sprintf("r-%s%d", d.Get("route_table_id").(string), hashcode.String(*r.DestinationCidrBlock))
 }
