@@ -100,11 +100,7 @@ func resourceAwsLoadBalancerListenerPoliciesRead(d *schema.ResourceData, meta in
 	}
 
 	d.Set("load_balancer_name", loadBalancerName)
-	loadBalancerPortVal, err := strconv.ParseInt(loadBalancerPort, 10, 64)
-	if err != nil {
-		return fmt.Errorf("error parsing load balancer port: %s", err)
-	}
-	d.Set("load_balancer_port", loadBalancerPortVal)
+	d.Set("load_balancer_port", loadBalancerPort)
 	d.Set("policy_names", flattenStringList(policyNames))
 
 	return nil

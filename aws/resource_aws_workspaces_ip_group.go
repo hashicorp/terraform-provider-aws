@@ -7,7 +7,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -38,9 +37,8 @@ func resourceAwsWorkspacesIpGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"source": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.IsCIDR,
+							Type:     schema.TypeString,
+							Required: true,
 						},
 						"description": {
 							Type:     schema.TypeString,
@@ -93,19 +91,9 @@ func resourceAwsWorkspacesIpGroupRead(d *schema.ResourceData, meta interface{}) 
 		return err
 	}
 
-	ipGroups := resp.Result
-
-	if len(ipGroups) == 0 {
-		log.Printf("[WARN] Workspaces Ip Group (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	ipGroup := ipGroups[0]
-
-	d.Set("name", ipGroup.GroupName)
-	d.Set("description", ipGroup.GroupDesc)
-	d.Set("rules", flattenIpGroupRules(ipGroup.UserRules))
+	d.Set("name", resp.Result[0].GroupName)
+	d.Set("description", resp.Result[0].GroupDesc)
+	d.Set("rules", flattenIpGroupRules(resp.Result[0].UserRules))
 
 	tags, err := keyvaluetags.WorkspacesListTags(conn, d.Id())
 	if err != nil {

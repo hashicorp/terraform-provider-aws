@@ -7,10 +7,6 @@ import (
 )
 
 func TestAccAWSElbServiceAccount_basic(t *testing.T) {
-	expectedAccountID := elbAccountIdPerRegionMap[testAccGetRegion()]
-
-	dataSourceName := "data.aws_elb_service_account.main"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -18,28 +14,15 @@ func TestAccAWSElbServiceAccount_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsElbServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr("data.aws_elb_service_account.main", "id", "797873946194"),
+					resource.TestCheckResourceAttr("data.aws_elb_service_account.main", "arn", "arn:aws:iam::797873946194:root"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccAWSElbServiceAccount_Region(t *testing.T) {
-	expectedAccountID := elbAccountIdPerRegionMap[testAccGetRegion()]
-
-	dataSourceName := "data.aws_elb_service_account.regional"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
-		Providers: testAccProviders,
-		Steps: []resource.TestStep{
 			{
 				Config: testAccCheckAwsElbServiceAccountExplicitRegionConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr("data.aws_elb_service_account.regional", "id", "156460612806"),
+					resource.TestCheckResourceAttr("data.aws_elb_service_account.regional", "arn", "arn:aws:iam::156460612806:root"),
 				),
 			},
 		},
@@ -51,9 +34,7 @@ data "aws_elb_service_account" "main" { }
 `
 
 const testAccCheckAwsElbServiceAccountExplicitRegionConfig = `
-data "aws_region" "current" {}
-
 data "aws_elb_service_account" "regional" {
-	region = "${data.aws_region.current.name}"
+	region = "eu-west-1"
 }
 `

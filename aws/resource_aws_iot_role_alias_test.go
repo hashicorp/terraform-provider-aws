@@ -15,9 +15,6 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 	alias := acctest.RandomWithPrefix("RoleAlias-")
 	alias2 := acctest.RandomWithPrefix("RoleAlias2-")
 
-	resourceName := "aws_iot_role_alias.ra"
-	resourceName2 := "aws_iot_role_alias.ra2"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -26,46 +23,51 @@ func TestAccAWSIotRoleAlias_basic(t *testing.T) {
 			{
 				Config: testAccAWSIotRoleAliasConfig(alias),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotRoleAliasExists(resourceName),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
-					resource.TestCheckResourceAttr(resourceName, "credential_duration", "3600"),
+					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra"),
+					testAccCheckResourceAttrRegionalARN("aws_iot_role_alias.ra", "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
+					resource.TestCheckResourceAttr(
+						"aws_iot_role_alias.ra", "credential_duration", "3600"),
 				),
 			},
 			{
 				Config: testAccAWSIotRoleAliasConfigUpdate1(alias, alias2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotRoleAliasExists(resourceName),
-					testAccCheckAWSIotRoleAliasExists(resourceName2),
-					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
-					resource.TestCheckResourceAttr(resourceName, "credential_duration", "1800"),
+					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra"),
+					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra2"),
+					testAccCheckResourceAttrRegionalARN("aws_iot_role_alias.ra", "arn", "iot", fmt.Sprintf("rolealias/%s", alias)),
+					resource.TestCheckResourceAttr(
+						"aws_iot_role_alias.ra", "credential_duration", "1800"),
 				),
 			},
 			{
 				Config: testAccAWSIotRoleAliasConfigUpdate2(alias2),
-				Check:  resource.ComposeTestCheckFunc(testAccCheckAWSIotRoleAliasExists(resourceName2)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra2"),
+				),
 			},
 			{
 				Config: testAccAWSIotRoleAliasConfigUpdate3(alias2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotRoleAliasExists(resourceName2),
+					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra2"),
 				),
 				ExpectError: regexp.MustCompile("Role alias .+? already exists for this account"),
 			},
 			{
 				Config: testAccAWSIotRoleAliasConfigUpdate4(alias2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotRoleAliasExists(resourceName2),
+					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra2"),
 				),
 			},
 			{
 				Config: testAccAWSIotRoleAliasConfigUpdate5(alias2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSIotRoleAliasExists(resourceName2),
-					testAccMatchResourceAttrGlobalARN(resourceName2, "role_arn", "iam", regexp.MustCompile("role/rolebogus")),
+					testAccCheckAWSIotRoleAliasExists("aws_iot_role_alias.ra2"),
+					resource.TestMatchResourceAttr(
+						"aws_iot_role_alias.ra2", "role_arn", regexp.MustCompile(".+?bogus")),
 				),
 			},
 			{
-				ResourceName:      resourceName2,
+				ResourceName:      "aws_iot_role_alias.ra2",
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

@@ -51,8 +51,6 @@ func SerializeValueForHash(buf *bytes.Buffer, val interface{}, schema *Schema) {
 			buf.WriteRune(':')
 
 			switch innerVal := innerVal.(type) {
-			case bool:
-				buf.WriteString(strconv.FormatBool(innerVal))
 			case int:
 				buf.WriteString(strconv.Itoa(innerVal))
 			case float64:

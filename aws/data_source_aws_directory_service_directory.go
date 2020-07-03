@@ -56,11 +56,6 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 					},
 				},
 			},
@@ -69,12 +64,6 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"connect_ips": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      schema.HashString,
-						},
 						"customer_username": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -94,11 +83,6 @@ func dataSourceAwsDirectoryServiceDirectory() *schema.Resource {
 						"vpc_id": {
 							Type:     schema.TypeString,
 							Computed: true,
-						},
-						"availability_zones": {
-							Type:     schema.TypeSet,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},
@@ -170,15 +154,8 @@ func dataSourceAwsDirectoryServiceDirectoryRead(d *schema.ResourceData, meta int
 	d.Set("size", dir.Size)
 	d.Set("edition", dir.Edition)
 	d.Set("type", dir.Type)
-
-	if err := d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings)); err != nil {
-		return fmt.Errorf("error setting VPC settings: %s", err)
-	}
-
-	if err := d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings)); err != nil {
-		return fmt.Errorf("error setting connect settings: %s", err)
-	}
-
+	d.Set("vpc_settings", flattenDSVpcSettings(dir.VpcSettings))
+	d.Set("connect_settings", flattenDSConnectSettings(dir.DnsIpAddrs, dir.ConnectSettings))
 	d.Set("enable_sso", dir.SsoEnabled)
 
 	if aws.StringValue(dir.Type) == directoryservice.DirectoryTypeAdconnector {

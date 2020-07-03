@@ -40,9 +40,8 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 			},
 
 			"result_map": {
-				Type:       schema.TypeMap,
-				Computed:   true,
-				Deprecated: "use `result` attribute with jsondecode() function",
+				Type:     schema.TypeMap,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

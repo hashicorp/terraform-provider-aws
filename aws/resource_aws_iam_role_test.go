@@ -53,7 +53,7 @@ func testSweepIamRoles(region string) error {
 	prefixes := []string{
 		"ecs_instance_role",
 		"ecs_tf",
-		"EMR_AutoScaling_DefaultRole_",
+		"EMR_AutoScaling_DefaultRole",
 		"iam_emr",
 		"terraform-",
 		"test",

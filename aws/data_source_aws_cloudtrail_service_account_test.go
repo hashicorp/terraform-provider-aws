@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
@@ -9,8 +10,6 @@ import (
 func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 	expectedAccountID := cloudTrailServiceAccountPerRegionMap[testAccGetRegion()]
 
-	dataSourceName := "data.aws_cloudtrail_service_account.main"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -18,8 +17,8 @@ func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 			{
 				Config: testAccCheckAwsCloudTrailServiceAccountConfig,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.main", "id", expectedAccountID),
+					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.main", "arn", fmt.Sprintf("arn:%s:iam::%s:root", testAccGetPartition(), expectedAccountID)),
 				),
 			},
 		},
@@ -29,8 +28,6 @@ func TestAccAWSCloudTrailServiceAccount_basic(t *testing.T) {
 func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
 	expectedAccountID := cloudTrailServiceAccountPerRegionMap[testAccGetRegion()]
 
-	dataSourceName := "data.aws_cloudtrail_service_account.regional"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
@@ -38,8 +35,8 @@ func TestAccAWSCloudTrailServiceAccount_Region(t *testing.T) {
 			{
 				Config: testAccCheckAwsCloudTrailServiceAccountConfigRegion,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "id", expectedAccountID),
-					testAccCheckResourceAttrGlobalARNAccountID(dataSourceName, "arn", expectedAccountID, "iam", "root"),
+					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.regional", "id", expectedAccountID),
+					resource.TestCheckResourceAttr("data.aws_cloudtrail_service_account.regional", "arn", fmt.Sprintf("arn:%s:iam::%s:root", testAccGetPartition(), expectedAccountID)),
 				),
 			},
 		},
