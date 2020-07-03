@@ -140,7 +140,7 @@ func resourceAwsServiceCatalogLaunchTemplateConstraintJsonParameters(d *schema.R
 	if err := resourceAwsServiceCatalogLaunchTemplateConstraintParseRules(d, &constraint); err != nil {
 		return "", err
 	}
-	marshal, err := json.Marshal(constraint.Rules)
+	marshal, err := json.Marshal(constraint)
 	if err != nil {
 		return "", err
 	}
