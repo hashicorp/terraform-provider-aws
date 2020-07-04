@@ -1023,12 +1023,12 @@ func TestAccAWSRoute_IPv4_Update_Target(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "instance_owner_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
+					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eniResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
-					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateBlackhole),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
 					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
 				),
@@ -2325,7 +2325,11 @@ resource "aws_subnet" "test" {
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-  subnet_id     = aws_subnet.test.id
+
+  network_interface {
+    device_index         = 0
+    network_interface_id = aws_network_interface.test.id
+  }
 
   tags = {
     Name = %[1]q
