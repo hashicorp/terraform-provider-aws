@@ -525,6 +525,70 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 	})
 }
 
+func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
+	var route ec2.Route
+	resourceName := "aws_route.test"
+	eni1ResourceName := "aws_network_interface.test1"
+	eni2ResourceName := "aws_network_interface.test2"
+	instanceResourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni1ResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
+					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eni1ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				Config: testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, eni2ResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSRouteExists(resourceName, &route),
+					resource.TestCheckResourceAttr(resourceName, "destination_cidr_block", destinationCidr),
+					resource.TestCheckResourceAttr(resourceName, "destination_ipv6_cidr_block", ""),
+					resource.TestCheckResourceAttr(resourceName, "destination_prefix_list_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "egress_only_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_id", instanceResourceName, "id"),
+					testAccCheckResourceAttrAccountID(resourceName, "instance_owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "nat_gateway_id", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "network_interface_id", eni2ResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "origin", ec2.RouteOriginCreateRoute),
+					resource.TestCheckResourceAttr(resourceName, "state", ec2.RouteStateActive),
+					resource.TestCheckResourceAttr(resourceName, "transit_gateway_id", ""),
+					resource.TestCheckResourceAttr(resourceName, "vpc_peering_connection_id", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccAWSRouteImportStateIdFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
@@ -1485,6 +1549,94 @@ resource "aws_route" "test" {
   depends_on = [aws_instance.test]
 }
 `, rName, destinationCidr))
+}
+
+func testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, targetResourceName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.current.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test1" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_interface" "test2" {
+  subnet_id = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+
+  network_interface {
+    device_index         = 0
+    network_interface_id = aws_network_interface.test1.id
+  }
+
+  network_interface {
+    device_index         = 1
+    network_interface_id = aws_network_interface.test2.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  network_interface_id   = %[3]s.id
+
+  # Wait for the ENI attachment.
+  depends_on = [aws_instance.test]
+}
+`, rName, destinationCidr, targetResourceName))
 }
 
 func testAccAWSRouteConfigIpv4VpcPeeringConnection(rName, destinationCidr string) string {
