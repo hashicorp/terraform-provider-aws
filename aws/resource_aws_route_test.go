@@ -525,7 +525,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 	})
 }
 
-/*
 func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 	var route ec2.Route
 	resourceName := "aws_route.test"
@@ -589,7 +588,6 @@ func TestAccAWSRoute_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) {
 		},
 	})
 }
-*/
 
 func TestAccAWSRoute_IPv4_To_VpcPeeringConnection(t *testing.T) {
 	var route ec2.Route
@@ -1722,7 +1720,6 @@ resource "aws_route" "test" {
 `, rName, destinationCidr))
 }
 
-/*
 func testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationCidr, targetResourceName string) string {
 	return composeConfig(
 		testAccLatestAmazonNatInstanceAmiConfig(),
@@ -1800,7 +1797,6 @@ resource "aws_route" "test" {
 }
 `, rName, destinationCidr, targetResourceName))
 }
-*/
 
 func testAccAWSRouteConfigIpv4VpcPeeringConnection(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
