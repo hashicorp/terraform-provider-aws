@@ -1,2 +1,4 @@
 # Default owner for all pull requests
 *    @terraform-providers/aws-provider
+# Service specific owners
+/aws/*_aws_fsx_*.go                       @drfaust92
