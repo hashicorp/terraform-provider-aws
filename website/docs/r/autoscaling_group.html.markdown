@@ -286,7 +286,7 @@ Alternatively the `tags` attributes can be used, which accepts a list of maps co
 This allows the construction of dynamic lists of tags which is not possible using the single `tag` attribute.
 `tag` and `tags` are mutually exclusive, only one of them can be specified.
 
-~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. To ignore the removal of these automatic tags, see the [`ignore_tags` provider configuration](https://www.terraform.io/docs/providers/aws/index.html#ignore_tags) or the [`ignore_changes` lifecycle argument for Terraform resources](https://www.terraform.io/docs/configuration/resources.html#ignore_changes).
+~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. These generally should be included in the configuration so Terraform does not attempt to remove them and so if the `min_size` was greater than zero on creation, that these tag(s) are applied to any initial EC2 Instances in the Auto Scaling Group. If these tag(s) were missing in the Auto Scaling Group configuration on creation, affected EC2 Instances missing the tags may require manual intervention of adding the tags to ensure they work properly with the other AWS service.
 
 ## Attributes Reference
 
