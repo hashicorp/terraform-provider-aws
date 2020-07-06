@@ -946,7 +946,7 @@ func TestAccAWSLaunchTemplate_defaultVersion(t *testing.T) {
 	description := "Test Description 1"
 	descriptionNew := "Test Description 2"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,
@@ -991,7 +991,7 @@ func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
 	description := "Test Description 1"
 	descriptionNew := "Test Description 2"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSLaunchTemplateDestroy,

@@ -814,18 +814,7 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
-		LaunchTemplateId: aws.String(d.Id()),
-		Versions:         aws.StringSlice([]string{"$Latest"}),
-	})
-	if err != nil {
-		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template (%s): %w", d.Id(), err)
-	}
-	if dltv == nil || len(dltv.LaunchTemplateVersions) == 0 {
-		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template (%s): empty output", d.Id())
-	}
-
-	latestVersion := aws.Int64Value(dltv.LaunchTemplateVersions[0].VersionNumber)
+	latestVersion := int64(d.Get("latest_version").(int))
 	defaultVersion := d.Get("default_version").(int)
 
 	if d.HasChanges(updateKeys...) {
