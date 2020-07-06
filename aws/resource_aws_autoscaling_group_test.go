@@ -461,6 +461,7 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer(t *testing.T) {
 
 func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 	var group autoscaling.Group
+	resourceName := "aws_autoscaling_group.bar"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -470,13 +471,13 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithLoadBalancer,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "0"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -492,14 +493,13 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithTargetGroup,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "1"),
-					// DEPRECATED: This value will be 0 when Computed: true is removed
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
@@ -515,14 +515,13 @@ func TestAccAWSAutoScalingGroup_WithLoadBalancer_ToTargetGroup(t *testing.T) {
 			{
 				Config: testAccAWSAutoScalingGroupConfigWithLoadBalancer,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSAutoScalingGroupExists("aws_autoscaling_group.bar", &group),
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "load_balancers.#", "1"),
-					// DEPRECATED: This value will be 0 when Computed: true is removed
-					resource.TestCheckResourceAttr("aws_autoscaling_group.bar", "target_group_arns.#", "1"),
+					testAccCheckAWSAutoScalingGroupExists(resourceName, &group),
+					resource.TestCheckResourceAttr(resourceName, "load_balancers.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target_group_arns.#", "0"),
 				),
 			},
 			{
-				ResourceName:      "aws_autoscaling_group.bar",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
