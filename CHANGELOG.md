@@ -1,4 +1,10 @@
 ## 2.70.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) [GH-5225]
+* resource/aws_launch_template: Add `update_default_version` argument to set the launch template's default version to the latest version available on update [GH-5225]
+
 ## 2.69.0 (July 02, 2020)
 
 NOTES:
