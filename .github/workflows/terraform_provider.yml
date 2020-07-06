@@ -241,13 +241,14 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
       - name: goreleaser check
+        continue-on-error: true
         uses: goreleaser/goreleaser-action@v2
         with:
           args: check
       - name: goreleaser build
         uses: goreleaser/goreleaser-action@v2
         with:
-          args: build -p 1 --snapshot --timeout 1h
+          args: build --snapshot --timeout 1h
 
   tfproviderdocs:
     needs: [terraform_providers_schema]
