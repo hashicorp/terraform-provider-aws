@@ -134,6 +134,32 @@ func TestAccAWSEksFargateProfile_disappears(t *testing.T) {
 	})
 }
 
+// Quick test to stand up a cluster, with two fargate profiles, and delete them.
+func TestAccAWSEksFargateProfile_Multi_Profile(t *testing.T) {
+	var fargateProfile eks.FargateProfile
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEks(t); testAccPreCheckAWSEksFargateProfile(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSEksFargateProfileDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEksFargateProfileConfigBase(rName) + testAccAWSEksFargateProfileConfigFargateProfileNameMultiple("tf_acc_test1") + testAccAWSEksFargateProfileConfigFargateProfileNameMultiple("tf_acc_test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEksFargateProfileExists("aws_eks_fargate_profile.tf_acc_test1", &fargateProfile),
+					testAccCheckAWSEksFargateProfileExists("aws_eks_fargate_profile.tf_acc_test2", &fargateProfile),
+				),
+			},
+			{
+				ResourceName:      "aws_eks_fargate_profile.tf_acc_test2",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSEksFargateProfile_Selector_Labels(t *testing.T) {
 	var fargateProfile1 eks.FargateProfile
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -509,6 +535,29 @@ resource "aws_eks_cluster" "test" {
 func testAccAWSEksFargateProfileConfigFargateProfileName(rName string) string {
 	return testAccAWSEksFargateProfileConfigBase(rName) + fmt.Sprintf(`
 resource "aws_eks_fargate_profile" "test" {
+  cluster_name           = aws_eks_cluster.test.name
+  fargate_profile_name   = %[1]q
+  pod_execution_role_arn = aws_iam_role.pod.arn
+  subnet_ids             = aws_subnet.private[*].id
+
+  selector {
+    namespace = "test"
+  }
+
+  depends_on = [
+    aws_iam_role_policy_attachment.pod-AmazonEKSFargatePodExecutionRolePolicy,
+    aws_route_table_association.private,
+  ]
+}
+`, rName)
+}
+
+// similar to above, but allows the name for the resource to be passed in and
+// sets the terraform resource name and the profile name to the same.  Allows
+// multiple profiles to be created.
+func testAccAWSEksFargateProfileConfigFargateProfileNameMultiple(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_eks_fargate_profile" %[1]q {
   cluster_name           = aws_eks_cluster.test.name
   fargate_profile_name   = %[1]q
   pod_execution_role_arn = aws_iam_role.pod.arn
