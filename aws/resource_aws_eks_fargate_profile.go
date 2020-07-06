@@ -110,6 +110,11 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 		input.Tags = keyvaluetags.New(v).IgnoreAws().EksTags()
 	}
 
+	// mutex lock for creation/deletion serialization
+	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
+
 	// Creation of profiles must be serialized, and can take a while, increase the timeout to a long time.
 	err := resource.Retry(30*time.Minute, func() *resource.RetryError {
 		_, err := conn.CreateFargateProfile(input)
@@ -117,11 +122,6 @@ func resourceAwsEksFargateProfileCreate(d *schema.ResourceData, meta interface{}
 		// Retry for IAM eventual consistency on error:
 		// InvalidParameterException: Misconfigured PodExecutionRole Trust Policy; Please add the eks-fargate-pods.amazonaws.com Service Principal
 		if isAWSErr(err, eks.ErrCodeInvalidParameterException, "Misconfigured PodExecutionRole Trust Policy") {
-			return resource.RetryableError(err)
-		}
-
-		// Retry for ResourceInUse errors, creation needs to be serialized.
-		if isAWSErr(err, eks.ErrCodeResourceInUseException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -238,18 +238,12 @@ func resourceAwsEksFargateProfileDelete(d *schema.ResourceData, meta interface{}
 		FargateProfileName: aws.String(fargateProfileName),
 	}
 
-	// Deletion of profiles must be serialized, and can take a while, increase the timeout to a long time.
-	err = resource.Retry(30*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteFargateProfile(input)
-		// Retry for ResourceInUse errors, creation needs to be serialized.
-		if isAWSErr(err, eks.ErrCodeResourceInUseException, "") {
-			return resource.RetryableError(err)
-		}
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-		return nil
-	})
+	// mutex lock for creation/deletion serialization
+	mutexKey := fmt.Sprintf("%s-fargate-profiles", d.Get("cluster_name").(string))
+	awsMutexKV.Lock(mutexKey)
+	defer awsMutexKV.Unlock(mutexKey)
+
+	_, err = conn.DeleteFargateProfile(input)
 
 	if isAWSErr(err, eks.ErrCodeResourceNotFoundException, "") {
 		return nil
