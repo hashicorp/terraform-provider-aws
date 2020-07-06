@@ -1980,7 +1980,7 @@ func testAccAWSRouteConfigIpv4FlexiTarget(rName, destinationCidr, targetAttribut
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -2019,7 +2019,7 @@ resource "aws_internet_gateway" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   map_public_ip_on_launch = true
 
@@ -2125,7 +2125,7 @@ func testAccAWSRouteConfigIpv6FlexiTarget(rName, destinationCidr, targetAttribut
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
   exclude_zone_ids = ["usw2-az4"]
@@ -2165,7 +2165,7 @@ resource "aws_internet_gateway" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
   ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   map_public_ip_on_launch = true
