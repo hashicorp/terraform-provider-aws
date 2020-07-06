@@ -991,7 +991,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv6NetworkInterfaceUnattached(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1014,7 +1014,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
   ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
@@ -1051,7 +1051,7 @@ func testAccAWSRouteConfigIpv6Instance(rName, destinationCidr string) string {
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1074,7 +1074,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
   ipv6_cidr_block   = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)
 
   tags = {
@@ -1347,7 +1347,7 @@ func testAccAWSRouteConfigIpv4Instance(rName, destinationCidr string) string {
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1369,7 +1369,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -1404,7 +1404,7 @@ resource "aws_route" "test" {
 
 func testAccAWSRouteConfigIpv4NetworkInterfaceUnattached(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1426,7 +1426,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -1511,7 +1511,7 @@ func testAccAWSRouteConfigIpv4NetworkInterfaceAttached(rName, destinationCidr st
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1533,7 +1533,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -1587,7 +1587,7 @@ func testAccAWSRouteConfigIpv4NetworkInterfaceTwoAttachments(rName, destinationC
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1609,7 +1609,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
