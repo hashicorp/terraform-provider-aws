@@ -814,7 +814,19 @@ func resourceAwsLaunchTemplateRead(d *schema.ResourceData, meta interface{}) err
 func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	version := strconv.Itoa(d.Get("default_version").(int))
+	dltv, err := conn.DescribeLaunchTemplateVersions(&ec2.DescribeLaunchTemplateVersionsInput{
+		LaunchTemplateId: aws.String(d.Id()),
+		Versions:         aws.StringSlice([]string{"$Latest"}),
+	})
+	if err != nil {
+		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template (%s): %w", d.Id(), err)
+	}
+	if dltv == nil || len(dltv.LaunchTemplateVersions) == 0 {
+		return fmt.Errorf("Error describing $Latest Launch Template Version for Launch Template (%s): empty output", d.Id())
+	}
+
+	latestVersion := aws.Int64Value(dltv.LaunchTemplateVersions[0].VersionNumber)
+	defaultVersion := d.Get("default_version").(int)
 
 	if d.HasChanges(updateKeys...) {
 		launchTemplateData, err := buildLaunchTemplateData(d)
@@ -841,18 +853,20 @@ func resourceAwsLaunchTemplateUpdate(d *schema.ResourceData, meta interface{}) e
 			return fmt.Errorf("error creating Launch Template (%s) Version: empty output", d.Id())
 		}
 
-		version = strconv.FormatInt(aws.Int64Value(output.LaunchTemplateVersion.VersionNumber), 10)
+		latestVersion = aws.Int64Value(output.LaunchTemplateVersion.VersionNumber)
 
 	}
 
-	// Update default version iff update_default_version set to true and the version has changed
-	// OR if default_version explicitly changed
-	updateDefaultVersion := d.Get("update_default_version").(bool) && (version != strconv.Itoa(d.Get("default_version").(int)))
-	if updateDefaultVersion || d.HasChange("default_version") {
+	if d.Get("update_default_version").(bool) || d.HasChange("default_version") {
 		modifyLaunchTemplateOpts := &ec2.ModifyLaunchTemplateInput{
 			LaunchTemplateId: aws.String(d.Id()),
-			DefaultVersion:   aws.String(version),
 		}
+		if d.Get("update_default_version").(bool) {
+			modifyLaunchTemplateOpts.DefaultVersion = aws.String(strconv.FormatInt(latestVersion, 10))
+		} else if d.HasChange("default_version") {
+			modifyLaunchTemplateOpts.DefaultVersion = aws.String(strconv.Itoa(defaultVersion))
+		}
+
 		_, err := conn.ModifyLaunchTemplate(modifyLaunchTemplateOpts)
 		if err != nil {
 			return fmt.Errorf("error modifying Launch Template (%s): %w", d.Id(), err)

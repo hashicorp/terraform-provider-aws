@@ -1012,12 +1012,12 @@ func TestAccAWSLaunchTemplate_updateDefaultVersion(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
 				),
 			},
-			// Only updating the update_default_version field should not create a new version
-			// but use the default_version computed
+			// Only updating the update_default_version to true should not create a new version
+			// but update the template version to the latest available
 			{
 				Config: testAccAWSLaunchTemplateconfig_descriptionUpdateDefaultVersion(rName, descriptionNew, true),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "default_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_version", "2"),
 					resource.TestCheckResourceAttr(resourceName, "latest_version", "2"),
 				),
 			},
