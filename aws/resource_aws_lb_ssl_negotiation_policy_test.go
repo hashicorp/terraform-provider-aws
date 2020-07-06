@@ -57,7 +57,7 @@ func TestAccAWSLBSSLNegotiationPolicy_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLBSSLNegotiationPolicy(elbResourceName, resourceName),
 					testAccCheckAWSELBExists(elbResourceName, &loadBalancer),
-					testAccCheckResourceDisappears(testAccProvider, resourceAwsElb(), resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsElb(), elbResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
