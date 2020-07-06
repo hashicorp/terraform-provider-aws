@@ -381,6 +381,12 @@ const (
 	// The schedule you submitted isn't valid.
 	ErrCodeInvalidScheduleFault = "InvalidSchedule"
 
+	// ErrCodeInvalidScheduledActionFault for service response error code
+	// "InvalidScheduledAction".
+	//
+	// The scheduled action is not valid.
+	ErrCodeInvalidScheduledActionFault = "InvalidScheduledAction"
+
 	// ErrCodeInvalidSnapshotCopyGrantStateFault for service response error code
 	// "InvalidSnapshotCopyGrantStateFault".
 	//
@@ -414,6 +420,12 @@ const (
 	//
 	// The tag is invalid.
 	ErrCodeInvalidTagFault = "InvalidTagFault"
+
+	// ErrCodeInvalidUsageLimitFault for service response error code
+	// "InvalidUsageLimit".
+	//
+	// The usage limit is not valid.
+	ErrCodeInvalidUsageLimitFault = "InvalidUsageLimit"
 
 	// ErrCodeInvalidVPCNetworkStateFault for service response error code
 	// "InvalidVPCNetworkStateFault".
@@ -511,6 +523,30 @@ const (
 	//
 	// The definition you submitted is not supported.
 	ErrCodeScheduleDefinitionTypeUnsupportedFault = "ScheduleDefinitionTypeUnsupported"
+
+	// ErrCodeScheduledActionAlreadyExistsFault for service response error code
+	// "ScheduledActionAlreadyExists".
+	//
+	// The scheduled action already exists.
+	ErrCodeScheduledActionAlreadyExistsFault = "ScheduledActionAlreadyExists"
+
+	// ErrCodeScheduledActionNotFoundFault for service response error code
+	// "ScheduledActionNotFound".
+	//
+	// The scheduled action cannot be found.
+	ErrCodeScheduledActionNotFoundFault = "ScheduledActionNotFound"
+
+	// ErrCodeScheduledActionQuotaExceededFault for service response error code
+	// "ScheduledActionQuotaExceeded".
+	//
+	// The quota for scheduled actions exceeded.
+	ErrCodeScheduledActionQuotaExceededFault = "ScheduledActionQuotaExceeded"
+
+	// ErrCodeScheduledActionTypeUnsupportedFault for service response error code
+	// "ScheduledActionTypeUnsupported".
+	//
+	// The action type specified for a scheduled action is not supported.
+	ErrCodeScheduledActionTypeUnsupportedFault = "ScheduledActionTypeUnsupported"
 
 	// ErrCodeSnapshotCopyAlreadyDisabledFault for service response error code
 	// "SnapshotCopyAlreadyDisabledFault".
@@ -665,4 +701,16 @@ const (
 	//
 	// A request option was specified that is not supported.
 	ErrCodeUnsupportedOptionFault = "UnsupportedOptionFault"
+
+	// ErrCodeUsageLimitAlreadyExistsFault for service response error code
+	// "UsageLimitAlreadyExists".
+	//
+	// The usage limit already exists.
+	ErrCodeUsageLimitAlreadyExistsFault = "UsageLimitAlreadyExists"
+
+	// ErrCodeUsageLimitNotFoundFault for service response error code
+	// "UsageLimitNotFound".
+	//
+	// The usage limit identifier can't be found.
+	ErrCodeUsageLimitNotFoundFault = "UsageLimitNotFound"
 )

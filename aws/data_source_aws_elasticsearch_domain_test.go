@@ -14,12 +14,13 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSElasticsearchDomainConfigWithDataSource(rInt),
 				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(datasourceName, "processing", "false"),
 					resource.TestCheckResourceAttrPair(datasourceName, "elasticsearch_version", resourceName, "elasticsearch_version"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.#", resourceName, "cluster_config.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "cluster_config.0.instance_type", resourceName, "cluster_config.0.instance_type"),
@@ -32,6 +33,7 @@ func TestAccAWSDataElasticsearchDomain_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.#", resourceName, "advanced_security_options.#"),
 				),
 			},
 		},
@@ -44,7 +46,7 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 	resourceName := "aws_elasticsearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:  func() { testAccPreCheck(t) },
+		PreCheck:  func() { testAccPreCheck(t); testAccPreCheckIamServiceLinkedRoleEs(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
@@ -64,6 +66,8 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
 					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "vpc_options.#", resourceName, "vpc_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.enabled", resourceName, "advanced_security_options.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.internal_user_database_enabled", resourceName, "advanced_security_options.0.internal_user_database_enabled"),
 				),
 			},
 		},
@@ -72,10 +76,6 @@ func TestAccAWSDataElasticsearchDomain_advanced(t *testing.T) {
 
 func testAccAWSElasticsearchDomainConfigWithDataSource(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-east-1"
-}
-
 locals {
 	random_name = "test-es-%d"
 }
@@ -106,7 +106,7 @@ resource "aws_elasticsearch_domain" "test" {
 POLICY
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch"
     instance_count = 2
 	dedicated_master_enabled = false
 	zone_awareness_config {
@@ -132,9 +132,16 @@ data "aws_elasticsearch_domain" "test" {
 
 func testAccAWSElasticsearchDomainConfigAdvancedWithDataSource(rInt int) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-east-1"
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
+
+data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
 
@@ -157,14 +164,14 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 		{
 			"Effect": "Allow",
 			"Principal": {
-				"Service": "es.amazonaws.com"
+				"Service": "es.${data.aws_partition.current.dns_suffix}"
 			},
 			"Action": [
 				"logs:PutLogEvents",
 				"logs:PutLogEventsBatch",
 				"logs:CreateLogStream"
 			],
-			"Resource": "arn:aws:logs:*"
+			"Resource": "arn:${data.aws_partition.current.partition}:logs:*"
 		}
 	]
 }
@@ -176,13 +183,15 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-	vpc_id = "${aws_vpc.test.id}"
-	cidr_block = "10.0.0.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_subnet" "test2" {
-	vpc_id = "${aws_vpc.test.id}"
-	cidr_block = "10.0.1.0/24"
+  availability_zone = "${data.aws_availability_zones.available.names[1]}"
+  cidr_block        = "10.0.1.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 }
 
 resource "aws_security_group" "test" {
@@ -212,14 +221,14 @@ resource "aws_elasticsearch_domain" "test" {
 			"Action": "es:*",
 			"Principal": "*",
 			"Effect": "Allow",
-			"Resource": "arn:aws:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*"
+			"Resource": "arn:${data.aws_partition.current.partition}:es:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:domain/${local.random_name}/*"
 		}
 	]
 }
 POLICY
 
   cluster_config {
-    instance_type = "t2.micro.elasticsearch"
+    instance_type = "t2.small.elasticsearch"
     instance_count = 2
     dedicated_master_enabled = false
 	zone_awareness_config {
@@ -247,6 +256,10 @@ POLICY
 			"${aws_subnet.test.id}",
 			"${aws_subnet.test2.id}"
 		]
+  }
+  advanced_security_options {
+	enabled = false
+	internal_user_database_enabled = false
   }
 
   tags = {

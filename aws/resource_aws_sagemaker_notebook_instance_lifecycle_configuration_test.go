@@ -21,6 +21,9 @@ func init() {
 	resource.AddTestSweepers("aws_sagemaker_notebook_instance_lifecycle_configuration", &resource.Sweeper{
 		Name: "aws_sagemaker_notebook_instance_lifecycle_configuration",
 		F:    testSweepSagemakerNotebookInstanceLifecycleConfiguration,
+		Dependencies: []string{
+			"aws_sagemaker_notebook_instance",
+		},
 	})
 }
 

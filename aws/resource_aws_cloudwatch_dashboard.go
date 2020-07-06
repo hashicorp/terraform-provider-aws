@@ -34,7 +34,7 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 			"dashboard_body": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -44,6 +44,7 @@ func resourceAwsCloudWatchDashboard() *schema.Resource {
 			"dashboard_name": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				ValidateFunc: validateCloudWatchDashboardName,
 			},
 		},

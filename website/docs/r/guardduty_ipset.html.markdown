@@ -1,4 +1,5 @@
 ---
+subcategory: "GuardDuty"
 layout: aws
 page_title: 'AWS: aws_guardduty_ipset'
 description: Provides a resource to manage a GuardDuty IPSet
@@ -46,11 +47,13 @@ The following arguments are supported:
 * `format` - (Required) The format of the file that contains the IPSet. Valid values: `TXT` | `STIX` | `OTX_CSV` | `ALIEN_VAULT` | `PROOF_POINT` | `FIRE_EYE`
 * `location` - (Required) The URI of the file that contains the IPSet.
 * `name` - (Required) The friendly name to identify the IPSet.
+* `tags` - (Optional) Key-value map of resource tags.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the GuardDuty IPSet.
 * `id` - The ID of the GuardDuty IPSet.
 
 ## Import

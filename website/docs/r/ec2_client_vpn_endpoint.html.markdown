@@ -1,4 +1,5 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_client_vpn_endpoint"
 description: |-
@@ -35,15 +36,16 @@ resource "aws_ec2_client_vpn_endpoint" "example" {
 
 The following arguments are supported:
 
-* `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
-* `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
-* `connection_log_options` - (Required) Information about the client connection logging options.
 * `description` - (Optional) Name of the repository.
+* `client_cidr_block` - (Required) The IPv4 address range, in CIDR notation, from which to assign client IP addresses. The address range cannot overlap with the local CIDR of the VPC in which the associated subnet is located, or the routes that you add manually. The address range cannot be changed after the Client VPN endpoint has been created. The CIDR block should be /22 or greater.
 * `dns_servers` - (Optional) Information about the DNS servers to be used for DNS resolution. A Client VPN endpoint can have up to two DNS servers. If no DNS server is specified, the DNS address of the VPC that is to be associated with Client VPN endpoint is used as the DNS server.
 * `server_certificate_arn` - (Required) The ARN of the ACM server certificate.
 * `split_tunnel` - (Optional) Indicates whether split-tunnel is enabled on VPN endpoint. Default value is `false`.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
 * `transport_protocol` - (Optional) The transport protocol to be used by the VPN session. Default value is `udp`.
+* `authentication_options` - (Required) Information about the authentication method to be used to authenticate clients.
+* `connection_log_options` - (Required) Information about the client connection logging options.
+* `tags` - (Optional) A mapping of tags to assign to the resource.
+
 
 ### `authentication_options` Argument Reference
 
@@ -66,6 +68,7 @@ One of the following arguments must be supplied:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Client VPN endpoint.
+* `arn` - The ARN of the Client VPN endpoint.
 * `dns_name` - The DNS name to be used by clients when establishing their VPN session.
 * `status` - The current state of the Client VPN endpoint.
 

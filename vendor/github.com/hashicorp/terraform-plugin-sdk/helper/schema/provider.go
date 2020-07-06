@@ -98,7 +98,7 @@ func (p *Provider) InternalValidate() error {
 	}
 
 	// Provider-specific checks
-	for k, _ := range sm {
+	for k := range sm {
 		if isReservedProviderFieldName(k) {
 			return fmt.Errorf("%s is a reserved field name for a provider", k)
 		}
@@ -267,6 +267,11 @@ func (p *Provider) Configure(c *terraform.ResourceConfig) error {
 		return err
 	}
 
+	if p.TerraformVersion == "" {
+		// Terraform 0.12 introduced this field to the protocol
+		// We can therefore assume that if it's unconfigured at this point, it's 0.10 or 0.11
+		p.TerraformVersion = "0.11+compatible"
+	}
 	meta, err := p.ConfigureFunc(data)
 	if err != nil {
 		return err
@@ -449,7 +454,7 @@ func (p *Provider) ReadDataApply(
 // DataSources implementation of terraform.ResourceProvider interface.
 func (p *Provider) DataSources() []terraform.DataSource {
 	keys := make([]string, 0, len(p.DataSourcesMap))
-	for k, _ := range p.DataSourcesMap {
+	for k := range p.DataSourcesMap {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)

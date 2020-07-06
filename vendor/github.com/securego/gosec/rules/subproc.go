@@ -40,18 +40,37 @@ func (r *subprocess) ID() string {
 //
 // syscall.Exec("echo", "foobar" + tainted)
 func (r *subprocess) Match(n ast.Node, c *gosec.Context) (*gosec.Issue, error) {
-	if node := r.ContainsCallExpr(n, c, false); node != nil {
-		for _, arg := range node.Args {
+	if node := r.ContainsPkgCallExpr(n, c, false); node != nil {
+		args := node.Args
+		if r.isContext(n, c) {
+			args = args[1:]
+		}
+		for _, arg := range args {
 			if ident, ok := arg.(*ast.Ident); ok {
 				obj := c.Info.ObjectOf(ident)
 				if _, ok := obj.(*types.Var); ok && !gosec.TryResolve(ident, c) {
 					return gosec.NewIssue(c, n, r.ID(), "Subprocess launched with variable", gosec.Medium, gosec.High), nil
 				}
+			} else if !gosec.TryResolve(arg, c) {
+				// the arg is not a constant or a variable but instead a function call or os.Args[i]
+				return gosec.NewIssue(c, n, r.ID(), "Subprocess launched with function call as argument or cmd arguments", gosec.Medium, gosec.High), nil
 			}
 		}
-		return gosec.NewIssue(c, n, r.ID(), "Subprocess launching should be audited", gosec.Low, gosec.High), nil
 	}
 	return nil, nil
+}
+
+// isContext checks whether or not the node is a CommandContext call or not
+// Thi is requried in order to skip the first argument from the check.
+func (r *subprocess) isContext(n ast.Node, ctx *gosec.Context) bool {
+	selector, indent, err := gosec.GetCallInfo(n, ctx)
+	if err != nil {
+		return false
+	}
+	if selector == "exec" && indent == "CommandContext" {
+		return true
+	}
+	return false
 }
 
 // NewSubproc detects cases where we are forking out to an external process
@@ -60,5 +79,7 @@ func NewSubproc(id string, conf gosec.Config) (gosec.Rule, []ast.Node) {
 	rule.Add("os/exec", "Command")
 	rule.Add("os/exec", "CommandContext")
 	rule.Add("syscall", "Exec")
+	rule.Add("syscall", "ForkExec")
+	rule.Add("syscall", "StartProcess")
 	return rule, []ast.Node{(*ast.CallExpr)(nil)}
 }

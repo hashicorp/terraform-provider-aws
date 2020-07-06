@@ -55,29 +55,30 @@ func testSweepIamServerCertificates(region string) error {
 
 func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 	var cert iam.ServerCertificate
-	rInt := acctest.RandInt()
-	var certBody string
+
 	resourceName := "aws_iam_server_certificate.test_cert"
-	resourceId := fmt.Sprintf("terraform-test-cert-%d", rInt)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMServerCertConfig(rInt),
+				Config: testAccIAMServerCertConfig(rName, key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
-					getCertBody(&certBody),
-					testAccCheckAWSServerCertAttributes(&cert, &certBody),
+					testAccCheckAWSServerCertAttributes(&cert, &certificate),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateId:     resourceId,
+				ImportStateId:     rName,
 				ImportStateVerifyIgnore: []string{
 					"private_key"},
 			},
@@ -87,20 +88,22 @@ func TestAccAWSIAMServerCertificate_basic(t *testing.T) {
 
 func TestAccAWSIAMServerCertificate_name_prefix(t *testing.T) {
 	var cert iam.ServerCertificate
-	var certBody string
+
 	resourceName := "aws_iam_server_certificate.test_cert"
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMServerCertConfig_random(),
+				Config: testAccIAMServerCertConfig_random(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
-					getCertBody(&certBody),
-					testAccCheckAWSServerCertAttributes(&cert, &certBody),
+					testAccCheckAWSServerCertAttributes(&cert, &certificate),
 				),
 			},
 		},
@@ -110,6 +113,9 @@ func TestAccAWSIAMServerCertificate_name_prefix(t *testing.T) {
 func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 	var cert iam.ServerCertificate
 	resourceName := "aws_iam_server_certificate.test_cert"
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
 
 	testDestroyCert := func(*terraform.State) error {
 		// reach out and DELETE the Cert
@@ -127,11 +133,11 @@ func TestAccAWSIAMServerCertificate_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProvidersWithTLS,
+		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIAMServerCertConfig_random(),
+				Config: testAccIAMServerCertConfig_random(key, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCertExists(resourceName, &cert),
 					testDestroyCert,
@@ -180,6 +186,40 @@ func TestAccAWSIAMServerCertificate_file(t *testing.T) {
 	})
 }
 
+func TestAccAWSIAMServerCertificate_Path(t *testing.T) {
+	var cert iam.ServerCertificate
+
+	resourceName := "aws_iam_server_certificate.test_cert"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckIAMServerCertificateDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIAMServerCertConfig_path(rName, "/test/", key, certificate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCertExists(resourceName, &cert),
+					testAccCheckAWSServerCertAttributes(&cert, &certificate),
+					resource.TestCheckResourceAttr(resourceName, "path", "/test/"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     rName,
+				ImportStateVerifyIgnore: []string{
+					"private_key"},
+			},
+		},
+	})
+}
+
 func testAccCheckCertExists(n string, cert *iam.ServerCertificate) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -206,22 +246,9 @@ func testAccCheckCertExists(n string, cert *iam.ServerCertificate) resource.Test
 	}
 }
 
-func getCertBody(body *string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "tls_self_signed_cert" {
-				continue
-			}
-
-			*body = rs.Primary.Attributes["cert_pem"]
-		}
-		return nil
-	}
-}
-
 func testAccCheckAWSServerCertAttributes(cert *iam.ServerCertificate, certBody *string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !strings.Contains(*cert.ServerCertificateMetadata.ServerCertificateName, "terraform-test-cert") {
+		if !strings.Contains(*cert.ServerCertificateMetadata.ServerCertificateName, "tf-acc-test") {
 			return fmt.Errorf("Bad Server Cert Name: %s", *cert.ServerCertificateMetadata.ServerCertificateName)
 		}
 
@@ -258,65 +285,35 @@ func testAccCheckIAMServerCertificateDestroy(s *terraform.State) error {
 	return nil
 }
 
-const testAccTLSServerCert = `
-resource "tls_private_key" "example" {
-  algorithm = "RSA"
-}
-
-resource "tls_self_signed_cert" "example" {
-  key_algorithm   = "RSA"
-  private_key_pem = "${tls_private_key.example.private_key_pem}"
-
-  subject {
-    common_name  = "example.com"
-    organization = "ACME Examples, Inc"
-  }
-
-  validity_period_hours = 12
-
-  allowed_uses = [
-    "key_encipherment",
-    "digital_signature",
-    "server_auth",
-  ]
-}
-`
-
-func testAccIAMServerCertConfig(rInt int) string {
+func testAccIAMServerCertConfig(rName, key, certificate string) string {
 	return fmt.Sprintf(`
-%s
-
 resource "aws_iam_server_certificate" "test_cert" {
-  name             = "terraform-test-cert-%d"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+  name             = "%[1]s"
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
 }
-`, testAccTLSServerCert, rInt)
+`, rName, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccIAMServerCertConfig_random() string {
+func testAccIAMServerCertConfig_random(key, certificate string) string {
 	return fmt.Sprintf(`
-%s 
-
 resource "aws_iam_server_certificate" "test_cert" {
-  name_prefix = "terraform-test-cert"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+  name_prefix      = "tf-acc-test"
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
 }
-`, testAccTLSServerCert)
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
-func testAccIAMServerCertConfig_path(rInt int, path string) string {
+func testAccIAMServerCertConfig_path(rName, path, key, certificate string) string {
 	return fmt.Sprintf(`
-%s
-
 resource "aws_iam_server_certificate" "test_cert" {
-  name             = "terraform-test-cert-%d"
-  path             = "%s"
-  certificate_body = "${tls_self_signed_cert.example.cert_pem}"
-  private_key      = "${tls_private_key.example.private_key_pem}"
+  name             = "%[1]s"
+  path             = "%[2]s"
+  certificate_body = "%[3]s"
+  private_key      = "%[4]s"
 }
-`, testAccTLSServerCert, rInt, path)
+`, rName, path, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }
 
 // iam-ssl-unix-line-endings

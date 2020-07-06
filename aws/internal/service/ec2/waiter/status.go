@@ -1,0 +1,80 @@
+package waiter
+
+import (
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+)
+
+// LocalGatewayRouteTableVpcAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
+func LocalGatewayRouteTableVpcAssociationState(conn *ec2.EC2, localGatewayRouteTableVpcAssociationID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &ec2.DescribeLocalGatewayRouteTableVpcAssociationsInput{
+			LocalGatewayRouteTableVpcAssociationIds: aws.StringSlice([]string{localGatewayRouteTableVpcAssociationID}),
+		}
+
+		output, err := conn.DescribeLocalGatewayRouteTableVpcAssociations(input)
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		var association *ec2.LocalGatewayRouteTableVpcAssociation
+
+		for _, outputAssociation := range output.LocalGatewayRouteTableVpcAssociations {
+			if outputAssociation == nil {
+				continue
+			}
+
+			if aws.StringValue(outputAssociation.LocalGatewayRouteTableVpcAssociationId) == localGatewayRouteTableVpcAssociationID {
+				association = outputAssociation
+				break
+			}
+		}
+
+		if association == nil {
+			return association, ec2.RouteTableAssociationStateCodeDisassociated, nil
+		}
+
+		return association, aws.StringValue(association.State), nil
+	}
+}
+
+const (
+	ClientVpnEndpointStatusNotFound = "NotFound"
+
+	ClientVpnEndpointStatusUnknown = "Unknown"
+)
+
+// ClientVpnEndpointStatus fetches the Client VPN endpoint and its Status
+func ClientVpnEndpointStatus(conn *ec2.EC2, endpointID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		result, err := conn.DescribeClientVpnEndpoints(&ec2.DescribeClientVpnEndpointsInput{
+			ClientVpnEndpointIds: aws.StringSlice([]string{endpointID}),
+		})
+		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnEndpointIdNotFound) {
+			return nil, ClientVpnEndpointStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, ClientVpnEndpointStatusUnknown, err
+		}
+
+		if result == nil || len(result.ClientVpnEndpoints) == 0 || result.ClientVpnEndpoints[0] == nil {
+			return nil, ClientVpnEndpointStatusNotFound, nil
+		}
+
+		endpoint := result.ClientVpnEndpoints[0]
+		if endpoint.Status == nil || endpoint.Status.Code == nil {
+			return endpoint, ClientVpnEndpointStatusUnknown, nil
+		}
+
+		return endpoint, aws.StringValue(endpoint.Status.Code), nil
+	}
+}
+
+const (
+	ClientVpnAuthorizationRuleStatusNotFound = "NotFound"
+
+	ClientVpnAuthorizationRuleStatusUnknown = "Unknown"
+)

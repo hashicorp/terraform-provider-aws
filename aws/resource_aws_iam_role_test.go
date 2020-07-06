@@ -20,6 +20,7 @@ func init() {
 		Name: "aws_iam_role",
 		Dependencies: []string{
 			"aws_batch_compute_environment",
+			"aws_cloudformation_stack_set_instance",
 			"aws_cognito_user_pool",
 			"aws_config_configuration_aggregator",
 			"aws_config_configuration_recorder",
@@ -52,7 +53,7 @@ func testSweepIamRoles(region string) error {
 	prefixes := []string{
 		"ecs_instance_role",
 		"ecs_tf",
-		"EMR_AutoScaling_DefaultRole",
+		"EMR_AutoScaling_DefaultRole_",
 		"iam_emr",
 		"terraform-",
 		"test",

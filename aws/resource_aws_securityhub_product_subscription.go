@@ -73,6 +73,7 @@ func resourceAwsSecurityHubProductSubscriptionRead(d *schema.ResourceData, meta 
 	if !exists {
 		log.Printf("[WARN] Security Hub product subscriptions (%s) not found, removing from state", d.Id())
 		d.SetId("")
+		return nil
 	}
 
 	d.Set("product_arn", productArn)

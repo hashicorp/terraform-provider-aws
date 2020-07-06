@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"strings"
 	"time"
 
@@ -94,43 +95,37 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							MaxItems: 1,
-							// Ignore missing configuration block
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if old == "1" && new == "0" {
-									return true
-								}
-								return false
-							},
+							Computed: true,
+							// Ideally we'd want to detect drift detection,
+							// but a DiffSuppressFunc here does not behave nicely
+							// for detecting missing configuration blocks
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									// These fields are returned from calls to the API
+									// even if not provided at input time and can be omitted in requests;
+									// thus, to prevent non-empty plans, we set these
+									// to Computed and remove Defaults
 									"on_demand_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  "prioritized",
-										// Reference: https://github.com/hashicorp/terraform/issues/18027
-										// ValidateFunc: validation.StringInSlice([]string{
-										// 	"prioritized",
-										// }, false),
+										Computed: true,
 									},
 									"on_demand_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										Computed:     true,
 										ValidateFunc: validation.IntAtLeast(0),
 									},
 									"on_demand_percentage_above_base_capacity": {
 										Type:         schema.TypeInt,
 										Optional:     true,
-										Default:      100,
+										Computed:     true,
 										ValidateFunc: validation.IntBetween(0, 100),
 									},
 									"spot_allocation_strategy": {
 										Type:     schema.TypeString,
 										Optional: true,
-										Default:  "lowest-price",
-										// Reference: https://github.com/hashicorp/terraform/issues/18027
-										// ValidateFunc: validation.StringInSlice([]string{
-										// 	"lowest-price",
-										// }, false),
+										Computed: true,
 									},
 									"spot_instance_pools": {
 										Type:         schema.TypeInt,
@@ -186,6 +181,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 												},
+												"weighted_capacity": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[1-9][0-9]{0,2}$`), "see https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_LaunchTemplateOverrides.html"),
+												},
 											},
 										},
 									},
@@ -215,6 +215,11 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			"max_size": {
 				Type:     schema.TypeInt,
 				Required: true,
+			},
+
+			"max_instance_lifetime": {
+				Type:     schema.TypeInt,
+				Optional: true,
 			},
 
 			"default_cooldown": {
@@ -385,9 +390,12 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 			"tag": autoscalingTagSchema(),
 
 			"tags": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Elem:          &schema.Schema{Type: schema.TypeMap},
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeMap,
+					Elem: &schema.Schema{Type: schema.TypeString},
+				},
 				ConflictsWith: []string{"tag"},
 			},
 
@@ -534,7 +542,7 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		tags, err := autoscalingTagsFromList(v.([]interface{}), resourceID)
+		tags, err := autoscalingTagsFromList(v.(*schema.Set).List(), resourceID)
 		if err != nil {
 			return err
 		}
@@ -577,6 +585,10 @@ func resourceAwsAutoscalingGroupCreate(d *schema.ResourceData, meta interface{})
 
 	if v, ok := d.GetOk("service_linked_role_arn"); ok {
 		createOpts.ServiceLinkedRoleARN = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("max_instance_lifetime"); ok {
+		createOpts.MaxInstanceLifetime = aws.Int64(int64(v.(int)))
 	}
 
 	log.Printf("[DEBUG] AutoScaling Group create configuration: %#v", createOpts)
@@ -694,6 +706,7 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 	d.Set("placement_group", g.PlacementGroup)
 	d.Set("protect_from_scale_in", g.NewInstancesProtectedFromScaleIn)
 	d.Set("service_linked_role_arn", g.ServiceLinkedRoleARN)
+	d.Set("max_instance_lifetime", g.MaxInstanceLifetime)
 
 	if err := d.Set("suspended_processes", flattenAsgSuspendedProcesses(g.SuspendedProcesses)); err != nil {
 		return fmt.Errorf("error setting suspended_processes: %s", err)
@@ -710,12 +723,12 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 				tagList = append(tagList, t)
 			}
 		}
-		d.Set("tag", autoscalingTagDescriptionsToSlice(tagList))
+		d.Set("tag", autoscalingTagDescriptionsToSlice(tagList, false))
 	}
 
 	if v, tagsOk = d.GetOk("tags"); tagsOk {
 		tags := map[string]struct{}{}
-		for _, tag := range v.([]interface{}) {
+		for _, tag := range v.(*schema.Set).List() {
 			attr, ok := tag.(map[string]interface{})
 			if !ok {
 				continue
@@ -734,11 +747,12 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 				tagsList = append(tagsList, t)
 			}
 		}
-		d.Set("tags", autoscalingTagDescriptionsToSlice(tagsList))
+		//lintignore:AWSR002
+		d.Set("tags", autoscalingTagDescriptionsToSlice(tagsList, true))
 	}
 
 	if !tagOk && !tagsOk {
-		d.Set("tag", autoscalingTagDescriptionsToSlice(g.Tags))
+		d.Set("tag", autoscalingTagDescriptionsToSlice(g.Tags, false))
 	}
 
 	if err := d.Set("target_group_arns", flattenStringList(g.TargetGroupARNs)); err != nil {
@@ -762,6 +776,78 @@ func resourceAwsAutoscalingGroupRead(d *schema.ResourceData, meta interface{}) e
 		if err := d.Set("vpc_zone_identifier", strings.Split(aws.StringValue(g.VPCZoneIdentifier), ",")); err != nil {
 			return fmt.Errorf("error setting vpc_zone_identifier: %s", err)
 		}
+	}
+
+	return nil
+}
+
+func waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgRemoving bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Removing" {
+				tgRemoving = true
+				break
+			}
+		}
+
+		if tgRemoving {
+			tgRemoving = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
+func waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancerTargetGroupsInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var tgAdding bool
+
+	for {
+		output, err := conn.DescribeLoadBalancerTargetGroups(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancerTargetGroups {
+			if aws.StringValue(tg.State) == "Adding" {
+				tgAdding = true
+				break
+			}
+		}
+
+		if tgAdding {
+			tgAdding = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
 	}
 
 	return nil
@@ -811,6 +897,10 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		opts.MaxSize = aws.Int64(int64(d.Get("max_size").(int)))
 	}
 
+	if d.HasChange("max_instance_lifetime") {
+		opts.MaxInstanceLifetime = aws.Int64(int64(d.Get("max_instance_lifetime").(int)))
+	}
+
 	if d.HasChange("health_check_grace_period") {
 		opts.HealthCheckGracePeriod = aws.Int64(int64(d.Get("health_check_grace_period").(int)))
 	}
@@ -853,18 +943,9 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	if d.HasChange("tag") {
-		d.SetPartial("tag")
-	}
-
-	if d.HasChange("tags") {
-		d.SetPartial("tags")
-	}
-
 	log.Printf("[DEBUG] AutoScaling Group update configuration: %#v", opts)
 	_, err := conn.UpdateAutoScalingGroup(&opts)
 	if err != nil {
-		d.Partial(true)
 		return fmt.Errorf("Error updating Autoscaling group: %s", err)
 	}
 
@@ -884,22 +965,56 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		add := expandStringList(ns.Difference(os).List())
 
 		if len(remove) > 0 {
-			_, err := conn.DetachLoadBalancers(&autoscaling.DetachLoadBalancersInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				LoadBalancerNames:    remove,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers for AutoScaling Group (%s), error: %s", d.Id(), err)
+			// API only supports removing 10 at a time
+			var batches [][]*string
+
+			batchSize := 10
+
+			for batchSize < len(remove) {
+				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
+			}
+			batches = append(batches, remove)
+
+			for _, batch := range batches {
+				_, err := conn.DetachLoadBalancers(&autoscaling.DetachLoadBalancersInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					LoadBalancerNames:    batch,
+				})
+
+				if err != nil {
+					return fmt.Errorf("error detaching AutoScaling Group (%s) Load Balancers: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancersRemoved(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancers being removed: %s", d.Id(), err)
+				}
 			}
 		}
 
 		if len(add) > 0 {
-			_, err := conn.AttachLoadBalancers(&autoscaling.AttachLoadBalancersInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				LoadBalancerNames:    add,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers for AutoScaling Group (%s), error: %s", d.Id(), err)
+			// API only supports adding 10 at a time
+			batchSize := 10
+
+			var batches [][]*string
+
+			for batchSize < len(add) {
+				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			}
+			batches = append(batches, add)
+
+			for _, batch := range batches {
+				_, err := conn.AttachLoadBalancers(&autoscaling.AttachLoadBalancersInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					LoadBalancerNames:    batch,
+				})
+
+				if err != nil {
+					return fmt.Errorf("error attaching AutoScaling Group (%s) Load Balancers: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancersAdded(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancers being added: %s", d.Id(), err)
+				}
 			}
 		}
 	}
@@ -920,22 +1035,55 @@ func resourceAwsAutoscalingGroupUpdate(d *schema.ResourceData, meta interface{})
 		add := expandStringList(ns.Difference(os).List())
 
 		if len(remove) > 0 {
-			_, err := conn.DetachLoadBalancerTargetGroups(&autoscaling.DetachLoadBalancerTargetGroupsInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				TargetGroupARNs:      remove,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+			// AWS API only supports adding/removing 10 at a time
+			var batches [][]*string
+
+			batchSize := 10
+
+			for batchSize < len(remove) {
+				remove, batches = remove[batchSize:], append(batches, remove[0:batchSize:batchSize])
 			}
+			batches = append(batches, remove)
+
+			for _, batch := range batches {
+				_, err := conn.DetachLoadBalancerTargetGroups(&autoscaling.DetachLoadBalancerTargetGroupsInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					TargetGroupARNs:      batch,
+				})
+				if err != nil {
+					return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsRemoved(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancer Target Groups being removed: %s", d.Id(), err)
+				}
+			}
+
 		}
 
 		if len(add) > 0 {
-			_, err := conn.AttachLoadBalancerTargetGroups(&autoscaling.AttachLoadBalancerTargetGroupsInput{
-				AutoScalingGroupName: aws.String(d.Id()),
-				TargetGroupARNs:      add,
-			})
-			if err != nil {
-				return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+			batchSize := 10
+
+			var batches [][]*string
+
+			for batchSize < len(add) {
+				add, batches = add[batchSize:], append(batches, add[0:batchSize:batchSize])
+			}
+			batches = append(batches, add)
+
+			for _, batch := range batches {
+				_, err := conn.AttachLoadBalancerTargetGroups(&autoscaling.AttachLoadBalancerTargetGroupsInput{
+					AutoScalingGroupName: aws.String(d.Id()),
+					TargetGroupARNs:      batch,
+				})
+
+				if err != nil {
+					return fmt.Errorf("Error updating Load Balancers Target Groups for AutoScaling Group (%s), error: %s", d.Id(), err)
+				}
+
+				if err := waitUntilAutoscalingGroupLoadBalancerTargetGroupsAdded(conn, d.Id()); err != nil {
+					return fmt.Errorf("error describing AutoScaling Group (%s) Load Balancer Target Groups being added: %s", d.Id(), err)
+				}
 			}
 		}
 	}
@@ -1372,6 +1520,10 @@ func expandAutoScalingLaunchTemplateOverride(m map[string]interface{}) *autoscal
 		launchTemplateOverrides.InstanceType = aws.String(v.(string))
 	}
 
+	if v, ok := m["weighted_capacity"]; ok && v.(string) != "" {
+		launchTemplateOverrides.WeightedCapacity = aws.String(v.(string))
+	}
+
 	return launchTemplateOverrides
 }
 
@@ -1459,7 +1611,8 @@ func flattenAutoScalingLaunchTemplateOverrides(launchTemplateOverrides []*autosc
 			continue
 		}
 		m := map[string]interface{}{
-			"instance_type": aws.StringValue(launchTemplateOverride.InstanceType),
+			"instance_type":     aws.StringValue(launchTemplateOverride.InstanceType),
+			"weighted_capacity": aws.StringValue(launchTemplateOverride.WeightedCapacity),
 		}
 		l[i] = m
 	}
@@ -1492,4 +1645,76 @@ func flattenAutoScalingMixedInstancesPolicy(mixedInstancesPolicy *autoscaling.Mi
 	}
 
 	return []interface{}{m}
+}
+
+func waitUntilAutoscalingGroupLoadBalancersAdded(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancersInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var lbAdding bool
+
+	for {
+		output, err := conn.DescribeLoadBalancers(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancers {
+			if aws.StringValue(tg.State) == "Adding" {
+				lbAdding = true
+				break
+			}
+		}
+
+		if lbAdding {
+			lbAdding = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
+}
+
+func waitUntilAutoscalingGroupLoadBalancersRemoved(conn *autoscaling.AutoScaling, asgName string) error {
+	input := &autoscaling.DescribeLoadBalancersInput{
+		AutoScalingGroupName: aws.String(asgName),
+	}
+	var lbRemoving bool
+
+	for {
+		output, err := conn.DescribeLoadBalancers(input)
+
+		if err != nil {
+			return err
+		}
+
+		for _, tg := range output.LoadBalancers {
+			if aws.StringValue(tg.State) == "Removing" {
+				lbRemoving = true
+				break
+			}
+		}
+
+		if lbRemoving {
+			lbRemoving = false
+			input.NextToken = nil
+			continue
+		}
+
+		if aws.StringValue(output.NextToken) == "" {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
+
+	return nil
 }
