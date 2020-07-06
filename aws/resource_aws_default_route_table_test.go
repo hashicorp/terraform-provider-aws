@@ -82,6 +82,7 @@ func TestAccAWSDefaultRouteTable_vpcDisappears(t *testing.T) {
 func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -99,10 +100,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -123,10 +121,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 					// The route block from the previous step should still be
 					// present, because no blocks means "ignore existing blocks".
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -152,6 +147,7 @@ func TestAccAWSDefaultRouteTable_Route_ConfigMode(t *testing.T) {
 func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
 	rtResourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr1 := "10.2.0.0/16"
@@ -171,10 +167,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr1,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -197,10 +190,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr1,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -210,10 +200,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr2,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "id", rtResourceName, "id"),
 				),
 				// Follow up plan will now show a diff as the destination CIDR on the aws_route_table
@@ -227,6 +214,7 @@ func TestAccAWSDefaultRouteTable_swap(t *testing.T) {
 func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
+	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -241,10 +229,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "transit_gateway_id", tgwResourceName, "id"),
 				),
 			},
 			{
@@ -260,6 +245,7 @@ func TestAccAWSDefaultRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -275,10 +261,7 @@ func TestAccAWSDefaultRouteTable_VpcEndpointAssociation(t *testing.T) {
 					testAccCheckRouteTableExists(resourceName, &routeTable),
 					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -335,6 +318,7 @@ func TestAccAWSDefaultRouteTable_tags(t *testing.T) {
 func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_default_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -346,20 +330,14 @@ func TestAccAWSDefaultRouteTable_ConditionalCidrBlock(t *testing.T) {
 				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
 				Config: testAccDefaultRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      "",
-						"ipv6_cidr_block": destinationIpv6Cidr,
-					}),
+					testAccCheckDefaultRouteTableRoute(resourceName, "ipv6_cidr_block", destinationIpv6Cidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -399,6 +377,25 @@ func testAccCheckDefaultRouteTableDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCheckDefaultRouteTableRoute(resourceName, destinationAttr, destination, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[targetResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", targetResourceName)
+		}
+
+		target := rs.Primary.Attributes[targetResourceAttr]
+		if target == "" {
+			return fmt.Errorf("Not found: %s.%s", targetResourceName, targetResourceAttr)
+		}
+
+		return tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+			destinationAttr: destination,
+			targetAttr:      target,
+		})(s)
+	}
 }
 
 func testAccDefaultRouteTableConfigDefaultRouteTableId(defaultRouteTableId string) string {
