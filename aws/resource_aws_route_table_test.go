@@ -135,6 +135,7 @@ func TestAccAWSRouteTable_disappears(t *testing.T) {
 func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr1 := "10.2.0.0/16"
 	destinationCidr2 := "10.3.0.0/16"
@@ -154,14 +155,8 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr1,
-						"ipv6_cidr_block": "",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr2,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -174,14 +169,8 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr2,
-						"ipv6_cidr_block": "",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr3,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -198,6 +187,7 @@ func TestAccAWSRouteTable_IPv4_To_InternetGateway(t *testing.T) {
 func TestAccAWSRouteTable_IPv4_To_Instance(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	instanceResourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -215,10 +205,9 @@ func TestAccAWSRouteTable_IPv4_To_Instance(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "instance_id", instanceResourceName, "id"),
+					// TODO Why is `network_interface_id` not set?
+					// testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "network_interface_id", instanceResourceName, "primary_network_interface_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -235,6 +224,7 @@ func TestAccAWSRouteTable_IPv4_To_Instance(t *testing.T) {
 func TestAccAWSRouteTable_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	eoigwResourceName := "aws_egress_only_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "::/0"
 
@@ -252,10 +242,7 @@ func TestAccAWSRouteTable_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      "",
-						"ipv6_cidr_block": destinationCidr,
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr, "egress_only_gateway_id", eoigwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -360,6 +347,7 @@ func TestAccAWSRouteTable_RequireRouteTarget(t *testing.T) {
 func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr1 := "10.2.0.0/16"
 	destinationCidr2 := "10.3.0.0/16"
@@ -377,14 +365,8 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr1,
-						"ipv6_cidr_block": "",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr2,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -402,14 +384,8 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "2"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr1,
-						"ipv6_cidr_block": "",
-					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr2,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "gateway_id", igwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -443,6 +419,7 @@ func TestAccAWSRouteTable_Route_ConfigMode(t *testing.T) {
 func TestAccAWSRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	tgwResourceName := "aws_ec2_transit_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -459,10 +436,7 @@ func TestAccAWSRouteTable_IPv4_To_TransitGateway(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "transit_gateway_id", tgwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -520,10 +494,7 @@ func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "vpc_peering_connection_id", pcxResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -540,6 +511,7 @@ func TestAccAWSRouteTable_Route_LocalGatewayID(t *testing.T) {
 func TestAccAWSRouteTable_IPv4_To_VpcPeeringConnection(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	pcxResourceName := "aws_vpc_peering_connection.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -556,7 +528,7 @@ func TestAccAWSRouteTable_IPv4_To_VpcPeeringConnection(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
 						"cidr_block":      destinationCidr,
 						"ipv6_cidr_block": "",
 					}),
@@ -623,6 +595,7 @@ func TestAccAWSRouteTable_vgwRoutePropagation(t *testing.T) {
 func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	igwResourceName := "aws_internet_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 	destinationIpv6Cidr := "::/0"
@@ -636,20 +609,14 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
 				Config: testAccAWSRouteTableConfigConditionalIpv4Ipv6(rName, destinationCidr, destinationIpv6Cidr, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      "",
-						"ipv6_cidr_block": destinationIpv6Cidr,
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "ipv6_cidr_block", destinationIpv6Cidr, "gateway_id", igwResourceName, "id"),
 				),
 			},
 			{
@@ -664,6 +631,7 @@ func TestAccAWSRouteTable_ConditionalCidrBlock(t *testing.T) {
 func TestAccAWSRouteTable_IPv4_To_NatGateway(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	ngwResourceName := "aws_nat_gateway.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -681,10 +649,7 @@ func TestAccAWSRouteTable_IPv4_To_NatGateway(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "nat_gateway_id", ngwResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -702,6 +667,8 @@ func TestAccAWSRouteTable_IPv4_To_NatGateway(t *testing.T) {
 func TestAccAWSRouteTable_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	eniResourceName := "aws_network_interface.test"
+	instanceResourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -719,10 +686,8 @@ func TestAccAWSRouteTable_IPv4_To_NetworkInterface_Attached(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "network_interface_id", eniResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "instance_id", instanceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -741,6 +706,7 @@ func TestAccAWSRouteTable_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) 
 	resourceName := "aws_route_table.test"
 	eni1ResourceName := "aws_network_interface.test1"
 	eni2ResourceName := "aws_network_interface.test2"
+	instanceResourceName := "aws_instance.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "10.2.0.0/16"
 
@@ -758,10 +724,8 @@ func TestAccAWSRouteTable_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) 
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "network_interface_id", eni1ResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "instance_id", instanceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -774,10 +738,8 @@ func TestAccAWSRouteTable_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) 
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      destinationCidr,
-						"ipv6_cidr_block": "",
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "network_interface_id", eni2ResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr, "instance_id", instanceResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -795,6 +757,7 @@ func TestAccAWSRouteTable_IPv4_To_NetworkInterface_TwoAttachments(t *testing.T) 
 func TestAccAWSRouteTable_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
+	eniResourceName := "aws_network_interface.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	destinationCidr := "::/0"
 
@@ -812,10 +775,7 @@ func TestAccAWSRouteTable_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
-						"cidr_block":      "",
-						"ipv6_cidr_block": destinationCidr,
-					}),
+					testAccCheckAWSRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr, "network_interface_id", eniResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
@@ -941,7 +901,26 @@ func testAccCheckAWSRouteTablePropagatingVgw(resourceName, vgwResourceName strin
 			return fmt.Errorf("No VPN Gateway ID is set")
 		}
 
-		return tfawsresource.TestCheckTypeSetElemAttr(resourceName, "propagating_vgws.*", rs.Primary.ID)(s)
+		return resource.TestCheckTypeSetElemAttr(resourceName, "propagating_vgws.*", rs.Primary.ID)(s)
+	}
+}
+
+func testAccCheckAWSRouteTableRoute(resourceName, destinationAttr, destination, targetAttr, targetResourceName, targetResourceAttr string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[targetResourceName]
+		if !ok {
+			return fmt.Errorf("Not found: %s", targetResourceName)
+		}
+
+		target := rs.Primary.Attributes[targetResourceAttr]
+		if target == "" {
+			return fmt.Errorf("Not found: %s.%s", targetResourceName, targetResourceAttr)
+		}
+
+		return resource.TestCheckTypeSetElemNestedAttrs(resourceName, "route.*", map[string]string{
+			destinationAttr: destination,
+			targetAttr:      target,
+		})(s)
 	}
 }
 
@@ -1038,7 +1017,7 @@ func testAccAWSRouteTableConfigIpv4Instance(rName, destinationCidr string) strin
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1060,7 +1039,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -1592,7 +1571,7 @@ func testAccAWSRouteTableConfigIpv4NetworkInterfaceAttached(rName, destinationCi
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1614,7 +1593,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
@@ -1666,7 +1645,7 @@ func testAccAWSRouteTableConfigIpv4NetworkInterfaceTwoAttachments(rName, destina
 		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
 		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
-data "aws_availability_zones" "current" {
+data "aws_availability_zones" "available" {
   # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
   exclude_zone_ids = ["usw2-az4"]
   state            = "available"
@@ -1688,7 +1667,7 @@ resource "aws_vpc" "test" {
 resource "aws_subnet" "test" {
   cidr_block        = "10.1.1.0/24"
   vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.current.names[0]
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   tags = {
     Name = %[1]q
