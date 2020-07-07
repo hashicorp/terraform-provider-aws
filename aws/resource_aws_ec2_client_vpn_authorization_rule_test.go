@@ -243,13 +243,31 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigBasic(rName string) string {
-	return testAccEc2ClientVpnVpcComposeConfig(rName, 1, `
+	return composeConfig(
+		testAccEc2ClientVpnAuthorizationRuleVpcBase(rName, 1),
+		testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase(),
+		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_authorization_rule" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   target_network_cidr    = aws_subnet.test[0].cidr_block
   authorize_all_groups   = true
 }
-`)
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+`, rName))
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigGroups(rName string, groupNames map[string]string) string {
@@ -264,7 +282,25 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return testAccEc2ClientVpnVpcComposeConfig(rName, 1, b.String())
+	return composeConfig(
+		testAccEc2ClientVpnAuthorizationRuleVpcBase(rName, 1),
+		testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase(),
+		b.String(),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}`, rName))
 }
 
 func testAccEc2ClientVpnAuthorizationRuleConfigSubnets(rName string, subnetCount int, groupNames map[string]int) string {
@@ -279,10 +315,28 @@ resource "aws_ec2_client_vpn_authorization_rule" %[1]q {
 `, k, v)
 	}
 
-	return testAccEc2ClientVpnVpcComposeConfig(rName, subnetCount, b.String())
+	return composeConfig(
+		testAccEc2ClientVpnAuthorizationRuleVpcBase(rName, subnetCount),
+		testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase(),
+		b.String(),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = "${aws_acm_certificate.test.arn}"
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+	type                       = "certificate-authentication"
+	root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
+  }
+
+  connection_log_options {
+	enabled = false
+  }
+}`, rName))
 }
 
-func testAccEc2ClientVpnVpcBase(rName string, subnetCount int) string {
+func testAccEc2ClientVpnAuthorizationRuleVpcBase(rName string, subnetCount int) string {
 	return fmt.Sprintf(`
 data "aws_availability_zones" "available" {
   # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
@@ -317,11 +371,14 @@ resource "aws_subnet" "test" {
 `, rName, subnetCount)
 }
 
-func testAccEc2ClientVpnVpcComposeConfig(rName string, subnetCount int, config ...string) string {
-	return testAccEc2ClientVpnComposeConfig(rName,
-		append(
-			config,
-			testAccEc2ClientVpnVpcBase(rName, subnetCount),
-		)...,
-	)
+func testAccEc2ClientVpnAuthorizationRuleAcmCertificateBase() string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+}
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

@@ -22,7 +22,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfig(rStr),
+				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
 				),
@@ -42,7 +42,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEc2ClientVpnNetworkAssociationConfig(rStr),
+				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnNetworkAssociation(), resourceName),
@@ -111,11 +111,75 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 	}
 }
 
-func testAccEc2ClientVpnNetworkAssociationConfig(rName string) string {
-	return testAccEc2ClientVpnVpcComposeConfig(rName, 1, `
+func testAccEc2ClientVpnNetworkAssociationConfigBasic(rName string) string {
+	return composeConfig(
+		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
+		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
+		fmt.Sprintf(`
 resource "aws_ec2_client_vpn_network_association" "test" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
   subnet_id              = aws_subnet.test[0].id
 }
-`)
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%s"
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}`, rName))
+}
+
+func testAccEc2ClientVpnNetworkAssociationVpcBase(rName string, subnetCount int) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # InvalidParameterValue: AZ us-west-2d is not currently supported. Please choose another az in this region
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-subnet-%[1]s"
+  }
+}
+
+resource "aws_subnet" "test" {
+  count                   = %[2]d
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  vpc_id                  = aws_vpc.test.id
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = "tf-acc-subnet-%[1]s"
+  }
+}
+`, rName, subnetCount)
+}
+
+func testAccEc2ClientVpnNetworkAssociationAcmCertificateBase() string {
+	key := tlsRsaPrivateKeyPem(2048)
+	certificate := tlsRsaX509SelfSignedCertificatePem(key, "example.com")
+
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "test" {
+  certificate_body = "%[1]s"
+  private_key      = "%[2]s"
+}
+`, tlsPemEscapeNewlines(certificate), tlsPemEscapeNewlines(key))
 }

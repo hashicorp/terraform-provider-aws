@@ -538,12 +538,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.test.arn}"
   client_cidr_block      = "10.0.0.0/16"
-  
+
   authentication_options {
     type                = "directory-service-authentication"
     active_directory_id = "${aws_directory_service_directory.test.id}"
   }
-  
+
   connection_log_options {
     enabled = false
   }
@@ -640,13 +640,4 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName, splitTunnel)
-}
-
-func testAccEc2ClientVpnComposeConfig(rName string, config ...string) string {
-	return composeConfig(
-		append(
-			config,
-			testAccEc2ClientVpnEndpointConfig(rName),
-		)...,
-	)
 }
