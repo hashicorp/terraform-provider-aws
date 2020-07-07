@@ -69,8 +69,6 @@ func (c *ApplicationAutoScaling) DeleteScalingPolicyRequest(input *DeleteScaling
 // and Delete a Target Tracking Scaling Policy (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html#delete-target-tracking-policy)
 // in the Application Auto Scaling User Guide.
 //
-// To create a scaling policy or update an existing one, see PutScalingPolicy.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -78,23 +76,23 @@ func (c *ApplicationAutoScaling) DeleteScalingPolicyRequest(input *DeleteScaling
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DeleteScalingPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScalingPolicy
@@ -177,23 +175,23 @@ func (c *ApplicationAutoScaling) DeleteScheduledActionRequest(input *DeleteSched
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DeleteScheduledAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeleteScheduledAction
@@ -263,12 +261,12 @@ func (c *ApplicationAutoScaling) DeregisterScalableTargetRequest(input *Deregist
 
 // DeregisterScalableTarget API operation for Application Auto Scaling.
 //
-// Deregisters an Application Auto Scaling scalable target.
+// Deregisters an Application Auto Scaling scalable target when you have finished
+// using it. To see which resources have been registered, use DescribeScalableTargets
+// (https://docs.aws.amazon.com/autoscaling/application/APIReference/API_DescribeScalableTargets.html).
 //
-// Deregistering a scalable target deletes the scaling policies that are associated
-// with it.
-//
-// To create a scalable target or update an existing one, see RegisterScalableTarget.
+// Deregistering a scalable target deletes the scaling policies and the scheduled
+// actions that are associated with it.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -277,23 +275,23 @@ func (c *ApplicationAutoScaling) DeregisterScalableTargetRequest(input *Deregist
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DeregisterScalableTarget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DeregisterScalableTarget
@@ -372,10 +370,6 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsRequest(input *DescribeS
 //
 // You can filter the results using ResourceIds and ScalableDimension.
 //
-// To create a scalable target or update an existing one, see RegisterScalableTarget.
-// If you are no longer using a scalable target, you can deregister it using
-// DeregisterScalableTarget.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -383,19 +377,19 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsRequest(input *DescribeS
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScalableTargets for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalableTargets
@@ -463,10 +457,12 @@ func (c *ApplicationAutoScaling) DescribeScalableTargetsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalableTargetsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalableTargetsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -525,11 +521,6 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesRequest(input *Describ
 //
 // You can filter the results using ResourceId and ScalableDimension.
 //
-// Scaling activities are triggered by CloudWatch alarms that are associated
-// with scaling policies. To view the scaling policies for a service namespace,
-// see DescribeScalingPolicies. To create a scaling policy or update an existing
-// one, see PutScalingPolicy.
-//
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
 // the error.
@@ -537,19 +528,19 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesRequest(input *Describ
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScalingActivities for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingActivities
@@ -617,10 +608,12 @@ func (c *ApplicationAutoScaling) DescribeScalingActivitiesPagesWithContext(ctx a
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalingActivitiesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -679,8 +672,9 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 //
 // You can filter the results using ResourceId, ScalableDimension, and PolicyNames.
 //
-// To create a scaling policy or update an existing one, see PutScalingPolicy.
-// If you are no longer using a scaling policy, you can delete it using DeleteScalingPolicy.
+// For more information, see Target Tracking Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+// and Step Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
+// in the Application Auto Scaling User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -689,12 +683,12 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScalingPolicies for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeFailedResourceAccessException "FailedResourceAccessException"
+//   * FailedResourceAccessException
 //   Failed access to resources caused an exception. This exception is thrown
 //   when Application Auto Scaling is unable to retrieve the alarms associated
 //   with a scaling policy due to a client error, for example, if the role ARN
@@ -702,14 +696,14 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesRequest(input *DescribeS
 //   DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
 //   on your behalf.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScalingPolicies
@@ -777,10 +771,12 @@ func (c *ApplicationAutoScaling) DescribeScalingPoliciesPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScalingPoliciesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScalingPoliciesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -840,8 +836,8 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsRequest(input *Describe
 // You can filter the results using the ResourceId, ScalableDimension, and ScheduledActionNames
 // parameters.
 //
-// To create a scheduled action or update an existing one, see PutScheduledAction.
-// If you are no longer using a scheduled action, you can delete it using DeleteScheduledAction.
+// For more information, see Scheduled Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-scheduled-scaling.html)
+// in the Application Auto Scaling User Guide.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -850,19 +846,19 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsRequest(input *Describe
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation DescribeScheduledActions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeInvalidNextTokenException "InvalidNextTokenException"
+//   * InvalidNextTokenException
 //   The next token supplied was invalid.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/DescribeScheduledActions
@@ -930,10 +926,12 @@ func (c *ApplicationAutoScaling) DescribeScheduledActionsPagesWithContext(ctx aw
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeScheduledActionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeScheduledActionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -981,19 +979,13 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 
 // PutScalingPolicy API operation for Application Auto Scaling.
 //
-// Creates or updates a policy for an Application Auto Scaling scalable target.
+// Creates or updates a scaling policy for an Application Auto Scaling scalable
+// target.
 //
 // Each scalable target is identified by a service namespace, resource ID, and
 // scalable dimension. A scaling policy applies to the scalable target identified
 // by those three attributes. You cannot create a scaling policy until you have
-// registered the resource as a scalable target using RegisterScalableTarget.
-//
-// To update a policy, specify its policy name and the parameters that you want
-// to change. Any parameters that you don't specify are not changed by this
-// update request.
-//
-// You can view the scaling policies for a service namespace using DescribeScalingPolicies.
-// If you are no longer using a scaling policy, you can delete it using DeleteScalingPolicy.
+// registered the resource as a scalable target.
 //
 // Multiple scaling policies can be in force at the same time for the same scalable
 // target. You can have one or more target tracking scaling policies, one or
@@ -1006,8 +998,21 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 // uses the policy with the highest calculated capacity (200% of 10 = 20) and
 // scales out to 30.
 //
-// Learn more about how to work with scaling policies in the Application Auto
-// Scaling User Guide (https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html).
+// We recommend caution, however, when using target tracking scaling policies
+// with step scaling policies because conflicts between these policies can cause
+// undesirable behavior. For example, if the step scaling policy initiates a
+// scale-in activity before the target tracking policy is ready to scale in,
+// the scale-in activity will not be blocked. After the scale-in activity completes,
+// the target tracking policy could instruct the scalable target to scale out
+// again.
+//
+// For more information, see Target Tracking Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
+// and Step Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
+// in the Application Auto Scaling User Guide.
+//
+// If a scalable target is deregistered, the scalable target is no longer available
+// to execute scaling policies. Any scaling policies that were specified for
+// the scalable target are deleted.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1016,27 +1021,27 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation PutScalingPolicy for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A per-account resource limit is exceeded. For more information, see Application
 //   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeFailedResourceAccessException "FailedResourceAccessException"
+//   * FailedResourceAccessException
 //   Failed access to resources caused an exception. This exception is thrown
 //   when Application Auto Scaling is unable to retrieve the alarms associated
 //   with a scaling policy due to a client error, for example, if the role ARN
@@ -1044,7 +1049,7 @@ func (c *ApplicationAutoScaling) PutScalingPolicyRequest(input *PutScalingPolicy
 //   DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
 //   on your behalf.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScalingPolicy
@@ -1120,18 +1125,21 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 // Each scalable target is identified by a service namespace, resource ID, and
 // scalable dimension. A scheduled action applies to the scalable target identified
 // by those three attributes. You cannot create a scheduled action until you
-// have registered the resource as a scalable target using RegisterScalableTarget.
+// have registered the resource as a scalable target.
 //
-// To update an action, specify its name and the parameters that you want to
-// change. If you don't specify start and end times, the old values are deleted.
-// Any other parameters that you don't specify are not changed by this update
-// request.
+// When start and end times are specified with a recurring schedule using a
+// cron expression or rates, they form the boundaries of when the recurring
+// action starts and stops.
 //
-// You can view the scheduled actions using DescribeScheduledActions. If you
-// are no longer using a scheduled action, you can delete it using DeleteScheduledAction.
+// To update a scheduled action, specify the parameters that you want to change.
+// If you don't specify start and end times, the old values are deleted.
 //
-// Learn more about how to work with scheduled actions in the Application Auto
-// Scaling User Guide (https://docs.aws.amazon.com/autoscaling/application/userguide/what-is-application-auto-scaling.html).
+// For more information, see Scheduled Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-scheduled-scaling.html)
+// in the Application Auto Scaling User Guide.
+//
+// If a scalable target is deregistered, the scalable target is no longer available
+// to run scheduled actions. Any scheduled actions that were specified for the
+// scalable target are deleted.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1140,27 +1148,27 @@ func (c *ApplicationAutoScaling) PutScheduledActionRequest(input *PutScheduledAc
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation PutScheduledAction for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A per-account resource limit is exceeded. For more information, see Application
 //   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
-//   * ErrCodeObjectNotFoundException "ObjectNotFoundException"
+//   * ObjectNotFoundException
 //   The specified object could not be found. For any operation that depends on
 //   the existence of a scalable target, this exception is thrown if the scalable
 //   target with the specified service namespace, resource ID, and scalable dimension
 //   does not exist. For any operation that deletes or deregisters a resource,
 //   this exception is thrown if the resource cannot be found.
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/PutScheduledAction
@@ -1230,26 +1238,28 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 
 // RegisterScalableTarget API operation for Application Auto Scaling.
 //
-// Registers or updates a scalable target. A scalable target is a resource that
-// Application Auto Scaling can scale out and scale in. Scalable targets are
-// uniquely identified by the combination of resource ID, scalable dimension,
-// and namespace.
+// Registers or updates a scalable target.
+//
+// A scalable target is a resource that Application Auto Scaling can scale out
+// and scale in. Scalable targets are uniquely identified by the combination
+// of resource ID, scalable dimension, and namespace.
 //
 // When you register a new scalable target, you must specify values for minimum
-// and maximum capacity. Application Auto Scaling will not scale capacity to
-// values that are outside of this range.
-//
-// To update a scalable target, specify the parameter that you want to change
-// as well as the following parameters that identify the scalable target: resource
-// ID, scalable dimension, and namespace. Any parameters that you don't specify
-// are not changed by this update request.
+// and maximum capacity. Application Auto Scaling scaling policies will not
+// scale capacity to values that are outside of this range.
 //
 // After you register a scalable target, you do not need to register it again
 // to use other Application Auto Scaling operations. To see which resources
-// have been registered, use DescribeScalableTargets. You can also view the
-// scaling policies for a service namespace by using DescribeScalableTargets.
+// have been registered, use DescribeScalableTargets (https://docs.aws.amazon.com/autoscaling/application/APIReference/API_DescribeScalableTargets.html).
+// You can also view the scaling policies for a service namespace by using DescribeScalableTargets
+// (https://docs.aws.amazon.com/autoscaling/application/APIReference/API_DescribeScalableTargets.html).
+// If you no longer need a scalable target, you can deregister it by using DeregisterScalableTarget
+// (https://docs.aws.amazon.com/autoscaling/application/APIReference/API_DeregisterScalableTarget.html).
 //
-// If you no longer need a scalable target, you can deregister it by using DeregisterScalableTarget.
+// To update a scalable target, specify the parameters that you want to change.
+// Include the parameters that identify the scalable target: resource ID, scalable
+// dimension, and namespace. Any parameters that you don't specify are not changed
+// by this update request.
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
 // with awserr.Error's Code and Message methods to get detailed information about
@@ -1258,20 +1268,20 @@ func (c *ApplicationAutoScaling) RegisterScalableTargetRequest(input *RegisterSc
 // See the AWS API reference guide for Application Auto Scaling's
 // API operation RegisterScalableTarget for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeValidationException "ValidationException"
+// Returned Error Types:
+//   * ValidationException
 //   An exception was thrown for a validation issue. Review the available parameters
 //   for the API request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   A per-account resource limit is exceeded. For more information, see Application
 //   Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
 //
-//   * ErrCodeConcurrentUpdateException "ConcurrentUpdateException"
+//   * ConcurrentUpdateException
 //   Concurrent updates caused an exception, for example, if you request an update
 //   to an Application Auto Scaling resource that already has a pending update.
 //
-//   * ErrCodeInternalServiceException "InternalServiceException"
+//   * InternalServiceException
 //   The service encountered an internal error.
 //
 // See also, https://docs.aws.amazon.com/goto/WebAPI/application-autoscaling-2016-02-06/RegisterScalableTarget
@@ -1333,8 +1343,69 @@ func (s *Alarm) SetAlarmName(v string) *Alarm {
 	return s
 }
 
+// Concurrent updates caused an exception, for example, if you request an update
+// to an Application Auto Scaling resource that already has a pending update.
+type ConcurrentUpdateException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConcurrentUpdateException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConcurrentUpdateException) GoString() string {
+	return s.String()
+}
+
+func newErrorConcurrentUpdateException(v protocol.ResponseMetadata) error {
+	return &ConcurrentUpdateException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConcurrentUpdateException) Code() string {
+	return "ConcurrentUpdateException"
+}
+
+// Message returns the exception's message.
+func (s *ConcurrentUpdateException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConcurrentUpdateException) OrigErr() error {
+	return nil
+}
+
+func (s *ConcurrentUpdateException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConcurrentUpdateException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConcurrentUpdateException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Represents a CloudWatch metric of your choosing for a target tracking scaling
 // policy to use with Application Auto Scaling.
+//
+// For information about the available metrics for a service, see AWS Services
+// That Publish CloudWatch Metrics (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html)
+// in the Amazon CloudWatch User Guide.
 //
 // To create your customized metric specification:
 //
@@ -1347,7 +1418,7 @@ func (s *Alarm) SetAlarmName(v string) *Alarm {
 //    * Choose a metric that changes proportionally with capacity. The value
 //    of the metric should increase or decrease in inverse proportion to the
 //    number of capacity units. That is, the value of the metric should decrease
-//    when capacity increases.
+//    when capacity increases, and increase when capacity decreases.
 //
 // For more information about CloudWatch, see Amazon CloudWatch Concepts (https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/cloudwatch_concepts.html).
 type CustomizedMetricSpecification struct {
@@ -1471,21 +1542,32 @@ type DeleteScalingPolicyInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1526,13 +1608,24 @@ type DeleteScalingPolicyInput struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -1633,21 +1726,32 @@ type DeleteScheduledActionInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1688,6 +1792,19 @@ type DeleteScheduledActionInput struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
@@ -1696,10 +1813,8 @@ type DeleteScheduledActionInput struct {
 	// ScheduledActionName is a required field
 	ScheduledActionName *string `min:"1" type:"string" required:"true"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -1800,21 +1915,32 @@ type DeregisterScalableTargetInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -1855,13 +1981,24 @@ type DeregisterScalableTargetInput struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -1963,21 +2100,32 @@ type DescribeScalableTargetsInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	ResourceIds []*string `type:"list"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -2016,12 +2164,23 @@ type DescribeScalableTargetsInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -2145,21 +2304,32 @@ type DescribeScalingActivitiesInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2198,12 +2368,23 @@ type DescribeScalingActivitiesInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -2333,21 +2514,32 @@ type DescribeScalingPoliciesInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2386,12 +2578,23 @@ type DescribeScalingPoliciesInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -2524,21 +2727,32 @@ type DescribeScheduledActionsInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	ResourceId *string `min:"1" type:"string"`
 
 	// The scalable dimension. This string consists of the service namespace, resource
@@ -2577,15 +2791,26 @@ type DescribeScheduledActionsInput struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The names of the scheduled actions to describe.
 	ScheduledActionNames []*string `type:"list"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -2686,6 +2911,236 @@ func (s *DescribeScheduledActionsOutput) SetScheduledActions(v []*ScheduledActio
 	return s
 }
 
+// Failed access to resources caused an exception. This exception is thrown
+// when Application Auto Scaling is unable to retrieve the alarms associated
+// with a scaling policy due to a client error, for example, if the role ARN
+// specified for a scalable target does not have permission to call the CloudWatch
+// DescribeAlarms (https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_DescribeAlarms.html)
+// on your behalf.
+type FailedResourceAccessException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s FailedResourceAccessException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FailedResourceAccessException) GoString() string {
+	return s.String()
+}
+
+func newErrorFailedResourceAccessException(v protocol.ResponseMetadata) error {
+	return &FailedResourceAccessException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *FailedResourceAccessException) Code() string {
+	return "FailedResourceAccessException"
+}
+
+// Message returns the exception's message.
+func (s *FailedResourceAccessException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *FailedResourceAccessException) OrigErr() error {
+	return nil
+}
+
+func (s *FailedResourceAccessException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *FailedResourceAccessException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *FailedResourceAccessException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The service encountered an internal error.
+type InternalServiceException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalServiceException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalServiceException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalServiceException(v protocol.ResponseMetadata) error {
+	return &InternalServiceException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalServiceException) Code() string {
+	return "InternalServiceException"
+}
+
+// Message returns the exception's message.
+func (s *InternalServiceException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalServiceException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalServiceException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalServiceException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalServiceException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The next token supplied was invalid.
+type InvalidNextTokenException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidNextTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidNextTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidNextTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidNextTokenException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidNextTokenException) Code() string {
+	return "InvalidNextTokenException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidNextTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidNextTokenException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidNextTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidNextTokenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidNextTokenException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// A per-account resource limit is exceeded. For more information, see Application
+// Auto Scaling Limits (https://docs.aws.amazon.com/ApplicationAutoScaling/latest/userguide/application-auto-scaling-limits.html).
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Describes the dimension names and values associated with a metric.
 type MetricDimension struct {
 	_ struct{} `type:"structure"`
@@ -2739,8 +3194,74 @@ func (s *MetricDimension) SetValue(v string) *MetricDimension {
 	return s
 }
 
+// The specified object could not be found. For any operation that depends on
+// the existence of a scalable target, this exception is thrown if the scalable
+// target with the specified service namespace, resource ID, and scalable dimension
+// does not exist. For any operation that deletes or deregisters a resource,
+// this exception is thrown if the resource cannot be found.
+type ObjectNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ObjectNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ObjectNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorObjectNotFoundException(v protocol.ResponseMetadata) error {
+	return &ObjectNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ObjectNotFoundException) Code() string {
+	return "ObjectNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ObjectNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ObjectNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ObjectNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ObjectNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ObjectNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // Represents a predefined metric for a target tracking scaling policy to use
 // with Application Auto Scaling.
+//
+// Only the AWS services that you're using send metrics to Amazon CloudWatch.
+// To determine whether a desired metric already exists by looking up its namespace
+// and dimension using the CloudWatch metrics dashboard in the console, follow
+// the procedure in Building Dashboards with CloudWatch (https://docs.aws.amazon.com/autoscaling/application/userguide/monitoring-cloudwatch.html)
+// in the Application Auto Scaling User Guide.
 type PredefinedMetricSpecification struct {
 	_ struct{} `type:"structure"`
 
@@ -2816,9 +3337,10 @@ type PutScalingPolicyInput struct {
 	//
 	// The following policy types are supported:
 	//
-	// TargetTrackingScaling—Not supported for Amazon EMR or AppStream
+	// TargetTrackingScaling—Not supported for Amazon EMR
 	//
-	// StepScaling—Not supported for Amazon DynamoDB
+	// StepScaling—Not supported for DynamoDB, Amazon Comprehend, Lambda, or Amazon
+	// Keyspaces (for Apache Cassandra).
 	//
 	// For more information, see Target Tracking Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html)
 	// and Step Scaling Policies (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html)
@@ -2841,21 +3363,32 @@ type PutScalingPolicyInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -2896,13 +3429,24 @@ type PutScalingPolicyInput struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -3048,7 +3592,7 @@ func (s *PutScalingPolicyOutput) SetPolicyARN(v string) *PutScalingPolicyOutput 
 type PutScheduledActionInput struct {
 	_ struct{} `type:"structure"`
 
-	// The date and time for the scheduled action to end.
+	// The date and time for the recurring schedule to end.
 	EndTime *time.Time `type:"timestamp"`
 
 	// The identifier of the resource associated with the scheduled action. This
@@ -3067,21 +3611,32 @@ type PutScheduledActionInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3122,11 +3677,24 @@ type PutScheduledActionInput struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
-	// During the scheduled time, if the current capacity is below the minimum capacity,
+	// At the scheduled time, if the current capacity is below the minimum capacity,
 	// Application Auto Scaling scales out to the minimum capacity. If the current
 	// capacity is above the maximum capacity, Application Auto Scaling scales in
 	// to the maximum capacity.
@@ -3140,29 +3708,31 @@ type PutScheduledActionInput struct {
 	//
 	//    * Cron expressions - "cron(fields)"
 	//
-	// At expressions are useful for one-time schedules. Specify the time, in UTC.
+	// At expressions are useful for one-time schedules. Specify the time in UTC.
 	//
 	// For rate expressions, value is a positive integer and unit is minute | minutes
 	// | hour | hours | day | days.
 	//
 	// For more information about cron expressions, see Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
+	//
+	// For examples of using these expressions, see Scheduled Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-scheduled-scaling.html)
+	// in the Application Auto Scaling User Guide.
 	Schedule *string `min:"1" type:"string"`
 
-	// The name of the scheduled action.
+	// The name of the scheduled action. This name must be unique among all other
+	// scheduled actions on the specified scalable target.
 	//
 	// ScheduledActionName is a required field
 	ScheduledActionName *string `min:"1" type:"string" required:"true"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
 
-	// The date and time for the scheduled action to start.
+	// The date and time for this scheduled action to start.
 	StartTime *time.Time `type:"timestamp"`
 }
 
@@ -3272,12 +3842,20 @@ func (s PutScheduledActionOutput) GoString() string {
 type RegisterScalableTargetInput struct {
 	_ struct{} `type:"structure"`
 
-	// The maximum value to scale to in response to a scale-out event. MaxCapacity
-	// is required to register a scalable target.
+	// The maximum value that you plan to scale out to. When a scaling policy is
+	// in effect, Application Auto Scaling can scale out (expand) as needed to the
+	// maximum capacity limit in response to changing demand.
+	//
+	// This parameter is required if you are registering a scalable target.
 	MaxCapacity *int64 `type:"integer"`
 
-	// The minimum value to scale to in response to a scale-in event. MinCapacity
-	// is required to register a scalable target.
+	// The minimum value that you plan to scale in to. When a scaling policy is
+	// in effect, Application Auto Scaling can scale in (contract) as needed to
+	// the minimum capacity limit in response to changing demand.
+	//
+	// This parameter is required if you are registering a scalable target. For
+	// Lambda provisioned concurrency, the minimum value allowed is 0. For all other
+	// resources, the minimum value allowed is 1.
 	MinCapacity *int64 `type:"integer"`
 
 	// The identifier of the resource that is associated with the scalable target.
@@ -3296,15 +3874,15 @@ type RegisterScalableTargetInput struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
@@ -3312,16 +3890,27 @@ type RegisterScalableTargetInput struct {
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
 	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
+	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
 
-	// Application Auto Scaling creates a service-linked role that grants it permissions
-	// to modify the scalable target on your behalf. For more information, see Service-Linked
-	// Roles for Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-service-linked-roles.html).
+	// This parameter is required for services that do not support service-linked
+	// roles (such as Amazon EMR), and it must specify the ARN of an IAM role that
+	// allows Application Auto Scaling to modify the scalable target on your behalf.
 	//
-	// For Amazon EMR, this parameter is required, and it must specify the ARN of
-	// an IAM role that allows Application Auto Scaling to modify the scalable target
-	// on your behalf.
+	// If the service supports service-linked roles, Application Auto Scaling uses
+	// a service-linked role, which it creates if it does not yet exist. For more
+	// information, see Application Auto Scaling IAM Roles (https://docs.aws.amazon.com/autoscaling/application/userguide/security_iam_service-with-iam.html#security_iam_service-with-iam-roles).
 	RoleARN *string `min:"1" type:"string"`
 
 	// The scalable dimension associated with the scalable target. This string consists
@@ -3360,13 +3949,24 @@ type RegisterScalableTargetInput struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource. For a resource
+	// provided by your own application or service, use custom-resource instead.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -3387,7 +3987,7 @@ type RegisterScalableTargetInput struct {
 	//    * For ScheduledScalingSuspended, while a suspension is in effect, all
 	//    scaling activities that involve scheduled actions are suspended.
 	//
-	// For more information, see Suspend and Resume Application Auto Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-suspend-resume-scaling.html)
+	// For more information, see Suspending and Resuming Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-suspend-resume-scaling.html)
 	// in the Application Auto Scaling User Guide.
 	SuspendedState *SuspendedState `type:"structure"`
 }
@@ -3492,12 +4092,12 @@ type ScalableTarget struct {
 	// CreationTime is a required field
 	CreationTime *time.Time `type:"timestamp" required:"true"`
 
-	// The maximum value to scale to in response to a scale-out event.
+	// The maximum value to scale to in response to a scale-out activity.
 	//
 	// MaxCapacity is a required field
 	MaxCapacity *int64 `type:"integer" required:"true"`
 
-	// The minimum value to scale to in response to a scale-in event.
+	// The minimum value to scale to in response to a scale-in activity.
 	//
 	// MinCapacity is a required field
 	MinCapacity *int64 `type:"integer" required:"true"`
@@ -3518,21 +4118,32 @@ type ScalableTarget struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3579,13 +4190,23 @@ type ScalableTarget struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource, or a custom-resource.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -3661,6 +4282,9 @@ type ScalableTargetAction struct {
 	MaxCapacity *int64 `type:"integer"`
 
 	// The minimum capacity.
+	//
+	// For Lambda provisioned concurrency, the minimum value allowed is 0. For all
+	// other resources, the minimum value allowed is 1.
 	MinCapacity *int64 `type:"integer"`
 }
 
@@ -3727,21 +4351,32 @@ type ScalingActivity struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3782,13 +4417,23 @@ type ScalingActivity struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource, or a custom-resource.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -3926,21 +4571,32 @@ type ScalingPolicy struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -3981,13 +4637,23 @@ type ScalingPolicy struct {
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
 	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
+	//
 	// ScalableDimension is a required field
 	ScalableDimension *string `type:"string" required:"true" enum:"ScalableDimension"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource, or a custom-resource.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -4097,21 +4763,32 @@ type ScheduledAction struct {
 	//    is the fleet name. Example: fleet/sample-fleet.
 	//
 	//    * DynamoDB table - The resource type is table and the unique identifier
-	//    is the resource ID. Example: table/my-table.
+	//    is the table name. Example: table/my-table.
 	//
 	//    * DynamoDB global secondary index - The resource type is index and the
-	//    unique identifier is the resource ID. Example: table/my-table/index/my-table-index.
+	//    unique identifier is the index name. Example: table/my-table/index/my-table-index.
 	//
 	//    * Aurora DB cluster - The resource type is cluster and the unique identifier
 	//    is the cluster name. Example: cluster:my-db-cluster.
 	//
-	//    * Amazon SageMaker endpoint variants - The resource type is variant and
+	//    * Amazon SageMaker endpoint variant - The resource type is variant and
 	//    the unique identifier is the resource ID. Example: endpoint/my-end-point/variant/KMeansClustering.
 	//
 	//    * Custom resources are not supported with a resource type. This parameter
 	//    must specify the OutputValue from the CloudFormation template stack used
 	//    to access the resources. The unique identifier is defined by the service
 	//    provider. More information is available in our GitHub repository (https://github.com/aws/aws-auto-scaling-custom-resource).
+	//
+	//    * Amazon Comprehend document classification endpoint - The resource type
+	//    and unique identifier are specified using the endpoint ARN. Example: arn:aws:comprehend:us-west-2:123456789012:document-classifier-endpoint/EXAMPLE.
+	//
+	//    * Lambda provisioned concurrency - The resource type is function and the
+	//    unique identifier is the function name with a function version or alias
+	//    name suffix that is not $LATEST. Example: function:my-function:prod or
+	//    function:my-function:1.
+	//
+	//    * Amazon Keyspaces table - The resource type is table and the unique identifier
+	//    is the table name. Example: keyspace/mykeyspace/table/mytable.
 	//
 	// ResourceId is a required field
 	ResourceId *string `min:"1" type:"string" required:"true"`
@@ -4151,10 +4828,23 @@ type ScheduledAction struct {
 	//
 	//    * custom-resource:ResourceType:Property - The scalable dimension for a
 	//    custom resource provided by your own application or service.
+	//
+	//    * comprehend:document-classifier-endpoint:DesiredInferenceUnits - The
+	//    number of inference units for an Amazon Comprehend document classification
+	//    endpoint.
+	//
+	//    * lambda:function:ProvisionedConcurrency - The provisioned concurrency
+	//    for a Lambda function.
+	//
+	//    * cassandra:table:ReadCapacityUnits - The provisioned read capacity for
+	//    an Amazon Keyspaces table.
+	//
+	//    * cassandra:table:WriteCapacityUnits - The provisioned write capacity
+	//    for an Amazon Keyspaces table.
 	ScalableDimension *string `type:"string" enum:"ScalableDimension"`
 
 	// The new minimum and maximum capacity. You can set both values or just one.
-	// During the scheduled time, if the current capacity is below the minimum capacity,
+	// At the scheduled time, if the current capacity is below the minimum capacity,
 	// Application Auto Scaling scales out to the minimum capacity. If the current
 	// capacity is above the maximum capacity, Application Auto Scaling scales in
 	// to the maximum capacity.
@@ -4168,13 +4858,16 @@ type ScheduledAction struct {
 	//
 	//    * Cron expressions - "cron(fields)"
 	//
-	// At expressions are useful for one-time schedules. Specify the time, in UTC.
+	// At expressions are useful for one-time schedules. Specify the time in UTC.
 	//
 	// For rate expressions, value is a positive integer and unit is minute | minutes
 	// | hour | hours | day | days.
 	//
 	// For more information about cron expressions, see Cron Expressions (https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html#CronExpressions)
 	// in the Amazon CloudWatch Events User Guide.
+	//
+	// For examples of using these expressions, see Scheduled Scaling (https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-scheduled-scaling.html)
+	// in the Application Auto Scaling User Guide.
 	//
 	// Schedule is a required field
 	Schedule *string `min:"1" type:"string" required:"true"`
@@ -4189,10 +4882,7 @@ type ScheduledAction struct {
 	// ScheduledActionName is a required field
 	ScheduledActionName *string `min:"1" type:"string" required:"true"`
 
-	// The namespace of the AWS service that provides the resource or custom-resource
-	// for a resource provided by your own application or service. For more information,
-	// see AWS Service Namespaces (http://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html#genref-aws-service-namespaces)
-	// in the Amazon Web Services General Reference.
+	// The namespace of the AWS service that provides the resource, or a custom-resource.
 	//
 	// ServiceNamespace is a required field
 	ServiceNamespace *string `type:"string" required:"true" enum:"ServiceNamespace"`
@@ -4271,9 +4961,10 @@ func (s *ScheduledAction) SetStartTime(v time.Time) *ScheduledAction {
 	return s
 }
 
-// Represents a step adjustment for a StepScalingPolicyConfiguration. Describes
-// an adjustment based on the difference between the value of the aggregated
-// CloudWatch metric and the breach threshold that you've defined for the alarm.
+// Represents a step adjustment for a StepScalingPolicyConfiguration (https://docs.aws.amazon.com/autoscaling/application/APIReference/API_StepScalingPolicyConfiguration.html).
+// Describes an adjustment based on the difference between the value of the
+// aggregated CloudWatch metric and the breach threshold that you've defined
+// for the alarm.
 //
 // For the following examples, suppose that you have an alarm with a breach
 // threshold of 50:
@@ -4320,8 +5011,8 @@ type StepAdjustment struct {
 	MetricIntervalUpperBound *float64 `type:"double"`
 
 	// The amount by which to scale, based on the specified adjustment type. A positive
-	// value adds to the current scalable dimension while a negative number removes
-	// from the current scalable dimension.
+	// value adds to the current capacity while a negative number removes from the
+	// current capacity.
 	//
 	// ScalingAdjustment is a required field
 	ScalingAdjustment *int64 `type:"integer" required:"true"`
@@ -4373,31 +5064,62 @@ func (s *StepAdjustment) SetScalingAdjustment(v int64) *StepAdjustment {
 type StepScalingPolicyConfiguration struct {
 	_ struct{} `type:"structure"`
 
-	// Specifies whether the ScalingAdjustment value in a StepAdjustment is an absolute
-	// number or a percentage of the current capacity.
+	// Specifies whether the ScalingAdjustment value in a StepAdjustment (https://docs.aws.amazon.com/autoscaling/application/APIReference/API_StepAdjustment.html)
+	// is an absolute number or a percentage of the current capacity.
+	//
+	// AdjustmentType is required if you are adding a new step scaling policy configuration.
 	AdjustmentType *string `type:"string" enum:"AdjustmentType"`
 
-	// The amount of time, in seconds, after a scaling activity completes where
-	// previous trigger-related scaling activities can influence future scaling
-	// events.
+	// The amount of time, in seconds, to wait for a previous scaling activity to
+	// take effect.
 	//
-	// For scale-out policies, while the cooldown period is in effect, the capacity
-	// that has been added by the previous scale-out event that initiated the cooldown
-	// is calculated as part of the desired capacity for the next scale out. The
-	// intention is to continuously (but not excessively) scale out. For example,
-	// an alarm triggers a step scaling policy to scale out an Amazon ECS service
-	// by 2 tasks, the scaling activity completes successfully, and a cooldown period
-	// of 5 minutes starts. During the cooldown period, if the alarm triggers the
-	// same policy again but at a more aggressive step adjustment to scale out the
-	// service by 3 tasks, the 2 tasks that were added in the previous scale-out
-	// event are considered part of that capacity and only 1 additional task is
-	// added to the desired count.
+	// With scale-out policies, the intention is to continuously (but not excessively)
+	// scale out. After Application Auto Scaling successfully scales out using a
+	// step scaling policy, it starts to calculate the cooldown time. While the
+	// cooldown period is in effect, capacity added by the initiating scale-out
+	// activity is calculated as part of the desired capacity for the next scale-out
+	// activity. For example, when an alarm triggers a step scaling policy to increase
+	// the capacity by 2, the scaling activity completes successfully, and a cooldown
+	// period starts. If the alarm triggers again during the cooldown period but
+	// at a more aggressive step adjustment of 3, the previous increase of 2 is
+	// considered part of the current capacity. Therefore, only 1 is added to the
+	// capacity.
 	//
-	// For scale-in policies, the cooldown period is used to block subsequent scale-in
-	// requests until it has expired. The intention is to scale in conservatively
-	// to protect your application's availability. However, if another alarm triggers
-	// a scale-out policy during the cooldown period after a scale-in, Application
-	// Auto Scaling scales out your scalable target immediately.
+	// With scale-in policies, the intention is to scale in conservatively to protect
+	// your application’s availability, so scale-in activities are blocked until
+	// the cooldown period has expired. However, if another alarm triggers a scale-out
+	// activity during the cooldown period after a scale-in activity, Application
+	// Auto Scaling scales out the target immediately. In this case, the cooldown
+	// period for the scale-in activity stops and doesn't complete.
+	//
+	// Application Auto Scaling provides a default value of 300 for the following
+	// scalable targets:
+	//
+	//    * ECS services
+	//
+	//    * Spot Fleet requests
+	//
+	//    * EMR clusters
+	//
+	//    * AppStream 2.0 fleets
+	//
+	//    * Aurora DB clusters
+	//
+	//    * Amazon SageMaker endpoint variants
+	//
+	//    * Custom resources
+	//
+	// For all other scalable targets, the default value is 0:
+	//
+	//    * DynamoDB tables
+	//
+	//    * DynamoDB global secondary indexes
+	//
+	//    * Amazon Comprehend document classification endpoints
+	//
+	//    * Lambda provisioned concurrency
+	//
+	//    * Amazon Keyspaces tables
 	Cooldown *int64 `type:"integer"`
 
 	// The aggregation type for the CloudWatch metrics. Valid values are Minimum,
@@ -4405,19 +5127,21 @@ type StepScalingPolicyConfiguration struct {
 	// as Average.
 	MetricAggregationType *string `type:"string" enum:"MetricAggregationType"`
 
-	// The minimum number to adjust your scalable dimension as a result of a scaling
-	// activity. If the adjustment type is PercentChangeInCapacity, the scaling
-	// policy changes the scalable dimension of the scalable target by this amount.
+	// The minimum value to scale by when scaling by percentages. For example, suppose
+	// that you create a step scaling policy to scale out an Amazon ECS service
+	// by 25 percent and you specify a MinAdjustmentMagnitude of 2. If the service
+	// has 4 tasks and the scaling policy is performed, 25 percent of 4 is 1. However,
+	// because you specified a MinAdjustmentMagnitude of 2, Application Auto Scaling
+	// scales out the service by 2 tasks.
 	//
-	// For example, suppose that you create a step scaling policy to scale out an
-	// Amazon ECS service by 25 percent and you specify a MinAdjustmentMagnitude
-	// of 2. If the service has 4 tasks and the scaling policy is performed, 25
-	// percent of 4 is 1. However, because you specified a MinAdjustmentMagnitude
-	// of 2, Application Auto Scaling scales out the service by 2 tasks.
+	// Valid only if the adjustment type is PercentChangeInCapacity.
 	MinAdjustmentMagnitude *int64 `type:"integer"`
 
 	// A set of adjustments that enable you to scale based on the size of the alarm
 	// breach.
+	//
+	// At least one step adjustment is required if you are adding a new step scaling
+	// policy configuration.
 	StepAdjustments []*StepAdjustment `type:"list"`
 }
 
@@ -4541,9 +5265,9 @@ type TargetTrackingScalingPolicyConfiguration struct {
 
 	// Indicates whether scale in by the target tracking scaling policy is disabled.
 	// If the value is true, scale in is disabled and the target tracking scaling
-	// policy won't remove capacity from the scalable resource. Otherwise, scale
-	// in is enabled and the target tracking scaling policy can remove capacity
-	// from the scalable resource. The default value is false.
+	// policy won't remove capacity from the scalable target. Otherwise, scale in
+	// is enabled and the target tracking scaling policy can remove capacity from
+	// the scalable target. The default value is false.
 	DisableScaleIn *bool `type:"boolean"`
 
 	// A predefined metric. You can specify either a predefined metric or a customized
@@ -4551,22 +5275,83 @@ type TargetTrackingScalingPolicyConfiguration struct {
 	PredefinedMetricSpecification *PredefinedMetricSpecification `type:"structure"`
 
 	// The amount of time, in seconds, after a scale-in activity completes before
-	// another scale in activity can start.
+	// another scale-in activity can start.
 	//
-	// The cooldown period is used to block subsequent scale-in requests until it
-	// has expired. The intention is to scale in conservatively to protect your
-	// application's availability. However, if another alarm triggers a scale-out
-	// policy during the cooldown period after a scale-in, Application Auto Scaling
-	// scales out your scalable target immediately.
+	// With the scale-in cooldown period, the intention is to scale in conservatively
+	// to protect your application’s availability, so scale-in activities are
+	// blocked until the cooldown period has expired. However, if another alarm
+	// triggers a scale-out activity during the scale-in cooldown period, Application
+	// Auto Scaling scales out the target immediately. In this case, the scale-in
+	// cooldown period stops and doesn't complete.
+	//
+	// Application Auto Scaling provides a default value of 300 for the following
+	// scalable targets:
+	//
+	//    * ECS services
+	//
+	//    * Spot Fleet requests
+	//
+	//    * EMR clusters
+	//
+	//    * AppStream 2.0 fleets
+	//
+	//    * Aurora DB clusters
+	//
+	//    * Amazon SageMaker endpoint variants
+	//
+	//    * Custom resources
+	//
+	// For all other scalable targets, the default value is 0:
+	//
+	//    * DynamoDB tables
+	//
+	//    * DynamoDB global secondary indexes
+	//
+	//    * Amazon Comprehend document classification endpoints
+	//
+	//    * Lambda provisioned concurrency
+	//
+	//    * Amazon Keyspaces tables
 	ScaleInCooldown *int64 `type:"integer"`
 
-	// The amount of time, in seconds, after a scale-out activity completes before
-	// another scale-out activity can start.
+	// The amount of time, in seconds, to wait for a previous scale-out activity
+	// to take effect.
 	//
-	// While the cooldown period is in effect, the capacity that has been added
-	// by the previous scale-out event that initiated the cooldown is calculated
-	// as part of the desired capacity for the next scale out. The intention is
-	// to continuously (but not excessively) scale out.
+	// With the scale-out cooldown period, the intention is to continuously (but
+	// not excessively) scale out. After Application Auto Scaling successfully scales
+	// out using a target tracking scaling policy, it starts to calculate the cooldown
+	// time. While the scale-out cooldown period is in effect, the capacity added
+	// by the initiating scale-out activity is calculated as part of the desired
+	// capacity for the next scale-out activity.
+	//
+	// Application Auto Scaling provides a default value of 300 for the following
+	// scalable targets:
+	//
+	//    * ECS services
+	//
+	//    * Spot Fleet requests
+	//
+	//    * EMR clusters
+	//
+	//    * AppStream 2.0 fleets
+	//
+	//    * Aurora DB clusters
+	//
+	//    * Amazon SageMaker endpoint variants
+	//
+	//    * Custom resources
+	//
+	// For all other scalable targets, the default value is 0:
+	//
+	//    * DynamoDB tables
+	//
+	//    * DynamoDB global secondary indexes
+	//
+	//    * Amazon Comprehend document classification endpoints
+	//
+	//    * Lambda provisioned concurrency
+	//
+	//    * Amazon Keyspaces tables
 	ScaleOutCooldown *int64 `type:"integer"`
 
 	// The target value for the metric. The range is 8.515920e-109 to 1.174271e+108
@@ -4645,6 +5430,63 @@ func (s *TargetTrackingScalingPolicyConfiguration) SetTargetValue(v float64) *Ta
 	return s
 }
 
+// An exception was thrown for a validation issue. Review the available parameters
+// for the API request.
+type ValidationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s *ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s *ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 const (
 	// AdjustmentTypeChangeInCapacity is a AdjustmentType enum value
 	AdjustmentTypeChangeInCapacity = "ChangeInCapacity"
@@ -4717,6 +5559,21 @@ const (
 
 	// MetricTypeEcsserviceAverageMemoryUtilization is a MetricType enum value
 	MetricTypeEcsserviceAverageMemoryUtilization = "ECSServiceAverageMemoryUtilization"
+
+	// MetricTypeAppStreamAverageCapacityUtilization is a MetricType enum value
+	MetricTypeAppStreamAverageCapacityUtilization = "AppStreamAverageCapacityUtilization"
+
+	// MetricTypeComprehendInferenceUtilization is a MetricType enum value
+	MetricTypeComprehendInferenceUtilization = "ComprehendInferenceUtilization"
+
+	// MetricTypeLambdaProvisionedConcurrencyUtilization is a MetricType enum value
+	MetricTypeLambdaProvisionedConcurrencyUtilization = "LambdaProvisionedConcurrencyUtilization"
+
+	// MetricTypeCassandraReadCapacityUtilization is a MetricType enum value
+	MetricTypeCassandraReadCapacityUtilization = "CassandraReadCapacityUtilization"
+
+	// MetricTypeCassandraWriteCapacityUtilization is a MetricType enum value
+	MetricTypeCassandraWriteCapacityUtilization = "CassandraWriteCapacityUtilization"
 )
 
 const (
@@ -4760,6 +5617,18 @@ const (
 
 	// ScalableDimensionCustomResourceResourceTypeProperty is a ScalableDimension enum value
 	ScalableDimensionCustomResourceResourceTypeProperty = "custom-resource:ResourceType:Property"
+
+	// ScalableDimensionComprehendDocumentClassifierEndpointDesiredInferenceUnits is a ScalableDimension enum value
+	ScalableDimensionComprehendDocumentClassifierEndpointDesiredInferenceUnits = "comprehend:document-classifier-endpoint:DesiredInferenceUnits"
+
+	// ScalableDimensionLambdaFunctionProvisionedConcurrency is a ScalableDimension enum value
+	ScalableDimensionLambdaFunctionProvisionedConcurrency = "lambda:function:ProvisionedConcurrency"
+
+	// ScalableDimensionCassandraTableReadCapacityUnits is a ScalableDimension enum value
+	ScalableDimensionCassandraTableReadCapacityUnits = "cassandra:table:ReadCapacityUnits"
+
+	// ScalableDimensionCassandraTableWriteCapacityUnits is a ScalableDimension enum value
+	ScalableDimensionCassandraTableWriteCapacityUnits = "cassandra:table:WriteCapacityUnits"
 )
 
 const (
@@ -4806,4 +5675,13 @@ const (
 
 	// ServiceNamespaceCustomResource is a ServiceNamespace enum value
 	ServiceNamespaceCustomResource = "custom-resource"
+
+	// ServiceNamespaceComprehend is a ServiceNamespace enum value
+	ServiceNamespaceComprehend = "comprehend"
+
+	// ServiceNamespaceLambda is a ServiceNamespace enum value
+	ServiceNamespaceLambda = "lambda"
+
+	// ServiceNamespaceCassandra is a ServiceNamespace enum value
+	ServiceNamespaceCassandra = "cassandra"
 )

@@ -1,4 +1,5 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_lb_ssl_negotiation_policy"
 description: |-
@@ -78,8 +79,8 @@ The following arguments are supported:
   should be applied. This must be an active listener on the load
 balancer.
 * `attribute` - (Optional) An SSL Negotiation policy attribute. Each has two properties:
-	* `name` - The name of the attribute
-	* `value` - The value of the attribute
+    * `name` - The name of the attribute
+    * `value` - The value of the attribute
 
 To set your attributes, please see the [AWS Elastic Load Balancing Developer Guide](http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/elb-security-policy-table.html) for a listing of the supported SSL protocols, SSL options, and SSL ciphers.
 

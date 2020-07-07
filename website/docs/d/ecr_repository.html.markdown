@@ -1,4 +1,5 @@
 ---
+subcategory: "ECR"
 layout: "aws"
 page_title: "AWS: aws_ecr_repository"
 description: |-
@@ -30,4 +31,4 @@ In addition to all arguments above, the following attributes are exported:
 * `arn` - Full ARN of the repository.
 * `registry_id` - The registry ID where the repository was created.
 * `repository_url` - The URL of the repository (in the form `aws_account_id.dkr.ecr.region.amazonaws.com/repositoryName`).
-* `tags` - A mapping of tags assigned to the resource.
+* `tags` - A map of tags assigned to the resource.

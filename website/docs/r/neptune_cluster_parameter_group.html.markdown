@@ -1,4 +1,5 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_cluster_parameter_group"
 description: |-
@@ -33,7 +34,7 @@ The following arguments are supported:
 * `family` - (Required) The family of the neptune cluster parameter group.
 * `description` - (Optional) The description of the neptune cluster parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of neptune parameters to apply.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 Parameter blocks support the following:
 

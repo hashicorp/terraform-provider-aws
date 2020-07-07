@@ -1,4 +1,5 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_default_security_group"
 description: |-
@@ -98,7 +99,7 @@ removed. The following arguments are still supported:
 * `vpc_id` - (Optional, Forces new resource) The VPC ID. **Note that changing
 the `vpc_id` will _not_ restore any default security group rules that were
 modified, added, or removed.** It will be left in its current state
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 
 ## Usage

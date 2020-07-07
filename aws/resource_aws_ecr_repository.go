@@ -42,6 +42,20 @@ func resourceAwsEcrRepository() *schema.Resource {
 					ecr.ImageTagMutabilityImmutable,
 				}, false),
 			},
+			"image_scanning_configuration": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"scan_on_push": {
+							Type:     schema.TypeBool,
+							Required: true,
+						},
+					},
+				},
+				DiffSuppressFunc: suppressMissingOptionalConfigurationBlock,
+			},
 			"tags": tagsSchema(),
 			"arn": {
 				Type:     schema.TypeString,
@@ -68,6 +82,17 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 		Tags:               keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().EcrTags(),
 	}
 
+	imageScanningConfigs := d.Get("image_scanning_configuration").([]interface{})
+	if len(imageScanningConfigs) > 0 {
+		imageScanningConfig := imageScanningConfigs[0]
+		if imageScanningConfig != nil {
+			configMap := imageScanningConfig.(map[string]interface{})
+			input.ImageScanningConfiguration = &ecr.ImageScanningConfiguration{
+				ScanOnPush: aws.Bool(configMap["scan_on_push"].(bool)),
+			}
+		}
+	}
+
 	log.Printf("[DEBUG] Creating ECR repository: %#v", input)
 	out, err := conn.CreateRepository(&input)
 	if err != nil {
@@ -85,6 +110,7 @@ func resourceAwsEcrRepositoryCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecrconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	log.Printf("[DEBUG] Reading ECR repository %s", d.Id())
 	var out *ecr.DescribeRepositoriesOutput
@@ -127,17 +153,34 @@ func resourceAwsEcrRepositoryRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("repository_url", repository.RepositoryUri)
 	d.Set("image_tag_mutability", repository.ImageTagMutability)
 
+	if err := d.Set("image_scanning_configuration", flattenImageScanningConfiguration(repository.ImageScanningConfiguration)); err != nil {
+		return fmt.Errorf("error setting image_scanning_configuration: %s", err)
+	}
+
 	tags, err := keyvaluetags.EcrListTags(conn, arn)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for ECR Repository (%s): %s", arn, err)
 	}
 
-	if err := d.Set("tags", tags.IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
+}
+
+func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []map[string]interface{} {
+	if isc == nil {
+		return nil
+	}
+
+	config := make(map[string]interface{})
+	config["scan_on_push"] = aws.BoolValue(isc.ScanOnPush)
+
+	return []map[string]interface{}{
+		config,
+	}
 }
 
 func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) error {
@@ -146,6 +189,12 @@ func resourceAwsEcrRepositoryUpdate(d *schema.ResourceData, meta interface{}) er
 
 	if d.HasChange("image_tag_mutability") {
 		if err := resourceAwsEcrRepositoryUpdateImageTagMutability(conn, d); err != nil {
+			return err
+		}
+	}
+
+	if d.HasChange("image_scanning_configuration") {
+		if err := resourceAwsEcrRepositoryUpdateImageScanningConfiguration(conn, d); err != nil {
 			return err
 		}
 	}
@@ -218,6 +267,31 @@ func resourceAwsEcrRepositoryUpdateImageTagMutability(conn *ecr.ECR, d *schema.R
 	_, err := conn.PutImageTagMutability(input)
 	if err != nil {
 		return fmt.Errorf("Error setting image tag mutability: %s", err.Error())
+	}
+
+	return nil
+}
+func resourceAwsEcrRepositoryUpdateImageScanningConfiguration(conn *ecr.ECR, d *schema.ResourceData) error {
+
+	var ecrImageScanningConfig ecr.ImageScanningConfiguration
+	imageScanningConfigs := d.Get("image_scanning_configuration").([]interface{})
+	if len(imageScanningConfigs) > 0 {
+		imageScanningConfig := imageScanningConfigs[0]
+		if imageScanningConfig != nil {
+			configMap := imageScanningConfig.(map[string]interface{})
+			ecrImageScanningConfig.ScanOnPush = aws.Bool(configMap["scan_on_push"].(bool))
+		}
+	}
+
+	input := &ecr.PutImageScanningConfigurationInput{
+		ImageScanningConfiguration: &ecrImageScanningConfig,
+		RepositoryName:             aws.String(d.Id()),
+		RegistryId:                 aws.String(d.Get("registry_id").(string)),
+	}
+
+	_, err := conn.PutImageScanningConfiguration(input)
+	if err != nil {
+		return fmt.Errorf("Error setting image scanning configuration: %s", err.Error())
 	}
 
 	return nil
