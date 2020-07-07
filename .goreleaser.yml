@@ -8,6 +8,8 @@ before:
     - go mod download
 builds:
   - binary: '{{ .ProjectName }}_{{ .Version }}'
+    flags:
+      - -trimpath
     goarch:
       - '386'
       - amd64
@@ -22,7 +24,8 @@ builds:
       - goarch: '386'
         goos: darwin
     ldflags:
-      - -s -w -X github.com/terraform-providers/terraform-provider-aws/aws/version.ProviderVersion={{.Version}}
+      - -s -w -X aws/version.ProviderVersion={{.Version}}
+    mod_timestamp: '{{ .CommitTimestamp }}'
 changelog:
   skip: true
 checksum:
