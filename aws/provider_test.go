@@ -30,24 +30,24 @@ var TestAccSkip = func(t *testing.T, message string) {
 	t.Skip(message)
 }
 
-var testAccProviders map[string]terraform.ResourceProvider
-var testAccProviderFactories func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory
+var testAccProviders map[string]*schema.Provider
+var testAccProviderFactories func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error)
 var testAccProvider *schema.Provider
 var testAccProviderFunc func() *schema.Provider
 
 func init() {
-	testAccProvider = Provider().(*schema.Provider)
-	testAccProviders = map[string]terraform.ResourceProvider{
+	testAccProvider = Provider()
+	testAccProviders = map[string]*schema.Provider{
 		"aws": testAccProvider,
 	}
-	testAccProviderFactories = func(providers *[]*schema.Provider) map[string]terraform.ResourceProviderFactory {
+	testAccProviderFactories = func(providers *[]*schema.Provider) map[string]func() (*schema.Provider, error) {
 		// this is an SDKV2 compatible hack, the "factory" functions are
 		// effectively singletons for the lifecycle of a resource.Test
 		var providerNames = []string{"aws", "awseast", "awswest", "awsalternate", "awsus-east-1", "awsalternateaccountalternateregion", "awsalternateaccountsameregion", "awssameaccountalternateregion", "awsthird"}
-		var factories = make(map[string]terraform.ResourceProviderFactory, len(providerNames))
+		var factories = make(map[string]func() (*schema.Provider, error), len(providerNames))
 		for _, name := range providerNames {
-			p := Provider().(*schema.Provider)
-			factories[name] = func() (terraform.ResourceProvider, error) {
+			p := Provider()
+			factories[name] = func() (*schema.Provider, error) {
 				return p, nil
 			}
 			*providers = append(*providers, p)
@@ -58,13 +58,13 @@ func init() {
 }
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := Provider().InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
 
 func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
+	var _ *schema.Provider = Provider()
 }
 
 func testAccPreCheck(t *testing.T) {
