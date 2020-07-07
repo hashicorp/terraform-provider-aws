@@ -4,6 +4,8 @@ ENHANCEMENTS:
 
 * resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) [GH-5225]
 * resource/aws_launch_template: Add `update_default_version` argument to set the launch template's default version to the latest version available on update [GH-5225]
+* resource/aws_organizations_organization: Support `BACKUP_POLICY` value in `enabled_policy_types` plan-time validation (Support Backup policies) [GH-14060]
+* resource/aws_organizations_policy: Support `BACKUP_POLICY` value in `type` plan-time validation (Support Backup policies) [GH-14060]
 
 ## 2.69.0 (July 02, 2020)
 
