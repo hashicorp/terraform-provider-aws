@@ -102,10 +102,17 @@ func resourceAwsApiGatewayV2Integration() *schema.Resource {
 					"2.0",
 				}, false),
 			},
+			"request_parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				// Length between [1-512].
+				Elem: &schema.Schema{Type: schema.TypeString},
+			},
 			"request_templates": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
+				// Length between [0-32768].
+				Elem: &schema.Schema{Type: schema.TypeString},
 			},
 			"template_selection_expression": {
 				Type:     schema.TypeString,
@@ -155,6 +162,9 @@ func resourceAwsApiGatewayV2IntegrationCreate(d *schema.ResourceData, meta inter
 	if v, ok := d.GetOk("payload_format_version"); ok {
 		req.PayloadFormatVersion = aws.String(v.(string))
 	}
+	if v, ok := d.GetOk("request_parameters"); ok {
+		req.RequestParameters = stringMapToPointers(v.(map[string]interface{}))
+	}
 	if v, ok := d.GetOk("request_templates"); ok {
 		req.RequestTemplates = stringMapToPointers(v.(map[string]interface{}))
 	}
@@ -203,6 +213,10 @@ func resourceAwsApiGatewayV2IntegrationRead(d *schema.ResourceData, meta interfa
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
+	err = d.Set("request_parameters", pointersMapToStringList(resp.RequestParameters))
+	if err != nil {
+		return fmt.Errorf("error setting request_parameters: %s", err)
+	}
 	err = d.Set("request_templates", pointersMapToStringList(resp.RequestTemplates))
 	if err != nil {
 		return fmt.Errorf("error setting request_templates: %s", err)
@@ -246,6 +260,19 @@ func resourceAwsApiGatewayV2IntegrationUpdate(d *schema.ResourceData, meta inter
 	}
 	if d.HasChange("payload_format_version") {
 		req.PayloadFormatVersion = aws.String(d.Get("payload_format_version").(string))
+	}
+	if d.HasChange("request_parameters") {
+		o, n := d.GetChange("request_parameters")
+		add, del := diffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		// Parameters are removed by setting the associated value to "".
+		for k := range del {
+			del[k] = aws.String("")
+		}
+		variables := del
+		for k, v := range add {
+			variables[k] = v
+		}
+		req.RequestParameters = variables
 	}
 	if d.HasChange("request_templates") {
 		req.RequestTemplates = stringMapToPointers(d.Get("request_templates").(map[string]interface{}))
