@@ -237,7 +237,7 @@ func buildDynamoDbExpressionAttributeNames(attrs map[string]*dynamodb.AttributeV
 func cleanDynamoDbKeyName(key string) string {
 	reg, err := regexp.Compile("[^a-zA-Z]+")
 	if err != nil {
-		fmt.Errorf("[ERROR] Clean KeyName Errored %+v\n", err)
+		log.Printf("[ERROR] clean keyname errored %v", err)
 	}
 	return reg.ReplaceAllString(key, "")
 }
