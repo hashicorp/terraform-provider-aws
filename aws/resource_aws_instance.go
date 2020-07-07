@@ -113,6 +113,19 @@ func resourceAwsInstance() *schema.Resource {
 					validation.StringIsEmpty,
 					validation.IsIPv4Address,
 				),
+				ConflictsWith: []string{"private_ips"},
+			},
+
+			"private_ips": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPv4Address,
+				},
+				ConflictsWith: []string{"private_ip"},
 			},
 
 			"source_dest_check": {
@@ -206,7 +219,7 @@ func resourceAwsInstance() *schema.Resource {
 			},
 
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -807,6 +820,7 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		}
 	}
 
+	var privateIPs []string
 	var ipv6Addresses []string
 	if len(instance.NetworkInterfaces) > 0 {
 		var primaryNetworkInterface ec2.InstanceNetworkInterface
@@ -851,6 +865,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 
 		d.Set("associate_public_ip_address", primaryNetworkInterface.Association != nil)
 
+		for _, address := range primaryNetworkInterface.PrivateIpAddresses {
+			privateIPs = append(privateIPs, aws.StringValue(address.PrivateIpAddress))
+		}
+
 		for _, address := range primaryNetworkInterface.Ipv6Addresses {
 			ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
 		}
@@ -860,6 +878,10 @@ func resourceAwsInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("ipv6_address_count", 0)
 		d.Set("primary_network_interface_id", "")
 		d.Set("subnet_id", instance.SubnetId)
+	}
+
+	if err := d.Set("private_ips", privateIPs); err != nil {
+		return fmt.Errorf("Error setting private_ips for AWS Instance (%s): %w", d.Id(), err)
 	}
 
 	if err := d.Set("ipv6_addresses", ipv6Addresses); err != nil {
@@ -1685,6 +1707,10 @@ func buildNetworkInterfaceOpts(d *schema.ResourceData, groups []*string, nInterf
 
 		if v, ok := d.GetOk("private_ip"); ok {
 			ni.PrivateIpAddress = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("private_ips"); ok && v.(*schema.Set).Len() > 0 {
+			ni.PrivateIpAddresses = expandPrivateIPAddresses(v.(*schema.Set).List())
 		}
 
 		if v, ok := d.GetOk("ipv6_address_count"); ok {

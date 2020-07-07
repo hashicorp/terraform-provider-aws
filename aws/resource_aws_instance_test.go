@@ -2014,6 +2014,44 @@ func TestAccAWSInstance_addSecurityGroupNetworkInterface(t *testing.T) {
 	})
 }
 
+// Reference: https://github.com/terraform-providers/terraform-provider-aws/issues/7063
+func TestAccAWSInstance_newNetworkInterfacePrivateIPs(t *testing.T) {
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigPublicAndPrivateIPs(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
+					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "2"),
+				),
+			},
+			{
+				Config: testAccInstanceConfigPublicAndPrivateIPs(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "associate_public_ip_address", "false"),
+					resource.TestCheckResourceAttr(resourceName, "public_ip", ""),
+					resource.TestCheckResourceAttr(resourceName, "private_ips.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // https://github.com/terraform-providers/terraform-provider-aws/issues/227
 func TestAccAWSInstance_associatePublic_defaultPrivate(t *testing.T) {
 	var v ec2.Instance
@@ -4278,6 +4316,34 @@ resource "aws_network_interface" "test" {
   }
 }
 `, rName)
+}
+
+func testAccInstanceConfigPublicAndPrivateIPs(rName string, isPublic bool) string {
+	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + testAccAwsInstanceVpcConfig(rName, false) + fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  vpc_id      = "${aws_vpc.test.id}"
+  description = "%[1]s"
+  name        = "%[1]s"
+}
+
+resource "aws_instance" "test" {
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  instance_type = "t2.micro"
+  subnet_id     = "${aws_subnet.test.id}"
+
+  associate_public_ip_address = %[2]t
+
+  private_ips = ["10.1.1.42", "10.1.1.43"]
+
+  vpc_security_group_ids = [
+    "${aws_security_group.test.id}"
+  ]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, isPublic)
 }
 
 func testAccInstanceConfig_associatePublic_defaultPrivate(rName string) string {

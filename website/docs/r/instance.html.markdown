@@ -87,6 +87,7 @@ instances. See [Shutdown Behavior](https://docs.aws.amazon.com/AWSEC2/latest/Use
 * `associate_public_ip_address` - (Optional) Associate a public ip address with an instance in a VPC.  Boolean value.
 * `private_ip` - (Optional) Private IP address to associate with the
      instance in a VPC.
+* `private_ips` - (Optional, Forces new resource) A list of private IPv4 addresses to assign to the instance's associated network interface. Can only be assigned to a new network interface, not an existing one i.e. set in a `network_interface` block. By default, the first entry in the list is designated as `primary`.
 * `source_dest_check` - (Optional) Controls if traffic is routed to the instance when
   the destination address does not match the instance. Used for NAT or VPNs. Defaults true.
 * `user_data` - (Optional) The user data to provide when launching the instance. Do not pass gzip-compressed data via this argument; see `user_data_base64` instead.
