@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -74,7 +75,7 @@ func resourceAwsDxGatewayAssociationResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAwsDxGatewayAssociationStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAwsDxGatewayAssociationStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	conn := meta.(*AWSClient).dxconn
 
 	log.Println("[INFO] Found Direct Connect gateway association state v0; migrating to v1")

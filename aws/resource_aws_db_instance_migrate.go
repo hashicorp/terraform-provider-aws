@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"context"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -377,7 +379,7 @@ func resourceAwsDbInstanceResourceV0() *schema.Resource {
 	}
 }
 
-func resourceAwsDbInstanceStateUpgradeV0(rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func resourceAwsDbInstanceStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		return nil, nil
 	}

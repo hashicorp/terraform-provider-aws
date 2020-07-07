@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -604,7 +605,7 @@ func resourceAwsCodeBuildProject() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				// Plan time validation for cache location
 				cacheType, cacheTypeOk := diff.GetOk("cache.0.type")
 				if !cacheTypeOk || cacheType.(string) == codebuild.CacheTypeNoCache || cacheType.(string) == codebuild.CacheTypeLocal {

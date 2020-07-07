@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"testing"
@@ -526,7 +527,7 @@ func testAccCheckAwsDxGatewayAssociationStateUpgradeV0(name string) resource.Tes
 			"vpn_gateway_id": rs.Primary.Attributes["associated_gateway_id"], // vpn_gateway_id was removed in 3.0, but older state still has it
 		}
 
-		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(rawState, testAccProvider.Meta())
+		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(context.Background(), rawState, testAccProvider.Meta())
 		if err != nil {
 			return err
 		}

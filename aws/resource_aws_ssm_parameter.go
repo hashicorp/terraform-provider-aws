@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -94,7 +95,7 @@ func resourceAwsSsmParameter() *schema.Resource {
 		CustomizeDiff: customdiff.All(
 			// Prevent the following error during tier update from Advanced to Standard:
 			// ValidationException: This parameter uses the advanced-parameter tier. You can't downgrade a parameter from the advanced-parameter tier to the standard-parameter tier. If necessary, you can delete the advanced parameter and recreate it as a standard parameter.
-			customdiff.ForceNewIfChange("tier", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("tier", func(_ context.Context, old, new, meta interface{}) bool {
 				return old.(string) == ssm.ParameterTierAdvanced && new.(string) == ssm.ParameterTierStandard
 			}),
 		),

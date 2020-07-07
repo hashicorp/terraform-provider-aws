@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -439,10 +440,10 @@ func resourceAwsAutoscalingGroup() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ComputedIf("launch_template.0.id", func(diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("launch_template.0.id", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.name")
 			}),
-			customdiff.ComputedIf("launch_template.0.name", func(diff *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ComputedIf("launch_template.0.name", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.HasChange("launch_template.0.id")
 			}),
 		),

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -549,7 +550,7 @@ func resourceAwsVpcDelete(d *schema.ResourceData, meta interface{}) error {
 	return nil
 }
 
-func resourceAwsVpcCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+func resourceAwsVpcCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.HasChange("assign_generated_ipv6_cidr_block") {
 		if err := diff.SetNewComputed("ipv6_association_id"); err != nil {
 			return fmt.Errorf("error setting ipv6_association_id to computed: %s", err)

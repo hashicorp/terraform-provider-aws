@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -36,13 +37,13 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				return validateDynamoDbStreamSpec(diff)
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				return validateDynamoDbTableAttributes(diff)
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("server_side_encryption") {
 					o, n := diff.GetChange("server_side_encryption")
 					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {
@@ -51,7 +52,7 @@ func resourceAwsDynamoDbTable() *schema.Resource {
 				}
 				return nil
 			},
-			func(diff *schema.ResourceDiff, v interface{}) error {
+			func(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 				if diff.Id() != "" && diff.HasChange("point_in_time_recovery") {
 					o, n := diff.GetChange("point_in_time_recovery")
 					if isDynamoDbTableOptionDisabled(o) && isDynamoDbTableOptionDisabled(n) {

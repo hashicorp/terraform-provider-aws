@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -815,7 +816,7 @@ func flattenAwsLbResource(d *schema.ResourceData, meta interface{}, lb *elbv2.Lo
 // Load balancers of type 'network' cannot have their subnets updated at
 // this time. If the type is 'network' and subnets have changed, mark the
 // diff as a ForceNew operation
-func customizeDiffNLBSubnets(diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffNLBSubnets(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")

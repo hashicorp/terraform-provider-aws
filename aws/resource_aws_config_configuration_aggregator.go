@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
@@ -27,10 +28,10 @@ func resourceAwsConfigConfigurationAggregator() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// This is to prevent this error:
 			// All fields are ForceNew or Computed w/out Optional, Update is superfluous
-			customdiff.ForceNewIfChange("account_aggregation_source", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("account_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
-			customdiff.ForceNewIfChange("organization_aggregation_source", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("organization_aggregation_source", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 0 && len(new.([]interface{})) > 0
 			}),
 		),

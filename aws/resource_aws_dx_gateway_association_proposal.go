@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -22,7 +23,7 @@ func resourceAwsDxGatewayAssociationProposal() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			// Accepting the proposal with overridden prefixes changes the returned RequestedAllowedPrefixesToDirectConnectGateway value (allowed_prefixes attribute).
 			// We only want to force a new resource if this value changes and the current proposal state is "requested".
-			customdiff.ForceNewIf("allowed_prefixes", func(d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("allowed_prefixes", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				conn := meta.(*AWSClient).dxconn
 
 				proposal, err := describeDirectConnectGatewayAssociationProposal(conn, d.Id())

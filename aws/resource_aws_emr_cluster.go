@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"log"
 
 	"encoding/json"

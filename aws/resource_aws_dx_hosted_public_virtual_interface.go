@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strconv"
@@ -208,7 +209,7 @@ func resourceAwsDxHostedPublicVirtualInterfaceImport(d *schema.ResourceData, met
 	return []*schema.ResourceData{d}, nil
 }
 
-func resourceAwsDxHostedPublicVirtualInterfaceCustomizeDiff(diff *schema.ResourceDiff, meta interface{}) error {
+func resourceAwsDxHostedPublicVirtualInterfaceCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	if diff.Id() == "" {
 		// New resource.
 		if addressFamily := diff.Get("address_family").(string); addressFamily == directconnect.AddressFamilyIpv4 {

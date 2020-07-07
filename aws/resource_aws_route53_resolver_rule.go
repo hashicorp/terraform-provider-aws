@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -254,7 +255,7 @@ func resourceAwsRoute53ResolverRuleDelete(d *schema.ResourceData, meta interface
 	return nil
 }
 
-func resourceAwsRoute53ResolverRuleCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+func resourceAwsRoute53ResolverRuleCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if diff.Id() != "" {
 		if diff.HasChange("resolver_endpoint_id") {
 			if _, n := diff.GetChange("resolver_endpoint_id"); n.(string) == "" {

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"regexp"
@@ -33,7 +34,7 @@ func resourceAwsElasticSearchDomain() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIf("elasticsearch_version", func(d *schema.ResourceDiff, meta interface{}) bool {
+			customdiff.ForceNewIf("elasticsearch_version", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
 				newVersion := d.Get("elasticsearch_version").(string)
 				domainName := d.Get("domain_name").(string)
 

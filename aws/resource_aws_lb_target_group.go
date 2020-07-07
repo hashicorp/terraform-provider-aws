@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -722,7 +723,7 @@ func flattenAwsLbTargetGroupStickiness(d *schema.ResourceData, attributes []*elb
 	return nil
 }
 
-func resourceAwsLbTargetGroupCustomizeDiff(diff *schema.ResourceDiff, v interface{}) error {
+func resourceAwsLbTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	protocol := diff.Get("protocol").(string)
 	if protocol == elbv2.ProtocolEnumTcp {
 		// TCP load balancers do not support stickiness

@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
@@ -27,7 +28,7 @@ func resourceAwsStorageGatewayGateway() *schema.Resource {
 		Update: resourceAwsStorageGatewayGatewayUpdate,
 		Delete: resourceAwsStorageGatewayGatewayDelete,
 		CustomizeDiff: customdiff.Sequence(
-			customdiff.ForceNewIfChange("smb_active_directory_settings", func(old, new, meta interface{}) bool {
+			customdiff.ForceNewIfChange("smb_active_directory_settings", func(_ context.Context, old, new, meta interface{}) bool {
 				return len(old.([]interface{})) == 1 && len(new.([]interface{})) == 0
 			}),
 		),

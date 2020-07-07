@@ -1,6 +1,7 @@
 package aws
 
 import (
+	"context"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -293,7 +294,7 @@ func resourceAwsLambdaFunction() *schema.Resource {
 	}
 }
 
-func updateComputedAttributesOnPublish(d *schema.ResourceDiff, meta interface{}) error {
+func updateComputedAttributesOnPublish(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if needsFunctionCodeUpdate(d) {
 		d.SetNewComputed("last_modified")
 		publish := d.Get("publish").(bool)

@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"context"
 	"encoding/base64"
 	"fmt"
 	"io"
@@ -525,7 +526,7 @@ func validateMetadataIsLowerCase(v interface{}, k string) (ws []string, errors [
 	return
 }
 
-func resourceAwsS3BucketObjectCustomizeDiff(d *schema.ResourceDiff, meta interface{}) error {
+func resourceAwsS3BucketObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
 	if d.HasChange("etag") {
 		d.SetNewComputed("version_id")
 	}
