@@ -18,10 +18,10 @@ func ClientVpnAuthorizationRuleCreateID(endpointID, targetNetworkCidr, accessGro
 
 func ClientVpnAuthorizationRuleParseID(id string) (string, string, string, error) {
 	parts := strings.Split(id, clientVpnAuthorizationRuleIDSeparator)
-	if len(parts) == 2 {
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], "", nil
 	}
-	if len(parts) == 3 {
+	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
 		return parts[0], parts[1], parts[2], nil
 	}
 
