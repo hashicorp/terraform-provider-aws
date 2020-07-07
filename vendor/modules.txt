@@ -508,9 +508,18 @@ github.com/gostaticanalysis/analysisutil
 github.com/hashicorp/aws-sdk-go-base
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
+# github.com/hashicorp/go-checkpoint v0.5.0
+github.com/hashicorp/go-checkpoint
 # github.com/hashicorp/go-cleanhttp v0.5.1
 ## explicit
 github.com/hashicorp/go-cleanhttp
+# github.com/hashicorp/go-cty v1.4.1-0.20200414143053-d3edf31b6320
+github.com/hashicorp/go-cty/cty
+github.com/hashicorp/go-cty/cty/convert
+github.com/hashicorp/go-cty/cty/gocty
+github.com/hashicorp/go-cty/cty/json
+github.com/hashicorp/go-cty/cty/msgpack
+github.com/hashicorp/go-cty/cty/set
 # github.com/hashicorp/go-getter v1.4.2-0.20200106182914-9813cbd4eb02
 github.com/hashicorp/go-getter
 github.com/hashicorp/go-getter/helper/url
@@ -556,21 +565,20 @@ github.com/hashicorp/hcl/v2/json
 github.com/hashicorp/logutils
 # github.com/hashicorp/terraform-config-inspect v0.0.0-20191115094559-17f92b0546e8
 github.com/hashicorp/terraform-config-inspect/tfconfig
+# github.com/hashicorp/terraform-exec v0.3.0
+github.com/hashicorp/terraform-exec/tfinstall
 # github.com/hashicorp/terraform-json v0.5.0
 github.com/hashicorp/terraform-json
 # github.com/hashicorp/terraform-plugin-sdk v1.14.0
 ## explicit
 github.com/hashicorp/terraform-plugin-sdk/acctest
 github.com/hashicorp/terraform-plugin-sdk/helper/acctest
-github.com/hashicorp/terraform-plugin-sdk/helper/customdiff
 github.com/hashicorp/terraform-plugin-sdk/helper/encryption
 github.com/hashicorp/terraform-plugin-sdk/helper/hashcode
 github.com/hashicorp/terraform-plugin-sdk/helper/logging
 github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv
 github.com/hashicorp/terraform-plugin-sdk/helper/resource
 github.com/hashicorp/terraform-plugin-sdk/helper/schema
-github.com/hashicorp/terraform-plugin-sdk/helper/structure
-github.com/hashicorp/terraform-plugin-sdk/helper/validation
 github.com/hashicorp/terraform-plugin-sdk/httpclient
 github.com/hashicorp/terraform-plugin-sdk/internal/addrs
 github.com/hashicorp/terraform-plugin-sdk/internal/command/format
@@ -611,8 +619,34 @@ github.com/hashicorp/terraform-plugin-sdk/internal/version
 github.com/hashicorp/terraform-plugin-sdk/meta
 github.com/hashicorp/terraform-plugin-sdk/plugin
 github.com/hashicorp/terraform-plugin-sdk/terraform
-# github.com/hashicorp/terraform-plugin-test v1.3.0
+# github.com/hashicorp/terraform-plugin-sdk/v2 v2.0.0
+## explicit
+github.com/hashicorp/terraform-plugin-sdk/v2/diag
+github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest
+github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff
+github.com/hashicorp/terraform-plugin-sdk/v2/helper/logging
+github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource
+github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema
+github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure
+github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/addrs
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/configschema
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/configs/hcl2shim
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/hashcode
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/plugin
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/helper/plugin/context
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/plans/objchange
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/plugin/convert
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfdiags
+github.com/hashicorp/terraform-plugin-sdk/v2/internal/tfplugin5
+github.com/hashicorp/terraform-plugin-sdk/v2/meta
+github.com/hashicorp/terraform-plugin-sdk/v2/plugin
+github.com/hashicorp/terraform-plugin-sdk/v2/terraform
+# github.com/hashicorp/terraform-plugin-test v1.4.0
+## explicit
 github.com/hashicorp/terraform-plugin-test
+# github.com/hashicorp/terraform-plugin-test/v2 v2.0.0-20200724200815-faa9931ac59e
+github.com/hashicorp/terraform-plugin-test/v2
 # github.com/hashicorp/terraform-svchost v0.0.0-20191011084731-65d371908596
 github.com/hashicorp/terraform-svchost
 github.com/hashicorp/terraform-svchost/auth
