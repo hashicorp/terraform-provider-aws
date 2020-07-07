@@ -178,7 +178,8 @@ func resourceAwsGuardDutyFilterRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("name", filter.Name)
 	d.Set("detector_id", detectorId)
 	d.Set("rank", filter.Rank)
-	d.Set("tags", filter.Tags)
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+	d.Set("tags", keyvaluetags.GuarddutyKeyValueTags(filter.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map())
 	d.SetId(strings.Join([]string{detectorId, name}, "_"))
 
 	return nil
