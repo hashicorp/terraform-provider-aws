@@ -12,22 +12,25 @@ func TestAccDataSourceAwsLexSlotType_basic(t *testing.T) {
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexSlotTypeConfig_withoutVersion(rName),
+					testAccAwsLexSlotTypeConfig_basic(rName),
 					testAccDataSourceAwsLexSlotTypeConfig_basic(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "checksum", resourceName, "checksum"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enumeration_value.#", resourceName, "enumeration_value.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "value_selection_strategy", resourceName, "value_selection_strategy"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "created_date", resourceName, "created_date"),
 					testAccCheckResourceAttrRfc3339(dataSourceName, "created_date"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "last_updated_date", resourceName, "last_updated_date"),
 					testAccCheckResourceAttrRfc3339(dataSourceName, "last_updated_date"),
 				),
 			},
@@ -40,13 +43,13 @@ func TestAccDataSourceAwsLexSlotType_withVersion(t *testing.T) {
 	dataSourceName := "data.aws_lex_slot_type.test"
 	resourceName := "aws_lex_slot_type.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
 				Config: composeConfig(
-					testAccAwsLexSlotTypeConfig_basic(rName),
+					testAccAwsLexSlotTypeConfig_withVersion(rName),
 					testAccDataSourceAwsLexSlotTypeConfig_withVersion(),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(

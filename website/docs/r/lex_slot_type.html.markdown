@@ -45,15 +45,15 @@ resource "aws_lex_slot_type" "flower_types" {
 
 The following arguments are supported:
 
-* `create_version` - (Optional) 
-Determines if a new slot type version is created when the initial resource is created and on each 
-update. Defaults to true.
-* `description` - (Optional) A description of the slot type.
 * `enumeration_value` - (Required) A list of EnumerationValue objects that defines the values that 
 the slot type can take. Each value can have a list of synonyms, which are additional values that help 
 train the machine learning model about the values that it resolves for a slot. Attributes are 
 documented under [enumeration_value](#enumeration_value-1).
 * `name` - (Required) The name of the slot type. The name is not case sensitive.
+* `create_version` - (Optional) 
+Determines if a new slot type version is created when the initial resource is created and on each 
+update. Defaults to true.
+* `description` - (Optional) A description of the slot type.
 * `value_selection_strategy` - (Optional) Determines the slot resolution strategy that Amazon Lex 
 uses to return slot type values. `ORIGINAL_VALUE` returns the value entered by the user if the user 
 value is similar to the slot value. `TOP_RESOLUTION` returns the first value in the resolution list 
@@ -85,7 +85,7 @@ The following attributes are exported in addition to the arguments listed above:
 * `checksum` - Checksum identifying the version of the slot type that was created. The checksum is 
 not included as an argument because the resource will add it automatically when updating the slot type.
 * `created_date` - The date when the slot type version was created.
-* `last_updated_date` - The date when the $LATEST version of this slot type was updated.
+* `last_updated_date` - The date when the `$LATEST` version of this slot type was updated.
 * `version` - The version of the slot type.
 
 ## Import

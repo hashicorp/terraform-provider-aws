@@ -43,7 +43,7 @@ func resourceAwsLexSlotType() *schema.Resource {
 			"create_version": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  true,
+				Default:  false,
 			},
 			"created_date": {
 				Type:     schema.TypeString,
@@ -63,7 +63,7 @@ func resourceAwsLexSlotType() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"synonyms": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Optional: true,
 							MinItems: 1,
 							Elem: &schema.Schema{
@@ -129,7 +129,7 @@ func resourceAwsLexSlotTypeCreate(d *schema.ResourceData, meta interface{}) erro
 
 		if isAWSErr(err, lexmodelbuildingservice.ErrCodeConflictException, "") {
 			input.Checksum = output.Checksum
-			return resource.RetryableError(fmt.Errorf("%q: slot type still creating", d.Id()))
+			return resource.RetryableError(fmt.Errorf("%q slot type still creating, another operation is pending: %s", d.Id(), err))
 		}
 		if err != nil {
 			return resource.NonRetryableError(err)
@@ -293,7 +293,7 @@ func expandLexEnumerationValues(rawValues []interface{}) []*lexmodelbuildingserv
 		}
 
 		enums = append(enums, &lexmodelbuildingservice.EnumerationValue{
-			Synonyms: expandStringList(value["synonyms"].([]interface{})),
+			Synonyms: expandStringSet(value["synonyms"].(*schema.Set)),
 			Value:    aws.String(value["value"].(string)),
 		})
 	}
