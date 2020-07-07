@@ -11,15 +11,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/experimental/sync"
 )
 
 const clientVpnEndpointDefaultLimit = 5
 
-var testAccEc2ClientVpnEndpointSemaphore tfawsresource.Semaphore
+var testAccEc2ClientVpnEndpointSemaphore sync.Semaphore
 
 func init() {
-	testAccEc2ClientVpnEndpointSemaphore = tfawsresource.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVpnEndpointDefaultLimit)
+	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVpnEndpointDefaultLimit)
 }
 
 func init() {
@@ -73,6 +73,10 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	return nil
 }
 
+// This is part of an experimental feature, do not use this as a starting point for tests
+//   "This place is not a place of honor... no highly esteemed deed is commemorated here... nothing valued is here.
+//   What is here was dangerous and repulsive to us. This message is a warning about danger."
+//   --  https://hyperallergic.com/312318/a-nuclear-warning-designed-to-last-10000-years/
 func TestAccAwsEc2ClientVpn(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Endpoint": {
@@ -351,7 +355,7 @@ func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 }
 
 func testAccPreCheckClientVPNSyncronize(t *testing.T) {
-	tfawsresource.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
+	sync.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
 }
 
 func testAccCheckAwsEc2ClientVpnEndpointDestroy(s *terraform.State) error {
@@ -534,12 +538,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   description            = "terraform-testacc-clientvpn-%s"
   server_certificate_arn = "${aws_acm_certificate.test.arn}"
   client_cidr_block      = "10.0.0.0/16"
-  
+
   authentication_options {
     type                = "directory-service-authentication"
     active_directory_id = "${aws_directory_service_directory.test.id}"
   }
-  
+
   connection_log_options {
     enabled = false
   }
@@ -636,13 +640,4 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   }
 }
 `, rName, splitTunnel)
-}
-
-func testAccEc2ClientVpnComposeConfig(rName string, config ...string) string {
-	return composeConfig(
-		append(
-			config,
-			testAccEc2ClientVpnEndpointConfig(rName),
-		)...,
-	)
 }

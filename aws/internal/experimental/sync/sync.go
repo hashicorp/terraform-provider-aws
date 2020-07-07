@@ -1,4 +1,4 @@
-package tfawsresource
+package sync
 
 import (
 	"fmt"
@@ -11,6 +11,7 @@ import (
 type Semaphore chan struct{}
 
 // InitializeSemaphore initializes a semaphore with a default capacity or overrides it using an environment variable
+// NOTE: this is currently an experimental feature and is likely to change. DO NOT USE.
 func InitializeSemaphore(envvar string, defaultLimit int) Semaphore {
 	limit := defaultLimit
 	x := os.Getenv(envvar)
@@ -25,16 +26,19 @@ func InitializeSemaphore(envvar string, defaultLimit int) Semaphore {
 }
 
 // Wait waits for a semaphore before continuing
+// NOTE: this is currently an experimental feature and is likely to change. DO NOT USE.
 func (s Semaphore) Wait() {
 	s <- struct{}{}
 }
 
 // Notify releases a semaphore
+// NOTE: this is currently an experimental feature and is likely to change. DO NOT USE.
 func (s Semaphore) Notify() {
 	<-s
 }
 
 // TestAccPreCheckSyncronized waits for a semaphore and skips the test if there is no capacity
+// NOTE: this is currently an experimental feature and is likely to change. DO NOT USE.
 func TestAccPreCheckSyncronize(t *testing.T, semaphore Semaphore, resource string) {
 	if cap(semaphore) == 0 {
 		t.Skipf("concurrency for %s testing set to 0", resource)

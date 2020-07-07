@@ -77,3 +77,37 @@ const (
 
 	ClientVpnAuthorizationRuleRevokedTimeout = 1 * time.Minute
 )
+
+func ClientVpnAuthorizationRuleAuthorized(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeAuthorizing},
+		Target:  []string{ec2.ClientVpnAuthorizationRuleStatusCodeActive},
+		Refresh: ClientVpnAuthorizationRuleStatus(conn, authorizationRuleID),
+		Timeout: ClientVpnAuthorizationRuleActiveTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AuthorizationRule); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string) (*ec2.AuthorizationRule, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnAuthorizationRuleStatusCodeRevoking},
+		Target:  []string{},
+		Refresh: ClientVpnAuthorizationRuleStatus(conn, authorizationRuleID),
+		Timeout: ClientVpnAuthorizationRuleRevokedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.AuthorizationRule); ok {
+		return output, err
+	}
+
+	return nil, err
+}
