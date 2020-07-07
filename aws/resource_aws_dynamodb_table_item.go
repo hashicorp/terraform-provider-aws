@@ -226,31 +226,27 @@ func resourceAwsDynamoDbTableItemDelete(d *schema.ResourceData, meta interface{}
 func buildDynamoDbExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
 	names := map[string]*string{}
 
-	reg, err := regexp.Compile("[^a-zA-Z]+")
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for key := range attrs {
-		safeKey := reg.ReplaceAllString(key, "")
-		names["#a_"+safeKey] = aws.String(key)
+		names["#a_"+cleanDynamoDbKeyName(key)] = aws.String(key)
 	}
 
 	log.Printf("[DEBUG] ExpressionAttributeNames: %+v", names)
 	return names
 }
 
-// TODO:
-func buildDynamoDbProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
-	keys := []string{}
+func cleanDynamoDbKeyName(key string) string {
 	reg, err := regexp.Compile("[^a-zA-Z]+")
 	if err != nil {
 		log.Fatal(err)
 	}
-	for key := range attrs {
-		safeKey := reg.ReplaceAllString(key, "")
+	return reg.ReplaceAllString(key, "")
+}
 
-		keys = append(keys, safeKey)
+func buildDynamoDbProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
+	keys := []string{}
+
+	for key := range attrs {
+		keys = append(keys, cleanDynamoDbKeyName(key))
 	}
 	log.Printf("[DEBUG] ProjectionExpressions: %+v", strings.Join(keys, ", #a_"))
 	return aws.String("#a_" + strings.Join(keys, ", #a_"))
