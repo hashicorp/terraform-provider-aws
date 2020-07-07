@@ -1,10 +1,13 @@
 package waiter
 
 import (
+	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 // LocalGatewayRouteTableVpcAssociationState fetches the LocalGatewayRouteTableVpcAssociation and its State
@@ -78,3 +81,37 @@ const (
 
 	ClientVpnAuthorizationRuleStatusUnknown = "Unknown"
 )
+
+// ClientVpnAuthorizationRuleStatus fetches the Client VPN authorization rule and its Status
+// TODO: This should be in the waiters package, but has a dependency on isAWSErr()
+func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(authorizationRuleID)
+		if err != nil {
+			return nil, ClientVpnAuthorizationRuleStatusUnknown, err
+		}
+
+		result, err := finder.ClientVpnAuthorizationRule(conn, endpointID, targetNetworkCidr, accessGroupID)
+		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnAuthorizationRuleNotFound) {
+			return nil, ClientVpnAuthorizationRuleStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, ClientVpnAuthorizationRuleStatusUnknown, err
+		}
+
+		if result == nil || len(result.AuthorizationRules) == 0 || result.AuthorizationRules[0] == nil {
+			return nil, ClientVpnAuthorizationRuleStatusNotFound, nil
+		}
+
+		if len(result.AuthorizationRules) > 1 {
+			return nil, ClientVpnAuthorizationRuleStatusUnknown, fmt.Errorf("internal error: found %d results for Client VPN authorization rule (%s) status, need 1", len(result.AuthorizationRules), authorizationRuleID)
+		}
+
+		rule := result.AuthorizationRules[0]
+		if rule.Status == nil || rule.Status.Code == nil {
+			return rule, ClientVpnAuthorizationRuleStatusUnknown, nil
+		}
+
+		return rule, aws.StringValue(rule.Status.Code), nil
+	}
+}

@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func testAccAwsEc2ClientVpnAuthorizationRule_basic(t *testing.T) {
@@ -201,7 +202,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleDestroy(s *terraform.State) err
 			continue
 		}
 
-		_, err := findClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
+		_, err := finder.ClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err == nil {
 			return fmt.Errorf("Client VPN authorization rule (%s) still exists", rs.Primary.ID)
 		}
@@ -227,7 +228,7 @@ func testAccCheckAwsEc2ClientVpnAuthorizationRuleExists(name string, assoc *ec2.
 
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
-		result, err := findClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
+		result, err := finder.ClientVpnAuthorizationRuleByID(conn, rs.Primary.ID)
 		if err != nil {
 			return fmt.Errorf("error reading Client VPN authorization rule (%s): %w", rs.Primary.ID, err)
 		}
