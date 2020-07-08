@@ -115,3 +115,42 @@ func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string)
 		return rule, aws.StringValue(rule.Status.Code), nil
 	}
 }
+
+const (
+	ClientVpnRouteStatusNotFound = "NotFound"
+
+	ClientVpnRouteStatusUnknown = "Unknown"
+)
+
+// ClientVpnRouteStatus fetches the Client VPN route and its Status
+func ClientVpnRouteStatus(conn *ec2.EC2, routeID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		endpointID, targetSubnetID, destinationCidr, err := tfec2.ClientVpnRouteParseID(routeID)
+		if err != nil {
+			return nil, ClientVpnRouteStatusNotFound, err
+		}
+
+		result, err := finder.ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
+		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeClientVpnRouteNotFound) {
+			return nil, ClientVpnRouteStatusNotFound, nil
+		}
+		if err != nil {
+			return nil, ClientVpnRouteStatusUnknown, err
+		}
+
+		if result == nil || len(result.Routes) == 0 || result.Routes[0] == nil {
+			return nil, ClientVpnRouteStatusNotFound, nil
+		}
+
+		if len(result.Routes) > 1 {
+			return nil, ClientVpnRouteStatusUnknown, fmt.Errorf("internal error: found %d results for Client VPN route (%s) status, need 1", len(result.Routes), routeID)
+		}
+
+		rule := result.Routes[0]
+		if rule.Status == nil || rule.Status.Code == nil {
+			return rule, ClientVpnRouteStatusUnknown, nil
+		}
+
+		return rule, aws.StringValue(rule.Status.Code), nil
+	}
+}
