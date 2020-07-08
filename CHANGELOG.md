@@ -1,5 +1,9 @@
 ## 2.70.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_ec2_client_vpn_authorization_rule` [GH-13950]
+
 ENHANCEMENTS:
 
 * resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) [GH-5225]
