@@ -713,9 +713,7 @@ func TestAccAWSRouteTable_IPv6_To_NetworkInterface_Unattached(t *testing.T) {
 	})
 }
 
-/*
-TODO Fix this. When associating RT with VPCE, need to wait until available.
-func TestAccAWSRouteTable_VpcMultipleCidrs_VpcEndpointAssociation(t *testing.T) {
+func TestAccAWSRouteTable_VpcMultipleCidrs(t *testing.T) {
 	var routeTable ec2.RouteTable
 	resourceName := "aws_route_table.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -726,10 +724,10 @@ func TestAccAWSRouteTable_VpcMultipleCidrs_VpcEndpointAssociation(t *testing.T) 
 		CheckDestroy: testAccCheckAWSRouteDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSRouteTableConfigVpcMultipleCidrsPlusVpcEndpointAssociation(rName),
+				Config: testAccAWSRouteTableConfigVpcMultipleCidrs(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRouteTableExists(resourceName, &routeTable),
-					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 3),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
@@ -745,7 +743,6 @@ func TestAccAWSRouteTable_VpcMultipleCidrs_VpcEndpointAssociation(t *testing.T) 
 		},
 	})
 }
-*/
 
 func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -1573,8 +1570,7 @@ resource "aws_route_table" "test" {
 `, rName, destinationCidr)
 }
 
-/*
-func testAccAWSRouteTableConfigVpcMultipleCidrsPlusVpcEndpointAssociation(rName string) string {
+func testAccAWSRouteTableConfigVpcMultipleCidrs(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
@@ -1590,28 +1586,11 @@ resource "aws_vpc_ipv4_cidr_block_association" "test" {
 }
 
 resource "aws_route_table" "test" {
-  vpc_id = aws_vpc.test.id
+  vpc_id = aws_vpc_ipv4_cidr_block_association.test.vpc_id
 
   tags = {
     Name = %[1]q
   }
-}
-
-data "aws_region" "current" {}
-
-resource "aws_vpc_endpoint" "test" {
-  vpc_id       = aws_vpc.test.id
-  service_name = "com.amazonaws.${data.aws_region.current.name}.s3"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc_endpoint_route_table_association" "test" {
-  vpc_endpoint_id = aws_vpc_endpoint.test.id
-  route_table_id  = aws_route_table.test.id
 }
 `, rName)
 }
-*/
