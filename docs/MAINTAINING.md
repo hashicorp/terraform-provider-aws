@@ -82,11 +82,8 @@ Create an issue to cover the update noting down any areas of particular interest
 Ensure that the following steps are tracked within the issue and completed within the resulting pull request.
 
 - Update go version in `go.mod`
-- Verify all formatting, linting, and testing works as expected
-- Verify `gox` builds for all currently supported architectures:
-```
-gox -os='linux darwin windows freebsd openbsd solaris' -arch='386 amd64 arm' -osarch='!darwin/arm !darwin/386' -ldflags '-s -w -X aws/version.ProviderVersion=99.99.99 -X aws/version.ProtocolVersion=4' -output 'results/{{.OS}}_{{.Arch}}/terraform-provider-aws_v99.99.99_x4' .
-```
+- Verify `make test lint` works as expected
+- Verify `goreleaser build --snapshot` succeeds for all currently supported architectures
 - Verify `goenv` support for the new version
 - Update `docs/DEVELOPMENT.md`
 - Update `.github/workflows/*.yml`
