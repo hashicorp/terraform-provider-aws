@@ -250,6 +250,33 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
+		// Reset parameters that have been removed
+		resetParameters := expandParameters(os.Difference(ns).List())
+		if len(resetParameters) > 0 {
+			maxParams := 20
+			for resetParameters != nil {
+				var paramsToReset []*rds.Parameter
+				if len(resetParameters) <= maxParams {
+					paramsToReset, resetParameters = resetParameters[:], nil
+				} else {
+					paramsToReset, resetParameters = resetParameters[:maxParams], resetParameters[maxParams:]
+				}
+		
+				parameterGroupName := d.Get("name").(string)
+				resetOpts := rds.ResetDBParameterGroupInput{
+					DBParameterGroupName: aws.String(parameterGroupName),
+					Parameters:           paramsToReset,
+					ResetAllParameters:   aws.Bool(false),
+				}
+		
+				log.Printf("[DEBUG] Reset DB Parameter Group: %s", resetOpts)
+				_, err := rdsconn.ResetDBParameterGroup(&resetOpts)
+				if err != nil {
+					return fmt.Errorf("Error resetting DB Parameter Group: %s", err)
+				}
+			}
+		}
+
 		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter
 		parameters := expandParameters(ns.Difference(os).List())
 
@@ -277,32 +304,7 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 			}
 		}
 
-		// Reset parameters that have been removed
-		resetParameters := expandParameters(os.Difference(ns).List())
-		if len(resetParameters) > 0 {
-			maxParams := 20
-			for resetParameters != nil {
-				var paramsToReset []*rds.Parameter
-				if len(resetParameters) <= maxParams {
-					paramsToReset, resetParameters = resetParameters[:], nil
-				} else {
-					paramsToReset, resetParameters = resetParameters[:maxParams], resetParameters[maxParams:]
-				}
 
-				parameterGroupName := d.Get("name").(string)
-				resetOpts := rds.ResetDBParameterGroupInput{
-					DBParameterGroupName: aws.String(parameterGroupName),
-					Parameters:           paramsToReset,
-					ResetAllParameters:   aws.Bool(false),
-				}
-
-				log.Printf("[DEBUG] Reset DB Parameter Group: %s", resetOpts)
-				_, err := rdsconn.ResetDBParameterGroup(&resetOpts)
-				if err != nil {
-					return fmt.Errorf("Error resetting DB Parameter Group: %s", err)
-				}
-			}
-		}
 	}
 
 	if d.HasChange("tags") {
