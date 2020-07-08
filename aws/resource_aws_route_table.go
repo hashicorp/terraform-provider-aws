@@ -42,69 +42,7 @@ func resourceAwsRouteTable() *schema.Resource {
 				Set:      schema.HashString,
 			},
 
-			"route": {
-				Type:       schema.TypeSet,
-				Computed:   true,
-				Optional:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validateIpv4CIDRNetworkAddress,
-							),
-						},
-
-						"ipv6_cidr_block": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ValidateFunc: validation.Any(
-								validation.StringIsEmpty,
-								validateIpv6CIDRNetworkAddress,
-							),
-						},
-
-						"egress_only_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"instance_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"nat_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"transit_gateway_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"vpc_peering_connection_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-
-						"network_interface_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-				Set: resourceAwsRouteTableHash,
-			},
+			"route": routeTableRouteSchema(),
 
 			"owner_id": {
 				Type:     schema.TypeString,
@@ -571,5 +509,74 @@ func resourceAwsRouteTableStateRefreshFunc(conn *ec2.EC2, id string) resource.St
 
 		rt := resp.RouteTables[0]
 		return rt, "ready", nil
+	}
+}
+
+// Shared by aws_route_table and aws_default_route_table.
+func routeTableRouteSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:       schema.TypeSet,
+		Computed:   true,
+		Optional:   true,
+		ConfigMode: schema.SchemaConfigModeAttr,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				// Destinations.
+				"cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						validation.StringIsEmpty,
+						validateIpv4CIDRNetworkAddress,
+					),
+				},
+
+				"ipv6_cidr_block": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ValidateFunc: validation.Any(
+						validation.StringIsEmpty,
+						validateIpv6CIDRNetworkAddress,
+					),
+				},
+
+				// Targets.
+				"egress_only_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"instance_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"nat_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"network_interface_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"transit_gateway_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+
+				"vpc_peering_connection_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+			},
+		},
+		Set: resourceAwsRouteTableHash,
 	}
 }
