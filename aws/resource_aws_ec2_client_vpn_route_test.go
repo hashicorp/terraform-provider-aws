@@ -37,6 +37,11 @@ func TestAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "Nat"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -62,6 +67,11 @@ func TestAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "target_vpc_subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "description", "test client VPN route"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
