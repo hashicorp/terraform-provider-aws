@@ -261,14 +261,14 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 				} else {
 					paramsToReset, resetParameters = resetParameters[:maxParams], resetParameters[maxParams:]
 				}
-		
+
 				parameterGroupName := d.Get("name").(string)
 				resetOpts := rds.ResetDBParameterGroupInput{
 					DBParameterGroupName: aws.String(parameterGroupName),
 					Parameters:           paramsToReset,
 					ResetAllParameters:   aws.Bool(false),
 				}
-		
+
 				log.Printf("[DEBUG] Reset DB Parameter Group: %s", resetOpts)
 				_, err := rdsconn.ResetDBParameterGroup(&resetOpts)
 				if err != nil {
@@ -303,7 +303,6 @@ func resourceAwsDbParameterGroupUpdate(d *schema.ResourceData, meta interface{})
 				}
 			}
 		}
-
 
 	}
 
