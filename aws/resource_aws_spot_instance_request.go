@@ -191,7 +191,10 @@ func resourceAwsSpotInstanceRequestCreate(d *schema.ResourceData, meta interface
 			log.Printf("[DEBUG] IAM Instance Profile appears to have no IAM roles, retrying...")
 			return resource.RetryableError(err)
 		}
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 
 	if isResourceTimeoutError(err) {
