@@ -83,7 +83,6 @@ const (
 )
 
 // ClientVpnAuthorizationRuleStatus fetches the Client VPN authorization rule and its Status
-// TODO: This should be in the waiters package, but has a dependency on isAWSErr()
 func ClientVpnAuthorizationRuleStatus(conn *ec2.EC2, authorizationRuleID string) resource.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		endpointID, targetNetworkCidr, accessGroupID, err := tfec2.ClientVpnAuthorizationRuleParseID(authorizationRuleID)
