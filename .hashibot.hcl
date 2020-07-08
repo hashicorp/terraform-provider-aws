@@ -250,7 +250,7 @@ behavior "regexp_issue_labeler_v2" "service_labels" {
       "aws_eks_",
     ],
     "service/elastic-transcoder" = [
-      "aws_elastic_transcoder_",
+      "aws_elastictranscoder_",
     ],
     "service/elasticache" = [
       "aws_elasticache_",
