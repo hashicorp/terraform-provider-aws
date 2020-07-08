@@ -140,9 +140,7 @@ func resourceAwsEc2ClientVpnAuthorizationRuleDelete(d *schema.ResourceData, meta
 		RevokeAllGroups:     aws.Bool(d.Get("authorize_all_groups").(bool)),
 	}
 	if v, ok := d.GetOk("access_group_id"); ok {
-		if s, ok := v.(string); ok && s != "" {
-			input.AccessGroupId = aws.String(s)
-		}
+		input.AccessGroupId = aws.String(v.(string))
 	}
 
 	log.Printf("[DEBUG] Revoking Client VPN authorization rule %q", d.Id())
