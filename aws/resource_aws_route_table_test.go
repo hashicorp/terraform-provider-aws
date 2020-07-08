@@ -5,6 +5,7 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -775,6 +776,43 @@ func TestAccAWSRouteTable_VpcClassicLink(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteTable_GatewayVpcEndpoint(t *testing.T) {
+	var routeTable ec2.RouteTable
+	var vpce ec2.VpcEndpoint
+	resourceName := "aws_route_table.test"
+	vpceResourceName := "aws_vpc_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSRouteDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigGatewayVpcEndpoint(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckVpcEndpointExists(vpceResourceName, &vpce),
+					testAccCheckAWSRouteTableWaitForVpcEndpointRoute(&routeTable, &vpce),
+					// Refresh the route table once the VPC endpoint route is present.
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -873,6 +911,51 @@ func testAccCheckAWSRouteTableRoute(resourceName, destinationAttr, destination, 
 			destinationAttr: destination,
 			targetAttr:      target,
 		})(s)
+	}
+}
+
+// testAccCheckAWSRouteTableWaitForVpcEndpointRoute returns a TestCheckFunc which waits for
+// a route to the specified VPC endpoint's prefix list to appear in the specified route table.
+func testAccCheckAWSRouteTableWaitForVpcEndpointRoute(routeTable *ec2.RouteTable, vpce *ec2.VpcEndpoint) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		resp, err := conn.DescribePrefixLists(&ec2.DescribePrefixListsInput{
+			Filters: buildEC2AttributeFilterList(map[string]string{
+				"prefix-list-name": aws.StringValue(vpce.ServiceName),
+			}),
+		})
+		if err != nil {
+			return err
+		}
+
+		if resp == nil || len(resp.PrefixLists) == 0 {
+			return fmt.Errorf("Prefix List not found")
+		}
+
+		plId := aws.StringValue(resp.PrefixLists[0].PrefixListId)
+
+		err = resource.Retry(3*time.Minute, func() *resource.RetryError {
+			resp, err := conn.DescribeRouteTables(&ec2.DescribeRouteTablesInput{
+				RouteTableIds: []*string{routeTable.RouteTableId},
+			})
+			if err != nil {
+				return resource.NonRetryableError(err)
+			}
+			if resp == nil || len(resp.RouteTables) == 0 {
+				return resource.NonRetryableError(fmt.Errorf("Route Table not found"))
+			}
+
+			for _, route := range resp.RouteTables[0].Routes {
+				if aws.StringValue(route.DestinationPrefixListId) == plId {
+					return nil
+				}
+			}
+
+			return resource.RetryableError(fmt.Errorf("Route not found"))
+		})
+
+		return err
 	}
 }
 
@@ -1643,6 +1726,34 @@ resource "aws_route_table" "test" {
   tags = {
     Name = %[1]q
   }
+}
+`, rName)
+}
+
+func testAccAWSRouteTableConfigGatewayVpcEndpoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_region" "current" {}
+
+resource "aws_vpc_endpoint" "test" {
+  vpc_id          = aws_vpc.test.id
+  service_name    = "com.amazonaws.${data.aws_region.current.name}.s3"
+  route_table_ids = [aws_route_table.test.id]
 }
 `, rName)
 }
