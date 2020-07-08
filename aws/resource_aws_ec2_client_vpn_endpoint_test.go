@@ -99,6 +99,11 @@ func TestAccAwsEc2ClientVpn(t *testing.T) {
 			"basic":      testAccAwsEc2ClientVpnNetworkAssociation_basic,
 			"disappears": testAccAwsEc2ClientVpnNetworkAssociation_disappears,
 		},
+		"Route": {
+			"basic":       testAccAwsEc2ClientVpnRoute_basic,
+			"description": testAccAwsEc2ClientVpnRoute_description,
+			"disappears":  testAccAwsEc2ClientVpnRoute_disappears,
+		},
 	}
 
 	for group, m := range testCases {

@@ -12,7 +12,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
-func TestAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
+func testAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 	var v ec2.ClientVpnRoute
 	rStr := acctest.RandString(5)
 
@@ -21,7 +21,7 @@ func TestAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
@@ -46,7 +46,7 @@ func TestAccAwsEc2ClientVpnRoute_basic(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnRoute_description(t *testing.T) {
+func testAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 	var v ec2.ClientVpnRoute
 	rStr := acctest.RandString(5)
 
@@ -55,7 +55,7 @@ func TestAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 	subnetResourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
@@ -77,14 +77,14 @@ func TestAccAwsEc2ClientVpnRoute_description(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
+func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 	var v ec2.ClientVpnRoute
 	rStr := acctest.RandString(5)
 
 	resourceName := "aws_ec2_client_vpn_route.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnRouteDestroy,
 		Steps: []resource.TestStep{
