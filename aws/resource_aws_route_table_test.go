@@ -274,14 +274,11 @@ func TestAccAWSRouteTable_IPv6_To_EgressOnlyInternetGateway(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			/*
-				TODO Fix this.
-				{
-					// Verify that expanded form of the destination CIDR causes no diff.
-					Config: testAccAWSRouteTableConfigIpv6EgressOnlyInternetGateway(rName, "::0/0"),
-					PlanOnly: true,
-				},
-			*/
+			{
+				// Verify that expanded form of the destination CIDR causes no diff.
+				Config:   testAccAWSRouteTableConfigIpv6EgressOnlyInternetGateway(rName, "::0/0"),
+				PlanOnly: true,
+			},
 		},
 	})
 }
