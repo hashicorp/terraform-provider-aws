@@ -288,7 +288,7 @@ func TestAccAWSSpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.005"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
 				),
@@ -314,7 +314,7 @@ func TestAccAWSSpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.005"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 				),
 			},
@@ -439,7 +439,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.005"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
 				),
 			},
@@ -455,7 +455,7 @@ func TestAccAWSSpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.01"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					testAccCheckAWSSpotFleetRequestConfigRecreated(t, &before, &after),
 				),
 			},
@@ -693,7 +693,7 @@ func testAccCheckAWSSpotFleetRequest_IamInstanceProfileArn(
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
 		//Validate the string whether it is ARN
-		re := regexp.MustCompile(`arn:aws:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
+		re := regexp.MustCompile(`arn:aws[a-z0-9-]*:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`)
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
 		}
@@ -749,10 +749,10 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
-					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.035"),
+					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.05"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
-						"spot_price":    "0.01",
+						"spot_price":    "0.05",
 						"instance_type": "m3.large",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
@@ -1391,7 +1391,7 @@ func testAccAWSSpotFleetRequestConfig(rName string, rInt int, validUntil string)
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1399,7 +1399,7 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1411,7 +1411,7 @@ func testAccAWSSpotFleetRequestConfigTags1(rName, validUntil, tagKey1, tagValue1
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1419,7 +1419,7 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
     }
     tags = {
@@ -1434,7 +1434,7 @@ func testAccAWSSpotFleetRequestConfigTags2(rName, validUntil, tagKey1, tagValue1
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
@@ -1442,7 +1442,7 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
     }
     tags = {
@@ -1458,14 +1458,14 @@ func testAccAWSSpotFleetRequestConfigAssociatePublicIpAddress(rName string, rInt
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.027"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         associate_public_ip_address = true
     }
@@ -1478,7 +1478,7 @@ func testAccAWSSpotFleetRequestConfigTargetCapacity(rName string, rInt int, vali
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 3
     valid_until = %[1]q
     fleet_type = "request"
@@ -1486,7 +1486,7 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1498,14 +1498,14 @@ func testAccAWSSpotFleetRequestLaunchTemplateConfig(rName string, rInt int, vali
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[2]q
-  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name      = "${aws_key_pair.test.key_name}"
 }
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[1]q
   terminate_instances_with_expiration = true
@@ -1538,7 +1538,7 @@ data "aws_ec2_instance_type_offering" "test" {
 
 resource "aws_launch_template" "test1" {
   name          = "%[2]s-1"
-  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name      = "${aws_key_pair.test.key_name}"
 }
@@ -1552,7 +1552,7 @@ resource "aws_launch_template" "test2" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[1]q
   terminate_instances_with_expiration = true
@@ -1583,14 +1583,14 @@ func testAccAWSSpotFleetRequestLaunchTemplateConfigWithOverrides(rName string, r
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[2]q
-  image_id      = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   instance_type = "${data.aws_ec2_instance_type_offering.available.instance_type}"
   key_name      = "${aws_key_pair.test.key_name}"
 }
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 2
   valid_until                         = %[1]q
   terminate_instances_with_expiration = true
@@ -1624,7 +1624,7 @@ func testAccAWSSpotFleetRequestConfigExcessCapacityTermination(rName string, rIn
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     excess_capacity_termination_policy = "NoTermination"
     valid_until = %[1]q
@@ -1633,7 +1633,7 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1644,7 +1644,7 @@ func testAccAWSSpotFleetRequestConfigFleetType(rName string, rInt int, validUnti
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     fleet_type = "request"
@@ -1652,7 +1652,7 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -1705,7 +1705,7 @@ resource "aws_iam_instance_profile" "test-iam-instance-profile1" {
 
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[2]q
     terminate_instances_with_expiration = true
@@ -1713,7 +1713,7 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         iam_instance_profile_arn = "${aws_iam_instance_profile.test-iam-instance-profile1.arn}"
     }
@@ -1726,14 +1726,14 @@ func testAccAWSSpotFleetRequestConfigChangeSpotBidPrice(rName string, rInt int, 
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.01"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
@@ -1745,20 +1745,20 @@ func testAccAWSSpotFleetRequestConfigWithAzs(rName string, rInt int, validUntil 
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[1]}"
     }
@@ -1803,13 +1803,13 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d0f506b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d0f506b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.bar.id}"
     }
@@ -1865,7 +1865,7 @@ resource "aws_spot_fleet_request" "test" {
     load_balancers = ["${aws_elb.elb.name}"]
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d0f506b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
@@ -1932,7 +1932,7 @@ resource "aws_spot_fleet_request" "test" {
     target_group_arns = ["${aws_alb_target_group.target_group.arn}"]
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d0f506b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
@@ -1945,20 +1945,20 @@ func testAccAWSSpotFleetRequestConfigMultipleInstanceTypesinSameAz(rName string,
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.025"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
@@ -1987,20 +1987,20 @@ resource "aws_subnet" "test" {
 
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.035"
+    spot_price = "0.05"
     target_capacity = 4
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d0f506b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
     launch_specification {
         instance_type = "r3.large"
-        ami = "ami-d0f506b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         subnet_id = "${aws_subnet.test.id}"
     }
@@ -2013,23 +2013,23 @@ func testAccAWSSpotFleetRequestConfigOverridingSpotPrice(rName string, rInt int,
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.035"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
-        spot_price = "0.01"
+        spot_price = "0.05"
     }
     depends_on = ["aws_iam_policy_attachment.test-attach"]
 }
@@ -2046,13 +2046,13 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
@@ -2073,19 +2073,19 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
@@ -2106,19 +2106,19 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
     launch_specification {
         instance_type = "r3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
     }
@@ -2138,14 +2138,14 @@ resource "aws_spot_fleet_request" "test" {
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "6"
     }
     launch_specification {
         instance_type = "r3.large"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
         availability_zone = "${data.aws_availability_zones.available.names[0]}"
         weighted_capacity = "3"
@@ -2159,14 +2159,14 @@ func testAccAWSSpotFleetRequestEBSConfig(rName string, rInt int, validUntil stri
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 1
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
 
     ebs_block_device {
             device_name = "/dev/xvda"
@@ -2197,14 +2197,14 @@ resource "aws_kms_key" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   valid_until                         = %[1]q
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     instance_type = "t2.micro"
 
     ebs_block_device {
@@ -2239,14 +2239,14 @@ resource "aws_kms_key" "test" {
 
 resource "aws_spot_fleet_request" "test" {
   iam_fleet_role                      = "${aws_iam_role.test-role.arn}"
-  spot_price                          = "0.005"
+  spot_price                          = "0.05"
   target_capacity                     = 1
   terminate_instances_with_expiration = true
   valid_until                         = %[1]q
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
     instance_type = "t2.micro"
 
     root_block_device {
@@ -2263,28 +2263,19 @@ resource "aws_spot_fleet_request" "test" {
 }
 
 func testAccAWSSpotFleetRequestLaunchSpecificationWithInstanceStoreAmi(rName string, rInt int, validUntil string) string {
-	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
-data "aws_ami" "ubuntu_instance_store" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  # Latest Ubuntu 18.04 LTS amd64 instance-store HVM AMI
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-instance/ubuntu-bionic-18.04-amd64-server*"]
-  }
-}
-
+	return testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig() +
+		testAccAWSSpotFleetRequestConfigBase(rName, rInt) +
+		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.03"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
 
     launch_specification {
-      ami           = "${data.aws_ami.ubuntu_instance_store.id}"
+      ami           = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
 	  instance_type = "c3.large"
     }
 
@@ -2297,14 +2288,14 @@ func testAccAWSSpotFleetRequestTagsConfig(rName string, rInt int, validUntil str
 	return testAccAWSSpotFleetRequestConfigBase(rName, rInt) + fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 1
     valid_until = %[1]q
     terminate_instances_with_expiration = true
     wait_for_fulfillment = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-516b9131"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
   tags = {
             First = "TfAccTest"
             Second = "Terraform"
@@ -2324,13 +2315,13 @@ resource "aws_placement_group" "test" {
 
 resource "aws_spot_fleet_request" "test" {
     iam_fleet_role = "${aws_iam_role.test-role.arn}"
-    spot_price = "0.005"
+    spot_price = "0.05"
     target_capacity = 2
     valid_until = %[2]q
     terminate_instances_with_expiration = true
     launch_specification {
         instance_type = "m1.small"
-        ami = "ami-d06a90b0"
+        ami = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
         key_name = "${aws_key_pair.test.key_name}"
 		placement_tenancy = "dedicated"
 		placement_group = "${aws_placement_group.test.name}"
