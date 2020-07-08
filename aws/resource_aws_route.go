@@ -391,6 +391,11 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
+		// Local routes (which may have been imported) cannot be deleted. Remove from state.
+		if isAWSErr(err, "InvalidParameterValue", "cannot remove local route") {
+			return nil
+		}
+
 		if isAWSErr(err, "InvalidParameterException", "") {
 			return resource.RetryableError(err)
 		}
