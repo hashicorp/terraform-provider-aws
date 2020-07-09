@@ -72,7 +72,7 @@ func TestAccAWSOpsworksApplication_basic(t *testing.T) {
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
 						"key":    "key2",
 						"value":  "value2",
-						"secret": "true",
+						"secure": "true",
 					}),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "environment.*", map[string]string{
 						"key":    "key1",
