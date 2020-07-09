@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -68,10 +69,8 @@ func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error
 	d.SetId(*pl.PrefixListId)
 	d.Set("name", pl.PrefixListName)
 
-	cidrs := make([]string, len(pl.Cidrs))
-	for i, v := range pl.Cidrs {
-		cidrs[i] = *v
-	}
+	cidrs := aws.StringValueSlice(pl.Cidrs)
+	sort.Strings(cidrs)
 	d.Set("cidr_blocks", cidrs)
 
 	return nil
