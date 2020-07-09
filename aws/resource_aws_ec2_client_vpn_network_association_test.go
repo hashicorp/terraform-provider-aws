@@ -15,6 +15,9 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	var assoc1 ec2.TargetNetwork
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_network_association.test"
+	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
+	subnetResourceName := "aws_subnet.test"
+	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
@@ -25,6 +28,10 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
+					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
 		},
