@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -143,10 +144,9 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSpotFleetRequestDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotFleetRequestConfigAssociatePublicIpAddress(rName, rInt, validUntil),
@@ -154,7 +154,9 @@ func TestAccAWSSpotFleetRequest_associatePublicIpAddress(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.24370212.associate_public_ip_address", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"associate_public_ip_address": "true",
+					}),
 				),
 			},
 			{
@@ -581,10 +583,9 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSpotFleetRequestDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotFleetRequestConfigWithAzs(rName, rInt, validUntil),
@@ -592,8 +593,12 @@ func TestAccAWSSpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.availability_zone", "us-west-2a"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.19404370.availability_zone", "us-west-2b"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"availability_zone": "us-west-2a",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"availability_zone": "us-west-2b",
+					}),
 				),
 			},
 			{
@@ -644,10 +649,9 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSpotFleetRequestDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotFleetRequestConfigMultipleInstanceTypesinSameAz(rName, rInt, validUntil),
@@ -655,10 +659,14 @@ func TestAccAWSSpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.instance_type", "m1.small"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.availability_zone", "us-west-2a"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.instance_type", "m3.large"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.availability_zone", "us-west-2a"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"instance_type":     "m1.small",
+						"availability_zone": "us-west-2a",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"instance_type":     "m3.large",
+						"availability_zone": "us-west-2a",
+					}),
 				),
 			},
 			{
@@ -732,10 +740,9 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSpotFleetRequestDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotFleetRequestConfigOverridingSpotPrice(rName, rInt, validUntil),
@@ -744,10 +751,14 @@ func TestAccAWSSpotFleetRequest_overriddingSpotPrice(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "spot_price", "0.035"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.4143232216.spot_price", "0.01"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.4143232216.instance_type", "m3.large"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.spot_price", ""), //there will not be a value here since it's not overriding
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.1991689378.instance_type", "m1.small"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"spot_price":    "0.01",
+						"instance_type": "m3.large",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"spot_price":    "", //there will not be a value here since it's not overriding
+						"instance_type": "m1.small",
+					}),
 				),
 			},
 			{
@@ -875,10 +886,9 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSpotFleetRequestDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotFleetRequestConfigWithWeightedCapacity(rName, rInt, validUntil),
@@ -887,10 +897,14 @@ func TestAccAWSSpotFleetRequest_withWeightedCapacity(t *testing.T) {
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &sfr),
 					resource.TestCheckResourceAttr(resourceName, "spot_request_state", "active"),
 					resource.TestCheckResourceAttr(resourceName, "launch_specification.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.4120185872.weighted_capacity", "3"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.4120185872.instance_type", "r3.large"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.weighted_capacity", "6"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.590403189.instance_type", "m3.large"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"weighted_capacity": "3",
+						"instance_type":     "r3.large",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"weighted_capacity": "6",
+						"instance_type":     "m3.large",
+					}),
 				),
 			},
 			{
@@ -996,18 +1010,19 @@ func TestAccAWSSpotFleetRequest_withTags(t *testing.T) {
 	resourceName := "aws_spot_fleet_request.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckAWSSpotFleetRequestDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSEc2SpotFleetRequest(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSpotFleetRequestDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSSpotFleetRequestTagsConfig(rName, rInt, validUntil),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAWSSpotFleetRequestExists(resourceName, &config),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.24370212.tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.24370212.tags.First", "TfAccTest"),
-					resource.TestCheckResourceAttr(resourceName, "launch_specification.24370212.tags.Second", "Terraform"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "launch_specification.*", map[string]string{
+						"tags.%":      "2",
+						"tags.First":  "TfAccTest",
+						"tags.Second": "Terraform",
+					}),
 				),
 			},
 			{

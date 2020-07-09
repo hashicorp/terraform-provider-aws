@@ -1007,7 +1007,7 @@ func TestAccAWSAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 						"default_result": "CONTINUE",
 						"name":           "launching",
 					}),
-					// TODO: TypeSet hash
+					// TODO: TypeSet check rewrite check to avoid hash reference
 					testAccCheckAWSAutoScalingGroupInitialLifecycleHookExists(
 						"aws_autoscaling_group.bar", "initial_lifecycle_hook.391359060.name"),
 				),
