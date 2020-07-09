@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -67,27 +67,6 @@ func testSweepEc2NetworkInterfaces(region string) error {
 	return nil
 }
 
-func TestAccAWSENI_importBasic(t *testing.T) {
-	resourceName := "aws_network_interface.bar"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckAWSENIDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAWSENIConfig,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
 func TestAccAWSENI_basic(t *testing.T) {
 	var conf ec2.NetworkInterface
 
@@ -106,11 +85,20 @@ func TestAccAWSENI_basic(t *testing.T) {
 						"aws_network_interface.bar", "private_ips.#", "1"),
 					resource.TestCheckResourceAttrSet(
 						"aws_network_interface.bar", "private_dns_name"),
+					resource.TestCheckResourceAttrSet(
+						"aws_network_interface.bar", "mac_address"),
 					resource.TestCheckResourceAttr(
 						"aws_network_interface.bar", "tags.Name", "bar_interface"),
 					resource.TestCheckResourceAttr(
 						"aws_network_interface.bar", "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttr(
+						"aws_network_interface.bar", "outpost_arn", ""),
 				),
+			},
+			{
+				ResourceName:      "aws_network_interface.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -154,7 +142,11 @@ func TestAccAWSENI_updatedDescription(t *testing.T) {
 						"aws_network_interface.bar", "description", "Managed by Terraform"),
 				),
 			},
-
+			{
+				ResourceName:      "aws_network_interface.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 			{
 				Config: testAccAWSENIConfigUpdatedDescription,
 				Check: resource.ComposeTestCheckFunc(
@@ -187,6 +179,11 @@ func TestAccAWSENI_attached(t *testing.T) {
 						"aws_network_interface.bar", "tags.Name", "bar_interface"),
 				),
 			},
+			{
+				ResourceName:      "aws_network_interface.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -207,6 +204,11 @@ func TestAccAWSENI_ignoreExternalAttachment(t *testing.T) {
 					testAccCheckAWSENIAttributes(&conf),
 					testAccCheckAWSENIMakeExternalAttachment("aws_instance.foo", &conf),
 				),
+			},
+			{
+				ResourceName:      "aws_network_interface.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -229,6 +231,11 @@ func TestAccAWSENI_sourceDestCheck(t *testing.T) {
 						"aws_network_interface.bar", "source_dest_check", "false"),
 				),
 			},
+			{
+				ResourceName:      "aws_network_interface.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
@@ -249,6 +256,72 @@ func TestAccAWSENI_computedIPs(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						"aws_network_interface.bar", "private_ips.#", "1"),
 				),
+			},
+			{
+				ResourceName:      "aws_network_interface.bar",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSENI_PrivateIpsCount(t *testing.T) {
+	var networkInterface1, networkInterface2, networkInterface3, networkInterface4 ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSENIDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSENIConfigPrivateIpsCount(1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &networkInterface1),
+					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIConfigPrivateIpsCount(2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &networkInterface2),
+					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIConfigPrivateIpsCount(0),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &networkInterface3),
+					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSENIConfigPrivateIpsCount(1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSENIExists(resourceName, &networkInterface4),
+					resource.TestCheckResourceAttr(resourceName, "private_ips_count", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -307,6 +380,10 @@ func testAccCheckAWSENIAttributes(conf *ec2.NetworkInterface) resource.TestCheck
 
 		if *conf.PrivateDnsName != "ip-172-16-10-100.us-west-2.compute.internal" {
 			return fmt.Errorf("expected private dns name to be ip-172-16-10-100.us-west-2.compute.internal, but was %s", *conf.PrivateDnsName)
+		}
+
+		if len(*conf.MacAddress) == 0 {
+			return fmt.Errorf("expected mac_address to be set")
 		}
 
 		if !*conf.SourceDestCheck {
@@ -653,3 +730,29 @@ resource "aws_network_interface" "bar" {
     }
 }
 `
+
+func testAccAWSENIConfigPrivateIpsCount(privateIpsCount int) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "tf-acc-test-network-interface-private-ips-count"
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = "${aws_vpc.test.id}"
+
+  tags = {
+    Name = "tf-acc-test-network-interface-private-ips-count"
+  }
+}
+
+resource "aws_network_interface" "test" {
+  private_ips_count = %[1]d
+  subnet_id         = "${aws_subnet.test.id}"
+}
+`, privateIpsCount)
+}

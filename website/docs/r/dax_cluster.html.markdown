@@ -1,12 +1,12 @@
 ---
+subcategory: "DynamoDB Accelerator (DAX)"
 layout: "aws"
 page_title: "AWS: aws_dax_cluster"
-sidebar_current: "docs-aws-resource-dax-cluster"
 description: |-
   Provides an DAX Cluster resource.
 ---
 
-# aws_dax_cluster
+# Resource: aws_dax_cluster
 
 Provides a DAX Cluster resource.
 
@@ -64,7 +64,7 @@ with the cluster
 * `subnet_group_name` – (Optional) Name of the subnet group to be used for the
 cluster
 
-* `tags` - (Optional) A mapping of tags to assign to the resource
+* `tags` - (Optional) A map of tags to assign to the resource
 
 The `server_side_encryption` object supports the following:
 

@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -43,10 +42,6 @@ func testSweepLambdaLayerVersions(region string) error {
 	}
 
 	for _, l := range resp.Layers {
-		if !strings.HasPrefix(*l.LayerName, "tf_acc_") {
-			continue
-		}
-
 		versionResp, err := lambdaconn.ListLayerVersions(&lambda.ListLayerVersionsInput{
 			LayerName: l.LayerName,
 		})
@@ -79,7 +74,16 @@ func TestAccAWSLambdaLayerVersion_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAWSLambdaLayerVersionBasic(layerName),
-				Check:  testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsLambdaLayerVersionExists(resourceName, layerName),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", layerName)),
+					resource.TestCheckResourceAttr(resourceName, "compatible_runtimes.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttr(resourceName, "layer_name", layerName),
+					resource.TestCheckResourceAttr(resourceName, "license_info", ""),
+					testAccCheckResourceAttrRegionalARN(resourceName, "layer_arn", "lambda", fmt.Sprintf("layer:%s", layerName)),
+					resource.TestCheckResourceAttr(resourceName, "version", "1"),
+				),
 			},
 
 			{
@@ -295,8 +299,8 @@ func testAccCheckAwsLambdaLayerVersionExists(res, layerName string) resource.Tes
 func testAccAWSLambdaLayerVersionBasic(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-	filename = "test-fixtures/lambdatest.zip"
-	layer_name = "%s"
+  filename   = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
 }
 `, layerName)
 }
@@ -304,19 +308,19 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 func testAccAWSLambdaLayerVersionS3(bucketName, layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "lambda_bucket" {
-	bucket = "%s"
+  bucket = "%s"
 }
 
 resource "aws_s3_bucket_object" "lambda_code" {
-	bucket = "${aws_s3_bucket.lambda_bucket.id}"
-	key = "lambdatest.zip"
-	source = "test-fixtures/lambdatest.zip"
+  bucket = "${aws_s3_bucket.lambda_bucket.id}"
+  key    = "lambdatest.zip"
+  source = "test-fixtures/lambdatest.zip"
 }
 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-	s3_bucket = "${aws_s3_bucket.lambda_bucket.id}"
-	s3_key = "${aws_s3_bucket_object.lambda_code.id}"
-	layer_name = "%s"
+  s3_bucket  = "${aws_s3_bucket.lambda_bucket.id}"
+  s3_key     = "${aws_s3_bucket_object.lambda_code.id}"
+  layer_name = "%s"
 }
 `, bucketName, layerName)
 }
@@ -326,7 +330,7 @@ func testAccAWSLambdaLayerVersionCreateBeforeDestroy(layerName string, filename 
 resource "aws_lambda_layer_version" "lambda_layer_test" {
   filename         = "%s"
   layer_name       = "%s"
-  source_code_hash = "${base64sha256(file("%s"))}"
+  source_code_hash = "${filebase64sha256("%s")}"
 
   lifecycle {
     create_before_destroy = true
@@ -338,10 +342,10 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 func testAccAWSLambdaLayerVersionCompatibleRuntimes(layerName string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-	filename = "test-fixtures/lambdatest.zip"
-	layer_name = "%s"
+  filename   = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
 
-	compatible_runtimes = ["nodejs8.10", "nodejs6.10"]
+  compatible_runtimes = ["nodejs12.x", "nodejs10.x"]
 }
 `, layerName)
 }
@@ -349,10 +353,10 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 func testAccAWSLambdaLayerVersionDescription(layerName string, description string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-	filename = "test-fixtures/lambdatest.zip"
-	layer_name = "%s"
+  filename   = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
 
-	description = "%s"
+  description = "%s"
 }
 `, layerName, description)
 }
@@ -360,10 +364,10 @@ resource "aws_lambda_layer_version" "lambda_layer_test" {
 func testAccAWSLambdaLayerVersionLicenseInfo(layerName string, licenseInfo string) string {
 	return fmt.Sprintf(`
 resource "aws_lambda_layer_version" "lambda_layer_test" {
-	filename = "test-fixtures/lambdatest.zip"
-	layer_name = "%s"
+  filename   = "test-fixtures/lambdatest.zip"
+  layer_name = "%s"
 
-	license_info = "%s"
+  license_info = "%s"
 }
 `, layerName, licenseInfo)
 }

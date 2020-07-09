@@ -8,9 +8,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestALBTargetGroupCloudwatchSuffixFromARN(t *testing.T) {
@@ -443,6 +443,47 @@ func TestAccAWSALBTargetGroup_setAndUpdateSlowStart(t *testing.T) {
 	})
 }
 
+func TestAccAWSALBTargetGroup_updateLoadBalancingAlgorithmType(t *testing.T) {
+	var conf elbv2.TargetGroup
+	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: "aws_alb_target_group.test",
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName, false, ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "load_balancing_algorithm_type", "round_robin"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName, true, "round_robin"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "load_balancing_algorithm_type", "round_robin"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName, true, "least_outstanding_requests"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
+					resource.TestCheckResourceAttrSet("aws_alb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "name", targetGroupName),
+					resource.TestCheckResourceAttr("aws_alb_target_group.test", "load_balancing_algorithm_type", "least_outstanding_requests"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAWSALBTargetGroupExists(n string, res *elbv2.TargetGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -505,20 +546,81 @@ func testAccCheckAWSALBTargetGroupDestroy(s *terraform.State) error {
 }
 
 func TestAccAWSALBTargetGroup_lambda(t *testing.T) {
-	var conf elbv2.TargetGroup
-	targetGroupName := fmt.Sprintf("test-target-group-%s", acctest.RandStringFromCharSet(10, acctest.CharSetAlphaNum))
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_alb_target_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_alb_target_group.test",
-		Providers:     testAccProviders,
-		CheckDestroy:  testAccCheckAWSALBTargetGroupDestroy,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSALBTargetGroupConfig_lambda(targetGroupName),
+				Config: testAccAWSALBTargetGroupConfig_lambda(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSALBTargetGroupExists("aws_alb_target_group.test", &conf),
-					resource.TestCheckResourceAttr("aws_alb_target_group.test", "target_type", "lambda"),
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregistration_delay",
+					"proxy_protocol_v2",
+					"slow_start",
+					"load_balancing_algorithm_type",
+				},
+			},
+		},
+	})
+}
+
+func TestAccAWSALBTargetGroup_lambdaMultiValueHeadersEnabled(t *testing.T) {
+	var targetGroup1 elbv2.TargetGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSALBTargetGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregistration_delay",
+					"proxy_protocol_v2",
+					"slow_start",
+					"load_balancing_algorithm_type",
+				},
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
+				),
+			},
+			{
+				Config: testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSALBTargetGroupExists(resourceName, &targetGroup1),
+					resource.TestCheckResourceAttr(resourceName, "lambda_multi_value_headers_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "target_type", "lambda"),
 				),
 			},
 		},
@@ -830,6 +932,32 @@ resource "aws_vpc" "test" {
 }`, targetGroupName, stickinessBlock)
 }
 
+func testAccAWSALBTargetGroupConfig_loadBalancingAlgorithm(targetGroupName string, nonDefault bool, algoType string) string {
+	var algoTypeParam string
+
+	if nonDefault {
+		algoTypeParam = fmt.Sprintf(`load_balancing_algorithm_type = "%s"`, algoType)
+	}
+
+	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
+  name = "%s"
+  port = 443
+  protocol = "HTTPS"
+  vpc_id = "${aws_vpc.test.id}"
+
+  %s
+
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-alb-target-group-load-balancing-algo"
+  }
+}`, targetGroupName, algoTypeParam)
+}
+
 func testAccAWSALBTargetGroupConfig_updateSlowStart(targetGroupName string, slowStartDuration int) string {
 	return fmt.Sprintf(`resource "aws_alb_target_group" "test" {
   name = "%s"
@@ -891,7 +1019,7 @@ resource "aws_alb_target_group" "test" {
   port = 80
   protocol = "HTTP"
 	vpc_id = "${aws_vpc.test.id}"
-	
+
 	health_check {
     path = "/health"
     interval = 60
@@ -916,6 +1044,16 @@ func testAccAWSALBTargetGroupConfig_lambda(targetGroupName string) string {
 	name = "%s"
 	target_type = "lambda"
 }`, targetGroupName)
+}
+
+func testAccAWSALBTargetGroupConfig_lambdaMultiValueHeadersEnabled(rName string, lambdaMultiValueHadersEnabled bool) string {
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  lambda_multi_value_headers_enabled = %[1]t
+  name                               = %[2]q
+  target_type                        = "lambda"
+}
+`, lambdaMultiValueHadersEnabled, rName)
 }
 
 func testAccAWSALBTargetGroupConfig_missing_port(targetGroupName string) string {

@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_documentation_part"
-sidebar_current: "docs-aws-resource-api-gateway-documentation-part"
 description: |-
   Provides a settings of an API Gateway Documentation Part.
 ---
 
-# aws_api_gateway_documentation_part
+# Resource: aws_api_gateway_documentation_part
 
 Provides a settings of an API Gateway Documentation Part.
 

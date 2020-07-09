@@ -1,12 +1,12 @@
 ---
+subcategory: "Elastic Load Balancing (ELB Classic)"
 layout: "aws"
 page_title: "AWS: aws_elb_attachment"
-sidebar_current: "docs-aws-resource-elb-attachment"
 description: |-
   Provides an Elastic Load Balancer Attachment resource.
 ---
 
-# aws_elb_attachment
+# Resource: aws_elb_attachment
 
 Attaches an EC2 instance to an Elastic Load Balancer (ELB). For attaching resources with Application Load Balancer (ALB) or Network Load Balancer (NLB), see the [`aws_lb_target_group_attachment` resource](/docs/providers/aws/r/lb_target_group_attachment.html).
 

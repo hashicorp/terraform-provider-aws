@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/organizations"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsOrganizationsPolicyAttachment() *schema.Resource {
@@ -63,6 +63,9 @@ func resourceAwsOrganizationsPolicyAttachmentCreate(d *schema.ResourceData, meta
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.AttachPolicy(input)
+	}
 
 	if err != nil {
 		return fmt.Errorf("error creating Organizations Policy Attachment: %s", err)
@@ -81,16 +84,16 @@ func resourceAwsOrganizationsPolicyAttachmentRead(d *schema.ResourceData, meta i
 		return err
 	}
 
-	input := &organizations.ListPoliciesForTargetInput{
-		Filter:   aws.String(organizations.PolicyTypeServiceControlPolicy),
-		TargetId: aws.String(targetID),
+	input := &organizations.ListTargetsForPolicyInput{
+		PolicyId: aws.String(policyID),
 	}
 
 	log.Printf("[DEBUG] Listing Organizations Policies for Target: %s", input)
-	var output *organizations.PolicySummary
-	err = conn.ListPoliciesForTargetPages(input, func(page *organizations.ListPoliciesForTargetOutput, lastPage bool) bool {
-		for _, policySummary := range page.Policies {
-			if aws.StringValue(policySummary.Id) == policyID {
+	var output *organizations.PolicyTargetSummary
+
+	err = conn.ListTargetsForPolicyPages(input, func(page *organizations.ListTargetsForPolicyOutput, lastPage bool) bool {
+		for _, policySummary := range page.Targets {
+			if aws.StringValue(policySummary.TargetId) == targetID {
 				output = policySummary
 				return true
 			}

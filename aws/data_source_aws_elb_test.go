@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAWSELB_basic(t *testing.T) {
@@ -29,6 +29,7 @@ func TestAccDataSourceAWSELB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("data.aws_elb.elb_test", "tags.TestName", t.Name()),
 					resource.TestCheckResourceAttrSet("data.aws_elb.elb_test", "dns_name"),
 					resource.TestCheckResourceAttrSet("data.aws_elb.elb_test", "zone_id"),
+					resource.TestCheckResourceAttrPair("data.aws_elb.elb_test", "arn", "aws_elb.elb_test", "arn"),
 				),
 			},
 		},
@@ -62,7 +63,14 @@ variable "subnets" {
   type    = "list"
 }
 
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "elb_test" {
   cidr_block = "10.0.0.0/16"
@@ -90,10 +98,10 @@ resource "aws_security_group" "elb_test" {
   vpc_id      = "${aws_vpc.elb_test.id}"
 
   ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    self        = true
+    from_port = 0
+    to_port   = 0
+    protocol  = "-1"
+    self      = true
   }
 
   egress {
@@ -109,6 +117,7 @@ resource "aws_security_group" "elb_test" {
 }
 
 data "aws_elb" "elb_test" {
-	name = "${aws_elb.elb_test.name}"
-}`, rName, testName)
+  name = "${aws_elb.elb_test.name}"
+}
+`, rName, testName)
 }

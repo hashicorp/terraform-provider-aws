@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsDxConnectionAssociation() *schema.Resource {
@@ -81,7 +81,7 @@ func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta inter
 		LagId:        aws.String(d.Get("lag_id").(string)),
 	}
 
-	return resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		_, err := conn.DisassociateConnectionFromLag(input)
 		if err != nil {
 			if isAWSErr(err, directconnect.ErrCodeClientException, "is in a transitioning state.") {
@@ -91,4 +91,10 @@ func resourceAwsDxConnectionAssociationDelete(d *schema.ResourceData, meta inter
 		}
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.DisassociateConnectionFromLag(input)
+	}
+
+	return err
 }

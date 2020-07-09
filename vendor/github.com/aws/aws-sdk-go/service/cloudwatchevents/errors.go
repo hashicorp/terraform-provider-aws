@@ -2,6 +2,10 @@
 
 package cloudwatchevents
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeConcurrentModificationException for service response error code
@@ -22,6 +26,12 @@ const (
 	// The event pattern is not valid.
 	ErrCodeInvalidEventPatternException = "InvalidEventPatternException"
 
+	// ErrCodeInvalidStateException for service response error code
+	// "InvalidStateException".
+	//
+	// The specified state is not a valid state for an event source.
+	ErrCodeInvalidStateException = "InvalidStateException"
+
 	// ErrCodeLimitExceededException for service response error code
 	// "LimitExceededException".
 	//
@@ -35,7 +45,8 @@ const (
 	// managed by that service. If you see this error in response to DeleteRule
 	// or RemoveTargets, you can use the Force parameter in those calls to delete
 	// the rule or remove targets from the rule. You cannot modify these managed
-	// rules by using DisableRule, EnableRule, PutTargets, or PutRule.
+	// rules by using DisableRule, EnableRule, PutTargets, PutRule, TagResource,
+	// or UntagResource.
 	ErrCodeManagedRuleException = "ManagedRuleException"
 
 	// ErrCodePolicyLengthExceededException for service response error code
@@ -44,9 +55,27 @@ const (
 	// The event bus policy is too long. For more information, see the limits.
 	ErrCodePolicyLengthExceededException = "PolicyLengthExceededException"
 
+	// ErrCodeResourceAlreadyExistsException for service response error code
+	// "ResourceAlreadyExistsException".
+	//
+	// The resource you are trying to create already exists.
+	ErrCodeResourceAlreadyExistsException = "ResourceAlreadyExistsException"
+
 	// ErrCodeResourceNotFoundException for service response error code
 	// "ResourceNotFoundException".
 	//
 	// An entity that you specified does not exist.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"ConcurrentModificationException": newErrorConcurrentModificationException,
+	"InternalException":               newErrorInternalException,
+	"InvalidEventPatternException":    newErrorInvalidEventPatternException,
+	"InvalidStateException":           newErrorInvalidStateException,
+	"LimitExceededException":          newErrorLimitExceededException,
+	"ManagedRuleException":            newErrorManagedRuleException,
+	"PolicyLengthExceededException":   newErrorPolicyLengthExceededException,
+	"ResourceAlreadyExistsException":  newErrorResourceAlreadyExistsException,
+	"ResourceNotFoundException":       newErrorResourceNotFoundException,
+}

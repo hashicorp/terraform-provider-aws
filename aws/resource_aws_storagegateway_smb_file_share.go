@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
@@ -102,6 +103,10 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 					storagegateway.ObjectACLPublicReadWrite,
 				}, false),
 			},
+			"path": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"read_only": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -123,6 +128,7 @@ func resourceAwsStorageGatewaySmbFileShare() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -144,6 +150,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 		RequesterPays:        aws.Bool(d.Get("requester_pays").(bool)),
 		Role:                 aws.String(d.Get("role_arn").(string)),
 		ValidUserList:        expandStringSet(d.Get("valid_user_list").(*schema.Set)),
+		Tags:                 keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().StoragegatewayTags(),
 	}
 
 	if v, ok := d.GetOk("kms_key_arn"); ok && v.(string) != "" {
@@ -176,6 +183,7 @@ func resourceAwsStorageGatewaySmbFileShareCreate(d *schema.ResourceData, meta in
 
 func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &storagegateway.DescribeSMBFileSharesInput{
 		FileShareARNList: []*string{aws.String(d.Id())},
@@ -200,7 +208,8 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 
 	fileshare := output.SMBFileShareInfoList[0]
 
-	d.Set("arn", fileshare.FileShareARN)
+	arn := fileshare.FileShareARN
+	d.Set("arn", arn)
 	d.Set("authentication", fileshare.Authentication)
 	d.Set("default_storage_class", fileshare.DefaultStorageClass)
 	d.Set("fileshare_id", fileshare.FileShareId)
@@ -224,11 +233,26 @@ func resourceAwsStorageGatewaySmbFileShareRead(d *schema.ResourceData, meta inte
 		return fmt.Errorf("error setting valid_user_list: %s", err)
 	}
 
+	tags, err := keyvaluetags.StoragegatewayListTags(conn, *arn)
+	if err != nil {
+		return fmt.Errorf("error listing tags for resource (%s): %s", *arn, err)
+	}
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
 func resourceAwsStorageGatewaySmbFileShareUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).storagegatewayconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.StoragegatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
 
 	input := &storagegateway.UpdateSMBFileShareInput{
 		DefaultStorageClass:  aws.String(d.Get("default_storage_class").(string)),

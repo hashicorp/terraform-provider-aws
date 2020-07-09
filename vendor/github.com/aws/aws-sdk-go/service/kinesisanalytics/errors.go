@@ -2,6 +2,10 @@
 
 package kinesisanalytics
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
 
 	// ErrCodeCodeValidationException for service response error code
@@ -54,7 +58,7 @@ const (
 	//
 	// Discovery failed to get a record from the streaming source because of the
 	// Amazon Kinesis Streams ProvisionedThroughputExceededException. For more information,
-	// see GetRecords (http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
+	// see GetRecords (https://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetRecords.html)
 	// in the Amazon Kinesis Streams API Reference.
 	ErrCodeResourceProvisionedThroughputExceededException = "ResourceProvisionedThroughputExceededException"
 
@@ -63,6 +67,14 @@ const (
 	//
 	// The service is unavailable. Back off and retry the operation.
 	ErrCodeServiceUnavailableException = "ServiceUnavailableException"
+
+	// ErrCodeTooManyTagsException for service response error code
+	// "TooManyTagsException".
+	//
+	// Application created with too many tags, or too many tags added to an application.
+	// Note that the maximum number of application tags includes system tags. The
+	// maximum number of user-defined application tags is 50.
+	ErrCodeTooManyTagsException = "TooManyTagsException"
 
 	// ErrCodeUnableToDetectSchemaException for service response error code
 	// "UnableToDetectSchemaException".
@@ -73,5 +85,23 @@ const (
 
 	// ErrCodeUnsupportedOperationException for service response error code
 	// "UnsupportedOperationException".
+	//
+	// The request was rejected because a specified parameter is not supported or
+	// a specified resource is not valid for this operation.
 	ErrCodeUnsupportedOperationException = "UnsupportedOperationException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"CodeValidationException":                        newErrorCodeValidationException,
+	"ConcurrentModificationException":                newErrorConcurrentModificationException,
+	"InvalidApplicationConfigurationException":       newErrorInvalidApplicationConfigurationException,
+	"InvalidArgumentException":                       newErrorInvalidArgumentException,
+	"LimitExceededException":                         newErrorLimitExceededException,
+	"ResourceInUseException":                         newErrorResourceInUseException,
+	"ResourceNotFoundException":                      newErrorResourceNotFoundException,
+	"ResourceProvisionedThroughputExceededException": newErrorResourceProvisionedThroughputExceededException,
+	"ServiceUnavailableException":                    newErrorServiceUnavailableException,
+	"TooManyTagsException":                           newErrorTooManyTagsException,
+	"UnableToDetectSchemaException":                  newErrorUnableToDetectSchemaException,
+	"UnsupportedOperationException":                  newErrorUnsupportedOperationException,
+}

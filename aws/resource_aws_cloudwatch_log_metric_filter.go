@@ -5,9 +5,9 @@ import (
 	"log"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
@@ -20,6 +20,9 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 		Read:   resourceAwsCloudWatchLogMetricFilterRead,
 		Update: resourceAwsCloudWatchLogMetricFilterUpdate,
 		Delete: resourceAwsCloudWatchLogMetricFilterDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsCloudWatchLogMetricFilterImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -85,16 +88,25 @@ func resourceAwsCloudWatchLogMetricFilter() *schema.Resource {
 func resourceAwsCloudWatchLogMetricFilterUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudwatchlogsconn
 
+	name := d.Get("name").(string)
+	logGroupName := d.Get("log_group_name").(string)
+
 	input := cloudwatchlogs.PutMetricFilterInput{
-		FilterName:    aws.String(d.Get("name").(string)),
+		FilterName:    aws.String(name),
 		FilterPattern: aws.String(strings.TrimSpace(d.Get("pattern").(string))),
-		LogGroupName:  aws.String(d.Get("log_group_name").(string)),
+		LogGroupName:  aws.String(logGroupName),
 	}
 
 	transformations := d.Get("metric_transformation").([]interface{})
 	o := transformations[0].(map[string]interface{})
 	input.MetricTransformations = expandCloudWatchLogMetricTransformations(o)
 
+	// Creating multiple filters on the same log group can sometimes cause
+	// clashes, so use a mutex here (and on deletion) to serialise actions on
+	// log groups.
+	mutex_key := fmt.Sprintf(`log-group-%s`, d.Get(`log_group_name`))
+	awsMutexKV.Lock(mutex_key)
+	defer awsMutexKV.Unlock(mutex_key)
 	log.Printf("[DEBUG] Creating/Updating CloudWatch Log Metric Filter: %s", input)
 	_, err := conn.PutMetricFilter(&input)
 	if err != nil {
@@ -127,7 +139,9 @@ func resourceAwsCloudWatchLogMetricFilterRead(d *schema.ResourceData, meta inter
 
 	d.Set("name", mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
-	d.Set("metric_transformation", flattenCloudWatchLogMetricTransformations(mf.MetricTransformations))
+	if err := d.Set("metric_transformation", flattenCloudWatchLogMetricTransformations(mf.MetricTransformations)); err != nil {
+		return fmt.Errorf("error setting metric_transformation: %s", err)
+	}
 
 	return nil
 }
@@ -180,6 +194,12 @@ func resourceAwsCloudWatchLogMetricFilterDelete(d *schema.ResourceData, meta int
 		FilterName:   aws.String(d.Get("name").(string)),
 		LogGroupName: aws.String(d.Get("log_group_name").(string)),
 	}
+	// Creating multiple filters on the same log group can sometimes cause
+	// clashes, so use a mutex here (and on creation) to serialise actions on
+	// log groups.
+	mutex_key := fmt.Sprintf(`log-group-%s`, d.Get(`log_group_name`))
+	awsMutexKV.Lock(mutex_key)
+	defer awsMutexKV.Unlock(mutex_key)
 	log.Printf("[INFO] Deleting CloudWatch Log Metric Filter: %s", d.Id())
 	_, err := conn.DeleteMetricFilter(&input)
 	if err != nil {
@@ -188,4 +208,17 @@ func resourceAwsCloudWatchLogMetricFilterDelete(d *schema.ResourceData, meta int
 	log.Println("[INFO] CloudWatch Log Metric Filter deleted")
 
 	return nil
+}
+
+func resourceAwsCloudWatchLogMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), ":")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("Unexpected format of ID (%q), expected <log_group_name>:<name>", d.Id())
+	}
+	logGroupName := idParts[0]
+	name := idParts[1]
+	d.Set("log_group_name", logGroupName)
+	d.Set("name", name)
+	d.SetId(name)
+	return []*schema.ResourceData{d}, nil
 }

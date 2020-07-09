@@ -1,12 +1,12 @@
 ---
+subcategory: "Sagemaker"
 layout: "aws"
 page_title: "AWS: aws_sagemaker_model"
-sidebar_current: "docs-aws-resource-sagemaker-model"
 description: |-
   Provides a SageMaker model resource.
 ---
 
-# aws_sagemaker_model
+# Resource: aws_sagemaker_model
 
 Provides a SageMaker model resource.
 
@@ -16,12 +16,12 @@ Basic usage:
 
 ```hcl
 resource "aws_sagemaker_model" "m" {
-    name = "my-model"
-    execution_role_arn = "${aws_iam_role.foo.arn}"
+  name               = "my-model"
+  execution_role_arn = "${aws_iam_role.foo.arn}"
 
-    primary_container {
-        image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
-    }
+  primary_container {
+    image = "174872318107.dkr.ecr.us-west-2.amazonaws.com/kmeans:1"
+  }
 }
 
 resource "aws_iam_role" "r" {
@@ -30,10 +30,11 @@ resource "aws_iam_role" "r" {
 
 data "aws_iam_policy_document" "assume_role" {
   statement {
-    actions = [ "sts:AssumeRole" ]
+    actions = ["sts:AssumeRole"]
+
     principals {
-      type = "Service"
-      identifiers = [ "sagemaker.amazonaws.com" ]
+      type        = "Service"
+      identifiers = ["sagemaker.amazonaws.com"]
     }
   }
 }
@@ -49,7 +50,7 @@ The following arguments are supported:
 * `container` (Optional) -  Specifies containers in the inference pipeline. If not specified, the `primary_container` argument is required. Fields are documented below.
 * `enable_network_isolation` (Optional) - Isolates the model container. No inbound or outbound network calls can be made to or from the model container.
 * `vpc_config` (Optional) - Specifies the VPC that you want your model to connect to. VpcConfig is used in hosting services and in batch transform.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 The `primary_container` and `container` block both support:
 

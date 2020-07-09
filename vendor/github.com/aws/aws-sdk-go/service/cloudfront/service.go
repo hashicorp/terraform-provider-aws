@@ -31,7 +31,7 @@ var initRequest func(*request.Request)
 const (
 	ServiceName = "cloudfront" // Name of service.
 	EndpointsID = ServiceName  // ID to lookup a service endpoint with.
-	ServiceID   = "CloudFront" // ServiceID is a unique identifer of a specific service.
+	ServiceID   = "CloudFront" // ServiceID is a unique identifier of a specific service.
 )
 
 // New creates a new instance of the CloudFront client with a session.
@@ -39,6 +39,8 @@ const (
 // aws.Config parameter to add your extra config.
 //
 // Example:
+//     mySession := session.Must(session.NewSession())
+//
 //     // Create a CloudFront client from just a session.
 //     svc := cloudfront.New(mySession)
 //
@@ -46,11 +48,11 @@ const (
 //     svc := cloudfront.New(mySession, aws.NewConfig().WithRegion("us-west-2"))
 func New(p client.ConfigProvider, cfgs ...*aws.Config) *CloudFront {
 	c := p.ClientConfig(EndpointsID, cfgs...)
-	return newClient(*c.Config, c.Handlers, c.Endpoint, c.SigningRegion, c.SigningName)
+	return newClient(*c.Config, c.Handlers, c.PartitionID, c.Endpoint, c.SigningRegion, c.SigningName)
 }
 
 // newClient creates, initializes and returns a new service client instance.
-func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegion, signingName string) *CloudFront {
+func newClient(cfg aws.Config, handlers request.Handlers, partitionID, endpoint, signingRegion, signingName string) *CloudFront {
 	svc := &CloudFront{
 		Client: client.New(
 			cfg,
@@ -59,8 +61,9 @@ func newClient(cfg aws.Config, handlers request.Handlers, endpoint, signingRegio
 				ServiceID:     ServiceID,
 				SigningName:   signingName,
 				SigningRegion: signingRegion,
+				PartitionID:   partitionID,
 				Endpoint:      endpoint,
-				APIVersion:    "2018-11-05",
+				APIVersion:    "2019-03-26",
 			},
 			handlers,
 		),

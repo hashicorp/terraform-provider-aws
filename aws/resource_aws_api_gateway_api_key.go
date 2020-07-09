@@ -6,10 +6,11 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsApiGatewayApiKey() *schema.Resource {
@@ -42,9 +43,9 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 			},
 
 			"stage_key": {
-				Type:       schema.TypeSet,
-				Optional:   true,
-				Deprecated: "Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage",
+				Type:     schema.TypeSet,
+				Optional: true,
+				Removed:  "Since the API Gateway usage plans feature was launched on August 11, 2016, usage plans are now required to associate an API key with an API stage",
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"rest_api_id": {
@@ -78,12 +79,17 @@ func resourceAwsApiGatewayApiKey() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(30, 128),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"tags": tagsSchema(),
 		},
 	}
 }
 
 func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Creating API Gateway API Key")
 
 	apiKey, err := conn.CreateApiKey(&apigateway.CreateApiKeyInput{
@@ -91,10 +97,10 @@ func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{})
 		Description: aws.String(d.Get("description").(string)),
 		Enabled:     aws.Bool(d.Get("enabled").(bool)),
 		Value:       aws.String(d.Get("value").(string)),
-		StageKeys:   expandApiGatewayStageKeys(d),
+		Tags:        keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().ApigatewayTags(),
 	})
 	if err != nil {
-		return fmt.Errorf("Error creating API Gateway: %s", err)
+		return fmt.Errorf("Error creating API Gateway API Key: %s", err)
 	}
 
 	d.SetId(aws.StringValue(apiKey.Id))
@@ -103,7 +109,9 @@ func resourceAwsApiGatewayApiKeyCreate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	log.Printf("[DEBUG] Reading API Gateway API Key: %s", d.Id())
 
 	apiKey, err := conn.GetApiKey(&apigateway.GetApiKeyInput{
@@ -120,18 +128,29 @@ func resourceAwsApiGatewayApiKeyRead(d *schema.ResourceData, meta interface{}) e
 		return err
 	}
 
+	if err := d.Set("tags", keyvaluetags.ApigatewayKeyValueTags(apiKey.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
+	arn := arn.ARN{
+		Partition: meta.(*AWSClient).partition,
+		Service:   "apigateway",
+		Region:    meta.(*AWSClient).region,
+		Resource:  fmt.Sprintf("/apikeys/%s", d.Id()),
+	}.String()
+	d.Set("arn", arn)
+
 	d.Set("name", apiKey.Name)
 	d.Set("description", apiKey.Description)
 	d.Set("enabled", apiKey.Enabled)
-	d.Set("stage_key", flattenApiGatewayStageKeys(apiKey.StageKeys))
 	d.Set("value", apiKey.Value)
 
 	if err := d.Set("created_date", apiKey.CreatedDate.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting created_date: %s", err)
+		return fmt.Errorf("error setting created_date: %s", err)
 	}
 
 	if err := d.Set("last_updated_date", apiKey.LastUpdatedDate.Format(time.RFC3339)); err != nil {
-		log.Printf("[DEBUG] Error setting last_updated_date: %s", err)
+		return fmt.Errorf("error setting last_updated_date: %s", err)
 	}
 
 	return nil
@@ -159,16 +178,20 @@ func resourceAwsApiGatewayApiKeyUpdateOperations(d *schema.ResourceData) []*apig
 		})
 	}
 
-	if d.HasChange("stage_key") {
-		operations = append(operations, expandApiGatewayStageKeyOperations(d)...)
-	}
 	return operations
 }
 
 func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	log.Printf("[DEBUG] Updating API Gateway API Key: %s", d.Id())
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+		if err := keyvaluetags.ApigatewayUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating tags: %s", err)
+		}
+	}
 
 	_, err := conn.UpdateApiKey(&apigateway.UpdateApiKeyInput{
 		ApiKey:          aws.String(d.Id()),
@@ -182,24 +205,20 @@ func resourceAwsApiGatewayApiKeyUpdate(d *schema.ResourceData, meta interface{})
 }
 
 func resourceAwsApiGatewayApiKeyDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 	log.Printf("[DEBUG] Deleting API Gateway API Key: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
-		_, err := conn.DeleteApiKey(&apigateway.DeleteApiKeyInput{
-			ApiKey: aws.String(d.Id()),
-		})
-
-		if err == nil {
-			return nil
-		}
-
-		if err != nil {
-			if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
-				return nil
-			}
-		}
-
-		return resource.NonRetryableError(err)
+	_, err := conn.DeleteApiKey(&apigateway.DeleteApiKeyInput{
+		ApiKey: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, apigateway.ErrCodeNotFoundException, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting API Gateway API Key (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

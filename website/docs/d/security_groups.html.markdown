@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_security_groups"
-sidebar_current: "docs-aws-datasource-security-groups"
 description: |-
   Get information about a set of Security Groups.
 ---
@@ -12,6 +12,7 @@ Use this data source to get IDs and VPC membership of Security Groups that are c
 outside of Terraform.
 
 ## Example Usage
+
 ```hcl
 data "aws_security_groups" "test" {
   tags = {
@@ -37,7 +38,7 @@ data "aws_security_groups" "test" {
 
 ## Argument Reference
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match for
+* `tags` - (Optional) A map of tags, each pair of which must exactly match for
 desired security groups.
 
 * `filter` - (Optional) One or more name/value pairs to use as filters. There are

@@ -8,7 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshift"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRedshiftSubnetGroup() *schema.Resource {
@@ -22,11 +24,20 @@ func resourceAwsRedshiftSubnetGroup() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+
 			"name": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Required:     true,
-				ValidateFunc: validateRedshiftSubnetGroupName,
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 255),
+					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringNotInSlice([]string{"default"}, false),
+				),
 			},
 
 			"description": {
@@ -55,7 +66,7 @@ func resourceAwsRedshiftSubnetGroupCreate(d *schema.ResourceData, meta interface
 	for i, subnetId := range subnetIdsSet.List() {
 		subnetIds[i] = aws.String(subnetId.(string))
 	}
-	tags := tagsFromMapRedshift(d.Get("tags").(map[string]interface{}))
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().RedshiftTags()
 
 	createOpts := redshift.CreateClusterSubnetGroupInput{
 		ClusterSubnetGroupName: aws.String(d.Get("name").(string)),
@@ -77,6 +88,7 @@ func resourceAwsRedshiftSubnetGroupCreate(d *schema.ResourceData, meta interface
 
 func resourceAwsRedshiftSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).redshiftconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	describeOpts := redshift.DescribeClusterSubnetGroupsInput{
 		ClusterSubnetGroupName: aws.String(d.Id()),
@@ -99,15 +111,9 @@ func resourceAwsRedshiftSubnetGroupRead(d *schema.ResourceData, meta interface{}
 	d.Set("name", d.Id())
 	d.Set("description", describeResp.ClusterSubnetGroups[0].Description)
 	d.Set("subnet_ids", subnetIdsToSlice(describeResp.ClusterSubnetGroups[0].Subnets))
-	if err := d.Set("tags", tagsToMapRedshift(describeResp.ClusterSubnetGroups[0].Tags)); err != nil {
-		return fmt.Errorf("Error setting Redshift Subnet Group Tags: %#v", err)
+	if err := d.Set("tags", keyvaluetags.RedshiftKeyValueTags(describeResp.ClusterSubnetGroups[0].Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
-
-	return nil
-}
-
-func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).redshiftconn
 
 	arn := arn.ARN{
 		Partition: meta.(*AWSClient).partition,
@@ -116,11 +122,24 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		AccountID: meta.(*AWSClient).accountid,
 		Resource:  fmt.Sprintf("subnetgroup:%s", d.Id()),
 	}.String()
-	if tagErr := setTagsRedshift(conn, d, arn); tagErr != nil {
-		return tagErr
+
+	d.Set("arn", arn)
+
+	return nil
+}
+
+func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*AWSClient).redshiftconn
+
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.RedshiftUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating Redshift Subnet Group (%s) tags: %s", d.Get("arn").(string), err)
+		}
 	}
 
-	if d.HasChange("subnet_ids") || d.HasChange("description") {
+	if d.HasChanges("subnet_ids", "description") {
 		_, n := d.GetChange("subnet_ids")
 		if n == nil {
 			n = new(schema.Set)
@@ -143,7 +162,7 @@ func resourceAwsRedshiftSubnetGroupUpdate(d *schema.ResourceData, meta interface
 		}
 	}
 
-	return nil
+	return resourceAwsRedshiftSubnetGroupRead(d, meta)
 }
 
 func resourceAwsRedshiftSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
@@ -165,21 +184,4 @@ func subnetIdsToSlice(subnetIds []*redshift.Subnet) []string {
 		subnetsSlice = append(subnetsSlice, *s.SubnetIdentifier)
 	}
 	return subnetsSlice
-}
-
-func validateRedshiftSubnetGroupName(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !regexp.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in %q", k))
-	}
-	if len(value) > 255 {
-		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 255 characters", k))
-	}
-	if regexp.MustCompile(`(?i)^default$`).MatchString(value) {
-		errors = append(errors, fmt.Errorf(
-			"%q is not allowed as %q", "Default", k))
-	}
-	return
 }

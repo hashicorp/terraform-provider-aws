@@ -1,16 +1,16 @@
 ---
+subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_account"
-sidebar_current: "docs-aws-resource-securityhub-account"
 description: |-
   Enables Security Hub for an AWS account.
 ---
 
-# aws_securityhub_account
-
--> **Note:** Destroying this resource will disable Security Hub for this AWS account.
+# Resource: aws_securityhub_account
 
 Enables Security Hub for this AWS account.
+
+~> **NOTE:** Destroying this resource will disable Security Hub for this AWS account.
 
 ## Example Usage
 

@@ -1,12 +1,12 @@
 ---
+subcategory: "Kinesis"
 layout: "aws"
 page_title: "AWS: aws_kinesis_analytics_application"
-sidebar_current: "docs-aws-resource-kinesis-analytics-application"
 description: |-
   Provides a AWS Kinesis Analytics Application
 ---
 
-# aws_kinesis_analytics_application
+# Resource: aws_kinesis_analytics_application
 
 Provides a Kinesis Analytics Application resource. Kinesis Analytics is a managed service that
 allows processing and analyzing streaming data using standard SQL.
@@ -26,20 +26,25 @@ resource "aws_kinesis_analytics_application" "test_application" {
 
   inputs {
     name_prefix = "test_prefix"
+
     kinesis_stream {
       resource_arn = "${aws_kinesis_stream.test_stream.arn}"
       role_arn     = "${aws_iam_role.test.arn}"
     }
+
     parallelism {
       count = 1
     }
+
     schema {
       record_columns {
         mapping  = "$.test"
         name     = "test"
         sql_type = "VARCHAR(8)"
       }
+
       record_encoding = "UTF-8"
+
       record_format {
         mapping_parameters {
           json {
@@ -59,12 +64,13 @@ The following arguments are supported:
 * `name` - (Required) Name of the Kinesis Analytics Application.
 * `code` - (Optional) SQL Code to transform input data, and generate output.
 * `description` - (Optional) Description of the application.
-* `cloudwatch_logging_options` - (Optional) The CloudWatch log stream options to monitor application errors. 
+* `cloudwatch_logging_options` - (Optional) The CloudWatch log stream options to monitor application errors.
 See [CloudWatch Logging Options](#cloudwatch-logging-options) below for more details.
 * `inputs` - (Optional) Input configuration of the application. See [Inputs](#inputs) below for more details.
 * `outputs` - (Optional) Output destination configuration of the application. See [Outputs](#outputs) below for more details.
-* `reference_data_sources` - (Optional) An S3 Reference Data Source for the application. 
+* `reference_data_sources` - (Optional) An S3 Reference Data Source for the application.
 See [Reference Data Sources](#reference-data-sources) below for more details.
+* `tags` - Key-value map of tags for the Kinesis Analytics Application.
 
 ### CloudWatch Logging Options
 
@@ -83,11 +89,11 @@ The `inputs` block supports the following:
 
 * `name_prefix` - (Required) The Name Prefix to use when creating an in-application stream.
 * `schema` - (Required) The Schema format of the data in the streaming source. See [Source Schema](#source-schema) below for more details.
-* `kinesis_firehose` - (Optional) The Kinesis Firehose configuration for the streaming source. Conflicts with `kinesis_stream`. 
+* `kinesis_firehose` - (Optional) The Kinesis Firehose configuration for the streaming source. Conflicts with `kinesis_stream`.
 See [Kinesis Firehose](#kinesis-firehose) below for more details.
-* `kinesis_stream` - (Optional) The Kinesis Stream configuration for the streaming source. Conflicts with `kinesis_firehose`. 
+* `kinesis_stream` - (Optional) The Kinesis Stream configuration for the streaming source. Conflicts with `kinesis_firehose`.
 See [Kinesis Stream](#kinesis-stream) below for more details.
-* `parallelism` - (Optional) The number of Parallel in-application streams to create. 
+* `parallelism` - (Optional) The number of Parallel in-application streams to create.
 See [Parallelism](#parallelism) below for more details.
 * `processing_configuration` - (Optional) The Processing Configuration to transform records as they are received from the stream.
 See [Processing Configuration](#processing-configuration) below for more details.
@@ -114,7 +120,7 @@ The `reference_data_sources` block supports the following:
 
 * `schema` - (Required) The Schema format of the data in the streaming source. See [Source Schema](#source-schema) below for more details.
 * `table_name` - (Required) The in-application Table Name.
-* `s3` - (Optional) The S3 configuration for the reference data source. See [S3 Reference](#s3-reference) below for more details. 
+* `s3` - (Optional) The S3 configuration for the reference data source. See [S3 Reference](#s3-reference) below for more details.
 
 #### Kinesis Firehose
 
@@ -249,3 +255,11 @@ The following attributes are exported along with all argument references:
 * `version` - The Version of the application.
 
 [1]: https://docs.aws.amazon.com/kinesisanalytics/latest/dev/what-is.html
+
+## Import
+
+Kinesis Analytics Application can be imported by using ARN, e.g.
+
+```
+$ terraform import aws_kinesis_analytics_application.example arn:aws:kinesisanalytics:us-west-2:1234567890:application/example
+```

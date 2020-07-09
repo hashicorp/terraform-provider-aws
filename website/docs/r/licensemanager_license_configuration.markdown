@@ -1,12 +1,12 @@
 ---
+subcategory: "License Manager"
 layout: "aws"
 page_title: "AWS: aws_licensemanager_license_configuration"
-sidebar_current: "docs-aws-resource-licensemanager-license-configuration"
 description: |-
   Provides a License Manager license configuration resource.
 ---
 
-# aws_licensemanager_license_configuration
+# Resource: aws_licensemanager_license_configuration
 
 Provides a License Manager license configuration resource.
 
@@ -23,7 +23,7 @@ resource "aws_licensemanager_license_configuration" "example" {
   license_counting_type    = "Socket"
 
   license_rules = [
-    "#minimumSockets=2"
+    "#minimumSockets=2",
   ]
 
   tags = {
@@ -42,7 +42,7 @@ The following arguments are supported:
 * `license_count_hard_limit` - (Optional) Sets the number of available licenses as a hard limit.
 * `license_counting_type` - (Required) Dimension to use to track license inventory. Specify either `vCPU`, `Instance`, `Core` or `Socket`.
 * `license_rules` - (Optional) Array of configured License Manager rules.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Rules
 

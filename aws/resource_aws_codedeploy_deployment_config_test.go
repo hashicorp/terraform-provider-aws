@@ -7,9 +7,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSCodeDeployDeploymentConfig_basic(t *testing.T) {
@@ -311,13 +311,13 @@ func testAccAWSCodeDeployDeploymentConfigTrafficCanary(rName string, interval, p
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
   deployment_config_name = %q
-  compute_platform = "Lambda"
+  compute_platform       = "Lambda"
 
   traffic_routing_config {
     type = "TimeBasedCanary"
 
     time_based_canary {
-      interval = %d
+      interval   = %d
       percentage = %d
     }
   }
@@ -329,13 +329,13 @@ func testAccAWSCodeDeployDeploymentConfigTrafficLinear(rName string, interval, p
 	return fmt.Sprintf(`
 resource "aws_codedeploy_deployment_config" "test" {
   deployment_config_name = %q
-  compute_platform = "Lambda"
+  compute_platform       = "Lambda"
 
   traffic_routing_config {
     type = "TimeBasedLinear"
 
     time_based_linear {
-      interval = %d
+      interval   = %d
       percentage = %d
     }
   }

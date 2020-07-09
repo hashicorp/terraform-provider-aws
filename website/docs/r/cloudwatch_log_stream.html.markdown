@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_log_stream"
-sidebar_current: "docs-aws-resource-cloudwatch-log-stream"
 description: |-
   Provides a CloudWatch Log Stream resource.
 ---
 
-# aws_cloudwatch_log_stream
+# Resource: aws_cloudwatch_log_stream
 
 Provides a CloudWatch Log Stream resource.
 
@@ -35,3 +35,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `arn` - The Amazon Resource Name (ARN) specifying the log stream.
+
+## Import
+
+Cloudwatch Log Stream can be imported using the stream's `log_group_name` and `name`, e.g.
+
+```
+$ terraform import aws_cloudwatch_log_stream.foo Yada:SampleLogStream1234
+```

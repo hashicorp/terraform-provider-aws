@@ -1,12 +1,12 @@
 ---
+subcategory: "CloudWatch"
 layout: "aws"
 page_title: "AWS: aws_cloudwatch_event_target"
-sidebar_current: "docs-aws-resource-cloudwatch-event-target"
 description: |-
   Provides a CloudWatch Event Target resource.
 ---
 
-# aws_cloudwatch_event_target
+# Resource: aws_cloudwatch_event_target
 
 Provides a CloudWatch Event Target resource.
 
@@ -56,7 +56,7 @@ resource "aws_kinesis_stream" "test_stream" {
 
 ## Example SSM Document Usage
 
-```
+```hcl
 data "aws_iam_policy_document" "ssm_lifecycle_trust" {
   statement {
     actions = ["sts:AssumeRole"]
@@ -140,13 +140,11 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
     values = ["midnight"]
   }
 }
-
 ```
 
 ## Example RunCommand Usage
 
-```
-
+```hcl
 resource "aws_cloudwatch_event_rule" "stop_instances" {
   name                = "StopInstance"
   description         = "Stop instances nightly"
@@ -165,14 +163,14 @@ resource "aws_cloudwatch_event_target" "stop_instances" {
     values = ["midnight"]
   }
 }
-
 ```
 
 ## Example ECS Run Task with Role and Task Override Usage
 
-```
+```hcl
 resource "aws_iam_role" "ecs_events" {
   name = "ecs_events"
+
   assume_role_policy = <<DOC
 {
   "Version": "2012-10-17",
@@ -193,6 +191,7 @@ DOC
 resource "aws_iam_role_policy" "ecs_events_run_task_with_any_role" {
   name = "ecs_events_run_task_with_any_role"
   role = "${aws_iam_role.ecs_events.id}"
+
   policy = <<DOC
 {
     "Version": "2012-10-17",
@@ -218,8 +217,8 @@ resource "aws_cloudwatch_event_target" "ecs_scheduled_task" {
   rule      = "${aws_cloudwatch_event_rule.every_hour.name}"
   role_arn  = "${aws_iam_role.ecs_events.arn}"
 
-  ecs_target = {
-    task_count = 1
+  ecs_target {
+    task_count          = 1
     task_definition_arn = "${aws_ecs_task_definition.task_name.arn}"
   }
 
@@ -303,3 +302,11 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `input_paths` - (Optional) Key value pairs specified in the form of JSONPath (for example, time = $.time)
 * `input_template` - (Required) Structure containing the template body.
+
+## Import
+
+Cloud Watch Event Target can be imported using the role event_rule and target_id separated by `/`.
+
+ ```
+$ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+```

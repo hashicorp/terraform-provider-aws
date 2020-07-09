@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"log"
 	"regexp"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -49,10 +48,7 @@ func testSweepDataSyncAgents(region string) error {
 
 		for _, agent := range output.Agents {
 			name := aws.StringValue(agent.Name)
-			if !strings.HasPrefix(name, "tf-acc-test-") {
-				log.Printf("[INFO] Skipping DataSync Agent: %s", name)
-				continue
-			}
+
 			log.Printf("[INFO] Deleting DataSync Agent: %s", name)
 			input := &datasync.DeleteAgentInput{
 				AgentArn: agent.AgentArn,
@@ -60,7 +56,7 @@ func testSweepDataSyncAgents(region string) error {
 
 			_, err := conn.DeleteAgent(input)
 
-			if isAWSErr(err, "InvalidRequestException", "not found") {
+			if isAWSErr(err, "InvalidRequestException", "does not exist") {
 				continue
 			}
 
@@ -223,7 +219,7 @@ func testAccCheckAWSDataSyncAgentDestroy(s *terraform.State) error {
 
 		_, err := conn.DescribeAgent(input)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
 			return nil
 		}
 
@@ -370,10 +366,11 @@ resource "aws_instance" "test" {
 
   ami                         = "${data.aws_ami.aws-thinstaller.id}"
   associate_public_ip_address = true
+
   # Default instance type from sync.sh
-  instance_type               = "c5.2xlarge"
-  vpc_security_group_ids      = ["${aws_security_group.test.id}"]
-  subnet_id                   = "${aws_subnet.test.id}"
+  instance_type          = "c5.2xlarge"
+  vpc_security_group_ids = ["${aws_security_group.test.id}"]
+  subnet_id              = "${aws_subnet.test.id}"
 
   tags = {
     Name = "tf-acc-test-datasync-agent"

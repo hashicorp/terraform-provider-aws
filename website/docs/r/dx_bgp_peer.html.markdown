@@ -1,12 +1,12 @@
 ---
+subcategory: "Direct Connect"
 layout: "aws"
 page_title: "AWS: aws_dx_bgp_peer"
-sidebar_current: "docs-aws-resource-dx-bgp-peer"
 description: |-
   Provides a Direct Connect BGP peer resource.
 ---
 
-# aws_dx_bgp_peer
+# Resource: aws_dx_bgp_peer
 
 Provides a Direct Connect BGP peer resource.
 
@@ -37,8 +37,10 @@ Required for IPv4 BGP peers on public virtual interfaces.
 
 In addition to all arguments above, the following attributes are exported:
 
-* `id` - The ID of the BGP peer.
+* `id` - The ID of the BGP peer resource.
 * `bgp_status` - The Up/Down state of the BGP peer.
+* `bgp_peer_id` - The ID of the BGP peer.
+* `aws_device` - The Direct Connect endpoint on which the BGP peer terminates.
 
 ## Timeouts
 

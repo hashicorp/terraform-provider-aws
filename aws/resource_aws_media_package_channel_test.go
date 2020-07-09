@@ -7,16 +7,16 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/mediapackage"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSMediaPackageChannel_basic(t *testing.T) {
 	resourceName := "aws_media_package_channel.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -47,7 +47,7 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
 		Steps: []resource.TestStep{
@@ -68,6 +68,49 @@ func TestAccAWSMediaPackageChannel_description(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsMediaPackageChannelExists(resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSMediaPackageChannel_tags(t *testing.T) {
+	resourceName := "aws_media_package_channel.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSMediaPackage(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsMediaPackageChannelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccMediaPackageChannelConfigWithTags(rName, "Environment", "test1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Environment", "test1"),
+				),
+			},
+			{
+				Config: testAccMediaPackageChannelConfigWithTags(rName, "Update", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsMediaPackageChannelExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Update", "true"),
 				),
 			},
 		},
@@ -118,17 +161,48 @@ func testAccCheckAwsMediaPackageChannelExists(name string) resource.TestCheckFun
 	}
 }
 
+func testAccPreCheckAWSMediaPackage(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).mediapackageconn
+
+	input := &mediapackage.ListChannelsInput{}
+
+	_, err := conn.ListChannels(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccMediaPackageChannelConfig(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
   channel_id = "tf_mediachannel_%s"
-}`, rName)
+}
+`, rName)
 }
 
 func testAccMediaPackageChannelConfigDescription(rName, description string) string {
 	return fmt.Sprintf(`
 resource "aws_media_package_channel" "test" {
-  channel_id = %q
+  channel_id  = %q
   description = %q
-}`, rName, description)
+}
+`, rName, description)
+}
+
+func testAccMediaPackageChannelConfigWithTags(rName, key, value string) string {
+	return fmt.Sprintf(`
+resource "aws_media_package_channel" "test" {
+  channel_id = "%[1]s"
+
+  tags = {
+	  Name = "%[1]s"
+	  %[2]s = "%[3]s"
+  }
+}
+`, rName, key, value)
 }

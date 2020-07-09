@@ -13,6 +13,92 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
+const opAcceptInboundCrossClusterSearchConnection = "AcceptInboundCrossClusterSearchConnection"
+
+// AcceptInboundCrossClusterSearchConnectionRequest generates a "aws/request.Request" representing the
+// client's request for the AcceptInboundCrossClusterSearchConnection operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AcceptInboundCrossClusterSearchConnection for more information on using the AcceptInboundCrossClusterSearchConnection
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AcceptInboundCrossClusterSearchConnectionRequest method.
+//    req, resp := client.AcceptInboundCrossClusterSearchConnectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) AcceptInboundCrossClusterSearchConnectionRequest(input *AcceptInboundCrossClusterSearchConnectionInput) (req *request.Request, output *AcceptInboundCrossClusterSearchConnectionOutput) {
+	op := &request.Operation{
+		Name:       opAcceptInboundCrossClusterSearchConnection,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2015-01-01/es/ccs/inboundConnection/{ConnectionId}/accept",
+	}
+
+	if input == nil {
+		input = &AcceptInboundCrossClusterSearchConnectionInput{}
+	}
+
+	output = &AcceptInboundCrossClusterSearchConnectionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AcceptInboundCrossClusterSearchConnection API operation for Amazon Elasticsearch Service.
+//
+// Allows the destination domain owner to accept an inbound cross-cluster search
+// connection request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation AcceptInboundCrossClusterSearchConnection for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * LimitExceededException
+//   An exception for trying to create more than allowed resources or sub-resources.
+//   Gives http status code of 409.
+//
+//   * DisabledOperationException
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) AcceptInboundCrossClusterSearchConnection(input *AcceptInboundCrossClusterSearchConnectionInput) (*AcceptInboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.AcceptInboundCrossClusterSearchConnectionRequest(input)
+	return out, req.Send()
+}
+
+// AcceptInboundCrossClusterSearchConnectionWithContext is the same as AcceptInboundCrossClusterSearchConnection with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AcceptInboundCrossClusterSearchConnection for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) AcceptInboundCrossClusterSearchConnectionWithContext(ctx aws.Context, input *AcceptInboundCrossClusterSearchConnectionInput, opts ...request.Option) (*AcceptInboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.AcceptInboundCrossClusterSearchConnectionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opAddTags = "AddTags"
 
 // AddTagsRequest generates a "aws/request.Request" representing the
@@ -57,7 +143,7 @@ func (c *ElasticsearchService) AddTagsRequest(input *AddTagsInput) (req *request
 // AddTags API operation for Amazon Elasticsearch Service.
 //
 // Attaches tags to an existing Elasticsearch domain. Tags are a set of case-sensitive
-// key value pairs. An Elasticsearch domain may have up to 10 tags. See  Tagging
+// key value pairs. An Elasticsearch domain may have up to 10 tags. See Tagging
 // Amazon Elasticsearch Service Domains for more information. (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-managedomains.html#es-managedomains-awsresorcetagging)
 //
 // Returns awserr.Error for service API and SDK errors. Use runtime type assertions
@@ -67,19 +153,19 @@ func (c *ElasticsearchService) AddTagsRequest(input *AddTagsInput) (req *request
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation AddTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   An exception for trying to create more than allowed resources or sub-resources.
 //   Gives http status code of 409.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -100,6 +186,103 @@ func (c *ElasticsearchService) AddTags(input *AddTagsInput) (*AddTagsOutput, err
 // for more information on using Contexts.
 func (c *ElasticsearchService) AddTagsWithContext(ctx aws.Context, input *AddTagsInput, opts ...request.Option) (*AddTagsOutput, error) {
 	req, out := c.AddTagsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opAssociatePackage = "AssociatePackage"
+
+// AssociatePackageRequest generates a "aws/request.Request" representing the
+// client's request for the AssociatePackage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See AssociatePackage for more information on using the AssociatePackage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the AssociatePackageRequest method.
+//    req, resp := client.AssociatePackageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) AssociatePackageRequest(input *AssociatePackageInput) (req *request.Request, output *AssociatePackageOutput) {
+	op := &request.Operation{
+		Name:       opAssociatePackage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/packages/associate/{PackageID}/{DomainName}",
+	}
+
+	if input == nil {
+		input = &AssociatePackageInput{}
+	}
+
+	output = &AssociatePackageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// AssociatePackage API operation for Amazon Elasticsearch Service.
+//
+// Associates a package with an Amazon ES domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation AssociatePackage for usage and error information.
+//
+// Returned Error Types:
+//   * BaseException
+//   An error occurred while processing the request.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * AccessDeniedException
+//   An error occurred because user does not have permissions to access the resource.
+//   Returns HTTP status code 403.
+//
+//   * ValidationException
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ConflictException
+//   An error occurred because the client attempts to remove a resource that is
+//   currently in use. Returns HTTP status code 409.
+//
+func (c *ElasticsearchService) AssociatePackage(input *AssociatePackageInput) (*AssociatePackageOutput, error) {
+	req, out := c.AssociatePackageRequest(input)
+	return out, req.Send()
+}
+
+// AssociatePackageWithContext is the same as AssociatePackage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See AssociatePackage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) AssociatePackageWithContext(ctx aws.Context, input *AssociatePackageInput, opts ...request.Option) (*AssociatePackageOutput, error) {
+	req, out := c.AssociatePackageRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -158,20 +341,20 @@ func (c *ElasticsearchService) CancelElasticsearchServiceSoftwareUpdateRequest(i
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation CancelElasticsearchServiceSoftwareUpdate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -249,32 +432,32 @@ func (c *ElasticsearchService) CreateElasticsearchDomainRequest(input *CreateEla
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation CreateElasticsearchDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeInvalidTypeException "InvalidTypeException"
+//   * InvalidTypeException
 //   An exception for trying to create or access sub-resource that is either invalid
 //   or not supported. Gives http status code of 409.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   An exception for trying to create more than allowed resources or sub-resources.
 //   Gives http status code of 409.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   An exception for creating a resource that already exists. Gives http status
 //   code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -294,6 +477,198 @@ func (c *ElasticsearchService) CreateElasticsearchDomain(input *CreateElasticsea
 // for more information on using Contexts.
 func (c *ElasticsearchService) CreateElasticsearchDomainWithContext(ctx aws.Context, input *CreateElasticsearchDomainInput, opts ...request.Option) (*CreateElasticsearchDomainOutput, error) {
 	req, out := c.CreateElasticsearchDomainRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreateOutboundCrossClusterSearchConnection = "CreateOutboundCrossClusterSearchConnection"
+
+// CreateOutboundCrossClusterSearchConnectionRequest generates a "aws/request.Request" representing the
+// client's request for the CreateOutboundCrossClusterSearchConnection operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreateOutboundCrossClusterSearchConnection for more information on using the CreateOutboundCrossClusterSearchConnection
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreateOutboundCrossClusterSearchConnectionRequest method.
+//    req, resp := client.CreateOutboundCrossClusterSearchConnectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) CreateOutboundCrossClusterSearchConnectionRequest(input *CreateOutboundCrossClusterSearchConnectionInput) (req *request.Request, output *CreateOutboundCrossClusterSearchConnectionOutput) {
+	op := &request.Operation{
+		Name:       opCreateOutboundCrossClusterSearchConnection,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/es/ccs/outboundConnection",
+	}
+
+	if input == nil {
+		input = &CreateOutboundCrossClusterSearchConnectionInput{}
+	}
+
+	output = &CreateOutboundCrossClusterSearchConnectionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreateOutboundCrossClusterSearchConnection API operation for Amazon Elasticsearch Service.
+//
+// Creates a new cross-cluster search connection from a source domain to a destination
+// domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation CreateOutboundCrossClusterSearchConnection for usage and error information.
+//
+// Returned Error Types:
+//   * LimitExceededException
+//   An exception for trying to create more than allowed resources or sub-resources.
+//   Gives http status code of 409.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ResourceAlreadyExistsException
+//   An exception for creating a resource that already exists. Gives http status
+//   code of 400.
+//
+//   * DisabledOperationException
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) CreateOutboundCrossClusterSearchConnection(input *CreateOutboundCrossClusterSearchConnectionInput) (*CreateOutboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.CreateOutboundCrossClusterSearchConnectionRequest(input)
+	return out, req.Send()
+}
+
+// CreateOutboundCrossClusterSearchConnectionWithContext is the same as CreateOutboundCrossClusterSearchConnection with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreateOutboundCrossClusterSearchConnection for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) CreateOutboundCrossClusterSearchConnectionWithContext(ctx aws.Context, input *CreateOutboundCrossClusterSearchConnectionInput, opts ...request.Option) (*CreateOutboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.CreateOutboundCrossClusterSearchConnectionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opCreatePackage = "CreatePackage"
+
+// CreatePackageRequest generates a "aws/request.Request" representing the
+// client's request for the CreatePackage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See CreatePackage for more information on using the CreatePackage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the CreatePackageRequest method.
+//    req, resp := client.CreatePackageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) CreatePackageRequest(input *CreatePackageInput) (req *request.Request, output *CreatePackageOutput) {
+	op := &request.Operation{
+		Name:       opCreatePackage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/packages",
+	}
+
+	if input == nil {
+		input = &CreatePackageInput{}
+	}
+
+	output = &CreatePackageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// CreatePackage API operation for Amazon Elasticsearch Service.
+//
+// Create a package for use with Amazon ES domains.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation CreatePackage for usage and error information.
+//
+// Returned Error Types:
+//   * BaseException
+//   An error occurred while processing the request.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * LimitExceededException
+//   An exception for trying to create more than allowed resources or sub-resources.
+//   Gives http status code of 409.
+//
+//   * InvalidTypeException
+//   An exception for trying to create or access sub-resource that is either invalid
+//   or not supported. Gives http status code of 409.
+//
+//   * ResourceAlreadyExistsException
+//   An exception for creating a resource that already exists. Gives http status
+//   code of 400.
+//
+//   * AccessDeniedException
+//   An error occurred because user does not have permissions to access the resource.
+//   Returns HTTP status code 403.
+//
+//   * ValidationException
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+func (c *ElasticsearchService) CreatePackage(input *CreatePackageInput) (*CreatePackageOutput, error) {
+	req, out := c.CreatePackageRequest(input)
+	return out, req.Send()
+}
+
+// CreatePackageWithContext is the same as CreatePackage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See CreatePackage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) CreatePackageWithContext(ctx aws.Context, input *CreatePackageInput, opts ...request.Option) (*CreatePackageOutput, error) {
+	req, out := c.CreatePackageRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -351,20 +726,20 @@ func (c *ElasticsearchService) DeleteElasticsearchDomainRequest(input *DeleteEla
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DeleteElasticsearchDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -445,16 +820,16 @@ func (c *ElasticsearchService) DeleteElasticsearchServiceRoleRequest(input *Dele
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DeleteElasticsearchServiceRole for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -474,6 +849,267 @@ func (c *ElasticsearchService) DeleteElasticsearchServiceRole(input *DeleteElast
 // for more information on using Contexts.
 func (c *ElasticsearchService) DeleteElasticsearchServiceRoleWithContext(ctx aws.Context, input *DeleteElasticsearchServiceRoleInput, opts ...request.Option) (*DeleteElasticsearchServiceRoleOutput, error) {
 	req, out := c.DeleteElasticsearchServiceRoleRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteInboundCrossClusterSearchConnection = "DeleteInboundCrossClusterSearchConnection"
+
+// DeleteInboundCrossClusterSearchConnectionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteInboundCrossClusterSearchConnection operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteInboundCrossClusterSearchConnection for more information on using the DeleteInboundCrossClusterSearchConnection
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteInboundCrossClusterSearchConnectionRequest method.
+//    req, resp := client.DeleteInboundCrossClusterSearchConnectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DeleteInboundCrossClusterSearchConnectionRequest(input *DeleteInboundCrossClusterSearchConnectionInput) (req *request.Request, output *DeleteInboundCrossClusterSearchConnectionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteInboundCrossClusterSearchConnection,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2015-01-01/es/ccs/inboundConnection/{ConnectionId}",
+	}
+
+	if input == nil {
+		input = &DeleteInboundCrossClusterSearchConnectionInput{}
+	}
+
+	output = &DeleteInboundCrossClusterSearchConnectionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteInboundCrossClusterSearchConnection API operation for Amazon Elasticsearch Service.
+//
+// Allows the destination domain owner to delete an existing inbound cross-cluster
+// search connection.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DeleteInboundCrossClusterSearchConnection for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * DisabledOperationException
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) DeleteInboundCrossClusterSearchConnection(input *DeleteInboundCrossClusterSearchConnectionInput) (*DeleteInboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.DeleteInboundCrossClusterSearchConnectionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteInboundCrossClusterSearchConnectionWithContext is the same as DeleteInboundCrossClusterSearchConnection with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteInboundCrossClusterSearchConnection for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DeleteInboundCrossClusterSearchConnectionWithContext(ctx aws.Context, input *DeleteInboundCrossClusterSearchConnectionInput, opts ...request.Option) (*DeleteInboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.DeleteInboundCrossClusterSearchConnectionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteOutboundCrossClusterSearchConnection = "DeleteOutboundCrossClusterSearchConnection"
+
+// DeleteOutboundCrossClusterSearchConnectionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteOutboundCrossClusterSearchConnection operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteOutboundCrossClusterSearchConnection for more information on using the DeleteOutboundCrossClusterSearchConnection
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteOutboundCrossClusterSearchConnectionRequest method.
+//    req, resp := client.DeleteOutboundCrossClusterSearchConnectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DeleteOutboundCrossClusterSearchConnectionRequest(input *DeleteOutboundCrossClusterSearchConnectionInput) (req *request.Request, output *DeleteOutboundCrossClusterSearchConnectionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteOutboundCrossClusterSearchConnection,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2015-01-01/es/ccs/outboundConnection/{ConnectionId}",
+	}
+
+	if input == nil {
+		input = &DeleteOutboundCrossClusterSearchConnectionInput{}
+	}
+
+	output = &DeleteOutboundCrossClusterSearchConnectionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeleteOutboundCrossClusterSearchConnection API operation for Amazon Elasticsearch Service.
+//
+// Allows the source domain owner to delete an existing outbound cross-cluster
+// search connection.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DeleteOutboundCrossClusterSearchConnection for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * DisabledOperationException
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) DeleteOutboundCrossClusterSearchConnection(input *DeleteOutboundCrossClusterSearchConnectionInput) (*DeleteOutboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.DeleteOutboundCrossClusterSearchConnectionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteOutboundCrossClusterSearchConnectionWithContext is the same as DeleteOutboundCrossClusterSearchConnection with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteOutboundCrossClusterSearchConnection for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DeleteOutboundCrossClusterSearchConnectionWithContext(ctx aws.Context, input *DeleteOutboundCrossClusterSearchConnectionInput, opts ...request.Option) (*DeleteOutboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.DeleteOutboundCrossClusterSearchConnectionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeletePackage = "DeletePackage"
+
+// DeletePackageRequest generates a "aws/request.Request" representing the
+// client's request for the DeletePackage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeletePackage for more information on using the DeletePackage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeletePackageRequest method.
+//    req, resp := client.DeletePackageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DeletePackageRequest(input *DeletePackageInput) (req *request.Request, output *DeletePackageOutput) {
+	op := &request.Operation{
+		Name:       opDeletePackage,
+		HTTPMethod: "DELETE",
+		HTTPPath:   "/2015-01-01/packages/{PackageID}",
+	}
+
+	if input == nil {
+		input = &DeletePackageInput{}
+	}
+
+	output = &DeletePackageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DeletePackage API operation for Amazon Elasticsearch Service.
+//
+// Delete the package.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DeletePackage for usage and error information.
+//
+// Returned Error Types:
+//   * BaseException
+//   An error occurred while processing the request.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * AccessDeniedException
+//   An error occurred because user does not have permissions to access the resource.
+//   Returns HTTP status code 403.
+//
+//   * ValidationException
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ConflictException
+//   An error occurred because the client attempts to remove a resource that is
+//   currently in use. Returns HTTP status code 409.
+//
+func (c *ElasticsearchService) DeletePackage(input *DeletePackageInput) (*DeletePackageOutput, error) {
+	req, out := c.DeletePackageRequest(input)
+	return out, req.Send()
+}
+
+// DeletePackageWithContext is the same as DeletePackage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeletePackage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DeletePackageWithContext(ctx aws.Context, input *DeletePackageInput, opts ...request.Option) (*DeletePackageOutput, error) {
+	req, out := c.DeletePackageRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -531,20 +1167,20 @@ func (c *ElasticsearchService) DescribeElasticsearchDomainRequest(input *Describ
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DescribeElasticsearchDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -622,20 +1258,20 @@ func (c *ElasticsearchService) DescribeElasticsearchDomainConfigRequest(input *D
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DescribeElasticsearchDomainConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -712,16 +1348,16 @@ func (c *ElasticsearchService) DescribeElasticsearchDomainsRequest(input *Descri
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DescribeElasticsearchDomains for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -799,28 +1435,28 @@ func (c *ElasticsearchService) DescribeElasticsearchInstanceTypeLimitsRequest(in
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DescribeElasticsearchInstanceTypeLimits for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeInvalidTypeException "InvalidTypeException"
+//   * InvalidTypeException
 //   An exception for trying to create or access sub-resource that is either invalid
 //   or not supported. Gives http status code of 409.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   An exception for trying to create more than allowed resources or sub-resources.
 //   Gives http status code of 409.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -843,6 +1479,437 @@ func (c *ElasticsearchService) DescribeElasticsearchInstanceTypeLimitsWithContex
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opDescribeInboundCrossClusterSearchConnections = "DescribeInboundCrossClusterSearchConnections"
+
+// DescribeInboundCrossClusterSearchConnectionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeInboundCrossClusterSearchConnections operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeInboundCrossClusterSearchConnections for more information on using the DescribeInboundCrossClusterSearchConnections
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeInboundCrossClusterSearchConnectionsRequest method.
+//    req, resp := client.DescribeInboundCrossClusterSearchConnectionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DescribeInboundCrossClusterSearchConnectionsRequest(input *DescribeInboundCrossClusterSearchConnectionsInput) (req *request.Request, output *DescribeInboundCrossClusterSearchConnectionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeInboundCrossClusterSearchConnections,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/es/ccs/inboundConnection/search",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeInboundCrossClusterSearchConnectionsInput{}
+	}
+
+	output = &DescribeInboundCrossClusterSearchConnectionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeInboundCrossClusterSearchConnections API operation for Amazon Elasticsearch Service.
+//
+// Lists all the inbound cross-cluster search connections for a destination
+// domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DescribeInboundCrossClusterSearchConnections for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidPaginationTokenException
+//   The request processing has failed because of invalid pagination token provided
+//   by customer. Returns an HTTP status code of 400.
+//
+//   * DisabledOperationException
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) DescribeInboundCrossClusterSearchConnections(input *DescribeInboundCrossClusterSearchConnectionsInput) (*DescribeInboundCrossClusterSearchConnectionsOutput, error) {
+	req, out := c.DescribeInboundCrossClusterSearchConnectionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeInboundCrossClusterSearchConnectionsWithContext is the same as DescribeInboundCrossClusterSearchConnections with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeInboundCrossClusterSearchConnections for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeInboundCrossClusterSearchConnectionsWithContext(ctx aws.Context, input *DescribeInboundCrossClusterSearchConnectionsInput, opts ...request.Option) (*DescribeInboundCrossClusterSearchConnectionsOutput, error) {
+	req, out := c.DescribeInboundCrossClusterSearchConnectionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeInboundCrossClusterSearchConnectionsPages iterates over the pages of a DescribeInboundCrossClusterSearchConnections operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeInboundCrossClusterSearchConnections method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeInboundCrossClusterSearchConnections operation.
+//    pageNum := 0
+//    err := client.DescribeInboundCrossClusterSearchConnectionsPages(params,
+//        func(page *elasticsearchservice.DescribeInboundCrossClusterSearchConnectionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) DescribeInboundCrossClusterSearchConnectionsPages(input *DescribeInboundCrossClusterSearchConnectionsInput, fn func(*DescribeInboundCrossClusterSearchConnectionsOutput, bool) bool) error {
+	return c.DescribeInboundCrossClusterSearchConnectionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeInboundCrossClusterSearchConnectionsPagesWithContext same as DescribeInboundCrossClusterSearchConnectionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeInboundCrossClusterSearchConnectionsPagesWithContext(ctx aws.Context, input *DescribeInboundCrossClusterSearchConnectionsInput, fn func(*DescribeInboundCrossClusterSearchConnectionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeInboundCrossClusterSearchConnectionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeInboundCrossClusterSearchConnectionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeInboundCrossClusterSearchConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opDescribeOutboundCrossClusterSearchConnections = "DescribeOutboundCrossClusterSearchConnections"
+
+// DescribeOutboundCrossClusterSearchConnectionsRequest generates a "aws/request.Request" representing the
+// client's request for the DescribeOutboundCrossClusterSearchConnections operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribeOutboundCrossClusterSearchConnections for more information on using the DescribeOutboundCrossClusterSearchConnections
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribeOutboundCrossClusterSearchConnectionsRequest method.
+//    req, resp := client.DescribeOutboundCrossClusterSearchConnectionsRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DescribeOutboundCrossClusterSearchConnectionsRequest(input *DescribeOutboundCrossClusterSearchConnectionsInput) (req *request.Request, output *DescribeOutboundCrossClusterSearchConnectionsOutput) {
+	op := &request.Operation{
+		Name:       opDescribeOutboundCrossClusterSearchConnections,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/es/ccs/outboundConnection/search",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribeOutboundCrossClusterSearchConnectionsInput{}
+	}
+
+	output = &DescribeOutboundCrossClusterSearchConnectionsOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribeOutboundCrossClusterSearchConnections API operation for Amazon Elasticsearch Service.
+//
+// Lists all the outbound cross-cluster search connections for a source domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DescribeOutboundCrossClusterSearchConnections for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidPaginationTokenException
+//   The request processing has failed because of invalid pagination token provided
+//   by customer. Returns an HTTP status code of 400.
+//
+//   * DisabledOperationException
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) DescribeOutboundCrossClusterSearchConnections(input *DescribeOutboundCrossClusterSearchConnectionsInput) (*DescribeOutboundCrossClusterSearchConnectionsOutput, error) {
+	req, out := c.DescribeOutboundCrossClusterSearchConnectionsRequest(input)
+	return out, req.Send()
+}
+
+// DescribeOutboundCrossClusterSearchConnectionsWithContext is the same as DescribeOutboundCrossClusterSearchConnections with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribeOutboundCrossClusterSearchConnections for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeOutboundCrossClusterSearchConnectionsWithContext(ctx aws.Context, input *DescribeOutboundCrossClusterSearchConnectionsInput, opts ...request.Option) (*DescribeOutboundCrossClusterSearchConnectionsOutput, error) {
+	req, out := c.DescribeOutboundCrossClusterSearchConnectionsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribeOutboundCrossClusterSearchConnectionsPages iterates over the pages of a DescribeOutboundCrossClusterSearchConnections operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribeOutboundCrossClusterSearchConnections method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribeOutboundCrossClusterSearchConnections operation.
+//    pageNum := 0
+//    err := client.DescribeOutboundCrossClusterSearchConnectionsPages(params,
+//        func(page *elasticsearchservice.DescribeOutboundCrossClusterSearchConnectionsOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) DescribeOutboundCrossClusterSearchConnectionsPages(input *DescribeOutboundCrossClusterSearchConnectionsInput, fn func(*DescribeOutboundCrossClusterSearchConnectionsOutput, bool) bool) error {
+	return c.DescribeOutboundCrossClusterSearchConnectionsPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribeOutboundCrossClusterSearchConnectionsPagesWithContext same as DescribeOutboundCrossClusterSearchConnectionsPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribeOutboundCrossClusterSearchConnectionsPagesWithContext(ctx aws.Context, input *DescribeOutboundCrossClusterSearchConnectionsInput, fn func(*DescribeOutboundCrossClusterSearchConnectionsOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribeOutboundCrossClusterSearchConnectionsInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribeOutboundCrossClusterSearchConnectionsRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribeOutboundCrossClusterSearchConnectionsOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
+}
+
+const opDescribePackages = "DescribePackages"
+
+// DescribePackagesRequest generates a "aws/request.Request" representing the
+// client's request for the DescribePackages operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DescribePackages for more information on using the DescribePackages
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DescribePackagesRequest method.
+//    req, resp := client.DescribePackagesRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DescribePackagesRequest(input *DescribePackagesInput) (req *request.Request, output *DescribePackagesOutput) {
+	op := &request.Operation{
+		Name:       opDescribePackages,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/packages/describe",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &DescribePackagesInput{}
+	}
+
+	output = &DescribePackagesOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DescribePackages API operation for Amazon Elasticsearch Service.
+//
+// Describes all packages available to Amazon ES. Includes options for filtering,
+// limiting the number of results, and pagination.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DescribePackages for usage and error information.
+//
+// Returned Error Types:
+//   * BaseException
+//   An error occurred while processing the request.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * AccessDeniedException
+//   An error occurred because user does not have permissions to access the resource.
+//   Returns HTTP status code 403.
+//
+//   * ValidationException
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+func (c *ElasticsearchService) DescribePackages(input *DescribePackagesInput) (*DescribePackagesOutput, error) {
+	req, out := c.DescribePackagesRequest(input)
+	return out, req.Send()
+}
+
+// DescribePackagesWithContext is the same as DescribePackages with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DescribePackages for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribePackagesWithContext(ctx aws.Context, input *DescribePackagesInput, opts ...request.Option) (*DescribePackagesOutput, error) {
+	req, out := c.DescribePackagesRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// DescribePackagesPages iterates over the pages of a DescribePackages operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See DescribePackages method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a DescribePackages operation.
+//    pageNum := 0
+//    err := client.DescribePackagesPages(params,
+//        func(page *elasticsearchservice.DescribePackagesOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) DescribePackagesPages(input *DescribePackagesInput, fn func(*DescribePackagesOutput, bool) bool) error {
+	return c.DescribePackagesPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// DescribePackagesPagesWithContext same as DescribePackagesPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DescribePackagesPagesWithContext(ctx aws.Context, input *DescribePackagesInput, fn func(*DescribePackagesOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *DescribePackagesInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.DescribePackagesRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*DescribePackagesOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opDescribeReservedElasticsearchInstanceOfferings = "DescribeReservedElasticsearchInstanceOfferings"
@@ -902,20 +1969,20 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsReq
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DescribeReservedElasticsearchInstanceOfferings for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -952,7 +2019,7 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsWit
 //    // Example iterating over at most 3 pages of a DescribeReservedElasticsearchInstanceOfferings operation.
 //    pageNum := 0
 //    err := client.DescribeReservedElasticsearchInstanceOfferingsPages(params,
-//        func(page *DescribeReservedElasticsearchInstanceOfferingsOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.DescribeReservedElasticsearchInstanceOfferingsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -984,10 +2051,12 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstanceOfferingsPag
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedElasticsearchInstanceOfferingsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedElasticsearchInstanceOfferingsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1048,21 +2117,21 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesRequest(inp
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation DescribeReservedElasticsearchInstances for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
@@ -1098,7 +2167,7 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesWithContext
 //    // Example iterating over at most 3 pages of a DescribeReservedElasticsearchInstances operation.
 //    pageNum := 0
 //    err := client.DescribeReservedElasticsearchInstancesPages(params,
-//        func(page *DescribeReservedElasticsearchInstancesOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.DescribeReservedElasticsearchInstancesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1130,11 +2199,110 @@ func (c *ElasticsearchService) DescribeReservedElasticsearchInstancesPagesWithCo
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*DescribeReservedElasticsearchInstancesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*DescribeReservedElasticsearchInstancesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
+}
+
+const opDissociatePackage = "DissociatePackage"
+
+// DissociatePackageRequest generates a "aws/request.Request" representing the
+// client's request for the DissociatePackage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DissociatePackage for more information on using the DissociatePackage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DissociatePackageRequest method.
+//    req, resp := client.DissociatePackageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) DissociatePackageRequest(input *DissociatePackageInput) (req *request.Request, output *DissociatePackageOutput) {
+	op := &request.Operation{
+		Name:       opDissociatePackage,
+		HTTPMethod: "POST",
+		HTTPPath:   "/2015-01-01/packages/dissociate/{PackageID}/{DomainName}",
+	}
+
+	if input == nil {
+		input = &DissociatePackageInput{}
+	}
+
+	output = &DissociatePackageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// DissociatePackage API operation for Amazon Elasticsearch Service.
+//
+// Dissociates a package from the Amazon ES domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation DissociatePackage for usage and error information.
+//
+// Returned Error Types:
+//   * BaseException
+//   An error occurred while processing the request.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * AccessDeniedException
+//   An error occurred because user does not have permissions to access the resource.
+//   Returns HTTP status code 403.
+//
+//   * ValidationException
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+//   * ConflictException
+//   An error occurred because the client attempts to remove a resource that is
+//   currently in use. Returns HTTP status code 409.
+//
+func (c *ElasticsearchService) DissociatePackage(input *DissociatePackageInput) (*DissociatePackageOutput, error) {
+	req, out := c.DissociatePackageRequest(input)
+	return out, req.Send()
+}
+
+// DissociatePackageWithContext is the same as DissociatePackage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DissociatePackage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) DissociatePackageWithContext(ctx aws.Context, input *DissociatePackageInput, opts ...request.Option) (*DissociatePackageOutput, error) {
+	req, out := c.DissociatePackageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetCompatibleElasticsearchVersions = "GetCompatibleElasticsearchVersions"
@@ -1190,23 +2358,23 @@ func (c *ElasticsearchService) GetCompatibleElasticsearchVersionsRequest(input *
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation GetCompatibleElasticsearchVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -1290,23 +2458,23 @@ func (c *ElasticsearchService) GetUpgradeHistoryRequest(input *GetUpgradeHistory
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation GetUpgradeHistory for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -1343,7 +2511,7 @@ func (c *ElasticsearchService) GetUpgradeHistoryWithContext(ctx aws.Context, inp
 //    // Example iterating over at most 3 pages of a GetUpgradeHistory operation.
 //    pageNum := 0
 //    err := client.GetUpgradeHistoryPages(params,
-//        func(page *GetUpgradeHistoryOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.GetUpgradeHistoryOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1375,10 +2543,12 @@ func (c *ElasticsearchService) GetUpgradeHistoryPagesWithContext(ctx aws.Context
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*GetUpgradeHistoryOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*GetUpgradeHistoryOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1434,23 +2604,23 @@ func (c *ElasticsearchService) GetUpgradeStatusRequest(input *GetUpgradeStatusIn
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation GetUpgradeStatus for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -1528,11 +2698,11 @@ func (c *ElasticsearchService) ListDomainNamesRequest(input *ListDomainNamesInpu
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation ListDomainNames for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -1555,6 +2725,157 @@ func (c *ElasticsearchService) ListDomainNamesWithContext(ctx aws.Context, input
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
+}
+
+const opListDomainsForPackage = "ListDomainsForPackage"
+
+// ListDomainsForPackageRequest generates a "aws/request.Request" representing the
+// client's request for the ListDomainsForPackage operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListDomainsForPackage for more information on using the ListDomainsForPackage
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListDomainsForPackageRequest method.
+//    req, resp := client.ListDomainsForPackageRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) ListDomainsForPackageRequest(input *ListDomainsForPackageInput) (req *request.Request, output *ListDomainsForPackageOutput) {
+	op := &request.Operation{
+		Name:       opListDomainsForPackage,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-01-01/packages/{PackageID}/domains",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListDomainsForPackageInput{}
+	}
+
+	output = &ListDomainsForPackageOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListDomainsForPackage API operation for Amazon Elasticsearch Service.
+//
+// Lists all Amazon ES domains associated with the package.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation ListDomainsForPackage for usage and error information.
+//
+// Returned Error Types:
+//   * BaseException
+//   An error occurred while processing the request.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * AccessDeniedException
+//   An error occurred because user does not have permissions to access the resource.
+//   Returns HTTP status code 403.
+//
+//   * ValidationException
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+func (c *ElasticsearchService) ListDomainsForPackage(input *ListDomainsForPackageInput) (*ListDomainsForPackageOutput, error) {
+	req, out := c.ListDomainsForPackageRequest(input)
+	return out, req.Send()
+}
+
+// ListDomainsForPackageWithContext is the same as ListDomainsForPackage with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListDomainsForPackage for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) ListDomainsForPackageWithContext(ctx aws.Context, input *ListDomainsForPackageInput, opts ...request.Option) (*ListDomainsForPackageOutput, error) {
+	req, out := c.ListDomainsForPackageRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListDomainsForPackagePages iterates over the pages of a ListDomainsForPackage operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListDomainsForPackage method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListDomainsForPackage operation.
+//    pageNum := 0
+//    err := client.ListDomainsForPackagePages(params,
+//        func(page *elasticsearchservice.ListDomainsForPackageOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) ListDomainsForPackagePages(input *ListDomainsForPackageInput, fn func(*ListDomainsForPackageOutput, bool) bool) error {
+	return c.ListDomainsForPackagePagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListDomainsForPackagePagesWithContext same as ListDomainsForPackagePages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) ListDomainsForPackagePagesWithContext(ctx aws.Context, input *ListDomainsForPackageInput, fn func(*ListDomainsForPackageOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListDomainsForPackageInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListDomainsForPackageRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListDomainsForPackageOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
+	return p.Err()
 }
 
 const opListElasticsearchInstanceTypes = "ListElasticsearchInstanceTypes"
@@ -1614,20 +2935,20 @@ func (c *ElasticsearchService) ListElasticsearchInstanceTypesRequest(input *List
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation ListElasticsearchInstanceTypes for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -1663,7 +2984,7 @@ func (c *ElasticsearchService) ListElasticsearchInstanceTypesWithContext(ctx aws
 //    // Example iterating over at most 3 pages of a ListElasticsearchInstanceTypes operation.
 //    pageNum := 0
 //    err := client.ListElasticsearchInstanceTypesPages(params,
-//        func(page *ListElasticsearchInstanceTypesOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.ListElasticsearchInstanceTypesOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1695,10 +3016,12 @@ func (c *ElasticsearchService) ListElasticsearchInstanceTypesPagesWithContext(ct
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListElasticsearchInstanceTypesOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListElasticsearchInstanceTypesOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
 	return p.Err()
 }
 
@@ -1759,20 +3082,20 @@ func (c *ElasticsearchService) ListElasticsearchVersionsRequest(input *ListElast
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation ListElasticsearchVersions for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -1808,7 +3131,7 @@ func (c *ElasticsearchService) ListElasticsearchVersionsWithContext(ctx aws.Cont
 //    // Example iterating over at most 3 pages of a ListElasticsearchVersions operation.
 //    pageNum := 0
 //    err := client.ListElasticsearchVersionsPages(params,
-//        func(page *ListElasticsearchVersionsOutput, lastPage bool) bool {
+//        func(page *elasticsearchservice.ListElasticsearchVersionsOutput, lastPage bool) bool {
 //            pageNum++
 //            fmt.Println(page)
 //            return pageNum <= 3
@@ -1840,10 +3163,163 @@ func (c *ElasticsearchService) ListElasticsearchVersionsPagesWithContext(ctx aws
 		},
 	}
 
-	cont := true
-	for p.Next() && cont {
-		cont = fn(p.Page().(*ListElasticsearchVersionsOutput), !p.HasNextPage())
+	for p.Next() {
+		if !fn(p.Page().(*ListElasticsearchVersionsOutput), !p.HasNextPage()) {
+			break
+		}
 	}
+
+	return p.Err()
+}
+
+const opListPackagesForDomain = "ListPackagesForDomain"
+
+// ListPackagesForDomainRequest generates a "aws/request.Request" representing the
+// client's request for the ListPackagesForDomain operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListPackagesForDomain for more information on using the ListPackagesForDomain
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListPackagesForDomainRequest method.
+//    req, resp := client.ListPackagesForDomainRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) ListPackagesForDomainRequest(input *ListPackagesForDomainInput) (req *request.Request, output *ListPackagesForDomainOutput) {
+	op := &request.Operation{
+		Name:       opListPackagesForDomain,
+		HTTPMethod: "GET",
+		HTTPPath:   "/2015-01-01/domain/{DomainName}/packages",
+		Paginator: &request.Paginator{
+			InputTokens:     []string{"NextToken"},
+			OutputTokens:    []string{"NextToken"},
+			LimitToken:      "MaxResults",
+			TruncationToken: "",
+		},
+	}
+
+	if input == nil {
+		input = &ListPackagesForDomainInput{}
+	}
+
+	output = &ListPackagesForDomainOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListPackagesForDomain API operation for Amazon Elasticsearch Service.
+//
+// Lists all packages associated with the Amazon ES domain.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation ListPackagesForDomain for usage and error information.
+//
+// Returned Error Types:
+//   * BaseException
+//   An error occurred while processing the request.
+//
+//   * InternalException
+//   The request processing has failed because of an unknown error, exception
+//   or failure (the failure is internal to the service) . Gives http status code
+//   of 500.
+//
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * AccessDeniedException
+//   An error occurred because user does not have permissions to access the resource.
+//   Returns HTTP status code 403.
+//
+//   * ValidationException
+//   An exception for missing / invalid input fields. Gives http status code of
+//   400.
+//
+func (c *ElasticsearchService) ListPackagesForDomain(input *ListPackagesForDomainInput) (*ListPackagesForDomainOutput, error) {
+	req, out := c.ListPackagesForDomainRequest(input)
+	return out, req.Send()
+}
+
+// ListPackagesForDomainWithContext is the same as ListPackagesForDomain with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListPackagesForDomain for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) ListPackagesForDomainWithContext(ctx aws.Context, input *ListPackagesForDomainInput, opts ...request.Option) (*ListPackagesForDomainOutput, error) {
+	req, out := c.ListPackagesForDomainRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+// ListPackagesForDomainPages iterates over the pages of a ListPackagesForDomain operation,
+// calling the "fn" function with the response data for each page. To stop
+// iterating, return false from the fn function.
+//
+// See ListPackagesForDomain method for more information on how to use this operation.
+//
+// Note: This operation can generate multiple requests to a service.
+//
+//    // Example iterating over at most 3 pages of a ListPackagesForDomain operation.
+//    pageNum := 0
+//    err := client.ListPackagesForDomainPages(params,
+//        func(page *elasticsearchservice.ListPackagesForDomainOutput, lastPage bool) bool {
+//            pageNum++
+//            fmt.Println(page)
+//            return pageNum <= 3
+//        })
+//
+func (c *ElasticsearchService) ListPackagesForDomainPages(input *ListPackagesForDomainInput, fn func(*ListPackagesForDomainOutput, bool) bool) error {
+	return c.ListPackagesForDomainPagesWithContext(aws.BackgroundContext(), input, fn)
+}
+
+// ListPackagesForDomainPagesWithContext same as ListPackagesForDomainPages except
+// it takes a Context and allows setting request options on the pages.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) ListPackagesForDomainPagesWithContext(ctx aws.Context, input *ListPackagesForDomainInput, fn func(*ListPackagesForDomainOutput, bool) bool, opts ...request.Option) error {
+	p := request.Pagination{
+		NewRequest: func() (*request.Request, error) {
+			var inCpy *ListPackagesForDomainInput
+			if input != nil {
+				tmp := *input
+				inCpy = &tmp
+			}
+			req, _ := c.ListPackagesForDomainRequest(inCpy)
+			req.SetContext(ctx)
+			req.ApplyOptions(opts...)
+			return req, nil
+		},
+	}
+
+	for p.Next() {
+		if !fn(p.Page().(*ListPackagesForDomainOutput), !p.HasNextPage()) {
+			break
+		}
+	}
+
 	return p.Err()
 }
 
@@ -1898,19 +3374,19 @@ func (c *ElasticsearchService) ListTagsRequest(input *ListTagsInput) (req *reque
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation ListTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -1987,28 +3463,28 @@ func (c *ElasticsearchService) PurchaseReservedElasticsearchInstanceOfferingRequ
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation PurchaseReservedElasticsearchInstanceOffering for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+// Returned Error Types:
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   An exception for creating a resource that already exists. Gives http status
 //   code of 400.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   An exception for trying to create more than allowed resources or sub-resources.
 //   Gives http status code of 409.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -2029,6 +3505,88 @@ func (c *ElasticsearchService) PurchaseReservedElasticsearchInstanceOffering(inp
 // for more information on using Contexts.
 func (c *ElasticsearchService) PurchaseReservedElasticsearchInstanceOfferingWithContext(ctx aws.Context, input *PurchaseReservedElasticsearchInstanceOfferingInput, opts ...request.Option) (*PurchaseReservedElasticsearchInstanceOfferingOutput, error) {
 	req, out := c.PurchaseReservedElasticsearchInstanceOfferingRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opRejectInboundCrossClusterSearchConnection = "RejectInboundCrossClusterSearchConnection"
+
+// RejectInboundCrossClusterSearchConnectionRequest generates a "aws/request.Request" representing the
+// client's request for the RejectInboundCrossClusterSearchConnection operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See RejectInboundCrossClusterSearchConnection for more information on using the RejectInboundCrossClusterSearchConnection
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the RejectInboundCrossClusterSearchConnectionRequest method.
+//    req, resp := client.RejectInboundCrossClusterSearchConnectionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+func (c *ElasticsearchService) RejectInboundCrossClusterSearchConnectionRequest(input *RejectInboundCrossClusterSearchConnectionInput) (req *request.Request, output *RejectInboundCrossClusterSearchConnectionOutput) {
+	op := &request.Operation{
+		Name:       opRejectInboundCrossClusterSearchConnection,
+		HTTPMethod: "PUT",
+		HTTPPath:   "/2015-01-01/es/ccs/inboundConnection/{ConnectionId}/reject",
+	}
+
+	if input == nil {
+		input = &RejectInboundCrossClusterSearchConnectionInput{}
+	}
+
+	output = &RejectInboundCrossClusterSearchConnectionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// RejectInboundCrossClusterSearchConnection API operation for Amazon Elasticsearch Service.
+//
+// Allows the destination domain owner to reject an inbound cross-cluster search
+// connection request.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for Amazon Elasticsearch Service's
+// API operation RejectInboundCrossClusterSearchConnection for usage and error information.
+//
+// Returned Error Types:
+//   * ResourceNotFoundException
+//   An exception for accessing or deleting a resource that does not exist. Gives
+//   http status code of 400.
+//
+//   * DisabledOperationException
+//   An error occured because the client wanted to access a not supported operation.
+//   Gives http status code of 409.
+//
+func (c *ElasticsearchService) RejectInboundCrossClusterSearchConnection(input *RejectInboundCrossClusterSearchConnectionInput) (*RejectInboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.RejectInboundCrossClusterSearchConnectionRequest(input)
+	return out, req.Send()
+}
+
+// RejectInboundCrossClusterSearchConnectionWithContext is the same as RejectInboundCrossClusterSearchConnection with the addition of
+// the ability to pass a context and additional request options.
+//
+// See RejectInboundCrossClusterSearchConnection for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *ElasticsearchService) RejectInboundCrossClusterSearchConnectionWithContext(ctx aws.Context, input *RejectInboundCrossClusterSearchConnectionInput, opts ...request.Option) (*RejectInboundCrossClusterSearchConnectionOutput, error) {
+	req, out := c.RejectInboundCrossClusterSearchConnectionRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2086,15 +3644,15 @@ func (c *ElasticsearchService) RemoveTagsRequest(input *RemoveTagsInput) (req *r
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation RemoveTags for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -2171,20 +3729,20 @@ func (c *ElasticsearchService) StartElasticsearchServiceSoftwareUpdateRequest(in
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation StartElasticsearchServiceSoftwareUpdate for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -2261,28 +3819,28 @@ func (c *ElasticsearchService) UpdateElasticsearchDomainConfigRequest(input *Upd
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation UpdateElasticsearchDomainConfig for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
 //
-//   * ErrCodeInvalidTypeException "InvalidTypeException"
+//   * InvalidTypeException
 //   An exception for trying to create or access sub-resource that is either invalid
 //   or not supported. Gives http status code of 409.
 //
-//   * ErrCodeLimitExceededException "LimitExceededException"
+//   * LimitExceededException
 //   An exception for trying to create more than allowed resources or sub-resources.
 //   Gives http status code of 409.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
@@ -2359,27 +3917,27 @@ func (c *ElasticsearchService) UpgradeElasticsearchDomainRequest(input *UpgradeE
 // See the AWS API reference guide for Amazon Elasticsearch Service's
 // API operation UpgradeElasticsearchDomain for usage and error information.
 //
-// Returned Error Codes:
-//   * ErrCodeBaseException "BaseException"
+// Returned Error Types:
+//   * BaseException
 //   An error occurred while processing the request.
 //
-//   * ErrCodeResourceNotFoundException "ResourceNotFoundException"
+//   * ResourceNotFoundException
 //   An exception for accessing or deleting a resource that does not exist. Gives
 //   http status code of 400.
 //
-//   * ErrCodeResourceAlreadyExistsException "ResourceAlreadyExistsException"
+//   * ResourceAlreadyExistsException
 //   An exception for creating a resource that already exists. Gives http status
 //   code of 400.
 //
-//   * ErrCodeDisabledOperationException "DisabledOperationException"
+//   * DisabledOperationException
 //   An error occured because the client wanted to access a not supported operation.
 //   Gives http status code of 409.
 //
-//   * ErrCodeValidationException "ValidationException"
+//   * ValidationException
 //   An exception for missing / invalid input fields. Gives http status code of
 //   400.
 //
-//   * ErrCodeInternalException "InternalException"
+//   * InternalException
 //   The request processing has failed because of an unknown error, exception
 //   or failure (the failure is internal to the service) . Gives http status code
 //   of 500.
@@ -2405,13 +3963,138 @@ func (c *ElasticsearchService) UpgradeElasticsearchDomainWithContext(ctx aws.Con
 	return out, req.Send()
 }
 
+// Container for the parameters to the AcceptInboundCrossClusterSearchConnection
+// operation.
+type AcceptInboundCrossClusterSearchConnectionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The id of the inbound connection that you want to accept.
+	//
+	// CrossClusterSearchConnectionId is a required field
+	CrossClusterSearchConnectionId *string `location:"uri" locationName:"ConnectionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AcceptInboundCrossClusterSearchConnectionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AcceptInboundCrossClusterSearchConnectionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AcceptInboundCrossClusterSearchConnectionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AcceptInboundCrossClusterSearchConnectionInput"}
+	if s.CrossClusterSearchConnectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CrossClusterSearchConnectionId"))
+	}
+	if s.CrossClusterSearchConnectionId != nil && len(*s.CrossClusterSearchConnectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CrossClusterSearchConnectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCrossClusterSearchConnectionId sets the CrossClusterSearchConnectionId field's value.
+func (s *AcceptInboundCrossClusterSearchConnectionInput) SetCrossClusterSearchConnectionId(v string) *AcceptInboundCrossClusterSearchConnectionInput {
+	s.CrossClusterSearchConnectionId = &v
+	return s
+}
+
+// The result of a AcceptInboundCrossClusterSearchConnection operation. Contains
+// details of accepted inbound connection.
+type AcceptInboundCrossClusterSearchConnectionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the InboundCrossClusterSearchConnection of accepted inbound connection.
+	CrossClusterSearchConnection *InboundCrossClusterSearchConnection `type:"structure"`
+}
+
+// String returns the string representation
+func (s AcceptInboundCrossClusterSearchConnectionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AcceptInboundCrossClusterSearchConnectionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrossClusterSearchConnection sets the CrossClusterSearchConnection field's value.
+func (s *AcceptInboundCrossClusterSearchConnectionOutput) SetCrossClusterSearchConnection(v *InboundCrossClusterSearchConnection) *AcceptInboundCrossClusterSearchConnectionOutput {
+	s.CrossClusterSearchConnection = v
+	return s
+}
+
+// An error occurred because user does not have permissions to access the resource.
+// Returns HTTP status code 403.
+type AccessDeniedException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s AccessDeniedException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AccessDeniedException) GoString() string {
+	return s.String()
+}
+
+func newErrorAccessDeniedException(v protocol.ResponseMetadata) error {
+	return &AccessDeniedException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *AccessDeniedException) Code() string {
+	return "AccessDeniedException"
+}
+
+// Message returns the exception's message.
+func (s *AccessDeniedException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *AccessDeniedException) OrigErr() error {
+	return nil
+}
+
+func (s *AccessDeniedException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *AccessDeniedException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *AccessDeniedException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The configured access rules for the domain's document and search endpoints,
 // and the current status of those rules.
 type AccessPoliciesStatus struct {
 	_ struct{} `type:"structure"`
 
 	// The access policy configured for the Elasticsearch domain. Access policies
-	// may be resource-based, IP-based, or IAM-based. See  Configuring Access Policies
+	// may be resource-based, IP-based, or IAM-based. See Configuring Access Policies
 	// (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-access-policies)for
 	// more information.
 	//
@@ -2531,11 +4214,10 @@ type AdditionalLimit struct {
 	_ struct{} `type:"structure"`
 
 	// Name of Additional Limit is specific to a given InstanceType and for each
-	// of it's InstanceRole etc. Attributes and their details: MaximumNumberOfDataNodesSupported
-	// This attribute will be present in Master node only to specify how much data
-	// nodes upto which given ESPartitionInstanceTypecan support as master node. MaximumNumberOfDataNodesWithoutMasterNode
-	// This attribute will be present in Data node only to specify how much data
-	// nodes of given ESPartitionInstanceType
+	// of it's InstanceRole etc. Attributes and their details:
+	//    * MaximumNumberOfDataNodesSupported
+	//
+	//    * MaximumNumberOfDataNodesWithoutMasterNode
 	LimitName *string `type:"string"`
 
 	// Value for given AdditionalLimit$LimitName .
@@ -2569,10 +4251,11 @@ func (s *AdditionalLimit) SetLimitValues(v []*string) *AdditionalLimit {
 //
 //    * Option to allow references to indices in an HTTP request body. Must
 //    be false when configuring access to individual sub-resources. By default,
-//    the value is true. See Configuration Advanced Options (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-advanced-options)
-//    for more information.
+//    the value is true. See Configuration Advanced Options for more information.
+//
 //    * Option to specify the percentage of heap space that is allocated to
 //    field data. By default, this setting is unbounded.
+//
 // For more information, see Configuring Advanced Options (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-advanced-options).
 type AdvancedOptionsStatus struct {
 	_ struct{} `type:"structure"`
@@ -2610,6 +4293,279 @@ func (s *AdvancedOptionsStatus) SetOptions(v map[string]*string) *AdvancedOption
 func (s *AdvancedOptionsStatus) SetStatus(v *OptionStatus) *AdvancedOptionsStatus {
 	s.Status = v
 	return s
+}
+
+// Specifies the advanced security configuration: whether advanced security
+// is enabled, whether the internal database option is enabled.
+type AdvancedSecurityOptions struct {
+	_ struct{} `type:"structure"`
+
+	// True if advanced security is enabled.
+	Enabled *bool `type:"boolean"`
+
+	// True if the internal user database is enabled.
+	InternalUserDatabaseEnabled *bool `type:"boolean"`
+}
+
+// String returns the string representation
+func (s AdvancedSecurityOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdvancedSecurityOptions) GoString() string {
+	return s.String()
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *AdvancedSecurityOptions) SetEnabled(v bool) *AdvancedSecurityOptions {
+	s.Enabled = &v
+	return s
+}
+
+// SetInternalUserDatabaseEnabled sets the InternalUserDatabaseEnabled field's value.
+func (s *AdvancedSecurityOptions) SetInternalUserDatabaseEnabled(v bool) *AdvancedSecurityOptions {
+	s.InternalUserDatabaseEnabled = &v
+	return s
+}
+
+// Specifies the advanced security configuration: whether advanced security
+// is enabled, whether the internal database option is enabled, master username
+// and password (if internal database is enabled), and master user ARN (if IAM
+// is enabled).
+type AdvancedSecurityOptionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// True if advanced security is enabled.
+	Enabled *bool `type:"boolean"`
+
+	// True if the internal user database is enabled.
+	InternalUserDatabaseEnabled *bool `type:"boolean"`
+
+	// Credentials for the master user: username and password, ARN, or both.
+	MasterUserOptions *MasterUserOptions `type:"structure"`
+}
+
+// String returns the string representation
+func (s AdvancedSecurityOptionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdvancedSecurityOptionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AdvancedSecurityOptionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AdvancedSecurityOptionsInput"}
+	if s.MasterUserOptions != nil {
+		if err := s.MasterUserOptions.Validate(); err != nil {
+			invalidParams.AddNested("MasterUserOptions", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetEnabled sets the Enabled field's value.
+func (s *AdvancedSecurityOptionsInput) SetEnabled(v bool) *AdvancedSecurityOptionsInput {
+	s.Enabled = &v
+	return s
+}
+
+// SetInternalUserDatabaseEnabled sets the InternalUserDatabaseEnabled field's value.
+func (s *AdvancedSecurityOptionsInput) SetInternalUserDatabaseEnabled(v bool) *AdvancedSecurityOptionsInput {
+	s.InternalUserDatabaseEnabled = &v
+	return s
+}
+
+// SetMasterUserOptions sets the MasterUserOptions field's value.
+func (s *AdvancedSecurityOptionsInput) SetMasterUserOptions(v *MasterUserOptions) *AdvancedSecurityOptionsInput {
+	s.MasterUserOptions = v
+	return s
+}
+
+// Specifies the status of advanced security options for the specified Elasticsearch
+// domain.
+type AdvancedSecurityOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies advanced security options for the specified Elasticsearch domain.
+	//
+	// Options is a required field
+	Options *AdvancedSecurityOptions `type:"structure" required:"true"`
+
+	// Status of the advanced security options for the specified Elasticsearch domain.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s AdvancedSecurityOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AdvancedSecurityOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *AdvancedSecurityOptionsStatus) SetOptions(v *AdvancedSecurityOptions) *AdvancedSecurityOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *AdvancedSecurityOptionsStatus) SetStatus(v *OptionStatus) *AdvancedSecurityOptionsStatus {
+	s.Status = v
+	return s
+}
+
+// Container for request parameters to AssociatePackage operation.
+type AssociatePackageInput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the domain that you want to associate the package with.
+	//
+	// DomainName is a required field
+	DomainName *string `location:"uri" locationName:"DomainName" min:"3" type:"string" required:"true"`
+
+	// Internal ID of the package that you want to associate with a domain. Use
+	// DescribePackages to find this value.
+	//
+	// PackageID is a required field
+	PackageID *string `location:"uri" locationName:"PackageID" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s AssociatePackageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociatePackageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *AssociatePackageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "AssociatePackageInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+	if s.PackageID == nil {
+		invalidParams.Add(request.NewErrParamRequired("PackageID"))
+	}
+	if s.PackageID != nil && len(*s.PackageID) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PackageID", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *AssociatePackageInput) SetDomainName(v string) *AssociatePackageInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetPackageID sets the PackageID field's value.
+func (s *AssociatePackageInput) SetPackageID(v string) *AssociatePackageInput {
+	s.PackageID = &v
+	return s
+}
+
+// Container for response returned by AssociatePackage operation.
+type AssociatePackageOutput struct {
+	_ struct{} `type:"structure"`
+
+	// DomainPackageDetails
+	DomainPackageDetails *DomainPackageDetails `type:"structure"`
+}
+
+// String returns the string representation
+func (s AssociatePackageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s AssociatePackageOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainPackageDetails sets the DomainPackageDetails field's value.
+func (s *AssociatePackageOutput) SetDomainPackageDetails(v *DomainPackageDetails) *AssociatePackageOutput {
+	s.DomainPackageDetails = v
+	return s
+}
+
+// An error occurred while processing the request.
+type BaseException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	// A description of the error.
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s BaseException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BaseException) GoString() string {
+	return s.String()
+}
+
+func newErrorBaseException(v protocol.ResponseMetadata) error {
+	return &BaseException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *BaseException) Code() string {
+	return "BaseException"
+}
+
+// Message returns the exception's message.
+func (s *BaseException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *BaseException) OrigErr() error {
+	return nil
+}
+
+func (s *BaseException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *BaseException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *BaseException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // Container for the parameters to the CancelElasticsearchServiceSoftwareUpdate
@@ -2826,6 +4782,63 @@ func (s *CompatibleVersionsMap) SetTargetVersions(v []*string) *CompatibleVersio
 	return s
 }
 
+// An error occurred because the client attempts to remove a resource that is
+// currently in use. Returns HTTP status code 409.
+type ConflictException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ConflictException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ConflictException) GoString() string {
+	return s.String()
+}
+
+func newErrorConflictException(v protocol.ResponseMetadata) error {
+	return &ConflictException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ConflictException) Code() string {
+	return "ConflictException"
+}
+
+// Message returns the exception's message.
+func (s *ConflictException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ConflictException) OrigErr() error {
+	return nil
+}
+
+func (s *ConflictException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ConflictException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ConflictException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 type CreateElasticsearchDomainInput struct {
 	_ struct{} `type:"structure"`
 
@@ -2838,13 +4851,19 @@ type CreateElasticsearchDomainInput struct {
 	// for more information.
 	AdvancedOptions map[string]*string `type:"map"`
 
+	// Specifies advanced security options.
+	AdvancedSecurityOptions *AdvancedSecurityOptionsInput `type:"structure"`
+
 	// Options to specify the Cognito user and identity pools for Kibana authentication.
 	// For more information, see Amazon Cognito Authentication for Kibana (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html).
 	CognitoOptions *CognitoOptions `type:"structure"`
 
+	// Options to specify configuration that will be applied to the domain endpoint.
+	DomainEndpointOptions *DomainEndpointOptions `type:"structure"`
+
 	// The name of the Elasticsearch domain that you are creating. Domain names
 	// are unique across the domains owned by an account within an AWS region. Domain
-	// names must start with a letter or number and can contain the following characters:
+	// names must start with a lowercase letter and can contain the following characters:
 	// a-z (lowercase), 0-9, and - (hyphen).
 	//
 	// DomainName is a required field
@@ -2902,6 +4921,11 @@ func (s *CreateElasticsearchDomainInput) Validate() error {
 	if s.DomainName != nil && len(*s.DomainName) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
 	}
+	if s.AdvancedSecurityOptions != nil {
+		if err := s.AdvancedSecurityOptions.Validate(); err != nil {
+			invalidParams.AddNested("AdvancedSecurityOptions", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.CognitoOptions != nil {
 		if err := s.CognitoOptions.Validate(); err != nil {
 			invalidParams.AddNested("CognitoOptions", err.(request.ErrInvalidParams))
@@ -2931,9 +4955,21 @@ func (s *CreateElasticsearchDomainInput) SetAdvancedOptions(v map[string]*string
 	return s
 }
 
+// SetAdvancedSecurityOptions sets the AdvancedSecurityOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetAdvancedSecurityOptions(v *AdvancedSecurityOptionsInput) *CreateElasticsearchDomainInput {
+	s.AdvancedSecurityOptions = v
+	return s
+}
+
 // SetCognitoOptions sets the CognitoOptions field's value.
 func (s *CreateElasticsearchDomainInput) SetCognitoOptions(v *CognitoOptions) *CreateElasticsearchDomainInput {
 	s.CognitoOptions = v
+	return s
+}
+
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *CreateElasticsearchDomainInput) SetDomainEndpointOptions(v *DomainEndpointOptions) *CreateElasticsearchDomainInput {
+	s.DomainEndpointOptions = v
 	return s
 }
 
@@ -3013,6 +5049,256 @@ func (s CreateElasticsearchDomainOutput) GoString() string {
 // SetDomainStatus sets the DomainStatus field's value.
 func (s *CreateElasticsearchDomainOutput) SetDomainStatus(v *ElasticsearchDomainStatus) *CreateElasticsearchDomainOutput {
 	s.DomainStatus = v
+	return s
+}
+
+// Container for the parameters to the CreateOutboundCrossClusterSearchConnection
+// operation.
+type CreateOutboundCrossClusterSearchConnectionInput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the connection alias that will be used by the customer for this
+	// connection.
+	//
+	// ConnectionAlias is a required field
+	ConnectionAlias *string `type:"string" required:"true"`
+
+	// Specifies the DomainInformation for the destination Elasticsearch domain.
+	//
+	// DestinationDomainInfo is a required field
+	DestinationDomainInfo *DomainInformation `type:"structure" required:"true"`
+
+	// Specifies the DomainInformation for the source Elasticsearch domain.
+	//
+	// SourceDomainInfo is a required field
+	SourceDomainInfo *DomainInformation `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s CreateOutboundCrossClusterSearchConnectionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOutboundCrossClusterSearchConnectionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreateOutboundCrossClusterSearchConnectionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreateOutboundCrossClusterSearchConnectionInput"}
+	if s.ConnectionAlias == nil {
+		invalidParams.Add(request.NewErrParamRequired("ConnectionAlias"))
+	}
+	if s.DestinationDomainInfo == nil {
+		invalidParams.Add(request.NewErrParamRequired("DestinationDomainInfo"))
+	}
+	if s.SourceDomainInfo == nil {
+		invalidParams.Add(request.NewErrParamRequired("SourceDomainInfo"))
+	}
+	if s.DestinationDomainInfo != nil {
+		if err := s.DestinationDomainInfo.Validate(); err != nil {
+			invalidParams.AddNested("DestinationDomainInfo", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.SourceDomainInfo != nil {
+		if err := s.SourceDomainInfo.Validate(); err != nil {
+			invalidParams.AddNested("SourceDomainInfo", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetConnectionAlias sets the ConnectionAlias field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionInput) SetConnectionAlias(v string) *CreateOutboundCrossClusterSearchConnectionInput {
+	s.ConnectionAlias = &v
+	return s
+}
+
+// SetDestinationDomainInfo sets the DestinationDomainInfo field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionInput) SetDestinationDomainInfo(v *DomainInformation) *CreateOutboundCrossClusterSearchConnectionInput {
+	s.DestinationDomainInfo = v
+	return s
+}
+
+// SetSourceDomainInfo sets the SourceDomainInfo field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionInput) SetSourceDomainInfo(v *DomainInformation) *CreateOutboundCrossClusterSearchConnectionInput {
+	s.SourceDomainInfo = v
+	return s
+}
+
+// The result of a CreateOutboundCrossClusterSearchConnection request. Contains
+// the details of the newly created cross-cluster search connection.
+type CreateOutboundCrossClusterSearchConnectionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the connection alias provided during the create connection request.
+	ConnectionAlias *string `type:"string"`
+
+	// Specifies the OutboundCrossClusterSearchConnectionStatus for the newly created
+	// connection.
+	ConnectionStatus *OutboundCrossClusterSearchConnectionStatus `type:"structure"`
+
+	// Unique id for the created outbound connection, which is used for subsequent
+	// operations on connection.
+	CrossClusterSearchConnectionId *string `type:"string"`
+
+	// Specifies the DomainInformation for the destination Elasticsearch domain.
+	DestinationDomainInfo *DomainInformation `type:"structure"`
+
+	// Specifies the DomainInformation for the source Elasticsearch domain.
+	SourceDomainInfo *DomainInformation `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreateOutboundCrossClusterSearchConnectionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreateOutboundCrossClusterSearchConnectionOutput) GoString() string {
+	return s.String()
+}
+
+// SetConnectionAlias sets the ConnectionAlias field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionOutput) SetConnectionAlias(v string) *CreateOutboundCrossClusterSearchConnectionOutput {
+	s.ConnectionAlias = &v
+	return s
+}
+
+// SetConnectionStatus sets the ConnectionStatus field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionOutput) SetConnectionStatus(v *OutboundCrossClusterSearchConnectionStatus) *CreateOutboundCrossClusterSearchConnectionOutput {
+	s.ConnectionStatus = v
+	return s
+}
+
+// SetCrossClusterSearchConnectionId sets the CrossClusterSearchConnectionId field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionOutput) SetCrossClusterSearchConnectionId(v string) *CreateOutboundCrossClusterSearchConnectionOutput {
+	s.CrossClusterSearchConnectionId = &v
+	return s
+}
+
+// SetDestinationDomainInfo sets the DestinationDomainInfo field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionOutput) SetDestinationDomainInfo(v *DomainInformation) *CreateOutboundCrossClusterSearchConnectionOutput {
+	s.DestinationDomainInfo = v
+	return s
+}
+
+// SetSourceDomainInfo sets the SourceDomainInfo field's value.
+func (s *CreateOutboundCrossClusterSearchConnectionOutput) SetSourceDomainInfo(v *DomainInformation) *CreateOutboundCrossClusterSearchConnectionOutput {
+	s.SourceDomainInfo = v
+	return s
+}
+
+// Container for request parameters to CreatePackage operation.
+type CreatePackageInput struct {
+	_ struct{} `type:"structure"`
+
+	// Description of the package.
+	PackageDescription *string `type:"string"`
+
+	// Unique identifier for the package.
+	//
+	// PackageName is a required field
+	PackageName *string `min:"3" type:"string" required:"true"`
+
+	// The customer S3 location PackageSource for importing the package.
+	//
+	// PackageSource is a required field
+	PackageSource *PackageSource `type:"structure" required:"true"`
+
+	// Type of package. Currently supports only TXT-DICTIONARY.
+	//
+	// PackageType is a required field
+	PackageType *string `type:"string" required:"true" enum:"PackageType"`
+}
+
+// String returns the string representation
+func (s CreatePackageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreatePackageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *CreatePackageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "CreatePackageInput"}
+	if s.PackageName == nil {
+		invalidParams.Add(request.NewErrParamRequired("PackageName"))
+	}
+	if s.PackageName != nil && len(*s.PackageName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("PackageName", 3))
+	}
+	if s.PackageSource == nil {
+		invalidParams.Add(request.NewErrParamRequired("PackageSource"))
+	}
+	if s.PackageType == nil {
+		invalidParams.Add(request.NewErrParamRequired("PackageType"))
+	}
+	if s.PackageSource != nil {
+		if err := s.PackageSource.Validate(); err != nil {
+			invalidParams.AddNested("PackageSource", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPackageDescription sets the PackageDescription field's value.
+func (s *CreatePackageInput) SetPackageDescription(v string) *CreatePackageInput {
+	s.PackageDescription = &v
+	return s
+}
+
+// SetPackageName sets the PackageName field's value.
+func (s *CreatePackageInput) SetPackageName(v string) *CreatePackageInput {
+	s.PackageName = &v
+	return s
+}
+
+// SetPackageSource sets the PackageSource field's value.
+func (s *CreatePackageInput) SetPackageSource(v *PackageSource) *CreatePackageInput {
+	s.PackageSource = v
+	return s
+}
+
+// SetPackageType sets the PackageType field's value.
+func (s *CreatePackageInput) SetPackageType(v string) *CreatePackageInput {
+	s.PackageType = &v
+	return s
+}
+
+// Container for response returned by CreatePackage operation.
+type CreatePackageOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Information about the package PackageDetails.
+	PackageDetails *PackageDetails `type:"structure"`
+}
+
+// String returns the string representation
+func (s CreatePackageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s CreatePackageOutput) GoString() string {
+	return s.String()
+}
+
+// SetPackageDetails sets the PackageDetails field's value.
+func (s *CreatePackageOutput) SetPackageDetails(v *PackageDetails) *CreatePackageOutput {
+	s.PackageDetails = v
 	return s
 }
 
@@ -3111,6 +5397,209 @@ func (s DeleteElasticsearchServiceRoleOutput) String() string {
 // GoString returns the string representation
 func (s DeleteElasticsearchServiceRoleOutput) GoString() string {
 	return s.String()
+}
+
+// Container for the parameters to the DeleteInboundCrossClusterSearchConnection
+// operation.
+type DeleteInboundCrossClusterSearchConnectionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The id of the inbound connection that you want to permanently delete.
+	//
+	// CrossClusterSearchConnectionId is a required field
+	CrossClusterSearchConnectionId *string `location:"uri" locationName:"ConnectionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteInboundCrossClusterSearchConnectionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteInboundCrossClusterSearchConnectionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteInboundCrossClusterSearchConnectionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteInboundCrossClusterSearchConnectionInput"}
+	if s.CrossClusterSearchConnectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CrossClusterSearchConnectionId"))
+	}
+	if s.CrossClusterSearchConnectionId != nil && len(*s.CrossClusterSearchConnectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CrossClusterSearchConnectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCrossClusterSearchConnectionId sets the CrossClusterSearchConnectionId field's value.
+func (s *DeleteInboundCrossClusterSearchConnectionInput) SetCrossClusterSearchConnectionId(v string) *DeleteInboundCrossClusterSearchConnectionInput {
+	s.CrossClusterSearchConnectionId = &v
+	return s
+}
+
+// The result of a DeleteInboundCrossClusterSearchConnection operation. Contains
+// details of deleted inbound connection.
+type DeleteInboundCrossClusterSearchConnectionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the InboundCrossClusterSearchConnection of deleted inbound connection.
+	CrossClusterSearchConnection *InboundCrossClusterSearchConnection `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteInboundCrossClusterSearchConnectionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteInboundCrossClusterSearchConnectionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrossClusterSearchConnection sets the CrossClusterSearchConnection field's value.
+func (s *DeleteInboundCrossClusterSearchConnectionOutput) SetCrossClusterSearchConnection(v *InboundCrossClusterSearchConnection) *DeleteInboundCrossClusterSearchConnectionOutput {
+	s.CrossClusterSearchConnection = v
+	return s
+}
+
+// Container for the parameters to the DeleteOutboundCrossClusterSearchConnection
+// operation.
+type DeleteOutboundCrossClusterSearchConnectionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The id of the outbound connection that you want to permanently delete.
+	//
+	// CrossClusterSearchConnectionId is a required field
+	CrossClusterSearchConnectionId *string `location:"uri" locationName:"ConnectionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteOutboundCrossClusterSearchConnectionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOutboundCrossClusterSearchConnectionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteOutboundCrossClusterSearchConnectionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteOutboundCrossClusterSearchConnectionInput"}
+	if s.CrossClusterSearchConnectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CrossClusterSearchConnectionId"))
+	}
+	if s.CrossClusterSearchConnectionId != nil && len(*s.CrossClusterSearchConnectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CrossClusterSearchConnectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCrossClusterSearchConnectionId sets the CrossClusterSearchConnectionId field's value.
+func (s *DeleteOutboundCrossClusterSearchConnectionInput) SetCrossClusterSearchConnectionId(v string) *DeleteOutboundCrossClusterSearchConnectionInput {
+	s.CrossClusterSearchConnectionId = &v
+	return s
+}
+
+// The result of a DeleteOutboundCrossClusterSearchConnection operation. Contains
+// details of deleted outbound connection.
+type DeleteOutboundCrossClusterSearchConnectionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the OutboundCrossClusterSearchConnection of deleted outbound connection.
+	CrossClusterSearchConnection *OutboundCrossClusterSearchConnection `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteOutboundCrossClusterSearchConnectionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteOutboundCrossClusterSearchConnectionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrossClusterSearchConnection sets the CrossClusterSearchConnection field's value.
+func (s *DeleteOutboundCrossClusterSearchConnectionOutput) SetCrossClusterSearchConnection(v *OutboundCrossClusterSearchConnection) *DeleteOutboundCrossClusterSearchConnectionOutput {
+	s.CrossClusterSearchConnection = v
+	return s
+}
+
+// Container for request parameters to DeletePackage operation.
+type DeletePackageInput struct {
+	_ struct{} `type:"structure"`
+
+	// Internal ID of the package that you want to delete. Use DescribePackages
+	// to find this value.
+	//
+	// PackageID is a required field
+	PackageID *string `location:"uri" locationName:"PackageID" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeletePackageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePackageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeletePackageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeletePackageInput"}
+	if s.PackageID == nil {
+		invalidParams.Add(request.NewErrParamRequired("PackageID"))
+	}
+	if s.PackageID != nil && len(*s.PackageID) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PackageID", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetPackageID sets the PackageID field's value.
+func (s *DeletePackageInput) SetPackageID(v string) *DeletePackageInput {
+	s.PackageID = &v
+	return s
+}
+
+// Container for response parameters to DeletePackage operation.
+type DeletePackageOutput struct {
+	_ struct{} `type:"structure"`
+
+	// PackageDetails
+	PackageDetails *PackageDetails `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeletePackageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeletePackageOutput) GoString() string {
+	return s.String()
+}
+
+// SetPackageDetails sets the PackageDetails field's value.
+func (s *DeletePackageOutput) SetPackageDetails(v *PackageDetails) *DeletePackageOutput {
+	s.PackageDetails = v
+	return s
 }
 
 // Container for the parameters to the DescribeElasticsearchDomainConfig operation.
@@ -3400,9 +5889,12 @@ type DescribeElasticsearchInstanceTypeLimitsOutput struct {
 	_ struct{} `type:"structure"`
 
 	// Map of Role of the Instance and Limits that are applicable. Role performed
-	// by given Instance in Elasticsearch can be one of the following: Data: If
-	// the given InstanceType is used as Data node
-	// Master: If the given InstanceType is used as Master node
+	// by given Instance in Elasticsearch can be one of the following:
+	//    * data: If the given InstanceType is used as data node
+	//
+	//    * master: If the given InstanceType is used as master node
+	//
+	//    * ultra_warm: If the given InstanceType is used as warm node
 	LimitsByRole map[string]*Limits `type:"map"`
 }
 
@@ -3419,6 +5911,336 @@ func (s DescribeElasticsearchInstanceTypeLimitsOutput) GoString() string {
 // SetLimitsByRole sets the LimitsByRole field's value.
 func (s *DescribeElasticsearchInstanceTypeLimitsOutput) SetLimitsByRole(v map[string]*Limits) *DescribeElasticsearchInstanceTypeLimitsOutput {
 	s.LimitsByRole = v
+	return s
+}
+
+// Container for the parameters to the DescribeInboundCrossClusterSearchConnections
+// operation.
+type DescribeInboundCrossClusterSearchConnectionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of filters used to match properties for inbound cross-cluster search
+	// connection. Available Filter names for this operation are:
+	//    * cross-cluster-search-connection-id
+	//
+	//    * source-domain-info.domain-name
+	//
+	//    * source-domain-info.owner-id
+	//
+	//    * source-domain-info.region
+	//
+	//    * destination-domain-info.domain-name
+	Filters []*Filter `type:"list"`
+
+	// Set this value to limit the number of results returned. If not specified,
+	// defaults to 100.
+	MaxResults *int64 `type:"integer"`
+
+	// NextToken is sent in case the earlier API call results contain the NextToken.
+	// It is used for pagination.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeInboundCrossClusterSearchConnectionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInboundCrossClusterSearchConnectionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeInboundCrossClusterSearchConnectionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeInboundCrossClusterSearchConnectionsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeInboundCrossClusterSearchConnectionsInput) SetFilters(v []*Filter) *DescribeInboundCrossClusterSearchConnectionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeInboundCrossClusterSearchConnectionsInput) SetMaxResults(v int64) *DescribeInboundCrossClusterSearchConnectionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInboundCrossClusterSearchConnectionsInput) SetNextToken(v string) *DescribeInboundCrossClusterSearchConnectionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// The result of a DescribeInboundCrossClusterSearchConnections request. Contains
+// the list of connections matching the filter criteria.
+type DescribeInboundCrossClusterSearchConnectionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of list of InboundCrossClusterSearchConnection matching the specified
+	// filter criteria.
+	CrossClusterSearchConnections []*InboundCrossClusterSearchConnection `type:"list"`
+
+	// If more results are available and NextToken is present, make the next request
+	// to the same API with the received NextToken to paginate the remaining results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeInboundCrossClusterSearchConnectionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeInboundCrossClusterSearchConnectionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrossClusterSearchConnections sets the CrossClusterSearchConnections field's value.
+func (s *DescribeInboundCrossClusterSearchConnectionsOutput) SetCrossClusterSearchConnections(v []*InboundCrossClusterSearchConnection) *DescribeInboundCrossClusterSearchConnectionsOutput {
+	s.CrossClusterSearchConnections = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeInboundCrossClusterSearchConnectionsOutput) SetNextToken(v string) *DescribeInboundCrossClusterSearchConnectionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// Container for the parameters to the DescribeOutboundCrossClusterSearchConnections
+// operation.
+type DescribeOutboundCrossClusterSearchConnectionsInput struct {
+	_ struct{} `type:"structure"`
+
+	// A list of filters used to match properties for outbound cross-cluster search
+	// connection. Available Filter names for this operation are:
+	//    * cross-cluster-search-connection-id
+	//
+	//    * destination-domain-info.domain-name
+	//
+	//    * destination-domain-info.owner-id
+	//
+	//    * destination-domain-info.region
+	//
+	//    * source-domain-info.domain-name
+	Filters []*Filter `type:"list"`
+
+	// Set this value to limit the number of results returned. If not specified,
+	// defaults to 100.
+	MaxResults *int64 `type:"integer"`
+
+	// NextToken is sent in case the earlier API call results contain the NextToken.
+	// It is used for pagination.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeOutboundCrossClusterSearchConnectionsInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOutboundCrossClusterSearchConnectionsInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DescribeOutboundCrossClusterSearchConnectionsInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DescribeOutboundCrossClusterSearchConnectionsInput"}
+	if s.Filters != nil {
+		for i, v := range s.Filters {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Filters", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribeOutboundCrossClusterSearchConnectionsInput) SetFilters(v []*Filter) *DescribeOutboundCrossClusterSearchConnectionsInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribeOutboundCrossClusterSearchConnectionsInput) SetMaxResults(v int64) *DescribeOutboundCrossClusterSearchConnectionsInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOutboundCrossClusterSearchConnectionsInput) SetNextToken(v string) *DescribeOutboundCrossClusterSearchConnectionsInput {
+	s.NextToken = &v
+	return s
+}
+
+// The result of a DescribeOutboundCrossClusterSearchConnections request. Contains
+// the list of connections matching the filter criteria.
+type DescribeOutboundCrossClusterSearchConnectionsOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Consists of list of OutboundCrossClusterSearchConnection matching the specified
+	// filter criteria.
+	CrossClusterSearchConnections []*OutboundCrossClusterSearchConnection `type:"list"`
+
+	// If more results are available and NextToken is present, make the next request
+	// to the same API with the received NextToken to paginate the remaining results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribeOutboundCrossClusterSearchConnectionsOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribeOutboundCrossClusterSearchConnectionsOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrossClusterSearchConnections sets the CrossClusterSearchConnections field's value.
+func (s *DescribeOutboundCrossClusterSearchConnectionsOutput) SetCrossClusterSearchConnections(v []*OutboundCrossClusterSearchConnection) *DescribeOutboundCrossClusterSearchConnectionsOutput {
+	s.CrossClusterSearchConnections = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribeOutboundCrossClusterSearchConnectionsOutput) SetNextToken(v string) *DescribeOutboundCrossClusterSearchConnectionsOutput {
+	s.NextToken = &v
+	return s
+}
+
+// Filter to apply in DescribePackage response.
+type DescribePackagesFilter struct {
+	_ struct{} `type:"structure"`
+
+	// Any field from PackageDetails.
+	Name *string `type:"string" enum:"DescribePackagesFilterName"`
+
+	// A list of values for the specified field.
+	Value []*string `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePackagesFilter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePackagesFilter) GoString() string {
+	return s.String()
+}
+
+// SetName sets the Name field's value.
+func (s *DescribePackagesFilter) SetName(v string) *DescribePackagesFilter {
+	s.Name = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *DescribePackagesFilter) SetValue(v []*string) *DescribePackagesFilter {
+	s.Value = v
+	return s
+}
+
+// Container for request parameters to DescribePackage operation.
+type DescribePackagesInput struct {
+	_ struct{} `type:"structure"`
+
+	// Only returns packages that match the DescribePackagesFilterList values.
+	Filters []*DescribePackagesFilter `type:"list"`
+
+	// Limits results to a maximum number of packages.
+	MaxResults *int64 `type:"integer"`
+
+	// Used for pagination. Only necessary if a previous API call includes a non-null
+	// NextToken value. If provided, returns results for the next page.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DescribePackagesInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePackagesInput) GoString() string {
+	return s.String()
+}
+
+// SetFilters sets the Filters field's value.
+func (s *DescribePackagesInput) SetFilters(v []*DescribePackagesFilter) *DescribePackagesInput {
+	s.Filters = v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *DescribePackagesInput) SetMaxResults(v int64) *DescribePackagesInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePackagesInput) SetNextToken(v string) *DescribePackagesInput {
+	s.NextToken = &v
+	return s
+}
+
+// Container for response returned by DescribePackages operation.
+type DescribePackagesOutput struct {
+	_ struct{} `type:"structure"`
+
+	NextToken *string `type:"string"`
+
+	// List of PackageDetails objects.
+	PackageDetailsList []*PackageDetails `type:"list"`
+}
+
+// String returns the string representation
+func (s DescribePackagesOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DescribePackagesOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *DescribePackagesOutput) SetNextToken(v string) *DescribePackagesOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPackageDetailsList sets the PackageDetailsList field's value.
+func (s *DescribePackagesOutput) SetPackageDetailsList(v []*PackageDetails) *DescribePackagesOutput {
+	s.PackageDetailsList = v
 	return s
 }
 
@@ -3579,6 +6401,224 @@ func (s *DescribeReservedElasticsearchInstancesOutput) SetReservedElasticsearchI
 	return s
 }
 
+// An error occured because the client wanted to access a not supported operation.
+// Gives http status code of 409.
+type DisabledOperationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s DisabledOperationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DisabledOperationException) GoString() string {
+	return s.String()
+}
+
+func newErrorDisabledOperationException(v protocol.ResponseMetadata) error {
+	return &DisabledOperationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *DisabledOperationException) Code() string {
+	return "DisabledOperationException"
+}
+
+// Message returns the exception's message.
+func (s *DisabledOperationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *DisabledOperationException) OrigErr() error {
+	return nil
+}
+
+func (s *DisabledOperationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *DisabledOperationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *DisabledOperationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Container for request parameters to DissociatePackage operation.
+type DissociatePackageInput struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the domain that you want to associate the package with.
+	//
+	// DomainName is a required field
+	DomainName *string `location:"uri" locationName:"DomainName" min:"3" type:"string" required:"true"`
+
+	// Internal ID of the package that you want to associate with a domain. Use
+	// DescribePackages to find this value.
+	//
+	// PackageID is a required field
+	PackageID *string `location:"uri" locationName:"PackageID" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DissociatePackageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DissociatePackageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DissociatePackageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DissociatePackageInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+	if s.PackageID == nil {
+		invalidParams.Add(request.NewErrParamRequired("PackageID"))
+	}
+	if s.PackageID != nil && len(*s.PackageID) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PackageID", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DissociatePackageInput) SetDomainName(v string) *DissociatePackageInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetPackageID sets the PackageID field's value.
+func (s *DissociatePackageInput) SetPackageID(v string) *DissociatePackageInput {
+	s.PackageID = &v
+	return s
+}
+
+// Container for response returned by DissociatePackage operation.
+type DissociatePackageOutput struct {
+	_ struct{} `type:"structure"`
+
+	// DomainPackageDetails
+	DomainPackageDetails *DomainPackageDetails `type:"structure"`
+}
+
+// String returns the string representation
+func (s DissociatePackageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DissociatePackageOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainPackageDetails sets the DomainPackageDetails field's value.
+func (s *DissociatePackageOutput) SetDomainPackageDetails(v *DomainPackageDetails) *DissociatePackageOutput {
+	s.DomainPackageDetails = v
+	return s
+}
+
+// Options to configure endpoint for the Elasticsearch domain.
+type DomainEndpointOptions struct {
+	_ struct{} `type:"structure"`
+
+	// Specify if only HTTPS endpoint should be enabled for the Elasticsearch domain.
+	EnforceHTTPS *bool `type:"boolean"`
+
+	// Specify the TLS security policy that needs to be applied to the HTTPS endpoint
+	// of Elasticsearch domain. It can be one of the following values:
+	//    * Policy-Min-TLS-1-0-2019-07: TLS security policy which supports TLSv1.0
+	//    and higher.
+	//
+	//    * Policy-Min-TLS-1-2-2019-07: TLS security policy which supports only
+	//    TLSv1.2
+	TLSSecurityPolicy *string `type:"string" enum:"TLSSecurityPolicy"`
+}
+
+// String returns the string representation
+func (s DomainEndpointOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainEndpointOptions) GoString() string {
+	return s.String()
+}
+
+// SetEnforceHTTPS sets the EnforceHTTPS field's value.
+func (s *DomainEndpointOptions) SetEnforceHTTPS(v bool) *DomainEndpointOptions {
+	s.EnforceHTTPS = &v
+	return s
+}
+
+// SetTLSSecurityPolicy sets the TLSSecurityPolicy field's value.
+func (s *DomainEndpointOptions) SetTLSSecurityPolicy(v string) *DomainEndpointOptions {
+	s.TLSSecurityPolicy = &v
+	return s
+}
+
+// The configured endpoint options for the domain and their current status.
+type DomainEndpointOptionsStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Options to configure endpoint for the Elasticsearch domain.
+	//
+	// Options is a required field
+	Options *DomainEndpointOptions `type:"structure" required:"true"`
+
+	// The status of the endpoint options for the Elasticsearch domain. See OptionStatus
+	// for the status information that's included.
+	//
+	// Status is a required field
+	Status *OptionStatus `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s DomainEndpointOptionsStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainEndpointOptionsStatus) GoString() string {
+	return s.String()
+}
+
+// SetOptions sets the Options field's value.
+func (s *DomainEndpointOptionsStatus) SetOptions(v *DomainEndpointOptions) *DomainEndpointOptionsStatus {
+	s.Options = v
+	return s
+}
+
+// SetStatus sets the Status field's value.
+func (s *DomainEndpointOptionsStatus) SetStatus(v *OptionStatus) *DomainEndpointOptionsStatus {
+	s.Status = v
+	return s
+}
+
 type DomainInfo struct {
 	_ struct{} `type:"structure"`
 
@@ -3602,8 +6642,159 @@ func (s *DomainInfo) SetDomainName(v string) *DomainInfo {
 	return s
 }
 
+type DomainInformation struct {
+	_ struct{} `type:"structure"`
+
+	// The name of an Elasticsearch domain. Domain names are unique across the domains
+	// owned by an account within an AWS region. Domain names start with a letter
+	// or number and can contain the following characters: a-z (lowercase), 0-9,
+	// and - (hyphen).
+	//
+	// DomainName is a required field
+	DomainName *string `min:"3" type:"string" required:"true"`
+
+	OwnerId *string `min:"12" type:"string"`
+
+	Region *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DomainInformation) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainInformation) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DomainInformation) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DomainInformation"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+	if s.OwnerId != nil && len(*s.OwnerId) < 12 {
+		invalidParams.Add(request.NewErrParamMinLen("OwnerId", 12))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DomainInformation) SetDomainName(v string) *DomainInformation {
+	s.DomainName = &v
+	return s
+}
+
+// SetOwnerId sets the OwnerId field's value.
+func (s *DomainInformation) SetOwnerId(v string) *DomainInformation {
+	s.OwnerId = &v
+	return s
+}
+
+// SetRegion sets the Region field's value.
+func (s *DomainInformation) SetRegion(v string) *DomainInformation {
+	s.Region = &v
+	return s
+}
+
+// Information on a package that is associated with a domain.
+type DomainPackageDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the domain you've associated a package with.
+	DomainName *string `min:"3" type:"string"`
+
+	// State of the association. Values are ASSOCIATING/ASSOCIATION_FAILED/ACTIVE/DISSOCIATING/DISSOCIATION_FAILED.
+	DomainPackageStatus *string `type:"string" enum:"DomainPackageStatus"`
+
+	// Additional information if the package is in an error state. Null otherwise.
+	ErrorDetails *ErrorDetails `type:"structure"`
+
+	// Timestamp of the most-recent update to the association status.
+	LastUpdated *time.Time `type:"timestamp"`
+
+	// Internal ID of the package.
+	PackageID *string `type:"string"`
+
+	// User specified name of the package.
+	PackageName *string `min:"3" type:"string"`
+
+	// Currently supports only TXT-DICTIONARY.
+	PackageType *string `type:"string" enum:"PackageType"`
+
+	// The relative path on Amazon ES nodes, which can be used as synonym_path when
+	// the package is synonym file.
+	ReferencePath *string `type:"string"`
+}
+
+// String returns the string representation
+func (s DomainPackageDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DomainPackageDetails) GoString() string {
+	return s.String()
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *DomainPackageDetails) SetDomainName(v string) *DomainPackageDetails {
+	s.DomainName = &v
+	return s
+}
+
+// SetDomainPackageStatus sets the DomainPackageStatus field's value.
+func (s *DomainPackageDetails) SetDomainPackageStatus(v string) *DomainPackageDetails {
+	s.DomainPackageStatus = &v
+	return s
+}
+
+// SetErrorDetails sets the ErrorDetails field's value.
+func (s *DomainPackageDetails) SetErrorDetails(v *ErrorDetails) *DomainPackageDetails {
+	s.ErrorDetails = v
+	return s
+}
+
+// SetLastUpdated sets the LastUpdated field's value.
+func (s *DomainPackageDetails) SetLastUpdated(v time.Time) *DomainPackageDetails {
+	s.LastUpdated = &v
+	return s
+}
+
+// SetPackageID sets the PackageID field's value.
+func (s *DomainPackageDetails) SetPackageID(v string) *DomainPackageDetails {
+	s.PackageID = &v
+	return s
+}
+
+// SetPackageName sets the PackageName field's value.
+func (s *DomainPackageDetails) SetPackageName(v string) *DomainPackageDetails {
+	s.PackageName = &v
+	return s
+}
+
+// SetPackageType sets the PackageType field's value.
+func (s *DomainPackageDetails) SetPackageType(v string) *DomainPackageDetails {
+	s.PackageType = &v
+	return s
+}
+
+// SetReferencePath sets the ReferencePath field's value.
+func (s *DomainPackageDetails) SetReferencePath(v string) *DomainPackageDetails {
+	s.ReferencePath = &v
+	return s
+}
+
 // Options to enable, disable, and specify the properties of EBS storage volumes.
-// For more information, see  Configuring EBS-based Storage (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-ebs).
+// For more information, see Configuring EBS-based Storage (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-createupdatedomains.html#es-createdomain-configure-ebs).
 type EBSOptions struct {
 	_ struct{} `type:"structure"`
 
@@ -3710,8 +6901,22 @@ type ElasticsearchClusterConfig struct {
 	// The number of instances in the specified domain cluster.
 	InstanceCount *int64 `type:"integer"`
 
-	// The instance type for an Elasticsearch cluster.
+	// The instance type for an Elasticsearch cluster. UltraWarm instance types
+	// are not supported for data instances.
 	InstanceType *string `type:"string" enum:"ESPartitionInstanceType"`
+
+	// The number of warm nodes in the cluster.
+	WarmCount *int64 `type:"integer"`
+
+	// True to enable warm storage.
+	WarmEnabled *bool `type:"boolean"`
+
+	// The instance type for the Elasticsearch cluster's warm nodes.
+	WarmType *string `type:"string" enum:"ESWarmPartitionInstanceType"`
+
+	// Specifies the zone awareness configuration for a domain when zone awareness
+	// is enabled.
+	ZoneAwarenessConfig *ZoneAwarenessConfig `type:"structure"`
 
 	// A boolean value to indicate whether zone awareness is enabled. See About
 	// Zone Awareness (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-managedomains.html#es-managedomains-zoneawareness)
@@ -3756,6 +6961,30 @@ func (s *ElasticsearchClusterConfig) SetInstanceCount(v int64) *ElasticsearchClu
 // SetInstanceType sets the InstanceType field's value.
 func (s *ElasticsearchClusterConfig) SetInstanceType(v string) *ElasticsearchClusterConfig {
 	s.InstanceType = &v
+	return s
+}
+
+// SetWarmCount sets the WarmCount field's value.
+func (s *ElasticsearchClusterConfig) SetWarmCount(v int64) *ElasticsearchClusterConfig {
+	s.WarmCount = &v
+	return s
+}
+
+// SetWarmEnabled sets the WarmEnabled field's value.
+func (s *ElasticsearchClusterConfig) SetWarmEnabled(v bool) *ElasticsearchClusterConfig {
+	s.WarmEnabled = &v
+	return s
+}
+
+// SetWarmType sets the WarmType field's value.
+func (s *ElasticsearchClusterConfig) SetWarmType(v string) *ElasticsearchClusterConfig {
+	s.WarmType = &v
+	return s
+}
+
+// SetZoneAwarenessConfig sets the ZoneAwarenessConfig field's value.
+func (s *ElasticsearchClusterConfig) SetZoneAwarenessConfig(v *ZoneAwarenessConfig) *ElasticsearchClusterConfig {
+	s.ZoneAwarenessConfig = v
 	return s
 }
 
@@ -3815,9 +7044,15 @@ type ElasticsearchDomainConfig struct {
 	// for more information.
 	AdvancedOptions *AdvancedOptionsStatus `type:"structure"`
 
+	// Specifies AdvancedSecurityOptions for the domain.
+	AdvancedSecurityOptions *AdvancedSecurityOptionsStatus `type:"structure"`
+
 	// The CognitoOptions for the specified domain. For more information, see Amazon
 	// Cognito Authentication for Kibana (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html).
 	CognitoOptions *CognitoOptionsStatus `type:"structure"`
+
+	// Specifies the DomainEndpointOptions for the Elasticsearch domain.
+	DomainEndpointOptions *DomainEndpointOptionsStatus `type:"structure"`
 
 	// Specifies the EBSOptions for the Elasticsearch domain.
 	EBSOptions *EBSOptionsStatus `type:"structure"`
@@ -3867,9 +7102,21 @@ func (s *ElasticsearchDomainConfig) SetAdvancedOptions(v *AdvancedOptionsStatus)
 	return s
 }
 
+// SetAdvancedSecurityOptions sets the AdvancedSecurityOptions field's value.
+func (s *ElasticsearchDomainConfig) SetAdvancedSecurityOptions(v *AdvancedSecurityOptionsStatus) *ElasticsearchDomainConfig {
+	s.AdvancedSecurityOptions = v
+	return s
+}
+
 // SetCognitoOptions sets the CognitoOptions field's value.
 func (s *ElasticsearchDomainConfig) SetCognitoOptions(v *CognitoOptionsStatus) *ElasticsearchDomainConfig {
 	s.CognitoOptions = v
+	return s
+}
+
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *ElasticsearchDomainConfig) SetDomainEndpointOptions(v *DomainEndpointOptionsStatus) *ElasticsearchDomainConfig {
+	s.DomainEndpointOptions = v
 	return s
 }
 
@@ -3938,6 +7185,9 @@ type ElasticsearchDomainStatus struct {
 	// Specifies the status of the AdvancedOptions
 	AdvancedOptions map[string]*string `type:"map"`
 
+	// The current status of the Elasticsearch domain's advanced security options.
+	AdvancedSecurityOptions *AdvancedSecurityOptions `type:"structure"`
+
 	// The CognitoOptions for the specified domain. For more information, see Amazon
 	// Cognito Authentication for Kibana (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html).
 	CognitoOptions *CognitoOptions `type:"structure"`
@@ -3951,6 +7201,9 @@ type ElasticsearchDomainStatus struct {
 	// has not been deleted. Once domain deletion is complete, the status of the
 	// domain is no longer returned.
 	Deleted *bool `type:"boolean"`
+
+	// The current status of the Elasticsearch domain's endpoint options.
+	DomainEndpointOptions *DomainEndpointOptions `type:"structure"`
 
 	// The unique identifier for the specified Elasticsearch domain.
 	//
@@ -4042,6 +7295,12 @@ func (s *ElasticsearchDomainStatus) SetAdvancedOptions(v map[string]*string) *El
 	return s
 }
 
+// SetAdvancedSecurityOptions sets the AdvancedSecurityOptions field's value.
+func (s *ElasticsearchDomainStatus) SetAdvancedSecurityOptions(v *AdvancedSecurityOptions) *ElasticsearchDomainStatus {
+	s.AdvancedSecurityOptions = v
+	return s
+}
+
 // SetCognitoOptions sets the CognitoOptions field's value.
 func (s *ElasticsearchDomainStatus) SetCognitoOptions(v *CognitoOptions) *ElasticsearchDomainStatus {
 	s.CognitoOptions = v
@@ -4057,6 +7316,12 @@ func (s *ElasticsearchDomainStatus) SetCreated(v bool) *ElasticsearchDomainStatu
 // SetDeleted sets the Deleted field's value.
 func (s *ElasticsearchDomainStatus) SetDeleted(v bool) *ElasticsearchDomainStatus {
 	s.Deleted = &v
+	return s
+}
+
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *ElasticsearchDomainStatus) SetDomainEndpointOptions(v *DomainEndpointOptions) *ElasticsearchDomainStatus {
+	s.DomainEndpointOptions = v
 	return s
 }
 
@@ -4272,6 +7537,88 @@ func (s *EncryptionAtRestOptionsStatus) SetOptions(v *EncryptionAtRestOptions) *
 // SetStatus sets the Status field's value.
 func (s *EncryptionAtRestOptionsStatus) SetStatus(v *OptionStatus) *EncryptionAtRestOptionsStatus {
 	s.Status = v
+	return s
+}
+
+type ErrorDetails struct {
+	_ struct{} `type:"structure"`
+
+	ErrorMessage *string `type:"string"`
+
+	ErrorType *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ErrorDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ErrorDetails) GoString() string {
+	return s.String()
+}
+
+// SetErrorMessage sets the ErrorMessage field's value.
+func (s *ErrorDetails) SetErrorMessage(v string) *ErrorDetails {
+	s.ErrorMessage = &v
+	return s
+}
+
+// SetErrorType sets the ErrorType field's value.
+func (s *ErrorDetails) SetErrorType(v string) *ErrorDetails {
+	s.ErrorType = &v
+	return s
+}
+
+// A filter used to limit results when describing inbound or outbound cross-cluster
+// search connections. Multiple values can be specified per filter. A cross-cluster
+// search connection must match at least one of the specified values for it
+// to be returned from an operation.
+type Filter struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the name of the filter.
+	Name *string `min:"1" type:"string"`
+
+	// Contains one or more values for the filter.
+	Values []*string `min:"1" type:"list"`
+}
+
+// String returns the string representation
+func (s Filter) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Filter) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Filter) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Filter"}
+	if s.Name != nil && len(*s.Name) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Name", 1))
+	}
+	if s.Values != nil && len(s.Values) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Values", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetName sets the Name field's value.
+func (s *Filter) SetName(v string) *Filter {
+	s.Name = &v
+	return s
+}
+
+// SetValues sets the Values field's value.
+func (s *Filter) SetValues(v []*string) *Filter {
+	s.Values = v
 	return s
 }
 
@@ -4491,19 +7838,26 @@ type GetUpgradeStatusOutput struct {
 	_ struct{} `type:"structure"`
 
 	// One of 4 statuses that a step can go through returned as part of the GetUpgradeStatusResponse
-	// object. The status can take one of the following values: In Progress
-	// Succeeded
-	// Succeeded with Issues
-	// Failed
+	// object. The status can take one of the following values:
+	//    * In Progress
+	//
+	//    * Succeeded
+	//
+	//    * Succeeded with Issues
+	//
+	//    * Failed
 	StepStatus *string `type:"string" enum:"UpgradeStatus"`
 
 	// A string that describes the update briefly
 	UpgradeName *string `type:"string"`
 
 	// Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does
-	// through: PreUpgradeCheck
-	// Snapshot
-	// Upgrade
+	// through:
+	//    * PreUpgradeCheck
+	//
+	//    * Snapshot
+	//
+	//    * Upgrade
 	UpgradeStep *string `type:"string" enum:"UpgradeStep"`
 }
 
@@ -4532,6 +7886,105 @@ func (s *GetUpgradeStatusOutput) SetUpgradeName(v string) *GetUpgradeStatusOutpu
 // SetUpgradeStep sets the UpgradeStep field's value.
 func (s *GetUpgradeStatusOutput) SetUpgradeStep(v string) *GetUpgradeStatusOutput {
 	s.UpgradeStep = &v
+	return s
+}
+
+// Specifies details of an inbound connection.
+type InboundCrossClusterSearchConnection struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the InboundCrossClusterSearchConnectionStatus for the outbound
+	// connection.
+	ConnectionStatus *InboundCrossClusterSearchConnectionStatus `type:"structure"`
+
+	// Specifies the connection id for the inbound cross-cluster search connection.
+	CrossClusterSearchConnectionId *string `type:"string"`
+
+	// Specifies the DomainInformation for the destination Elasticsearch domain.
+	DestinationDomainInfo *DomainInformation `type:"structure"`
+
+	// Specifies the DomainInformation for the source Elasticsearch domain.
+	SourceDomainInfo *DomainInformation `type:"structure"`
+}
+
+// String returns the string representation
+func (s InboundCrossClusterSearchConnection) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InboundCrossClusterSearchConnection) GoString() string {
+	return s.String()
+}
+
+// SetConnectionStatus sets the ConnectionStatus field's value.
+func (s *InboundCrossClusterSearchConnection) SetConnectionStatus(v *InboundCrossClusterSearchConnectionStatus) *InboundCrossClusterSearchConnection {
+	s.ConnectionStatus = v
+	return s
+}
+
+// SetCrossClusterSearchConnectionId sets the CrossClusterSearchConnectionId field's value.
+func (s *InboundCrossClusterSearchConnection) SetCrossClusterSearchConnectionId(v string) *InboundCrossClusterSearchConnection {
+	s.CrossClusterSearchConnectionId = &v
+	return s
+}
+
+// SetDestinationDomainInfo sets the DestinationDomainInfo field's value.
+func (s *InboundCrossClusterSearchConnection) SetDestinationDomainInfo(v *DomainInformation) *InboundCrossClusterSearchConnection {
+	s.DestinationDomainInfo = v
+	return s
+}
+
+// SetSourceDomainInfo sets the SourceDomainInfo field's value.
+func (s *InboundCrossClusterSearchConnection) SetSourceDomainInfo(v *DomainInformation) *InboundCrossClusterSearchConnection {
+	s.SourceDomainInfo = v
+	return s
+}
+
+// Specifies the coonection status of an inbound cross-cluster search connection.
+type InboundCrossClusterSearchConnectionStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies verbose information for the inbound connection status.
+	Message *string `type:"string"`
+
+	// The state code for inbound connection. This can be one of the following:
+	//
+	//    * PENDING_ACCEPTANCE: Inbound connection is not yet accepted by destination
+	//    domain owner.
+	//
+	//    * APPROVED: Inbound connection is pending acceptance by destination domain
+	//    owner.
+	//
+	//    * REJECTING: Inbound connection rejection is in process.
+	//
+	//    * REJECTED: Inbound connection is rejected.
+	//
+	//    * DELETING: Inbound connection deletion is in progress.
+	//
+	//    * DELETED: Inbound connection is deleted and cannot be used further.
+	StatusCode *string `type:"string" enum:"InboundCrossClusterSearchConnectionStatusCode"`
+}
+
+// String returns the string representation
+func (s InboundCrossClusterSearchConnectionStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InboundCrossClusterSearchConnectionStatus) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *InboundCrossClusterSearchConnectionStatus) SetMessage(v string) *InboundCrossClusterSearchConnectionStatus {
+	s.Message = &v
+	return s
+}
+
+// SetStatusCode sets the StatusCode field's value.
+func (s *InboundCrossClusterSearchConnectionStatus) SetStatusCode(v string) *InboundCrossClusterSearchConnectionStatus {
+	s.StatusCode = &v
 	return s
 }
 
@@ -4595,7 +8048,237 @@ func (s *InstanceLimits) SetInstanceCountLimits(v *InstanceCountLimits) *Instanc
 	return s
 }
 
-// Limits for given InstanceType and for each of it's role. Limits contains following StorageTypes,   InstanceLimitsand AdditionalLimits
+// The request processing has failed because of an unknown error, exception
+// or failure (the failure is internal to the service) . Gives http status code
+// of 500.
+type InternalException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InternalException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InternalException) GoString() string {
+	return s.String()
+}
+
+func newErrorInternalException(v protocol.ResponseMetadata) error {
+	return &InternalException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InternalException) Code() string {
+	return "InternalException"
+}
+
+// Message returns the exception's message.
+func (s *InternalException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InternalException) OrigErr() error {
+	return nil
+}
+
+func (s *InternalException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InternalException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InternalException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// The request processing has failed because of invalid pagination token provided
+// by customer. Returns an HTTP status code of 400.
+type InvalidPaginationTokenException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidPaginationTokenException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidPaginationTokenException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidPaginationTokenException(v protocol.ResponseMetadata) error {
+	return &InvalidPaginationTokenException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidPaginationTokenException) Code() string {
+	return "InvalidPaginationTokenException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidPaginationTokenException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidPaginationTokenException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidPaginationTokenException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidPaginationTokenException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidPaginationTokenException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// An exception for trying to create or access sub-resource that is either invalid
+// or not supported. Gives http status code of 409.
+type InvalidTypeException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s InvalidTypeException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s InvalidTypeException) GoString() string {
+	return s.String()
+}
+
+func newErrorInvalidTypeException(v protocol.ResponseMetadata) error {
+	return &InvalidTypeException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *InvalidTypeException) Code() string {
+	return "InvalidTypeException"
+}
+
+// Message returns the exception's message.
+func (s *InvalidTypeException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *InvalidTypeException) OrigErr() error {
+	return nil
+}
+
+func (s *InvalidTypeException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *InvalidTypeException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *InvalidTypeException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// An exception for trying to create more than allowed resources or sub-resources.
+// Gives http status code of 409.
+type LimitExceededException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s LimitExceededException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LimitExceededException) GoString() string {
+	return s.String()
+}
+
+func newErrorLimitExceededException(v protocol.ResponseMetadata) error {
+	return &LimitExceededException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *LimitExceededException) Code() string {
+	return "LimitExceededException"
+}
+
+// Message returns the exception's message.
+func (s *LimitExceededException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *LimitExceededException) OrigErr() error {
+	return nil
+}
+
+func (s *LimitExceededException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *LimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *LimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Limits for given InstanceType and for each of it's role. Limits contains
+// following StorageTypes, InstanceLimits and AdditionalLimits
 type Limits struct {
 	_ struct{} `type:"structure"`
 
@@ -4676,6 +8359,99 @@ func (s ListDomainNamesOutput) GoString() string {
 // SetDomainNames sets the DomainNames field's value.
 func (s *ListDomainNamesOutput) SetDomainNames(v []*DomainInfo) *ListDomainNamesOutput {
 	s.DomainNames = v
+	return s
+}
+
+// Container for request parameters to ListDomainsForPackage operation.
+type ListDomainsForPackageInput struct {
+	_ struct{} `type:"structure"`
+
+	// Limits results to a maximum number of domains.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+
+	// Used for pagination. Only necessary if a previous API call includes a non-null
+	// NextToken value. If provided, returns results for the next page.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+
+	// The package for which to list domains.
+	//
+	// PackageID is a required field
+	PackageID *string `location:"uri" locationName:"PackageID" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListDomainsForPackageInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDomainsForPackageInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListDomainsForPackageInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListDomainsForPackageInput"}
+	if s.PackageID == nil {
+		invalidParams.Add(request.NewErrParamRequired("PackageID"))
+	}
+	if s.PackageID != nil && len(*s.PackageID) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("PackageID", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListDomainsForPackageInput) SetMaxResults(v int64) *ListDomainsForPackageInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDomainsForPackageInput) SetNextToken(v string) *ListDomainsForPackageInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetPackageID sets the PackageID field's value.
+func (s *ListDomainsForPackageInput) SetPackageID(v string) *ListDomainsForPackageInput {
+	s.PackageID = &v
+	return s
+}
+
+// Container for response parameters to ListDomainsForPackage operation.
+type ListDomainsForPackageOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of DomainPackageDetails objects.
+	DomainPackageDetailsList []*DomainPackageDetails `type:"list"`
+
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListDomainsForPackageOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListDomainsForPackageOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainPackageDetailsList sets the DomainPackageDetailsList field's value.
+func (s *ListDomainsForPackageOutput) SetDomainPackageDetailsList(v []*DomainPackageDetails) *ListDomainsForPackageOutput {
+	s.DomainPackageDetailsList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListDomainsForPackageOutput) SetNextToken(v string) *ListDomainsForPackageOutput {
+	s.NextToken = &v
 	return s
 }
 
@@ -4793,10 +8569,10 @@ func (s *ListElasticsearchInstanceTypesOutput) SetNextToken(v string) *ListElast
 }
 
 // Container for the parameters to the ListElasticsearchVersions operation.
-//  Use MaxResults to control the maximum number of results to retrieve in a
+// Use MaxResults to control the maximum number of results to retrieve in a
 // single call.
 //
-//  Use NextToken in response to retrieve more results. If the received response
+// Use NextToken in response to retrieve more results. If the received response
 // does not contain a NextToken, then there are no more results to retrieve.
 type ListElasticsearchVersionsInput struct {
 	_ struct{} `type:"structure"`
@@ -4869,6 +8645,101 @@ func (s *ListElasticsearchVersionsOutput) SetNextToken(v string) *ListElasticsea
 	return s
 }
 
+// Container for request parameters to ListPackagesForDomain operation.
+type ListPackagesForDomainInput struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the domain for which you want to list associated packages.
+	//
+	// DomainName is a required field
+	DomainName *string `location:"uri" locationName:"DomainName" min:"3" type:"string" required:"true"`
+
+	// Limits results to a maximum number of packages.
+	MaxResults *int64 `location:"querystring" locationName:"maxResults" type:"integer"`
+
+	// Used for pagination. Only necessary if a previous API call includes a non-null
+	// NextToken value. If provided, returns results for the next page.
+	NextToken *string `location:"querystring" locationName:"nextToken" type:"string"`
+}
+
+// String returns the string representation
+func (s ListPackagesForDomainInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListPackagesForDomainInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListPackagesForDomainInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListPackagesForDomainInput"}
+	if s.DomainName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DomainName"))
+	}
+	if s.DomainName != nil && len(*s.DomainName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetDomainName sets the DomainName field's value.
+func (s *ListPackagesForDomainInput) SetDomainName(v string) *ListPackagesForDomainInput {
+	s.DomainName = &v
+	return s
+}
+
+// SetMaxResults sets the MaxResults field's value.
+func (s *ListPackagesForDomainInput) SetMaxResults(v int64) *ListPackagesForDomainInput {
+	s.MaxResults = &v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListPackagesForDomainInput) SetNextToken(v string) *ListPackagesForDomainInput {
+	s.NextToken = &v
+	return s
+}
+
+// Container for response parameters to ListPackagesForDomain operation.
+type ListPackagesForDomainOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of DomainPackageDetails objects.
+	DomainPackageDetailsList []*DomainPackageDetails `type:"list"`
+
+	// Pagination token that needs to be supplied to the next call to get the next
+	// page of results.
+	NextToken *string `type:"string"`
+}
+
+// String returns the string representation
+func (s ListPackagesForDomainOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListPackagesForDomainOutput) GoString() string {
+	return s.String()
+}
+
+// SetDomainPackageDetailsList sets the DomainPackageDetailsList field's value.
+func (s *ListPackagesForDomainOutput) SetDomainPackageDetailsList(v []*DomainPackageDetails) *ListPackagesForDomainOutput {
+	s.DomainPackageDetailsList = v
+	return s
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListPackagesForDomainOutput) SetNextToken(v string) *ListPackagesForDomainOutput {
+	s.NextToken = &v
+	return s
+}
+
 // Container for the parameters to the ListTags operation. Specify the ARN for
 // the Elasticsearch domain to which the tags are attached that you want to
 // view are attached.
@@ -4936,9 +8807,13 @@ func (s *ListTagsOutput) SetTagList(v []*Tag) *ListTagsOutput {
 	return s
 }
 
-// Log Publishing option that is set for given domain. Attributes and their details: CloudWatchLogsLogGroupArn: ARN of the Cloudwatch
-// log group to which log needs to be published.
-// Enabled: Whether the log publishing for given log type is enabled or not
+// Log Publishing option that is set for given domain. Attributes and their
+// details:
+//    * CloudWatchLogsLogGroupArn: ARN of the Cloudwatch log group to which
+//    log needs to be published.
+//
+//    * Enabled: Whether the log publishing for given log type is enabled or
+//    not
 type LogPublishingOption struct {
 	_ struct{} `type:"structure"`
 
@@ -5002,6 +8877,66 @@ func (s *LogPublishingOptionsStatus) SetOptions(v map[string]*LogPublishingOptio
 // SetStatus sets the Status field's value.
 func (s *LogPublishingOptionsStatus) SetStatus(v *OptionStatus) *LogPublishingOptionsStatus {
 	s.Status = v
+	return s
+}
+
+// Credentials for the master user: username and password, ARN, or both.
+type MasterUserOptions struct {
+	_ struct{} `type:"structure"`
+
+	// ARN for the master user (if IAM is enabled).
+	MasterUserARN *string `type:"string"`
+
+	// The master user's username, which is stored in the Amazon Elasticsearch Service
+	// domain's internal database.
+	MasterUserName *string `min:"1" type:"string" sensitive:"true"`
+
+	// The master user's password, which is stored in the Amazon Elasticsearch Service
+	// domain's internal database.
+	MasterUserPassword *string `min:"8" type:"string" sensitive:"true"`
+}
+
+// String returns the string representation
+func (s MasterUserOptions) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s MasterUserOptions) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *MasterUserOptions) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "MasterUserOptions"}
+	if s.MasterUserName != nil && len(*s.MasterUserName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("MasterUserName", 1))
+	}
+	if s.MasterUserPassword != nil && len(*s.MasterUserPassword) < 8 {
+		invalidParams.Add(request.NewErrParamMinLen("MasterUserPassword", 8))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMasterUserARN sets the MasterUserARN field's value.
+func (s *MasterUserOptions) SetMasterUserARN(v string) *MasterUserOptions {
+	s.MasterUserARN = &v
+	return s
+}
+
+// SetMasterUserName sets the MasterUserName field's value.
+func (s *MasterUserOptions) SetMasterUserName(v string) *MasterUserOptions {
+	s.MasterUserName = &v
+	return s
+}
+
+// SetMasterUserPassword sets the MasterUserPassword field's value.
+func (s *MasterUserOptions) SetMasterUserPassword(v string) *MasterUserOptions {
+	s.MasterUserPassword = &v
 	return s
 }
 
@@ -5132,6 +9067,242 @@ func (s *OptionStatus) SetUpdateDate(v time.Time) *OptionStatus {
 // SetUpdateVersion sets the UpdateVersion field's value.
 func (s *OptionStatus) SetUpdateVersion(v int64) *OptionStatus {
 	s.UpdateVersion = &v
+	return s
+}
+
+// Specifies details of an outbound connection.
+type OutboundCrossClusterSearchConnection struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the connection alias for the outbound cross-cluster search connection.
+	ConnectionAlias *string `type:"string"`
+
+	// Specifies the OutboundCrossClusterSearchConnectionStatus for the outbound
+	// connection.
+	ConnectionStatus *OutboundCrossClusterSearchConnectionStatus `type:"structure"`
+
+	// Specifies the connection id for the outbound cross-cluster search connection.
+	CrossClusterSearchConnectionId *string `type:"string"`
+
+	// Specifies the DomainInformation for the destination Elasticsearch domain.
+	DestinationDomainInfo *DomainInformation `type:"structure"`
+
+	// Specifies the DomainInformation for the source Elasticsearch domain.
+	SourceDomainInfo *DomainInformation `type:"structure"`
+}
+
+// String returns the string representation
+func (s OutboundCrossClusterSearchConnection) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OutboundCrossClusterSearchConnection) GoString() string {
+	return s.String()
+}
+
+// SetConnectionAlias sets the ConnectionAlias field's value.
+func (s *OutboundCrossClusterSearchConnection) SetConnectionAlias(v string) *OutboundCrossClusterSearchConnection {
+	s.ConnectionAlias = &v
+	return s
+}
+
+// SetConnectionStatus sets the ConnectionStatus field's value.
+func (s *OutboundCrossClusterSearchConnection) SetConnectionStatus(v *OutboundCrossClusterSearchConnectionStatus) *OutboundCrossClusterSearchConnection {
+	s.ConnectionStatus = v
+	return s
+}
+
+// SetCrossClusterSearchConnectionId sets the CrossClusterSearchConnectionId field's value.
+func (s *OutboundCrossClusterSearchConnection) SetCrossClusterSearchConnectionId(v string) *OutboundCrossClusterSearchConnection {
+	s.CrossClusterSearchConnectionId = &v
+	return s
+}
+
+// SetDestinationDomainInfo sets the DestinationDomainInfo field's value.
+func (s *OutboundCrossClusterSearchConnection) SetDestinationDomainInfo(v *DomainInformation) *OutboundCrossClusterSearchConnection {
+	s.DestinationDomainInfo = v
+	return s
+}
+
+// SetSourceDomainInfo sets the SourceDomainInfo field's value.
+func (s *OutboundCrossClusterSearchConnection) SetSourceDomainInfo(v *DomainInformation) *OutboundCrossClusterSearchConnection {
+	s.SourceDomainInfo = v
+	return s
+}
+
+// Specifies the connection status of an outbound cross-cluster search connection.
+type OutboundCrossClusterSearchConnectionStatus struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies verbose information for the outbound connection status.
+	Message *string `type:"string"`
+
+	// The state code for outbound connection. This can be one of the following:
+	//
+	//    * VALIDATING: The outbound connection request is being validated.
+	//
+	//    * VALIDATION_FAILED: Validation failed for the connection request.
+	//
+	//    * PENDING_ACCEPTANCE: Outbound connection request is validated and is
+	//    not yet accepted by destination domain owner.
+	//
+	//    * PROVISIONING: Outbound connection request is in process.
+	//
+	//    * ACTIVE: Outbound connection is active and ready to use.
+	//
+	//    * REJECTED: Outbound connection request is rejected by destination domain
+	//    owner.
+	//
+	//    * DELETING: Outbound connection deletion is in progress.
+	//
+	//    * DELETED: Outbound connection is deleted and cannot be used further.
+	StatusCode *string `type:"string" enum:"OutboundCrossClusterSearchConnectionStatusCode"`
+}
+
+// String returns the string representation
+func (s OutboundCrossClusterSearchConnectionStatus) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s OutboundCrossClusterSearchConnectionStatus) GoString() string {
+	return s.String()
+}
+
+// SetMessage sets the Message field's value.
+func (s *OutboundCrossClusterSearchConnectionStatus) SetMessage(v string) *OutboundCrossClusterSearchConnectionStatus {
+	s.Message = &v
+	return s
+}
+
+// SetStatusCode sets the StatusCode field's value.
+func (s *OutboundCrossClusterSearchConnectionStatus) SetStatusCode(v string) *OutboundCrossClusterSearchConnectionStatus {
+	s.StatusCode = &v
+	return s
+}
+
+// Basic information about a package.
+type PackageDetails struct {
+	_ struct{} `type:"structure"`
+
+	// Timestamp which tells creation date of the package.
+	CreatedAt *time.Time `type:"timestamp"`
+
+	// Additional information if the package is in an error state. Null otherwise.
+	ErrorDetails *ErrorDetails `type:"structure"`
+
+	// User-specified description of the package.
+	PackageDescription *string `type:"string"`
+
+	// Internal ID of the package.
+	PackageID *string `type:"string"`
+
+	// User specified name of the package.
+	PackageName *string `min:"3" type:"string"`
+
+	// Current state of the package. Values are COPYING/COPY_FAILED/AVAILABLE/DELETING/DELETE_FAILED
+	PackageStatus *string `type:"string" enum:"PackageStatus"`
+
+	// Currently supports only TXT-DICTIONARY.
+	PackageType *string `type:"string" enum:"PackageType"`
+}
+
+// String returns the string representation
+func (s PackageDetails) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PackageDetails) GoString() string {
+	return s.String()
+}
+
+// SetCreatedAt sets the CreatedAt field's value.
+func (s *PackageDetails) SetCreatedAt(v time.Time) *PackageDetails {
+	s.CreatedAt = &v
+	return s
+}
+
+// SetErrorDetails sets the ErrorDetails field's value.
+func (s *PackageDetails) SetErrorDetails(v *ErrorDetails) *PackageDetails {
+	s.ErrorDetails = v
+	return s
+}
+
+// SetPackageDescription sets the PackageDescription field's value.
+func (s *PackageDetails) SetPackageDescription(v string) *PackageDetails {
+	s.PackageDescription = &v
+	return s
+}
+
+// SetPackageID sets the PackageID field's value.
+func (s *PackageDetails) SetPackageID(v string) *PackageDetails {
+	s.PackageID = &v
+	return s
+}
+
+// SetPackageName sets the PackageName field's value.
+func (s *PackageDetails) SetPackageName(v string) *PackageDetails {
+	s.PackageName = &v
+	return s
+}
+
+// SetPackageStatus sets the PackageStatus field's value.
+func (s *PackageDetails) SetPackageStatus(v string) *PackageDetails {
+	s.PackageStatus = &v
+	return s
+}
+
+// SetPackageType sets the PackageType field's value.
+func (s *PackageDetails) SetPackageType(v string) *PackageDetails {
+	s.PackageType = &v
+	return s
+}
+
+// The S3 location for importing the package specified as S3BucketName and S3Key
+type PackageSource struct {
+	_ struct{} `type:"structure"`
+
+	// Name of the bucket containing the package.
+	S3BucketName *string `min:"3" type:"string"`
+
+	// Key (file name) of the package.
+	S3Key *string `type:"string"`
+}
+
+// String returns the string representation
+func (s PackageSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s PackageSource) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *PackageSource) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "PackageSource"}
+	if s.S3BucketName != nil && len(*s.S3BucketName) < 3 {
+		invalidParams.Add(request.NewErrParamMinLen("S3BucketName", 3))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *PackageSource) SetS3BucketName(v string) *PackageSource {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetS3Key sets the S3Key field's value.
+func (s *PackageSource) SetS3Key(v string) *PackageSource {
+	s.S3Key = &v
 	return s
 }
 
@@ -5268,6 +9439,74 @@ func (s *RecurringCharge) SetRecurringChargeAmount(v float64) *RecurringCharge {
 // SetRecurringChargeFrequency sets the RecurringChargeFrequency field's value.
 func (s *RecurringCharge) SetRecurringChargeFrequency(v string) *RecurringCharge {
 	s.RecurringChargeFrequency = &v
+	return s
+}
+
+// Container for the parameters to the RejectInboundCrossClusterSearchConnection
+// operation.
+type RejectInboundCrossClusterSearchConnectionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The id of the inbound connection that you want to reject.
+	//
+	// CrossClusterSearchConnectionId is a required field
+	CrossClusterSearchConnectionId *string `location:"uri" locationName:"ConnectionId" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s RejectInboundCrossClusterSearchConnectionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RejectInboundCrossClusterSearchConnectionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *RejectInboundCrossClusterSearchConnectionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "RejectInboundCrossClusterSearchConnectionInput"}
+	if s.CrossClusterSearchConnectionId == nil {
+		invalidParams.Add(request.NewErrParamRequired("CrossClusterSearchConnectionId"))
+	}
+	if s.CrossClusterSearchConnectionId != nil && len(*s.CrossClusterSearchConnectionId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CrossClusterSearchConnectionId", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCrossClusterSearchConnectionId sets the CrossClusterSearchConnectionId field's value.
+func (s *RejectInboundCrossClusterSearchConnectionInput) SetCrossClusterSearchConnectionId(v string) *RejectInboundCrossClusterSearchConnectionInput {
+	s.CrossClusterSearchConnectionId = &v
+	return s
+}
+
+// The result of a RejectInboundCrossClusterSearchConnection operation. Contains
+// details of rejected inbound connection.
+type RejectInboundCrossClusterSearchConnectionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Specifies the InboundCrossClusterSearchConnection of rejected inbound connection.
+	CrossClusterSearchConnection *InboundCrossClusterSearchConnection `type:"structure"`
+}
+
+// String returns the string representation
+func (s RejectInboundCrossClusterSearchConnectionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s RejectInboundCrossClusterSearchConnectionOutput) GoString() string {
+	return s.String()
+}
+
+// SetCrossClusterSearchConnection sets the CrossClusterSearchConnection field's value.
+func (s *RejectInboundCrossClusterSearchConnectionOutput) SetCrossClusterSearchConnection(v *InboundCrossClusterSearchConnection) *RejectInboundCrossClusterSearchConnectionOutput {
+	s.CrossClusterSearchConnection = v
 	return s
 }
 
@@ -5568,6 +9807,120 @@ func (s *ReservedElasticsearchInstanceOffering) SetUsagePrice(v float64) *Reserv
 	return s
 }
 
+// An exception for creating a resource that already exists. Gives http status
+// code of 400.
+type ResourceAlreadyExistsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceAlreadyExistsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceAlreadyExistsException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceAlreadyExistsException(v protocol.ResponseMetadata) error {
+	return &ResourceAlreadyExistsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceAlreadyExistsException) Code() string {
+	return "ResourceAlreadyExistsException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceAlreadyExistsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceAlreadyExistsException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceAlreadyExistsException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceAlreadyExistsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceAlreadyExistsException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// An exception for accessing or deleting a resource that does not exist. Gives
+// http status code of 400.
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The current options of an Elasticsearch domain service software options.
 type ServiceSoftwareOptions struct {
 	_ struct{} `type:"structure"`
@@ -5588,6 +9941,10 @@ type ServiceSoftwareOptions struct {
 
 	// The new service software version if one is available.
 	NewVersion *string `type:"string"`
+
+	// True if a service software is never automatically updated. False if a service
+	// software is automatically updated after AutomatedUpdateDate.
+	OptionalDeployment *bool `type:"boolean"`
 
 	// True if you are able to update you service software version. False if you
 	// are not able to update your service software version.
@@ -5635,6 +9992,12 @@ func (s *ServiceSoftwareOptions) SetDescription(v string) *ServiceSoftwareOption
 // SetNewVersion sets the NewVersion field's value.
 func (s *ServiceSoftwareOptions) SetNewVersion(v string) *ServiceSoftwareOptions {
 	s.NewVersion = &v
+	return s
+}
+
+// SetOptionalDeployment sets the OptionalDeployment field's value.
+func (s *ServiceSoftwareOptions) SetOptionalDeployment(v bool) *ServiceSoftwareOptions {
+	s.OptionalDeployment = &v
 	return s
 }
 
@@ -5789,18 +10152,16 @@ type StorageType struct {
 
 	// SubType of the given storage type. List of available sub-storage options:
 	// For "instance" storageType we wont have any storageSubType, in case of "ebs"
-	// storageType we will have following valid storageSubTypes standard
-	// gp2
-	// io1
-	//  Refer VolumeType for more information regarding above EBS storage options.
+	// storageType we will have following valid storageSubTypes standard gp2 io1
+	// Refer VolumeType for more information regarding above EBS storage options.
 	StorageSubTypeName *string `type:"string"`
 
 	// List of limits that are applicable for given storage type.
 	StorageTypeLimits []*StorageTypeLimit `type:"list"`
 
-	// Type of the storage. List of available storage options: instance
-	//  Inbuilt storage available for the given Instance ebs
-	//  Elastic block storage that would be attached to the given Instance
+	// Type of the storage. List of available storage options: instance Inbuilt
+	// storage available for the given Instance ebs Elastic block storage that would
+	// be attached to the given Instance
 	StorageTypeName *string `type:"string"`
 }
 
@@ -5837,15 +10198,14 @@ type StorageTypeLimit struct {
 	_ struct{} `type:"structure"`
 
 	// Name of storage limits that are applicable for given storage type. If StorageType
-	// is ebs, following storage options are applicable MinimumVolumeSize
-	//  Minimum amount of volume size that is applicable for given storage type.It
-	// can be empty if it is not applicable. MaximumVolumeSize
-	//  Maximum amount of volume size that is applicable for given storage type.It
-	// can be empty if it is not applicable. MaximumIops
-	//  Maximum amount of Iops that is applicable for given storage type.It can
-	// be empty if it is not applicable. MinimumIops
-	//  Minimum amount of Iops that is applicable for given storage type.It can
-	// be empty if it is not applicable.
+	// is ebs, following storage options are applicable MinimumVolumeSize Minimum
+	// amount of volume size that is applicable for given storage type.It can be
+	// empty if it is not applicable. MaximumVolumeSize Maximum amount of volume
+	// size that is applicable for given storage type.It can be empty if it is not
+	// applicable. MaximumIops Maximum amount of Iops that is applicable for given
+	// storage type.It can be empty if it is not applicable. MinimumIops Minimum
+	// amount of Iops that is applicable for given storage type.It can be empty
+	// if it is not applicable.
 	LimitName *string `type:"string"`
 
 	// Values for the StorageTypeLimit$LimitName .
@@ -5948,9 +10308,15 @@ type UpdateElasticsearchDomainConfigInput struct {
 	// for more information.
 	AdvancedOptions map[string]*string `type:"map"`
 
+	// Specifies advanced security options.
+	AdvancedSecurityOptions *AdvancedSecurityOptionsInput `type:"structure"`
+
 	// Options to specify the Cognito user and identity pools for Kibana authentication.
 	// For more information, see Amazon Cognito Authentication for Kibana (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-cognito-auth.html).
 	CognitoOptions *CognitoOptions `type:"structure"`
+
+	// Options to specify configuration that will be applied to the domain endpoint.
+	DomainEndpointOptions *DomainEndpointOptions `type:"structure"`
 
 	// The name of the Elasticsearch domain that you are updating.
 	//
@@ -5996,6 +10362,11 @@ func (s *UpdateElasticsearchDomainConfigInput) Validate() error {
 	if s.DomainName != nil && len(*s.DomainName) < 3 {
 		invalidParams.Add(request.NewErrParamMinLen("DomainName", 3))
 	}
+	if s.AdvancedSecurityOptions != nil {
+		if err := s.AdvancedSecurityOptions.Validate(); err != nil {
+			invalidParams.AddNested("AdvancedSecurityOptions", err.(request.ErrInvalidParams))
+		}
+	}
 	if s.CognitoOptions != nil {
 		if err := s.CognitoOptions.Validate(); err != nil {
 			invalidParams.AddNested("CognitoOptions", err.(request.ErrInvalidParams))
@@ -6020,9 +10391,21 @@ func (s *UpdateElasticsearchDomainConfigInput) SetAdvancedOptions(v map[string]*
 	return s
 }
 
+// SetAdvancedSecurityOptions sets the AdvancedSecurityOptions field's value.
+func (s *UpdateElasticsearchDomainConfigInput) SetAdvancedSecurityOptions(v *AdvancedSecurityOptionsInput) *UpdateElasticsearchDomainConfigInput {
+	s.AdvancedSecurityOptions = v
+	return s
+}
+
 // SetCognitoOptions sets the CognitoOptions field's value.
 func (s *UpdateElasticsearchDomainConfigInput) SetCognitoOptions(v *CognitoOptions) *UpdateElasticsearchDomainConfigInput {
 	s.CognitoOptions = v
+	return s
+}
+
+// SetDomainEndpointOptions sets the DomainEndpointOptions field's value.
+func (s *UpdateElasticsearchDomainConfigInput) SetDomainEndpointOptions(v *DomainEndpointOptions) *UpdateElasticsearchDomainConfigInput {
+	s.DomainEndpointOptions = v
 	return s
 }
 
@@ -6220,10 +10603,14 @@ type UpgradeHistory struct {
 	UpgradeName *string `type:"string"`
 
 	// The overall status of the update. The status can take one of the following
-	// values: In Progress
-	// Succeeded
-	// Succeeded with Issues
-	// Failed
+	// values:
+	//    * In Progress
+	//
+	//    * Succeeded
+	//
+	//    * Succeeded with Issues
+	//
+	//    * Failed
 	UpgradeStatus *string `type:"string" enum:"UpgradeStatus"`
 }
 
@@ -6274,16 +10661,23 @@ type UpgradeStepItem struct {
 	ProgressPercent *float64 `type:"double"`
 
 	// Represents one of 3 steps that an Upgrade or Upgrade Eligibility Check does
-	// through: PreUpgradeCheck
-	// Snapshot
-	// Upgrade
+	// through:
+	//    * PreUpgradeCheck
+	//
+	//    * Snapshot
+	//
+	//    * Upgrade
 	UpgradeStep *string `type:"string" enum:"UpgradeStep"`
 
 	// The status of a particular step during an upgrade. The status can take one
-	// of the following values: In Progress
-	// Succeeded
-	// Succeeded with Issues
-	// Failed
+	// of the following values:
+	//    * In Progress
+	//
+	//    * Succeeded
+	//
+	//    * Succeeded with Issues
+	//
+	//    * Failed
 	UpgradeStepStatus *string `type:"string" enum:"UpgradeStatus"`
 }
 
@@ -6322,7 +10716,7 @@ func (s *UpgradeStepItem) SetUpgradeStepStatus(v string) *UpgradeStepItem {
 }
 
 // Options to specify the subnets and security groups for VPC endpoint. For
-// more information, see  VPC Endpoints for Amazon Elasticsearch Service Domains
+// more information, see VPC Endpoints for Amazon Elasticsearch Service Domains
 // (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
 type VPCDerivedInfo struct {
 	_ struct{} `type:"structure"`
@@ -6414,7 +10808,7 @@ func (s *VPCDerivedInfoStatus) SetStatus(v *OptionStatus) *VPCDerivedInfoStatus 
 }
 
 // Options to specify the subnets and security groups for VPC endpoint. For
-// more information, see  VPC Endpoints for Amazon Elasticsearch Service Domains
+// more information, see VPC Endpoints for Amazon Elasticsearch Service Domains
 // (http://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html).
 type VPCOptions struct {
 	_ struct{} `type:"structure"`
@@ -6448,6 +10842,90 @@ func (s *VPCOptions) SetSubnetIds(v []*string) *VPCOptions {
 	return s
 }
 
+// An exception for missing / invalid input fields. Gives http status code of
+// 400.
+type ValidationException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"message" type:"string"`
+}
+
+// String returns the string representation
+func (s ValidationException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ValidationException) GoString() string {
+	return s.String()
+}
+
+func newErrorValidationException(v protocol.ResponseMetadata) error {
+	return &ValidationException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ValidationException) Code() string {
+	return "ValidationException"
+}
+
+// Message returns the exception's message.
+func (s *ValidationException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ValidationException) OrigErr() error {
+	return nil
+}
+
+func (s *ValidationException) Error() string {
+	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ValidationException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ValidationException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+// Specifies the zone awareness configuration for the domain cluster, such as
+// the number of availability zones.
+type ZoneAwarenessConfig struct {
+	_ struct{} `type:"structure"`
+
+	// An integer value to indicate the number of availability zones for a domain
+	// when zone awareness is enabled. This should be equal to number of subnets
+	// if VPC endpoints is enabled
+	AvailabilityZoneCount *int64 `type:"integer"`
+}
+
+// String returns the string representation
+func (s ZoneAwarenessConfig) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ZoneAwarenessConfig) GoString() string {
+	return s.String()
+}
+
+// SetAvailabilityZoneCount sets the AvailabilityZoneCount field's value.
+func (s *ZoneAwarenessConfig) SetAvailabilityZoneCount(v int64) *ZoneAwarenessConfig {
+	s.AvailabilityZoneCount = &v
+	return s
+}
+
 const (
 	// DeploymentStatusPendingUpdate is a DeploymentStatus enum value
 	DeploymentStatusPendingUpdate = "PENDING_UPDATE"
@@ -6463,6 +10941,34 @@ const (
 
 	// DeploymentStatusEligible is a DeploymentStatus enum value
 	DeploymentStatusEligible = "ELIGIBLE"
+)
+
+const (
+	// DescribePackagesFilterNamePackageId is a DescribePackagesFilterName enum value
+	DescribePackagesFilterNamePackageId = "PackageID"
+
+	// DescribePackagesFilterNamePackageName is a DescribePackagesFilterName enum value
+	DescribePackagesFilterNamePackageName = "PackageName"
+
+	// DescribePackagesFilterNamePackageStatus is a DescribePackagesFilterName enum value
+	DescribePackagesFilterNamePackageStatus = "PackageStatus"
+)
+
+const (
+	// DomainPackageStatusAssociating is a DomainPackageStatus enum value
+	DomainPackageStatusAssociating = "ASSOCIATING"
+
+	// DomainPackageStatusAssociationFailed is a DomainPackageStatus enum value
+	DomainPackageStatusAssociationFailed = "ASSOCIATION_FAILED"
+
+	// DomainPackageStatusActive is a DomainPackageStatus enum value
+	DomainPackageStatusActive = "ACTIVE"
+
+	// DomainPackageStatusDissociating is a DomainPackageStatus enum value
+	DomainPackageStatusDissociating = "DISSOCIATING"
+
+	// DomainPackageStatusDissociationFailed is a DomainPackageStatus enum value
+	DomainPackageStatusDissociationFailed = "DISSOCIATION_FAILED"
 )
 
 const (
@@ -6492,6 +10998,60 @@ const (
 
 	// ESPartitionInstanceTypeM410xlargeElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeM410xlargeElasticsearch = "m4.10xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM5LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM5LargeElasticsearch = "m5.large.elasticsearch"
+
+	// ESPartitionInstanceTypeM5XlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM5XlargeElasticsearch = "m5.xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM52xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM52xlargeElasticsearch = "m5.2xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM54xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM54xlargeElasticsearch = "m5.4xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeM512xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeM512xlargeElasticsearch = "m5.12xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR5LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR5LargeElasticsearch = "r5.large.elasticsearch"
+
+	// ESPartitionInstanceTypeR5XlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR5XlargeElasticsearch = "r5.xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR52xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR52xlargeElasticsearch = "r5.2xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR54xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR54xlargeElasticsearch = "r5.4xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeR512xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeR512xlargeElasticsearch = "r5.12xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC5LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC5LargeElasticsearch = "c5.large.elasticsearch"
+
+	// ESPartitionInstanceTypeC5XlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC5XlargeElasticsearch = "c5.xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC52xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC52xlargeElasticsearch = "c5.2xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC54xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC54xlargeElasticsearch = "c5.4xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC59xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC59xlargeElasticsearch = "c5.9xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeC518xlargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeC518xlargeElasticsearch = "c5.18xlarge.elasticsearch"
+
+	// ESPartitionInstanceTypeUltrawarm1MediumElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeUltrawarm1MediumElasticsearch = "ultrawarm1.medium.elasticsearch"
+
+	// ESPartitionInstanceTypeUltrawarm1LargeElasticsearch is a ESPartitionInstanceType enum value
+	ESPartitionInstanceTypeUltrawarm1LargeElasticsearch = "ultrawarm1.large.elasticsearch"
 
 	// ESPartitionInstanceTypeT2MicroElasticsearch is a ESPartitionInstanceType enum value
 	ESPartitionInstanceTypeT2MicroElasticsearch = "t2.micro.elasticsearch"
@@ -6587,14 +11147,44 @@ const (
 	ESPartitionInstanceTypeI316xlargeElasticsearch = "i3.16xlarge.elasticsearch"
 )
 
-// Type of Log File, it can be one of the following: INDEX_SLOW_LOGS: Index
-// slow logs contain insert requests that took more time than configured index
-// query log threshold to execute.
-// SEARCH_SLOW_LOGS: Search slow logs contain search queries that took more
-// time than configured search query log threshold to execute.
-// ES_APPLICATION_LOGS: Elasticsearch application logs contain information about
-// errors and warnings raised during the operation of the service and can be
-// useful for troubleshooting.
+const (
+	// ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch is a ESWarmPartitionInstanceType enum value
+	ESWarmPartitionInstanceTypeUltrawarm1MediumElasticsearch = "ultrawarm1.medium.elasticsearch"
+
+	// ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch is a ESWarmPartitionInstanceType enum value
+	ESWarmPartitionInstanceTypeUltrawarm1LargeElasticsearch = "ultrawarm1.large.elasticsearch"
+)
+
+const (
+	// InboundCrossClusterSearchConnectionStatusCodePendingAcceptance is a InboundCrossClusterSearchConnectionStatusCode enum value
+	InboundCrossClusterSearchConnectionStatusCodePendingAcceptance = "PENDING_ACCEPTANCE"
+
+	// InboundCrossClusterSearchConnectionStatusCodeApproved is a InboundCrossClusterSearchConnectionStatusCode enum value
+	InboundCrossClusterSearchConnectionStatusCodeApproved = "APPROVED"
+
+	// InboundCrossClusterSearchConnectionStatusCodeRejecting is a InboundCrossClusterSearchConnectionStatusCode enum value
+	InboundCrossClusterSearchConnectionStatusCodeRejecting = "REJECTING"
+
+	// InboundCrossClusterSearchConnectionStatusCodeRejected is a InboundCrossClusterSearchConnectionStatusCode enum value
+	InboundCrossClusterSearchConnectionStatusCodeRejected = "REJECTED"
+
+	// InboundCrossClusterSearchConnectionStatusCodeDeleting is a InboundCrossClusterSearchConnectionStatusCode enum value
+	InboundCrossClusterSearchConnectionStatusCodeDeleting = "DELETING"
+
+	// InboundCrossClusterSearchConnectionStatusCodeDeleted is a InboundCrossClusterSearchConnectionStatusCode enum value
+	InboundCrossClusterSearchConnectionStatusCodeDeleted = "DELETED"
+)
+
+// Type of Log File, it can be one of the following:
+//    * INDEX_SLOW_LOGS: Index slow logs contain insert requests that took more
+//    time than configured index query log threshold to execute.
+//
+//    * SEARCH_SLOW_LOGS: Search slow logs contain search queries that took
+//    more time than configured search query log threshold to execute.
+//
+//    * ES_APPLICATION_LOGS: Elasticsearch application logs contain information
+//    about errors and warnings raised during the operation of the service and
+//    can be useful for troubleshooting.
 const (
 	// LogTypeIndexSlowLogs is a LogType enum value
 	LogTypeIndexSlowLogs = "INDEX_SLOW_LOGS"
@@ -6609,6 +11199,7 @@ const (
 // The state of a requested change. One of the following:
 //
 //    * Processing: The request change is still in-process.
+//
 //    * Active: The request change is processed and deployed to the Elasticsearch
 //    domain.
 const (
@@ -6623,6 +11214,63 @@ const (
 )
 
 const (
+	// OutboundCrossClusterSearchConnectionStatusCodePendingAcceptance is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodePendingAcceptance = "PENDING_ACCEPTANCE"
+
+	// OutboundCrossClusterSearchConnectionStatusCodeValidating is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodeValidating = "VALIDATING"
+
+	// OutboundCrossClusterSearchConnectionStatusCodeValidationFailed is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodeValidationFailed = "VALIDATION_FAILED"
+
+	// OutboundCrossClusterSearchConnectionStatusCodeProvisioning is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodeProvisioning = "PROVISIONING"
+
+	// OutboundCrossClusterSearchConnectionStatusCodeActive is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodeActive = "ACTIVE"
+
+	// OutboundCrossClusterSearchConnectionStatusCodeRejected is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodeRejected = "REJECTED"
+
+	// OutboundCrossClusterSearchConnectionStatusCodeDeleting is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodeDeleting = "DELETING"
+
+	// OutboundCrossClusterSearchConnectionStatusCodeDeleted is a OutboundCrossClusterSearchConnectionStatusCode enum value
+	OutboundCrossClusterSearchConnectionStatusCodeDeleted = "DELETED"
+)
+
+const (
+	// PackageStatusCopying is a PackageStatus enum value
+	PackageStatusCopying = "COPYING"
+
+	// PackageStatusCopyFailed is a PackageStatus enum value
+	PackageStatusCopyFailed = "COPY_FAILED"
+
+	// PackageStatusValidating is a PackageStatus enum value
+	PackageStatusValidating = "VALIDATING"
+
+	// PackageStatusValidationFailed is a PackageStatus enum value
+	PackageStatusValidationFailed = "VALIDATION_FAILED"
+
+	// PackageStatusAvailable is a PackageStatus enum value
+	PackageStatusAvailable = "AVAILABLE"
+
+	// PackageStatusDeleting is a PackageStatus enum value
+	PackageStatusDeleting = "DELETING"
+
+	// PackageStatusDeleted is a PackageStatus enum value
+	PackageStatusDeleted = "DELETED"
+
+	// PackageStatusDeleteFailed is a PackageStatus enum value
+	PackageStatusDeleteFailed = "DELETE_FAILED"
+)
+
+const (
+	// PackageTypeTxtDictionary is a PackageType enum value
+	PackageTypeTxtDictionary = "TXT-DICTIONARY"
+)
+
+const (
 	// ReservedElasticsearchInstancePaymentOptionAllUpfront is a ReservedElasticsearchInstancePaymentOption enum value
 	ReservedElasticsearchInstancePaymentOptionAllUpfront = "ALL_UPFRONT"
 
@@ -6631,6 +11279,14 @@ const (
 
 	// ReservedElasticsearchInstancePaymentOptionNoUpfront is a ReservedElasticsearchInstancePaymentOption enum value
 	ReservedElasticsearchInstancePaymentOptionNoUpfront = "NO_UPFRONT"
+)
+
+const (
+	// TLSSecurityPolicyPolicyMinTls10201907 is a TLSSecurityPolicy enum value
+	TLSSecurityPolicyPolicyMinTls10201907 = "Policy-Min-TLS-1-0-2019-07"
+
+	// TLSSecurityPolicyPolicyMinTls12201907 is a TLSSecurityPolicy enum value
+	TLSSecurityPolicyPolicyMinTls12201907 = "Policy-Min-TLS-1-2-2019-07"
 )
 
 const (

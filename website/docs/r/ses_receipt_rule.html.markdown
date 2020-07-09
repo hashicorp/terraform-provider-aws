@@ -1,12 +1,12 @@
 ---
+subcategory: "SES"
 layout: "aws"
-page_title: "AWS: ses_receipt_rule"
-sidebar_current: "docs-aws-resource-ses-receipt-rule"
+page_title: "AWS: aws_ses_receipt_rule"
 description: |-
   Provides an SES receipt rule resource
 ---
 
-# aws_ses_receipt_rule
+# Resource: aws_ses_receipt_rule
 
 Provides an SES receipt rule resource
 
@@ -24,10 +24,12 @@ resource "aws_ses_receipt_rule" "store" {
   add_header_action {
     header_name  = "Custom-Header"
     header_value = "Added by SES"
+    position     = 1
   }
 
   s3_action {
     bucket_name = "emails"
+    position    = 2
   }
 }
 ```

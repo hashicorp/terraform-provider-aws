@@ -7,9 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudtrail"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCloudTrail() *schema.Resource {
@@ -138,10 +139,15 @@ func resourceAwsCloudTrail() *schema.Resource {
 
 func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
+	tags := keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CloudtrailTags()
 
 	input := cloudtrail.CreateTrailInput{
 		Name:         aws.String(d.Get("name").(string)),
 		S3BucketName: aws.String(d.Get("s3_bucket_name").(string)),
+	}
+
+	if len(tags) > 0 {
+		input.TagsList = tags
 	}
 
 	if v, ok := d.GetOk("cloud_watch_logs_group_arn"); ok {
@@ -187,13 +193,15 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		t, err = conn.CreateTrail(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error creating CloudTrail: %s", err)
 	}
 
 	log.Printf("[DEBUG] CloudTrail created: %s", t)
 
-	d.Set("arn", t.TrailARN)
 	d.SetId(*t.Name)
 
 	// AWS CloudTrail sets newly-created trails to false.
@@ -211,11 +219,12 @@ func resourceAwsCloudTrailCreate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	return resourceAwsCloudTrailUpdate(d, meta)
+	return resourceAwsCloudTrailRead(d, meta)
 }
 
 func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).cloudtrailconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := cloudtrail.DescribeTrailsInput{
 		TrailNameList: []*string{
@@ -263,24 +272,14 @@ func resourceAwsCloudTrailRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", trail.TrailARN)
 	d.Set("home_region", trail.HomeRegion)
 
-	// Get tags
-	req := &cloudtrail.ListTagsInput{
-		ResourceIdList: []*string{trail.TrailARN},
-	}
+	tags, err := keyvaluetags.CloudtrailListTags(conn, *trail.TrailARN)
 
-	tagsOut, err := conn.ListTags(req)
 	if err != nil {
-		return err
-	}
-	log.Printf("[DEBUG] Received CloudTrail tags: %s", tagsOut)
-
-	var tags []*cloudtrail.Tag
-	if tagsOut.ResourceTagList != nil && len(tagsOut.ResourceTagList) > 0 {
-		tags = tagsOut.ResourceTagList[0].TagsList
+		return fmt.Errorf("error listing tags for Cloudtrail (%s): %s", *trail.TrailARN, err)
 	}
 
-	if err := d.Set("tags", tagsToMapCloudtrail(tags)); err != nil {
-		return err
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	logstatus, err := cloudTrailGetLoggingStatus(conn, trail.Name)
@@ -317,7 +316,7 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 	if d.HasChange("s3_key_prefix") {
 		input.S3KeyPrefix = aws.String(d.Get("s3_key_prefix").(string))
 	}
-	if d.HasChange("cloud_watch_logs_role_arn") || d.HasChange("cloud_watch_logs_group_arn") {
+	if d.HasChanges("cloud_watch_logs_role_arn", "cloud_watch_logs_group_arn") {
 		// Both of these need to be provided together
 		// in the update call otherwise API complains
 		input.CloudWatchLogsRoleArn = aws.String(d.Get("cloud_watch_logs_role_arn").(string))
@@ -358,14 +357,18 @@ func resourceAwsCloudTrailUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		t, err = conn.UpdateTrail(&input)
+	}
 	if err != nil {
-		return err
+		return fmt.Errorf("Error updating CloudTrail: %s", err)
 	}
 
 	if d.HasChange("tags") {
-		err := setTagsCloudtrail(conn, d)
-		if err != nil {
-			return err
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.CloudtrailUpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
+			return fmt.Errorf("error updating ECR Repository (%s) tags: %s", d.Get("arn").(string), err)
 		}
 	}
 
@@ -448,6 +451,15 @@ func cloudTrailSetEventSelectors(conn *cloudtrail.CloudTrail, d *schema.Resource
 	}
 
 	eventSelectors := expandAwsCloudTrailEventSelector(d.Get("event_selector").([]interface{}))
+	// If no defined selectors revert to the single default selector
+	if len(eventSelectors) == 0 {
+		es := &cloudtrail.EventSelector{
+			IncludeManagementEvents: aws.Bool(true),
+			ReadWriteType:           aws.String("All"),
+			DataResources:           make([]*cloudtrail.DataResource, 0),
+		}
+		eventSelectors = append(eventSelectors, es)
+	}
 	input.EventSelectors = eventSelectors
 
 	if err := input.Validate(); err != nil {
@@ -507,7 +519,7 @@ func flattenAwsCloudTrailEventSelector(configured []*cloudtrail.EventSelector) [
 	eventSelectors := make([]map[string]interface{}, 0, len(configured))
 
 	// Prevent default configurations shows differences
-	if len(configured) == 1 && len(configured[0].DataResources) == 0 {
+	if len(configured) == 1 && len(configured[0].DataResources) == 0 && aws.StringValue(configured[0].ReadWriteType) == "All" {
 		return eventSelectors
 	}
 

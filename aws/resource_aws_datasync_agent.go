@@ -9,8 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsDataSyncAgent() *schema.Resource {
@@ -49,11 +50,7 @@ func resourceAwsDataSyncAgent() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -85,9 +82,10 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 			return fmt.Errorf("error creating HTTP request: %s", err)
 		}
 
+		var response *http.Response
 		err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 			log.Printf("[DEBUG] Making HTTP request: %s", request.URL.String())
-			response, err := client.Do(request)
+			response, err = client.Do(request)
 			if err != nil {
 				if err, ok := err.(net.Error); ok {
 					errMessage := fmt.Errorf("error making HTTP request: %s", err)
@@ -96,24 +94,30 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 				}
 				return resource.NonRetryableError(fmt.Errorf("error making HTTP request: %s", err))
 			}
-
-			log.Printf("[DEBUG] Received HTTP response: %#v", response)
-			if response.StatusCode != 302 {
-				return resource.NonRetryableError(fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode))
-			}
-
-			redirectURL, err := response.Location()
-			if err != nil {
-				return resource.NonRetryableError(fmt.Errorf("error extracting HTTP Location header: %s", err))
-			}
-
-			activationKey = redirectURL.Query().Get("activationKey")
-
 			return nil
 		})
+		if isResourceTimeoutError(err) {
+			response, err = client.Do(request)
+		}
 		if err != nil {
 			return fmt.Errorf("error retrieving activation key from IP Address (%s): %s", agentIpAddress, err)
 		}
+		if response == nil {
+			return fmt.Errorf("Error retrieving response for activation key request: %s", err)
+		}
+
+		log.Printf("[DEBUG] Received HTTP response: %#v", response)
+		if response.StatusCode != 302 {
+			return fmt.Errorf("expected HTTP status code 302, received: %d", response.StatusCode)
+		}
+
+		redirectURL, err := response.Location()
+		if err != nil {
+			return fmt.Errorf("error extracting HTTP Location header: %s", err)
+		}
+
+		activationKey = redirectURL.Query().Get("activationKey")
+
 		if activationKey == "" {
 			return fmt.Errorf("empty activationKey received from IP Address: %s", agentIpAddress)
 		}
@@ -121,7 +125,7 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 	input := &datasync.CreateAgentInput{
 		ActivationKey: aws.String(activationKey),
-		Tags:          expandDataSyncTagListEntry(d.Get("tags").(map[string]interface{})),
+		Tags:          keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().DatasyncTags(),
 	}
 
 	if v, ok := d.GetOk("name"); ok {
@@ -137,12 +141,13 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 	d.SetId(aws.StringValue(output.AgentArn))
 
 	// Agent activations can take a few minutes
+	descAgentInput := &datasync.DescribeAgentInput{
+		AgentArn: aws.String(d.Id()),
+	}
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		_, err := conn.DescribeAgent(&datasync.DescribeAgentInput{
-			AgentArn: aws.String(d.Id()),
-		})
+		_, err := conn.DescribeAgent(descAgentInput)
 
-		if isAWSErr(err, "InvalidRequestException", "not found") {
+		if isAWSErr(err, "InvalidRequestException", "does not exist") {
 			return resource.RetryableError(err)
 		}
 
@@ -152,6 +157,9 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DescribeAgent(descAgentInput)
+	}
 	if err != nil {
 		return fmt.Errorf("error waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
 	}
@@ -161,6 +169,7 @@ func resourceAwsDataSyncAgentCreate(d *schema.ResourceData, meta interface{}) er
 
 func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).datasyncconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &datasync.DescribeAgentInput{
 		AgentArn: aws.String(d.Id()),
@@ -169,7 +178,7 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 	log.Printf("[DEBUG] Reading DataSync Agent: %s", input)
 	output, err := conn.DescribeAgent(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if isAWSErr(err, "InvalidRequestException", "does not exist") {
 		log.Printf("[WARN] DataSync Agent %q not found - removing from state", d.Id())
 		d.SetId("")
 		return nil
@@ -179,21 +188,16 @@ func resourceAwsDataSyncAgentRead(d *schema.ResourceData, meta interface{}) erro
 		return fmt.Errorf("error reading DataSync Agent (%s): %s", d.Id(), err)
 	}
 
-	tagsInput := &datasync.ListTagsForResourceInput{
-		ResourceArn: output.AgentArn,
-	}
-
-	log.Printf("[DEBUG] Reading DataSync Agent tags: %s", tagsInput)
-	tagsOutput, err := conn.ListTagsForResource(tagsInput)
-
-	if err != nil {
-		return fmt.Errorf("error reading DataSync Agent (%s) tags: %s", d.Id(), err)
-	}
-
 	d.Set("arn", output.AgentArn)
 	d.Set("name", output.Name)
 
-	if err := d.Set("tags", flattenDataSyncTagListEntry(tagsOutput.Tags)); err != nil {
+	tags, err := keyvaluetags.DatasyncListTags(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for DataSync Agent (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -217,31 +221,10 @@ func resourceAwsDataSyncAgentUpdate(d *schema.ResourceData, meta interface{}) er
 	}
 
 	if d.HasChange("tags") {
-		oldRaw, newRaw := d.GetChange("tags")
-		createTags, removeTags := dataSyncTagsDiff(expandDataSyncTagListEntry(oldRaw.(map[string]interface{})), expandDataSyncTagListEntry(newRaw.(map[string]interface{})))
+		o, n := d.GetChange("tags")
 
-		if len(removeTags) > 0 {
-			input := &datasync.UntagResourceInput{
-				Keys:        dataSyncTagsKeys(removeTags),
-				ResourceArn: aws.String(d.Id()),
-			}
-
-			log.Printf("[DEBUG] Untagging DataSync Agent: %s", input)
-			if _, err := conn.UntagResource(input); err != nil {
-				return fmt.Errorf("error untagging DataSync Agent (%s): %s", d.Id(), err)
-			}
-		}
-
-		if len(createTags) > 0 {
-			input := &datasync.TagResourceInput{
-				ResourceArn: aws.String(d.Id()),
-				Tags:        createTags,
-			}
-
-			log.Printf("[DEBUG] Tagging DataSync Agent: %s", input)
-			if _, err := conn.TagResource(input); err != nil {
-				return fmt.Errorf("error tagging DataSync Agent (%s): %s", d.Id(), err)
-			}
+		if err := keyvaluetags.DatasyncUpdateTags(conn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating DataSync Agent (%s) tags: %s", d.Id(), err)
 		}
 	}
 
@@ -258,7 +241,7 @@ func resourceAwsDataSyncAgentDelete(d *schema.ResourceData, meta interface{}) er
 	log.Printf("[DEBUG] Deleting DataSync Agent: %s", input)
 	_, err := conn.DeleteAgent(input)
 
-	if isAWSErr(err, "InvalidRequestException", "not found") {
+	if isAWSErr(err, "InvalidRequestException", "does not exist") {
 		return nil
 	}
 

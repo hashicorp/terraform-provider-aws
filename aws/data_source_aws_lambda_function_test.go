@@ -4,43 +4,41 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
-	rString := acctest.RandString(7)
-	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-basic-role-%s", rString)
-	policyName := fmt.Sprintf("tf-acctest-d-lambda-function-basic-policy-%s", rString)
-	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-basic-sg-%s", rString)
-	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-basic-func-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaFunctionConfigBasic(roleName, policyName, sgName, funcName),
+				Config: testAccDataSourceAWSLambdaFunctionConfigBasic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "arn"),
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "role"),
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "source_code_hash"),
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "source_code_size"),
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "last_modified"),
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "qualified_arn"),
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "invoke_arn"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "function_name", funcName),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "description", funcName),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "qualifier", "$LATEST"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "handler", "exports.example"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "memory_size", "128"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "runtime", "nodejs8.10"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "timeout", "3"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "version", "$LATEST"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "reserved_concurrent_executions", "0"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "dead_letter_config.#", "0"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "tracing_config.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "tracing_config.0.mode", "PassThrough"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "dead_letter_config.#", resourceName, "dead_letter_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "function_name", resourceName, "function_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "handler", resourceName, "handler"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified", resourceName, "last_modified"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "memory_size", resourceName, "memory_size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "reserved_concurrent_executions", resourceName, "reserved_concurrent_executions"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "role", resourceName, "role"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "runtime", resourceName, "runtime"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_hash", resourceName, "source_code_hash"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "source_code_size", resourceName, "source_code_size"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "timeout", resourceName, "timeout"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tracing_config.#", resourceName, "tracing_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "tracing_config.0.mode", resourceName, "tracing_config.0.mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version", resourceName, "version"),
 				),
 			},
 		},
@@ -48,23 +46,21 @@ func TestAccDataSourceAWSLambdaFunction_basic(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLambdaFunction_version(t *testing.T) {
-	rString := acctest.RandString(7)
-	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-version-role-%s", rString)
-	policyName := fmt.Sprintf("tf-acctest-d-lambda-function-version-policy-%s", rString)
-	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-version-sg-%s", rString)
-	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-version-func-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaFunctionConfigVersion(roleName, policyName, sgName, funcName),
+				Config: testAccDataSourceAWSLambdaFunctionConfigVersion(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "arn"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "function_name", funcName),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "qualifier", "1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "version", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "qualifier", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "1"),
 				),
 			},
 		},
@@ -72,23 +68,22 @@ func TestAccDataSourceAWSLambdaFunction_version(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLambdaFunction_alias(t *testing.T) {
-	rString := acctest.RandString(7)
-	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-alias-role-%s", rString)
-	policyName := fmt.Sprintf("tf-acctest-d-lambda-function-alias-policy-%s", rString)
-	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-alias-sg-%s", rString)
-	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-alias-func-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	lambdaAliasResourceName := "aws_lambda_alias.test"
+	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaFunctionConfigAlias(roleName, policyName, sgName, funcName),
+				Config: testAccDataSourceAWSLambdaFunctionConfigAlias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "arn"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "function_name", funcName),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "qualifier", "alias-name"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "version", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", lambdaAliasResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "qualifier", lambdaAliasResourceName, "name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "version", lambdaAliasResourceName, "function_version"),
 				),
 			},
 		},
@@ -96,22 +91,19 @@ func TestAccDataSourceAWSLambdaFunction_alias(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLambdaFunction_layers(t *testing.T) {
-	rString := acctest.RandString(7)
-	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-role-%s", rString)
-	policyName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-policy-%s", rString)
-	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-sg-%s", rString)
-	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-func-%s", rString)
-	layerName := fmt.Sprintf("tf-acctest-d-lambda-function-layer-layer-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaFunctionConfigLayers(roleName, policyName, sgName, funcName, layerName),
+				Config: testAccDataSourceAWSLambdaFunctionConfigLayers(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "arn"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "layers.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "layers.#", resourceName, "layers.#"),
 				),
 			},
 		},
@@ -119,23 +111,21 @@ func TestAccDataSourceAWSLambdaFunction_layers(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLambdaFunction_vpc(t *testing.T) {
-	rString := acctest.RandString(7)
-	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-vpc-role-%s", rString)
-	policyName := fmt.Sprintf("tf-acctest-d-lambda-function-vpc-policy-%s", rString)
-	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-vpc-sg-%s", rString)
-	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-vpc-func-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaFunctionConfigVPC(roleName, policyName, sgName, funcName),
+				Config: testAccDataSourceAWSLambdaFunctionConfigVPC(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "arn"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "vpc_config.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "vpc_config.0.security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "vpc_config.0.subnet_ids.#", "1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.#", resourceName, "vpc_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.security_group_ids.#", resourceName, "vpc_config.0.security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.subnet_ids.#", resourceName, "vpc_config.0.subnet_ids.#"),
 				),
 			},
 		},
@@ -143,34 +133,54 @@ func TestAccDataSourceAWSLambdaFunction_vpc(t *testing.T) {
 }
 
 func TestAccDataSourceAWSLambdaFunction_environment(t *testing.T) {
-	rString := acctest.RandString(7)
-	roleName := fmt.Sprintf("tf-acctest-d-lambda-function-environment-role-%s", rString)
-	policyName := fmt.Sprintf("tf-acctest-d-lambda-function-environment-policy-%s", rString)
-	sgName := fmt.Sprintf("tf-acctest-d-lambda-function-environment-sg-%s", rString)
-	funcName := fmt.Sprintf("tf-acctest-d-lambda-function-environment-func-%s", rString)
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:  func() { testAccPreCheck(t) },
 		Providers: testAccProviders,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataSourceAWSLambdaFunctionConfigEnvironment(roleName, policyName, sgName, funcName),
+				Config: testAccDataSourceAWSLambdaFunctionConfigEnvironment(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_lambda_function.acctest", "arn"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "environment.#", "1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "environment.0.variables.%", "2"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "environment.0.variables.key1", "value1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_function.acctest", "environment.0.variables.key2", "value2"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "environment.#", resourceName, "environment.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "environment.0.variables.%", resourceName, "environment.0.variables.%"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "environment.0.variables.key1", resourceName, "environment.0.variables.key1"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "environment.0.variables.key2", resourceName, "environment.0.variables.key2"),
 				),
 			},
 		},
 	})
 }
 
-func testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName string) string {
+func TestAccDataSourceAWSLambdaFunction_fileSystemConfig(t *testing.T) {
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:  func() { testAccPreCheck(t) },
+		Providers: testAccProviders,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceAWSLambdaFunctionConfigFileSystemConfigs(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_config.#", resourceName, "file_system_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_config.0.arn", resourceName, "file_system_config.0.arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "file_system_config.0.local_mount_path", resourceName, "file_system_config.0.local_mount_path"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDataSourceAWSLambdaFunctionConfigBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "lambda" {
-  name = "%s"
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -192,7 +202,7 @@ EOF
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "lambda" {
-  name = "%s"
+  name = %[1]q
   role = "${aws_iam_role.lambda.id}"
 
   policy = <<EOF
@@ -223,20 +233,113 @@ resource "aws_iam_role_policy" "lambda" {
 }
 EOF
 }
+`, rName)
+}
 
-resource "aws_vpc" "lambda" {
+func testAccDataSourceAWSLambdaFunctionConfigBasic(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs12.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = "${aws_lambda_function.test.function_name}"
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaFunctionConfigVersion(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  publish       = true
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs12.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = "${aws_lambda_function.test.function_name}"
+  qualifier     = 1
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaFunctionConfigAlias(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  publish       = true
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs12.x"
+}
+
+resource "aws_lambda_alias" "test" {
+  name             = "alias-name"
+  function_name    = "${aws_lambda_function.test.arn}"
+  function_version = "1"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = "${aws_lambda_function.test.function_name}"
+  qualifier     = "${aws_lambda_alias.test.name}"
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaFunctionConfigLayers(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_layer_version" "test" {
+  filename            = "test-fixtures/lambdatest.zip"
+  layer_name          = %[1]q
+  compatible_runtimes = ["nodejs12.x"]
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  layers        = ["${aws_lambda_layer_version.test.arn}"]
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs12.x"
+}
+
+data "aws_lambda_function" "test" {
+  function_name = "${aws_lambda_function.test.function_name}"
+}
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaFunctionConfigVPC(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+	Name = %[1]q
+  }
 }
 
-resource "aws_subnet" "lambda" {
-  vpc_id     = "${aws_vpc.lambda.id}"
+resource "aws_subnet" "test" {
+  vpc_id     = "${aws_vpc.test.id}"
   cidr_block = "10.0.1.0/24"
+
+  tags = {
+	Name = %[1]q
+  }
 }
 
-resource "aws_security_group" "lambda" {
-  name        = "%s"
-  description = "Allow all inbound traffic for lambda test"
-  vpc_id      = "${aws_vpc.lambda.id}"
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Terraform Acceptance Testing"
+  vpc_id      = "${aws_vpc.test.id}"
 
   ingress {
     from_port   = 0
@@ -252,125 +355,34 @@ resource "aws_security_group" "lambda" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-`, roleName, policyName, sgName)
-}
 
-func testAccDataSourceAWSLambdaFunctionConfigBasic(roleName, policyName, sgName, funcName string) string {
-	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
-resource "aws_lambda_function" "acctest_create" {
-  function_name = "%s"
-  description = "%s"
-  filename = "test-fixtures/lambdatest.zip"
-  role = "${aws_iam_role.lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
-}
-
-data "aws_lambda_function" "acctest" {
-  function_name = "${aws_lambda_function.acctest_create.function_name}"
-}
-`, funcName, funcName)
-}
-
-func testAccDataSourceAWSLambdaFunctionConfigVersion(roleName, policyName, sgName, funcName string) string {
-	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
-resource "aws_lambda_function" "acctest_create" {
-  function_name = "%s"
-  description = "%s"
-  filename = "test-fixtures/lambdatest.zip"
-  role = "${aws_iam_role.lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
-  publish = true
-}
-
-data "aws_lambda_function" "acctest" {
-  function_name = "${aws_lambda_function.acctest_create.function_name}"
-  qualifier     = 1
-}
-`, funcName, funcName)
-}
-
-func testAccDataSourceAWSLambdaFunctionConfigAlias(roleName, policyName, sgName, funcName string) string {
-	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
-resource "aws_lambda_function" "acctest_create" {
-  function_name = "%s"
-  description = "%s"
-  filename = "test-fixtures/lambdatest.zip"
-  role = "${aws_iam_role.lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
-  publish = true
-}
-
-resource "aws_lambda_alias" "alias" {
-  name             = "alias-name"
-  function_name    = "${aws_lambda_function.acctest_create.arn}"
-  function_version = "1"
-}
-
-data "aws_lambda_function" "acctest" {
-  function_name = "${aws_lambda_function.acctest_create.function_name}"
-  qualifier     = "${aws_lambda_alias.alias.name}"
-}
-`, funcName, funcName)
-}
-
-func testAccDataSourceAWSLambdaFunctionConfigLayers(roleName, policyName, sgName, funcName, layerName string) string {
-	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
-resource "aws_lambda_layer_version" "acctest_create" {
-  filename = "test-fixtures/lambdatest.zip"
-  layer_name = "%s"
-  compatible_runtimes = ["nodejs8.10"]
-}
-
-resource "aws_lambda_function" "acctest_create" {
-  function_name = "%s"
-  description = "%s"
-  filename = "test-fixtures/lambdatest.zip"
-  role = "${aws_iam_role.lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
-  layers = ["${aws_lambda_layer_version.acctest_create.layer_arn}"]
-}
-
-data "aws_lambda_function" "acctest" {
-  function_name = "${aws_lambda_function.acctest_create.function_name}"
-}
-`, layerName, funcName, funcName)
-}
-
-func testAccDataSourceAWSLambdaFunctionConfigVPC(roleName, policyName, sgName, funcName string) string {
-	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
-resource "aws_lambda_function" "acctest_create" {
-  function_name = "%s"
-  description = "%s"
-  filename = "test-fixtures/lambdatest.zip"
-  role = "${aws_iam_role.lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs12.x"
 
   vpc_config {
-    subnet_ids = ["${aws_subnet.lambda.id}"]
-    security_group_ids = ["${aws_security_group.lambda.id}"]
+    security_group_ids = ["${aws_security_group.test.id}"]
+    subnet_ids         = ["${aws_subnet.test.id}"]
   }
 }
 
-data "aws_lambda_function" "acctest" {
-  function_name = "${aws_lambda_function.acctest_create.function_name}"
+data "aws_lambda_function" "test" {
+  function_name = "${aws_lambda_function.test.function_name}"
 }
-`, funcName, funcName)
+`, rName)
 }
 
-func testAccDataSourceAWSLambdaFunctionConfigEnvironment(roleName, policyName, sgName, funcName string) string {
-	return fmt.Sprintf(testAccDataSourceAWSLambdaFunctionConfigBase(roleName, policyName, sgName)+`
-resource "aws_lambda_function" "acctest_create" {
-  function_name = "%s"
-  description = "%s"
-  filename = "test-fixtures/lambdatest.zip"
-  role = "${aws_iam_role.lambda.arn}"
-  handler = "exports.example"
-  runtime = "nodejs8.10"
+func testAccDataSourceAWSLambdaFunctionConfigEnvironment(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs12.x"
 
   environment {
     variables = {
@@ -380,8 +392,103 @@ resource "aws_lambda_function" "acctest_create" {
   }
 }
 
-data "aws_lambda_function" "acctest" {
-  function_name = "${aws_lambda_function.acctest_create.function_name}"
+data "aws_lambda_function" "test" {
+  function_name = "${aws_lambda_function.test.function_name}"
 }
-`, funcName, funcName)
+`, rName)
+}
+
+func testAccDataSourceAWSLambdaFunctionConfigFileSystemConfigs(rName string) string {
+	return testAccDataSourceAWSLambdaFunctionConfigBase(rName) + fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+	Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  vpc_id     = "${aws_vpc.test.id}"
+  cidr_block = "10.0.1.0/24"
+
+  tags = {
+	Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = "Terraform Acceptance Testing"
+  vpc_id      = "${aws_vpc.test.id}"
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    self        = true
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_efs_file_system" "efs_for_lambda" {
+	tags = {
+    	Name = "efs_for_lambda"
+  	}
+}
+
+resource "aws_efs_mount_target" "alpha" {
+	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+	subnet_id      = "${aws_subnet.test.id}"
+}
+
+resource "aws_efs_access_point" "access_point_1" {
+	file_system_id = "${aws_efs_file_system.efs_for_lambda.id}"
+
+	root_directory {
+		path = "/lambda"
+		creation_info {
+			owner_gid   = 1000
+			owner_uid   = 1000
+			permissions = "777"
+		}
+	}
+	
+	posix_user {
+		gid = 1000
+		uid = 1000
+	}
+}
+
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "lambdatest.handler"
+  role          = "${aws_iam_role.lambda.arn}"
+  runtime       = "nodejs12.x"
+
+  vpc_config {
+   security_group_ids = ["${aws_security_group.test.id}"]
+   subnet_ids         = ["${aws_subnet.test.id}"]
+  }
+
+	
+  file_system_config {
+	arn = "${aws_efs_access_point.access_point_1.arn}"
+	local_mount_path = "/mnt/lambda"
+  }
+
+  depends_on = [aws_efs_mount_target.alpha]
+}
+
+data "aws_lambda_function" "test" {
+  function_name = "${aws_lambda_function.test.function_name}"
+}
+`, rName)
 }

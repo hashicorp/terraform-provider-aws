@@ -5,13 +5,14 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsNetworkAclRule() *schema.Resource {
@@ -19,6 +20,30 @@ func resourceAwsNetworkAclRule() *schema.Resource {
 		Create: resourceAwsNetworkAclRuleCreate,
 		Read:   resourceAwsNetworkAclRuleRead,
 		Delete: resourceAwsNetworkAclRuleDelete,
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				idParts := strings.Split(d.Id(), ":")
+				if len(idParts) != 4 || idParts[0] == "" || idParts[1] == "" || idParts[2] == "" || idParts[3] == "" {
+					return nil, fmt.Errorf("unexpected format of ID (%q), expected NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS", d.Id())
+				}
+				networkAclID := idParts[0]
+				ruleNumber, err := strconv.Atoi(idParts[1])
+				if err != nil {
+					return nil, err
+				}
+				protocol := idParts[2]
+				egress, err := strconv.ParseBool(idParts[3])
+				if err != nil {
+					return nil, err
+				}
+
+				d.Set("network_acl_id", networkAclID)
+				d.Set("rule_number", ruleNumber)
+				d.Set("egress", egress)
+				d.SetId(networkAclIdRuleNumberEgressHash(networkAclID, ruleNumber, egress, protocol))
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"network_acl_id": {
@@ -169,18 +194,24 @@ func resourceAwsNetworkAclRuleCreate(d *schema.ResourceData, meta interface{}) e
 	// It appears it might be a while until the newly created rule is visible via the
 	// API (see issue GH-4721). Retry the `findNetworkAclRule` function until it is
 	// visible (which in most cases is likely immediately).
+	var r *ec2.NetworkAclEntry
 	err = resource.Retry(3*time.Minute, func() *resource.RetryError {
-		r, findErr := findNetworkAclRule(d, meta)
-		if findErr != nil {
-			return resource.RetryableError(findErr)
+		r, err = findNetworkAclRule(d, meta)
+		if err != nil {
+			return resource.RetryableError(err)
 		}
 		if r == nil {
-			err := fmt.Errorf("Network ACL rule (%s) not found", d.Id())
-			return resource.RetryableError(err)
+			return resource.RetryableError(fmt.Errorf("Network ACL rule (%s) not found", d.Id()))
 		}
 
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		r, err = findNetworkAclRule(d, meta)
+		if r == nil {
+			return fmt.Errorf("Network ACL rule (%s) not found", d.Id())
+		}
+	}
 	if err != nil {
 		return fmt.Errorf("Created Network ACL Rule was not visible in API within 3 minute period. Running 'terraform apply' again will resume infrastructure creation.")
 	}
@@ -204,8 +235,8 @@ func resourceAwsNetworkAclRuleRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("ipv6_cidr_block", resp.Ipv6CidrBlock)
 	d.Set("egress", resp.Egress)
 	if resp.IcmpTypeCode != nil {
-		d.Set("icmp_code", resp.IcmpTypeCode.Code)
-		d.Set("icmp_type", resp.IcmpTypeCode.Type)
+		d.Set("icmp_code", strconv.FormatInt(aws.Int64Value(resp.IcmpTypeCode.Code), 10))
+		d.Set("icmp_type", strconv.FormatInt(aws.Int64Value(resp.IcmpTypeCode.Type), 10))
 	}
 	if resp.PortRange != nil {
 		d.Set("from_port", resp.PortRange.From)
@@ -269,6 +300,11 @@ func findNetworkAclRule(d *schema.ResourceData, meta interface{}) (*ec2.NetworkA
 	log.Printf("[INFO] Describing Network Acl: %s", d.Get("network_acl_id").(string))
 	log.Printf("[INFO] Describing Network Acl with the Filters %#v", params)
 	resp, err := conn.DescribeNetworkAcls(params)
+
+	if isAWSErr(err, "InvalidNetworkAclID.NotFound", "") {
+		return nil, nil
+	}
+
 	if err != nil {
 		return nil, fmt.Errorf("Error Finding Network Acl Rule %d: %s", d.Get("rule_number").(int), err.Error())
 	}
@@ -289,6 +325,7 @@ func findNetworkAclRule(d *schema.ResourceData, meta interface{}) (*ec2.NetworkA
 				return i, nil
 			}
 		}
+		return nil, nil
 	}
 	return nil, fmt.Errorf(
 		"Expected the Network ACL to have Entries, got: %#v",

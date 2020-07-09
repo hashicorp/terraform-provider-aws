@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ebs_snapshot_copy"
-sidebar_current: "docs-aws-resource-ebs-snapshot-copy"
 description: |-
   Duplicates an existing Amazon snapshot
 ---
 
-# aws_ebs_snapshot_copy
+# Resource: aws_ebs_snapshot_copy
 
 Creates a Snapshot of a snapshot.
 
@@ -49,12 +49,13 @@ The following arguments are supported:
 * `kms_key_id` - The ARN for the KMS encryption key.
 * `source_snapshot_id` The ARN for the snapshot to be copied.
 * `source_region` The region of the source snapshot.
-* `tags` - A mapping of tags for the snapshot.
+* `tags` - A map of tags for the snapshot.
 
 ## Attributes Reference
 
 The following attributes are exported:
 
+* `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g. snap-59fcb34e).
 * `owner_id` - The AWS account ID of the snapshot owner.
 * `owner_alias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
@@ -64,4 +65,4 @@ The following attributes are exported:
 * `data_encryption_key_id` - The data encryption key identifier for the snapshot.
 * `source_snapshot_id` The ARN of the copied snapshot.
 * `source_region` The region of the source snapshot.
-* `tags` - A mapping of tags for the snapshot.
+* `tags` - A map of tags for the snapshot.

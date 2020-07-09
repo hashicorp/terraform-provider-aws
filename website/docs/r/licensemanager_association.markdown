@@ -1,12 +1,12 @@
 ---
+subcategory: "License Manager"
 layout: "aws"
 page_title: "AWS: aws_licensemanager_association"
-sidebar_current: "docs-aws-resource-licensemanager-association"
 description: |-
   Provides a License Manager association resource.
 ---
 
-# aws_licensemanager_association
+# Resource: aws_licensemanager_association
 
 Provides a License Manager association.
 
@@ -16,12 +16,8 @@ Provides a License Manager association.
 
 ```hcl
 data "aws_ami" "example" {
-  most_recent      = true
-
-  filter {
-    name   = "owner-alias"
-    values = ["amazon"]
-  }
+  most_recent = true
+  owners      = ["amazon"]
 
   filter {
     name   = "name"

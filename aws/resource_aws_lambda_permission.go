@@ -11,8 +11,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 var LambdaFunctionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
@@ -22,6 +22,9 @@ func resourceAwsLambdaPermission() *schema.Resource {
 		Create: resourceAwsLambdaPermissionCreate,
 		Read:   resourceAwsLambdaPermissionRead,
 		Delete: resourceAwsLambdaPermissionDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsLambdaPermissionImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"action": {
@@ -131,21 +134,18 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		var err error
 		out, err = conn.AddPermission(&input)
 
-		if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") {
+		if isAWSErr(err, lambda.ErrCodeResourceConflictException, "") || isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
 			return resource.RetryableError(err)
 		}
-
-		if isAWSErr(err, lambda.ErrCodeResourceNotFoundException, "") {
-			return resource.RetryableError(err)
-		}
-
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
 
 		return nil
 	})
-
+	if isResourceTimeoutError(err) {
+		out, err = conn.AddPermission(&input)
+	}
 	if err != nil {
 		return fmt.Errorf("Error adding new Lambda Permission for %s: %s", functionName, err)
 	}
@@ -178,8 +178,13 @@ func resourceAwsLambdaPermissionCreate(d *schema.ResourceData, meta interface{})
 		}
 		return nil
 	})
-
-	return err
+	if isResourceTimeoutError(err) {
+		err = resourceAwsLambdaPermissionRead(d, meta)
+	}
+	if err != nil {
+		return fmt.Errorf("Error reading new Lambda permissions: %s", err)
+	}
+	return nil
 }
 
 func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) error {
@@ -208,16 +213,33 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 			return resource.NonRetryableError(err)
 		}
 
-		policyInBytes := []byte(*out.Policy)
-		policy := LambdaPolicy{}
-		err = json.Unmarshal(policyInBytes, &policy)
+		statement, err = getLambdaPolicyStatement(out, d.Id())
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return resource.RetryableError(err)
 		}
-
-		statement, err = findLambdaPolicyStatementById(&policy, d.Id())
-		return resource.RetryableError(err)
+		return nil
 	})
+	if isResourceTimeoutError(err) {
+		out, err = conn.GetPolicy(&input)
+
+		if err == nil {
+			var psErr error
+			statement, psErr = getLambdaPolicyStatement(out, d.Id())
+
+			// handle the resource not existing
+			if awsErr, ok := psErr.(awserr.Error); ok {
+				if awsErr.Code() == "ResourceNotFoundException" {
+					log.Printf("[WARN] No Lambda Permission Policy found: %v", input)
+					d.SetId("")
+					return nil
+				}
+			}
+
+			if psErr != nil {
+				return psErr
+			}
+		}
+	}
 
 	if err != nil {
 		// Missing whole policy or Lambda function (API error)
@@ -237,6 +259,10 @@ func resourceAwsLambdaPermissionRead(d *schema.ResourceData, meta interface{}) e
 		}
 
 		return err
+	}
+
+	if statement == nil {
+		return fmt.Errorf("No Lambda Permission policy found with ID %s", d.Id())
 	}
 
 	qualifier, err := getQualifierFromLambdaAliasOrVersionArn(statement.Resource)
@@ -313,59 +339,53 @@ func resourceAwsLambdaPermissionDelete(d *schema.ResourceData, meta interface{})
 		return err
 	}
 
-	err = resource.Retry(5*time.Minute, func() *resource.RetryError {
-		log.Printf("[DEBUG] Checking if Lambda permission %q is deleted", d.Id())
+	params := &lambda.GetPolicyInput{
+		FunctionName: aws.String(d.Get("function_name").(string)),
+	}
+	if v, ok := d.GetOk("qualifier"); ok {
+		params.Qualifier = aws.String(v.(string))
+	}
 
-		params := &lambda.GetPolicyInput{
-			FunctionName: aws.String(d.Get("function_name").(string)),
-		}
-		if v, ok := d.GetOk("qualifier"); ok {
-			params.Qualifier = aws.String(v.(string))
-		}
+	resp, err := conn.GetPolicy(params)
 
-		log.Printf("[DEBUG] Looking for Lambda permission: %s", *params)
-		resp, err := conn.GetPolicy(params)
-		if err != nil {
-			if awsErr, ok := err.(awserr.Error); ok {
-				if awsErr.Code() == "ResourceNotFoundException" {
-					return nil
-				}
-			}
-			return resource.NonRetryableError(err)
-		}
-
-		if resp.Policy == nil {
-			return nil
-		}
-
-		policyInBytes := []byte(*resp.Policy)
-		policy := LambdaPolicy{}
-		err = json.Unmarshal(policyInBytes, &policy)
-		if err != nil {
-			return resource.RetryableError(
-				fmt.Errorf("Error unmarshalling Lambda policy: %s", err))
-		}
-
-		_, err = findLambdaPolicyStatementById(&policy, d.Id())
-		if err != nil {
-			return nil
-		}
-
-		log.Printf("[DEBUG] No error when checking if Lambda permission %s is deleted", d.Id())
+	if isAWSErr(err, "ResourceNotFoundException", "") {
 		return nil
-	})
+	}
 
 	if err != nil {
-		return fmt.Errorf("Failed removing Lambda permission: %s", err)
+		return fmt.Errorf("error getting Lambda Permission policy: %s", err)
+	}
+
+	if resp.Policy == nil {
+		return nil
+	}
+
+	statement, err := getLambdaPolicyStatement(resp, d.Id())
+
+	if err != nil {
+		return nil
+	}
+
+	if statement != nil {
+		return fmt.Errorf("Failed to delete Lambda permission with ID %s", d.Id())
 	}
 
 	log.Printf("[DEBUG] Lambda permission with ID %q removed", d.Id())
 
 	return nil
 }
+func getLambdaPolicyStatement(out *lambda.GetPolicyOutput, statemendId string) (statement *LambdaPolicyStatement, err error) {
+	policyInBytes := []byte(*out.Policy)
+	policy := LambdaPolicy{}
+	err = json.Unmarshal(policyInBytes, &policy)
+	if err != nil {
+		return nil, fmt.Errorf("Error unmarshalling Lambda policy: %s", err)
+	}
 
-func findLambdaPolicyStatementById(policy *LambdaPolicy, id string) (
-	*LambdaPolicyStatement, error) {
+	return findLambdaPolicyStatementById(&policy, statemendId)
+}
+
+func findLambdaPolicyStatementById(policy *LambdaPolicy, id string) (*LambdaPolicyStatement, error) {
 
 	log.Printf("[DEBUG] Received %d statements in Lambda policy: %s", len(policy.Statement), policy.Statement)
 	for _, statement := range policy.Statement {
@@ -398,6 +418,41 @@ func getFunctionNameFromLambdaArn(arn string) (string, error) {
 			arn)
 	}
 	return matches[5], nil
+}
+
+func resourceAwsLambdaPermissionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	idParts := strings.Split(d.Id(), "/")
+	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
+		return nil, fmt.Errorf("Unexpected format of ID (%q), expected FUNCTION_NAME/STATEMENT_ID or FUNCTION_NAME:QUALIFIER/STATEMENT_ID", d.Id())
+	}
+
+	functionName := idParts[0]
+
+	input := &lambda.GetFunctionInput{FunctionName: &functionName}
+
+	var qualifier string
+	fnParts := strings.Split(functionName, ":")
+	if len(fnParts) == 2 {
+		functionName = fnParts[0]
+		qualifier = fnParts[1]
+		input.Qualifier = &qualifier
+	}
+	statementId := idParts[1]
+	log.Printf("[DEBUG] Importing Lambda Permission %s for function name %s", statementId, functionName)
+
+	conn := meta.(*AWSClient).lambdaconn
+	getFunctionOutput, err := conn.GetFunction(input)
+	if err != nil {
+		return nil, err
+	}
+
+	d.Set("function_name", getFunctionOutput.Configuration.FunctionArn)
+	d.Set("statement_id", statementId)
+	if qualifier != "" {
+		d.Set("qualifier", qualifier)
+	}
+	d.SetId(statementId)
+	return []*schema.ResourceData{d}, nil
 }
 
 type LambdaPolicy struct {

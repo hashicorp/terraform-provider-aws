@@ -1,12 +1,12 @@
 ---
+subcategory: "CodeDeploy"
 layout: "aws"
 page_title: "AWS: aws_codedeploy_app"
-sidebar_current: "docs-aws-resource-codedeploy-app"
 description: |-
   Provides a CodeDeploy application.
 ---
 
-# aws_codedeploy_app
+# Resource: aws_codedeploy_app
 
 Provides a CodeDeploy application to be used as a basis for deployments
 

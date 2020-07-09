@@ -1,27 +1,25 @@
 ---
+subcategory: "Lambda"
 layout: "aws"
 page_title: "AWS: aws_lambda_layer_version"
-sidebar_current: "docs-aws-resource-lambda-layer-version"
 description: |-
   Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse shared bits of code across multiple lambda functions.
 ---
 
-# aws_lambda_layer_version
+# Resource: aws_lambda_layer_version
 
 Provides a Lambda Layer Version resource. Lambda Layers allow you to reuse shared bits of code across multiple lambda functions.
 
 For information about Lambda Layers and how to use them, see [AWS Lambda Layers][1]
 
-~> **NOTE:** The attribute values for `arn` and `layer_arn` will be swapped in version 2.0.0 of the Terraform AWS Provider.
-
 ## Example Usage
 
 ```hcl
 resource "aws_lambda_layer_version" "lambda_layer" {
-  filename = "lambda_layer_payload.zip"
+  filename   = "lambda_layer_payload.zip"
   layer_name = "lambda_layer_name"
-  
-  compatible_runtimes = ["nodejs8.10", "nodejs6.10"]
+
+  compatible_runtimes = ["nodejs8.10"]
 }
 ```
 
@@ -47,12 +45,12 @@ large files efficiently.
 * `compatible_runtimes` - (Optional) A list of [Runtimes][2] this layer is compatible with. Up to 5 runtimes can be specified.
 * `description` - (Optional) Description of what your Lambda Layer does.
 * `license_info` - (Optional) License info for your Lambda Layer. See [License Info][3].
-* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${base64sha256(file("file.zip"))}`, where "file.zip" is the local filename of the lambda layer source archive.
+* `source_code_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the package file specified with either `filename` or `s3_key`. The usual way to set this is `${filebase64sha256("file.zip")}` (Terraform 0.11.12 or later) or `${base64sha256(file("file.zip"))}` (Terraform 0.11.11 and earlier), where "file.zip" is the local filename of the lambda layer source archive.
 
 ## Attributes Reference
 
-* `arn` - The Amazon Resource Name (ARN) identifying your Lambda Layer.
-* `layer_arn` - The Amazon Resource Name (ARN) identifying your specific Lambda Layer version.
+* `arn` - The Amazon Resource Name (ARN) of the Lambda Layer with version.
+* `layer_arn` - The Amazon Resource Name (ARN) of the Lambda Layer without version.
 * `created_date` - The date this resource was created.
 * `source_code_size` - The size in bytes of the function .zip file.
 * `version` - This Lamba Layer version.
@@ -63,8 +61,10 @@ large files efficiently.
 
 ## Import
 
-Lambda Layers can be imported using `layer_name` and `version` together.
+Lambda Layers can be imported using `arn`.
 
 ```
-$ terraform import aws_lambda_layer_version.test_layer layer-name:1
+$ terraform import \
+    aws_lambda_layer_version.test_layer \
+    arn:aws:lambda:_REGION_:_ACCOUNT_ID_:layer:_LAYER_NAME_:_LAYER_VERSION_
 ```

@@ -1,4 +1,5 @@
 ---
+subcategory: "Cognito"
 layout: "aws"
 page_title: "AWS: aws_cognito_resource_server"
 side_bar_current: "docs-aws-resource-cognito-resource-server"
@@ -6,7 +7,7 @@ description: |-
   Provides a Cognito Resource Server.
 ---
 
-# aws_cognito_resource_server
+# Resource: aws_cognito_resource_server
 
 Provides a Cognito Resource Server.
 

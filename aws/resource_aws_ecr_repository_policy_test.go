@@ -7,13 +7,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 	randString := acctest.RandString(10)
+	resourceName := "aws_ecr_repository_policy.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -23,8 +24,13 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 			{
 				Config: testAccAWSEcrRepositoryPolicy(randString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists("aws_ecr_repository_policy.default"),
+					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -32,6 +38,7 @@ func TestAccAWSEcrRepositoryPolicy_basic(t *testing.T) {
 
 func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 	randString := acctest.RandString(10)
+	resourceName := "aws_ecr_repository_policy.default"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -41,8 +48,13 @@ func TestAccAWSEcrRepositoryPolicy_iam(t *testing.T) {
 			{
 				Config: testAccAWSEcrRepositoryPolicyWithIAMRole(randString),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSEcrRepositoryPolicyExists("aws_ecr_repository_policy.default"),
+					testAccCheckAWSEcrRepositoryPolicyExists(resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -84,18 +96,14 @@ func testAccCheckAWSEcrRepositoryPolicyExists(name string) resource.TestCheckFun
 
 func testAccAWSEcrRepositoryPolicy(randString string) string {
 	return fmt.Sprintf(`
-# ECR initially only available in us-east-1
-# https://aws.amazon.com/blogs/aws/ec2-container-registry-now-generally-available/
-provider "aws" {
-	region = "us-east-1"
-}
 resource "aws_ecr_repository" "foo" {
-	name = "tf-acc-test-ecr-%s"
+  name = "tf-acc-test-ecr-%s"
 }
 
 resource "aws_ecr_repository_policy" "default" {
-	repository = "${aws_ecr_repository.foo.name}"
-	policy = <<EOF
+  repository = "${aws_ecr_repository.foo.name}"
+
+  policy = <<EOF
 {
     "Version": "2008-10-17",
     "Statement": [
@@ -120,12 +128,8 @@ EOF
 // exercise our retry logic, since we try to use the new resource instantly.
 func testAccAWSEcrRepositoryPolicyWithIAMRole(randString string) string {
 	return fmt.Sprintf(`
-provider "aws" {
-	region = "us-east-1"
-}
-
 resource "aws_ecr_repository" "foo" {
-	name = "tf-acc-test-ecr-%s"
+  name = "tf-acc-test-ecr-%s"
 }
 
 resource "aws_iam_role" "foo" {
@@ -148,8 +152,9 @@ EOF
 }
 
 resource "aws_ecr_repository_policy" "default" {
-	repository = "${aws_ecr_repository.foo.name}"
-	policy = <<EOF
+  repository = "${aws_ecr_repository.foo.name}"
+
+  policy = <<EOF
 {
     "Version": "2008-10-17",
     "Statement": [

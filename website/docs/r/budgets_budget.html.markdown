@@ -1,12 +1,12 @@
 ---
+subcategory: "Budgets"
 layout: "aws"
 page_title: "AWS: aws_budgets_budget"
-sidebar_current: "docs-aws-resource-budgets-budget"
 description: |-
   Provides a budgets budget resource.
 ---
 
-# aws_budgets_budget
+# Resource: aws_budgets_budget
 
 Provides a budgets budget resource. Budgets use the cost visualisation provided by Cost Explorer to show you the status of your budgets, to provide forecasts of your estimated costs, and to track your AWS usage, including your free tier usage.
 
@@ -24,6 +24,14 @@ resource "aws_budgets_budget" "ec2" {
 
   cost_filters = {
     Service = "Amazon Elastic Compute Cloud - Compute"
+  }
+
+  notification {
+    comparison_operator        = "GREATER_THAN"
+    threshold                  = 100
+    threshold_type             = "PERCENTAGE"
+    notification_type          = "FORECASTED"
+    subscriber_email_addresses = ["test@example.com"]
   }
 }
 ```
@@ -50,6 +58,60 @@ resource "aws_budgets_budget" "s3" {
 }
 ```
 
+Create a Savings Plan Utilization Budget
+
+```hcl
+resource "aws_budgets_budget" "savings_plan_utilization" {
+  # ...
+  budget_type  = "SAVINGS_PLANS_UTILIZATION"
+  limit_amount = "100.0"
+  limit_unit   = "PERCENTAGE"
+
+  cost_types {
+    include_credit             = false
+    include_discount           = false
+    include_other_subscription = false
+    include_recurring          = false
+    include_refund             = false
+    include_subscription       = true
+    include_support            = false
+    include_tax                = false
+    include_upfront            = false
+    use_blended                = false
+  }
+}
+```
+
+Create a RI Utilization Budget
+
+```hcl
+resource "aws_budgets_budget" "ri_utilization" {
+  # ...
+  budget_type  = "RI_UTILIZATION"
+  limit_amount = "100.0" # RI utilization must be 100
+  limit_unit   = "PERCENTAGE"
+
+  #Cost types must be defined for RI budgets because the settings conflict with the defaults
+  cost_types {
+    include_credit             = false
+    include_discount           = false
+    include_other_subscription = false
+    include_recurring          = false
+    include_refund             = false
+    include_subscription       = true
+    include_support            = false
+    include_tax                = false
+    include_upfront            = false
+    use_blended                = false
+  }
+
+  # RI Utilization plans require a service cost filter to be set
+  cost_filters = {
+    Service = "Amazon Relational Database Service"
+  }
+}
+```
+
 ## Argument Reference
 
 For more detailed documentation about each argument, refer to the [AWS official
@@ -68,6 +130,7 @@ The following arguments are supported:
 * `time_period_end` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
 * `time_period_start` - (Required) The start of the time period covered by the budget. The start date must come before the end date. Format: `2017-01-01_12:00`.
 * `time_unit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`.
+* `notification` - (Optional) Object containing [Budget Notifications](#BudgetNotification). Can be used multiple times to define more than one budget notification
 
 ## Attributes Reference
 
@@ -98,21 +161,33 @@ Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-mana
 Valid keys for `cost_filters` parameter vary depending on the `budget_type` value.
 
 * `cost`
-  * `AZ`
-  * `LinkedAccount`
-  * `Operation`
-  * `PurchaseType`
-  * `Service`
-  * `TagKeyValue`
+    * `AZ`
+    * `LinkedAccount`
+    * `Operation`
+    * `PurchaseType`
+    * `Service`
+    * `TagKeyValue`
 * `usage`
-  * `AZ`
-  * `LinkedAccount`
-  * `Operation`
-  * `PurchaseType`
-  * `UsageType:<service name>`
-  * `TagKeyValue`
+    * `AZ`
+    * `LinkedAccount`
+    * `Operation`
+    * `PurchaseType`
+    * `UsageType:<service name>`
+    * `TagKeyValue`
 
 Refer to [AWS CostFilter documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-filter.html) for further detail.
+
+### BudgetNotification
+
+Valid keys for `notification` parameter.
+
+* `comparison_operator` - (Required) Comparison operator to use to evaluate the condition. Can be `LESS_THAN`, `EQUAL_TO` or `GREATER_THAN`.
+* `threshold` - (Required) Threshold when the notification should be sent.
+* `threshold_type` - (Required) What kind of threshold is defined. Can be `PERCENTAGE` OR `ABSOLUTE_VALUE`.
+* `notification_type` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`
+* `subscriber_email_addresses` - (Optional) E-Mail addresses to notify. Either this or `subscriber_sns_topic_arns` is required.
+* `subscriber_sns_topic_arns` - (Optional) SNS topics to notify. Either this or `subscriber_email_addresses` is required.
+
 
 ## Import
 

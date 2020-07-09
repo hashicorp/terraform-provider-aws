@@ -8,8 +8,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 func dataSourceAwsAvailabilityZones() *schema.Resource {
@@ -17,10 +17,46 @@ func dataSourceAwsAvailabilityZones() *schema.Resource {
 		Read: dataSourceAwsAvailabilityZonesRead,
 
 		Schema: map[string]*schema.Schema{
+			"all_availability_zones": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"blacklisted_names": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"exclude_names"},
+				Deprecated:    "use `exclude_names` instead",
+				Elem:          &schema.Schema{Type: schema.TypeString},
+			},
+			"blacklisted_zone_ids": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"exclude_zone_ids"},
+				Deprecated:    "use `exclude_zone_ids` instead",
+				Elem:          &schema.Schema{Type: schema.TypeString},
+			},
+			"filter": ec2CustomFiltersSchema(),
+			"group_names": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"names": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"exclude_names": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"blacklisted_names"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
+			},
+			"exclude_zone_ids": {
+				Type:          schema.TypeSet,
+				Optional:      true,
+				ConflictsWith: []string{"blacklisted_zone_ids"},
+				Elem:          &schema.Schema{Type: schema.TypeString},
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -49,6 +85,10 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 
 	request := &ec2.DescribeAvailabilityZonesInput{}
 
+	if v, ok := d.GetOk("all_availability_zones"); ok {
+		request.AllAvailabilityZones = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("state"); ok {
 		request.Filters = []*ec2.Filter{
 			{
@@ -56,6 +96,17 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 				Values: []*string{aws.String(v.(string))},
 			},
 		}
+	}
+
+	if filters, filtersOk := d.GetOk("filter"); filtersOk {
+		request.Filters = append(request.Filters, buildEC2CustomFilterList(
+			filters.(*schema.Set),
+		)...)
+	}
+
+	if len(request.Filters) == 0 {
+		// Don't send an empty filters list; the EC2 API won't accept it.
+		request.Filters = nil
 	}
 
 	log.Printf("[DEBUG] Reading Availability Zones: %s", request)
@@ -68,13 +119,38 @@ func dataSourceAwsAvailabilityZonesRead(d *schema.ResourceData, meta interface{}
 		return aws.StringValue(resp.AvailabilityZones[i].ZoneName) < aws.StringValue(resp.AvailabilityZones[j].ZoneName)
 	})
 
+	blacklistedNames := d.Get("blacklisted_names").(*schema.Set)
+	blacklistedZoneIDs := d.Get("blacklisted_zone_ids").(*schema.Set)
+	excludeNames := d.Get("exclude_names").(*schema.Set)
+	excludeZoneIDs := d.Get("exclude_zone_ids").(*schema.Set)
+
+	groupNames := schema.NewSet(schema.HashString, nil)
 	names := []string{}
 	zoneIds := []string{}
 	for _, v := range resp.AvailabilityZones {
-		names = append(names, aws.StringValue(v.ZoneName))
-		zoneIds = append(zoneIds, aws.StringValue(v.ZoneId))
+		groupName := aws.StringValue(v.GroupName)
+		name := aws.StringValue(v.ZoneName)
+		zoneID := aws.StringValue(v.ZoneId)
+
+		if blacklistedNames.Contains(name) || excludeNames.Contains(name) {
+			continue
+		}
+
+		if blacklistedZoneIDs.Contains(zoneID) || excludeZoneIDs.Contains(zoneID) {
+			continue
+		}
+
+		if !groupNames.Contains(groupName) {
+			groupNames.Add(groupName)
+		}
+
+		names = append(names, name)
+		zoneIds = append(zoneIds, zoneID)
 	}
 
+	if err := d.Set("group_names", groupNames); err != nil {
+		return fmt.Errorf("error setting group_names: %s", err)
+	}
 	if err := d.Set("names", names); err != nil {
 		return fmt.Errorf("Error setting Availability Zone names: %s", err)
 	}

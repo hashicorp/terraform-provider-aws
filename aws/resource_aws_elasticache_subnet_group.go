@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/elasticache"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsElasticacheSubnetGroup() *schema.Resource {
@@ -127,7 +127,7 @@ func resourceAwsElasticacheSubnetGroupRead(d *schema.ResourceData, meta interfac
 
 func resourceAwsElasticacheSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).elasticacheconn
-	if d.HasChange("subnet_ids") || d.HasChange("description") {
+	if d.HasChanges("subnet_ids", "description") {
 		var subnets []*string
 		if v := d.Get("subnet_ids"); v != nil {
 			for _, v := range v.(*schema.Set).List() {
@@ -153,7 +153,7 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 
 	log.Printf("[DEBUG] Cache subnet group delete: %s", d.Id())
 
-	return resource.Retry(5*time.Minute, func() *resource.RetryError {
+	err := resource.Retry(5*time.Minute, func() *resource.RetryError {
 		_, err := conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
 			CacheSubnetGroupName: aws.String(d.Id()),
 		})
@@ -173,4 +173,19 @@ func resourceAwsElasticacheSubnetGroupDelete(d *schema.ResourceData, meta interf
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		_, err = conn.DeleteCacheSubnetGroup(&elasticache.DeleteCacheSubnetGroupInput{
+			CacheSubnetGroupName: aws.String(d.Id()),
+		})
+	}
+
+	if isAWSErr(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault, "") {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error deleting Elasticache Subnet Group (%s): %s", d.Id(), err)
+	}
+
+	return nil
 }

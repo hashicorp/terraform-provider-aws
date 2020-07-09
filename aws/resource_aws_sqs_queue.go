@@ -10,11 +10,13 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 var sqsQueueAttributeMap = map[string]string{
@@ -89,13 +91,13 @@ func resourceAwsSqsQueue() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 			"redrive_policy": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -170,6 +172,11 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		QueueName: aws.String(name),
 	}
 
+	// Tag-on-create is currently only supported in AWS Commercial
+	if v, ok := d.GetOk("tags"); ok && meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		req.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().SqsTags()
+	}
+
 	attributes := make(map[string]*string)
 
 	queueResource := *resourceAwsSqsQueue()
@@ -206,20 +213,32 @@ func resourceAwsSqsQueueCreate(d *schema.ResourceData, meta interface{}) error {
 		}
 		return nil
 	})
+	if isResourceTimeoutError(err) {
+		output, err = sqsconn.CreateQueue(req)
+	}
 	if err != nil {
 		return fmt.Errorf("Error creating SQS queue: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.QueueUrl))
 
-	return resourceAwsSqsQueueUpdate(d, meta)
+	// Tag-on-create is currently only supported in AWS Commercial
+	if meta.(*AWSClient).partition == endpoints.AwsPartitionID {
+		return resourceAwsSqsQueueRead(d, meta)
+	} else {
+		return resourceAwsSqsQueueUpdate(d, meta)
+	}
 }
 
 func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
 
-	if err := setTagsSQS(sqsconn, d); err != nil {
-		return err
+	if d.HasChange("tags") {
+		o, n := d.GetChange("tags")
+
+		if err := keyvaluetags.SqsUpdateTags(sqsconn, d.Id(), o, n); err != nil {
+			return fmt.Errorf("error updating SQS Queue (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	attributes := make(map[string]*string)
@@ -258,6 +277,7 @@ func resourceAwsSqsQueueUpdate(d *schema.ResourceData, meta interface{}) error {
 
 func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	sqsconn := meta.(*AWSClient).sqsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	attributeOutput, err := sqsconn.GetQueueAttributes(&sqs.GetQueueAttributesInput{
 		QueueUrl:       aws.String(d.Id()),
@@ -267,7 +287,7 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		if awsErr, ok := err.(awserr.Error); ok {
 			log.Printf("ERROR Found %s", awsErr.Code())
-			if awsErr.Code() == "AWS.SimpleQueueService.NonExistentQueue" {
+			if awsErr.Code() == sqs.ErrCodeQueueDoesNotExist {
 				d.SetId("")
 				log.Printf("[DEBUG] SQS Queue (%s) not found", d.Get("name").(string))
 				return nil
@@ -280,58 +300,136 @@ func resourceAwsSqsQueueRead(d *schema.ResourceData, meta interface{}) error {
 	if err != nil {
 		return err
 	}
-	d.Set("name", name)
 
-	if attributeOutput.Attributes != nil && len(attributeOutput.Attributes) > 0 {
-		attrmap := attributeOutput.Attributes
-		resource := *resourceAwsSqsQueue()
-		// iKey = internal struct key, oKey = AWS Attribute Map key
-		for iKey, oKey := range sqsQueueAttributeMap {
-			if attrmap[oKey] != nil {
-				switch resource.Schema[iKey].Type {
-				case schema.TypeInt:
-					value, err := strconv.Atoi(*attrmap[oKey])
-					if err != nil {
-						return err
-					}
-					d.Set(iKey, value)
-					log.Printf("[DEBUG] Reading %s => %s -> %d", iKey, oKey, value)
-				case schema.TypeBool:
-					value, err := strconv.ParseBool(*attrmap[oKey])
-					if err != nil {
-						return err
-					}
-					d.Set(iKey, value)
-					log.Printf("[DEBUG] Reading %s => %s -> %t", iKey, oKey, value)
-				default:
-					log.Printf("[DEBUG] Reading %s => %s -> %s", iKey, oKey, *attrmap[oKey])
-					d.Set(iKey, *attrmap[oKey])
-				}
+	// Always set attribute defaults
+	d.Set("arn", "")
+	d.Set("content_based_deduplication", false)
+	d.Set("delay_seconds", 0)
+	d.Set("fifo_queue", false)
+	d.Set("kms_data_key_reuse_period_seconds", 300)
+	d.Set("kms_master_key_id", "")
+	d.Set("max_message_size", 262144)
+	d.Set("message_retention_seconds", 345600)
+	d.Set("name", name)
+	d.Set("policy", "")
+	d.Set("receive_wait_time_seconds", 0)
+	d.Set("redrive_policy", "")
+	d.Set("visibility_timeout_seconds", 30)
+
+	if attributeOutput != nil {
+		queueAttributes := aws.StringValueMap(attributeOutput.Attributes)
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameQueueArn]; ok {
+			d.Set("arn", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameContentBasedDeduplication]; ok && v != "" {
+			vBool, err := strconv.ParseBool(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing content_based_deduplication value (%s) into boolean: %s", v, err)
 			}
+
+			d.Set("content_based_deduplication", vBool)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameDelaySeconds]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing delay_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("delay_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameFifoQueue]; ok && v != "" {
+			vBool, err := strconv.ParseBool(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing fifo_queue value (%s) into boolean: %s", v, err)
+			}
+
+			d.Set("fifo_queue", vBool)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameKmsDataKeyReusePeriodSeconds]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing kms_data_key_reuse_period_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("kms_data_key_reuse_period_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameKmsMasterKeyId]; ok {
+			d.Set("kms_master_key_id", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameMaximumMessageSize]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing max_message_size value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("max_message_size", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameMessageRetentionPeriod]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing message_retention_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("message_retention_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNamePolicy]; ok {
+			d.Set("policy", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameReceiveMessageWaitTimeSeconds]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing receive_wait_time_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("receive_wait_time_seconds", vInt)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameRedrivePolicy]; ok {
+			d.Set("redrive_policy", v)
+		}
+
+		if v, ok := queueAttributes[sqs.QueueAttributeNameVisibilityTimeout]; ok && v != "" {
+			vInt, err := strconv.Atoi(v)
+
+			if err != nil {
+				return fmt.Errorf("error parsing visibility_timeout_seconds value (%s) into integer: %s", v, err)
+			}
+
+			d.Set("visibility_timeout_seconds", vInt)
 		}
 	}
 
-	// Since AWS does not send the FifoQueue attribute back when the queue
-	// is a standard one (even to false), this enforces the queue to be set
-	// to the correct value.
-	d.Set("fifo_queue", d.Get("fifo_queue").(bool))
-	d.Set("content_based_deduplication", d.Get("content_based_deduplication").(bool))
+	tags, err := keyvaluetags.SqsListTags(sqsconn, d.Id())
 
-	tags := make(map[string]string)
-	listTagsOutput, err := sqsconn.ListQueueTags(&sqs.ListQueueTagsInput{
-		QueueUrl: aws.String(d.Id()),
-	})
 	if err != nil {
 		// Non-standard partitions (e.g. US Gov) and some local development
 		// solutions do not yet support this API call. Depending on the
 		// implementation it may return InvalidAction or AWS.SimpleQueueService.UnsupportedOperation
 		if !isAWSErr(err, "InvalidAction", "") && !isAWSErr(err, sqs.ErrCodeUnsupportedOperation, "") {
-			return err
+			return fmt.Errorf("error listing tags for SQS Queue (%s): %s", d.Id(), err)
 		}
-	} else {
-		tags = tagsToMapGeneric(listTagsOutput.Tags)
 	}
-	d.Set("tags", tags)
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
 
 	return nil
 }
@@ -359,40 +457,4 @@ func extractNameFromSqsQueueUrl(queue string) (string, error) {
 
 	return segments[2], nil
 
-}
-
-func setTagsSQS(conn *sqs.SQS, d *schema.ResourceData) error {
-	if d.HasChange("tags") {
-		oraw, nraw := d.GetChange("tags")
-		create, remove := diffTagsGeneric(oraw.(map[string]interface{}), nraw.(map[string]interface{}))
-
-		if len(remove) > 0 {
-			log.Printf("[DEBUG] Removing tags: %#v", remove)
-			keys := make([]*string, 0, len(remove))
-			for k := range remove {
-				keys = append(keys, aws.String(k))
-			}
-
-			_, err := conn.UntagQueue(&sqs.UntagQueueInput{
-				QueueUrl: aws.String(d.Id()),
-				TagKeys:  keys,
-			})
-			if err != nil {
-				return err
-			}
-		}
-		if len(create) > 0 {
-			log.Printf("[DEBUG] Creating tags: %#v", create)
-
-			_, err := conn.TagQueue(&sqs.TagQueueInput{
-				QueueUrl: aws.String(d.Id()),
-				Tags:     create,
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
 }

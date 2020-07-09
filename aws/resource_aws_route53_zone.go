@@ -10,10 +10,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53"
-	"github.com/hashicorp/terraform/helper/hashcode"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsRoute53Zone() *schema.Resource {
@@ -41,12 +42,10 @@ func resourceAwsRoute53Zone() *schema.Resource {
 			},
 
 			"vpc": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				// Deprecated: Remove Computed: true in next major version of the provider
-				Computed:      true,
+				Type:          schema.TypeSet,
+				Optional:      true,
 				MinItems:      1,
-				ConflictsWith: []string{"delegation_set_id", "vpc_id", "vpc_region"},
+				ConflictsWith: []string{"delegation_set_id"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"vpc_id": {
@@ -65,21 +64,19 @@ func resourceAwsRoute53Zone() *schema.Resource {
 			},
 
 			"vpc_id": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ConflictsWith: []string{"delegation_set_id", "vpc"},
-				Deprecated:    "use 'vpc' attribute instead",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				Removed:  "use 'vpc' configuration block instead",
 			},
 
 			"vpc_region": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				ConflictsWith: []string{"delegation_set_id", "vpc"},
-				Deprecated:    "use 'vpc' attribute instead",
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				Computed: true,
+				Removed:  "use 'vpc' configuration block instead",
 			},
 
 			"zone_id": {
@@ -91,7 +88,7 @@ func resourceAwsRoute53Zone() *schema.Resource {
 				Type:          schema.TypeString,
 				Optional:      true,
 				ForceNew:      true,
-				ConflictsWith: []string{"vpc_id"},
+				ConflictsWith: []string{"vpc"},
 			},
 
 			"name_servers": {
@@ -132,20 +129,6 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 
 	var vpcs []*route53.VPC = expandRoute53VPCs(d.Get("vpc").(*schema.Set).List(), region)
 
-	// Backwards compatibility
-	if vpcID, ok := d.GetOk("vpc_id"); ok {
-		vpc := &route53.VPC{
-			VPCId:     aws.String(vpcID.(string)),
-			VPCRegion: aws.String(region),
-		}
-
-		if vpcRegion, ok := d.GetOk("vpc_region"); ok {
-			vpc.VPCRegion = aws.String(vpcRegion.(string))
-		}
-
-		vpcs = []*route53.VPC{vpc}
-	}
-
 	if len(vpcs) > 0 {
 		input.VPC = vpcs[0]
 	}
@@ -159,12 +142,14 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 
 	d.SetId(cleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
-	if err := route53WaitForChangeSynchronization(conn, cleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
-		return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) creation: %s", d.Id(), err)
+	if output.ChangeInfo != nil {
+		if err := route53WaitForChangeSynchronization(conn, cleanChangeID(aws.StringValue(output.ChangeInfo.Id))); err != nil {
+			return fmt.Errorf("error waiting for Route53 Hosted Zone (%s) creation: %s", d.Id(), err)
+		}
 	}
 
-	if err := setTagsR53(conn, d, route53.TagResourceTypeHostedzone); err != nil {
-		return fmt.Errorf("error setting tags for Route53 Hosted Zone (%s): %s", d.Id(), err)
+	if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, map[string]interface{}{}, d.Get("tags").(map[string]interface{})); err != nil {
+		return fmt.Errorf("error setting Route53 Zone (%s) tags: %s", d.Id(), err)
 	}
 
 	// Associate additional VPCs beyond the first
@@ -183,6 +168,7 @@ func resourceAwsRoute53ZoneCreate(d *schema.ResourceData, meta interface{}) erro
 
 func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &route53.GetHostedZoneInput{
 		Id: aws.String(d.Id()),
@@ -238,54 +224,18 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 		return fmt.Errorf("error setting name_servers: %s", err)
 	}
 
-	// Backwards compatibility: only set vpc_id/vpc_region if either is true:
-	//  * Previously configured
-	//  * Only one VPC association
-	existingVpcID := d.Get("vpc_id").(string)
-
-	// Detect drift in configuration
-	d.Set("vpc_id", "")
-	d.Set("vpc_region", "")
-
-	if len(output.VPCs) == 1 && output.VPCs[0] != nil {
-		d.Set("vpc_id", output.VPCs[0].VPCId)
-		d.Set("vpc_region", output.VPCs[0].VPCRegion)
-	} else if len(output.VPCs) > 1 {
-		for _, vpc := range output.VPCs {
-			if vpc == nil {
-				continue
-			}
-			if aws.StringValue(vpc.VPCId) == existingVpcID {
-				d.Set("vpc_id", vpc.VPCId)
-				d.Set("vpc_region", vpc.VPCRegion)
-			}
-		}
-	}
-
 	if err := d.Set("vpc", flattenRoute53VPCs(output.VPCs)); err != nil {
 		return fmt.Errorf("error setting vpc: %s", err)
 	}
 
-	// get tags
-	req := &route53.ListTagsForResourceInput{
-		ResourceId:   aws.String(d.Id()),
-		ResourceType: aws.String(route53.TagResourceTypeHostedzone),
-	}
-
-	log.Printf("[DEBUG] Listing tags for Route53 Hosted Zone: %s", req)
-	resp, err := conn.ListTagsForResource(req)
+	tags, err := keyvaluetags.Route53ListTags(conn, d.Id(), route53.TagResourceTypeHostedzone)
 
 	if err != nil {
 		return fmt.Errorf("error listing tags for Route53 Hosted Zone (%s): %s", d.Id(), err)
 	}
 
-	var tags []*route53.Tag
-	if resp.ResourceTagSet != nil {
-		tags = resp.ResourceTagSet.Tags
-	}
-
-	if err := d.Set("tags", tagsToMapR53(tags)); err != nil {
-		return err
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
 	}
 
 	return nil
@@ -294,8 +244,6 @@ func resourceAwsRoute53ZoneRead(d *schema.ResourceData, meta interface{}) error 
 func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).r53conn
 	region := meta.(*AWSClient).region
-
-	d.Partial(true)
 
 	if d.HasChange("comment") {
 		input := route53.UpdateHostedZoneCommentInput{
@@ -308,16 +256,14 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 		if err != nil {
 			return fmt.Errorf("error updating Route53 Hosted Zone (%s) comment: %s", d.Id(), err)
 		}
-
-		d.SetPartial("comment")
 	}
 
 	if d.HasChange("tags") {
-		if err := setTagsR53(conn, d, route53.TagResourceTypeHostedzone); err != nil {
-			return err
-		}
+		o, n := d.GetChange("tags")
 
-		d.SetPartial("tags")
+		if err := keyvaluetags.Route53UpdateTags(conn, d.Id(), route53.TagResourceTypeHostedzone, o, n); err != nil {
+			return fmt.Errorf("error updating Route53 Zone (%s) tags: %s", d.Id(), err)
+		}
 	}
 
 	if d.HasChange("vpc") {
@@ -351,11 +297,7 @@ func resourceAwsRoute53ZoneUpdate(d *schema.ResourceData, meta interface{}) erro
 				return err
 			}
 		}
-
-		d.SetPartial("vpc")
 	}
-
-	d.Partial(false)
 
 	return resourceAwsRoute53ZoneRead(d, meta)
 }
@@ -455,20 +397,12 @@ func resourceAwsGoRoute53Wait(r53 *route53.Route53, ref *route53.GetChangeInput)
 
 // cleanChangeID is used to remove the leading /change/
 func cleanChangeID(ID string) string {
-	return cleanPrefix(ID, "/change/")
+	return strings.TrimPrefix(ID, "/change/")
 }
 
 // cleanZoneID is used to remove the leading /hostedzone/
 func cleanZoneID(ID string) string {
-	return cleanPrefix(ID, "/hostedzone/")
-}
-
-// cleanPrefix removes a string prefix from an ID
-func cleanPrefix(ID, prefix string) string {
-	if strings.HasPrefix(ID, prefix) {
-		ID = strings.TrimPrefix(ID, prefix)
-	}
-	return ID
+	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
 func getNameServers(zoneId string, zoneName string, r53 *route53.Route53) ([]string, error) {

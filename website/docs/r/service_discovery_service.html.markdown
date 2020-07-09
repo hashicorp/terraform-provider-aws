@@ -1,12 +1,12 @@
 ---
+subcategory: "Service Discovery"
 layout: "aws"
 page_title: "AWS: aws_service_discovery_service"
-sidebar_current: "docs-aws-resource-service-discovery-service"
 description: |-
   Provides a Service Discovery Service resource.
 ---
 
-# aws_service_discovery_service
+# Resource: aws_service_discovery_service
 
 Provides a Service Discovery Service resource.
 
@@ -14,7 +14,9 @@ Provides a Service Discovery Service resource.
 
 ```hcl
 resource "aws_vpc" "example" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
 }
 
 resource "aws_service_discovery_private_dns_namespace" "example" {
@@ -75,9 +77,11 @@ The following arguments are supported:
 
 * `name` - (Required, ForceNew) The name of the service.
 * `description` - (Optional) The description of the service.
-* `dns_config` - (Required) A complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance.
+* `dns_config` - (Optional) A complex type that contains information about the resource record sets that you want Amazon Route 53 to create when you register an instance.
 * `health_check_config` - (Optional) A complex type that contains settings for an optional health check. Only for Public DNS namespaces.
 * `health_check_custom_config` - (Optional, ForceNew) A complex type that contains settings for ECS managed health checks.
+* `namespace_id` - (Optional) The ID of the namespace that you want to use to create the service.
+* `tags` - (Optional) A map of tags to assign to the service.
 
 ### dns_config
 

@@ -1,22 +1,24 @@
 ---
+subcategory: "WAF Regional"
 layout: "aws"
-page_title: "AWS: wafregional_xss_match_set"
-sidebar_current: "docs-aws-resource-wafregional-xss-match-set"
+page_title: "AWS: aws_wafregional_xss_match_set"
 description: |-
   Provides an AWS WAF Regional XSS Match Set resource for use with ALB.
 ---
 
-# aws_wafregional_xss_match_set
+# Resource: aws_wafregional_xss_match_set
 
 Provides a WAF Regional XSS Match Set Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```
+```hcl
 resource "aws_wafregional_xss_match_set" "xss_match_set" {
   name = "xss_match_set"
+
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "URI"
     }
@@ -24,6 +26,7 @@ resource "aws_wafregional_xss_match_set" "xss_match_set" {
 
   xss_match_tuple {
     text_transformation = "NONE"
+
     field_to_match {
       type = "QUERY_STRING"
     }
@@ -55,3 +58,11 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The ID of the Regional WAF XSS Match Set.
+
+## Import
+
+AWS WAF Regional XSS Match can be imported using the `id`, e.g.
+
+```sh
+$ terraform import aws_wafregional_xss_match_set.example 12345abcde
+```

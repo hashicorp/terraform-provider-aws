@@ -3,13 +3,14 @@ package aws
 import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func resourceAwsCloudFrontDistributionImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	// This is a non API attribute
 	// We are merely setting this to the same value as the Default setting in the schema
 	d.Set("retain_on_delete", false)
+	d.Set("wait_for_deployment", true)
 
 	conn := meta.(*AWSClient).cloudfrontconn
 	id := d.Id()

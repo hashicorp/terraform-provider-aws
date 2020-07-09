@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"log"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kinesisanalytics"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
@@ -19,6 +21,15 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 		Read:   resourceAwsKinesisAnalyticsApplicationRead,
 		Update: resourceAwsKinesisAnalyticsApplicationUpdate,
 		Delete: resourceAwsKinesisAnalyticsApplicationDelete,
+
+		Importer: &schema.ResourceImporter{
+			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				arns := strings.Split(d.Id(), ":")
+				name := strings.Replace(arns[len(arns)-1], "application/", "", 1)
+				d.Set("name", name)
+				return []*schema.ResourceData{d}, nil
+			},
+		},
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -542,6 +553,7 @@ func resourceAwsKinesisAnalyticsApplication() *schema.Resource {
 					},
 				},
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -569,17 +581,29 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		createOpts.Inputs = []*kinesisanalytics.Input{inputs}
 	}
 
-	if v, ok := d.GetOk("outputs"); ok {
-		o := v.([]interface{})[0].(map[string]interface{})
-		outputs := expandKinesisAnalyticsOutputs(o)
-		createOpts.Outputs = []*kinesisanalytics.Output{outputs}
+	if v := d.Get("outputs").([]interface{}); len(v) > 0 {
+		outputs := make([]*kinesisanalytics.Output, 0)
+		for _, o := range v {
+			output := expandKinesisAnalyticsOutputs(o.(map[string]interface{}))
+			outputs = append(outputs, output)
+		}
+		createOpts.Outputs = outputs
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		createOpts.Tags = keyvaluetags.New(v).IgnoreAws().KinesisanalyticsTags()
 	}
 
 	// Retry for IAM eventual consistency
 	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
 		output, err := conn.CreateApplication(createOpts)
 		if err != nil {
+			// Kinesis Stream: https://github.com/terraform-providers/terraform-provider-aws/issues/7032
 			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics service doesn't have sufficient privileges") {
+				return resource.RetryableError(err)
+			}
+			// Kinesis Firehose: https://github.com/terraform-providers/terraform-provider-aws/issues/7394
+			if isAWSErr(err, kinesisanalytics.ErrCodeInvalidArgumentException, "Kinesis Analytics doesn't have sufficient privileges") {
 				return resource.RetryableError(err)
 			}
 			// InvalidArgumentException: Given IAM role arn : arn:aws:iam::123456789012:role/xxx does not provide Invoke permissions on the Lambda resource : arn:aws:lambda:us-west-2:123456789012:function:yyy
@@ -591,6 +615,13 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 		d.SetId(aws.StringValue(output.ApplicationSummary.ApplicationARN))
 		return nil
 	})
+
+	if isResourceTimeoutError(err) {
+		var output *kinesisanalytics.CreateApplicationOutput
+		output, err = conn.CreateApplication(createOpts)
+		d.SetId(aws.StringValue(output.ApplicationSummary.ApplicationARN))
+	}
+
 	if err != nil {
 		return fmt.Errorf("Unable to create Kinesis Analytics application: %s", err)
 	}
@@ -600,6 +631,8 @@ func resourceAwsKinesisAnalyticsApplicationCreate(d *schema.ResourceData, meta i
 
 func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).kinesisanalyticsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+
 	name := d.Get("name").(string)
 
 	describeOpts := &kinesisanalytics.DescribeApplicationInput{
@@ -615,8 +648,9 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error reading Kinesis Analytics Application (%s): %s", d.Id(), err)
 	}
 
+	arn := aws.StringValue(resp.ApplicationDetail.ApplicationARN)
 	d.Set("name", aws.StringValue(resp.ApplicationDetail.ApplicationName))
-	d.Set("arn", aws.StringValue(resp.ApplicationDetail.ApplicationARN))
+	d.Set("arn", arn)
 	d.Set("code", aws.StringValue(resp.ApplicationDetail.ApplicationCode))
 	d.Set("create_timestamp", aws.TimeValue(resp.ApplicationDetail.CreateTimestamp).Format(time.RFC3339))
 	d.Set("description", aws.StringValue(resp.ApplicationDetail.ApplicationDescription))
@@ -640,6 +674,16 @@ func resourceAwsKinesisAnalyticsApplicationRead(d *schema.ResourceData, meta int
 		return fmt.Errorf("error setting reference_data_sources: %s", err)
 	}
 
+	tags, err := keyvaluetags.KinesisanalyticsListTags(conn, arn)
+
+	if err != nil {
+		return fmt.Errorf("error listing tags for Kinesis Analytics Application (%s): %s", arn, err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
@@ -660,10 +704,7 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 			CurrentApplicationVersionId: aws.Int64(int64(version)),
 		}
 
-		applicationUpdate, err := createApplicationUpdateOpts(d)
-		if err != nil {
-			return err
-		}
+		applicationUpdate := createApplicationUpdateOpts(d)
 
 		if !reflect.DeepEqual(applicationUpdate, &kinesisanalytics.ApplicationUpdate{}) {
 			updateApplicationOpts.SetApplicationUpdate(applicationUpdate)
@@ -695,6 +736,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationCloudWatchLoggingOption(addOpts)
+				}
+
 				if err != nil {
 					return fmt.Errorf("Unable to add CloudWatch logging options: %s", err)
 				}
@@ -727,6 +772,10 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationInput(addOpts)
+				}
+
 				if err != nil {
 					return fmt.Errorf("Unable to add application inputs: %s", err)
 				}
@@ -759,10 +808,22 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationOutput(addOpts)
+				}
 				if err != nil {
 					return fmt.Errorf("Unable to add application outputs: %s", err)
 				}
 				version = version + 1
+			}
+		}
+
+		arn := d.Get("arn").(string)
+		if d.HasChange("tags") {
+			o, n := d.GetChange("tags")
+
+			if err := keyvaluetags.KinesisanalyticsUpdateTags(conn, arn, o, n); err != nil {
+				return fmt.Errorf("error updating Kinesis Analytics Application (%s) tags: %s", arn, err)
 			}
 		}
 	}
@@ -789,6 +850,9 @@ func resourceAwsKinesisAnalyticsApplicationUpdate(d *schema.ResourceData, meta i
 					}
 					return nil
 				})
+				if isResourceTimeoutError(err) {
+					_, err = conn.AddApplicationReferenceDataSource(addOpts)
+				}
 				if err != nil {
 					return fmt.Errorf("Unable to add application reference data source: %s", err)
 				}
@@ -1018,7 +1082,7 @@ func expandKinesisAnalyticsReferenceData(rd map[string]interface{}) *kinesisanal
 	return referenceData
 }
 
-func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.ApplicationUpdate, error) {
+func createApplicationUpdateOpts(d *schema.ResourceData) *kinesisanalytics.ApplicationUpdate {
 	applicationUpdate := &kinesisanalytics.ApplicationUpdate{}
 
 	if d.HasChange("code") {
@@ -1087,7 +1151,7 @@ func createApplicationUpdateOpts(d *schema.ResourceData) (*kinesisanalytics.Appl
 		}
 	}
 
-	return applicationUpdate, nil
+	return applicationUpdate
 }
 
 func expandKinesisAnalyticsInputUpdate(vL map[string]interface{}) *kinesisanalytics.InputUpdate {
@@ -1404,45 +1468,43 @@ func flattenKinesisAnalyticsInputs(inputs []*kinesisanalytics.InputDescription) 
 func flattenKinesisAnalyticsOutputs(outputs []*kinesisanalytics.OutputDescription) []interface{} {
 	s := []interface{}{}
 
-	if len(outputs) > 0 {
-		id := outputs[0]
-
+	for _, o := range outputs {
 		output := map[string]interface{}{
-			"id":   aws.StringValue(id.OutputId),
-			"name": aws.StringValue(id.Name),
+			"id":   aws.StringValue(o.OutputId),
+			"name": aws.StringValue(o.Name),
 		}
 
-		if id.KinesisFirehoseOutputDescription != nil {
+		if o.KinesisFirehoseOutputDescription != nil {
 			output["kinesis_firehose"] = []interface{}{
 				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisFirehoseOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisFirehoseOutputDescription.RoleARN),
+					"resource_arn": aws.StringValue(o.KinesisFirehoseOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(o.KinesisFirehoseOutputDescription.RoleARN),
 				},
 			}
 		}
 
-		if id.KinesisStreamsOutputDescription != nil {
+		if o.KinesisStreamsOutputDescription != nil {
 			output["kinesis_stream"] = []interface{}{
 				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.KinesisStreamsOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.KinesisStreamsOutputDescription.RoleARN),
+					"resource_arn": aws.StringValue(o.KinesisStreamsOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(o.KinesisStreamsOutputDescription.RoleARN),
 				},
 			}
 		}
 
-		if id.LambdaOutputDescription != nil {
+		if o.LambdaOutputDescription != nil {
 			output["lambda"] = []interface{}{
 				map[string]interface{}{
-					"resource_arn": aws.StringValue(id.LambdaOutputDescription.ResourceARN),
-					"role_arn":     aws.StringValue(id.LambdaOutputDescription.RoleARN),
+					"resource_arn": aws.StringValue(o.LambdaOutputDescription.ResourceARN),
+					"role_arn":     aws.StringValue(o.LambdaOutputDescription.RoleARN),
 				},
 			}
 		}
 
-		if id.DestinationSchema != nil {
+		if o.DestinationSchema != nil {
 			output["schema"] = []interface{}{
 				map[string]interface{}{
-					"record_format_type": aws.StringValue(id.DestinationSchema.RecordFormatType),
+					"record_format_type": aws.StringValue(o.DestinationSchema.RecordFormatType),
 				},
 			}
 		}

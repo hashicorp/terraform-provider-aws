@@ -6,25 +6,31 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAwsBackupVault_basic(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultConfig(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -34,17 +40,23 @@ func TestAccAwsBackupVault_withKmsKey(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultWithKmsKey(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
-					resource.TestCheckResourceAttrPair("aws_backup_vault.test", "kms_key_arn", "aws_kms_key.test", "arn"),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_arn", "aws_kms_key.test", "arn"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -54,19 +66,67 @@ func TestAccAwsBackupVault_withTags(t *testing.T) {
 	var vault backup.DescribeBackupVaultOutput
 
 	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBackupVaultWithTags(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsBackupVaultExists("aws_backup_vault.test", &vault),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.%", "2"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.up", "down"),
-					resource.TestCheckResourceAttr("aws_backup_vault.test", "tags.left", "right"),
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.up", "down"),
+					resource.TestCheckResourceAttr(resourceName, "tags.left", "right"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccBackupVaultWithUpdateTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.up", "downdown"),
+					resource.TestCheckResourceAttr(resourceName, "tags.left", "rightright"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+			{
+				Config: testAccBackupVaultWithRemoveTags(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
+					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsBackupVault_disappears(t *testing.T) {
+	var vault backup.DescribeBackupVaultOutput
+
+	rInt := acctest.RandInt()
+	resourceName := "aws_backup_vault.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSBackup(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsBackupVaultDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackupVaultConfig(rInt),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsBackupVaultExists(resourceName, &vault),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsBackupVault(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -117,10 +177,26 @@ func testAccCheckAwsBackupVaultExists(name string, vault *backup.DescribeBackupV
 	}
 }
 
+func testAccPreCheckAWSBackup(t *testing.T) {
+	conn := testAccProvider.Meta().(*AWSClient).backupconn
+
+	input := &backup.ListBackupVaultsInput{}
+
+	_, err := conn.ListBackupVaults(input)
+
+	if testAccPreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func testAccBackupVaultConfig(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
+  name = "tf_acc_test_backup_vault_%d"
 }
 `, randInt)
 }
@@ -128,13 +204,13 @@ resource "aws_backup_vault" "test" {
 func testAccBackupVaultWithKmsKey(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-	description             = "Test KMS Key for AWS Backup Vault"
-	deletion_window_in_days = 10
+  description             = "Test KMS Key for AWS Backup Vault"
+  deletion_window_in_days = 10
 }
 
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
-	kms_key_arn = "${aws_kms_key.test.arn}"
+  name        = "tf_acc_test_backup_vault_%d"
+  kms_key_arn = "${aws_kms_key.test.arn}"
 }
 `, randInt)
 }
@@ -142,12 +218,40 @@ resource "aws_backup_vault" "test" {
 func testAccBackupVaultWithTags(randInt int) string {
 	return fmt.Sprintf(`
 resource "aws_backup_vault" "test" {
-	name = "tf_acc_test_backup_vault_%d"
-	
-	tags = {
-		up		= "down"
-		left	= "right"
-	}
+  name = "tf_acc_test_backup_vault_%d"
+
+  tags = {
+    up   = "down"
+    left = "right"
+  }
+}
+`, randInt)
+}
+
+func testAccBackupVaultWithUpdateTags(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%d"
+
+  tags = {
+    up   = "downdown"
+    left = "rightright"
+    foo  = "bar"
+    fizz = "buzz"
+  }
+}
+`, randInt)
+}
+
+func testAccBackupVaultWithRemoveTags(randInt int) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = "tf_acc_test_backup_vault_%d"
+
+  tags = {
+    foo  = "bar"
+    fizz = "buzz"
+  }
 }
 `, randInt)
 }

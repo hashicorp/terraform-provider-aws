@@ -1,12 +1,12 @@
 ---
+subcategory: "Lightsail"
 layout: "aws"
 page_title: "AWS: aws_lightsail_instance"
-sidebar_current: "docs-aws-resource-lightsail-instance"
 description: |-
   Provides an Lightsail Instance
 ---
 
-# aws_lightsail_instance
+# Resource: aws_lightsail_instance
 
 Provides a Lightsail Instance. Amazon Lightsail is a service to provide easy virtual private servers
 with custom software already setup. See [What is Amazon Lightsail?](https://lightsail.aws.amazon.com/ls/docs/getting-started/article/what-is-amazon-lightsail)
@@ -19,11 +19,14 @@ for more information.
 ```hcl
 # Create a new GitLab Lightsail Instance
 resource "aws_lightsail_instance" "gitlab_test" {
-  name              = "custom gitlab"
+  name              = "custom_gitlab"
   availability_zone = "us-east-1b"
   blueprint_id      = "string"
   bundle_id         = "string"
   key_pair_name     = "some_key_name"
+  tags = {
+    foo = "bar"
+  }
 }
 ```
 
@@ -31,15 +34,16 @@ resource "aws_lightsail_instance" "gitlab_test" {
 
 The following arguments are supported:
 
-* `name` - (Required) The name of the Lightsail Instance
+* `name` - (Required) The name of the Lightsail Instance. Names be unique within each AWS Region in your Lightsail account.
 * `availability_zone` - (Required) The Availability Zone in which to create your
 instance (see list below)
 * `blueprint_id` - (Required) The ID for a virtual private server image
 (see list below)
 * `bundle_id` - (Required) The bundle of specification information (see list below)
-* `key_pair_name` - (Required) The name of your key pair. Created in the
+* `key_pair_name` - (Optional) The name of your key pair. Created in the
 Lightsail console (cannot use `aws_key_pair` at this time)
 * `user_data` - (Optional) launch script to configure server with additional user data
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Availability Zones
 Lightsail currently supports the following Availability Zones (e.g. `us-east-1a`):
@@ -65,7 +69,7 @@ Lightsail currently supports the following Blueprint IDs:
 ### OS Only
 
 - `amazon_linux_2018_03_0_2`
-- `centos_7_1805_01`
+- `centos_7_1901_01`
 - `debian_8_7`
 - `debian_9_5`
 - `freebsd_11_1`
@@ -129,6 +133,7 @@ The following attributes are exported in addition to the arguments listed above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
+* `created_at` - The timestamp when the instance was created.
 * `availability_zone`
 * `blueprint_id`
 * `bundle_id`

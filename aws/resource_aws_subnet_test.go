@@ -5,12 +5,16 @@ import (
 	"log"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 // add sweeper to delete known test subnets
@@ -21,21 +25,29 @@ func init() {
 		Dependencies: []string{
 			"aws_autoscaling_group",
 			"aws_batch_compute_environment",
-			"aws_beanstalk_environment",
-			"aws_db_instance",
+			"aws_elastic_beanstalk_environment",
+			"aws_cloudhsm_v2_cluster",
+			"aws_db_subnet_group",
 			"aws_directory_service_directory",
+			"aws_ec2_client_vpn_endpoint",
 			"aws_ec2_transit_gateway_vpc_attachment",
+			"aws_efs_file_system",
 			"aws_eks_cluster",
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
 			"aws_elasticsearch_domain",
 			"aws_elb",
 			"aws_emr_cluster",
+			"aws_fsx_lustre_file_system",
+			"aws_fsx_windows_file_system",
 			"aws_lambda_function",
 			"aws_lb",
 			"aws_mq_broker",
+			"aws_msk_cluster",
 			"aws_network_interface",
 			"aws_redshift_cluster",
+			"aws_route53_resolver_endpoint",
+			"aws_sagemaker_notebook_instance",
 			"aws_spot_fleet_request",
 			"aws_vpc_endpoint",
 		},
@@ -48,78 +60,71 @@ func testSweepSubnets(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeSubnetsInput{}
+	var sweeperErrs *multierror.Error
 
-	req := &ec2.DescribeSubnetsInput{
-		Filters: []*ec2.Filter{
-			{
-				Name: aws.String("tag-value"),
-				Values: []*string{
-					aws.String("terraform-testacc-*"),
-					aws.String("tf-acc-*"),
-				},
-			},
-		},
-	}
-	resp, err := conn.DescribeSubnets(req)
-	if err != nil {
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeSubnetsPages(input, func(page *ec2.DescribeSubnetsOutput, lastPage bool) bool {
+		for _, subnet := range page.Subnets {
+			if subnet == nil {
+				continue
+			}
+
+			id := aws.StringValue(subnet.SubnetId)
+			input := &ec2.DeleteSubnetInput{
+				SubnetId: subnet.SubnetId,
+			}
+
+			if aws.BoolValue(subnet.DefaultForAz) {
+				log.Printf("[DEBUG] Skipping default EC2 Subnet: %s", id)
+				continue
+			}
+
+			log.Printf("[INFO] Deleting EC2 Subnet: %s", id)
+
+			// Handle eventual consistency, especially with lingering ENIs from Load Balancers and Lambda
+			err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+				_, err := conn.DeleteSubnet(input)
+
+				if isAWSErr(err, "DependencyViolation", "") {
+					return resource.RetryableError(err)
+				}
+
+				if err != nil {
+					return resource.NonRetryableError(err)
+				}
+
+				return nil
+			})
+
+			if isResourceTimeoutError(err) {
+				_, err = conn.DeleteSubnet(input)
+			}
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error deleting EC2 Subnet (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+			}
 		}
-		return fmt.Errorf("Error describing subnets: %s", err)
-	}
 
-	if len(resp.Subnets) == 0 {
-		log.Print("[DEBUG] No aws subnets to sweep")
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping EC2 Subnet sweep for %s: %s", region, err)
 		return nil
 	}
 
-	for _, subnet := range resp.Subnets {
-		if subnet == nil {
-			continue
-		}
-
-		if aws.BoolValue(subnet.DefaultForAz) {
-			continue
-		}
-
-		// delete the subnet
-		_, err := conn.DeleteSubnet(&ec2.DeleteSubnetInput{
-			SubnetId: subnet.SubnetId,
-		})
-		if err != nil {
-			return fmt.Errorf(
-				"Error deleting Subnet (%s): %s",
-				*subnet.SubnetId, err)
-		}
+	if err != nil {
+		return fmt.Errorf("Error describing subnets: %s", err)
 	}
 
-	return nil
-}
-
-func TestAccAWSSubnet_importBasic(t *testing.T) {
-	resourceName := "aws_subnet.foo"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
-		Providers:    testAccProviders,
-		CheckDestroy: testAccCheckSubnetDestroy,
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSubnetConfig,
-			},
-
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
+	return sweeperErrs.ErrorOrNil()
 }
 
 func TestAccAWSSubnet_basic(t *testing.T) {
 	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	testCheck := func(*terraform.State) error {
 		if aws.StringValue(v.CidrBlock) != "10.1.1.0/24" {
@@ -135,29 +140,58 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfig,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						"aws_subnet.foo", &v),
+					testAccCheckSubnetExists(resourceName, &v),
 					testCheck,
 					// ipv6 should be empty if disabled so we can still use the property in conditionals
-					resource.TestCheckResourceAttr(
-						"aws_subnet.foo", "ipv6_cidr_block", ""),
-					resource.TestMatchResourceAttr(
-						"aws_subnet.foo",
-						"arn",
-						regexp.MustCompile(`^arn:[^:]+:ec2:[^:]+:\d{12}:subnet/subnet-.+`)),
-					testAccCheckResourceAttrAccountID("aws_subnet.foo", "owner_id"),
-					resource.TestCheckResourceAttrSet(
-						"aws_subnet.foo", "availability_zone"),
-					resource.TestCheckResourceAttrSet(
-						"aws_subnet.foo", "availability_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_cidr_block", ""),
+					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile("subnet/subnet-.+$")),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSSubnet_ignoreTags(t *testing.T) {
+	var providers []*schema.Provider
+	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:          func() { testAccPreCheck(t) },
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckVpcDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfig,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &subnet),
+					testAccCheckSubnetUpdateTags(&subnet, nil, map[string]string{"ignorekey1": "ignorevalue1"}),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config:   testAccProviderConfigIgnoreTagsKeyPrefixes1("ignorekey") + testAccSubnetConfig,
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccProviderConfigIgnoreTagsKeys1("ignorekey1") + testAccSubnetConfig,
+				PlanOnly: true,
 			},
 		},
 	})
@@ -165,34 +199,37 @@ func TestAccAWSSubnet_basic(t *testing.T) {
 
 func TestAccAWSSubnet_ipv6(t *testing.T) {
 	var before, after ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						"aws_subnet.foo", &before),
-					testAccCheckAwsSubnetIpv6BeforeUpdate(t, &before),
+					testAccCheckSubnetExists(resourceName, &before),
+					testAccCheckAwsSubnetIpv6BeforeUpdate(&before),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						"aws_subnet.foo", &after),
-					testAccCheckAwsSubnetIpv6AfterUpdate(t, &after),
+					testAccCheckSubnetExists(resourceName, &after),
+					testAccCheckAwsSubnetIpv6AfterUpdate(&after),
 				),
 			},
 			{
 				Config: testAccSubnetConfigIpv6UpdateIpv6Cidr,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						"aws_subnet.foo", &after),
+					testAccCheckSubnetExists(resourceName, &after),
 
 					testAccCheckAwsSubnetNotRecreated(t, &before, &after),
 				),
@@ -203,25 +240,29 @@ func TestAccAWSSubnet_ipv6(t *testing.T) {
 
 func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 	var subnet ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfigPreIpv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						"aws_subnet.foo", &subnet),
+					testAccCheckSubnetExists(resourceName, &subnet),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccSubnetConfigIpv6,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						"aws_subnet.foo", &subnet),
+					testAccCheckSubnetExists(resourceName, &subnet),
 				),
 			},
 		},
@@ -230,29 +271,59 @@ func TestAccAWSSubnet_enableIpv6(t *testing.T) {
 
 func TestAccAWSSubnet_availabilityZoneId(t *testing.T) {
 	var v ec2.Subnet
+	resourceName := "aws_subnet.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
-		IDRefreshName: "aws_subnet.foo",
+		IDRefreshName: resourceName,
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckSubnetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubnetConfigAvailabilityZoneId,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSubnetExists(
-						"aws_subnet.foo", &v),
-					resource.TestCheckResourceAttrSet(
-						"aws_subnet.foo", "availability_zone"),
-					resource.TestCheckResourceAttr(
-						"aws_subnet.foo", "availability_zone_id", "usw2-az3"),
+					testAccCheckSubnetExists(resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "availability_zone_id", "usw2-az3"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
 }
 
-func testAccCheckAwsSubnetIpv6BeforeUpdate(t *testing.T, subnet *ec2.Subnet) resource.TestCheckFunc {
+func TestAccAWSSubnet_outpost(t *testing.T) {
+	var v ec2.Subnet
+	outpostDataSourceName := "data.aws_outposts_outpost.test"
+	resourceName := "aws_subnet.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckSubnetDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubnetConfigOutpost(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubnetExists(resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_arn", outpostDataSourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAwsSubnetIpv6BeforeUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if subnet.Ipv6CidrBlockAssociationSet == nil {
 			return fmt.Errorf("Expected IPV6 CIDR Block Association")
@@ -266,7 +337,7 @@ func testAccCheckAwsSubnetIpv6BeforeUpdate(t *testing.T, subnet *ec2.Subnet) res
 	}
 }
 
-func testAccCheckAwsSubnetIpv6AfterUpdate(t *testing.T, subnet *ec2.Subnet) resource.TestCheckFunc {
+func testAccCheckAwsSubnetIpv6AfterUpdate(subnet *ec2.Subnet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.BoolValue(subnet.AssignIpv6AddressOnCreation) {
 			return fmt.Errorf("bad AssignIpv6AddressOnCreation: %t", aws.BoolValue(subnet.AssignIpv6AddressOnCreation))
@@ -347,17 +418,25 @@ func testAccCheckSubnetExists(n string, v *ec2.Subnet) resource.TestCheckFunc {
 	}
 }
 
+func testAccCheckSubnetUpdateTags(subnet *ec2.Subnet, oldTags, newTags map[string]string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := testAccProvider.Meta().(*AWSClient).ec2conn
+
+		return keyvaluetags.Ec2UpdateTags(conn, aws.StringValue(subnet.SubnetId), oldTags, newTags)
+	}
+}
+
 const testAccSubnetConfig = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.1.0.0/16"
 	tags = {
 		Name = "terraform-testacc-subnet"
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.1.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	map_public_ip_on_launch = true
 	tags = {
 		Name = "tf-acc-subnet"
@@ -366,7 +445,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigPreIpv6 = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -374,9 +453,9 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
+	vpc_id = "${aws_vpc.test.id}"
 	map_public_ip_on_launch = true
 	tags = {
 		Name = "tf-acc-subnet-ipv6"
@@ -385,7 +464,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigIpv6 = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -393,10 +472,10 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = true
 	tags = {
@@ -406,7 +485,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigIpv6UpdateAssignIpv6OnCreation = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -414,10 +493,10 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 1)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 1)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags = {
@@ -427,7 +506,7 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigIpv6UpdateIpv6Cidr = `
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
 	cidr_block = "10.10.0.0/16"
 	assign_generated_ipv6_cidr_block = true
 	tags = {
@@ -435,10 +514,10 @@ resource "aws_vpc" "foo" {
 	}
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
 	cidr_block = "10.10.1.0/24"
-	vpc_id = "${aws_vpc.foo.id}"
-	ipv6_cidr_block = "${cidrsubnet(aws_vpc.foo.ipv6_cidr_block, 8, 3)}"
+	vpc_id = "${aws_vpc.test.id}"
+	ipv6_cidr_block = "${cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, 3)}"
 	map_public_ip_on_launch = true
 	assign_ipv6_address_on_creation = false
 	tags = {
@@ -448,23 +527,47 @@ resource "aws_subnet" "foo" {
 `
 
 const testAccSubnetConfigAvailabilityZoneId = `
-provider "aws" {
-  region = "us-west-2"
-}
-
-resource "aws_vpc" "foo" {
+resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
   tags = {
     Name = "terraform-testacc-subnet"
   }
 }
 
-resource "aws_subnet" "foo" {
+resource "aws_subnet" "test" {
   cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = "${aws_vpc.test.id}"
   availability_zone_id = "usw2-az3"
   tags = {
     Name = "tf-acc-subnet"
   }
 }
 `
+
+func testAccSubnetConfigOutpost() string {
+	return `
+data "aws_outposts_outposts" "test" {}
+
+data "aws_outposts_outpost" "test" {
+  id = tolist(data.aws_outposts_outposts.test.ids)[0]
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+  tags = {
+    Name = "terraform-testacc-subnet-outpost"
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone = data.aws_outposts_outpost.test.availability_zone
+  cidr_block        = "10.1.1.0/24"
+  outpost_arn       = data.aws_outposts_outpost.test.arn
+  vpc_id            = aws_vpc.test.id
+
+  tags = {
+    Name = "tf-acc-subnet-outpost"
+  }
+}
+`
+}

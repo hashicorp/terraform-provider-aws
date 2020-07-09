@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
@@ -25,6 +25,7 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_network_interface.test", "interface_type"),
 					resource.TestCheckResourceAttrPair("data.aws_network_interface.test", "private_dns_name", "aws_network_interface.test", "private_dns_name"),
 					resource.TestCheckResourceAttrPair("data.aws_network_interface.test", "subnet_id", "aws_network_interface.test", "subnet_id"),
+					resource.TestCheckResourceAttr("data.aws_network_interface.test", "outpost_arn", ""),
 					resource.TestCheckResourceAttrSet("data.aws_network_interface.test", "vpc_id"),
 				),
 			},
@@ -34,32 +35,41 @@ func TestAccDataSourceAwsNetworkInterface_basic(t *testing.T) {
 
 func testAccDataSourceAwsNetworkInterface_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-eni-data-source-basic"
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id            = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-eni-data-source-basic"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "tf-sg-%s"
+  name   = "tf-sg-%s"
   vpc_id = "${aws_vpc.test.id}"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
-  private_ips = ["10.0.0.50"]
+  subnet_id       = "${aws_subnet.test.id}"
+  private_ips     = ["10.0.0.50"]
   security_groups = ["${aws_security_group.test.id}"]
 }
 
@@ -88,32 +98,41 @@ func TestAccDataSourceAwsNetworkInterface_filters(t *testing.T) {
 
 func testAccDataSourceAwsNetworkInterface_filters(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
   tags = {
     Name = "terraform-testacc-eni-data-source-filters"
   }
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
+  cidr_block        = "10.0.0.0/24"
   availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id            = "${aws_vpc.test.id}"
+
   tags = {
     Name = "tf-acc-eni-data-source-filters"
   }
 }
 
 resource "aws_security_group" "test" {
-  name = "tf-sg-%s"
+  name   = "tf-sg-%s"
   vpc_id = "${aws_vpc.test.id}"
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
-  private_ips = ["10.0.0.60"]
+  subnet_id       = "${aws_subnet.test.id}"
+  private_ips     = ["10.0.0.60"]
   security_groups = ["${aws_security_group.test.id}"]
 }
 

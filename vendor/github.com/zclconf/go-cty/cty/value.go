@@ -45,6 +45,9 @@ func (val Value) Type() Type {
 // operating on other unknown values, and so an application that never
 // introduces Unknown values can be guaranteed to never receive any either.
 func (val Value) IsKnown() bool {
+	if val.IsMarked() {
+		return val.unmarkForce().IsKnown()
+	}
 	return val.v != unknown
 }
 
@@ -53,6 +56,9 @@ func (val Value) IsKnown() bool {
 // produces null, so an application that never introduces Null values can
 // be guaranteed to never receive any either.
 func (val Value) IsNull() bool {
+	if val.IsMarked() {
+		return val.unmarkForce().IsNull()
+	}
 	return val.v == nil
 }
 
@@ -68,4 +74,35 @@ func (val Value) IsNull() bool {
 var NilVal = Value{
 	ty: Type{typeImpl: nil},
 	v:  nil,
+}
+
+// IsWhollyKnown is an extension of IsKnown that also recursively checks
+// inside collections and structures to see if there are any nested unknown
+// values.
+func (val Value) IsWhollyKnown() bool {
+	if val.IsMarked() {
+		return val.unmarkForce().IsWhollyKnown()
+	}
+
+	if !val.IsKnown() {
+		return false
+	}
+
+	if val.IsNull() {
+		// Can't recurse into a null, so we're done
+		return true
+	}
+
+	switch {
+	case val.CanIterateElements():
+		for it := val.ElementIterator(); it.Next(); {
+			_, ev := it.Element()
+			if !ev.IsWhollyKnown() {
+				return false
+			}
+		}
+		return true
+	default:
+		return true
+	}
 }

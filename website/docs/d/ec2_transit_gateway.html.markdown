@@ -1,7 +1,7 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway"
-sidebar_current: "docs-aws-datasource-ec2-transit-gateway-x"
 description: |-
   Get information on an EC2 Transit Gateway
 ---
@@ -17,7 +17,7 @@ Get information on an EC2 Transit Gateway.
 ```hcl
 data "aws_ec2_transit_gateway" "example" {
   filter {
-    name   = "amazon-side-asn"
+    name   = "options.amazon-side-asn"
     values = ["64512"]
   }
 }

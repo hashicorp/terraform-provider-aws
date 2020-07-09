@@ -1,12 +1,12 @@
 ---
+subcategory: "Secrets Manager"
 layout: "aws"
 page_title: "AWS: aws_secretsmanager_secret_version"
-sidebar_current: "docs-aws-resource-secretsmanager-secret-version"
 description: |-
   Provides a resource to manage AWS Secrets Manager secret version including its secret value
 ---
 
-# aws_secretsmanager_secret_version
+# Resource: aws_secretsmanager_secret_version
 
 Provides a resource to manage AWS Secrets Manager secret version including its secret value. To manage secret metadata, see the [`aws_secretsmanager_secret` resource](/docs/providers/aws/r/secretsmanager_secret.html).
 
@@ -45,6 +45,14 @@ resource "aws_secretsmanager_secret_version" "example" {
 }
 ```
 
+Reading key-value pairs from JSON back into a native Terraform map can be accomplished in Terraform 0.12 and later with the [`jsondecode()` function](https://www.terraform.io/docs/configuration/functions/jsondecode.html):
+
+```hcl
+output "example" {
+  value = jsondecode(aws_secretsmanager_secret_version.example.secret_string)["key1"]
+}
+```
+
 ## Argument Reference
 
 The following arguments are supported:
@@ -67,5 +75,5 @@ The following arguments are supported:
 `aws_secretsmanager_secret_version` can be imported by using the secret ID and version ID, e.g.
 
 ```
-$ terraform import aws_secretsmanager_secret.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx
+$ terraform import aws_secretsmanager_secret_version.example arn:aws:secretsmanager:us-east-1:123456789012:secret:example-123456|xxxxx-xxxxxxx-xxxxxxx-xxxxx
 ```

@@ -1,12 +1,12 @@
 ---
+subcategory: "DataSync"
 layout: "aws"
 page_title: "AWS: aws_datasync_location_s3"
-sidebar_current: "docs-aws-resource-datasync-location-s3"
 description: |-
   Manages an AWS DataSync S3 Location
 ---
 
-# aws_datasync_location_s3
+# Resource: aws_datasync_location_s3
 
 Manages an S3 Location within AWS DataSync.
 

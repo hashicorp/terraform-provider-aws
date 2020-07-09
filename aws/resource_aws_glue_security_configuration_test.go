@@ -3,14 +3,13 @@ package aws
 import (
 	"fmt"
 	"log"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
-	"github.com/hashicorp/terraform/helper/acctest"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func init() {
@@ -43,11 +42,6 @@ func testSweepGlueSecurityConfigurations(region string) error {
 
 		for _, securityConfiguration := range output.SecurityConfigurations {
 			name := aws.StringValue(securityConfiguration.Name)
-
-			if !strings.HasPrefix(name, "tf-acc-test") {
-				log.Printf("[INFO] Skipping Glue Security Configuration: %s", name)
-				continue
-			}
 
 			log.Printf("[INFO] Deleting Glue Security Configuration: %s", name)
 			err := deleteGlueSecurityConfiguration(conn, name)

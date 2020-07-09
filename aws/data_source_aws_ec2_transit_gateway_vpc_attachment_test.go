@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 )
 
 func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_Filter(t *testing.T) {
@@ -59,6 +59,17 @@ func TestAccAWSEc2TransitGatewayVpcAttachmentDataSource_ID(t *testing.T) {
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigFilter() string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -68,8 +79,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"
@@ -95,6 +107,17 @@ data "aws_ec2_transit_gateway_vpc_attachment" "test" {
 
 func testAccAWSEc2TransitGatewayVpcAttachmentDataSourceConfigID() string {
 	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # IncorrectState: Transit Gateway is not available in availability zone us-west-2d
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
@@ -104,8 +127,9 @@ resource "aws_vpc" "test" {
 }
 
 resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = "${aws_vpc.test.id}"
+  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  cidr_block        = "10.0.0.0/24"
+  vpc_id            = "${aws_vpc.test.id}"
 
   tags = {
     Name = "tf-acc-test-ec2-transit-gateway-vpc-attachment"

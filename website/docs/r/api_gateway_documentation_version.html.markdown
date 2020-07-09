@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_documentation_version"
-sidebar_current: "docs-aws-resource-api-gateway-documentation-version"
 description: |-
   Provides a resource to manage an API Gateway Documentation Version.
 ---
 
-# aws_api_gateway_documentation_version
+# Resource: aws_api_gateway_documentation_version
 
 Provides a resource to manage an API Gateway Documentation Version.
 

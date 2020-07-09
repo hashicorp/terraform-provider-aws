@@ -1,12 +1,12 @@
 ---
+subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_zone_association"
-sidebar_current: "docs-aws-resource-route53-zone-association"
 description: |-
   Manages a Route53 Hosted Zone VPC association
 ---
 
-# aws_route53_zone_association
+# Resource: aws_route53_zone_association
 
 Manages a Route53 Hosted Zone VPC association. VPC associations can only be made on private zones.
 
@@ -68,3 +68,11 @@ In addition to all arguments above, the following attributes are exported:
 * `zone_id` - The ID of the hosted zone for the association.
 * `vpc_id` - The ID of the VPC for the association.
 * `vpc_region` - The region in which the VPC identified by `vpc_id` was created.
+
+## Import
+
+Route 53 Hosted Zone Associations can be imported via the Hosted Zone ID and VPC ID, separated by a colon (`:`), e.g.
+
+```
+$ terraform import aws_route53_zone_association.example Z123456ABCDEFG:vpc-12345678
+```

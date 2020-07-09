@@ -40,12 +40,14 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/route53"
+	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/worklink"
 	"github.com/beevik/etree"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/hashcode"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/structure"
 	"github.com/mitchellh/copystructure"
 	"gopkg.in/yaml.v2"
 )
@@ -97,7 +99,7 @@ func expandListeners(configured []interface{}) ([]*elb.Listener, error) {
 
 // Takes the result of flatmap. Expand for an array of listeners and
 // returns ECS Volume compatible objects
-func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
+func expandEcsVolumes(configured []interface{}) []*ecs.Volume {
 	volumes := make([]*ecs.Volume, 0, len(configured))
 
 	// Loop over our configured volumes and create
@@ -145,10 +147,45 @@ func expandEcsVolumes(configured []interface{}) ([]*ecs.Volume, error) {
 			}
 		}
 
+		efsConfig, ok := data["efs_volume_configuration"].([]interface{})
+		if ok && len(efsConfig) > 0 {
+			config := efsConfig[0].(map[string]interface{})
+			l.EfsVolumeConfiguration = &ecs.EFSVolumeConfiguration{}
+
+			if v, ok := config["file_system_id"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.FileSystemId = aws.String(v)
+			}
+
+			if v, ok := config["root_directory"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.RootDirectory = aws.String(v)
+			}
+			if v, ok := config["transit_encryption"].(string); ok && v != "" {
+				l.EfsVolumeConfiguration.TransitEncryption = aws.String(v)
+			}
+
+			if v, ok := config["transit_encryption_port"].(int); ok && v > 0 {
+				l.EfsVolumeConfiguration.TransitEncryptionPort = aws.Int64(int64(v))
+			}
+			authConfig, ok := config["authorization_config"].([]interface{})
+			if ok && len(authConfig) > 0 {
+				authconfig := authConfig[0].(map[string]interface{})
+				l.EfsVolumeConfiguration.RootDirectory = nil
+				l.EfsVolumeConfiguration.AuthorizationConfig = &ecs.EFSAuthorizationConfig{}
+
+				if v, ok := authconfig["access_point_id"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.AccessPointId = aws.String(v)
+				}
+
+				if v, ok := authconfig["iam"].(string); ok && v != "" {
+					l.EfsVolumeConfiguration.AuthorizationConfig.Iam = aws.String(v)
+				}
+			}
+		}
+
 		volumes = append(volumes, l)
 	}
 
-	return volumes, nil
+	return volumes
 }
 
 // Takes JSON in a string. Decodes JSON into
@@ -304,7 +341,7 @@ func expandIPPerms(
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandParameters(configured []interface{}) ([]*rds.Parameter, error) {
+func expandParameters(configured []interface{}) []*rds.Parameter {
 	var parameters []*rds.Parameter
 
 	// Loop over our configured parameters and create
@@ -325,10 +362,10 @@ func expandParameters(configured []interface{}) ([]*rds.Parameter, error) {
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
-func expandRedshiftParameters(configured []interface{}) ([]*redshift.Parameter, error) {
+func expandRedshiftParameters(configured []interface{}) []*redshift.Parameter {
 	var parameters []*redshift.Parameter
 
 	// Loop over our configured parameters and create
@@ -348,12 +385,12 @@ func expandRedshiftParameters(configured []interface{}) ([]*redshift.Parameter, 
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandDocDBParameters(configured []interface{}) ([]*docdb.Parameter, error) {
+func expandDocDBParameters(configured []interface{}) []*docdb.Parameter {
 	parameters := make([]*docdb.Parameter, 0, len(configured))
 
 	// Loop over our configured parameters and create
@@ -370,7 +407,7 @@ func expandDocDBParameters(configured []interface{}) ([]*docdb.Parameter, error)
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 func expandOptionConfiguration(configured []interface{}) []*rds.OptionConfiguration {
@@ -437,7 +474,7 @@ func expandOptionSetting(list []interface{}) []*rds.OptionSetting {
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandElastiCacheParameters(configured []interface{}) ([]*elasticache.ParameterNameValue, error) {
+func expandElastiCacheParameters(configured []interface{}) []*elasticache.ParameterNameValue {
 	parameters := make([]*elasticache.ParameterNameValue, 0, len(configured))
 
 	// Loop over our configured parameters and create
@@ -453,12 +490,12 @@ func expandElastiCacheParameters(configured []interface{}) ([]*elasticache.Param
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 // Takes the result of flatmap.Expand for an array of parameters and
 // returns Parameter API compatible objects
-func expandNeptuneParameters(configured []interface{}) ([]*neptune.Parameter, error) {
+func expandNeptuneParameters(configured []interface{}) []*neptune.Parameter {
 	parameters := make([]*neptune.Parameter, 0, len(configured))
 
 	// Loop over our configured parameters and create
@@ -475,7 +512,7 @@ func expandNeptuneParameters(configured []interface{}) ([]*neptune.Parameter, er
 		parameters = append(parameters, p)
 	}
 
-	return parameters, nil
+	return parameters
 }
 
 // Flattens an access log into something that flatmap.Flatten() can handle
@@ -683,6 +720,10 @@ func flattenEcsVolumes(list []*ecs.Volume) []map[string]interface{} {
 			l["docker_volume_configuration"] = flattenDockerVolumeConfiguration(volume.DockerVolumeConfiguration)
 		}
 
+		if volume.EfsVolumeConfiguration != nil {
+			l["efs_volume_configuration"] = flattenEFSVolumeConfiguration(volume.EfsVolumeConfiguration)
+		}
+
 		result = append(result, l)
 	}
 	return result
@@ -692,24 +733,68 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	var items []interface{}
 	m := make(map[string]interface{})
 
-	if config.Scope != nil {
-		m["scope"] = aws.StringValue(config.Scope)
+	if v := config.Scope; v != nil {
+		m["scope"] = aws.StringValue(v)
 	}
 
-	if config.Autoprovision != nil {
-		m["autoprovision"] = aws.BoolValue(config.Autoprovision)
+	if v := config.Autoprovision; v != nil {
+		m["autoprovision"] = aws.BoolValue(v)
 	}
 
-	if config.Driver != nil {
-		m["driver"] = aws.StringValue(config.Driver)
+	if v := config.Driver; v != nil {
+		m["driver"] = aws.StringValue(v)
 	}
 
 	if config.DriverOpts != nil {
 		m["driver_opts"] = pointersMapToStringList(config.DriverOpts)
 	}
 
-	if config.Labels != nil {
-		m["labels"] = pointersMapToStringList(config.Labels)
+	if v := config.Labels; v != nil {
+		m["labels"] = pointersMapToStringList(v)
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSVolumeConfiguration(config *ecs.EFSVolumeConfiguration) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.FileSystemId; v != nil {
+			m["file_system_id"] = aws.StringValue(v)
+		}
+
+		if v := config.RootDirectory; v != nil {
+			m["root_directory"] = aws.StringValue(v)
+		}
+		if v := config.TransitEncryption; v != nil {
+			m["transit_encryption"] = aws.StringValue(v)
+		}
+
+		if v := config.TransitEncryptionPort; v != nil {
+			m["transit_encryption_port"] = int(aws.Int64Value(v))
+		}
+
+		if v := config.AuthorizationConfig; v != nil {
+			m["authorization_config"] = flattenEFSVolumeAuthorizationConfig(v)
+		}
+	}
+
+	items = append(items, m)
+	return items
+}
+
+func flattenEFSVolumeAuthorizationConfig(config *ecs.EFSAuthorizationConfig) []interface{} {
+	var items []interface{}
+	m := make(map[string]interface{})
+	if config != nil {
+		if v := config.AccessPointId; v != nil {
+			m["access_point_id"] = aws.StringValue(v)
+		}
+		if v := config.Iam; v != nil {
+			m["iam"] = aws.StringValue(v)
+		}
 	}
 
 	items = append(items, m)
@@ -933,6 +1018,16 @@ func expandStringList(configured []interface{}) []*string {
 	return vs
 }
 
+// Takes the result of flatmap.Expand for an array of int64
+// and returns a []*int64
+func expandInt64List(configured []interface{}) []*int64 {
+	vs := make([]*int64, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, aws.Int64(int64(v.(int))))
+	}
+	return vs
+}
+
 // Expands a map of string to interface to a map of string to *float
 func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 	float64Map := make(map[string]*float64, len(m))
@@ -945,6 +1040,11 @@ func expandFloat64Map(m map[string]interface{}) map[string]*float64 {
 // Takes the result of schema.Set of strings and returns a []*string
 func expandStringSet(configured *schema.Set) []*string {
 	return expandStringList(configured.List())
+}
+
+// Takes the result of schema.Set of strings and returns a []*int64
+func expandInt64Set(configured *schema.Set) []*int64 {
+	return expandInt64List(configured.List())
 }
 
 // Takes list of pointers to strings. Expand to an array
@@ -960,6 +1060,16 @@ func flattenStringList(list []*string) []interface{} {
 
 func flattenStringSet(list []*string) *schema.Set {
 	return schema.NewSet(schema.HashString, flattenStringList(list))
+}
+
+// hashStringCaseInsensitive hashes strings in a case insensitive manner.
+// If you want a Set of strings and are case inensitive, this is the SchemaSetFunc you want.
+func hashStringCaseInsensitive(v interface{}) int {
+	return hashcode.String(strings.ToLower(v.(string)))
+}
+
+func flattenCaseInsensitiveStringSet(list []*string) *schema.Set {
+	return schema.NewSet(hashStringCaseInsensitive, flattenStringList(list))
 }
 
 //Flattens an array of private ip addresses into a []string, where the elements returned are the IP strings e.g. "192.168.0.0"
@@ -1175,63 +1285,6 @@ func expandTxtEntry(s string) string {
 	}
 	return s
 }
-
-func expandESClusterConfig(m map[string]interface{}) *elasticsearch.ElasticsearchClusterConfig {
-	config := elasticsearch.ElasticsearchClusterConfig{}
-
-	if v, ok := m["dedicated_master_enabled"]; ok {
-		isEnabled := v.(bool)
-		config.DedicatedMasterEnabled = aws.Bool(isEnabled)
-
-		if isEnabled {
-			if v, ok := m["dedicated_master_count"]; ok && v.(int) > 0 {
-				config.DedicatedMasterCount = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["dedicated_master_type"]; ok && v.(string) != "" {
-				config.DedicatedMasterType = aws.String(v.(string))
-			}
-		}
-	}
-
-	if v, ok := m["instance_count"]; ok {
-		config.InstanceCount = aws.Int64(int64(v.(int)))
-	}
-	if v, ok := m["instance_type"]; ok {
-		config.InstanceType = aws.String(v.(string))
-	}
-
-	if v, ok := m["zone_awareness_enabled"]; ok {
-		config.ZoneAwarenessEnabled = aws.Bool(v.(bool))
-	}
-
-	return &config
-}
-
-func flattenESClusterConfig(c *elasticsearch.ElasticsearchClusterConfig) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if c.DedicatedMasterCount != nil {
-		m["dedicated_master_count"] = *c.DedicatedMasterCount
-	}
-	if c.DedicatedMasterEnabled != nil {
-		m["dedicated_master_enabled"] = *c.DedicatedMasterEnabled
-	}
-	if c.DedicatedMasterType != nil {
-		m["dedicated_master_type"] = *c.DedicatedMasterType
-	}
-	if c.InstanceCount != nil {
-		m["instance_count"] = *c.InstanceCount
-	}
-	if c.InstanceType != nil {
-		m["instance_type"] = *c.InstanceType
-	}
-	if c.ZoneAwarenessEnabled != nil {
-		m["zone_awareness_enabled"] = *c.ZoneAwarenessEnabled
-	}
-
-	return []map[string]interface{}{m}
-}
-
 func expandESCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 	options := &elasticsearch.CognitoOptions{
 		Enabled: aws.Bool(false),
@@ -1274,6 +1327,38 @@ func flattenESCognitoOptions(c *elasticsearch.CognitoOptions) []map[string]inter
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandESDomainEndpointOptions(l []interface{}) *elasticsearch.DomainEndpointOptions {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	domainEndpointOptions := &elasticsearch.DomainEndpointOptions{}
+
+	if v, ok := m["enforce_https"].(bool); ok {
+		domainEndpointOptions.EnforceHTTPS = aws.Bool(v)
+	}
+
+	if v, ok := m["tls_security_policy"].(string); ok {
+		domainEndpointOptions.TLSSecurityPolicy = aws.String(v)
+	}
+
+	return domainEndpointOptions
+}
+
+func flattenESDomainEndpointOptions(domainEndpointOptions *elasticsearch.DomainEndpointOptions) []interface{} {
+	if domainEndpointOptions == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"enforce_https":       aws.BoolValue(domainEndpointOptions.EnforceHTTPS),
+		"tls_security_policy": aws.StringValue(domainEndpointOptions.TLSSecurityPolicy),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenESSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []map[string]interface{} {
@@ -1456,6 +1541,32 @@ func stringMapToPointers(m map[string]interface{}) map[string]*string {
 	return list
 }
 
+// diffStringMaps returns the set of keys and values that must be created,
+// and the set of keys and values that must be destroyed.
+// Equivalent to 'diffTagsGeneric'.
+func diffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string) {
+	// First, we're creating everything we have
+	create := map[string]*string{}
+	for k, v := range newMap {
+		create[k] = aws.String(v.(string))
+	}
+
+	// Build the map of what to remove
+	remove := map[string]*string{}
+	for k, v := range oldMap {
+		old, ok := create[k]
+		if !ok || aws.StringValue(old) != v.(string) {
+			// Delete it!
+			remove[k] = aws.String(v.(string))
+		} else if ok {
+			// already present so remove from new
+			delete(create, k)
+		}
+	}
+
+	return create, remove
+}
+
 func flattenDSVpcSettings(
 	s *directoryservice.DirectoryVpcSettingsDescription) []map[string]interface{} {
 	settings := make(map[string]interface{})
@@ -1464,8 +1575,9 @@ func flattenDSVpcSettings(
 		return nil
 	}
 
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
@@ -1486,6 +1598,45 @@ func flattenLambdaEnvironment(lambdaEnv *lambda.EnvironmentResponse) []interface
 	}
 
 	return []interface{}{envs}
+}
+
+func expandLambdaEventSourceMappingDestinationConfig(vDest []interface{}) *lambda.DestinationConfig {
+	if len(vDest) == 0 {
+		return nil
+	}
+
+	dest := &lambda.DestinationConfig{}
+	onFailure := &lambda.OnFailure{}
+
+	if len(vDest) > 0 {
+		if config, ok := vDest[0].(map[string]interface{}); ok {
+			if vOnFailure, ok := config["on_failure"].([]interface{}); ok && len(vOnFailure) > 0 && vOnFailure[0] != nil {
+				mOnFailure := vOnFailure[0].(map[string]interface{})
+				onFailure.SetDestination(mOnFailure["destination_arn"].(string))
+			}
+		}
+	}
+	dest.SetOnFailure(onFailure)
+	return dest
+}
+
+func flattenLambdaEventSourceMappingDestinationConfig(dest *lambda.DestinationConfig) []interface{} {
+	mDest := map[string]interface{}{}
+	mOnFailure := map[string]interface{}{}
+	if dest != nil {
+		if dest.OnFailure != nil {
+			if dest.OnFailure.Destination != nil {
+				mOnFailure["destination_arn"] = *dest.OnFailure.Destination
+				mDest["on_failure"] = []interface{}{mOnFailure}
+			}
+		}
+	}
+
+	if len(mDest) == 0 {
+		return nil
+	}
+
+	return []interface{}{mDest}
 }
 
 func flattenLambdaLayers(layers []*lambda.Layer) []interface{} {
@@ -1541,11 +1692,12 @@ func flattenDSConnectSettings(
 
 	settings := make(map[string]interface{})
 
-	settings["customer_dns_ips"] = schema.NewSet(schema.HashString, flattenStringList(customerDnsIps))
-	settings["connect_ips"] = schema.NewSet(schema.HashString, flattenStringList(s.ConnectIps))
-	settings["customer_username"] = *s.CustomerUserName
-	settings["subnet_ids"] = schema.NewSet(schema.HashString, flattenStringList(s.SubnetIds))
-	settings["vpc_id"] = *s.VpcId
+	settings["customer_dns_ips"] = flattenStringSet(customerDnsIps)
+	settings["connect_ips"] = flattenStringSet(s.ConnectIps)
+	settings["customer_username"] = aws.StringValue(s.CustomerUserName)
+	settings["subnet_ids"] = flattenStringSet(s.SubnetIds)
+	settings["vpc_id"] = aws.StringValue(s.VpcId)
+	settings["availability_zones"] = flattenStringSet(s.AvailabilityZones)
 
 	return []map[string]interface{}{settings}
 }
@@ -1585,25 +1737,6 @@ func flattenAllCloudFormationParameters(cfParams []*cloudformation.Parameter) ma
 	return params
 }
 
-func expandCloudFormationTags(tags map[string]interface{}) []*cloudformation.Tag {
-	var cfTags []*cloudformation.Tag
-	for k, v := range tags {
-		cfTags = append(cfTags, &cloudformation.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v.(string)),
-		})
-	}
-	return cfTags
-}
-
-func flattenCloudFormationTags(cfTags []*cloudformation.Tag) map[string]string {
-	tags := make(map[string]string, len(cfTags))
-	for _, t := range cfTags {
-		tags[*t.Key] = *t.Value
-	}
-	return tags
-}
-
 func flattenCloudFormationOutputs(cfOutputs []*cloudformation.Output) map[string]string {
 	outputs := make(map[string]string, len(cfOutputs))
 	for _, o := range cfOutputs {
@@ -1641,36 +1774,6 @@ func flattenKinesisShardLevelMetrics(list []*kinesis.EnhancedMetrics) []string {
 		strs = append(strs, *s)
 	}
 	return strs
-}
-
-func flattenApiGatewayStageKeys(keys []*string) []map[string]interface{} {
-	stageKeys := make([]map[string]interface{}, 0, len(keys))
-	for _, o := range keys {
-		key := make(map[string]interface{})
-		parts := strings.Split(*o, "/")
-		key["stage_name"] = parts[1]
-		key["rest_api_id"] = parts[0]
-
-		stageKeys = append(stageKeys, key)
-	}
-	return stageKeys
-}
-
-func expandApiGatewayStageKeys(d *schema.ResourceData) []*apigateway.StageKey {
-	var stageKeys []*apigateway.StageKey
-
-	if stageKeyData, ok := d.GetOk("stage_key"); ok {
-		params := stageKeyData.(*schema.Set).List()
-		for k := range params {
-			data := params[k].(map[string]interface{})
-			stageKeys = append(stageKeys, &apigateway.StageKey{
-				RestApiId: aws.String(data["rest_api_id"].(string)),
-				StageName: aws.String(data["stage_name"].(string)),
-			})
-		}
-	}
-
-	return stageKeys
 }
 
 func expandApiGatewayRequestResponseModelOperations(d *schema.ResourceData, key string, prefix string) []*apigateway.PatchOperation {
@@ -1768,7 +1871,7 @@ func deprecatedExpandApiGatewayMethodParametersJSONOperations(d *schema.Resource
 	return operations, nil
 }
 
-func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key string, prefix string) ([]*apigateway.PatchOperation, error) {
+func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key string, prefix string) []*apigateway.PatchOperation {
 	operations := make([]*apigateway.PatchOperation, 0)
 
 	oldParameters, newParameters := d.GetChange(key)
@@ -1818,56 +1921,6 @@ func expandApiGatewayMethodParametersOperations(d *schema.ResourceData, key stri
 		}
 	}
 
-	return operations, nil
-}
-
-func expandApiGatewayStageKeyOperations(d *schema.ResourceData) []*apigateway.PatchOperation {
-	operations := make([]*apigateway.PatchOperation, 0)
-
-	prev, curr := d.GetChange("stage_key")
-	prevList := prev.(*schema.Set).List()
-	currList := curr.(*schema.Set).List()
-
-	for i := range prevList {
-		p := prevList[i].(map[string]interface{})
-		exists := false
-
-		for j := range currList {
-			c := currList[j].(map[string]interface{})
-			if c["rest_api_id"].(string) == p["rest_api_id"].(string) && c["stage_name"].(string) == p["stage_name"].(string) {
-				exists = true
-			}
-		}
-
-		if !exists {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String("remove"),
-				Path:  aws.String("/stages"),
-				Value: aws.String(fmt.Sprintf("%s/%s", p["rest_api_id"].(string), p["stage_name"].(string))),
-			})
-		}
-	}
-
-	for i := range currList {
-		c := currList[i].(map[string]interface{})
-		exists := false
-
-		for j := range prevList {
-			p := prevList[j].(map[string]interface{})
-			if c["rest_api_id"].(string) == p["rest_api_id"].(string) && c["stage_name"].(string) == p["stage_name"].(string) {
-				exists = true
-			}
-		}
-
-		if !exists {
-			operations = append(operations, &apigateway.PatchOperation{
-				Op:    aws.String("add"),
-				Path:  aws.String("/stages"),
-				Value: aws.String(fmt.Sprintf("%s/%s", c["rest_api_id"].(string), c["stage_name"].(string))),
-			})
-		}
-	}
-
 	return operations
 }
 
@@ -1890,14 +1943,14 @@ func flattenCloudWatchLogMetricTransformations(ts []*cloudwatchlogs.MetricTransf
 	mts := make([]interface{}, 0)
 	m := make(map[string]interface{})
 
-	m["name"] = *ts[0].MetricName
-	m["namespace"] = *ts[0].MetricNamespace
-	m["value"] = *ts[0].MetricValue
+	m["name"] = aws.StringValue(ts[0].MetricName)
+	m["namespace"] = aws.StringValue(ts[0].MetricNamespace)
+	m["value"] = aws.StringValue(ts[0].MetricValue)
 
 	if ts[0].DefaultValue == nil {
 		m["default_value"] = ""
 	} else {
-		m["default_value"] = *ts[0].DefaultValue
+		m["default_value"] = strconv.FormatFloat(aws.Float64Value(ts[0].DefaultValue), 'f', -1, 64)
 	}
 
 	mts = append(mts, m)
@@ -2023,127 +2076,9 @@ func flattenApiGatewayThrottleSettings(settings *apigateway.ThrottleSettings) []
 
 // TODO: refactor some of these helper functions and types in the terraform/helper packages
 
-// getStringPtr returns a *string version of the value taken from m, where m
-// can be a map[string]interface{} or a *schema.ResourceData. If the key isn't
-// present or is empty, getNilString returns nil.
-func getStringPtr(m interface{}, key string) *string {
-	switch m := m.(type) {
-	case map[string]interface{}:
-		v := m[key]
-
-		if v == nil {
-			return nil
-		}
-
-		s := v.(string)
-		if s == "" {
-			return nil
-		}
-
-		return &s
-
-	case *schema.ResourceData:
-		if v, ok := m.GetOk(key); ok {
-			if v == nil || v.(string) == "" {
-				return nil
-			}
-			s := v.(string)
-			return &s
-		}
-
-	default:
-		panic("unknown type in getStringPtr")
-	}
-
-	return nil
-}
-
-// a convenience wrapper type for the schema.Set map[string]interface{}
-// Set operations only alter the underlying map if the value is not nil
-type setMap map[string]interface{}
-
-// SetString sets m[key] = *value only if `value != nil`
-func (s setMap) SetString(key string, value *string) {
-	if value == nil {
-		return
-	}
-
-	s[key] = *value
-}
-
-// SetStringMap sets key to value as a map[string]interface{}, stripping any nil
-// values. The value parameter can be a map[string]interface{}, a
-// map[string]*string, or a map[string]string.
-func (s setMap) SetStringMap(key string, value interface{}) {
-	// because these methods are meant to be chained without intermediate
-	// checks for nil, we are likely to get interfaces with dynamic types but
-	// a nil value.
-	if reflect.ValueOf(value).IsNil() {
-		return
-	}
-
-	m := make(map[string]interface{})
-
-	switch value := value.(type) {
-	case map[string]string:
-		for k, v := range value {
-			m[k] = v
-		}
-	case map[string]*string:
-		for k, v := range value {
-			if v == nil {
-				continue
-			}
-			m[k] = *v
-		}
-	case map[string]interface{}:
-		for k, v := range value {
-			if v == nil {
-				continue
-			}
-
-			switch v := v.(type) {
-			case string:
-				m[k] = v
-			case *string:
-				if v != nil {
-					m[k] = *v
-				}
-			default:
-				panic(fmt.Sprintf("unknown type for SetString: %T", v))
-			}
-		}
-	}
-
-	// catch the case where the interface wasn't nil, but we had no non-nil values
-	if len(m) > 0 {
-		s[key] = m
-	}
-}
-
-// Set assigns value to s[key] if value isn't nil
-func (s setMap) Set(key string, value interface{}) {
-	if reflect.ValueOf(value).IsNil() {
-		return
-	}
-
-	s[key] = value
-}
-
-// Map returns the raw map type for a shorter type conversion
-func (s setMap) Map() map[string]interface{} {
-	return map[string]interface{}(s)
-}
-
-// MapList returns the map[string]interface{} as a single element in a slice to
-// match the schema.Set data type used for structs.
-func (s setMap) MapList() []map[string]interface{} {
-	return []map[string]interface{}{s.Map()}
-}
-
 // Takes the result of flatmap.Expand for an array of policy attributes and
 // returns ELB API compatible objects
-func expandPolicyAttributes(configured []interface{}) ([]*elb.PolicyAttribute, error) {
+func expandPolicyAttributes(configured []interface{}) []*elb.PolicyAttribute {
 	attributes := make([]*elb.PolicyAttribute, 0, len(configured))
 
 	// Loop over our configured attributes and create
@@ -2160,7 +2095,7 @@ func expandPolicyAttributes(configured []interface{}) ([]*elb.PolicyAttribute, e
 
 	}
 
-	return attributes, nil
+	return attributes
 }
 
 // Flattens an array of PolicyAttributes into a []interface{}
@@ -2452,9 +2387,9 @@ func flattenApiGatewayUsagePlanQuota(s *apigateway.QuotaSettings) []map[string]i
 	return []map[string]interface{}{settings}
 }
 
-func buildApiGatewayInvokeURL(restApiId, region, stageName string) string {
-	return fmt.Sprintf("https://%s.execute-api.%s.amazonaws.com/%s",
-		restApiId, region, stageName)
+func buildApiGatewayInvokeURL(client *AWSClient, restApiId, stageName string) string {
+	hostname := client.RegionalHostname(fmt.Sprintf("%s.execute-api", restApiId))
+	return fmt.Sprintf("https://%s/%s", hostname, stageName)
 }
 
 func expandCognitoSupportedLoginProviders(config map[string]interface{}) map[string]*string {
@@ -2539,8 +2474,16 @@ func flattenCognitoUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailCo
 		m["reply_to_email_address"] = *s.ReplyToEmailAddress
 	}
 
+	if s.From != nil {
+		m["from_email_address"] = *s.From
+	}
+
 	if s.SourceArn != nil {
 		m["source_arn"] = *s.SourceArn
+	}
+
+	if s.EmailSendingAccount != nil {
+		m["email_sending_account"] = *s.EmailSendingAccount
 	}
 
 	if len(m) > 0 {
@@ -2779,229 +2722,25 @@ func expandCognitoUserPoolPasswordPolicy(config map[string]interface{}) *cognito
 		configs.RequireUppercase = aws.Bool(v.(bool))
 	}
 
+	if v, ok := config["temporary_password_validity_days"]; ok {
+		configs.TemporaryPasswordValidityDays = aws.Int64(int64(v.(int)))
+	}
+
 	return configs
 }
 
-func flattenIoTRuleCloudWatchAlarmActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
+func flattenCognitoUserPoolUserPoolAddOns(s *cognitoidentityprovider.UserPoolAddOnsType) []map[string]interface{} {
+	config := make(map[string]interface{})
 
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.CloudwatchAlarm
-		if v != nil {
-			result["alarm_name"] = *v.AlarmName
-			result["role_arn"] = *v.RoleArn
-			result["state_reason"] = *v.StateReason
-			result["state_value"] = *v.StateValue
-
-			results = append(results, result)
-		}
+	if s == nil {
+		return []map[string]interface{}{}
 	}
 
-	return results
-}
-
-func flattenIoTRuleCloudWatchMetricActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.CloudwatchMetric
-		if v != nil {
-			result["metric_name"] = *v.MetricName
-			result["role_arn"] = *v.RoleArn
-			result["metric_namespace"] = *v.MetricNamespace
-			result["metric_unit"] = *v.MetricUnit
-			result["metric_value"] = *v.MetricValue
-
-			if v.MetricTimestamp != nil {
-				result["metric_timestamp"] = *v.MetricTimestamp
-			}
-
-			results = append(results, result)
-		}
+	if s.AdvancedSecurityMode != nil {
+		config["advanced_security_mode"] = *s.AdvancedSecurityMode
 	}
 
-	return results
-}
-
-func flattenIoTRuleDynamoDbActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.DynamoDB
-		if v != nil {
-			result["hash_key_field"] = *v.HashKeyField
-			result["hash_key_value"] = *v.HashKeyValue
-			result["range_key_field"] = *v.RangeKeyField
-			result["range_key_value"] = *v.RangeKeyValue
-			result["role_arn"] = *v.RoleArn
-			result["table_name"] = *v.TableName
-
-			if v.HashKeyType != nil {
-				result["hash_key_type"] = *v.HashKeyType
-			}
-
-			if v.PayloadField != nil {
-				result["payload_field"] = *v.PayloadField
-			}
-
-			if v.RangeKeyType != nil {
-				result["range_key_type"] = *v.RangeKeyType
-			}
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleElasticSearchActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Elasticsearch
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["endpoint"] = *v.Endpoint
-			result["id"] = *v.Id
-			result["index"] = *v.Index
-			result["type"] = *v.Type
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleFirehoseActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Firehose
-		if v != nil {
-			result["role_arn"] = aws.StringValue(v.RoleArn)
-			result["delivery_stream_name"] = aws.StringValue(v.DeliveryStreamName)
-			result["separator"] = aws.StringValue(v.Separator)
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleKinesisActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Kinesis
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["stream_name"] = *v.StreamName
-
-			if v.PartitionKey != nil {
-				result["partition_key"] = *v.PartitionKey
-			}
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleLambdaActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Lambda
-		if v != nil {
-			result["function_arn"] = *v.FunctionArn
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleRepublishActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Republish
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["topic"] = *v.Topic
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleS3Actions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.S3
-		if v != nil {
-			result["role_arn"] = *v.RoleArn
-			result["bucket_name"] = *v.BucketName
-			result["key"] = *v.Key
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleSnsActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Sns
-		if v != nil {
-			result["message_format"] = *v.MessageFormat
-			result["role_arn"] = *v.RoleArn
-			result["target_arn"] = *v.TargetArn
-
-			results = append(results, result)
-		}
-	}
-
-	return results
-}
-
-func flattenIoTRuleSqsActions(actions []*iot.Action) []map[string]interface{} {
-	results := make([]map[string]interface{}, 0)
-
-	for _, a := range actions {
-		result := make(map[string]interface{})
-		v := a.Sqs
-		if v != nil {
-			result["role_arn"] = aws.StringValue(v.RoleArn)
-			result["use_base64"] = aws.BoolValue(v.UseBase64)
-			result["queue_url"] = aws.StringValue(v.QueueUrl)
-
-			results = append(results, result)
-		}
-	}
-
-	return results
+	return []map[string]interface{}{config}
 }
 
 func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
@@ -3029,6 +2768,10 @@ func flattenCognitoUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPol
 
 	if s.RequireUppercase != nil {
 		m["require_uppercase"] = *s.RequireUppercase
+	}
+
+	if s.TemporaryPasswordValidityDays != nil {
+		m["temporary_password_validity_days"] = *s.TemporaryPasswordValidityDays
 	}
 
 	if len(m) > 0 {
@@ -3456,29 +3199,22 @@ func flattenCognitoUserPoolSchema(configuredAttributes, inputs []*cognitoidentit
 	return values
 }
 
-func expandCognitoUserPoolSmsConfiguration(config map[string]interface{}) *cognitoidentityprovider.SmsConfigurationType {
-	smsConfigurationType := &cognitoidentityprovider.SmsConfigurationType{
-		SnsCallerArn: aws.String(config["sns_caller_arn"].(string)),
+func expandCognitoUserPoolUsernameConfiguration(config map[string]interface{}) *cognitoidentityprovider.UsernameConfigurationType {
+	usernameConfigurationType := &cognitoidentityprovider.UsernameConfigurationType{
+		CaseSensitive: aws.Bool(config["case_sensitive"].(bool)),
 	}
 
-	if v, ok := config["external_id"]; ok && v.(string) != "" {
-		smsConfigurationType.ExternalId = aws.String(v.(string))
-	}
-
-	return smsConfigurationType
+	return usernameConfigurationType
 }
 
-func flattenCognitoUserPoolSmsConfiguration(s *cognitoidentityprovider.SmsConfigurationType) []map[string]interface{} {
+func flattenCognitoUserPoolUsernameConfiguration(u *cognitoidentityprovider.UsernameConfigurationType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
-	if s == nil {
+	if u == nil {
 		return nil
 	}
 
-	if s.ExternalId != nil {
-		m["external_id"] = *s.ExternalId
-	}
-	m["sns_caller_arn"] = *s.SnsCallerArn
+	m["case_sensitive"] = *u.CaseSensitive
 
 	return []map[string]interface{}{m}
 }
@@ -3693,10 +3429,11 @@ func flattenWafAction(n *waf.WafAction) []map[string]interface{} {
 		return nil
 	}
 
-	m := setMap(make(map[string]interface{}))
+	result := map[string]interface{}{
+		"type": aws.StringValue(n.Type),
+	}
 
-	m.SetString("type", n.Type)
-	return m.MapList()
+	return []map[string]interface{}{result}
 }
 
 func flattenWafWebAclRules(ts []*waf.ActivatedRule) []map[string]interface{} {
@@ -3896,7 +3633,7 @@ func flattenRedshiftLogging(ls *redshift.LoggingStatus) []interface{} {
 	}
 
 	cfg := make(map[string]interface{})
-	cfg["enabled"] = *ls.LoggingEnabled
+	cfg["enable"] = aws.BoolValue(ls.LoggingEnabled)
 	if ls.BucketName != nil {
 		cfg["bucket_name"] = *ls.BucketName
 	}
@@ -4249,19 +3986,21 @@ func stripCapacityAttributes(in map[string]interface{}) (map[string]interface{},
 
 // Expanders + flatteners
 
-func flattenDynamoDbTtl(ttlDesc *dynamodb.TimeToLiveDescription) []interface{} {
-	m := map[string]interface{}{}
-	if ttlDesc.AttributeName != nil {
-		m["attribute_name"] = *ttlDesc.AttributeName
-		if ttlDesc.TimeToLiveStatus != nil {
-			m["enabled"] = (*ttlDesc.TimeToLiveStatus == dynamodb.TimeToLiveStatusEnabled)
-		}
+func flattenDynamoDbTtl(ttlOutput *dynamodb.DescribeTimeToLiveOutput) []interface{} {
+	m := map[string]interface{}{
+		"enabled": false,
 	}
-	if len(m) > 0 {
+
+	if ttlOutput == nil || ttlOutput.TimeToLiveDescription == nil {
 		return []interface{}{m}
 	}
 
-	return []interface{}{}
+	ttlDesc := ttlOutput.TimeToLiveDescription
+
+	m["attribute_name"] = aws.StringValue(ttlDesc.AttributeName)
+	m["enabled"] = (aws.StringValue(ttlDesc.TimeToLiveStatus) == dynamodb.TimeToLiveStatusEnabled)
+
+	return []interface{}{m}
 }
 
 func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []interface{} {
@@ -4281,6 +4020,24 @@ func flattenDynamoDbPitr(pitrDesc *dynamodb.DescribeContinuousBackupsOutput) []i
 	}
 
 	return []interface{}{m}
+}
+
+func flattenAwsDynamoDbReplicaDescriptions(apiObjects []*dynamodb.ReplicaDescription) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfMap := map[string]interface{}{
+			"region_name": aws.StringValue(apiObject.RegionName),
+		}
+
+		tfList = append(tfList, tfMap)
+	}
+
+	return tfList
 }
 
 func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.TableDescription) error {
@@ -4387,12 +4144,18 @@ func flattenAwsDynamoDbTableResource(d *schema.ResourceData, table *dynamodb.Tab
 	}
 
 	sseOptions := []map[string]interface{}{}
-	if table.SSEDescription != nil {
-		m := map[string]interface{}{}
-		m["enabled"] = aws.StringValue(table.SSEDescription.Status) == dynamodb.SSEStatusEnabled
-		sseOptions = []map[string]interface{}{m}
+	if sseDescription := table.SSEDescription; sseDescription != nil {
+		sseOptions = []map[string]interface{}{{
+			"enabled":     aws.StringValue(sseDescription.Status) == dynamodb.SSEStatusEnabled,
+			"kms_key_arn": aws.StringValue(sseDescription.KMSMasterKeyArn),
+		}}
 	}
 	err = d.Set("server_side_encryption", sseOptions)
+	if err != nil {
+		return err
+	}
+
+	err = d.Set("replica", flattenAwsDynamoDbReplicaDescriptions(table.Replicas))
 	if err != nil {
 		return err
 	}
@@ -4514,24 +4277,24 @@ func expandDynamoDbKeySchema(data map[string]interface{}) []*dynamodb.KeySchemaE
 	return keySchema
 }
 
-func expandDynamoDbEncryptAtRestOptions(m map[string]interface{}) *dynamodb.SSESpecification {
-	options := dynamodb.SSESpecification{}
+func expandDynamoDbEncryptAtRestOptions(vOptions []interface{}) *dynamodb.SSESpecification {
+	options := &dynamodb.SSESpecification{}
 
-	if v, ok := m["enabled"]; ok {
-		options.Enabled = aws.Bool(v.(bool))
-	}
+	enabled := false
+	if len(vOptions) > 0 {
+		mOptions := vOptions[0].(map[string]interface{})
 
-	return &options
-}
-
-func flattenVpcEndpointServiceAllowedPrincipals(allowedPrincipals []*ec2.AllowedPrincipal) []string {
-	result := make([]string, 0, len(allowedPrincipals))
-	for _, allowedPrincipal := range allowedPrincipals {
-		if allowedPrincipal.Principal != nil {
-			result = append(result, *allowedPrincipal.Principal)
+		enabled = mOptions["enabled"].(bool)
+		if enabled {
+			if vKmsKeyArn, ok := mOptions["kms_key_arn"].(string); ok && vKmsKeyArn != "" {
+				options.KMSMasterKeyId = aws.String(vKmsKeyArn)
+				options.SSEType = aws.String(dynamodb.SSETypeKms)
+			}
 		}
 	}
-	return result
+	options.Enabled = aws.Bool(enabled)
+
+	return options
 }
 
 func expandDynamoDbTableItemAttributes(input string) (map[string]*dynamodb.AttributeValue, error) {
@@ -4594,16 +4357,17 @@ func expandIotThingTypeProperties(config map[string]interface{}) *iot.ThingTypeP
 }
 
 func flattenIotThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
-	m := map[string]interface{}{}
+	m := map[string]interface{}{
+		"description":           "",
+		"searchable_attributes": flattenStringSet(nil),
+	}
 
 	if s == nil {
-		return nil
+		return []map[string]interface{}{m}
 	}
 
-	if s.ThingTypeDescription != nil {
-		m["description"] = *s.ThingTypeDescription
-	}
-	m["searchable_attributes"] = flattenStringList(s.SearchableAttributes)
+	m["description"] = aws.StringValue(s.ThingTypeDescription)
+	m["searchable_attributes"] = flattenStringSet(s.SearchableAttributes)
 
 	return []map[string]interface{}{m}
 }
@@ -4640,6 +4404,10 @@ func expandLaunchTemplateSpecification(specs []interface{}) (*autoscaling.Launch
 }
 
 func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+	if lt == nil {
+		return []map[string]interface{}{}
+	}
+
 	attrs := map[string]interface{}{}
 	result := make([]map[string]interface{}, 0)
 
@@ -4659,59 +4427,65 @@ func flattenLaunchTemplateSpecification(lt *autoscaling.LaunchTemplateSpecificat
 	return result
 }
 
-func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []map[string]interface{} {
-	m := map[string]interface{}{}
-
-	if options.AllowDnsResolutionFromRemoteVpc != nil {
-		m["allow_remote_vpc_dns_resolution"] = *options.AllowDnsResolutionFromRemoteVpc
+func flattenVpcPeeringConnectionOptions(options *ec2.VpcPeeringConnectionOptionsDescription) []interface{} {
+	// When the VPC Peering Connection is pending acceptance,
+	// the details about accepter and/or requester peering
+	// options would not be included in the response.
+	if options == nil {
+		return []interface{}{}
 	}
 
-	if options.AllowEgressFromLocalClassicLinkToRemoteVpc != nil {
-		m["allow_classic_link_to_remote_vpc"] = *options.AllowEgressFromLocalClassicLinkToRemoteVpc
-	}
-
-	if options.AllowEgressFromLocalVpcToRemoteClassicLink != nil {
-		m["allow_vpc_to_remote_classic_link"] = *options.AllowEgressFromLocalVpcToRemoteClassicLink
-	}
-
-	return []map[string]interface{}{m}
+	return []interface{}{map[string]interface{}{
+		"allow_remote_vpc_dns_resolution":  aws.BoolValue(options.AllowDnsResolutionFromRemoteVpc),
+		"allow_classic_link_to_remote_vpc": aws.BoolValue(options.AllowEgressFromLocalClassicLinkToRemoteVpc),
+		"allow_vpc_to_remote_classic_link": aws.BoolValue(options.AllowEgressFromLocalVpcToRemoteClassicLink),
+	}}
 }
 
-func expandVpcPeeringConnectionOptions(m map[string]interface{}) *ec2.PeeringConnectionOptionsRequest {
+func expandVpcPeeringConnectionOptions(vOptions []interface{}, crossRegionPeering bool) *ec2.PeeringConnectionOptionsRequest {
+	if len(vOptions) == 0 || vOptions[0] == nil {
+		return nil
+	}
+
+	mOptions := vOptions[0].(map[string]interface{})
+
 	options := &ec2.PeeringConnectionOptionsRequest{}
 
-	if v, ok := m["allow_remote_vpc_dns_resolution"]; ok {
-		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v.(bool))
+	if v, ok := mOptions["allow_remote_vpc_dns_resolution"].(bool); ok {
+		options.AllowDnsResolutionFromRemoteVpc = aws.Bool(v)
 	}
-
-	if v, ok := m["allow_classic_link_to_remote_vpc"]; ok {
-		options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v.(bool))
-	}
-
-	if v, ok := m["allow_vpc_to_remote_classic_link"]; ok {
-		options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v.(bool))
+	if !crossRegionPeering {
+		if v, ok := mOptions["allow_classic_link_to_remote_vpc"].(bool); ok {
+			options.AllowEgressFromLocalClassicLinkToRemoteVpc = aws.Bool(v)
+		}
+		if v, ok := mOptions["allow_vpc_to_remote_classic_link"].(bool); ok {
+			options.AllowEgressFromLocalVpcToRemoteClassicLink = aws.Bool(v)
+		}
 	}
 
 	return options
 }
 
-func expandDxRouteFilterPrefixes(cfg []interface{}) []*directconnect.RouteFilterPrefix {
-	prefixes := make([]*directconnect.RouteFilterPrefix, len(cfg))
-	for i, p := range cfg {
-		prefix := &directconnect.RouteFilterPrefix{
-			Cidr: aws.String(p.(string)),
-		}
-		prefixes[i] = prefix
+func expandDxRouteFilterPrefixes(vPrefixes *schema.Set) []*directconnect.RouteFilterPrefix {
+	routeFilterPrefixes := []*directconnect.RouteFilterPrefix{}
+
+	for _, vPrefix := range vPrefixes.List() {
+		routeFilterPrefixes = append(routeFilterPrefixes, &directconnect.RouteFilterPrefix{
+			Cidr: aws.String(vPrefix.(string)),
+		})
 	}
-	return prefixes
+
+	return routeFilterPrefixes
 }
 
-func flattenDxRouteFilterPrefixes(prefixes []*directconnect.RouteFilterPrefix) *schema.Set {
-	out := make([]interface{}, 0)
-	for _, prefix := range prefixes {
-		out = append(out, aws.StringValue(prefix.Cidr))
+func flattenDxRouteFilterPrefixes(routeFilterPrefixes []*directconnect.RouteFilterPrefix) *schema.Set {
+	vPrefixes := []interface{}{}
+
+	for _, routeFilterPrefix := range routeFilterPrefixes {
+		vPrefixes = append(vPrefixes, aws.StringValue(routeFilterPrefix.Cidr))
 	}
-	return schema.NewSet(schema.HashString, out)
+
+	return schema.NewSet(schema.HashString, vPrefixes)
 }
 
 func expandMacieClassificationType(d *schema.ResourceData) *macie.ClassificationType {
@@ -4810,9 +4584,17 @@ func flattenDaxEncryptAtRestOptions(options *dax.SSEDescription) []map[string]in
 	return []map[string]interface{}{m}
 }
 
-func expandRdsScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
+func expandRdsClusterScalingConfiguration(l []interface{}, engineMode string) *rds.ScalingConfiguration {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		// Our default value for MinCapacity is different from AWS's.
+		// We need to override it here to avoid a non-empty plan with an empty ScalingConfiguration.
+		if engineMode == "serverless" {
+			return &rds.ScalingConfiguration{
+				MinCapacity: aws.Int64(int64(rdsClusterScalingConfiguration_DefaultMinCapacity)),
+			}
+		} else {
+			return nil
+		}
 	}
 
 	m := l[0].(map[string]interface{})
@@ -4822,6 +4604,10 @@ func expandRdsScalingConfiguration(l []interface{}) *rds.ScalingConfiguration {
 		MaxCapacity:           aws.Int64(int64(m["max_capacity"].(int))),
 		MinCapacity:           aws.Int64(int64(m["min_capacity"].(int))),
 		SecondsUntilAutoPause: aws.Int64(int64(m["seconds_until_auto_pause"].(int))),
+	}
+
+	if vTimeoutAction, ok := m["timeout_action"].(string); ok && vTimeoutAction != "" {
+		scalingConfiguration.TimeoutAction = aws.String(vTimeoutAction)
 	}
 
 	return scalingConfiguration
@@ -4837,21 +4623,84 @@ func flattenRdsScalingConfigurationInfo(scalingConfigurationInfo *rds.ScalingCon
 		"max_capacity":             aws.Int64Value(scalingConfigurationInfo.MaxCapacity),
 		"min_capacity":             aws.Int64Value(scalingConfigurationInfo.MinCapacity),
 		"seconds_until_auto_pause": aws.Int64Value(scalingConfigurationInfo.SecondsUntilAutoPause),
+		"timeout_action":           aws.StringValue(scalingConfigurationInfo.TimeoutAction),
 	}
 
 	return []interface{}{m}
 }
 
-func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterSpec {
+func expandAppmeshMeshSpec(vSpec []interface{}) *appmesh.MeshSpec {
+	spec := &appmesh.MeshSpec{}
+
 	if len(vSpec) == 0 || vSpec[0] == nil {
-		return nil
+		// Empty Spec is allowed.
+		return spec
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
+	if vEgressFilter, ok := mSpec["egress_filter"].([]interface{}); ok && len(vEgressFilter) > 0 && vEgressFilter[0] != nil {
+		mEgressFilter := vEgressFilter[0].(map[string]interface{})
+
+		if vType, ok := mEgressFilter["type"].(string); ok && vType != "" {
+			spec.EgressFilter = &appmesh.EgressFilter{
+				Type: aws.String(vType),
+			}
+		}
+	}
+
+	return spec
+}
+
+func flattenAppmeshMeshSpec(spec *appmesh.MeshSpec) []interface{} {
+	if spec == nil {
+		return []interface{}{}
+	}
+
+	mSpec := map[string]interface{}{}
+
+	if spec.EgressFilter != nil {
+		mSpec["egress_filter"] = []interface{}{
+			map[string]interface{}{
+				"type": aws.StringValue(spec.EgressFilter.Type),
+			},
+		}
+	}
+
+	return []interface{}{mSpec}
+}
+
+func expandAppmeshVirtualRouterSpec(vSpec []interface{}) *appmesh.VirtualRouterSpec {
 	spec := &appmesh.VirtualRouterSpec{}
 
-	if vServiceNames, ok := mSpec["service_names"].(*schema.Set); ok && vServiceNames.Len() > 0 {
-		spec.ServiceNames = expandStringSet(vServiceNames)
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		// Empty Spec is allowed.
+		return spec
+	}
+	mSpec := vSpec[0].(map[string]interface{})
+
+	if vListeners, ok := mSpec["listener"].([]interface{}); ok && len(vListeners) > 0 && vListeners[0] != nil {
+		listeners := []*appmesh.VirtualRouterListener{}
+
+		for _, vListener := range vListeners {
+			listener := &appmesh.VirtualRouterListener{}
+
+			mListener := vListener.(map[string]interface{})
+
+			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
+				mPortMapping := vPortMapping[0].(map[string]interface{})
+
+				listener.PortMapping = &appmesh.PortMapping{}
+
+				if vPort, ok := mPortMapping["port"].(int); ok && vPort > 0 {
+					listener.PortMapping.Port = aws.Int64(int64(vPort))
+				}
+				if vProtocol, ok := mPortMapping["protocol"].(string); ok && vProtocol != "" {
+					listener.PortMapping.Protocol = aws.String(vProtocol)
+				}
+			}
+			listeners = append(listeners, listener)
+		}
+		spec.Listeners = listeners
 	}
 
 	return spec
@@ -4861,9 +4710,19 @@ func flattenAppmeshVirtualRouterSpec(spec *appmesh.VirtualRouterSpec) []interfac
 	if spec == nil {
 		return []interface{}{}
 	}
-
-	mSpec := map[string]interface{}{
-		"service_names": flattenStringSet(spec.ServiceNames),
+	mSpec := make(map[string]interface{})
+	if spec.Listeners != nil && spec.Listeners[0] != nil {
+		// Per schema definition, set at most 1 Listener
+		listener := spec.Listeners[0]
+		mListener := make(map[string]interface{})
+		if listener.PortMapping != nil {
+			mPortMapping := map[string]interface{}{
+				"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+				"protocol": aws.StringValue(listener.PortMapping.Protocol),
+			}
+			mListener["port_mapping"] = []interface{}{mPortMapping}
+		}
+		mSpec["listener"] = []interface{}{mListener}
 	}
 
 	return []interface{}{mSpec}
@@ -4878,17 +4737,64 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
-	if vBackends, ok := mSpec["backends"].(*schema.Set); ok && vBackends.Len() > 0 {
-		spec.Backends = expandStringSet(vBackends)
+	if vBackends, ok := mSpec["backend"].(*schema.Set); ok && vBackends.Len() > 0 {
+		backends := []*appmesh.Backend{}
+
+		for _, vBackend := range vBackends.List() {
+			backend := &appmesh.Backend{}
+
+			mBackend := vBackend.(map[string]interface{})
+
+			if vVirtualService, ok := mBackend["virtual_service"].([]interface{}); ok && len(vVirtualService) > 0 && vVirtualService[0] != nil {
+				mVirtualService := vVirtualService[0].(map[string]interface{})
+
+				backend.VirtualService = &appmesh.VirtualServiceBackend{}
+
+				if vVirtualServiceName, ok := mVirtualService["virtual_service_name"].(string); ok {
+					backend.VirtualService.VirtualServiceName = aws.String(vVirtualServiceName)
+				}
+			}
+			backends = append(backends, backend)
+		}
+
+		spec.Backends = backends
 	}
 
-	if vListeners, ok := mSpec["listener"].(*schema.Set); ok && vListeners.Len() > 0 {
+	if vListeners, ok := mSpec["listener"].([]interface{}); ok && len(vListeners) > 0 && vListeners[0] != nil {
 		listeners := []*appmesh.Listener{}
 
-		for _, vListener := range vListeners.List() {
+		for _, vListener := range vListeners {
 			listener := &appmesh.Listener{}
 
 			mListener := vListener.(map[string]interface{})
+
+			if vHealthCheck, ok := mListener["health_check"].([]interface{}); ok && len(vHealthCheck) > 0 && vHealthCheck[0] != nil {
+				mHealthCheck := vHealthCheck[0].(map[string]interface{})
+
+				listener.HealthCheck = &appmesh.HealthCheckPolicy{}
+
+				if vHealthyThreshold, ok := mHealthCheck["healthy_threshold"].(int); ok && vHealthyThreshold > 0 {
+					listener.HealthCheck.HealthyThreshold = aws.Int64(int64(vHealthyThreshold))
+				}
+				if vIntervalMillis, ok := mHealthCheck["interval_millis"].(int); ok && vIntervalMillis > 0 {
+					listener.HealthCheck.IntervalMillis = aws.Int64(int64(vIntervalMillis))
+				}
+				if vPath, ok := mHealthCheck["path"].(string); ok && vPath != "" {
+					listener.HealthCheck.Path = aws.String(vPath)
+				}
+				if vPort, ok := mHealthCheck["port"].(int); ok && vPort > 0 {
+					listener.HealthCheck.Port = aws.Int64(int64(vPort))
+				}
+				if vProtocol, ok := mHealthCheck["protocol"].(string); ok && vProtocol != "" {
+					listener.HealthCheck.Protocol = aws.String(vProtocol)
+				}
+				if vTimeoutMillis, ok := mHealthCheck["timeout_millis"].(int); ok && vTimeoutMillis > 0 {
+					listener.HealthCheck.TimeoutMillis = aws.Int64(int64(vTimeoutMillis))
+				}
+				if vUnhealthyThreshold, ok := mHealthCheck["unhealthy_threshold"].(int); ok && vUnhealthyThreshold > 0 {
+					listener.HealthCheck.UnhealthyThreshold = aws.Int64(int64(vUnhealthyThreshold))
+				}
+			}
 
 			if vPortMapping, ok := mListener["port_mapping"].([]interface{}); ok && len(vPortMapping) > 0 && vPortMapping[0] != nil {
 				mPortMapping := vPortMapping[0].(map[string]interface{})
@@ -4909,17 +4815,64 @@ func expandAppmeshVirtualNodeSpec(vSpec []interface{}) *appmesh.VirtualNodeSpec 
 		spec.Listeners = listeners
 	}
 
+	if vLogging, ok := mSpec["logging"].([]interface{}); ok && len(vLogging) > 0 && vLogging[0] != nil {
+		mLogging := vLogging[0].(map[string]interface{})
+
+		if vAccessLog, ok := mLogging["access_log"].([]interface{}); ok && len(vAccessLog) > 0 && vAccessLog[0] != nil {
+			mAccessLog := vAccessLog[0].(map[string]interface{})
+
+			if vFile, ok := mAccessLog["file"].([]interface{}); ok && len(vFile) > 0 && vFile[0] != nil {
+				mFile := vFile[0].(map[string]interface{})
+
+				if vPath, ok := mFile["path"].(string); ok && vPath != "" {
+					spec.Logging = &appmesh.Logging{
+						AccessLog: &appmesh.AccessLog{
+							File: &appmesh.FileAccessLog{
+								Path: aws.String(vPath),
+							},
+						},
+					}
+				}
+			}
+		}
+	}
+
 	if vServiceDiscovery, ok := mSpec["service_discovery"].([]interface{}); ok && len(vServiceDiscovery) > 0 && vServiceDiscovery[0] != nil {
+		spec.ServiceDiscovery = &appmesh.ServiceDiscovery{}
+
 		mServiceDiscovery := vServiceDiscovery[0].(map[string]interface{})
+
+		if vAwsCloudMap, ok := mServiceDiscovery["aws_cloud_map"].([]interface{}); ok && len(vAwsCloudMap) > 0 && vAwsCloudMap[0] != nil {
+			spec.ServiceDiscovery.AwsCloudMap = &appmesh.AwsCloudMapServiceDiscovery{}
+
+			mAwsCloudMap := vAwsCloudMap[0].(map[string]interface{})
+
+			if vAttributes, ok := mAwsCloudMap["attributes"].(map[string]interface{}); ok && len(vAttributes) > 0 {
+				attributes := []*appmesh.AwsCloudMapInstanceAttribute{}
+
+				for k, v := range vAttributes {
+					attributes = append(attributes, &appmesh.AwsCloudMapInstanceAttribute{
+						Key:   aws.String(k),
+						Value: aws.String(v.(string)),
+					})
+				}
+
+				spec.ServiceDiscovery.AwsCloudMap.Attributes = attributes
+			}
+			if vNamespaceName, ok := mAwsCloudMap["namespace_name"].(string); ok && vNamespaceName != "" {
+				spec.ServiceDiscovery.AwsCloudMap.NamespaceName = aws.String(vNamespaceName)
+			}
+			if vServiceName, ok := mAwsCloudMap["service_name"].(string); ok && vServiceName != "" {
+				spec.ServiceDiscovery.AwsCloudMap.ServiceName = aws.String(vServiceName)
+			}
+		}
 
 		if vDns, ok := mServiceDiscovery["dns"].([]interface{}); ok && len(vDns) > 0 && vDns[0] != nil {
 			mDns := vDns[0].(map[string]interface{})
 
-			if vServiceName, ok := mDns["service_name"].(string); ok && vServiceName != "" {
-				spec.ServiceDiscovery = &appmesh.ServiceDiscovery{
-					Dns: &appmesh.DnsServiceDiscovery{
-						ServiceName: aws.String(vServiceName),
-					},
+			if vHostname, ok := mDns["hostname"].(string); ok && vHostname != "" {
+				spec.ServiceDiscovery.Dns = &appmesh.DnsServiceDiscovery{
+					Hostname: aws.String(vHostname),
 				}
 			}
 		}
@@ -4936,39 +4889,167 @@ func flattenAppmeshVirtualNodeSpec(spec *appmesh.VirtualNodeSpec) []interface{} 
 	mSpec := map[string]interface{}{}
 
 	if spec.Backends != nil {
-		mSpec["backends"] = flattenStringSet(spec.Backends)
-	}
+		vBackends := []interface{}{}
 
-	if spec.Listeners != nil {
-		vListeners := []interface{}{}
+		for _, backend := range spec.Backends {
+			mBackend := map[string]interface{}{}
 
-		for _, listener := range spec.Listeners {
-			mListener := map[string]interface{}{}
-
-			if listener.PortMapping != nil {
-				mPortMapping := map[string]interface{}{
-					"port":     int(aws.Int64Value(listener.PortMapping.Port)),
-					"protocol": aws.StringValue(listener.PortMapping.Protocol),
+			if backend.VirtualService != nil {
+				mVirtualService := map[string]interface{}{
+					"virtual_service_name": aws.StringValue(backend.VirtualService.VirtualServiceName),
 				}
-				mListener["port_mapping"] = []interface{}{mPortMapping}
+				mBackend["virtual_service"] = []interface{}{mVirtualService}
 			}
 
-			vListeners = append(vListeners, mListener)
+			vBackends = append(vBackends, mBackend)
 		}
 
-		mSpec["listener"] = schema.NewSet(appmeshVirtualNodeListenerHash, vListeners)
+		mSpec["backend"] = schema.NewSet(appmeshVirtualNodeBackendHash, vBackends)
 	}
 
-	if spec.ServiceDiscovery != nil && spec.ServiceDiscovery.Dns != nil {
-		mSpec["service_discovery"] = []interface{}{
+	if spec.Listeners != nil && spec.Listeners[0] != nil {
+		// Per schema definition, set at most 1 Listener
+		listener := spec.Listeners[0]
+		mListener := map[string]interface{}{}
+
+		if listener.HealthCheck != nil {
+			mHealthCheck := map[string]interface{}{
+				"healthy_threshold":   int(aws.Int64Value(listener.HealthCheck.HealthyThreshold)),
+				"interval_millis":     int(aws.Int64Value(listener.HealthCheck.IntervalMillis)),
+				"path":                aws.StringValue(listener.HealthCheck.Path),
+				"port":                int(aws.Int64Value(listener.HealthCheck.Port)),
+				"protocol":            aws.StringValue(listener.HealthCheck.Protocol),
+				"timeout_millis":      int(aws.Int64Value(listener.HealthCheck.TimeoutMillis)),
+				"unhealthy_threshold": int(aws.Int64Value(listener.HealthCheck.UnhealthyThreshold)),
+			}
+			mListener["health_check"] = []interface{}{mHealthCheck}
+		}
+
+		if listener.PortMapping != nil {
+			mPortMapping := map[string]interface{}{
+				"port":     int(aws.Int64Value(listener.PortMapping.Port)),
+				"protocol": aws.StringValue(listener.PortMapping.Protocol),
+			}
+			mListener["port_mapping"] = []interface{}{mPortMapping}
+		}
+
+		mSpec["listener"] = []interface{}{mListener}
+	}
+
+	if spec.Logging != nil && spec.Logging.AccessLog != nil && spec.Logging.AccessLog.File != nil {
+		mSpec["logging"] = []interface{}{
 			map[string]interface{}{
-				"dns": []interface{}{
+				"access_log": []interface{}{
 					map[string]interface{}{
-						"service_name": aws.StringValue(spec.ServiceDiscovery.Dns.ServiceName),
+						"file": []interface{}{
+							map[string]interface{}{
+								"path": aws.StringValue(spec.Logging.AccessLog.File.Path),
+							},
+						},
 					},
 				},
 			},
 		}
+	}
+
+	if spec.ServiceDiscovery != nil {
+		mServiceDiscovery := map[string]interface{}{}
+
+		if spec.ServiceDiscovery.AwsCloudMap != nil {
+			vAttributes := map[string]interface{}{}
+
+			for _, attribute := range spec.ServiceDiscovery.AwsCloudMap.Attributes {
+				vAttributes[aws.StringValue(attribute.Key)] = aws.StringValue(attribute.Value)
+			}
+
+			mServiceDiscovery["aws_cloud_map"] = []interface{}{
+				map[string]interface{}{
+					"attributes":     vAttributes,
+					"namespace_name": aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.NamespaceName),
+					"service_name":   aws.StringValue(spec.ServiceDiscovery.AwsCloudMap.ServiceName),
+				},
+			}
+		}
+
+		if spec.ServiceDiscovery.Dns != nil {
+			mServiceDiscovery["dns"] = []interface{}{
+				map[string]interface{}{
+					"hostname": aws.StringValue(spec.ServiceDiscovery.Dns.Hostname),
+				},
+			}
+		}
+
+		mSpec["service_discovery"] = []interface{}{mServiceDiscovery}
+	}
+
+	return []interface{}{mSpec}
+}
+
+func expandAppmeshVirtualServiceSpec(vSpec []interface{}) *appmesh.VirtualServiceSpec {
+	spec := &appmesh.VirtualServiceSpec{}
+
+	if len(vSpec) == 0 || vSpec[0] == nil {
+		// Empty Spec is allowed.
+		return spec
+	}
+	mSpec := vSpec[0].(map[string]interface{})
+
+	if vProvider, ok := mSpec["provider"].([]interface{}); ok && len(vProvider) > 0 && vProvider[0] != nil {
+		mProvider := vProvider[0].(map[string]interface{})
+
+		spec.Provider = &appmesh.VirtualServiceProvider{}
+
+		if vVirtualNode, ok := mProvider["virtual_node"].([]interface{}); ok && len(vVirtualNode) > 0 && vVirtualNode[0] != nil {
+			mVirtualNode := vVirtualNode[0].(map[string]interface{})
+
+			if vVirtualNodeName, ok := mVirtualNode["virtual_node_name"].(string); ok && vVirtualNodeName != "" {
+				spec.Provider.VirtualNode = &appmesh.VirtualNodeServiceProvider{
+					VirtualNodeName: aws.String(vVirtualNodeName),
+				}
+			}
+		}
+
+		if vVirtualRouter, ok := mProvider["virtual_router"].([]interface{}); ok && len(vVirtualRouter) > 0 && vVirtualRouter[0] != nil {
+			mVirtualRouter := vVirtualRouter[0].(map[string]interface{})
+
+			if vVirtualRouterName, ok := mVirtualRouter["virtual_router_name"].(string); ok && vVirtualRouterName != "" {
+				spec.Provider.VirtualRouter = &appmesh.VirtualRouterServiceProvider{
+					VirtualRouterName: aws.String(vVirtualRouterName),
+				}
+			}
+		}
+	}
+
+	return spec
+}
+
+func flattenAppmeshVirtualServiceSpec(spec *appmesh.VirtualServiceSpec) []interface{} {
+	if spec == nil {
+		return []interface{}{}
+	}
+
+	mSpec := map[string]interface{}{}
+
+	if spec.Provider != nil {
+		mProvider := map[string]interface{}{}
+
+		if spec.Provider.VirtualNode != nil {
+			mProvider["virtual_node"] = []interface{}{
+				map[string]interface{}{
+					"virtual_node_name": aws.StringValue(spec.Provider.VirtualNode.VirtualNodeName),
+				},
+			}
+		}
+
+		if spec.Provider.VirtualRouter != nil {
+			mProvider["virtual_router"] = []interface{}{
+				map[string]interface{}{
+					"virtual_router_name": aws.StringValue(spec.Provider.VirtualRouter.VirtualRouterName),
+				},
+			}
+		}
+
+		mSpec["provider"] = []interface{}{mProvider}
 	}
 
 	return []interface{}{mSpec}
@@ -4983,47 +5064,143 @@ func expandAppmeshRouteSpec(vSpec []interface{}) *appmesh.RouteSpec {
 	}
 	mSpec := vSpec[0].(map[string]interface{})
 
-	vHttpRoute, ok := mSpec["http_route"].([]interface{})
-	if !ok || len(vHttpRoute) == 0 || vHttpRoute[0] == nil {
-		return nil
+	if vPriority, ok := mSpec["priority"].(int); ok && vPriority > 0 {
+		spec.Priority = aws.Int64(int64(vPriority))
 	}
-	mHttpRoute := vHttpRoute[0].(map[string]interface{})
 
-	spec.HttpRoute = &appmesh.HttpRoute{}
+	if vHttpRoute, ok := mSpec["http_route"].([]interface{}); ok && len(vHttpRoute) > 0 && vHttpRoute[0] != nil {
+		mHttpRoute := vHttpRoute[0].(map[string]interface{})
 
-	if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
-		mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
+		spec.HttpRoute = &appmesh.HttpRoute{}
 
-		if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
-			weightedTargets := []*appmesh.WeightedTarget{}
+		if vHttpRouteAction, ok := mHttpRoute["action"].([]interface{}); ok && len(vHttpRouteAction) > 0 && vHttpRouteAction[0] != nil {
+			mHttpRouteAction := vHttpRouteAction[0].(map[string]interface{})
 
-			for _, vWeightedTarget := range vWeightedTargets.List() {
-				weightedTarget := &appmesh.WeightedTarget{}
+			if vWeightedTargets, ok := mHttpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+				weightedTargets := []*appmesh.WeightedTarget{}
 
-				mWeightedTarget := vWeightedTarget.(map[string]interface{})
+				for _, vWeightedTarget := range vWeightedTargets.List() {
+					weightedTarget := &appmesh.WeightedTarget{}
 
-				if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
-					weightedTarget.VirtualNode = aws.String(vVirtualNode)
+					mWeightedTarget := vWeightedTarget.(map[string]interface{})
+
+					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+						weightedTarget.VirtualNode = aws.String(vVirtualNode)
+					}
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+						weightedTarget.Weight = aws.Int64(int64(vWeight))
+					}
+
+					weightedTargets = append(weightedTargets, weightedTarget)
 				}
-				if vWeight, ok := mWeightedTarget["weight"].(int); ok {
-					weightedTarget.Weight = aws.Int64(int64(vWeight))
-				}
 
-				weightedTargets = append(weightedTargets, weightedTarget)
+				spec.HttpRoute.Action = &appmesh.HttpRouteAction{
+					WeightedTargets: weightedTargets,
+				}
+			}
+		}
+
+		if vHttpRouteMatch, ok := mHttpRoute["match"].([]interface{}); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
+			httpRouteMatch := &appmesh.HttpRouteMatch{}
+
+			mHttpRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
+
+			if vMethod, ok := mHttpRouteMatch["method"].(string); ok && vMethod != "" {
+				httpRouteMatch.Method = aws.String(vMethod)
+			}
+			if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
+				httpRouteMatch.Prefix = aws.String(vPrefix)
+			}
+			if vScheme, ok := mHttpRouteMatch["scheme"].(string); ok && vScheme != "" {
+				httpRouteMatch.Scheme = aws.String(vScheme)
 			}
 
-			spec.HttpRoute.Action = &appmesh.HttpRouteAction{
-				WeightedTargets: weightedTargets,
+			if vHttpRouteHeaders, ok := mHttpRouteMatch["header"].(*schema.Set); ok && vHttpRouteHeaders.Len() > 0 {
+				httpRouteHeaders := []*appmesh.HttpRouteHeader{}
+
+				for _, vHttpRouteHeader := range vHttpRouteHeaders.List() {
+					httpRouteHeader := &appmesh.HttpRouteHeader{}
+
+					mHttpRouteHeader := vHttpRouteHeader.(map[string]interface{})
+
+					if vInvert, ok := mHttpRouteHeader["invert"].(bool); ok {
+						httpRouteHeader.Invert = aws.Bool(vInvert)
+					}
+					if vName, ok := mHttpRouteHeader["name"].(string); ok && vName != "" {
+						httpRouteHeader.Name = aws.String(vName)
+					}
+
+					if vMatch, ok := mHttpRouteHeader["match"].([]interface{}); ok && len(vMatch) > 0 && vMatch[0] != nil {
+						httpRouteHeader.Match = &appmesh.HeaderMatchMethod{}
+
+						mMatch := vMatch[0].(map[string]interface{})
+
+						if vExact, ok := mMatch["exact"].(string); ok && vExact != "" {
+							httpRouteHeader.Match.Exact = aws.String(vExact)
+						}
+						if vPrefix, ok := mMatch["prefix"].(string); ok && vPrefix != "" {
+							httpRouteHeader.Match.Prefix = aws.String(vPrefix)
+						}
+						if vRegex, ok := mMatch["regex"].(string); ok && vRegex != "" {
+							httpRouteHeader.Match.Regex = aws.String(vRegex)
+						}
+						if vSuffix, ok := mMatch["suffix"].(string); ok && vSuffix != "" {
+							httpRouteHeader.Match.Suffix = aws.String(vSuffix)
+						}
+
+						if vRange, ok := mMatch["range"].([]interface{}); ok && len(vRange) > 0 && vRange[0] != nil {
+							httpRouteHeader.Match.Range = &appmesh.MatchRange{}
+
+							mRange := vRange[0].(map[string]interface{})
+
+							if vEnd, ok := mRange["end"].(int); ok && vEnd > 0 {
+								httpRouteHeader.Match.Range.End = aws.Int64(int64(vEnd))
+							}
+							if vStart, ok := mRange["start"].(int); ok && vStart > 0 {
+								httpRouteHeader.Match.Range.Start = aws.Int64(int64(vStart))
+							}
+						}
+					}
+
+					httpRouteHeaders = append(httpRouteHeaders, httpRouteHeader)
+				}
+
+				httpRouteMatch.Headers = httpRouteHeaders
 			}
+
+			spec.HttpRoute.Match = httpRouteMatch
 		}
 	}
 
-	if vHttpRouteMatch, ok := mHttpRoute["match"].([]interface{}); ok && len(vHttpRouteMatch) > 0 && vHttpRouteMatch[0] != nil {
-		mHttpRouteMatch := vHttpRouteMatch[0].(map[string]interface{})
+	if vTcpRoute, ok := mSpec["tcp_route"].([]interface{}); ok && len(vTcpRoute) > 0 && vTcpRoute[0] != nil {
+		mTcpRoute := vTcpRoute[0].(map[string]interface{})
 
-		if vPrefix, ok := mHttpRouteMatch["prefix"].(string); ok && vPrefix != "" {
-			spec.HttpRoute.Match = &appmesh.HttpRouteMatch{
-				Prefix: aws.String(vPrefix),
+		spec.TcpRoute = &appmesh.TcpRoute{}
+
+		if vTcpRouteAction, ok := mTcpRoute["action"].([]interface{}); ok && len(vTcpRouteAction) > 0 && vTcpRouteAction[0] != nil {
+			mTcpRouteAction := vTcpRouteAction[0].(map[string]interface{})
+
+			if vWeightedTargets, ok := mTcpRouteAction["weighted_target"].(*schema.Set); ok && vWeightedTargets.Len() > 0 {
+				weightedTargets := []*appmesh.WeightedTarget{}
+
+				for _, vWeightedTarget := range vWeightedTargets.List() {
+					weightedTarget := &appmesh.WeightedTarget{}
+
+					mWeightedTarget := vWeightedTarget.(map[string]interface{})
+
+					if vVirtualNode, ok := mWeightedTarget["virtual_node"].(string); ok && vVirtualNode != "" {
+						weightedTarget.VirtualNode = aws.String(vVirtualNode)
+					}
+					if vWeight, ok := mWeightedTarget["weight"].(int); ok {
+						weightedTarget.Weight = aws.Int64(int64(vWeight))
+					}
+
+					weightedTargets = append(weightedTargets, weightedTarget)
+				}
+
+				spec.TcpRoute.Action = &appmesh.TcpRouteAction{
+					WeightedTargets: weightedTargets,
+				}
 			}
 		}
 	}
@@ -5036,34 +5213,72 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 		return []interface{}{}
 	}
 
-	mSpec := map[string]interface{}{}
+	mSpec := map[string]interface{}{
+		"priority": int(aws.Int64Value(spec.Priority)),
+	}
 
-	if spec.HttpRoute != nil {
+	if httpRoute := spec.HttpRoute; httpRoute != nil {
 		mHttpRoute := map[string]interface{}{}
 
-		if spec.HttpRoute.Action != nil && spec.HttpRoute.Action.WeightedTargets != nil {
-			vWeightedTargets := []interface{}{}
+		if action := httpRoute.Action; action != nil {
+			if weightedTargets := action.WeightedTargets; weightedTargets != nil {
+				vWeightedTargets := []interface{}{}
 
-			for _, weightedTarget := range spec.HttpRoute.Action.WeightedTargets {
-				mWeightedTarget := map[string]interface{}{
-					"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
-					"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+				for _, weightedTarget := range weightedTargets {
+					mWeightedTarget := map[string]interface{}{
+						"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
+						"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+					}
+
+					vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
 				}
 
-				vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
-			}
-
-			mHttpRoute["action"] = []interface{}{
-				map[string]interface{}{
-					"weighted_target": schema.NewSet(appmeshRouteWeightedTargetHash, vWeightedTargets),
-				},
+				mHttpRoute["action"] = []interface{}{
+					map[string]interface{}{
+						"weighted_target": schema.NewSet(appmeshWeightedTargetHash, vWeightedTargets),
+					},
+				}
 			}
 		}
 
-		if spec.HttpRoute.Match != nil {
+		if httpRouteMatch := httpRoute.Match; httpRouteMatch != nil {
+			vHttpRouteHeaders := []interface{}{}
+
+			for _, httpRouteHeader := range httpRouteMatch.Headers {
+				mHttpRouteHeader := map[string]interface{}{
+					"invert": aws.BoolValue(httpRouteHeader.Invert),
+					"name":   aws.StringValue(httpRouteHeader.Name),
+				}
+
+				if match := httpRouteHeader.Match; match != nil {
+					mMatch := map[string]interface{}{
+						"exact":  aws.StringValue(match.Exact),
+						"prefix": aws.StringValue(match.Prefix),
+						"regex":  aws.StringValue(match.Regex),
+						"suffix": aws.StringValue(match.Suffix),
+					}
+
+					if r := match.Range; r != nil {
+						mRange := map[string]interface{}{
+							"end":   int(aws.Int64Value(r.End)),
+							"start": int(aws.Int64Value(r.Start)),
+						}
+
+						mMatch["range"] = []interface{}{mRange}
+					}
+
+					mHttpRouteHeader["match"] = []interface{}{mMatch}
+				}
+
+				vHttpRouteHeaders = append(vHttpRouteHeaders, mHttpRouteHeader)
+			}
+
 			mHttpRoute["match"] = []interface{}{
 				map[string]interface{}{
-					"prefix": aws.StringValue(spec.HttpRoute.Match.Prefix),
+					"header": schema.NewSet(appmeshHttpRouteHeaderHash, vHttpRouteHeaders),
+					"method": aws.StringValue(httpRouteMatch.Method),
+					"prefix": aws.StringValue(httpRouteMatch.Prefix),
+					"scheme": aws.StringValue(httpRouteMatch.Scheme),
 				},
 			}
 		}
@@ -5071,5 +5286,131 @@ func flattenAppmeshRouteSpec(spec *appmesh.RouteSpec) []interface{} {
 		mSpec["http_route"] = []interface{}{mHttpRoute}
 	}
 
+	if tcpRoute := spec.TcpRoute; tcpRoute != nil {
+		mTcpRoute := map[string]interface{}{}
+
+		if action := tcpRoute.Action; action != nil {
+			if weightedTargets := action.WeightedTargets; weightedTargets != nil {
+				vWeightedTargets := []interface{}{}
+
+				for _, weightedTarget := range weightedTargets {
+					mWeightedTarget := map[string]interface{}{
+						"virtual_node": aws.StringValue(weightedTarget.VirtualNode),
+						"weight":       int(aws.Int64Value(weightedTarget.Weight)),
+					}
+
+					vWeightedTargets = append(vWeightedTargets, mWeightedTarget)
+				}
+
+				mTcpRoute["action"] = []interface{}{
+					map[string]interface{}{
+						"weighted_target": schema.NewSet(appmeshWeightedTargetHash, vWeightedTargets),
+					},
+				}
+			}
+		}
+
+		mSpec["tcp_route"] = []interface{}{mTcpRoute}
+	}
+
 	return []interface{}{mSpec}
+}
+
+func expandRoute53ResolverEndpointIpAddresses(vIpAddresses *schema.Set) []*route53resolver.IpAddressRequest {
+	ipAddressRequests := []*route53resolver.IpAddressRequest{}
+
+	for _, vIpAddress := range vIpAddresses.List() {
+		ipAddressRequest := &route53resolver.IpAddressRequest{}
+
+		mIpAddress := vIpAddress.(map[string]interface{})
+
+		if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+			ipAddressRequest.SubnetId = aws.String(vSubnetId)
+		}
+		if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
+			ipAddressRequest.Ip = aws.String(vIp)
+		}
+
+		ipAddressRequests = append(ipAddressRequests, ipAddressRequest)
+	}
+
+	return ipAddressRequests
+}
+
+func flattenRoute53ResolverEndpointIpAddresses(ipAddresses []*route53resolver.IpAddressResponse) []interface{} {
+	if ipAddresses == nil {
+		return []interface{}{}
+	}
+
+	vIpAddresses := []interface{}{}
+
+	for _, ipAddress := range ipAddresses {
+		mIpAddress := map[string]interface{}{
+			"subnet_id": aws.StringValue(ipAddress.SubnetId),
+			"ip":        aws.StringValue(ipAddress.Ip),
+			"ip_id":     aws.StringValue(ipAddress.IpId),
+		}
+
+		vIpAddresses = append(vIpAddresses, mIpAddress)
+	}
+
+	return vIpAddresses
+}
+
+func expandRoute53ResolverEndpointIpAddressUpdate(vIpAddress interface{}) *route53resolver.IpAddressUpdate {
+	ipAddressUpdate := &route53resolver.IpAddressUpdate{}
+
+	mIpAddress := vIpAddress.(map[string]interface{})
+
+	if vSubnetId, ok := mIpAddress["subnet_id"].(string); ok && vSubnetId != "" {
+		ipAddressUpdate.SubnetId = aws.String(vSubnetId)
+	}
+	if vIp, ok := mIpAddress["ip"].(string); ok && vIp != "" {
+		ipAddressUpdate.Ip = aws.String(vIp)
+	}
+	if vIpId, ok := mIpAddress["ip_id"].(string); ok && vIpId != "" {
+		ipAddressUpdate.IpId = aws.String(vIpId)
+	}
+
+	return ipAddressUpdate
+}
+
+func expandRoute53ResolverRuleTargetIps(vTargetIps *schema.Set) []*route53resolver.TargetAddress {
+	targetAddresses := []*route53resolver.TargetAddress{}
+
+	for _, vTargetIp := range vTargetIps.List() {
+		targetAddress := &route53resolver.TargetAddress{}
+
+		mTargetIp := vTargetIp.(map[string]interface{})
+
+		if vIp, ok := mTargetIp["ip"].(string); ok && vIp != "" {
+			targetAddress.Ip = aws.String(vIp)
+		}
+		if vPort, ok := mTargetIp["port"].(int); ok {
+			targetAddress.Port = aws.Int64(int64(vPort))
+		}
+
+		targetAddresses = append(targetAddresses, targetAddress)
+	}
+
+	return targetAddresses
+}
+
+func flattenRoute53ResolverRuleTargetIps(targetAddresses []*route53resolver.TargetAddress) []interface{} {
+	if targetAddresses == nil {
+		return []interface{}{}
+	}
+
+	vTargetIps := []interface{}{}
+
+	for _, targetAddress := range targetAddresses {
+		mTargetIp := map[string]interface{}{
+			"ip":   aws.StringValue(targetAddress.Ip),
+			"port": int(aws.Int64Value(targetAddress.Port)),
+		}
+
+		vTargetIps = append(vTargetIps, mTargetIp)
+	}
+
+	return vTargetIps
 }

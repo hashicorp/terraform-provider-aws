@@ -14,22 +14,22 @@ const (
 	// ErrCodeConflictingDomainExists for service response error code
 	// "ConflictingDomainExists".
 	//
-	// The cause of this error depends on whether you're trying to create a public
-	// or a private hosted zone:
+	// The cause of this error depends on the operation that you're performing:
 	//
-	//    * Public hosted zone: Two hosted zones that have the same name or that
-	//    have a parent/child relationship (example.com and test.example.com) can't
-	//    have any common name servers. You tried to create a hosted zone that has
-	//    the same name as an existing hosted zone or that's the parent or child
-	//    of an existing hosted zone, and you specified a delegation set that shares
-	//    one or more name servers with the existing hosted zone. For more information,
-	//    see CreateReusableDelegationSet.
+	//    * Create a public hosted zone: Two hosted zones that have the same name
+	//    or that have a parent/child relationship (example.com and test.example.com)
+	//    can't have any common name servers. You tried to create a hosted zone
+	//    that has the same name as an existing hosted zone or that's the parent
+	//    or child of an existing hosted zone, and you specified a delegation set
+	//    that shares one or more name servers with the existing hosted zone. For
+	//    more information, see CreateReusableDelegationSet (https://docs.aws.amazon.com/Route53/latest/APIReference/API_CreateReusableDelegationSet.html).
 	//
-	//    * Private hosted zone: You specified an Amazon VPC that you're already
-	//    using for another hosted zone, and the domain that you specified for one
-	//    of the hosted zones is a subdomain of the domain that you specified for
-	//    the other hosted zone. For example, you can't use the same Amazon VPC
-	//    for the hosted zones for example.com and test.example.com.
+	//    * Create a private hosted zone: A hosted zone with the specified name
+	//    already exists and is already associated with the Amazon VPC that you
+	//    specified.
+	//
+	//    * Associate VPCs with a private hosted zone: The VPC that you specified
+	//    is already associated with another hosted zone that has the same name.
 	ErrCodeConflictingDomainExists = "ConflictingDomainExists"
 
 	// ErrCodeConflictingTypes for service response error code
@@ -212,8 +212,9 @@ const (
 	// reached the limit on reusable delegation sets that it can create or because
 	// you've reached the limit on the number of Amazon VPCs that you can associate
 	// with a private hosted zone. To get the current limit on the number of reusable
-	// delegation sets, see GetAccountLimit. To get the current limit on the number
-	// of Amazon VPCs that you can associate with a private hosted zone, see GetHostedZoneLimit.
+	// delegation sets, see GetAccountLimit (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetAccountLimit.html).
+	// To get the current limit on the number of Amazon VPCs that you can associate
+	// with a private hosted zone, see GetHostedZoneLimit (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetHostedZoneLimit.html).
 	// To request a higher limit, create a case (http://aws.amazon.com/route53-request)
 	// with the AWS Support Center.
 	ErrCodeLimitsExceeded = "LimitsExceeded"
@@ -239,7 +240,9 @@ const (
 	// ErrCodeNoSuchGeoLocation for service response error code
 	// "NoSuchGeoLocation".
 	//
-	// Amazon Route 53 doesn't support the specified geographic location.
+	// Amazon Route 53 doesn't support the specified geographic location. For a
+	// list of supported geolocation codes, see the GeoLocation (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GeoLocation.html)
+	// data type.
 	ErrCodeNoSuchGeoLocation = "NoSuchGeoLocation"
 
 	// ErrCodeNoSuchHealthCheck for service response error code
@@ -315,10 +318,11 @@ const (
 	// This health check can't be created because the current account has reached
 	// the limit on the number of active health checks.
 	//
-	// For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+	// For information about default limits, see Limits (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
 	// in the Amazon Route 53 Developer Guide.
 	//
-	// For information about how to get the current limit for an account, see GetAccountLimit.
+	// For information about how to get the current limit for an account, see GetAccountLimit
+	// (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetAccountLimit.html).
 	// To request a higher limit, create a case (http://aws.amazon.com/route53-request)
 	// with the AWS Support Center.
 	//
@@ -335,14 +339,14 @@ const (
 	// the limit on the number of hosted zones that can be associated with a reusable
 	// delegation set.
 	//
-	// For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+	// For information about default limits, see Limits (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
 	// in the Amazon Route 53 Developer Guide.
 	//
 	// To get the current limit on hosted zones that can be created by an account,
-	// see GetAccountLimit.
+	// see GetAccountLimit (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetAccountLimit.html).
 	//
 	// To get the current limit on hosted zones that can be associated with a reusable
-	// delegation set, see GetReusableDelegationSetLimit.
+	// delegation set, see GetReusableDelegationSetLimit (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetReusableDelegationSetLimit.html).
 	//
 	// To request a higher limit, create a case (http://aws.amazon.com/route53-request)
 	// with the AWS Support Center.
@@ -354,10 +358,10 @@ const (
 	// This traffic policy can't be created because the current account has reached
 	// the limit on the number of traffic policies.
 	//
-	// For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+	// For information about default limits, see Limits (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
 	// in the Amazon Route 53 Developer Guide.
 	//
-	// To get the current limit for an account, see GetAccountLimit.
+	// To get the current limit for an account, see GetAccountLimit (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetAccountLimit.html).
 	//
 	// To request a higher limit, create a case (http://aws.amazon.com/route53-request)
 	// with the AWS Support Center.
@@ -369,10 +373,11 @@ const (
 	// This traffic policy instance can't be created because the current account
 	// has reached the limit on the number of traffic policy instances.
 	//
-	// For information about default limits, see Limits (http://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
+	// For information about default limits, see Limits (https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/DNSLimitations.html)
 	// in the Amazon Route 53 Developer Guide.
 	//
-	// For information about how to get the current limit for an account, see GetAccountLimit.
+	// For information about how to get the current limit for an account, see GetAccountLimit
+	// (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetAccountLimit.html).
 	//
 	// To request a higher limit, create a case (http://aws.amazon.com/route53-request)
 	// with the AWS Support Center.
@@ -385,10 +390,10 @@ const (
 	// of 1000 on the number of versions that you can create for the current traffic
 	// policy.
 	//
-	// To create more traffic policy versions, you can use GetTrafficPolicy to get
-	// the traffic policy document for a specified traffic policy version, and then
-	// use CreateTrafficPolicy to create a new traffic policy using the traffic
-	// policy document.
+	// To create more traffic policy versions, you can use GetTrafficPolicy (https://docs.aws.amazon.com/Route53/latest/APIReference/API_GetTrafficPolicy.html)
+	// to get the traffic policy document for a specified traffic policy version,
+	// and then use CreateTrafficPolicy (https://docs.aws.amazon.com/Route53/latest/APIReference/API_CreateTrafficPolicy.html)
+	// to create a new traffic policy using the traffic policy document.
 	ErrCodeTooManyTrafficPolicyVersionsForCurrentPolicy = "TooManyTrafficPolicyVersionsForCurrentPolicy"
 
 	// ErrCodeTooManyVPCAssociationAuthorizations for service response error code

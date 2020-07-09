@@ -8,8 +8,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSDbEventCategories_basic(t *testing.T) {
@@ -85,8 +85,9 @@ func testAccCheckAwsDbEventCategoriesBuild(attrs map[string]string) ([]string, e
 	}
 
 	var eventCategories []string
+	r := regexp.MustCompile("event_categories.[0-9]+")
 	for k, v := range attrs {
-		matched, _ := regexp.MatchString("event_categories.[0-9]+", k)
+		matched := r.MatchString(k)
 		if matched {
 			eventCategories = append(eventCategories, v)
 		}

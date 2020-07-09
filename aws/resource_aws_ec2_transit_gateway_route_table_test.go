@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform/helper/resource"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
 
 func TestAccAWSEc2TransitGatewayRouteTable_basic(t *testing.T) {
@@ -77,7 +77,7 @@ func TestAccAWSEc2TransitGatewayRouteTable_disappears_TransitGateway(t *testing.
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSEc2TransitGatewayExists(transitGatewayResourceName, &transitGateway1),
 					testAccCheckAWSEc2TransitGatewayRouteTableExists(resourceName, &transitGatewayRouteTable1),
-					testAccCheckAWSEc2TransitGatewayDisappears(&transitGateway1),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2TransitGateway(), transitGatewayResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

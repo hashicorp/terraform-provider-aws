@@ -1,7 +1,7 @@
 ---
+subcategory: "VPC"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway"
-sidebar_current: "docs-aws-datasource-vpn-gateway"
 description: |-
     Provides details about a specific VPN gateway.
 ---
@@ -41,7 +41,7 @@ The given filters must match exactly one VPN gateway whose data will be exported
 
 * `filter` - (Optional) Custom filter block as described below.
 
-* `tags` - (Optional) A mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) A map of tags, each pair of which must exactly match
   a pair on the desired VPN Gateway.
 
 * `amazon_side_asn` - (Optional) The Autonomous System Number (ASN) for the Amazon side of the specific VPN Gateway to retrieve.

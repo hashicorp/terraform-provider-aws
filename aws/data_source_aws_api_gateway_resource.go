@@ -6,7 +6,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 )
 
 func dataSourceAwsApiGatewayResource() *schema.Resource {
@@ -34,7 +34,7 @@ func dataSourceAwsApiGatewayResource() *schema.Resource {
 }
 
 func dataSourceAwsApiGatewayResourceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*AWSClient).apigateway
+	conn := meta.(*AWSClient).apigatewayconn
 
 	restApiId := d.Get("rest_api_id").(string)
 	target := d.Get("path").(string)

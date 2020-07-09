@@ -1,7 +1,7 @@
 ---
+subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_db_event_categories"
-sidebar_current: "docs-aws-datasource-db-event-categories"
 description: |-
     Provides a list of DB Event Categories which can be used to pass values into DB Event Subscription.
 ---

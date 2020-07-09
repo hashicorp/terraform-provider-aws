@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2"
 layout: "aws"
 page_title: "AWS: aws_ec2_transit_gateway"
-sidebar_current: "docs-aws-resource-ec2-transit-gateway-x"
 description: |-
   Manages an EC2 Transit Gateway
 ---
 
-# aws_ec2_transit_gateway
+# Resource: aws_ec2_transit_gateway
 
 Manages an EC2 Transit Gateway.
 

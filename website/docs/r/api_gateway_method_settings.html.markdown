@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway (REST APIs)"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_method_settings"
-sidebar_current: "docs-aws-resource-api-gateway-method-settings"
 description: |-
   Provides an API Gateway Method Settings, e.g. logging or monitoring.
 ---
 
-# aws_api_gateway_method_settings
+# Resource: aws_api_gateway_method_settings
 
 Provides an API Gateway Method Settings, e.g. logging or monitoring.
 

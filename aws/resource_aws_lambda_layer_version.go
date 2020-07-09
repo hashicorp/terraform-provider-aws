@@ -10,8 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	arn2 "github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 )
 
 const awsMutexLambdaLayerKey = `aws_lambda_layer_version`
@@ -196,11 +196,11 @@ func resourceAwsLambdaLayerVersionRead(d *schema.ResourceData, meta interface{})
 	if err := d.Set("version", strconv.FormatInt(version, 10)); err != nil {
 		return fmt.Errorf("Error setting lambda layer version: %s", err)
 	}
-	if err := d.Set("arn", layerVersion.LayerArn); err != nil {
-		return fmt.Errorf("Error setting lambda layer arn: %s", err)
+	if err := d.Set("arn", layerVersion.LayerVersionArn); err != nil {
+		return fmt.Errorf("Error setting lambda layer version arn: %s", err)
 	}
-	if err := d.Set("layer_arn", layerVersion.LayerVersionArn); err != nil {
-		return fmt.Errorf("Error setting lambda layer qualified arn: %s", err)
+	if err := d.Set("layer_arn", layerVersion.LayerArn); err != nil {
+		return fmt.Errorf("Error setting lambda layer arn: %s", err)
 	}
 	if err := d.Set("description", layerVersion.Description); err != nil {
 		return fmt.Errorf("Error setting lambda layer description: %s", err)

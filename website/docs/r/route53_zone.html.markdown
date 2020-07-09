@@ -1,12 +1,12 @@
 ---
+subcategory: "Route53"
 layout: "aws"
 page_title: "AWS: aws_route53_zone"
-sidebar_current: "docs-aws-resource-route53-zone"
 description: |-
   Manages a Route53 Hosted Zone
 ---
 
-# aws_route53_zone
+# Resource: aws_route53_zone
 
 Manages a Route53 Hosted Zone.
 
@@ -76,12 +76,10 @@ The following arguments are supported:
 
 * `name` - (Required) This is the name of the hosted zone.
 * `comment` - (Optional) A comment for the hosted zone. Defaults to 'Managed by Terraform'.
-* `delegation_set_id` - (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with `vpc` and `vpc_id` as delegation sets can only be used for public zones.
+* `delegation_set_id` - (Optional) The ID of the reusable delegation set whose NS records you want to assign to the hosted zone. Conflicts with `vpc` as delegation sets can only be used for public zones.
 * `force_destroy` - (Optional) Whether to destroy all records (possibly managed outside of Terraform) in the zone when destroying the zone.
-* `tags` - (Optional) A mapping of tags to assign to the zone.
-* `vpc` - (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with `delegation_set_id`, `vpc_id`, and `vpc_region` in this resource and any [`aws_route53_zone_association` resource](/docs/providers/aws/r/route53_zone_association.html) specifying the same zone ID. Detailed below.
-* `vpc_id` - (Optional, **DEPRECATED**) Use `vpc` instead. The VPC to associate with a private hosted zone. Specifying `vpc_id` will create a private hosted zone. Conflicts with `delegation_set_id` as delegation sets can only be used for public zones and `vpc`.
-* `vpc_region` - (Optional, **DEPRECATED**) Use `vpc` instead. The VPC's region. Defaults to the region of the AWS provider.
+* `tags` - (Optional) A map of tags to assign to the zone.
+* `vpc` - (Optional) Configuration block(s) specifying VPC(s) to associate with a private hosted zone. Conflicts with the `delegation_set_id` argument in this resource and any [`aws_route53_zone_association` resource](/docs/providers/aws/r/route53_zone_association.html) specifying the same zone ID. Detailed below.
 
 ### vpc Argument Reference
 
@@ -95,7 +93,6 @@ In addition to all arguments above, the following attributes are exported:
 * `zone_id` - The Hosted Zone ID. This can be referenced by zone records.
 * `name_servers` - A list of name servers in associated (or default) delegation set.
   Find more about delegation sets in [AWS docs](https://docs.aws.amazon.com/Route53/latest/APIReference/actions-on-reusable-delegation-sets.html).
-
 
 ## Import
 

@@ -2,7 +2,18 @@
 
 package eks
 
+import (
+	"github.com/aws/aws-sdk-go/private/protocol"
+)
+
 const (
+
+	// ErrCodeBadRequestException for service response error code
+	// "BadRequestException".
+	//
+	// This exception is thrown if the request contains a semantic error. The precise
+	// meaning will depend on the API, and will be documented in the error message.
+	ErrCodeBadRequestException = "BadRequestException"
 
 	// ErrCodeClientException for service response error code
 	// "ClientException".
@@ -26,6 +37,13 @@ const (
 	// the cluster and the associated operations.
 	ErrCodeInvalidRequestException = "InvalidRequestException"
 
+	// ErrCodeNotFoundException for service response error code
+	// "NotFoundException".
+	//
+	// A service resource associated with the request could not be found. Clients
+	// should not retry such requests.
+	ErrCodeNotFoundException = "NotFoundException"
+
 	// ErrCodeResourceInUseException for service response error code
 	// "ResourceInUseException".
 	//
@@ -42,7 +60,8 @@ const (
 	// "ResourceNotFoundException".
 	//
 	// The specified resource could not be found. You can view your available clusters
-	// with ListClusters. Amazon EKS clusters are Region-specific.
+	// with ListClusters. You can view your available managed node groups with ListNodegroups.
+	// Amazon EKS clusters and node groups are Region-specific.
 	ErrCodeResourceNotFoundException = "ResourceNotFoundException"
 
 	// ErrCodeServerException for service response error code
@@ -66,3 +85,17 @@ const (
 	// your cluster.
 	ErrCodeUnsupportedAvailabilityZoneException = "UnsupportedAvailabilityZoneException"
 )
+
+var exceptionFromCode = map[string]func(protocol.ResponseMetadata) error{
+	"BadRequestException":                  newErrorBadRequestException,
+	"ClientException":                      newErrorClientException,
+	"InvalidParameterException":            newErrorInvalidParameterException,
+	"InvalidRequestException":              newErrorInvalidRequestException,
+	"NotFoundException":                    newErrorNotFoundException,
+	"ResourceInUseException":               newErrorResourceInUseException,
+	"ResourceLimitExceededException":       newErrorResourceLimitExceededException,
+	"ResourceNotFoundException":            newErrorResourceNotFoundException,
+	"ServerException":                      newErrorServerException,
+	"ServiceUnavailableException":          newErrorServiceUnavailableException,
+	"UnsupportedAvailabilityZoneException": newErrorUnsupportedAvailabilityZoneException,
+}
