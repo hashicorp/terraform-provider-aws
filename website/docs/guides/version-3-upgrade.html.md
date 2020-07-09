@@ -160,6 +160,63 @@ output "lambda_result" {
 
 Specifying both the `availability_zones` and `vpc_zone_identifier` arguments previously led to confusing behavior and errors. Now this issue is reported at plan-time. Use the `null` value instead of `[]` (empty list) in conditionals to ensure this validation does not unexpectedly trigger.
 
+### Drift detection enabled for `load_balancers` and `target_group_arns` arguments
+
+If you previously set one of these arguments to an empty list to enable drift detection (e.g. when migrating an ASG from ELB to ALB), this can be updated as follows.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_autoscaling_group" "example" {
+  # ... other configuration ...
+  load_balancers = []
+  target_group_arns = [aws_lb_target_group.example.arn]
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_autoscaling_group" "example" {
+  # ... other configuration ...
+  target_group_arns = [aws_lb_target_group.example.arn]
+}
+```
+
+If `aws_autoscaling_attachment` resources reference your ASG configurations, you will need to add the [`lifecycle` configuration block](/docs/configuration/resources.html#lifecycle-lifecycle-customizations) with an `ignore_changes` argument to prevent Terraform non-empty plans (i.e. forcing resource update) during the next state refresh.
+
+For example, given this previous configuration:
+
+```hcl
+resource "aws_autoscaling_attachment" "example" {
+  autoscaling_group_name = aws_autoscaling_group.example.id
+  elb                    = aws_elb.example.id
+}
+
+resource "aws_autoscaling_group" "example"{
+  # ... other configuration ...
+  load_balancers = [aws_elb.example.id]  
+}
+```
+
+An updated configuration:
+
+```hcl
+resource "aws_autoscaling_attachment" "example" {
+  autoscaling_group_name = aws_autoscaling_group.example.id
+  elb                    = aws_elb.example.id
+}
+
+resource "aws_autoscaling_group" "example"{
+  # ... other configuration ...
+  load_balancers = [aws_elb.example.id]
+
+  lifecycle {
+    ignore_changes = [load_balancers, target_group_arns]
+  }
+}
+```
+
 ## Resource: aws_dx_gateway
 
 ### Removal of Automatic aws_dx_gateway_association Import
