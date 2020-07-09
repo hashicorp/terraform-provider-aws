@@ -45,10 +45,6 @@ func TestAccDataSourceAwsLambdaInvocation_basic(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsLambdaInvocation_basic_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.%", "3"),
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.key1", "value1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.key2", "value2"),
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.key3", testData),
 					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
@@ -67,10 +63,7 @@ func TestAccDataSourceAwsLambdaInvocation_qualifier(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsLambdaInvocation_qualifier_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.%", "3"),
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.key1", "value1"),
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.key2", "value2"),
-					resource.TestCheckResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map.key3", testData),
+					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":"value1","key2":"value2","key3":"`+testData+`"}`),
 				),
 			},
 		},
@@ -88,7 +81,6 @@ func TestAccDataSourceAwsLambdaInvocation_complex(t *testing.T) {
 			{
 				Config: testAccDataSourceAwsLambdaInvocation_complex_config(rName, testData),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckNoResourceAttr("data.aws_lambda_invocation.invocation_test", "result_map"),
 					testAccCheckLambdaInvocationResult("data.aws_lambda_invocation.invocation_test", `{"key1":{"subkey1":"subvalue1"},"key2":{"subkey2":"subvalue2","subkey3":{"a": "b"}},"key3":"`+testData+`"}`),
 				),
 			},
