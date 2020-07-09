@@ -936,7 +936,7 @@ func TestAccAWSLBListenerRule_conditionPathPattern_deprecated(t *testing.T) {
 						"query_string.#":          "0",
 						"source_ip.#":             "0",
 						"values.#":                "1",
-						"values.1":                "/public/*",
+						"values.0":                "/public/*",
 					}),
 					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "condition.*.path_pattern.0.values.*", "/public/*"),
 				),
