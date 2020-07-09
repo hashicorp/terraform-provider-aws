@@ -253,7 +253,6 @@ resource "aws_iam_role_policy_attachment" "replication" {
 
 resource "aws_s3_bucket" "destination" {
   bucket = "tf-test-bucket-destination-12345"
-  region = "eu-west-1"
 
   versioning {
     enabled = true
@@ -264,7 +263,6 @@ resource "aws_s3_bucket" "bucket" {
   provider = "aws.central"
   bucket   = "tf-test-bucket-12345"
   acl      = "private"
-  region   = "eu-central-1"
 
   versioning {
     enabled = true
@@ -349,7 +347,6 @@ The following arguments are supported:
 * `logging` - (Optional) A settings of [bucket logging](https://docs.aws.amazon.com/AmazonS3/latest/UG/ManagingBucketLogging.html) (documented below).
 * `lifecycle_rule` - (Optional) A configuration of [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html) (documented below).
 * `acceleration_status` - (Optional) Sets the accelerate configuration of an existing bucket. Can be `Enabled` or `Suspended`.
-* `region` - (Optional) If specified, the AWS region this bucket should reside in. Otherwise, the region used by the callee.
 * `request_payer` - (Optional) Specifies who should bear the cost of Amazon S3 data transfer.
 Can be either `BucketOwner` or `Requester`. By default, the owner of the S3 bucket would incur
 the costs of any data transfer. See [Requester Pays Buckets](http://docs.aws.amazon.com/AmazonS3/latest/dev/RequesterPaysBuckets.html)
