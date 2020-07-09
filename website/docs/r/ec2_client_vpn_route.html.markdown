@@ -17,11 +17,7 @@ Provides additional routes for AWS Client VPN endpoints. For more information on
 resource "aws_ec2_client_vpn_route" "example" {
   client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.example.id
   destination_cidr_block = "0.0.0.0/0"
-  target_vpc_subnet_id   = aws_subnet.example[0].id
-
-  depends_on = [
-    aws_ec2_client_vpn_network_association.example,
-  ]
+  target_vpc_subnet_id   = aws_ec2_client_vpn_network_association.example.subnet_id
 }
 
 resource "aws_ec2_client_vpn_network_association" "example" {
