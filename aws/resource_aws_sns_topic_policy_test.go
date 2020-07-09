@@ -29,7 +29,7 @@ func TestAccAWSSNSTopicPolicy_basic(t *testing.T) {
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", "aws_sns_topic.test", "arn"),
 					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
+						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					testAccCheckResourceAttrAccountID(resourceName, "owner"),
 				),
 			},
@@ -57,7 +57,7 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
 					resource.TestMatchResourceAttr(resourceName, "policy",
-						regexp.MustCompile("^{\"Version\":\"2012-10-17\".+")),
+						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 				),
 			},
 			{
@@ -69,6 +69,8 @@ func TestAccAWSSNSTopicPolicy_updated(t *testing.T) {
 				Config: testAccAWSSNSTopicPolicyUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSSNSTopicExists("aws_sns_topic.test", attributes),
+					resource.TestMatchResourceAttr(resourceName, "policy",
+						regexp.MustCompile(fmt.Sprintf("\"Sid\":\"%[1]s\"", rName))),
 					resource.TestMatchResourceAttr(resourceName, "policy",
 						regexp.MustCompile("SNS:DeleteTopic")),
 				),
@@ -160,7 +162,7 @@ resource "aws_sns_topic_policy" "test" {
   "Id":"default",
   "Statement":[
     {
-      "Sid":"default",
+      "Sid":"%[1]s",
       "Effect":"Allow",
       "Principal":{
         "AWS":"*"
@@ -194,7 +196,7 @@ resource "aws_sns_topic_policy" "test" {
   "Id":"default",
   "Statement":[
     {
-      "Sid":"default",
+      "Sid":"%[1]s",
       "Effect":"Allow",
       "Principal":{
         "AWS":"*"
