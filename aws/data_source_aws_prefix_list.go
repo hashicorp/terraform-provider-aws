@@ -45,19 +45,22 @@ func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error
 	if prefixListID := d.Get("prefix_list_id"); prefixListID != "" {
 		req.PrefixListIds = aws.StringSlice([]string{prefixListID.(string)})
 	}
-	req.Filters = buildEC2AttributeFilterList(
-		map[string]string{
-			"prefix-list-name": d.Get("name").(string),
-		},
-	)
+	if prefixListName := d.Get("name"); prefixListName.(string) != "" {
+		req.Filters = append(req.Filters, &ec2.Filter{
+			Name:   aws.String("prefix-list-name"),
+			Values: aws.StringSlice([]string{prefixListName.(string)}),
+		})
+	}
 
 	log.Printf("[DEBUG] Reading Prefix List: %s", req)
 	resp, err := conn.DescribePrefixLists(req)
-	if err != nil {
+	switch {
+	case err != nil:
 		return err
-	}
-	if resp == nil || len(resp.PrefixLists) == 0 {
+	case resp == nil || len(resp.PrefixLists) == 0:
 		return fmt.Errorf("no matching prefix list found; the prefix list ID or name may be invalid or not exist in the current region")
+	case len(resp.PrefixLists) > 1:
+		return fmt.Errorf("more than one prefix list matched the given set of criteria")
 	}
 
 	pl := resp.PrefixLists[0]
