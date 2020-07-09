@@ -101,6 +101,7 @@ func TestAccAwsEc2ClientVpn(t *testing.T) {
 		},
 	}
 
+	t.Parallel()
 	for group, m := range testCases {
 		m := m
 		for name, tc := range m {
