@@ -1,7 +1,7 @@
 ---
 subcategory: "VPC"
 layout: "aws"
-page_title: "AWS: aws_prefix-list"
+page_title: "AWS: aws_prefix_list"
 description: |-
     Provides details about a specific prefix list
 ---
@@ -41,6 +41,15 @@ resource "aws_network_acl_rule" "private_s3" {
   cidr_block     = "${data.aws_prefix_list.private_s3.cidr_blocks[0]}"
   from_port      = 443
   to_port        = 443
+}
+```
+
+### Find the regional DynamoDB prefix list
+
+```hcl
+data "aws_region" "current" {}
+data "aws_prefix_list" "dynamo" {
+  name = "com.amazonaws.${data.aws_region.current.name}.dynamodb"
 }
 ```
 
