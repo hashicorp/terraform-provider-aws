@@ -2,14 +2,98 @@ package aws
 
 import (
 	"fmt"
+	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
 )
+
+func init() {
+	resource.AddTestSweepers("aws_ec2_client_vpn_network_association", &resource.Sweeper{
+		Name: "aws_ec2_client_vpn_network_association",
+		F:    testSweepEc2ClientVpnNetworkAssociations,
+	})
+}
+
+func testSweepEc2ClientVpnNetworkAssociations(region string) error {
+	client, err := sharedClientForRegion(region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.(*AWSClient).ec2conn
+	input := &ec2.DescribeClientVpnEndpointsInput{}
+	var sweeperErrs *multierror.Error
+
+	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
+			if clientVpnEndpoint == nil {
+				continue
+			}
+
+			endpointID := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
+			input := &ec2.DescribeClientVpnTargetNetworksInput{
+				ClientVpnEndpointId: clientVpnEndpoint.ClientVpnEndpointId,
+			}
+
+			err := conn.DescribeClientVpnTargetNetworksPages(input, func(page *ec2.DescribeClientVpnTargetNetworksOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, targetNetwork := range page.ClientVpnTargetNetworks {
+					associationID := aws.StringValue(targetNetwork.AssociationId)
+
+					log.Printf("[INFO] Deleting EC2 Client VPN Target Network: %s", associationID)
+					r := resourceAwsEc2ClientVpnNetworkAssociation()
+					d := r.Data(nil)
+					d.SetId(associationID)
+					d.Set("client_vpn_endpoint_id", endpointID)
+					err := r.Delete(d, client)
+
+					if err != nil {
+						sweeperErr := fmt.Errorf("error deleting EC2 Client VPN Target Network (%s): %w", associationID, err)
+						log.Printf("[ERROR] %s", sweeperErr)
+						sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+						continue
+					}
+				}
+
+				return !lastPage
+			})
+
+			if err != nil {
+				sweeperErr := fmt.Errorf("error describing EC2 Client VPN Target Networks for Endpoint (%s): %w", endpointID, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
+			}
+		}
+
+		return !lastPage
+	})
+
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Client VPN Endpoint sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
+	if err != nil {
+		return fmt.Errorf("error retrieving Client VPN Endpoints: %w", err)
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
 
 func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 	var assoc1 ec2.TargetNetwork
