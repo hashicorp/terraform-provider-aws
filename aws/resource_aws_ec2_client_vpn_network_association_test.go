@@ -60,13 +60,13 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
-	var assoc1 ec2.TargetNetwork
+func testAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
+	var assoc1, assoc2 ec2.TargetNetwork
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAwsEc2ClientVpnNetworkAssociationDestroy,
 		Steps: []resource.TestStep{
@@ -80,7 +80,7 @@ func TestAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc2),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 				),
 			},

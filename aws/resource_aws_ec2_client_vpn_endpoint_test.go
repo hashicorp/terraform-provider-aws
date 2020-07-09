@@ -96,8 +96,9 @@ func TestAccAwsEc2ClientVpn(t *testing.T) {
 			"disappears": testAccAwsEc2ClientVpnAuthorizationRule_disappears,
 		},
 		"NetworkAssociation": {
-			"basic":      testAccAwsEc2ClientVpnNetworkAssociation_basic,
-			"disappears": testAccAwsEc2ClientVpnNetworkAssociation_disappears,
+			"basic":          testAccAwsEc2ClientVpnNetworkAssociation_basic,
+			"disappears":     testAccAwsEc2ClientVpnNetworkAssociation_disappears,
+			"securityGroups": testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
 		},
 	}
 
