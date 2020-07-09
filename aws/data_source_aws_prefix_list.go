@@ -71,7 +71,9 @@ func dataSourceAwsPrefixListRead(d *schema.ResourceData, meta interface{}) error
 
 	cidrs := aws.StringValueSlice(pl.Cidrs)
 	sort.Strings(cidrs)
-	d.Set("cidr_blocks", cidrs)
+	if err := d.Set("cidr_blocks", cidrs); err != nil {
+		return fmt.Errorf("failed to set cidr blocks of prefix list %s: %s", d.Id(), err)
+	}
 
 	return nil
 }
