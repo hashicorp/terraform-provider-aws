@@ -21,6 +21,52 @@ func wafv2EmptySchema() *schema.Schema {
 	}
 }
 
+func wafv2RuleSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeSet,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"action": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"allow": wafv2EmptySchema(),
+							"block": wafv2EmptySchema(),
+							"count": wafv2EmptySchema(),
+						},
+					},
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: validation.StringLenBetween(1, 128),
+				},
+				"override_action": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"count": wafv2EmptySchema(),
+							"none":  wafv2EmptySchema(),
+						},
+					},
+				},
+				"priority": {
+					Type:     schema.TypeInt,
+					Required: true,
+				},
+				"statement":         wafv2RootStatementSchema(3),
+				"visibility_config": wafv2VisibilityConfigSchema(),
+			},
+		},
+	}
+}
+
 func wafv2RootStatementSchema(level int) *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -28,13 +74,16 @@ func wafv2RootStatementSchema(level int) *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"and_statement":                         wafv2StatementSchema(level - 1),
+				"and_statement":                         wafv2StatementSchema(level),
 				"byte_match_statement":                  wafv2ByteMatchStatementSchema(),
 				"geo_match_statement":                   wafv2GeoMatchStatementSchema(),
 				"ip_set_reference_statement":            wafv2IpSetReferenceStatementSchema(),
-				"not_statement":                         wafv2StatementSchema(level - 1),
-				"or_statement":                          wafv2StatementSchema(level - 1),
+				"managed_rule_group_statement":          wafv2ManagedRuleGroupStatementSchema(),
+				"not_statement":                         wafv2StatementSchema(level),
+				"or_statement":                          wafv2StatementSchema(level),
+				"rate_based_statement":                  wafv2RateBasedStatementSchema(level),
 				"regex_pattern_set_reference_statement": wafv2RegexPatternSetReferenceStatementSchema(),
+				"rule_group_reference_statement":        wafv2RuleGroupReferenceStatementSchema(),
 				"size_constraint_statement":             wafv2SizeConstraintSchema(),
 				"sqli_match_statement":                  wafv2SqliMatchStatementSchema(),
 				"xss_match_statement":                   wafv2XssMatchStatementSchema(),
@@ -379,13 +428,22 @@ func expandWafv2Rule(m map[string]interface{}) *wafv2.Rule {
 		return nil
 	}
 
-	return &wafv2.Rule{
+	rule := &wafv2.Rule{
 		Name:             aws.String(m["name"].(string)),
 		Priority:         aws.Int64(int64(m["priority"].(int))),
-		Action:           expandWafv2RuleAction(m["action"].([]interface{})),
 		Statement:        expandWafv2RootStatement(m["statement"].([]interface{})),
 		VisibilityConfig: expandWafv2VisibilityConfig(m["visibility_config"].([]interface{})),
 	}
+
+	if v, ok := m["action"]; ok {
+		rule.Action = expandWafv2RuleAction(v.([]interface{}))
+	}
+
+	if v, ok := m["override_action"]; ok {
+		rule.OverrideAction = expandWafv2OverrideAction(v.([]interface{}))
+	}
+
+	return rule
 }
 
 func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
@@ -406,6 +464,25 @@ func expandWafv2RuleAction(l []interface{}) *wafv2.RuleAction {
 
 	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
 		action.Count = &wafv2.CountAction{}
+	}
+
+	return action
+}
+
+func expandWafv2OverrideAction(l []interface{}) *wafv2.OverrideAction {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	action := &wafv2.OverrideAction{}
+
+	if v, ok := m["count"]; ok && len(v.([]interface{})) > 0 {
+		action.Count = &wafv2.CountAction{}
+	}
+
+	if v, ok := m["none"]; ok && len(v.([]interface{})) > 0 {
+		action.None = &wafv2.NoneAction{}
 	}
 
 	return action
@@ -485,6 +562,10 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.GeoMatchStatement = expandWafv2GeoMatchStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["managed_rule_group_statement"]; ok {
+		statement.ManagedRuleGroupStatement = expandWafv2ManagedRuleGroupStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["not_statement"]; ok {
 		statement.NotStatement = expandWafv2NotStatement(v.([]interface{}))
 	}
@@ -493,8 +574,16 @@ func expandWafv2Statement(m map[string]interface{}) *wafv2.Statement {
 		statement.OrStatement = expandWafv2OrStatement(v.([]interface{}))
 	}
 
+	if v, ok := m["rate_based_statement"]; ok {
+		statement.RateBasedStatement = expandWafv2RateBasedStatement(v.([]interface{}))
+	}
+
 	if v, ok := m["regex_pattern_set_reference_statement"]; ok {
 		statement.RegexPatternSetReferenceStatement = expandWafv2RegexPatternSetReferenceStatement(v.([]interface{}))
+	}
+
+	if v, ok := m["rule_group_reference_statement"]; ok {
+		statement.RuleGroupReferenceStatement = expandWafv2RuleGroupReferenceStatement(v.([]interface{}))
 	}
 
 	if v, ok := m["size_constraint_statement"]; ok {
@@ -685,6 +774,78 @@ func expandWafv2OrStatement(l []interface{}) *wafv2.OrStatement {
 	}
 }
 
+func expandWafv2ManagedRuleGroupStatement(l []interface{}) *wafv2.ManagedRuleGroupStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	return &wafv2.ManagedRuleGroupStatement{
+		ExcludedRules: expandWafv2ExcludedRules(m["excluded_rule"].([]interface{})),
+		Name:          aws.String(m["name"].(string)),
+		VendorName:    aws.String(m["vendor_name"].(string)),
+	}
+}
+
+func expandWafv2RateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+	r := &wafv2.RateBasedStatement{
+		AggregateKeyType: aws.String(m["aggregate_key_type"].(string)),
+		Limit:            aws.Int64(int64(m["limit"].(int))),
+	}
+
+	s := m["scope_down_statement"].([]interface{})
+	if len(s) > 0 && s[0] != nil {
+		r.ScopeDownStatement = expandWafv2Statement(s[0].(map[string]interface{}))
+	}
+
+	return r
+}
+
+func expandWafv2RuleGroupReferenceStatement(l []interface{}) *wafv2.RuleGroupReferenceStatement {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.RuleGroupReferenceStatement{
+		ARN:           aws.String(m["arn"].(string)),
+		ExcludedRules: expandWafv2ExcludedRules(m["excluded_rule"].([]interface{})),
+	}
+}
+
+func expandWafv2ExcludedRules(l []interface{}) []*wafv2.ExcludedRule {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	rules := make([]*wafv2.ExcludedRule, 0)
+
+	for _, rule := range l {
+		if rule == nil {
+			continue
+		}
+		rules = append(rules, expandWafv2ExcludedRule(rule.(map[string]interface{})))
+	}
+
+	return rules
+}
+
+func expandWafv2ExcludedRule(m map[string]interface{}) *wafv2.ExcludedRule {
+	if m == nil {
+		return nil
+	}
+
+	return &wafv2.ExcludedRule{
+		Name: aws.String(m["name"].(string)),
+	}
+}
+
 func expandWafv2RegexPatternSetReferenceStatement(l []interface{}) *wafv2.RegexPatternSetReferenceStatement {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -745,6 +906,7 @@ func flattenWafv2Rules(r []*wafv2.Rule) interface{} {
 	for i, rule := range r {
 		m := make(map[string]interface{})
 		m["action"] = flattenWafv2RuleAction(rule.Action)
+		m["override_action"] = flattenWafv2OverrideAction(rule.OverrideAction)
 		m["name"] = aws.StringValue(rule.Name)
 		m["priority"] = int(aws.Int64Value(rule.Priority))
 		m["statement"] = flattenWafv2RootStatement(rule.Statement)
@@ -777,21 +939,30 @@ func flattenWafv2RuleAction(a *wafv2.RuleAction) interface{} {
 	return []interface{}{m}
 }
 
+func flattenWafv2OverrideAction(a *wafv2.OverrideAction) interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if a.Count != nil {
+		m["count"] = make([]map[string]interface{}, 1)
+	}
+
+	if a.None != nil {
+		m["none"] = make([]map[string]interface{}, 1)
+	}
+
+	return []interface{}{m}
+}
+
 func flattenWafv2RootStatement(s *wafv2.Statement) interface{} {
 	if s == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{flattenWafv2Statement(s)}
-}
-
-func flattenWafv2Statements(s []*wafv2.Statement) interface{} {
-	out := make([]interface{}, len(s))
-	for i, statement := range s {
-		out[i] = flattenWafv2Statement(statement)
-	}
-
-	return out
 }
 
 func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
@@ -817,6 +988,10 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 		m["geo_match_statement"] = flattenWafv2GeoMatchStatement(s.GeoMatchStatement)
 	}
 
+	if s.ManagedRuleGroupStatement != nil {
+		m["managed_rule_group_statement"] = flattenWafv2ManagedRuleGroupStatement(s.ManagedRuleGroupStatement)
+	}
+
 	if s.NotStatement != nil {
 		m["not_statement"] = flattenWafv2NotStatement(s.NotStatement)
 	}
@@ -825,8 +1000,16 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 		m["or_statement"] = flattenWafv2OrStatement(s.OrStatement)
 	}
 
+	if s.RateBasedStatement != nil {
+		m["rate_based_statement"] = flattenWafv2RateBasedStatement(s.RateBasedStatement)
+	}
+
 	if s.RegexPatternSetReferenceStatement != nil {
 		m["regex_pattern_set_reference_statement"] = flattenWafv2RegexPatternSetReferenceStatement(s.RegexPatternSetReferenceStatement)
+	}
+
+	if s.RuleGroupReferenceStatement != nil {
+		m["rule_group_reference_statement"] = flattenWafv2RuleGroupReferenceStatement(s.RuleGroupReferenceStatement)
 	}
 
 	if s.SizeConstraintStatement != nil {
@@ -842,6 +1025,15 @@ func flattenWafv2Statement(s *wafv2.Statement) map[string]interface{} {
 	}
 
 	return m
+}
+
+func flattenWafv2Statements(s []*wafv2.Statement) interface{} {
+	out := make([]interface{}, len(s))
+	for i, statement := range s {
+		out[i] = flattenWafv2Statement(statement)
+	}
+
+	return out
 }
 
 func flattenWafv2AndStatement(a *wafv2.AndStatement) interface{} {
@@ -866,6 +1058,24 @@ func flattenWafv2ByteMatchStatement(b *wafv2.ByteMatchStatement) interface{} {
 		"positional_constraint": aws.StringValue(b.PositionalConstraint),
 		"search_string":         string(b.SearchString),
 		"text_transformation":   flattenWafv2TextTransformations(b.TextTransformations),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2DefaultAction(a *wafv2.DefaultAction) interface{} {
+	if a == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if a.Allow != nil {
+		m["allow"] = make([]map[string]interface{}, 1)
+	}
+
+	if a.Block != nil {
+		m["block"] = make([]map[string]interface{}, 1)
 	}
 
 	return []interface{}{m}
@@ -907,6 +1117,62 @@ func flattenWafv2FieldToMatch(f *wafv2.FieldToMatch) interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func flattenWafv2RateBasedStatement(r *wafv2.RateBasedStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"limit":                int(aws.Int64Value(r.Limit)),
+		"aggregate_key_type":   aws.StringValue(r.AggregateKeyType),
+		"scope_down_statement": nil,
+	}
+
+	if r.ScopeDownStatement != nil {
+		m["scope_down_statement"] = []interface{}{flattenWafv2Statement(r.ScopeDownStatement)}
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2ManagedRuleGroupStatement(r *wafv2.ManagedRuleGroupStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"excluded_rule": flattenWafv2ExcludedRules(r.ExcludedRules),
+		"name":          aws.StringValue(r.Name),
+		"vendor_name":   aws.StringValue(r.VendorName),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2RuleGroupReferenceStatement(r *wafv2.RuleGroupReferenceStatement) interface{} {
+	if r == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"excluded_rule": flattenWafv2ExcludedRules(r.ExcludedRules),
+		"arn":           aws.StringValue(r.ARN),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenWafv2ExcludedRules(r []*wafv2.ExcludedRule) interface{} {
+	out := make([]map[string]interface{}, len(r))
+	for i, rule := range r {
+		m := make(map[string]interface{})
+		m["name"] = aws.StringValue(rule.Name)
+		out[i] = m
+	}
+
+	return out
 }
 
 func flattenWafv2SingleHeader(s *wafv2.SingleHeader) interface{} {

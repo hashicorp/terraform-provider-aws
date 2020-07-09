@@ -75,38 +75,7 @@ func resourceAwsWafv2RuleGroup() *schema.Resource {
 					wafv2.ScopeRegional,
 				}, false),
 			},
-			"rule": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allow": wafv2EmptySchema(),
-									"block": wafv2EmptySchema(),
-									"count": wafv2EmptySchema(),
-								},
-							},
-						},
-						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(1, 128),
-						},
-						"priority": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"statement":         wafv2RootStatementSchema(3),
-						"visibility_config": wafv2VisibilityConfigSchema(),
-					},
-				},
-			},
+			"rule":              wafv2RuleSchema(),
 			"tags":              tagsSchema(),
 			"visibility_config": wafv2VisibilityConfigSchema(),
 		},

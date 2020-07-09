@@ -1037,6 +1037,7 @@ func computeWafv2IpSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resource.T
 					"count": []interface{}{},
 				},
 			},
+			"override_action": []interface{}{},
 			"statement": []interface{}{
 				map[string]interface{}{
 					"and_statement":        []interface{}{},
@@ -1047,9 +1048,12 @@ func computeWafv2IpSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resource.T
 							"arn": aws.StringValue(r.Rules[0].Statement.IPSetReferenceStatement.ARN),
 						},
 					},
+					"managed_rule_group_statement":          []interface{}{},
 					"not_statement":                         []interface{}{},
 					"or_statement":                          []interface{}{},
+					"rate_based_statement":                  []interface{}{},
 					"regex_pattern_set_reference_statement": []interface{}{},
+					"rule_group_reference_statement":        []interface{}{},
 					"size_constraint_statement":             []interface{}{},
 					"sqli_match_statement":                  []interface{}{},
 					"xss_match_statement":                   []interface{}{},
@@ -1086,14 +1090,17 @@ func computeWafv2RegexSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resourc
 					"count": []interface{}{},
 				},
 			},
+			"override_action": []interface{}{},
 			"statement": []interface{}{
 				map[string]interface{}{
-					"and_statement":              []interface{}{},
-					"byte_match_statement":       []interface{}{},
-					"geo_match_statement":        []interface{}{},
-					"ip_set_reference_statement": []interface{}{},
-					"not_statement":              []interface{}{},
-					"or_statement":               []interface{}{},
+					"and_statement":                []interface{}{},
+					"byte_match_statement":         []interface{}{},
+					"geo_match_statement":          []interface{}{},
+					"ip_set_reference_statement":   []interface{}{},
+					"managed_rule_group_statement": []interface{}{},
+					"not_statement":                []interface{}{},
+					"or_statement":                 []interface{}{},
+					"rate_based_statement":         []interface{}{},
 					"regex_pattern_set_reference_statement": []interface{}{
 						map[string]interface{}{
 							"arn": aws.StringValue(r.Rules[0].Statement.RegexPatternSetReferenceStatement.ARN),
@@ -1116,9 +1123,10 @@ func computeWafv2RegexSetRefStatementIndex(r *wafv2.RuleGroup, idx *int) resourc
 							}),
 						},
 					},
-					"size_constraint_statement": []interface{}{},
-					"sqli_match_statement":      []interface{}{},
-					"xss_match_statement":       []interface{}{},
+					"rule_group_reference_statement": []interface{}{},
+					"size_constraint_statement":      []interface{}{},
+					"sqli_match_statement":           []interface{}{},
+					"xss_match_statement":            []interface{}{},
 				},
 			},
 			"visibility_config": []interface{}{
