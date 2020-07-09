@@ -557,7 +557,7 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					// TODO: TypeSet check develop regex support
 					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2634515331.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
 						"device_name":  "/dev/sde",
 						"virtual_name": "ephemeral0",
 					}),
