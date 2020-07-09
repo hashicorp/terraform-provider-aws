@@ -357,7 +357,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 						"rule.%d.override_action.0.none.#": "0",
 						"rule.%d.statement.#":              "1",
 						"rule.%d.statement.0.rule_group_reference_statement.#":       "1",
-						"statement.0.rule_group_reference_statement.excluded_rule.#": "0",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.#": "0",
 					}),
 					// TODO: TypeSet check need helper for regex
 					testAccMatchResourceAttrArnWithIndexesAddr(resourceName, "rule.%d.statement.0.rule_group_reference_statement.0.arn", &idx, regexp.MustCompile(`regional/rulegroup/.+$`)),
