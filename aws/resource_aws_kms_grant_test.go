@@ -80,9 +80,9 @@ func TestAccAWSKmsGrant_withConstraints(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "constraints.#", "1"),
 					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "constraints.*", map[string]string{
-						"encryption_context_equals.%":   "2",
-						"encryption_context_equals.baz": "kaz",
-						"encryption_context_equals.foo": "bar",
+						"encryption_context_subset.%":   "2",
+						"encryption_context_subset.baz": "kaz",
+						"encryption_context_subset.foo": "bar",
 					}),
 				),
 			},
