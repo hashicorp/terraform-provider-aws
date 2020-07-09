@@ -531,24 +531,6 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 	partition := testAccGetPartition()
 	resourceName := "aws_s3_bucket.bucket"
 
-	checkFn := func(s []*terraform.InstanceState) error {
-		// Expect 2: bucket + policy
-		if len(s) != 2 {
-			return fmt.Errorf("expected 2 states: %#v", s)
-		}
-		bucketState, policyState := s[0], s[1]
-
-		if bucketState.ID != bucketName {
-			return fmt.Errorf("expected bucket of ID %s, %s received", bucketName, bucketState.ID)
-		}
-
-		if policyState.ID != bucketName {
-			return fmt.Errorf("expected policy of ID %s, %s received", bucketName, bucketState.ID)
-		}
-
-		return nil
-	}
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
@@ -562,9 +544,20 @@ func TestAccAWSS3Bucket_Policy(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:     resourceName,
-				ImportState:      true,
-				ImportStateCheck: checkFn,
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"acl",
+					"force_destroy",
+					"grant",
+					// NOTE: Prior to Terraform AWS Provider 3.0, this attribute did not import correctly either.
+					//       The Read function does not require GetBucketPolicy, if the argument is not configured.
+					//       Rather than introduce that breaking change as well with 3.0, instead we leave the
+					//       current Read behavior and note this will be deprecated in a later 3.x release along
+					//       with other inline policy attributes across the provider.
+					"policy",
+				},
 			},
 			{
 				Config: testAccAWSS3BucketConfig_Basic(bucketName),
