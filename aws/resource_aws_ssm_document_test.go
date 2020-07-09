@@ -72,6 +72,37 @@ func TestAccAWSSSMDocument_target_type(t *testing.T) {
 	})
 }
 
+func TestAccAWSSSMDocument_version_name(t *testing.T) {
+	name := acctest.RandString(10)
+	resourceName := "aws_ssm_document.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSSSMDocumentDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSSSMDocumentBasicConfigVersionName(name, "release-1.0.0"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSSSMDocumentBasicConfigVersionName(name, "release-1.0.1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSSSMDocumentExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "version_name", "release-1.0.1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSSSMDocument_update(t *testing.T) {
 	name := acctest.RandString(10)
 	resourceName := "aws_ssm_document.test"
@@ -622,6 +653,37 @@ resource "aws_ssm_document" "test" {
 DOC
 }
 `, rName, typ)
+}
+
+func testAccAWSSSMDocumentBasicConfigVersionName(rName, version string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_document" "test" {
+  name          = "%s"
+  document_type = "Command"
+  version_name   = "%s"
+
+  content = <<DOC
+    {
+       "schemaVersion": "2.0",
+       "description": "Sample version 2.0 document v2",
+       "parameters": {
+
+       },
+       "mainSteps": [
+          {
+             "action": "aws:runPowerShellScript",
+             "name": "runPowerShellScript",
+             "inputs": {
+                "runCommand": [
+                   "Get-Process"
+                ]
+             }
+          }
+       ]
+    }
+DOC
+}
+`, rName, version)
 }
 
 func testAccAWSSSMDocument20Config(rName string) string {
