@@ -378,7 +378,7 @@ func TestAccAwsWafv2WebACL_RuleGroupReferenceStatement(t *testing.T) {
 						"override_action.0.none.#": "0",
 						"statement.#":              "1",
 						"statement.0.rule_group_reference_statement.#":              "1",
-						"statement.0.rule_group_reference_statement.excluded_rule.#":        "2",
+						"statement.0.rule_group_reference_statement.0.excluded_rule.#":        "2",
 						"statement.0.rule_group_reference_statement.0.excluded_rule.0.name": "rule-to-exclude-b",
 						"statement.0.rule_group_reference_statement.0.excluded_rule.1.name": "rule-to-exclude-a",
 					}),
