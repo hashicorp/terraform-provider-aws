@@ -276,7 +276,7 @@ func TestAccAWSNetworkAcl_EgressAndIngressRules(t *testing.T) {
 						"action":     "allow",
 						"cidr_block": "10.3.0.0/18",
 					}),
-					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ingress.*", map[string]string{
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "egress.*", map[string]string{
 						"protocol":   "6",
 						"rule_no":    "2",
 						"from_port":  "443",
