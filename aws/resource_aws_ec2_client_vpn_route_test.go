@@ -103,6 +103,8 @@ func testAccAwsEc2ClientVpnRoute_disappears(t *testing.T) {
 func testAccCheckAwsEc2ClientVpnRouteDestroy(s *terraform.State) error {
 	conn := testAccProvider.Meta().(*AWSClient).ec2conn
 
+	defer testAccEc2ClientVpnEndpointSemaphore.Notify()
+
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_ec2_client_vpn_route" {
 			continue
