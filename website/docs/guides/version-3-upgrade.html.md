@@ -195,7 +195,6 @@ resource "aws_autoscaling_attachment" "example" {
 
 resource "aws_autoscaling_group" "example"{
   # ... other configuration ...
-  load_balancers = [aws_elb.example.id]  
 }
 ```
 
@@ -209,7 +208,6 @@ resource "aws_autoscaling_attachment" "example" {
 
 resource "aws_autoscaling_group" "example"{
   # ... other configuration ...
-  load_balancers = [aws_elb.example.id]
 
   lifecycle {
     ignore_changes = [load_balancers, target_group_arns]

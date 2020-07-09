@@ -41,7 +41,6 @@ resource "aws_autoscaling_attachment" "asg_attachment_bar" {
 ```hcl
 resource "aws_autoscaling_group" "asg" {
   # ... other configuration ...
-  load_balancers = [aws_elb.test.id]
 
   lifecycle {
     ignore_changes = [load_balancers, target_group_arns]
