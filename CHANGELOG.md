@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Resource:** `aws_ec2_client_vpn_authorization_rule` [GH-13950]
+* **New Resource:** `aws_ec2_client_vpn_route` [GH-14103]
 
 ENHANCEMENTS:
 
