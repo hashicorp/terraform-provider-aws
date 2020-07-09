@@ -9,15 +9,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
-	var assoc1 ec2.TargetNetwork
+	var assoc ec2.TargetNetwork
+	var group ec2.SecurityGroup
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 	endpointResourceName := "aws_ec2_client_vpn_endpoint.test"
 	subnetResourceName := "aws_subnet.test"
 	vpcResourceName := "aws_vpc.test"
+	defaultSecurityGroupResourceName := "aws_default_security_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
@@ -27,10 +30,12 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc),
+					testAccCheckAWSDefaultSecurityGroupExists(defaultSecurityGroupResourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
@@ -39,7 +44,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 }
 
 func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
-	var assoc1 ec2.TargetNetwork
+	var assoc ec2.TargetNetwork
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
@@ -51,7 +56,7 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc),
 					testAccCheckResourceDisappears(testAccProvider, resourceAwsEc2ClientVpnNetworkAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -146,6 +151,12 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 	}
 }
 
+func testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(name, key string, group *ec2.SecurityGroup) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return tfawsresource.TestCheckTypeSetElemAttr(name, key, aws.StringValue(group.GroupId))(s)
+	}
+}
+
 func testAccEc2ClientVpnNetworkAssociationConfigBasic(rName string) string {
 	return composeConfig(
 		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
@@ -169,7 +180,12 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
   connection_log_options {
     enabled = false
   }
-}`, rName))
+}
+
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+`, rName))
 }
 
 func testAccEc2ClientVpnNetworkAssociationVpcBase(rName string, subnetCount int) string {
