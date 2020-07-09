@@ -549,6 +549,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_client_vpn_authorization_rule":                   resourceAwsEc2ClientVpnAuthorizationRule(),
 			"aws_ec2_client_vpn_endpoint":                             resourceAwsEc2ClientVpnEndpoint(),
 			"aws_ec2_client_vpn_network_association":                  resourceAwsEc2ClientVpnNetworkAssociation(),
+			"aws_ec2_client_vpn_route":                                resourceAwsEc2ClientVpnRoute(),
 			"aws_ec2_fleet":                                           resourceAwsEc2Fleet(),
 			"aws_ec2_local_gateway_route":                             resourceAwsEc2LocalGatewayRoute(),
 			"aws_ec2_local_gateway_route_table_vpc_association":       resourceAwsEc2LocalGatewayRouteTableVpcAssociation(),
