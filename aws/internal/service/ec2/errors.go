@@ -28,3 +28,11 @@ const (
 	InvalidSecurityGroupIDNotFound = "InvalidSecurityGroupID.NotFound"
 	InvalidGroupNotFound           = "InvalidGroup.NotFound"
 )
+
+const (
+	ErrCodeInvalidParameterException = "InvalidParameterException"
+	ErrCodeInvalidParameterValue     = "InvalidParameterValue"
+	ErrCodeRouteNotFound             = "InvalidRoute.NotFound"
+	ErrCodeRouteTableNotFound        = "InvalidRouteTableID.NotFound"
+	ErrCodeTransitGatewayNotFound    = "InvalidTransitGatewayID.NotFound"
+)
