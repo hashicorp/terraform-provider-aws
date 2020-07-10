@@ -54,3 +54,22 @@ func ClientVpnRouteByID(conn *ec2.EC2, routeID string) (*ec2.DescribeClientVpnRo
 
 	return ClientVpnRoute(conn, endpointID, targetSubnetID, destinationCidr)
 }
+
+// RouteTableByID returns the route table corresponding to the specified identifier.
+// Returns nil if no route table is found.
+func RouteTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
+	input := &ec2.DescribeRouteTablesInput{
+		RouteTableIds: aws.StringSlice([]string{routeTableID}),
+	}
+
+	output, err := conn.DescribeRouteTables(input)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
+		return nil, nil
+	}
+
+	return output.RouteTables[0], nil
+}

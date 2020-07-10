@@ -153,3 +153,28 @@ func ClientVpnRouteStatus(conn *ec2.EC2, routeID string) resource.StateRefreshFu
 		return rule, aws.StringValue(rule.Status.Code), nil
 	}
 }
+
+const (
+	RouteTableStateNotFound = "NotFound"
+
+	RouteTableStateReady = "Ready"
+
+	RouteTableStateUnknown = "Unknown"
+)
+
+// RouteTableState fetches the Route Table and its State
+func RouteTableState(conn *ec2.EC2, routeTableID string) resource.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		routeTable, err := finder.RouteTableByID(conn, routeTableID)
+
+		if err != nil {
+			return nil, RouteTableStateUnknown, err
+		}
+
+		if routeTable == nil {
+			return nil, RouteTableStateNotFound, nil
+		}
+
+		return routeTable, RouteTableStateReady, nil
+	}
+}

@@ -17,6 +17,8 @@ func ErrCodeEquals(err error, code string) bool {
 	return false
 }
 
+const ErrCodeAssociationNotFound = "InvalidAssociationID.NotFound"
+
 const ErrCodeClientVpnEndpointIdNotFound = "InvalidClientVpnEndpointId.NotFound"
 
 const ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAuthorizationRuleNotFound"
@@ -24,3 +26,15 @@ const ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAutho
 const ErrCodeClientVpnAssociationIdNotFound = "InvalidClientVpnAssociationId.NotFound"
 
 const ErrCodeClientVpnRouteNotFound = "InvalidClientVpnRouteNotFound"
+
+const ErrCodeGatewayNotAttached = "Gateway.NotAttached"
+
+const ErrCodeInvalidParameterException = "InvalidParameterException"
+
+const ErrCodeInvalidParameterValue = "InvalidParameterValue"
+
+const ErrCodeRouteNotFound = "InvalidRoute.NotFound"
+
+const ErrCodeRouteTableNotFound = "InvalidRouteTableID.NotFound"
+
+const ErrCodeTransitGatewayNotFound = "InvalidTransitGatewayID.NotFound"

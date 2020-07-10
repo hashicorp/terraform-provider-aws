@@ -132,3 +132,44 @@ func ClientVpnRouteDeleted(conn *ec2.EC2, routeID string) (*ec2.ClientVpnRoute, 
 
 	return nil, err
 }
+
+const (
+	RouteTableCreatedTimeout = 10 * time.Minute
+
+	RouteTableDeletedTimeout = 5 * time.Minute
+)
+
+func RouteTableCreated(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:        []string{},
+		Target:         []string{RouteTableStateReady},
+		Refresh:        RouteTableState(conn, routeTableID),
+		Timeout:        RouteTableCreatedTimeout,
+		NotFoundChecks: 40,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func RouteTableDeleted(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{RouteTableStateReady},
+		Target:  []string{},
+		Refresh: RouteTableState(conn, routeTableID),
+		Timeout: RouteTableDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.RouteTable); ok {
+		return output, err
+	}
+
+	return nil, err
+}

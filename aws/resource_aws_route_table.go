@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsRouteTable() *schema.Resource {
@@ -231,7 +232,7 @@ func resourceAwsRouteTableUpdate(d *schema.ResourceData, meta interface{}) error
 				// If we get a Gateway.NotAttached, it is usually some
 				// eventually consistency stuff. So we have to just wait a
 				// bit...
-				if isAWSErr(err, "Gateway.NotAttached", "") {
+				if isAWSErr(err, tfec2.ErrCodeGatewayNotAttached, "") {
 					time.Sleep(20 * time.Second)
 					continue
 				}
@@ -393,7 +394,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 			// First check if the association ID is not found. If this
 			// is the case, then it was already disassociated somehow,
 			// and that is okay.
-			if isAWSErr(err, "InvalidAssociationID.NotFound", "") {
+			if isAWSErr(err, tfec2.ErrCodeAssociationNotFound, "") {
 				err = nil
 			}
 		}
@@ -408,7 +409,7 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 		RouteTableId: aws.String(d.Id()),
 	})
 	if err != nil {
-		if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+		if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
 			return nil
 		}
 
@@ -580,3 +581,7 @@ func routeTableRouteSchema() *schema.Schema {
 		Set: resourceAwsRouteTableHash,
 	}
 }
+
+// TODO
+// TODO Move these to a per-service internal package and auto-generate where possible.
+// TODO
