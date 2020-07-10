@@ -16,8 +16,8 @@ import (
 )
 
 func init() {
-	resource.AddTestSweepers("aws_workspace", &resource.Sweeper{
-		Name: "aws_workspace",
+	resource.AddTestSweepers("aws_workspaces_workspace", &resource.Sweeper{
+		Name: "aws_workspaces_workspace",
 		F:    testSweepWorkspaces,
 	})
 }

@@ -6,9 +6,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
@@ -63,22 +63,13 @@ func resourceAwsEc2ClientVpnNetworkAssociationCreate(d *schema.ResourceData, met
 		return fmt.Errorf("Error creating Client VPN network association: %w", err)
 	}
 
-	d.SetId(*resp.AssociationId)
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AssociationStatusCodeAssociating},
-		Target:  []string{ec2.AssociationStatusCodeAssociated},
-		Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
-		Timeout: d.Timeout(schema.TimeoutCreate),
-	}
+	d.SetId(aws.StringValue(resp.AssociationId))
 
 	log.Printf("[DEBUG] Waiting for Client VPN endpoint to associate with target network: %s", d.Id())
-	targetNetworkRaw, err := stateConf.WaitForState()
+	targetNetwork, err := waiter.ClientVpnNetworkAssociationAssociated(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
 	if err != nil {
-		return fmt.Errorf("Error waiting for Client VPN endpoint to associate with target network: %w", err)
+		return fmt.Errorf("error waiting for Client VPN endpoint to associate with target network: %w", err)
 	}
-
-	targetNetwork := targetNetworkRaw.(*ec2.TargetNetwork)
 
 	if v, ok := d.GetOk("security_groups"); ok {
 		sgReq := &ec2.ApplySecurityGroupsToClientVpnTargetNetworkInput{
@@ -139,18 +130,19 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 		return nil
 	}
 
-	if result.ClientVpnTargetNetworks[0].Status != nil && aws.StringValue(result.ClientVpnTargetNetworks[0].Status.Code) == ec2.AssociationStatusCodeDisassociated {
+	network := result.ClientVpnTargetNetworks[0]
+	if network.Status != nil && aws.StringValue(network.Status.Code) == ec2.AssociationStatusCodeDisassociated {
 		log.Printf("[WARN] EC2 Client VPN Network Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	d.Set("client_vpn_endpoint_id", result.ClientVpnTargetNetworks[0].ClientVpnEndpointId)
-	d.Set("status", result.ClientVpnTargetNetworks[0].Status.Code)
-	d.Set("subnet_id", result.ClientVpnTargetNetworks[0].TargetNetworkId)
-	d.Set("vpc_id", result.ClientVpnTargetNetworks[0].VpcId)
+	d.Set("client_vpn_endpoint_id", network.ClientVpnEndpointId)
+	d.Set("status", network.Status.Code)
+	d.Set("subnet_id", network.TargetNetworkId)
+	d.Set("vpc_id", network.VpcId)
 
-	if err := d.Set("security_groups", aws.StringValueSlice(result.ClientVpnTargetNetworks[0].SecurityGroups)); err != nil {
+	if err := d.Set("security_groups", aws.StringValueSlice(network.SecurityGroups)); err != nil {
 		return fmt.Errorf("error setting security_groups: %w", err)
 	}
 
@@ -160,54 +152,28 @@ func resourceAwsEc2ClientVpnNetworkAssociationRead(d *schema.ResourceData, meta 
 func resourceAwsEc2ClientVpnNetworkAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
-		ClientVpnEndpointId: aws.String(d.Get("client_vpn_endpoint_id").(string)),
-		AssociationId:       aws.String(d.Id()),
-	})
-
-	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
-		return nil
-	}
-
+	err := deleteClientVpnNetworkAssociation(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string))
 	if err != nil {
-		return fmt.Errorf("Error deleting Client VPN network association: %w", err)
-	}
-
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{ec2.AssociationStatusCodeDisassociating},
-		Target:  []string{ec2.AssociationStatusCodeDisassociated},
-		Refresh: clientVpnNetworkAssociationRefreshFunc(conn, d.Id(), d.Get("client_vpn_endpoint_id").(string)),
-		Timeout: d.Timeout(schema.TimeoutDelete),
-	}
-
-	log.Printf("[DEBUG] Waiting for Client VPN endpoint to disassociate with target network: %s", d.Id())
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("Error waiting for Client VPN endpoint to disassociate with target network: %w", err)
+		return fmt.Errorf("error deleting Client VPN network association: %w", err)
 	}
 
 	return nil
 }
 
-func clientVpnNetworkAssociationRefreshFunc(conn *ec2.EC2, cvnaID string, cvepID string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeClientVpnTargetNetworks(&ec2.DescribeClientVpnTargetNetworksInput{
-			ClientVpnEndpointId: aws.String(cvepID),
-			AssociationIds:      []*string{aws.String(cvnaID)},
-		})
+func deleteClientVpnNetworkAssociation(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) error {
+	_, err := conn.DisassociateClientVpnTargetNetwork(&ec2.DisassociateClientVpnTargetNetworkInput{
+		ClientVpnEndpointId: aws.String(clientVpnEndpointID),
+		AssociationId:       aws.String(networkAssociationID),
+	})
 
-		if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
-			return 42, ec2.AssociationStatusCodeDisassociated, nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if resp == nil || len(resp.ClientVpnTargetNetworks) == 0 || resp.ClientVpnTargetNetworks[0] == nil {
-			return 42, ec2.AssociationStatusCodeDisassociated, nil
-		}
-
-		return resp.ClientVpnTargetNetworks[0], aws.StringValue(resp.ClientVpnTargetNetworks[0].Status.Code), nil
+	if isAWSErr(err, tfec2.ErrCodeClientVpnAssociationIdNotFound, "") || isAWSErr(err, tfec2.ErrCodeClientVpnEndpointIdNotFound, "") {
+		return nil
 	}
+	if err != nil {
+		return err
+	}
+
+	_, err = waiter.ClientVpnNetworkAssociationDisassociated(conn, networkAssociationID, clientVpnEndpointID)
+
+	return err
 }

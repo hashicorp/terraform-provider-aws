@@ -111,3 +111,46 @@ func ClientVpnAuthorizationRuleRevoked(conn *ec2.EC2, authorizationRuleID string
 
 	return nil, err
 }
+
+const (
+	ClientVpnNetworkAssociationAssociatedTimeout = 5 * time.Minute
+
+	ClientVpnNetworkAssociationDisassociatedTimeout = 5 * time.Minute
+
+	ClientVpnNetworkAssociationDisassociatedMinTimeout = 2 * time.Minute
+)
+
+func ClientVpnNetworkAssociationAssociated(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) (*ec2.TargetNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.AssociationStatusCodeAssociating},
+		Target:  []string{ec2.AssociationStatusCodeAssociated},
+		Refresh: ClientVpnNetworkAssociationStatus(conn, networkAssociationID, clientVpnEndpointID),
+		Timeout: ClientVpnNetworkAssociationAssociatedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TargetNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func ClientVpnNetworkAssociationDisassociated(conn *ec2.EC2, networkAssociationID, clientVpnEndpointID string) (*ec2.TargetNetwork, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending:    []string{ec2.AssociationStatusCodeDisassociating},
+		Target:     []string{},
+		Refresh:    ClientVpnNetworkAssociationStatus(conn, networkAssociationID, clientVpnEndpointID),
+		Timeout:    ClientVpnNetworkAssociationDisassociatedTimeout,
+		MinTimeout: ClientVpnNetworkAssociationDisassociatedMinTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.TargetNetwork); ok {
+		return output, err
+	}
+
+	return nil, err
+}

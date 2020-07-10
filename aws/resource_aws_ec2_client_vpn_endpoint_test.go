@@ -8,6 +8,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
@@ -28,6 +29,7 @@ func init() {
 		F:    testSweepEc2ClientVpnEndpoints,
 		Dependencies: []string{
 			"aws_directory_service_directory",
+			"aws_ec2_client_vpn_network_association",
 		},
 	})
 }
@@ -40,37 +42,38 @@ func testSweepEc2ClientVpnEndpoints(region string) error {
 	}
 
 	conn := client.(*AWSClient).ec2conn
+
+	var sweeperErrs *multierror.Error
+
 	input := &ec2.DescribeClientVpnEndpointsInput{}
-
-	for {
-		output, err := conn.DescribeClientVpnEndpoints(input)
-
-		if testSweepSkipSweepError(err) {
-			log.Printf("[WARN] Skipping Client VPN Endpoint sweep for %s: %s", region, err)
-			return nil
+	err = conn.DescribeClientVpnEndpointsPages(input, func(page *ec2.DescribeClientVpnEndpointsOutput, isLast bool) bool {
+		if page == nil {
+			return !isLast
 		}
 
-		if err != nil {
-			return fmt.Errorf("error retrieving Client VPN Endpoints: %w", err)
-		}
-
-		for _, clientVpnEndpoint := range output.ClientVpnEndpoints {
+		for _, clientVpnEndpoint := range page.ClientVpnEndpoints {
 			id := aws.StringValue(clientVpnEndpoint.ClientVpnEndpointId)
-			log.Printf("[INFO] Deleting Client VPN Endpoint: %s", id)
+			log.Printf("[INFO] Deleting Client VPN endpoint: %s", id)
 			err := deleteClientVpnEndpoint(conn, id)
 			if err != nil {
-				return fmt.Errorf("error deleting Client VPN Endpoint (%s): %w", id, err)
+				sweeperErr := fmt.Errorf("error deleting Client VPN endpoint (%s): %w", id, err)
+				log.Printf("[ERROR] %s", sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				continue
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
+		return !isLast
+	})
+	if testSweepSkipSweepError(err) {
+		log.Printf("[WARN] Skipping Client VPN endpoint sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving Client VPN endpoints: %w", err))
 	}
 
-	return nil
+	return sweeperErrs.ErrorOrNil()
 }
 
 // This is part of an experimental feature, do not use this as a starting point for tests
