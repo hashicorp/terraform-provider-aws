@@ -8,6 +8,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"regexp"
 
@@ -276,18 +277,16 @@ func TestAccAWSRoute53Record_spfSupport(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckRoute53RecordDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53RecordConfigSPF,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record1),
-					resource.TestCheckResourceAttr(
-						resourceName, "records.2930149397", "include:notexample.com"),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "records.*", "include:notexample.com"),
 				),
 			},
 			{
@@ -305,18 +304,16 @@ func TestAccAWSRoute53Record_caaSupport(t *testing.T) {
 	resourceName := "aws_route53_record.default"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckRoute53RecordDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRoute53RecordDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRoute53RecordConfigCAA,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoute53RecordExists(resourceName, &record1),
-					resource.TestCheckResourceAttr(
-						resourceName, "records.2965463512", "0 issue \"exampleca.com;\""),
+					tfawsresource.TestCheckTypeSetElemAttr(resourceName, "records.*", "0 issue \"exampleca.com;\""),
 				),
 			},
 			{

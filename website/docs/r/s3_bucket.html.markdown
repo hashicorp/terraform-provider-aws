@@ -318,7 +318,7 @@ resource "aws_s3_bucket" "bucket" {
   bucket = "mybucket"
 
   grant {
-    id          = "${data.aws_canonical_user_id.current_user.id}"
+    id          = data.aws_canonical_user_id.current_user.id
     type        = "CanonicalUser"
     permissions = ["FULL_CONTROL"]
   }

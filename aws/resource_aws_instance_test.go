@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -323,17 +324,19 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckInstanceDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.encrypted", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"encrypted": "true",
+					}),
+					// TODO: TypeSet check implement attr pair helper
 					resource.TestCheckResourceAttrPair(resourceName, "ebs_block_device.2634515331.kms_key_id", kmsKeyResourceName, "arn"),
 				),
 			},
@@ -515,12 +518,11 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 	rootVolumeSize := "11"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		IDRefreshIgnore:     []string{"ephemeral_block_device"},
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckInstanceDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"ephemeral_block_device"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2InstanceConfigBlockDevices(rootVolumeSize),
@@ -531,22 +533,33 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdb",
+						"volume_size": "9",
+						"volume_type": "gp2",
+					}),
+					// TODO: TypeSet check develop regex support
 					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2576023345.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.device_name", "/dev/sdc"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdc",
+						"volume_size": "10",
+						"volume_type": "io1",
+						"iops":        "100",
+					}),
+					// TODO: TypeSet check develop regex support
 					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2554893574.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_type", "io1"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.device_name", "/dev/sdd"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"device_name": "/dev/sdd",
+						"encrypted":   "true",
+						"volume_size": "12",
+					}),
+					// TODO: TypeSet check develop regex support
 					resource.TestMatchResourceAttr(resourceName, "ebs_block_device.2634515331.volume_id", regexp.MustCompile("vol-[a-z0-9]+")),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.encrypted", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.1692014856.device_name", "/dev/sde"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.1692014856.virtual_name", "ephemeral0"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
+						"device_name":  "/dev/sde",
+						"virtual_name": "ephemeral0",
+					}),
 					testCheck(),
 				),
 			},
@@ -632,12 +645,11 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		IDRefreshName:       resourceName,
-		IDRefreshIgnore:     []string{"ephemeral_block_device"},
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckInstanceDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:        func() { testAccPreCheck(t) },
+		IDRefreshName:   resourceName,
+		IDRefreshIgnore: []string{"ephemeral_block_device"},
+		Providers:       testAccProviders,
+		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: `
@@ -670,10 +682,14 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.172787947.device_name", "/dev/sdb"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.172787947.no_device", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.3336996981.device_name", "/dev/sdc"),
-					resource.TestCheckResourceAttr(resourceName, "ephemeral_block_device.3336996981.no_device", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
+						"device_name": "/dev/sdb",
+						"no_device":   "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ephemeral_block_device.*", map[string]string{
+						"device_name": "/dev/sdc",
+						"no_device":   "true",
+					}),
 					testCheck(),
 				),
 			},
@@ -1759,19 +1775,24 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing
 	updatedRootVolumeSize := "14"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckInstanceDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(originalRootVolumeSize, deleteOnTermination),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", originalRootVolumeSize),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "9",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "10",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "12",
+					}),
 				),
 			},
 			{
@@ -1780,9 +1801,15 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifySize(t *testing
 					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(t, &before, &after),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", updatedRootVolumeSize),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "9",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "10",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "12",
+					}),
 				),
 			},
 		},
@@ -1800,10 +1827,9 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 	updatedDeleteOnTermination := "true"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckInstanceDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(rootVolumeSize, originalDeleteOnTermination),
@@ -1811,9 +1837,15 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 					testAccCheckInstanceExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", originalDeleteOnTermination),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "9",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "10",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "12",
+					}),
 				),
 			},
 			{
@@ -1823,9 +1855,15 @@ func TestAccAWSInstance_EbsRootDevice_MultipleBlockDevices_ModifyDeleteOnTermina
 					testAccCheckInstanceNotRecreated(t, &before, &after),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", rootVolumeSize),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.delete_on_termination", updatedDeleteOnTermination),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "9"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2634515331.volume_size", "12"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "9",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "10",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"volume_size": "12",
+					}),
 				),
 			},
 		},
@@ -1839,34 +1877,39 @@ func TestAccAWSInstance_EbsRootDevice_MultipleDynamicEBSBlockDevices(t *testing.
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:            func() { testAccPreCheck(t) },
-		Providers:           testAccProviders,
-		CheckDestroy:        testAccCheckInstanceDestroy,
-		DisableBinaryDriver: true,
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAwsEc2InstanceConfigDynamicEBSBlockDevices,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.delete_on_termination", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.device_name", "/dev/sdc"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2554893574.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.delete_on_termination", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.device_name", "/dev/sdb"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2576023345.volume_type", "gp2"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.delete_on_termination", "true"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.device_name", "/dev/sda"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.iops", "100"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.volume_size", "10"),
-					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.2613854568.volume_type", "gp2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "true",
+						"device_name":           "/dev/sdc",
+						"encrypted":             "false",
+						"iops":                  "100",
+						"volume_size":           "10",
+						"volume_type":           "gp2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "true",
+						"device_name":           "/dev/sdb",
+						"encrypted":             "false",
+						"iops":                  "100",
+						"volume_size":           "10",
+						"volume_type":           "gp2",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "true",
+						"device_name":           "/dev/sda",
+						"encrypted":             "false",
+						"iops":                  "100",
+						"volume_size":           "10",
+						"volume_type":           "gp2",
+					}),
 				),
 			},
 			{

@@ -1,15 +1,17 @@
-## 2.70.0 (Unreleased)
+## 3.0.0 (Unreleased)
+## 2.70.0 (July 10, 2020)
 
 FEATURES:
 
-* **New Resource:** `aws_ec2_client_vpn_authorization_rule` [GH-13950]
+* **New Resource:** `aws_ec2_client_vpn_authorization_rule` ([#13950](https://github.com/terraform-providers/terraform-provider-aws/issues/13950))
+* **New Resource:** `aws_ec2_client_vpn_route` ([#14103](https://github.com/terraform-providers/terraform-provider-aws/issues/14103))
 
 ENHANCEMENTS:
 
-* resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) [GH-5225]
-* resource/aws_launch_template: Add `update_default_version` argument to set the launch template's default version to the latest version available on update [GH-5225]
-* resource/aws_organizations_organization: Support `BACKUP_POLICY` value in `enabled_policy_types` plan-time validation (Support Backup policies) [GH-14060]
-* resource/aws_organizations_policy: Support `BACKUP_POLICY` value in `type` plan-time validation (Support Backup policies) [GH-14060]
+* resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) ([#5225](https://github.com/terraform-providers/terraform-provider-aws/issues/5225))
+* resource/aws_launch_template: Add `update_default_version` argument to set the launch template's default version to the latest version available on update ([#5225](https://github.com/terraform-providers/terraform-provider-aws/issues/5225))
+* resource/aws_organizations_organization: Support `BACKUP_POLICY` value in `enabled_policy_types` plan-time validation (Support Backup policies) ([#14060](https://github.com/terraform-providers/terraform-provider-aws/issues/14060))
+* resource/aws_organizations_policy: Support `BACKUP_POLICY` value in `type` plan-time validation (Support Backup policies) ([#14060](https://github.com/terraform-providers/terraform-provider-aws/issues/14060))
 
 ## 2.69.0 (July 02, 2020)
 

@@ -306,6 +306,7 @@ github.com/bflad/tfproviderlint/passes/V008
 github.com/bflad/tfproviderlint/passes/commentignore
 github.com/bflad/tfproviderlint/passes/helper/resource/retryfuncinfo
 github.com/bflad/tfproviderlint/passes/helper/resource/testcaseinfo
+github.com/bflad/tfproviderlint/passes/helper/resource/testcheckresourceattrcallexpr
 github.com/bflad/tfproviderlint/passes/helper/resource/testmatchresourceattrcallexpr
 github.com/bflad/tfproviderlint/passes/helper/schema/crudfuncinfo
 github.com/bflad/tfproviderlint/passes/helper/schema/resourcedatagetchangeassignstmt

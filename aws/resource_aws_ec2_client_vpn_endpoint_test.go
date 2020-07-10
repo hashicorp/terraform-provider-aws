@@ -103,6 +103,11 @@ func TestAccAwsEc2ClientVpn(t *testing.T) {
 			"disappears":     testAccAwsEc2ClientVpnNetworkAssociation_disappears,
 			"securityGroups": testAccAwsEc2ClientVpnNetworkAssociation_securityGroups,
 		},
+		"Route": {
+			"basic":       testAccAwsEc2ClientVpnRoute_basic,
+			"description": testAccAwsEc2ClientVpnRoute_description,
+			"disappears":  testAccAwsEc2ClientVpnRoute_disappears,
+		},
 	}
 
 	t.Parallel()

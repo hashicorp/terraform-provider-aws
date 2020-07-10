@@ -161,3 +161,24 @@ func ClientVpnNetworkAssociationDisassociated(conn *ec2.EC2, networkAssociationI
 
 	return nil, err
 }
+
+const (
+	ClientVpnRouteDeletedTimeout = 1 * time.Minute
+)
+
+func ClientVpnRouteDeleted(conn *ec2.EC2, routeID string) (*ec2.ClientVpnRoute, error) {
+	stateConf := &resource.StateChangeConf{
+		Pending: []string{ec2.ClientVpnRouteStatusCodeActive, ec2.ClientVpnRouteStatusCodeDeleting},
+		Target:  []string{},
+		Refresh: ClientVpnRouteStatus(conn, routeID),
+		Timeout: ClientVpnRouteDeletedTimeout,
+	}
+
+	outputRaw, err := stateConf.WaitForState()
+
+	if output, ok := outputRaw.(*ec2.ClientVpnRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
