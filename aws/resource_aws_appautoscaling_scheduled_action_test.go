@@ -256,9 +256,14 @@ resource "aws_emr_cluster" "hoge" {
     instance_profile                  = "${aws_iam_instance_profile.instance_profile.arn}"
   }
 
-  master_instance_type = "c4.large"
-  core_instance_type   = "c4.large"
-  core_instance_count  = 2
+  master_instance_group {
+    instance_type = "c4.large"
+  }
+
+  core_instance_group {
+    instance_count = 2
+    instance_type  = "c4.large"
+  }
 
   tags = {
     role     = "rolename"
