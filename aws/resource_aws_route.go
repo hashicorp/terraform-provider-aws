@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 func resourceAwsRoute() *schema.Resource {
@@ -155,15 +156,15 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeReader func(*ec2.EC2, string, string) (*ec2.Route, error)
+	var routeFinder routeFinder
 
 	switch destinationAttr {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = aws.String(destination)
-		routeReader = readIpv4Route
+		routeFinder = routeByIpv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = aws.String(destination)
-		routeReader = readIpv6Route
+		routeFinder = routeByIpv6Destination
 	default:
 		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
 	}
@@ -195,11 +196,11 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
 		_, err = conn.CreateRoute(input)
 
-		if isAWSErr(err, "InvalidParameterException", "") {
+		if isAWSErr(err, tfec2.ErrCodeInvalidParameterException, "") {
 			return resource.RetryableError(err)
 		}
 
-		if isAWSErr(err, "InvalidTransitGatewayID.NotFound", "") {
+		if isAWSErr(err, tfec2.ErrCodeTransitGatewayNotFound, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -220,7 +221,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 
 	var route *ec2.Route
 	err = resource.Retry(d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
-		route, err = routeReader(conn, routeTableID, destination)
+		route, err = routeFinder(conn, routeTableID, destination)
 
 		if err != nil {
 			return resource.RetryableError(err)
@@ -234,7 +235,7 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if isResourceTimeoutError(err) {
-		route, err = routeReader(conn, routeTableID, destination)
+		route, err = routeFinder(conn, routeTableID, destination)
 	}
 
 	if err != nil {
@@ -258,20 +259,20 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	destination := d.Get(destinationAttr).(string)
 	routeTableID := d.Get("route_table_id").(string)
 
-	var routeReader func(*ec2.EC2, string, string) (*ec2.Route, error)
+	var routeFinder routeFinder
 
 	switch destinationAttr {
 	case "destination_cidr_block":
-		routeReader = readIpv4Route
+		routeFinder = routeByIpv4Destination
 	case "destination_ipv6_cidr_block":
-		routeReader = readIpv6Route
+		routeFinder = routeByIpv6Destination
 	default:
 		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
 	}
 
-	route, err := routeReader(conn, routeTableID, destination)
+	route, err := routeFinder(conn, routeTableID, destination)
 
-	if isAWSErr(err, "InvalidRouteTableID.NotFound", "") {
+	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
 		log.Printf("[WARN] Route Table (%s) not found, removing from state", routeTableID)
 		d.SetId("")
 		return nil
@@ -387,16 +388,16 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidRoute.NotFound", "") {
+		if isAWSErr(err, tfec2.ErrCodeRouteNotFound, "") {
 			return nil
 		}
 
 		// Local routes (which may have been imported) cannot be deleted. Remove from state.
-		if isAWSErr(err, "InvalidParameterValue", "cannot remove local route") {
+		if isAWSErr(err, tfec2.ErrCodeInvalidParameterValue, "cannot remove local route") {
 			return nil
 		}
 
-		if isAWSErr(err, "InvalidParameterException", "") {
+		if isAWSErr(err, tfec2.ErrCodeInvalidParameterException, "") {
 			return resource.RetryableError(err)
 		}
 
@@ -408,7 +409,7 @@ func resourceAwsRouteDelete(d *schema.ResourceData, meta interface{}) error {
 		_, err = conn.DeleteRoute(input)
 	}
 
-	if isAWSErr(err, "InvalidRoute.NotFound", "") {
+	if isAWSErr(err, tfec2.ErrCodeRouteNotFound, "") {
 		return nil
 	}
 
@@ -512,29 +513,12 @@ func routeDestinationAndTargetAttributes(d *schema.ResourceData) (string, string
 // TODO Move these to a per-service internal package and auto-generate where possible.
 // TODO
 
-// readRouteTable returns the route table corresponding to the specified identifier.
-// Returns nil if no route table is found.
-func readRouteTable(conn *ec2.EC2, identifier string) (*ec2.RouteTable, error) {
-	input := &ec2.DescribeRouteTablesInput{
-		RouteTableIds: aws.StringSlice([]string{identifier}),
-	}
+type routeFinder func(*ec2.EC2, string, string) (*ec2.Route, error)
 
-	output, err := conn.DescribeRouteTables(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
-		return nil, nil
-	}
-
-	return output.RouteTables[0], nil
-}
-
-// readIpv4Route returns the route corresponding to the specified destination.
+// routeByIpv4Destination returns the route corresponding to the specified IPv4 destination.
 // Returns nil if no route is found.
-func readIpv4Route(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
-	routeTable, err := readRouteTable(conn, routeTableID)
+func routeByIpv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
+	routeTable, err := routeTableByID(conn, routeTableID)
 	if err != nil {
 		return nil, err
 	}
@@ -548,10 +532,10 @@ func readIpv4Route(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Ro
 	return nil, nil
 }
 
-// readIpv6Route returns the route corresponding to the specified destination.
+// routeByIpv6Destination returns the route corresponding to the specified IPv6 destination.
 // Returns nil if no route is found.
-func readIpv6Route(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
-	routeTable, err := readRouteTable(conn, routeTableID)
+func routeByIpv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
+	routeTable, err := routeTableByID(conn, routeTableID)
 	if err != nil {
 		return nil, err
 	}
