@@ -5,6 +5,7 @@ import (
 	"github.com/terraform-providers/terraform-provider-aws/awsproviderlint/passes/AWSAT002"
 	"github.com/terraform-providers/terraform-provider-aws/awsproviderlint/passes/AWSAT003"
 	"github.com/terraform-providers/terraform-provider-aws/awsproviderlint/passes/AWSAT004"
+	"github.com/terraform-providers/terraform-provider-aws/awsproviderlint/passes/AWSAT005"
 	"github.com/terraform-providers/terraform-provider-aws/awsproviderlint/passes/AWSR001"
 	"github.com/terraform-providers/terraform-provider-aws/awsproviderlint/passes/AWSR002"
 	"golang.org/x/tools/go/analysis"
@@ -15,6 +16,7 @@ var AllChecks = []*analysis.Analyzer{
 	AWSAT002.Analyzer,
 	AWSAT003.Analyzer,
 	AWSAT004.Analyzer,
+	AWSAT005.Analyzer,
 	AWSR001.Analyzer,
 	AWSR002.Analyzer,
 }
