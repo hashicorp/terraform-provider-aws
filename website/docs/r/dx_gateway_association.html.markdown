@@ -119,9 +119,9 @@ In addition to all arguments above, the following attributes are exported:
 `aws_dx_gateway_association` provides the following
 [Timeouts](/docs/configuration/resources.html#timeouts) configuration options:
 
-- `create` - (Default `15 minutes`) Used for creating the association
-- `update` - (Default `10 minutes`) Used for updating the association
-- `delete` - (Default `15 minutes`) Used for destroying the association
+- `create` - (Default `30 minutes`) Used for creating the association
+- `update` - (Default `30 minutes`) Used for updating the association
+- `delete` - (Default `30 minutes`) Used for destroying the association
 
 ## Import
 
