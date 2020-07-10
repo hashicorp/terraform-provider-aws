@@ -146,8 +146,11 @@ func testAccAwsEc2ClientVpnNetworkAssociation_disappears(t *testing.T) {
 
 func testAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
 	var assoc1, assoc2 ec2.TargetNetwork
+	var group11, group12, group21 ec2.SecurityGroup
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_network_association.test"
+	securityGroup1ResourceName := "aws_security_group.test1"
+	securityGroup2ResourceName := "aws_security_group.test2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckClientVPNSyncronize(t) },
@@ -158,14 +161,20 @@ func testAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
 				Config: testAccEc2ClientVpnNetworkAssociationTwoSecurityGroups(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc1),
+					testAccCheckAWSDefaultSecurityGroupExists(securityGroup1ResourceName, &group11),
+					testAccCheckAWSDefaultSecurityGroupExists(securityGroup2ResourceName, &group12),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group11),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group12),
 				),
 			},
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc2),
+					testAccCheckAWSDefaultSecurityGroupExists(securityGroup1ResourceName, &group21),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group21),
 				),
 			},
 		},
@@ -260,9 +269,85 @@ resource "aws_ec2_client_vpn_endpoint" "test" {
     enabled = false
   }
 }
+`, rName))
+}
 
-resource "aws_default_security_group" "test" {
-  vpc_id = aws_vpc.test.id
+func testAccEc2ClientVpnNetworkAssociationTwoSecurityGroups(rName string) string {
+	return composeConfig(
+		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
+		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_network_association" "test" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test[0].id
+  security_groups        = [aws_security_group.test1.id, aws_security_group.test2.id]
+}
+    
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%[1]s"
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+
+resource "aws_security_group" "test1" {
+  name        = "terraform_acceptance_test_example_1"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test2" {
+  name        = "terraform_acceptance_test_example_2"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.test.id
+}
+`, rName))
+}
+
+func testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rName string) string {
+	return composeConfig(
+		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
+		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
+		fmt.Sprintf(`
+resource "aws_ec2_client_vpn_network_association" "test" {
+  client_vpn_endpoint_id = aws_ec2_client_vpn_endpoint.test.id
+  subnet_id              = aws_subnet.test[0].id
+  security_groups        = [aws_security_group.test1.id]
+}
+
+resource "aws_ec2_client_vpn_endpoint" "test" {
+  description            = "terraform-testacc-clientvpn-%[1]s"
+  server_certificate_arn = aws_acm_certificate.test.arn
+  client_cidr_block      = "10.0.0.0/16"
+
+  authentication_options {
+    type                       = "certificate-authentication"
+    root_certificate_chain_arn = aws_acm_certificate.test.arn
+  }
+
+  connection_log_options {
+    enabled = false
+  }
+}
+
+resource "aws_security_group" "test1" {
+  name        = "terraform_acceptance_test_example_1"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.test.id
+}
+
+resource "aws_security_group" "test2" {
+  name        = "terraform_acceptance_test_example_2"
+  description = "Used in the terraform acceptance tests"
+  vpc_id      = aws_vpc.test.id
 }
 `, rName))
 }
@@ -288,6 +373,10 @@ resource "aws_vpc" "test" {
   }
 }
 
+resource "aws_default_security_group" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
 resource "aws_subnet" "test" {
   count                   = %[2]d
   availability_zone       = data.aws_availability_zones.available.names[count.index]
@@ -300,170 +389,6 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, subnetCount)
-}
-
-func testAccEc2ClientVpnNetworkAssociationTwoSecurityGroups(rName string) string {
-	return composeConfig(
-		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
-		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
-		fmt.Sprintf(`
-resource "aws_security_group" "test1" {
-  name        = "terraform_acceptance_test_example_1"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = "${aws_vpc.test.id}"
-
-  ingress {
-		protocol = "tcp"
-    from_port = 22
-    to_port = 22
-    cidr_blocks = ["10.1.1.0/24"]
-  }
-
-  ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 80
-    cidr_blocks = ["10.1.1.0/24"]
-  }
-
-  egress {
-    protocol = "-1"
-    from_port = 0
-    to_port = 0
-    cidr_blocks = ["10.1.0.0/16"]
-  }
-}
-
-resource "aws_security_group" "test2" {
-  name        = "terraform_acceptance_test_example_2"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = "${aws_vpc.test.id}"
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
-    cidr_blocks = ["10.1.2.0/24"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
-    cidr_blocks = ["10.1.2.0/24"]
-  }
-
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["10.1.0.0/16"]
-  }
-}
-
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%[1]s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
-  }
-
-  connection_log_options {
-    enabled = false
-  }
-}
-
-resource "aws_ec2_client_vpn_network_association" "test" {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  subnet_id              = "${aws_subnet.test[0].id}"
-  security_groups        = ["${aws_security_group.test1.id}", "${aws_security_group.test2.id}"]
-}
-`, rName))
-}
-
-func testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rName string) string {
-	return composeConfig(
-		testAccEc2ClientVpnNetworkAssociationVpcBase(rName, 1),
-		testAccEc2ClientVpnNetworkAssociationAcmCertificateBase(),
-		fmt.Sprintf(`
-resource "aws_security_group" "test1" {
-  name        = "terraform_acceptance_test_example_1"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = "${aws_vpc.test.id}"
-
-  ingress {
-		protocol = "tcp"
-    from_port = 22
-    to_port = 22
-    cidr_blocks = ["10.1.1.0/24"]
-  }
-
-  ingress {
-    protocol = "tcp"
-    from_port = 80
-    to_port = 80
-    cidr_blocks = ["10.1.1.0/24"]
-  }
-
-  egress {
-    protocol = "-1"
-    from_port = 0
-    to_port = 0
-    cidr_blocks = ["10.1.0.0/16"]
-  }
-}
-
-resource "aws_security_group" "test2" {
-  name        = "terraform_acceptance_test_example_2"
-  description = "Used in the terraform acceptance tests"
-  vpc_id      = "${aws_vpc.test.id}"
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 22
-    to_port     = 22
-    cidr_blocks = ["10.1.2.0/24"]
-  }
-
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 80
-    cidr_blocks = ["10.1.2.0/24"]
-  }
-
-  egress {
-    protocol    = "-1"
-    from_port   = 0
-    to_port     = 0
-    cidr_blocks = ["10.1.0.0/16"]
-  }
-}
-
-resource "aws_ec2_client_vpn_endpoint" "test" {
-  description            = "terraform-testacc-clientvpn-%[1]s"
-  server_certificate_arn = "${aws_acm_certificate.test.arn}"
-  client_cidr_block      = "10.0.0.0/16"
-
-  authentication_options {
-    type                       = "certificate-authentication"
-    root_certificate_chain_arn = "${aws_acm_certificate.test.arn}"
-  }
-
-  connection_log_options {
-    enabled = false
-  }
-}
-
-resource "aws_ec2_client_vpn_network_association" "test" {
-  client_vpn_endpoint_id = "${aws_ec2_client_vpn_endpoint.test.id}"
-  subnet_id              = "${aws_subnet.test[0].id}"
-  security_groups        = ["${aws_security_group.test1.id}"]
-}
-`, rName))
 }
 
 func testAccEc2ClientVpnNetworkAssociationAcmCertificateBase() string {

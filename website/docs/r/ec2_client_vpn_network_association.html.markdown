@@ -39,7 +39,7 @@ The following arguments are supported:
 
 * `client_vpn_endpoint_id` - (Required) The ID of the Client VPN endpoint.
 * `subnet_id` - (Required) The ID of the subnet to associate with the Client VPN endpoint.
-* `security_groups` - (Required) A list of up to five custom security groups to apply to the target network. Not populating this parameter will result in the subnet inheriting the default VPC security group.  Regardless of what you choose,  you must define this parameter due to the AWS API automatically assigning the default VPC security group if no other groups are included in the call.
+* `security_groups` - (Optional) A list of up to five custom security groups to apply to the target network. If not specified, the VPC's default security group is assigned.
 
 ## Attributes Reference
 
