@@ -253,7 +253,7 @@ func resourceAwsServiceCatalogProductRead(d *schema.ResourceData, meta interface
 
 	d.Set("product_arn", resp.ProductViewDetail.ProductARN)
 
-	err = d.Set("tags", tagsToMapServiceCatalog(keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map()))
+	err = d.Set("tags", keyvaluetags.ServicecatalogKeyValueTags(resp.Tags).IgnoreAws().IgnoreConfig(meta.(*AWSClient).IgnoreTagsConfig).Map())
 	if err != nil {
 		return fmt.Errorf("invalid tags read on ServiceCatalog product '%s': %s", d.Id(), err)
 	}
@@ -424,13 +424,4 @@ func replaceProvisioningArtifactParametersKeys(m map[string]*string) {
 func replaceProvisioningArtifactParametersKey(m map[string]*string, replacedKey, withKey string) {
 	m[withKey] = m[replacedKey]
 	delete(m, replacedKey)
-}
-
-// tagsToMap turns the list of tags into a map.
-func tagsToMapServiceCatalog(ts map[string]string) map[string]string {
-	result := make(map[string]string)
-	for k, v := range ts {
-		result[aws.StringValue(&k)] = aws.StringValue(&v)
-	}
-	return result
 }
