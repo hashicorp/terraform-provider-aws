@@ -46,7 +46,7 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	var regions []string
 
 	for _, p := range partitions {
-		for id, _ := range p.Regions() {
+		for id := range p.Regions() {
 			regions = append(regions, id)
 		}
 	}
