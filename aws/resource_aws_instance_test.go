@@ -3323,6 +3323,25 @@ func driftTags(instance *ec2.Instance) resource.TestCheckFunc {
 	}
 }
 
+func testAccCurrentAvailableAZsNoOptInDefaultExcludeConfig() string {
+	// Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+	return testAccCurrentAvailableAZsNoOptInExcludeConfig(`"usw2-az4", "usgw1-az2"`)
+}
+
+func testAccCurrentAvailableAZsNoOptInExcludeConfig(exclude string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "current" {
+  exclude_zone_ids = [%s]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+`, exclude)
+}
+
 func testAccInstanceConfigInDefaultVpcBySgName(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
 data "aws_availability_zones" "current" {
@@ -4961,6 +4980,37 @@ resource "aws_subnet" "test" {
   }
 }
 `, rName, mapPublicIpOnLaunch)
+}
+
+func testAccAwsInstanceVpcConfigBasic(rName string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  cidr_block              = "10.0.0.0/24"
+  vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
 }
 
 // testAccAwsInstanceVpcSecurityGroupConfig returns the configuration for tests that create
