@@ -14,6 +14,8 @@ Version 3.0.0 of the AWS provider for Terraform is a major release and includes 
 
 Most of the changes outlined in this guide have been previously marked as deprecated in the Terraform plan/apply output throughout previous provider releases. These changes, such as deprecation notices, can always be found in the [Terraform AWS Provider CHANGELOG](https://github.com/terraform-providers/terraform-provider-aws/blob/master/CHANGELOG.md).
 
+~> **NOTE:** Version 3.0.0 and later of the AWS Provider can only be automatically installed on Terraform 0.12 and later.
+
 Upgrade topics:
 
 <!-- TOC depthFrom:2 depthTo:2 -->
