@@ -90,14 +90,12 @@ A full example of how to create a VPN Gateway in one AWS account, create a Direc
 
 ## Argument Reference
 
-~> **NOTE:** `dx_gateway_id` plus one of `associated_gateway_id`, or `vpn_gateway_id` must be specified for single account Direct Connect gateway associations.
+~> **NOTE:** `dx_gateway_id` and `associated_gateway_id` must be specified for single account Direct Connect gateway associations.
 
 The following arguments are supported:
 
 * `dx_gateway_id` - (Required) The ID of the Direct Connect gateway.
 * `associated_gateway_id` - (Optional) The ID of the VGW or transit gateway with which to associate the Direct Connect gateway.
-Used for single account Direct Connect gateway associations.
-* `vpn_gateway_id` - (Optional) *Deprecated:* Use `associated_gateway_id` instead. The ID of the VGW with which to associate the gateway.
 Used for single account Direct Connect gateway associations.
 * `associated_gateway_owner_account_id` - (Optional) The ID of the AWS account that owns the VGW or transit gateway with which to associate the Direct Connect gateway.
 Used for cross-account Direct Connect gateway associations.
