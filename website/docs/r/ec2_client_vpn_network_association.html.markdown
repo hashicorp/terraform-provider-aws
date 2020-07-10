@@ -46,6 +46,7 @@ The following arguments are supported:
 In addition to all arguments above, the following attributes are exported:
 
 * `id` - The unique ID of the target network association.
+* `association_id` - The unique ID of the target network association.
 * `security_groups` - The IDs of the security groups applied to the target network association.
 * `vpc_id` - The ID of the VPC in which the target network (subnet) is located.
 * `status` - The current state of the target network association.

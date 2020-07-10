@@ -3,6 +3,7 @@ package aws
 import (
 	"fmt"
 	"log"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -110,9 +111,11 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 				Config: testAccEc2ClientVpnNetworkAssociationConfigBasic(rStr),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAwsEc2ClientVpnNetworkAssociationExists(resourceName, &assoc),
-					testAccCheckAWSDefaultSecurityGroupExists(defaultSecurityGroupResourceName, &group),
+					resource.TestMatchResourceAttr(resourceName, "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
+					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
+					testAccCheckAWSDefaultSecurityGroupExists(defaultSecurityGroupResourceName, &group),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group),
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
