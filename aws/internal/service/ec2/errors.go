@@ -24,3 +24,13 @@ const ErrCodeClientVpnAuthorizationRuleNotFound = "InvalidClientVpnEndpointAutho
 const ErrCodeClientVpnAssociationIdNotFound = "InvalidClientVpnAssociationId.NotFound"
 
 const ErrCodeClientVpnRouteNotFound = "InvalidClientVpnRouteNotFound"
+
+const ErrCodeInvalidParameterException = "InvalidParameterException"
+
+const ErrCodeInvalidParameterValue = "InvalidParameterValue"
+
+const ErrCodeRouteNotFound = "InvalidRoute.NotFound"
+
+const ErrCodeRouteTableNotFound = "InvalidRouteTableID.NotFound"
+
+const ErrCodeTransitGatewayNotFound = "InvalidTransitGatewayID.NotFound"
