@@ -18,6 +18,7 @@ The `awsproviderlint` tool extends the `tfproviderlint` tool and its checks. See
 | [AWSAT002](passes/AWSAT002) | check for hardcoded AMI IDs |
 | [AWSAT003](passes/AWSAT003) | check for hardcoded regions |
 | [AWSAT004](passes/AWSAT004) | check for TestCheckResourceAttr() calls with hardcoded TypeSet state hashes |
+| [AWSAT005](passes/AWSAT005) | check for hardcoded AWS partitions in ARNs |
 
 ### AWS Resource Checks
 
