@@ -17,6 +17,9 @@ func resourceAwsEc2ClientVpnNetworkAssociation() *schema.Resource {
 		Read:   resourceAwsEc2ClientVpnNetworkAssociationRead,
 		Update: resourceAwsEc2ClientVpnNetworkAssociationUpdate,
 		Delete: resourceAwsEc2ClientVpnNetworkAssociationDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceAwsEc2ClientVpnNetworkAssociationImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"association_id": {
@@ -182,4 +185,15 @@ func deleteClientVpnNetworkAssociation(conn *ec2.EC2, networkAssociationID, clie
 	_, err = waiter.ClientVpnNetworkAssociationDisassociated(conn, networkAssociationID, clientVpnEndpointID)
 
 	return err
+}
+
+func resourceAwsEc2ClientVpnNetworkAssociationImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	endpointID, associationID, err := tfec2.ClientVpnNetworkAssociationParseID(d.Id())
+	if err != nil {
+		return nil, err
+	}
+
+	d.SetId(associationID)
+	d.Set("client_vpn_endpoint_id", endpointID)
+	return []*schema.ResourceData{d}, nil
 }

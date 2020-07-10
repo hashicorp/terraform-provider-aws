@@ -48,5 +48,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The unique ID of the target network association.
 * `association_id` - The unique ID of the target network association.
 * `security_groups` - The IDs of the security groups applied to the target network association.
-* `vpc_id` - The ID of the VPC in which the target network (subnet) is located.
 * `status` - The current state of the target network association.
+* `vpc_id` - The ID of the VPC in which the target subnet is located.
+
+## Import
+
+AWS Client VPN network associations can be imported using the endpoint ID and the association ID. Values are separated by a `,`.
+
+```
+$ terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad
+```

@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
@@ -121,6 +122,12 @@ func testAccAwsEc2ClientVpnNetworkAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", vpcResourceName, "id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceName),
+			},
 		},
 	})
 }
@@ -170,6 +177,12 @@ func testAccAwsEc2ClientVpnNetworkAssociation_securityGroups(t *testing.T) {
 					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group11),
 					testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(resourceName, "security_groups.*", &group12),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceName),
 			},
 			{
 				Config: testAccEc2ClientVpnNetworkAssociationOneSecurityGroup(rStr),
@@ -245,6 +258,17 @@ func testAccCheckAwsEc2ClientVpnNetworkAssociationExists(name string, assoc *ec2
 func testAccCheckAwsEc2ClientVpnNetworkAssociationSecurityGroupID(name, key string, group *ec2.SecurityGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		return tfawsresource.TestCheckTypeSetElemAttr(name, key, aws.StringValue(group.GroupId))(s)
+	}
+}
+
+func testAccAwsEc2ClientVpnNetworkAssociationImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
+	return func(s *terraform.State) (string, error) {
+		rs, ok := s.RootModule().Resources[resourceName]
+		if !ok {
+			return "", fmt.Errorf("Not found: %s", resourceName)
+		}
+
+		return tfec2.ClientVpnNetworkAssociationCreateID(rs.Primary.Attributes["client_vpn_endpoint_id"], rs.Primary.ID), nil
 	}
 }
 
