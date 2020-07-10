@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/waiter"
 )
 
 func resourceAwsRouteTable() *schema.Resource {
@@ -56,37 +58,23 @@ func resourceAwsRouteTable() *schema.Resource {
 func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 
-	// Create the routing table
-	createOpts := &ec2.CreateRouteTableInput{
+	input := &ec2.CreateRouteTableInput{
 		VpcId: aws.String(d.Get("vpc_id").(string)),
 	}
-	log.Printf("[DEBUG] RouteTable create config: %#v", createOpts)
 
-	resp, err := conn.CreateRouteTable(createOpts)
+	log.Printf("[DEBUG] Creating Route Table: %s", input)
+	output, err := conn.CreateRouteTable(input)
+
 	if err != nil {
-		return fmt.Errorf("Error creating route table: %s", err)
+		return fmt.Errorf("error creating Route Table: %s", err)
 	}
 
-	// Get the ID and store it
-	rt := resp.RouteTable
-	d.SetId(*rt.RouteTableId)
-	log.Printf("[INFO] Route Table ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.RouteTable.RouteTableId))
 
-	// Wait for the route table to become available
-	log.Printf(
-		"[DEBUG] Waiting for route table (%s) to become available",
-		d.Id())
-	stateConf := &resource.StateChangeConf{
-		Pending:        []string{"pending"},
-		Target:         []string{"ready"},
-		Refresh:        resourceAwsRouteTableStateRefreshFunc(conn, d.Id()),
-		Timeout:        10 * time.Minute,
-		NotFoundChecks: 40,
-	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for route table (%s) to become available: %s",
-			d.Id(), err)
+	_, err = waiter.RouteTableCreated(conn, d.Id())
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Route Table (%s) to become available: %s", d.Id(), err)
 	}
 
 	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
@@ -102,29 +90,40 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ec2conn
 	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
-	}
-	if rtRaw == nil {
+	routeTable, err := finder.RouteTableByID(conn, d.Id())
+
+	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
+		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
 	}
 
-	rt := rtRaw.(*ec2.RouteTable)
-	d.Set("vpc_id", rt.VpcId)
-
-	propagatingVGWs := make([]string, 0, len(rt.PropagatingVgws))
-	for _, vgw := range rt.PropagatingVgws {
-		propagatingVGWs = append(propagatingVGWs, *vgw.GatewayId)
+	if err != nil {
+		return fmt.Errorf("error reading Route Table (%s): %s", d.Id(), err)
 	}
-	d.Set("propagating_vgws", propagatingVGWs)
+
+	if routeTable == nil {
+		log.Printf("[WARN] Route Table (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return nil
+	}
+
+	d.Set("owner_id", routeTable.OwnerId)
+	d.Set("vpc_id", routeTable.VpcId)
+
+	propagatingVgws := make([]*string, 0, len(routeTable.PropagatingVgws))
+	for _, propagatingVgw := range routeTable.PropagatingVgws {
+		propagatingVgws = append(propagatingVgws, propagatingVgw.GatewayId)
+	}
+	if err := d.Set("propagating_vgws", flattenStringSet(propagatingVgws)); err != nil {
+		return fmt.Errorf("error setting propagating_vgws: %s", err)
+	}
 
 	// Create an empty schema.Set to hold all routes
 	route := &schema.Set{F: resourceAwsRouteTableHash}
 
 	// Loop through the routes and add them to the set
-	for _, r := range rt.Routes {
+	for _, r := range routeTable.Routes {
 		if r.GatewayId != nil && *r.GatewayId == "local" {
 			continue
 		}
@@ -174,11 +173,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("route", route)
 
 	// Tags
-	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(rt.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(routeTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
-
-	d.Set("owner_id", rt.OwnerId)
 
 	return nil
 }
@@ -375,17 +372,22 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 
 	// First request the routing table since we'll have to disassociate
 	// all the subnets first.
-	rtRaw, _, err := resourceAwsRouteTableStateRefreshFunc(conn, d.Id())()
-	if err != nil {
-		return err
-	}
-	if rtRaw == nil {
+	routeTable, err := finder.RouteTableByID(conn, d.Id())
+
+	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
 		return nil
 	}
-	rt := rtRaw.(*ec2.RouteTable)
+
+	if err != nil {
+		return fmt.Errorf("error reading Route Table (%s): %s", d.Id(), err)
+	}
+
+	if routeTable == nil {
+		return nil
+	}
 
 	// Do all the disassociations
-	for _, a := range rt.Associations {
+	for _, a := range routeTable.Associations {
 		log.Printf("[INFO] Disassociating association: %s", *a.RouteTableAssociationId)
 		_, err := conn.DisassociateRouteTable(&ec2.DisassociateRouteTableInput{
 			AssociationId: a.RouteTableAssociationId,
@@ -403,34 +405,27 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	// Delete the route table
-	log.Printf("[INFO] Deleting Route Table: %s", d.Id())
+	log.Printf("[INFO] Deleting Route Table (%s)", d.Id())
 	_, err = conn.DeleteRouteTable(&ec2.DeleteRouteTableInput{
 		RouteTableId: aws.String(d.Id()),
 	})
+
+	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
+		return nil
+	}
+
 	if err != nil {
-		if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
-			return nil
-		}
-
-		return fmt.Errorf("Error deleting route table: %s", err)
+		return fmt.Errorf("error deleting Route Table (%s): %s", d.Id(), err)
 	}
 
-	// Wait for the route table to really destroy
-	log.Printf(
-		"[DEBUG] Waiting for route table (%s) to become destroyed",
-		d.Id())
+	_, err = waiter.RouteTableDeleted(conn, d.Id())
 
-	stateConf := &resource.StateChangeConf{
-		Pending: []string{"ready"},
-		Target:  []string{},
-		Refresh: resourceAwsRouteTableStateRefreshFunc(conn, d.Id()),
-		Timeout: 5 * time.Minute,
+	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
+		return nil
 	}
-	if _, err := stateConf.WaitForState(); err != nil {
-		return fmt.Errorf(
-			"Error waiting for route table (%s) to become destroyed: %s",
-			d.Id(), err)
+
+	if err != nil {
+		return fmt.Errorf("error waiting for Route Table (%s) to delete: %s", d.Id(), err)
 	}
 
 	return nil

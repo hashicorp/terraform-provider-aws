@@ -155,11 +155,10 @@ func ClientVpnRouteStatus(conn *ec2.EC2, routeID string) resource.StateRefreshFu
 }
 
 const (
-	RouteTableStateNotFound = "NotFound"
+	RouteTableStateReady = "ready"
 
-	RouteTableStateReady = "Ready"
-
-	RouteTableStateUnknown = "Unknown"
+	routeTableStateNotFound = "NotFound"
+	routeTableStateUnknown  = "Unknown"
 )
 
 // RouteTableState fetches the Route Table and its State
@@ -168,11 +167,11 @@ func RouteTableState(conn *ec2.EC2, routeTableID string) resource.StateRefreshFu
 		routeTable, err := finder.RouteTableByID(conn, routeTableID)
 
 		if err != nil {
-			return nil, RouteTableStateUnknown, err
+			return nil, routeTableStateUnknown, err
 		}
 
 		if routeTable == nil {
-			return nil, RouteTableStateNotFound, nil
+			return nil, routeTableStateNotFound, nil
 		}
 
 		return routeTable, RouteTableStateReady, nil
