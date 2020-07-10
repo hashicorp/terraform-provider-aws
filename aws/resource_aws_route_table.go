@@ -393,10 +393,6 @@ func resourceAwsRouteTableDelete(d *schema.ResourceData, meta interface{}) error
 
 	_, err = waiter.RouteTableDeleted(conn, d.Id())
 
-	if isAWSErr(err, tfec2.ErrCodeRouteTableNotFound, "") {
-		return nil
-	}
-
 	if err != nil {
 		return fmt.Errorf("error waiting for Route Table (%s) to delete: %s", d.Id(), err)
 	}

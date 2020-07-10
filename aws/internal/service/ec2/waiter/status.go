@@ -166,6 +166,10 @@ func RouteTableState(conn *ec2.EC2, routeTableID string) resource.StateRefreshFu
 	return func() (interface{}, string, error) {
 		routeTable, err := finder.RouteTableByID(conn, routeTableID)
 
+		if tfec2.ErrCodeEquals(err, tfec2.ErrCodeRouteTableNotFound) {
+			return nil, routeTableStateNotFound, nil
+		}
+
 		if err != nil {
 			return nil, routeTableStateUnknown, err
 		}
