@@ -34,6 +34,7 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -92,6 +93,50 @@ func TestAccAWSCodeBuildReportGroup_updated(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodeBuildReportGroup_tags(t *testing.T) {
+	var reportGroup codebuild.ReportGroup
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	resourceName := "aws_codebuild_report_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodeBuild(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodeBuildReportGroupConfigTags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSCodeBuildReportGroupConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAWSCodeBuildReportGroupConfigTags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
@@ -106,7 +151,7 @@ func TestAccAWSCodeBuildReportGroup_disappears(t *testing.T) {
 				Config: testAccAWSCodeBuildReportGroupBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
-					testAccCheckAWSCodeBuildReportGroupDisappears(&reportGroup),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodeBuildReportGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -166,18 +211,6 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 		*reportGroup = *resp.ReportGroups[0]
 
 		return nil
-	}
-}
-
-func testAccCheckAWSCodeBuildReportGroupDisappears(reportGroup *codebuild.ReportGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).codebuildconn
-
-		_, err := conn.DeleteReportGroup(&codebuild.DeleteReportGroupInput{
-			Arn: reportGroup.Arn,
-		})
-
-		return err
 	}
 }
 
@@ -273,4 +306,51 @@ resource "aws_codebuild_report_group" "test" {
   }
 }
 `, rName)
+}
+
+func testAccAWSCodeBuildReportGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
+	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_codebuild_report_group" "test" {
+  name = %[1]q
+  type = "TEST"
+
+  export_config {
+    type = "S3"
+
+    s3_destination {
+      bucket              = "${aws_s3_bucket.test.id}"
+      encryption_key      = "${aws_kms_key.test.arn}"
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccAWSCodeBuildReportGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
+		fmt.Sprintf(`
+resource "aws_codebuild_report_group" "test" {
+  name = %[1]q
+  type = "TEST"
+
+  export_config {
+    type = "S3"
+
+    s3_destination {
+      bucket              = "${aws_s3_bucket.test.id}"
+      encryption_key      = "${aws_kms_key.test.arn}"
+    }
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

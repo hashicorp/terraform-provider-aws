@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
 func resourceAwsCodeBuildReportGroup() *schema.Resource {
@@ -96,6 +97,7 @@ func resourceAwsCodeBuildReportGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tagsSchema(),
 		},
 	}
 }
@@ -106,6 +108,7 @@ func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interfac
 		Name:         aws.String(d.Get("name").(string)),
 		Type:         aws.String(d.Get("type").(string)),
 		ExportConfig: expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{})),
+		Tags:         keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodebuildTags(),
 	}
 
 	resp, err := conn.CreateReportGroup(createOpts)
@@ -120,6 +123,7 @@ func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interfac
 
 func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	resp, err := conn.BatchGetReportGroups(&codebuild.BatchGetReportGroupsInput{
 		ReportGroupArns: aws.StringSlice([]string{d.Id()}),
@@ -132,10 +136,6 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 		log.Printf("[WARN] CodeBuild Report Groups (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
-	}
-
-	if len(resp.ReportGroups) > 1 {
-		return fmt.Errorf("multiple matches found for CodeBuild Report Groups: %s", d.Id())
 	}
 
 	reportGroup := resp.ReportGroups[0]
@@ -158,18 +158,33 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 		return fmt.Errorf("error setting export config: %s", err)
 	}
 
+	if err := d.Set("tags", keyvaluetags.CodebuildKeyValueTags(reportGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("error setting tags: %s", err)
+	}
+
 	return nil
 }
 
 func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).codebuildconn
 
-	if d.HasChange("export_config") {
-		input := &codebuild.UpdateReportGroupInput{
-			Arn:          aws.String(d.Id()),
-			ExportConfig: expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{})),
-		}
+	input := &codebuild.UpdateReportGroupInput{
+		Arn: aws.String(d.Id()),
+	}
 
+	updateNeeded := false
+
+	if d.HasChange("export_config") {
+		input.ExportConfig = expandAwsCodeBuildReportGroupExportConfig(d.Get("export_config").([]interface{}))
+		updateNeeded = true
+	}
+
+	if d.HasChange("tags") {
+		input.Tags = keyvaluetags.New(d.Get("tags").(map[string]interface{})).IgnoreAws().CodebuildTags()
+		updateNeeded = true
+	}
+
+	if updateNeeded {
 		_, err := conn.UpdateReportGroup(input)
 		if err != nil {
 			return fmt.Errorf("Error updating CodeBuild Report Groups: %s", err)

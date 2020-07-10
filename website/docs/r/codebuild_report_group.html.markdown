@@ -65,6 +65,7 @@ The following arguments are supported:
 * `name` - (Required) The name of a Report Group.
 * `type` - (Required) The type of the Report Group. The one valid value is `TEST`.
 * `export_config` - (Required) Information about the destination where the raw data of this Report Group is exported. see [Export Config](#export-config) documented below.
+* `tags` - (Optional) Key-value mapping of resource tags
 
 ### Export Config
 
@@ -78,8 +79,6 @@ The following arguments are supported:
 * `encryption_disabled`- (Optional) A boolean value that specifies if the results of a report are encrypted.
 * `packaging` - (Optional) The type of build output artifact to create. Valid values are: `NONE` (default) and `ZIP`.
 * `path` - (Optional) The path to the exported report's raw data results.
-
-
 
 ## Attributes Reference
 
