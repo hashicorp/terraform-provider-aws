@@ -103,7 +103,7 @@ The following arguments are supported:
 * `schema_change_policy` (Optional) Policy for the crawler's update and deletion behavior.
 * `security_configuration` (Optional) The name of Security Configuration to be used by the crawler
 * `table_prefix` (Optional) The table prefix used for catalog tables that are created.
-* `tags` - (Optional) Key-value mapping of resource tags
+* `tags` - (Optional) Key-value map of resource tags
 
 ### dynamodb_target Argument Reference
 

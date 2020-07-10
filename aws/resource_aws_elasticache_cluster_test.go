@@ -993,7 +993,14 @@ func testAccAWSElasticacheClusterConfig_NumCacheNodesWithPreferredAvailabilityZo
 	}
 
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_elasticache_cluster" "test" {
   apply_immediately            = true
@@ -1008,7 +1015,12 @@ resource "aws_elasticache_cluster" "test" {
 
 var testAccAWSElasticacheClusterInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-    state = "available"
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -1069,7 +1081,12 @@ resource "aws_sns_topic" "test" {
 
 var testAccAWSElasticacheClusterMultiAZInVPCConfig = fmt.Sprintf(`
 data "aws_availability_zones" "available" {
-    state = "available"
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
@@ -1266,7 +1283,14 @@ resource "aws_elasticache_cluster" "test" {
 
 func testAccAWSElasticacheClusterConfig_ReplicationGroupID_AvailabilityZone(rName string) string {
 	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {}
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
 
 resource "aws_elasticache_replication_group" "test" {
     replication_group_description = "Terraform Acceptance Testing"

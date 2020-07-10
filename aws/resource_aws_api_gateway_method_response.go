@@ -172,10 +172,7 @@ func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("response_parameters") {
-		ops, err := expandApiGatewayMethodParametersOperations(d, "response_parameters", "responseParameters")
-		if err != nil {
-			return err
-		}
+		ops := expandApiGatewayMethodParametersOperations(d, "response_parameters", "responseParameters")
 		operations = append(operations, ops...)
 	}
 
