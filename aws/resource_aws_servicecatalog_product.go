@@ -158,7 +158,7 @@ func resourceAwsServiceCatalogProductCreate(d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Tags = tagsFromMapServiceCatalog(v.(map[string]interface{}))
+		input.Tags = keyvaluetags.New(v.(map[string]interface{})).IgnoreAws().ServicecatalogTags()
 	}
 
 	pa := d.Get("provisioning_artifact")
@@ -367,7 +367,7 @@ func resourceAwsServiceCatalogProductUpdate(d *schema.ResourceData, meta interfa
 				addTags[k] = v
 			}
 		}
-		input.AddTags = tagsFromMapServiceCatalog(addTags)
+		input.AddTags = keyvaluetags.New(addTags.(map[string]interface{})).IgnoreAws().ServicecatalogTags()
 		input.RemoveTags = removeTags
 	}
 
@@ -424,20 +424,6 @@ func replaceProvisioningArtifactParametersKeys(m map[string]*string) {
 func replaceProvisioningArtifactParametersKey(m map[string]*string, replacedKey, withKey string) {
 	m[withKey] = m[replacedKey]
 	delete(m, replacedKey)
-}
-
-// tagsFromMap returns the tags for the given map of data.
-func tagsFromMapServiceCatalog(m map[string]interface{}) []*servicecatalog.Tag {
-	result := make([]*servicecatalog.Tag, 0, len(m))
-	for k, v := range m {
-		t := &servicecatalog.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v.(string)),
-		}
-		result = append(result, t)
-	}
-
-	return result
 }
 
 // tagsToMap turns the list of tags into a map.
