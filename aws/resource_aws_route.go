@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/hashcode"
 	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2/finder"
 )
 
 func resourceAwsRoute() *schema.Resource {
@@ -150,15 +151,15 @@ func resourceAwsRouteCreate(d *schema.ResourceData, meta interface{}) error {
 		RouteTableId: aws.String(routeTableID),
 	}
 
-	var routeFinder routeFinder
+	var routeFinder finder.RouteFinder
 
 	switch destinationAttr {
 	case "destination_cidr_block":
 		input.DestinationCidrBlock = aws.String(destination)
-		routeFinder = routeByIpv4Destination
+		routeFinder = finder.RouteByIpv4Destination
 	case "destination_ipv6_cidr_block":
 		input.DestinationIpv6CidrBlock = aws.String(destination)
-		routeFinder = routeByIpv6Destination
+		routeFinder = finder.RouteByIpv6Destination
 	default:
 		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
 	}
@@ -251,13 +252,13 @@ func resourceAwsRouteRead(d *schema.ResourceData, meta interface{}) error {
 	destination := d.Get(destinationAttr).(string)
 	routeTableID := d.Get("route_table_id").(string)
 
-	var routeFinder routeFinder
+	var routeFinder finder.RouteFinder
 
 	switch destinationAttr {
 	case "destination_cidr_block":
-		routeFinder = routeByIpv4Destination
+		routeFinder = finder.RouteByIpv4Destination
 	case "destination_ipv6_cidr_block":
-		routeFinder = routeByIpv6Destination
+		routeFinder = finder.RouteByIpv6Destination
 	default:
 		return fmt.Errorf("unexpected destination attribute: `%s`", destinationAttr)
 	}
@@ -501,42 +502,6 @@ func routeDestinationAndTargetAttributes(d *schema.ResourceData) (string, string
 // TODO
 // TODO Move these to a per-service internal package and auto-generate where possible.
 // TODO
-
-type routeFinder func(*ec2.EC2, string, string) (*ec2.Route, error)
-
-// routeByIpv4Destination returns the route corresponding to the specified IPv4 destination.
-// Returns nil if no route is found.
-func routeByIpv4Destination(conn *ec2.EC2, routeTableID, destinationCidr string) (*ec2.Route, error) {
-	routeTable, err := routeTableByID(conn, routeTableID)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, route := range routeTable.Routes {
-		if aws.StringValue(route.DestinationCidrBlock) == destinationCidr {
-			return route, nil
-		}
-	}
-
-	return nil, nil
-}
-
-// routeByIpv6Destination returns the route corresponding to the specified IPv6 destination.
-// Returns nil if no route is found.
-func routeByIpv6Destination(conn *ec2.EC2, routeTableID, destinationIpv6Cidr string) (*ec2.Route, error) {
-	routeTable, err := routeTableByID(conn, routeTableID)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, route := range routeTable.Routes {
-		if cidrBlocksEqual(aws.StringValue(route.DestinationIpv6CidrBlock), destinationIpv6Cidr) {
-			return route, nil
-		}
-	}
-
-	return nil, nil
-}
 
 func routeCreateID(routeTableID, destination string) string {
 	return fmt.Sprintf("r-%s%d", routeTableID, hashcode.String(destination))
