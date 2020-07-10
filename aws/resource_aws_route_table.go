@@ -573,26 +573,3 @@ func resourceAwsRouteTableStateRefreshFunc(conn *ec2.EC2, id string) resource.St
 		return rt, "ready", nil
 	}
 }
-
-// TODO
-// TODO Move these to a per-service internal package and auto-generate where possible.
-// TODO
-
-// routeTableByID returns the route table corresponding to the specified identifier.
-// Returns nil if no route table is found.
-func routeTableByID(conn *ec2.EC2, routeTableID string) (*ec2.RouteTable, error) {
-	input := &ec2.DescribeRouteTablesInput{
-		RouteTableIds: aws.StringSlice([]string{routeTableID}),
-	}
-
-	output, err := conn.DescribeRouteTables(input)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output.RouteTables) == 0 || output.RouteTables[0] == nil {
-		return nil, nil
-	}
-
-	return output.RouteTables[0], nil
-}
