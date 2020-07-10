@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -77,13 +78,34 @@ func resourceAwsRouteTableCreate(d *schema.ResourceData, meta interface{}) error
 		return fmt.Errorf("error waiting for Route Table (%s) to become available: %s", d.Id(), err)
 	}
 
-	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
-		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
-			return fmt.Errorf("error adding tags: %s", err)
+	if vgws := d.Get("propagating_vgws").(*schema.Set); vgws.Len() > 0 {
+		for _, vgw := range vgws.List() {
+			log.Printf("[DEBUG] Enabling Route Table (%s) VGW (%s) route propagation", d.Id(), vgw)
+			err = enableVgwRoutePropagation(conn, d.Id(), vgw.(string), 2*time.Minute)
+
+			if err != nil {
+				return err
+			}
 		}
 	}
 
-	return resourceAwsRouteTableUpdate(d, meta)
+	if routes := d.Get("route").(*schema.Set); routes.Len() > 0 {
+		for _, vRoute := range routes.List() {
+			err = createRouteTableRoute(conn, d.Id(), vRoute, 5*time.Minute)
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	if v := d.Get("tags").(map[string]interface{}); len(v) > 0 {
+		if err := keyvaluetags.Ec2CreateTags(conn, d.Id(), v); err != nil {
+			return fmt.Errorf("error adding Route Table (%s) tags: %s", d.Id(), err)
+		}
+	}
+
+	return resourceAwsRouteTableRead(d, meta)
 }
 
 func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
@@ -119,58 +141,9 @@ func resourceAwsRouteTableRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting propagating_vgws: %s", err)
 	}
 
-	// Create an empty schema.Set to hold all routes
-	route := &schema.Set{F: resourceAwsRouteTableHash}
-
-	// Loop through the routes and add them to the set
-	for _, r := range routeTable.Routes {
-		if r.GatewayId != nil && *r.GatewayId == "local" {
-			continue
-		}
-
-		if r.Origin != nil && *r.Origin == ec2.RouteOriginEnableVgwRoutePropagation {
-			continue
-		}
-
-		if r.DestinationPrefixListId != nil {
-			// Skipping because VPC endpoint routes are handled separately
-			// See aws_vpc_endpoint
-			continue
-		}
-
-		m := make(map[string]interface{})
-
-		if r.DestinationCidrBlock != nil {
-			m["cidr_block"] = *r.DestinationCidrBlock
-		}
-		if r.DestinationIpv6CidrBlock != nil {
-			m["ipv6_cidr_block"] = *r.DestinationIpv6CidrBlock
-		}
-		if r.EgressOnlyInternetGatewayId != nil {
-			m["egress_only_gateway_id"] = *r.EgressOnlyInternetGatewayId
-		}
-		if r.GatewayId != nil {
-			m["gateway_id"] = *r.GatewayId
-		}
-		if r.NatGatewayId != nil {
-			m["nat_gateway_id"] = *r.NatGatewayId
-		}
-		if r.InstanceId != nil {
-			m["instance_id"] = *r.InstanceId
-		}
-		if r.TransitGatewayId != nil {
-			m["transit_gateway_id"] = *r.TransitGatewayId
-		}
-		if r.VpcPeeringConnectionId != nil {
-			m["vpc_peering_connection_id"] = *r.VpcPeeringConnectionId
-		}
-		if r.NetworkInterfaceId != nil {
-			m["network_interface_id"] = *r.NetworkInterfaceId
-		}
-
-		route.Add(m)
+	if err := d.Set("route", schema.NewSet(resourceAwsRouteTableHash, flattenRoutes(routeTable.Routes))); err != nil {
+		return fmt.Errorf("error setting route: %s", err)
 	}
-	d.Set("route", route)
 
 	// Tags
 	if err := d.Set("tags", keyvaluetags.Ec2KeyValueTags(routeTable.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
@@ -481,6 +454,7 @@ func resourceAwsRouteTableHash(v interface{}) int {
 	return hashcode.String(buf.String())
 }
 
+// TODO Tidy up other callers of this - Replace with finder.
 // resourceAwsRouteTableStateRefreshFunc returns a resource.StateRefreshFunc that is used to watch
 // a RouteTable.
 func resourceAwsRouteTableStateRefreshFunc(conn *ec2.EC2, id string) resource.StateRefreshFunc {
@@ -580,3 +554,127 @@ func routeTableRouteSchema() *schema.Schema {
 // TODO
 // TODO Move these to a per-service internal package and auto-generate where possible.
 // TODO
+
+// createRouteTableRoute attempts to create a route in a route table.
+// The specified eventual consistency timeout is respected.
+// Any error is returned.
+func createRouteTableRoute(conn *ec2.EC2, routeTableID string, vRoute interface{}, timeout time.Duration) error {
+	mRoute := vRoute.(map[string]interface{})
+
+	input := &ec2.CreateRouteInput{
+		RouteTableId: aws.String(routeTableID),
+	}
+
+	if vCidrBlock := mRoute["cidr_block"].(string); vCidrBlock != "" {
+		input.DestinationCidrBlock = aws.String(vCidrBlock)
+	}
+
+	if vIpv6CidrBlock := mRoute["ipv6_cidr_block"].(string); vIpv6CidrBlock != "" {
+		input.DestinationIpv6CidrBlock = aws.String(vIpv6CidrBlock)
+	}
+
+	if vEgressOnlyGatewayID := mRoute["egress_only_gateway_id"].(string); vEgressOnlyGatewayID != "" {
+		input.EgressOnlyInternetGatewayId = aws.String(vEgressOnlyGatewayID)
+	}
+
+	if vGatewayID := mRoute["gateway_id"].(string); vGatewayID != "" {
+		input.GatewayId = aws.String(vGatewayID)
+	}
+
+	if vInstanceID := mRoute["instance_id"].(string); vInstanceID != "" {
+		input.InstanceId = aws.String(vInstanceID)
+	}
+
+	if vNatGatewayID := mRoute["nat_gateway_id"].(string); vNatGatewayID != "" {
+		input.NatGatewayId = aws.String(vNatGatewayID)
+	}
+
+	if vNetworkInterfaceID := mRoute["network_interface_id"].(string); vNetworkInterfaceID != "" {
+		input.NetworkInterfaceId = aws.String(vNetworkInterfaceID)
+	}
+
+	if vTransitGatewayID := mRoute["transit_gateway_id"].(string); vTransitGatewayID != "" {
+		input.TransitGatewayId = aws.String(vTransitGatewayID)
+	}
+
+	if vVpcPeeringConnectionID := mRoute["vpc_peering_connection_id"].(string); vVpcPeeringConnectionID != "" {
+		input.VpcPeeringConnectionId = aws.String(vVpcPeeringConnectionID)
+	}
+
+	log.Printf("[DEBUG] Creating Route: %s", input)
+	if err := createRoute(conn, input, timeout); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// enableVgwRoutePropagation attempts to enable VGW route propagation.
+// The specified eventual consistency timeout is respected.
+// Any error is returned.
+func enableVgwRoutePropagation(conn *ec2.EC2, routeTableID, gatewayID string, timeout time.Duration) error {
+	input := &ec2.EnableVgwRoutePropagationInput{
+		GatewayId:    aws.String(gatewayID),
+		RouteTableId: aws.String(routeTableID),
+	}
+
+	err := resource.Retry(timeout, func() *resource.RetryError {
+		_, err := conn.EnableVgwRoutePropagation(input)
+
+		if isAWSErr(err, tfec2.ErrCodeGatewayNotAttached, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.EnableVgwRoutePropagation(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error enabling Route Table (%s) VGW (%s) route propagation: %s", routeTableID, gatewayID, err)
+	}
+
+	return nil
+}
+
+func flattenRoutes(routes []*ec2.Route) []interface{} {
+	if routes == nil {
+		return []interface{}{}
+	}
+
+	vRoutes := []interface{}{}
+
+	for _, route := range routes {
+		// Skip routes we didn't create ourselves.
+		if aws.StringValue(route.Origin) != ec2.RouteOriginCreateRoute {
+			continue
+		}
+
+		// Skip VPC Endpoint routes, they are managed via the ModifyVpcEndpoint API.
+		if strings.HasPrefix(aws.StringValue(route.DestinationPrefixListId), "vpce-") {
+			continue
+		}
+
+		mRoute := map[string]interface{}{
+			"cidr_block":                aws.StringValue(route.DestinationCidrBlock),
+			"ipv6_cidr_block":           aws.StringValue(route.DestinationIpv6CidrBlock),
+			"egress_only_gateway_id":    aws.StringValue(route.EgressOnlyInternetGatewayId),
+			"gateway_id":                aws.StringValue(route.GatewayId),
+			"instance_id":               aws.StringValue(route.InstanceId),
+			"nat_gateway_id":            aws.StringValue(route.NatGatewayId),
+			"network_interface_id":      aws.StringValue(route.NetworkInterfaceId),
+			"transit_gateway_id":        aws.StringValue(route.TransitGatewayId),
+			"vpc_peering_connection_id": aws.StringValue(route.VpcPeeringConnectionId),
+		}
+
+		vRoutes = append(vRoutes, mRoute)
+	}
+
+	return vRoutes
+}

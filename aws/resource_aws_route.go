@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	tfec2 "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/ec2"
 )
 
 // How long to sleep if a limit-exceeded event happens
@@ -564,4 +565,37 @@ func resourceAwsRouteFindRoute(conn *ec2.EC2, rtbid string, cidr string, ipv6cid
 	}
 
 	return nil, nil
+}
+
+// createRoute attempts to create a route.
+// The specified eventual consistency timeout is respected.
+// Any error is returned.
+func createRoute(conn *ec2.EC2, input *ec2.CreateRouteInput, timeout time.Duration) error {
+	err := resource.Retry(timeout, func() *resource.RetryError {
+		_, err := conn.CreateRoute(input)
+
+		if isAWSErr(err, tfec2.ErrCodeInvalidParameterException, "") {
+			return resource.RetryableError(err)
+		}
+
+		if isAWSErr(err, tfec2.ErrCodeTransitGatewayNotFound, "") {
+			return resource.RetryableError(err)
+		}
+
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if isResourceTimeoutError(err) {
+		_, err = conn.CreateRoute(input)
+	}
+
+	if err != nil {
+		return fmt.Errorf("error creating Route: %s", err)
+	}
+
+	return nil
 }
