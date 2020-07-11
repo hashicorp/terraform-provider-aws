@@ -113,7 +113,7 @@ func resourceAwsCodeBuildReportGroupCreate(d *schema.ResourceData, meta interfac
 
 	resp, err := conn.CreateReportGroup(createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating CodeBuild Report Groups: %s", err)
+		return fmt.Errorf("error creating CodeBuild Report Groups: %w", err)
 	}
 
 	d.SetId(aws.StringValue(resp.ReportGroup.Arn))
@@ -129,7 +129,7 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 		ReportGroupArns: aws.StringSlice([]string{d.Id()}),
 	})
 	if err != nil {
-		return fmt.Errorf("Error Listing CodeBuild Report Groups: %s", err)
+		return fmt.Errorf("error Listing CodeBuild Report Groups: %w", err)
 	}
 
 	if len(resp.ReportGroups) == 0 {
@@ -151,15 +151,15 @@ func resourceAwsCodeBuildReportGroupRead(d *schema.ResourceData, meta interface{
 	d.Set("name", reportGroup.Name)
 
 	if err := d.Set("created", reportGroup.Created.Format(time.RFC3339)); err != nil {
-		return fmt.Errorf("error setting created: %s", err)
+		return fmt.Errorf("error setting created: %w", err)
 	}
 
 	if err := d.Set("export_config", flattenAwsCodeBuildReportGroupExportConfig(reportGroup.ExportConfig)); err != nil {
-		return fmt.Errorf("error setting export config: %s", err)
+		return fmt.Errorf("error setting export config: %w", err)
 	}
 
 	if err := d.Set("tags", keyvaluetags.CodebuildKeyValueTags(reportGroup.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %s", err)
+		return fmt.Errorf("error setting tags: %w", err)
 	}
 
 	return nil
@@ -187,7 +187,7 @@ func resourceAwsCodeBuildReportGroupUpdate(d *schema.ResourceData, meta interfac
 	if updateNeeded {
 		_, err := conn.UpdateReportGroup(input)
 		if err != nil {
-			return fmt.Errorf("Error updating CodeBuild Report Groups: %s", err)
+			return fmt.Errorf("error updating CodeBuild Report Groups: %w", err)
 		}
 	}
 
@@ -202,7 +202,7 @@ func resourceAwsCodeBuildReportGroupDelete(d *schema.ResourceData, meta interfac
 	}
 
 	if _, err := conn.DeleteReportGroup(deleteOpts); err != nil {
-		return fmt.Errorf("Error deleting CodeBuild Report Groups(%s): %s", d.Id(), err)
+		return fmt.Errorf("error deleting CodeBuild Report Groups(%s): %w", d.Id(), err)
 	}
 
 	return nil

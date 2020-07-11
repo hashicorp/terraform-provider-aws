@@ -2,7 +2,6 @@ package aws
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -29,11 +28,8 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "NONE"),
-					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "NO_EXPORT"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -46,7 +42,7 @@ func TestAccAWSCodeBuildReportGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSCodeBuildReportGroup_updated(t *testing.T) {
+func TestAccAWSCodeBuildReportGroup_export_s3(t *testing.T) {
 	var reportGroup codebuild.ReportGroup
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_codebuild_report_group.test"
@@ -57,7 +53,7 @@ func TestAccAWSCodeBuildReportGroup_updated(t *testing.T) {
 		CheckDestroy: testAccCheckAWSCodeBuildReportGroupDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSCodeBuildReportGroupFullConfig(rName),
+				Config: testAccAWSCodeBuildReportGroupS3ExportConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -67,7 +63,8 @@ func TestAccAWSCodeBuildReportGroup_updated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/.+`)),
+					resource.TestCheckResourceAttrPair(resourceName, "export_config.0.s3_destination.0.encryption_key", "aws_kms_key.test", "arn"),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
 				),
 			},
 			{
@@ -76,7 +73,7 @@ func TestAccAWSCodeBuildReportGroup_updated(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAWSCodeBuildReportGroupUpdatedConfig(rName),
+				Config: testAccAWSCodeBuildReportGroupS3ExportUpdatedConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSCodeBuildReportGroupExists(resourceName, &reportGroup),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -84,9 +81,9 @@ func TestAccAWSCodeBuildReportGroup_updated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.type", "S3"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.packaging", "ZIP"),
-					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.encryption_disabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "export_config.0.s3_destination.0.path", "/some2"),
-					testAccMatchResourceAttrRegionalARN(resourceName, "arn", "codebuild", regexp.MustCompile(`report-group/.+`)),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("report-group/%s", rName)),
 				),
 			},
 		},
@@ -214,7 +211,20 @@ func testAccCheckAWSCodeBuildReportGroupExists(name string, reportGroup *codebui
 	}
 }
 
-func testAccAWSCodeBuildReportGroupBasicConfigBase(rName string) string {
+func testAccAWSCodeBuildReportGroupBasicConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_codebuild_report_group" "test" {
+  name = %[1]q
+  type = "TEST"
+
+  export_config {
+    type = "NO_EXPORT"
+  }
+}
+`, rName)
+}
+
+func testAccAWSCodeBuildReportGroupBasicConfigS3ExportBase(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -245,27 +255,8 @@ resource "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccAWSCodeBuildReportGroupBasicConfig(rName string) string {
-	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
-		fmt.Sprintf(`
-resource "aws_codebuild_report_group" "test" {
-  name = %[1]q
-  type = "TEST"
-
-  export_config {
-    type = "S3"
-
-    s3_destination {
-      bucket              = "${aws_s3_bucket.test.id}"
-      encryption_key      = "${aws_kms_key.test.arn}"
-    }
-  }
-}
-`, rName)
-}
-
-func testAccAWSCodeBuildReportGroupFullConfig(rName string) string {
-	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
+func testAccAWSCodeBuildReportGroupS3ExportConfig(rName string) string {
+	return testAccAWSCodeBuildReportGroupBasicConfigS3ExportBase(rName) +
 		fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q
@@ -286,8 +277,8 @@ resource "aws_codebuild_report_group" "test" {
 `, rName)
 }
 
-func testAccAWSCodeBuildReportGroupUpdatedConfig(rName string) string {
-	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
+func testAccAWSCodeBuildReportGroupS3ExportUpdatedConfig(rName string) string {
+	return testAccAWSCodeBuildReportGroupBasicConfigS3ExportBase(rName) +
 		fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q
@@ -298,8 +289,8 @@ resource "aws_codebuild_report_group" "test" {
 
     s3_destination {
       bucket              = "${aws_s3_bucket.test.id}"
-      encryption_disabled = true
       encryption_key      = "${aws_kms_key.test.arn}"
+      encryption_disabled = false
       packaging           = "ZIP"
       path                = "/some2"
     }
@@ -309,19 +300,13 @@ resource "aws_codebuild_report_group" "test" {
 }
 
 func testAccAWSCodeBuildReportGroupConfigTags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q
   type = "TEST"
 
   export_config {
-    type = "S3"
-
-    s3_destination {
-      bucket              = "${aws_s3_bucket.test.id}"
-      encryption_key      = "${aws_kms_key.test.arn}"
-    }
+    type = "NO_EXPORT"
   }
 
   tags = {
@@ -332,19 +317,13 @@ resource "aws_codebuild_report_group" "test" {
 }
 
 func testAccAWSCodeBuildReportGroupConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAWSCodeBuildReportGroupBasicConfigBase(rName) +
-		fmt.Sprintf(`
+	return fmt.Sprintf(`
 resource "aws_codebuild_report_group" "test" {
   name = %[1]q
   type = "TEST"
 
   export_config {
-    type = "S3"
-
-    s3_destination {
-      bucket              = "${aws_s3_bucket.test.id}"
-      encryption_key      = "${aws_kms_key.test.arn}"
-    }
+    type = "NO_EXPORT"
   }
 
   tags = {
