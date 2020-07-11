@@ -835,6 +835,88 @@ func TestAccAWSRouteTable_GatewayVpcEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccAWSRouteTable_MultipleRoutes(t *testing.T) {
+	var routeTable ec2.RouteTable
+	resourceName := "aws_route_table.test"
+	eoigwResourceName := "aws_egress_only_internet_gateway.test"
+	igwResourceName := "aws_internet_gateway.test"
+	instanceResourceName := "aws_instance.test"
+	pcxResourceName := "aws_vpc_peering_connection.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+	destinationCidr1 := "10.2.0.0/16"
+	destinationCidr2 := "10.3.0.0/16"
+	destinationCidr3 := "10.4.0.0/16"
+	destinationCidr4 := "2001:db8::/122"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckRouteTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSRouteTableConfigMultipleRoutes(rName,
+					"cidr_block", destinationCidr1, "gateway_id", igwResourceName,
+					"cidr_block", destinationCidr2, "instance_id", instanceResourceName,
+					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 5),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "instance_id", instanceResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccAWSRouteTableConfigMultipleRoutes(rName,
+					"cidr_block", destinationCidr1, "vpc_peering_connection_id", pcxResourceName,
+					"cidr_block", destinationCidr3, "instance_id", instanceResourceName,
+					"ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 5),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr1, "vpc_peering_connection_id", pcxResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "instance_id", instanceResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "egress_only_gateway_id", eoigwResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				Config: testAccAWSRouteTableConfigMultipleRoutes(rName,
+					"ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", pcxResourceName,
+					"cidr_block", destinationCidr3, "gateway_id", igwResourceName,
+					"cidr_block", destinationCidr2, "instance_id", instanceResourceName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(resourceName, &routeTable),
+					testAccCheckAWSRouteTableNumberOfRoutes(&routeTable, 5),
+					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
+					resource.TestCheckResourceAttr(resourceName, "propagating_vgws.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "route.#", "3"),
+					testAccCheckAWSRouteTableRoute(resourceName, "ipv6_cidr_block", destinationCidr4, "vpc_peering_connection_id", pcxResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr3, "gateway_id", igwResourceName, "id"),
+					testAccCheckAWSRouteTableRoute(resourceName, "cidr_block", destinationCidr2, "instance_id", instanceResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRouteTableExists(n string, v *ec2.RouteTable) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -1822,4 +1904,109 @@ resource "aws_vpc_endpoint" "test" {
   route_table_ids = [aws_route_table.test.id]
 }
 `, rName)
+}
+
+func testAccAWSRouteTableConfigMultipleRoutes(rName,
+	destinationAttr1, destinationValue1, targetAttribute1, targetValue1,
+	destinationAttr2, destinationValue2, targetAttribute2, targetValue2,
+	destinationAttr3, destinationValue3, targetAttribute3, targetValue3 string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForRegion("t3.micro", "t2.micro"),
+		fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  # Exclude usw2-az4 (us-west-2d) as it has limited instance types.
+  exclude_zone_ids = ["usw2-az4"]
+  state            = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block                       = "10.1.0.0/16"
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "target" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block        = "10.1.1.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_egress_only_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id     = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc_peering_connection" "test" {
+  vpc_id      = aws_vpc.test.id
+  peer_vpc_id = aws_vpc.target.id
+  auto_accept = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  route {
+	%[2]s = %[3]q
+    %[4]s = %[5]s.id
+  }
+  route {
+	%[6]s = %[7]q
+    %[8]s = %[9]s.id
+  }
+  route {
+	%[10]s = %[11]q
+    %[12]s = %[13]s.id
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, destinationAttr1, destinationValue1, targetAttribute1, targetValue1, destinationAttr2, destinationValue2, targetAttribute2, targetValue2, destinationAttr3, destinationValue3, targetAttribute3, targetValue3))
 }
