@@ -360,16 +360,12 @@ func testAccAwsEc2ClientVpnEndpoint_splitTunnel(t *testing.T) {
 	})
 }
 
-<<<<<<< HEAD
 func testAccPreCheckClientVPNSyncronize(t *testing.T) {
 	sync.TestAccPreCheckSyncronize(t, testAccEc2ClientVpnEndpointSemaphore, "Client VPN")
 }
 
 func testAccAwsEc2ClientVpnEndpoint_vpnPort(t *testing.T) {
 	var v1, v2 ec2.ClientVpnEndpoint
-=======
-func TestAccAwsEc2ClientVpnEndpoint_vpnPort(t *testing.T) {
->>>>>>> #11633 renamed test method
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
