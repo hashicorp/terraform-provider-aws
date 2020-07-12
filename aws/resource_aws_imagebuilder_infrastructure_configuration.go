@@ -27,11 +27,11 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"datecreated": {
+			"date_created": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"dateupdated": {
+			"date_updated": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -109,6 +109,7 @@ func resourceAwsImageBuilderInfrastructureConfiguration() *schema.Resource {
 			"terminate_instance_on_failure": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"tags": tagsSchema(),
 		},
@@ -179,8 +180,8 @@ func resourceAwsImageBuilderInfrastructureConfigurationRead(d *schema.ResourceDa
 	}
 
 	d.Set("arn", resp.InfrastructureConfiguration.Arn)
-	d.Set("datecreated", resp.InfrastructureConfiguration.DateCreated)
-	d.Set("dateupdated", resp.InfrastructureConfiguration.DateUpdated)
+	d.Set("date_created", resp.InfrastructureConfiguration.DateCreated)
+	d.Set("date_updated", resp.InfrastructureConfiguration.DateUpdated)
 	d.Set("description", resp.InfrastructureConfiguration.Description)
 	d.Set("instance_profile_name", resp.InfrastructureConfiguration.InstanceProfileName)
 	d.Set("instance_types", resp.InfrastructureConfiguration.InstanceTypes)
@@ -210,30 +211,41 @@ func resourceAwsImageBuilderInfrastructureConfigurationUpdate(d *schema.Resource
 	upd := imagebuilder.UpdateInfrastructureConfigurationInput{
 		InfrastructureConfigurationArn: aws.String(d.Id()),
 		InstanceProfileName:            aws.String(d.Get("instance_profile_name").(string)),
-		Description:                    aws.String(d.Get("description").(string)),
-		KeyPair:                        aws.String(d.Get("key_pair").(string)),
-		SubnetId:                       aws.String(d.Get("subnet_id").(string)),
 		Logging:                        expandAwsImageBuilderLogsConfig(d),
 	}
 
-	if d.HasChange("instance_types") {
-		if attr := d.Get("instance_types").(*schema.Set); attr.Len() > 0 {
-			upd.InstanceTypes = expandStringList(attr.List())
-		}
+	if description, ok := d.GetOk("description"); ok {
+		upd.Description = aws.String(description.(string))
 	}
+
+	if key_pair, ok := d.GetOk("key_pair"); ok {
+		upd.KeyPair = aws.String(key_pair.(string))
+	}
+
+	if subnet_id, ok := d.GetOk("subnet_id"); ok {
+		upd.SubnetId = aws.String(subnet_id.(string))
+	}
+
+	if attr := d.Get("instance_types").(*schema.Set); attr.Len() > 0 {
+		upd.InstanceTypes = expandStringList(attr.List())
+	}
+
 	if d.HasChange("instance_profile_name") {
 		upd.InstanceProfileName = aws.String(d.Get("instance_profile_name").(string))
 	}
+
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		if attr := v.(*schema.Set); attr.Len() > 0 {
 			upd.SecurityGroupIds = expandStringList(attr.List())
 		}
 	}
-	if d.HasChange("sns_topic_arn") {
-		upd.SnsTopicArn = aws.String(d.Get("sns_topic_arn").(string))
+
+	if sns_topic_arn, ok := d.GetOk("sns_topic_arn"); ok {
+		upd.SnsTopicArn = aws.String(sns_topic_arn.(string))
 	}
-	if d.HasChange("terminate_instance_on_failure") {
-		upd.TerminateInstanceOnFailure = aws.Bool(d.Get("terminate_instance_on_failure").(bool))
+
+	if terminate_instance_on_failure, ok := d.GetOk("terminate_instance_on_failure"); ok {
+		upd.TerminateInstanceOnFailure = aws.Bool(terminate_instance_on_failure.(bool))
 	}
 
 	if d.HasChange("security_group_ids") {
@@ -276,16 +288,14 @@ func resourceAwsImageBuilderInfrastructureConfigurationDelete(d *schema.Resource
 }
 
 func flattenAwsImageBuilderLogsConfig(logsConfig *imagebuilder.Logging) []interface{} {
-	if logsConfig == nil {
+	if logsConfig == nil || logsConfig.S3Logs == nil {
 		return []interface{}{}
 	}
 
 	values := map[string]interface{}{}
 
 	// If more logging options are added, add more ifs!
-	if v := logsConfig.S3Logs; v != nil {
-		values["s3_logs"] = flattenAwsImageBuilderS3Logs(v)
-	}
+	values["s3_logs"] = flattenAwsImageBuilderS3Logs(logsConfig.S3Logs)
 
 	return []interface{}{values}
 }
