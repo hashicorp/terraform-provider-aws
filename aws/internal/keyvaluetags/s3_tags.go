@@ -88,6 +88,10 @@ func S3ObjectListTags(conn *s3.S3, bucket, key string) (KeyValueTags, error) {
 
 	output, err := conn.GetObjectTagging(input)
 
+	if awsbase.IsAWSErr(err, "NoSuchTagSet", "") {
+		return New(nil), nil
+	}
+
 	if err != nil {
 		return New(nil), err
 	}
