@@ -57,6 +57,7 @@ Global Accelerator
 Glue
 GuardDuty
 IAM
+Image Builder
 Inspector
 IoT
 KMS
