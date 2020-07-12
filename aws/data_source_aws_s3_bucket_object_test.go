@@ -360,9 +360,7 @@ func TestAccDataSourceAWSS3BucketObject_MultipleSlashes(t *testing.T) {
 }
 
 func TestAccDataSourceAWSS3BucketObject_SingleSlashAsKey(t *testing.T) {
-	var rObj s3.GetObjectOutput
 	var dsObj s3.GetObjectOutput
-	resourceName := "aws_s3_bucket_object.test"
 	dataSourceName := "data.aws_s3_bucket_object.test"
 	rName := acctest.RandomWithPrefix("tf-acc-test")
 
@@ -374,11 +372,7 @@ func TestAccDataSourceAWSS3BucketObject_SingleSlashAsKey(t *testing.T) {
 			{
 				Config: testAccAWSDataSourceS3ObjectConfigSingleSlashAsKey(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAWSS3BucketObjectExists(resourceName, &rObj),
 					testAccCheckAwsS3ObjectDataSourceExists(dataSourceName, &dsObj),
-					resource.TestCheckResourceAttr(dataSourceName, "content_length", "3"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
-					resource.TestCheckResourceAttr(dataSourceName, "body", "yes"),
 				),
 			},
 		},
@@ -684,15 +678,9 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_s3_bucket_object" "test" {
-  bucket  = aws_s3_bucket.test.bucket
-  key     = "/"
-  content = "yes"
-}
-
 data "aws_s3_bucket_object" "test" {
   bucket = aws_s3_bucket.test.bucket
-  key    = aws_s3_bucket_object.test.key
+  key    = "/"
 }
 `, rName)
 }
