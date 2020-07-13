@@ -24,6 +24,7 @@ Upgrade topics:
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
+- [Resource: aws_spot_fleet_request](#resource-aws_spot_fleet_request)
 
 <!-- /TOC -->
 
@@ -328,3 +329,9 @@ resource "aws_lb_listener_rule" "example" {
 ### Removal of Automatic aws_s3_bucket_policy Import
 
 Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
+
+## Resource: aws_spot_fleet_request
+
+### valid_until Argument No Longer Uses 24 Hour Default
+
+Previously when the `valid_until` argument was not configured, the resource would default to a 24 hour request. This behavior has been removed and allows for non-expiring requests. To recreate the old behavior, the [`time_offset` resource](/docs/providers/time/r/offset.html) can potentially be used.
