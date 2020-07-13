@@ -365,6 +365,7 @@ func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 	var instance ec2.Instance
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -372,7 +373,7 @@ func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigRootBlockDeviceKmsKeyArn,
+				Config: testAccInstanceConfigRootBlockDeviceKmsKeyArn(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
@@ -3861,31 +3862,14 @@ resource "aws_instance" "test" {
 `))
 }
 
-const testAccInstanceConfigRootBlockDeviceKmsKeyArn = `
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-instance-source-dest-enable"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.1.1.0/24"
-  vpc_id = "${aws_vpc.test.id}"
-  availability_zone = "us-west-2a"
-
-  tags = {
-    Name = "tf-acc-instance-source-dest-enable"
-  }
-}
-
+func testAccInstanceConfigRootBlockDeviceKmsKeyArn(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcConfig(rName, false), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
 resource "aws_instance" "test" {
-  ami           = "ami-08692d171e3cf02d6"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t3.nano"
   subnet_id     = "${aws_subnet.test.id}"
 
@@ -3895,7 +3879,8 @@ resource "aws_instance" "test" {
     kms_key_id            = "${aws_kms_key.test.arn}"
   }
 }
-`
+`))
+}
 
 const testAccCheckInstanceConfigWithAttachedVolume = `
 data "aws_ami" "debian_jessie_latest" {
