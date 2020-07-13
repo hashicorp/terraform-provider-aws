@@ -393,7 +393,7 @@ func TestAccAWSInstance_RootBlockDevice_KmsKeyArn(t *testing.T) {
 func TestAccAWSInstance_userDataBase64(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rInt := acctest.RandInt()
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -402,7 +402,7 @@ func TestAccAWSInstance_userDataBase64(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigWithUserDataBase64(rInt),
+				Config: testAccInstanceConfigWithUserDataBase64(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "user_data_base64", "aGVsbG8gd29ybGQ="),
@@ -3451,30 +3451,16 @@ resource "aws_instance" "test" {
 `, rInt)
 }
 
-func testAccInstanceConfigWithUserDataBase64(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_test" {
-  name        = "tf_test_%d"
-  description = "test"
-
-  ingress {
-    protocol    = "icmp"
-    from_port   = -1
-    to_port     = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
+func testAccInstanceConfigWithUserDataBase64(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcConfig(rName, false), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  # us-west-2
-  ami               = "ami-4fccb37f"
-  availability_zone = "us-west-2a"
+  ami       = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+  subnet_id = "${aws_subnet.test.id}"
 
   instance_type    = "m1.small"
-  security_groups  = ["${aws_security_group.tf_test_test.name}"]
   user_data_base64 = "${base64encode("hello world")}"
 }
-`, rInt)
+`))
 }
 
 const testAccInstanceConfigWithSmallInstanceType = `
