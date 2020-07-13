@@ -267,26 +267,8 @@ func TestAccAWSInstance_basic(t *testing.T) {
 
 func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
 	var v ec2.Instance
-	var vol *ec2.Volume
 	resourceName := "aws_instance.test"
-	rInt := acctest.RandInt()
-
-	testCheck := func(rInt int) func(*terraform.State) error {
-		return func(*terraform.State) error {
-			if *v.Placement.AvailabilityZone != "us-west-2a" {
-				return fmt.Errorf("bad availability zone: %#v", *v.Placement.AvailabilityZone)
-			}
-
-			if len(v.SecurityGroups) == 0 {
-				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
-			}
-			if *v.SecurityGroups[0].GroupName != fmt.Sprintf("tf_test_%d", rInt) {
-				return fmt.Errorf("no security groups: %#v", v.SecurityGroups)
-			}
-
-			return nil
-		}
-	}
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:      func() { testAccPreCheck(t) },
@@ -294,25 +276,10 @@ func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
 		Providers:     testAccProviders,
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
-			// Create a volume to cover https://github.com/hashicorp/terraform/issues/1249
 			{
-				// Need a resource in this config so the provisioner will be available
-				Config: testAccInstanceConfig_pre(rInt),
-				Check: func(*terraform.State) error {
-					conn := testAccProvider.Meta().(*AWSClient).ec2conn
-					var err error
-					vol, err = conn.CreateVolume(&ec2.CreateVolumeInput{
-						AvailabilityZone: aws.String("us-west-2a"),
-						Size:             aws.Int64(int64(5)),
-					})
-					return err
-				},
-			},
-			{
-				Config: testAccInstanceConfig(rInt),
+				Config: testAccInstanceConfigAtLeastOneOtherEbsVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testCheck(rInt),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"), // This is an instance store AMI
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
@@ -329,22 +296,12 @@ func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
 			// that the user data hash stuff is working without generating
 			// an incorrect diff.
 			{
-				Config: testAccInstanceConfig(rInt),
+				Config: testAccInstanceConfigAtLeastOneOtherEbsVolume(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					testCheck(rInt),
 					resource.TestCheckResourceAttr(resourceName, "user_data", "3dc39dda39be1205215e776bad998da361a5955d"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 				),
-			},
-			// Clean up volume created above
-			{
-				Config: testAccInstanceConfig(rInt),
-				Check: func(*terraform.State) error {
-					conn := testAccProvider.Meta().(*AWSClient).ec2conn
-					_, err := conn.DeleteVolume(&ec2.DeleteVolumeInput{VolumeId: vol.VolumeId})
-					return err
-				},
 			},
 		},
 	})
@@ -3377,46 +3334,32 @@ resource "aws_instance" "test" {
 `))
 }
 
-func testAccInstanceConfig_pre(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_test" {
-  name        = "tf_test_%d"
-  description = "test"
+func testAccInstanceConfigAtLeastOneOtherEbsVolume(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(), testAccAwsInstanceVpcConfig(rName, false), fmt.Sprintf(`
+# Ensure that there is at least 1 EBS volume in the current region.
+# See https://github.com/hashicorp/terraform/issues/1249.
+resource "aws_ebs_volume" "test" {
+  availability_zone = data.aws_availability_zones.current.names[0]
+  size              = 5
 
-  ingress {
-    protocol    = "icmp"
-    from_port   = -1
-    to_port     = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-`, rInt)
-}
-
-func testAccInstanceConfig(rInt int) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "tf_test_test" {
-  name        = "tf_test_%d"
-  description = "test"
-
-  ingress {
-    protocol    = "icmp"
-    from_port   = -1
-    to_port     = -1
-    cidr_blocks = ["0.0.0.0/0"]
+  tags = {
+    Name = %[1]q
   }
 }
 
 resource "aws_instance" "test" {
-  # us-west-2
-  ami               = "ami-4fccb37f"
-  availability_zone = "us-west-2a"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
+  instance_type = "m1.small"
+  subnet_id     = aws_subnet.test.id
+  user_data     = "foo:-with-character's"
 
-  instance_type   = "m1.small"
-  security_groups = ["${aws_security_group.tf_test_test.name}"]
-  user_data       = "foo:-with-character's"
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on  = ["aws_ebs_volume.test"]
 }
-`, rInt)
+`, rName))
 }
 
 func testAccInstanceConfigWithUserDataBase64(rName string) string {
