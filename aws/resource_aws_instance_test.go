@@ -330,7 +330,7 @@ func TestAccAWSInstance_EbsBlockDevice_KmsKeyArn(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn,
+				Config: testAccInstanceConfigEbsBlockDeviceKmsKeyArn(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &instance),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "1"),
@@ -3831,14 +3831,14 @@ resource "aws_instance" "test" {
 }
 `
 
-const testAccInstanceConfigEbsBlockDeviceKmsKeyArn = `
+func testAccInstanceConfigEbsBlockDeviceKmsKeyArn() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
 resource "aws_instance" "test" {
-  # us-west-2
-  ami = "ami-55a7ea65"
+  ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 
   # In order to attach an encrypted volume to an instance you need to have an
   # m3.medium or larger. See "Supported Instance Types" in:
@@ -3858,7 +3858,8 @@ resource "aws_instance" "test" {
     volume_size = 12
   }
 }
-`
+`))
+}
 
 const testAccInstanceConfigRootBlockDeviceKmsKeyArn = `
 resource "aws_vpc" "test" {
