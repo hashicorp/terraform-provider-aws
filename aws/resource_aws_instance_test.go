@@ -1096,7 +1096,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstanceConfigNoVolumeTags,
+				Config: testAccCheckInstanceConfigNoVolumeTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "volume_tags"),
@@ -1109,7 +1109,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
 			},
 			{
-				Config: testAccCheckInstanceConfigWithVolumeTags,
+				Config: testAccCheckInstanceConfigWithVolumeTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
@@ -1117,7 +1117,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckInstanceConfigWithVolumeTagsUpdate,
+				Config: testAccCheckInstanceConfigWithVolumeTagsUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "2"),
@@ -1126,7 +1126,7 @@ func TestAccAWSInstance_volumeTags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCheckInstanceConfigNoVolumeTags,
+				Config: testAccCheckInstanceConfigNoVolumeTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckNoResourceAttr(resourceName, "volume_tags"),
@@ -1146,7 +1146,7 @@ func TestAccAWSInstance_volumeTagsComputed(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstanceConfigWithAttachedVolume,
+				Config: testAccCheckInstanceConfigWithAttachedVolume(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 				),
@@ -3892,35 +3892,10 @@ resource "aws_instance" "test" {
 `))
 }
 
-const testAccCheckInstanceConfigWithAttachedVolume = `
-data "aws_ami" "debian_jessie_latest" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["debian-jessie-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-
-  owners = ["379101102735"] # Debian
-}
-
+func testAccCheckInstanceConfigWithAttachedVolume() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.debian_jessie_latest.id}"
+  ami           = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type = "t2.medium"
 
   root_block_device {
@@ -3949,11 +3924,13 @@ resource "aws_volume_attachment" "test" {
   volume_id   = "${aws_ebs_volume.test.id}"
   instance_id = "${aws_instance.test.id}"
 }
-`
+`))
+}
 
-const testAccCheckInstanceConfigNoVolumeTags = `
+func testAccCheckInstanceConfigNoVolumeTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	ami = "ami-55a7ea65"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 
 	instance_type = "m3.medium"
 
@@ -3983,7 +3960,8 @@ resource "aws_instance" "test" {
 		virtual_name = "ephemeral0"
 	}
 }
-`
+`))
+}
 
 var testAccCheckInstanceConfigEBSBlockDeviceInvalidIops = composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume,
 	`
@@ -4001,9 +3979,10 @@ resource "aws_instance" "test" {
 }
 `)
 
-const testAccCheckInstanceConfigWithVolumeTags = `
+func testAccCheckInstanceConfigWithVolumeTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	ami = "ami-55a7ea65"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 
 	instance_type = "m3.medium"
 
@@ -4037,11 +4016,13 @@ resource "aws_instance" "test" {
 		Name = "acceptance-test-volume-tag"
 	}
 }
-`
+`))
+}
 
-const testAccCheckInstanceConfigWithVolumeTagsUpdate = `
+func testAccCheckInstanceConfigWithVolumeTagsUpdate() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	ami = "ami-55a7ea65"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 
 	instance_type = "m3.medium"
 
@@ -4076,7 +4057,8 @@ resource "aws_instance" "test" {
 		Environment = "dev"
 	}
 }
-`
+`))
+}
 
 func testAccCheckInstanceConfigTagsUpdate() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
