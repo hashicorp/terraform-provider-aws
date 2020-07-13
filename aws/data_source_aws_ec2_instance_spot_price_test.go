@@ -2,6 +2,7 @@ package aws
 
 import (
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -20,7 +21,8 @@ func TestAccAWSEc2InstanceSpotPriceDataSource_Filter(t *testing.T) {
 			{
 				Config: testAccAWSEc2InstanceSpotPriceDataSourceConfig(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "instance_type"),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price", regexp.MustCompile(`^\d+\.\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "spot_price_timestamp", regexp.MustCompile(rfc3339RegexPattern)),
 				),
 			},
 		},
