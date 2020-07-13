@@ -182,6 +182,28 @@ func testSweepDirectConnectGatewayAssociations(region string) error {
 	return nil
 }
 
+// V0 state upgrade testing must be done via acceptance testing due to API call
+func TestAccAwsDxGatewayAssociation_V0StateUpgrade(t *testing.T) {
+	resourceName := "aws_dx_gateway_association.test"
+	rName := fmt.Sprintf("terraform-testacc-dxgwassoc-%d", acctest.RandInt())
+	rBgpAsn := randIntRange(64512, 65534)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAwsDxGatewayAssociationDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDxGatewayAssociationConfig_basicVpnGatewaySingleAccount(rName, rBgpAsn),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAwsDxGatewayAssociationExists(resourceName),
+					testAccCheckAwsDxGatewayAssociationStateUpgradeV0(resourceName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsDxGatewayAssociation_basicVpnGatewaySingleAccount(t *testing.T) {
 	resourceName := "aws_dx_gateway_association.test"
 	resourceNameDxGw := "aws_dx_gateway.test"
@@ -501,7 +523,7 @@ func testAccCheckAwsDxGatewayAssociationStateUpgradeV0(name string) resource.Tes
 
 		rawState := map[string]interface{}{
 			"dx_gateway_id":  rs.Primary.Attributes["dx_gateway_id"],
-			"vpn_gateway_id": rs.Primary.Attributes["vpn_gateway_id"],
+			"vpn_gateway_id": rs.Primary.Attributes["associated_gateway_id"], // vpn_gateway_id was removed in 3.0, but older state still has it
 		}
 
 		updatedRawState, err := resourceAwsDxGatewayAssociationStateUpgradeV0(rawState, testAccProvider.Meta())
