@@ -14,7 +14,7 @@ and deleted. Instances also support [provisioning](/docs/provisioners/index.html
 ## Example Usage
 
 ```hcl
-# Create a new instance of the latest Ubuntu 14.04 on an
+# Create a new instance of the latest Ubuntu 20.04 on an
 # t2.micro node with an AWS Tag naming it "HelloWorld"
 provider "aws" {
   region = "us-west-2"
@@ -222,7 +222,7 @@ resource "aws_vpc" "my_vpc" {
 }
 
 resource "aws_subnet" "my_subnet" {
-  vpc_id            = "${aws_vpc.my_vpc.id}"
+  vpc_id            = aws_vpc.my_vpc.id
   cidr_block        = "172.16.10.0/24"
   availability_zone = "us-west-2a"
 
@@ -232,7 +232,7 @@ resource "aws_subnet" "my_subnet" {
 }
 
 resource "aws_network_interface" "foo" {
-  subnet_id   = "${aws_subnet.my_subnet.id}"
+  subnet_id   = aws_subnet.my_subnet.id
   private_ips = ["172.16.10.100"]
 
   tags = {
@@ -241,11 +241,11 @@ resource "aws_network_interface" "foo" {
 }
 
 resource "aws_instance" "foo" {
-  ami           = "ami-22b9a343" # us-west-2
+  ami           = "ami-005e54dee72cc1d00" # us-west-2
   instance_type = "t2.micro"
 
   network_interface {
-    network_interface_id = "${aws_network_interface.foo.id}"
+    network_interface_id = aws_network_interface.foo.id
     device_index         = 0
   }
 
