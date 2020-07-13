@@ -6,7 +6,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/mutexkv"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
-	homedir "github.com/mitchellh/go-homedir"
 
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
@@ -1019,18 +1018,6 @@ func init() {
 			"i.e., http://s3.amazonaws.com/BUCKET/KEY. By default, the S3 client will\n" +
 			"use virtual hosted bucket addressing when possible\n" +
 			"(http://BUCKET.s3.amazonaws.com/KEY). Specific to the Amazon S3 service.",
-
-		"assume_role_role_arn": "The ARN of an IAM role to assume prior to making API calls.",
-
-		"assume_role_session_name": "The session name to use when assuming the role. If omitted," +
-			" no session name is passed to the AssumeRole call.",
-
-		"assume_role_external_id": "The external ID to use when assuming the role. If omitted," +
-			" no external ID is passed to the AssumeRole call.",
-
-		"assume_role_policy": "The permissions applied when assuming a role. You cannot use," +
-			" this policy to grant further permissions that are in excess to those of the, " +
-			" role that is being assumed.",
 	}
 
 	endpointServiceNames = []string{
@@ -1185,6 +1172,7 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		Profile:                 d.Get("profile").(string),
 		Token:                   d.Get("token").(string),
 		Region:                  d.Get("region").(string),
+		CredsFilename:           d.Get("shared_credentials_file").(string),
 		Endpoints:               make(map[string]string),
 		MaxRetries:              d.Get("max_retries").(int),
 		IgnoreTagsConfig:        expandProviderIgnoreTags(d.Get("ignore_tags").([]interface{})),
@@ -1198,32 +1186,68 @@ func providerConfigure(d *schema.ResourceData, terraformVersion string) (interfa
 		terraformVersion:        terraformVersion,
 	}
 
-	// Set CredsFilename, expanding home directory
-	credsPath, err := homedir.Expand(d.Get("shared_credentials_file").(string))
-	if err != nil {
-		return nil, err
-	}
-	config.CredsFilename = credsPath
+	if l, ok := d.Get("assume_role").([]interface{}); ok && len(l) > 0 && l[0] != nil {
+		m := l[0].(map[string]interface{})
 
-	assumeRoleList := d.Get("assume_role").([]interface{})
-	if len(assumeRoleList) == 1 {
-		if assumeRoleList[0] != nil {
-			assumeRole := assumeRoleList[0].(map[string]interface{})
-			config.AssumeRoleARN = assumeRole["role_arn"].(string)
-			config.AssumeRoleSessionName = assumeRole["session_name"].(string)
-			config.AssumeRoleExternalID = assumeRole["external_id"].(string)
-
-			if v := assumeRole["policy"].(string); v != "" {
-				config.AssumeRolePolicy = v
-			}
-
-			log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q, Policy: %q)",
-				config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID, config.AssumeRolePolicy)
-		} else {
-			log.Printf("[INFO] Empty assume_role block read from configuration")
+		if v, ok := m["duration_seconds"].(int); ok && v != 0 {
+			config.AssumeRoleDurationSeconds = v
 		}
-	} else {
-		log.Printf("[INFO] No assume_role block read from configuration")
+
+		if v, ok := m["external_id"].(string); ok && v != "" {
+			config.AssumeRoleExternalID = v
+		}
+
+		if v, ok := m["policy"].(string); ok && v != "" {
+			config.AssumeRolePolicy = v
+		}
+
+		if policyARNSet, ok := m["policy_arns"].(*schema.Set); ok && policyARNSet.Len() > 0 {
+			for _, policyARNRaw := range policyARNSet.List() {
+				policyARN, ok := policyARNRaw.(string)
+
+				if !ok {
+					continue
+				}
+
+				config.AssumeRolePolicyARNs = append(config.AssumeRolePolicyARNs, policyARN)
+			}
+		}
+
+		if v, ok := m["role_arn"].(string); ok && v != "" {
+			config.AssumeRoleARN = v
+		}
+
+		if v, ok := m["session_name"].(string); ok && v != "" {
+			config.AssumeRoleSessionName = v
+		}
+
+		if tagMapRaw, ok := m["tags"].(map[string]interface{}); ok && len(tagMapRaw) > 0 {
+			config.AssumeRoleTags = make(map[string]string)
+
+			for k, vRaw := range tagMapRaw {
+				v, ok := vRaw.(string)
+
+				if !ok {
+					continue
+				}
+
+				config.AssumeRoleTags[k] = v
+			}
+		}
+
+		if transitiveTagKeySet, ok := m["transitive_tag_keys"].(*schema.Set); ok && transitiveTagKeySet.Len() > 0 {
+			for _, transitiveTagKeyRaw := range transitiveTagKeySet.List() {
+				transitiveTagKey, ok := transitiveTagKeyRaw.(string)
+
+				if !ok {
+					continue
+				}
+
+				config.AssumeRoleTransitiveTagKeys = append(config.AssumeRoleTransitiveTagKeys, transitiveTagKey)
+			}
+		}
+
+		log.Printf("[INFO] assume_role configuration set: (ARN: %q, SessionID: %q, ExternalID: %q)", config.AssumeRoleARN, config.AssumeRoleSessionName, config.AssumeRoleExternalID)
 	}
 
 	endpointsSet := d.Get("endpoints").(*schema.Set)
@@ -1260,28 +1284,48 @@ func assumeRoleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"role_arn": {
-					Type:        schema.TypeString,
+				"duration_seconds": {
+					Type:        schema.TypeInt,
 					Optional:    true,
-					Description: descriptions["assume_role_role_arn"],
+					Description: "Seconds to restrict the assume role session duration.",
 				},
-
-				"session_name": {
-					Type:        schema.TypeString,
-					Optional:    true,
-					Description: descriptions["assume_role_session_name"],
-				},
-
 				"external_id": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: descriptions["assume_role_external_id"],
+					Description: "Unique identifier that might be required for assuming a role in another account.",
 				},
-
 				"policy": {
 					Type:        schema.TypeString,
 					Optional:    true,
-					Description: descriptions["assume_role_policy"],
+					Description: "IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.",
+				},
+				"policy_arns": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				"role_arn": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Amazon Resource Name of an IAM Role to assume prior to making API calls.",
+				},
+				"session_name": {
+					Type:        schema.TypeString,
+					Optional:    true,
+					Description: "Identifier for the assumed role session.",
+				},
+				"tags": {
+					Type:        schema.TypeMap,
+					Optional:    true,
+					Description: "Assume role session tags.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
+				},
+				"transitive_tag_keys": {
+					Type:        schema.TypeSet,
+					Optional:    true,
+					Description: "Assume role session tag keys to pass to any subsequent sessions.",
+					Elem:        &schema.Schema{Type: schema.TypeString},
 				},
 			},
 		},

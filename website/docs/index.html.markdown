@@ -18,7 +18,7 @@ Use the navigation to the left to read about the available resources.
 ```hcl
 # Configure the AWS Provider
 provider "aws" {
-  version = "~> 2.0"
+  version = "~> 3.0"
   region  = "us-east-1"
 }
 
@@ -36,10 +36,11 @@ explained below:
 
 - Static credentials
 - Environment variables
-- Shared credentials file
-- EC2 Role
+- Shared credentials/configuration file
+- CodeBuild, ECS, and EKS Roles
+- EC2 Instance Metadata Service (IMDS and IMDSv2)
 
-### Static credentials
+### Static Credentials
 
 !> **Warning:** Hard-coding credentials into any Terraform configuration is not
 recommended, and risks secret leakage should this file ever be committed to a
@@ -58,7 +59,7 @@ provider "aws" {
 }
 ```
 
-### Environment variables
+### Environment Variables
 
 You can provide your credentials via the `AWS_ACCESS_KEY_ID` and
 `AWS_SECRET_ACCESS_KEY`, environment variables, representing your AWS
@@ -81,17 +82,9 @@ $ export AWS_DEFAULT_REGION="us-west-2"
 $ terraform plan
 ```
 
-### Shared Credentials file
+### Shared Credentials File
 
-You can use an AWS credentials file to specify your credentials. The
-default location is `$HOME/.aws/credentials` on Linux and OS X, or
-`"%USERPROFILE%\.aws\credentials"` for Windows users. If we fail to
-detect credentials inline, or in the environment, Terraform will check
-this location. You can optionally specify a different location in the
-configuration by providing the `shared_credentials_file` attribute, or
-in the environment with the `AWS_SHARED_CREDENTIALS_FILE` variable. This
-method also supports a `profile` configuration and matching
-`AWS_PROFILE` environment variable:
+You can use an [AWS credentials or configuration file](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html) to specify your credentials. The default location is `$HOME/.aws/credentials` on Linux and macOS, or `"%USERPROFILE%\.aws\credentials"` on Windows. You can optionally specify a different location in the Terraform configuration by providing the `shared_credentials_file` argument or using the `AWS_SHARED_CREDENTIALS_FILE` environment variable. This method also supports a `profile` configuration and matching `AWS_PROFILE` environment variable:
 
 Usage:
 
@@ -103,17 +96,15 @@ provider "aws" {
 }
 ```
 
-If specifying the profile through the `AWS_PROFILE` environment variable, you
-may also need to set `AWS_SDK_LOAD_CONFIG` to a truthy value (e.g. `AWS_SDK_LOAD_CONFIG=1`) for advanced AWS client configurations, such as profiles that use the `source_profile` or `role_arn` configurations.
+Please note that the [AWS Go SDK](https://aws.amazon.com/sdk-for-go/), the underlying authentication handler used by the Terraform AWS Provider, does not support all AWS CLI features, such as Single Sign On (SSO) configuration or credentials.
 
-### ECS and CodeBuild Task Roles
+### CodeBuild, ECS, and EKS Roles
 
-If you're running Terraform on ECS or CodeBuild and you have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html),
-Terraform will use the container's Task Role. Terraform looks for the presence of the `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI`
-environment variable that AWS injects when a Task Role is configured. If you have not defined a Task Role for your container
-or CodeBuild job, Terraform will continue to use the [EC2 Role](#ec2-role).
+If you're running Terraform on CodeBuild or ECS and have configured an [IAM Task Role](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-iam-roles.html), Terraform will use the container's Task Role. This support is based on the underlying `AWS_CONTAINER_CREDENTIALS_RELATIVE_URI` and `AWS_CONTAINER_CREDENTIALS_FULL_URI` environment variables being automatically set by those services or manually for advanced usage.
 
-### EC2 Role
+If you're running Terraform on EKS and have configured [IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html), Terraform will use the pod's role. This support is based on the underlying `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` environment variables being automatically set by Kubernetes or manually for advanced usage.
+
+### EC2 Instance Metadata Service
 
 If you're running Terraform from an EC2 instance with IAM Instance Profile
 using IAM Role, Terraform will just ask
@@ -127,15 +118,7 @@ which reduces the chance of leakage.
 You can provide the custom metadata API endpoint via the `AWS_METADATA_URL` variable
 which expects the endpoint URL, including the version, and defaults to `http://169.254.169.254:80/latest`.
 
-The default deadline for the EC2 metadata API endpoint is 100 milliseconds,
-which can be overidden by setting the `AWS_METADATA_TIMEOUT` environment
-variable. The variable expects a positive golang Time.Duration string, which is
-a sequence of decimal numbers and a unit suffix; valid suffixes are `ns`
-(nanoseconds), `us` (microseconds), `ms` (milliseconds), `s` (seconds), `m`
-(minutes), and `h` (hours). Examples of valid inputs: `100ms`, `250ms`, `1s`,
-`2.5s`, `2.5m`, `1m30s`.
-
-### Assume role
+### Assume Role
 
 If provided with a role ARN, Terraform will attempt to assume this role
 using the supplied credentials.
@@ -343,20 +326,16 @@ for more information about connecting to alternate AWS endpoints or AWS compatib
 
 ### assume_role Configuration Block
 
-The `assume_role` configuration block supports the following arguments:
+The `assume_role` configuration block supports the following optional arguments:
 
-* `role_arn` - (Required) The ARN of the role to assume.
-
-* `session_name` - (Optional) The session name to use when making the
-  AssumeRole call.
-
-* `external_id` - (Optional) The external ID to use when making the
-  AssumeRole call.
-
-* `policy` - (Optional) A more restrictive policy to apply to the temporary credentials.
-This gives you a way to further restrict the permissions for the resulting temporary
-security credentials. You cannot use the passed policy to grant permissions that are
-in excess of those allowed by the access policy of the role that is being assumed.
+* `duration_seconds` - (Optional) Number of seconds to restrict the assume role session duration.
+* `external_id` - (Optional) External identifier to use when assuming the role.
+* `policy` - (Optional) IAM Policy JSON describing further restricting permissions for the IAM Role being assumed.
+* `policy_arns` - (Optional) Set of Amazon Resource Names (ARNs) of IAM Policies describing further restricting permissions for the IAM Role being assumed.
+* `role_arn` - (Optional) Amazon Resource Name (ARN) of the IAM Role to assume.
+* `session_name` - (Optional) Session name to use when assuming the role.
+* `tags` - (Optional) Map of assume role session tags.
+* `transitive_tag_keys` - (Optional) Set of assume role session tag keys to pass to any subsequent sessions.
 
 ### ignore_tags Configuration Block
 
