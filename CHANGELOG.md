@@ -13,6 +13,7 @@ ENHANCEMENTS
 
 BUG FIXES
 
+* provider: Ensure nil is not passed to RetryError helpers, may result in some bug fixes [GH-14104]
 * provider: Ensure configured STS endpoint is used during `AssumeRole` API calls [GH-14077]
 * provider: Prefer AWS shared configuration over EC2 metadata credentials by default [GH-14077]
 * provider: Prefer CodeBuild, ECS, EKS credentials over EC2 metadata credentials by default [GH-14077]
