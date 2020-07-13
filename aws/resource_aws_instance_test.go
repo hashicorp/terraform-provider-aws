@@ -499,8 +499,8 @@ func TestAccAWSInstance_blockDevices(t *testing.T) {
 			}
 
 			// Check if the root block device exists.
-			if _, ok := blockDevices["/dev/sda1"]; !ok {
-				return fmt.Errorf("block device doesn't exist: /dev/sda1")
+			if _, ok := blockDevices["/dev/xvda"]; !ok {
+				return fmt.Errorf("block device doesn't exist: /dev/xvda")
 			}
 
 			// Check if the secondary block device exists.
@@ -3592,10 +3592,10 @@ func testAccAwsEc2InstanceConfigBlockDevicesWithDeleteOnTerminate(size, delete s
 	if delete == "" {
 		delete = "null"
 	}
-	return fmt.Sprintf(`
+
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	# us-west-2
-	ami = "ami-55a7ea65"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 
 	# In order to attach an encrypted volume to an instance you need to have an
 	# m3.medium or larger. See "Supported Instance Types" in:
@@ -3632,7 +3632,7 @@ resource "aws_instance" "test" {
 		virtual_name = "ephemeral0"
 	}
 }
-`, size, delete)
+`, size, delete))
 }
 
 func testAccInstanceConfigSourceDestEnable(rName string) string {
