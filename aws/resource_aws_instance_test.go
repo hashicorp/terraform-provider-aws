@@ -3390,25 +3390,9 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfigInEc2Classic(rInt int) string {
-	return fmt.Sprintf(`
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 provider "aws" {
   region = "us-east-1"
-}
-
-data "aws_ami" "ubuntu" {
-  most_recent = true
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/ubuntu-trusty-14.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["paravirtual"]
-  }
-
-  owners = ["099720109477"] # Canonical
 }
 
 resource "aws_security_group" "sg" {
@@ -3417,11 +3401,11 @@ resource "aws_security_group" "sg" {
 }
 
 resource "aws_instance" "test" {
-  ami             = "${data.aws_ami.ubuntu.id}"
+  ami             = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
   instance_type   = "m3.medium"
   security_groups = ["${aws_security_group.sg.name}"]
 }
-`, rInt)
+`, rInt))
 }
 
 func testAccInstanceConfig_pre(rInt int) string {
