@@ -64,7 +64,7 @@ func resourceAwsInternetGatewayCreate(d *schema.ResourceData, meta interface{}) 
 			return nil
 		}
 		if err == nil {
-			return resource.RetryableError(err)
+			return resource.RetryableError(&resource.NotFoundError{})
 		} else {
 			return resource.NonRetryableError(err)
 		}

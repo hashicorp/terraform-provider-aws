@@ -910,7 +910,10 @@ func deleteAwsRedshiftCluster(opts *redshift.DeleteClusterInput, conn *redshift.
 			return resource.RetryableError(err)
 		}
 
-		return resource.NonRetryableError(err)
+		if err != nil {
+			return resource.NonRetryableError(err)
+		}
+		return nil
 	})
 	if isResourceTimeoutError(err) {
 		_, err = conn.DeleteCluster(opts)
