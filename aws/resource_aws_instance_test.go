@@ -647,31 +647,10 @@ func TestAccAWSInstance_noAMIEphemeralDevices(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: `
-					resource "aws_instance" "test" {
-						# us-west-2
-						ami = "ami-01f05461"  // This AMI (Ubuntu) contains two ephemerals
-
-						instance_type = "c3.large"
-
-						root_block_device {
-							volume_type = "gp2"
-							volume_size = 11
-						}
-						ephemeral_block_device {
-							device_name = "/dev/sdb"
-							no_device = true
-						}
-						ephemeral_block_device {
-							device_name = "/dev/sdc"
-							no_device = true
-						}
-					}`,
+				Config: testAccInstanceConfigNoAMIEphemeralDevices(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ami", "ami-01f05461"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "c3.large"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_size", "11"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.volume_type", "gp2"),
@@ -3525,6 +3504,47 @@ resource "aws_instance" "test" {
   # Only certain instance types support ephemeral root instance stores.
   # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
   instance_type = "m3.medium"
+}
+`))
+}
+
+func testAccInstanceConfigNoAMIEphemeralDevices() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(), fmt.Sprintf(`
+# This AMI has 2 ephemeral block devices.
+data "aws_ami" "test" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-eoan-19.10-amd64-server-*"]
+  }
+
+  filter {
+    name   = "root-device-type"
+    values = ["ebs"]
+  }
+}
+
+resource "aws_instance" "test" {
+  ami = "${data.aws_ami.test.id}"
+
+  instance_type = "c3.large"
+
+  root_block_device {
+	  volume_type = "gp2"
+	  volume_size = 11
+  }
+
+  ephemeral_block_device {
+	  device_name = "/dev/sdb"
+	  no_device   = true
+  }
+
+  ephemeral_block_device {
+	  device_name = "/dev/sdc"
+	  no_device   = true
+  }
 }
 `))
 }
