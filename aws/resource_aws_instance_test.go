@@ -1385,10 +1385,10 @@ func TestAccAWSInstance_keyPairCheck(t *testing.T) {
 func TestAccAWSInstance_rootBlockDeviceMismatch(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	rName := fmt.Sprintf("tf-testacc-instance-%s", acctest.RandStringFromCharSet(12, acctest.CharSetAlphaNum))
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t); testAccRegionPreCheck(t, "us-west-2") },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
@@ -4213,7 +4213,7 @@ resource "aws_instance" "test" {
 func testAccInstanceConfigRootBlockDeviceMismatch(rName string) string {
 	return testAccAwsInstanceVpcConfig(rName, false) + `
 resource "aws_instance" "test" {
-  // This is an AMI with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
+  // This is an AMI in us-west-2 with RootDeviceName: "/dev/sda1"; actual root: "/dev/sda"
   ami           = "ami-ef5b69df"
   instance_type = "t1.micro"
   subnet_id     = "${aws_subnet.test.id}"

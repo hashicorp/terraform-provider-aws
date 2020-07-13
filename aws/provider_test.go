@@ -531,6 +531,13 @@ func testAccMultipleRegionsPreCheck(t *testing.T) {
 	}
 }
 
+// testAccRegionPreCheck checks that the test region is the specified region.
+func testAccRegionPreCheck(t *testing.T, region string) {
+	if testAccGetRegion() != region {
+		t.Skipf("skipping tests; AWS_DEFAULT_REGION (%s) does not equal %s", testAccGetRegion(), region)
+	}
+}
+
 func testAccOrganizationsAccountPreCheck(t *testing.T) {
 	conn := testAccProvider.Meta().(*AWSClient).organizationsconn
 	input := &organizations.DescribeOrganizationInput{}
