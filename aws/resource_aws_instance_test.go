@@ -478,7 +478,7 @@ func TestAccAWSInstance_GP2WithIopsValue(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccInstanceGP2WithIopsValue,
+				Config:      testAccInstanceGP2WithIopsValue(),
 				ExpectError: regexp.MustCompile(`error creating resource: iops attribute not supported for root_block_device with volume_type gp2`),
 			},
 		},
@@ -3509,10 +3509,10 @@ resource "aws_instance" "test" {
 `))
 }
 
-const testAccInstanceGP2WithIopsValue = `
+func testAccInstanceGP2WithIopsValue() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	# us-west-2
-	ami = "ami-55a7ea65"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 
 	# In order to attach an encrypted volume to an instance you need to have an
 	# m3.medium or larger. See "Supported Instance Types" in:
@@ -3526,7 +3526,8 @@ resource "aws_instance" "test" {
 		iops        = 10
 	}
 }
-`
+`))
+}
 
 func testAccAwsEc2InstanceEbsRootDeviceBasic() string {
 	return composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
