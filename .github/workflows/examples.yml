@@ -44,7 +44,10 @@ jobs:
       run: |
         for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
           if [ ${{ matrix.terraform_version }} = 0.11.14 ]; then
-            if [ $DIR = ./examples/eks-getting-started ]; then
+            if [ $DIR = ./examples/count ]; then
+              # Skip example already converted to Terraform 0.12 and later syntax
+              continue
+            elif [ $DIR = ./examples/eks-getting-started ]; then
               # Skip example already converted to Terraform 0.12 and later syntax
               continue
             elif [ $DIR = ./examples/sagemaker ]; then
