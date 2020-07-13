@@ -224,7 +224,7 @@ The following arguments are supported:
 * `cluster_config` - (Optional) Cluster configuration of the domain, see below.
 * `snapshot_options` - (Optional) Snapshot related options, see below.
 * `vpc_options` - (Optional) VPC related options, see below. Adding or removing this configuration forces a new resource ([documentation](https://docs.aws.amazon.com/elasticsearch-service/latest/developerguide/es-vpc.html#es-vpc-limitations)).
-* `log_publishing_options` - (Optional) Options for publishing slow logs to CloudWatch Logs.
+* `log_publishing_options` - (Optional) Options for publishing slow  and application logs to CloudWatch Logs. This block can be declared multiple times, for each log_type, within the same resource.
 * `elasticsearch_version` - (Optional) The version of Elasticsearch to deploy. Defaults to `1.5`
 * `domain_endpoint_options` - (Optional) Domain endpoint HTTP(S) related options. See below.
 * `tags` - (Optional) A map of tags to assign to the resource
