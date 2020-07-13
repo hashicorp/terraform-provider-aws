@@ -68,11 +68,11 @@ func dataSourceAwsEc2InstanceSpotPriceRead(d *schema.ResourceData, meta interfac
 	foundSpotPrice := output.SpotPriceHistory
 
 	if len(foundSpotPrice) == 0 {
-		return fmt.Errorf("no EC2 Instance Type Offerings found matching criteria; try different search")
+		return fmt.Errorf("no EC2 Spot Price History found matching criteria; try different search")
 	}
 
 	if len(foundSpotPrice) > 1 {
-		return fmt.Errorf("multiple EC2 Instance Offerings found matching criteria; try different search")
+		return fmt.Errorf("multiple EC2 Spot Price History results found matching criteria; try different search")
 	}
 
 	resultSpotPrice := foundSpotPrice[0]
