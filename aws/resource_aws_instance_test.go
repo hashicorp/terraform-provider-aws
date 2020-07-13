@@ -936,30 +936,6 @@ func TestAccAWSInstance_ipv6_supportAddressCountWithIpv4(t *testing.T) {
 	})
 }
 
-func TestAccAWSInstance_multipleRegions(t *testing.T) {
-	var v ec2.Instance
-	resourceName := "aws_instance.test"
-
-	// record the initialized providers so that we can use them to
-	// check for the instances in each region
-	var providers []*schema.Provider
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:          func() { testAccPreCheck(t) },
-		ProviderFactories: testAccProviderFactories(&providers),
-		CheckDestroy:      testAccCheckWithProviders(testAccCheckInstanceDestroyWithProvider, &providers),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceConfigMultipleRegions,
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExistsWithProvider(resourceName, &v, testAccAwsRegionProviderFunc("us-west-2", &providers)),
-					testAccCheckInstanceExistsWithProvider("aws_instance.test2", &v, testAccAwsRegionProviderFunc("us-east-1", &providers)),
-				),
-			},
-		},
-	})
-}
-
 func TestAccAWSInstance_NetworkInstanceSecurityGroups(t *testing.T) {
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
@@ -4849,26 +4825,6 @@ data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
   }
 }
 `
-}
-
-// testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
-func testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig() string {
-	return fmt.Sprintf(`
-data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
-  most_recent = true
-  owners      = ["amazon"]
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-  filter {
-    name   = "root-device-type"
-    values = ["instance-store"]
-  }
-}
-`)
 }
 
 // testAccLatestAmazonLinuxPvEbsAmiConfig returns the configuration for a data source that
