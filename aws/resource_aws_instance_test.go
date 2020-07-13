@@ -236,6 +236,37 @@ func TestAccAWSInstance_inEc2Classic(t *testing.T) {
 
 func TestAccAWSInstance_basic(t *testing.T) {
 	var v ec2.Instance
+	resourceName := "aws_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckInstanceDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfigBasic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(
+						resourceName, &v),
+					testAccMatchResourceAttrRegionalARN(
+						resourceName,
+						"arn",
+						"ec2",
+						regexp.MustCompile(`instance/i-.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSInstance_atLeastOneOtherEbsVolume(t *testing.T) {
+	var v ec2.Instance
 	var vol *ec2.Volume
 	resourceName := "aws_instance.test"
 	rInt := acctest.RandInt()
@@ -2930,8 +2961,7 @@ func TestAccAWSInstance_creditSpecification_unlimitedCpuCredits_t2Tot3Taint(t *t
 }
 
 func TestAccAWSInstance_disappears(t *testing.T) {
-	var conf ec2.Instance
-	rInt := acctest.RandInt()
+	var v ec2.Instance
 	resourceName := "aws_instance.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -2940,10 +2970,10 @@ func TestAccAWSInstance_disappears(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig(rInt),
+				Config: testAccInstanceConfigBasic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &conf),
-					testAccCheckInstanceDisappears(&conf),
+					testAccCheckInstanceExists(resourceName, &v),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsInstance(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -3174,22 +3204,6 @@ func testAccCheckInstanceExistsWithProvider(n string, i *ec2.Instance, providerF
 	}
 }
 
-func testAccCheckInstanceDisappears(conf *ec2.Instance) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		params := &ec2.TerminateInstancesInput{
-			InstanceIds: []*string{conf.InstanceId},
-		}
-
-		if _, err := conn.TerminateInstances(params); err != nil {
-			return err
-		}
-
-		return waitForInstanceDeletion(conn, *conf.InstanceId, 10*time.Minute)
-	}
-}
-
 func testAccCheckStopInstance(instance *ec2.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := testAccProvider.Meta().(*AWSClient).ec2conn
@@ -3351,6 +3365,16 @@ resource "aws_instance" "test" {
   security_groups = ["${aws_security_group.sg.name}"]
 }
 `, rInt))
+}
+
+func testAccInstanceConfigBasic() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  instance_type = "m1.small"
+  # Explicitly no tags so as to test creation without tags.
+}
+`))
 }
 
 func testAccInstanceConfig_pre(rInt int) string {
