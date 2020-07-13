@@ -2595,6 +2595,190 @@ func (c *Glue) DeleteClassifierWithContext(ctx aws.Context, input *DeleteClassif
 	return out, req.Send()
 }
 
+const opDeleteColumnStatisticsForPartition = "DeleteColumnStatisticsForPartition"
+
+// DeleteColumnStatisticsForPartitionRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteColumnStatisticsForPartition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteColumnStatisticsForPartition for more information on using the DeleteColumnStatisticsForPartition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteColumnStatisticsForPartitionRequest method.
+//    req, resp := client.DeleteColumnStatisticsForPartitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForPartition
+func (c *Glue) DeleteColumnStatisticsForPartitionRequest(input *DeleteColumnStatisticsForPartitionInput) (req *request.Request, output *DeleteColumnStatisticsForPartitionOutput) {
+	op := &request.Operation{
+		Name:       opDeleteColumnStatisticsForPartition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteColumnStatisticsForPartitionInput{}
+	}
+
+	output = &DeleteColumnStatisticsForPartitionOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteColumnStatisticsForPartition API operation for AWS Glue.
+//
+// Delete the partition column statistics of a column.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation DeleteColumnStatisticsForPartition for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForPartition
+func (c *Glue) DeleteColumnStatisticsForPartition(input *DeleteColumnStatisticsForPartitionInput) (*DeleteColumnStatisticsForPartitionOutput, error) {
+	req, out := c.DeleteColumnStatisticsForPartitionRequest(input)
+	return out, req.Send()
+}
+
+// DeleteColumnStatisticsForPartitionWithContext is the same as DeleteColumnStatisticsForPartition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteColumnStatisticsForPartition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) DeleteColumnStatisticsForPartitionWithContext(ctx aws.Context, input *DeleteColumnStatisticsForPartitionInput, opts ...request.Option) (*DeleteColumnStatisticsForPartitionOutput, error) {
+	req, out := c.DeleteColumnStatisticsForPartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opDeleteColumnStatisticsForTable = "DeleteColumnStatisticsForTable"
+
+// DeleteColumnStatisticsForTableRequest generates a "aws/request.Request" representing the
+// client's request for the DeleteColumnStatisticsForTable operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See DeleteColumnStatisticsForTable for more information on using the DeleteColumnStatisticsForTable
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the DeleteColumnStatisticsForTableRequest method.
+//    req, resp := client.DeleteColumnStatisticsForTableRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForTable
+func (c *Glue) DeleteColumnStatisticsForTableRequest(input *DeleteColumnStatisticsForTableInput) (req *request.Request, output *DeleteColumnStatisticsForTableOutput) {
+	op := &request.Operation{
+		Name:       opDeleteColumnStatisticsForTable,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &DeleteColumnStatisticsForTableInput{}
+	}
+
+	output = &DeleteColumnStatisticsForTableOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(jsonrpc.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// DeleteColumnStatisticsForTable API operation for AWS Glue.
+//
+// Retrieves table statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation DeleteColumnStatisticsForTable for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/DeleteColumnStatisticsForTable
+func (c *Glue) DeleteColumnStatisticsForTable(input *DeleteColumnStatisticsForTableInput) (*DeleteColumnStatisticsForTableOutput, error) {
+	req, out := c.DeleteColumnStatisticsForTableRequest(input)
+	return out, req.Send()
+}
+
+// DeleteColumnStatisticsForTableWithContext is the same as DeleteColumnStatisticsForTable with the addition of
+// the ability to pass a context and additional request options.
+//
+// See DeleteColumnStatisticsForTable for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) DeleteColumnStatisticsForTableWithContext(ctx aws.Context, input *DeleteColumnStatisticsForTableInput, opts ...request.Option) (*DeleteColumnStatisticsForTableOutput, error) {
+	req, out := c.DeleteColumnStatisticsForTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opDeleteConnection = "DeleteConnection"
 
 // DeleteConnectionRequest generates a "aws/request.Request" representing the
@@ -4158,6 +4342,188 @@ func (c *Glue) GetClassifiersPagesWithContext(ctx aws.Context, input *GetClassif
 	}
 
 	return p.Err()
+}
+
+const opGetColumnStatisticsForPartition = "GetColumnStatisticsForPartition"
+
+// GetColumnStatisticsForPartitionRequest generates a "aws/request.Request" representing the
+// client's request for the GetColumnStatisticsForPartition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetColumnStatisticsForPartition for more information on using the GetColumnStatisticsForPartition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetColumnStatisticsForPartitionRequest method.
+//    req, resp := client.GetColumnStatisticsForPartitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForPartition
+func (c *Glue) GetColumnStatisticsForPartitionRequest(input *GetColumnStatisticsForPartitionInput) (req *request.Request, output *GetColumnStatisticsForPartitionOutput) {
+	op := &request.Operation{
+		Name:       opGetColumnStatisticsForPartition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetColumnStatisticsForPartitionInput{}
+	}
+
+	output = &GetColumnStatisticsForPartitionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetColumnStatisticsForPartition API operation for AWS Glue.
+//
+// Retrieves partition statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetColumnStatisticsForPartition for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForPartition
+func (c *Glue) GetColumnStatisticsForPartition(input *GetColumnStatisticsForPartitionInput) (*GetColumnStatisticsForPartitionOutput, error) {
+	req, out := c.GetColumnStatisticsForPartitionRequest(input)
+	return out, req.Send()
+}
+
+// GetColumnStatisticsForPartitionWithContext is the same as GetColumnStatisticsForPartition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetColumnStatisticsForPartition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetColumnStatisticsForPartitionWithContext(ctx aws.Context, input *GetColumnStatisticsForPartitionInput, opts ...request.Option) (*GetColumnStatisticsForPartitionOutput, error) {
+	req, out := c.GetColumnStatisticsForPartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opGetColumnStatisticsForTable = "GetColumnStatisticsForTable"
+
+// GetColumnStatisticsForTableRequest generates a "aws/request.Request" representing the
+// client's request for the GetColumnStatisticsForTable operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See GetColumnStatisticsForTable for more information on using the GetColumnStatisticsForTable
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the GetColumnStatisticsForTableRequest method.
+//    req, resp := client.GetColumnStatisticsForTableRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForTable
+func (c *Glue) GetColumnStatisticsForTableRequest(input *GetColumnStatisticsForTableInput) (req *request.Request, output *GetColumnStatisticsForTableOutput) {
+	op := &request.Operation{
+		Name:       opGetColumnStatisticsForTable,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &GetColumnStatisticsForTableInput{}
+	}
+
+	output = &GetColumnStatisticsForTableOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// GetColumnStatisticsForTable API operation for AWS Glue.
+//
+// Retrieves table statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation GetColumnStatisticsForTable for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/GetColumnStatisticsForTable
+func (c *Glue) GetColumnStatisticsForTable(input *GetColumnStatisticsForTableInput) (*GetColumnStatisticsForTableOutput, error) {
+	req, out := c.GetColumnStatisticsForTableRequest(input)
+	return out, req.Send()
+}
+
+// GetColumnStatisticsForTableWithContext is the same as GetColumnStatisticsForTable with the addition of
+// the ability to pass a context and additional request options.
+//
+// See GetColumnStatisticsForTable for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) GetColumnStatisticsForTableWithContext(ctx aws.Context, input *GetColumnStatisticsForTableInput, opts ...request.Option) (*GetColumnStatisticsForTableOutput, error) {
+	req, out := c.GetColumnStatisticsForTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
 }
 
 const opGetConnection = "GetConnection"
@@ -11641,6 +12007,188 @@ func (c *Glue) UpdateClassifierWithContext(ctx aws.Context, input *UpdateClassif
 	return out, req.Send()
 }
 
+const opUpdateColumnStatisticsForPartition = "UpdateColumnStatisticsForPartition"
+
+// UpdateColumnStatisticsForPartitionRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateColumnStatisticsForPartition operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateColumnStatisticsForPartition for more information on using the UpdateColumnStatisticsForPartition
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateColumnStatisticsForPartitionRequest method.
+//    req, resp := client.UpdateColumnStatisticsForPartitionRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForPartition
+func (c *Glue) UpdateColumnStatisticsForPartitionRequest(input *UpdateColumnStatisticsForPartitionInput) (req *request.Request, output *UpdateColumnStatisticsForPartitionOutput) {
+	op := &request.Operation{
+		Name:       opUpdateColumnStatisticsForPartition,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateColumnStatisticsForPartitionInput{}
+	}
+
+	output = &UpdateColumnStatisticsForPartitionOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateColumnStatisticsForPartition API operation for AWS Glue.
+//
+// Creates or updates partition statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation UpdateColumnStatisticsForPartition for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForPartition
+func (c *Glue) UpdateColumnStatisticsForPartition(input *UpdateColumnStatisticsForPartitionInput) (*UpdateColumnStatisticsForPartitionOutput, error) {
+	req, out := c.UpdateColumnStatisticsForPartitionRequest(input)
+	return out, req.Send()
+}
+
+// UpdateColumnStatisticsForPartitionWithContext is the same as UpdateColumnStatisticsForPartition with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateColumnStatisticsForPartition for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) UpdateColumnStatisticsForPartitionWithContext(ctx aws.Context, input *UpdateColumnStatisticsForPartitionInput, opts ...request.Option) (*UpdateColumnStatisticsForPartitionOutput, error) {
+	req, out := c.UpdateColumnStatisticsForPartitionRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUpdateColumnStatisticsForTable = "UpdateColumnStatisticsForTable"
+
+// UpdateColumnStatisticsForTableRequest generates a "aws/request.Request" representing the
+// client's request for the UpdateColumnStatisticsForTable operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UpdateColumnStatisticsForTable for more information on using the UpdateColumnStatisticsForTable
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UpdateColumnStatisticsForTableRequest method.
+//    req, resp := client.UpdateColumnStatisticsForTableRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForTable
+func (c *Glue) UpdateColumnStatisticsForTableRequest(input *UpdateColumnStatisticsForTableInput) (req *request.Request, output *UpdateColumnStatisticsForTableOutput) {
+	op := &request.Operation{
+		Name:       opUpdateColumnStatisticsForTable,
+		HTTPMethod: "POST",
+		HTTPPath:   "/",
+	}
+
+	if input == nil {
+		input = &UpdateColumnStatisticsForTableInput{}
+	}
+
+	output = &UpdateColumnStatisticsForTableOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// UpdateColumnStatisticsForTable API operation for AWS Glue.
+//
+// Creates or updates table statistics of columns.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS Glue's
+// API operation UpdateColumnStatisticsForTable for usage and error information.
+//
+// Returned Error Types:
+//   * EntityNotFoundException
+//   A specified entity does not exist
+//
+//   * InvalidInputException
+//   The input provided was not valid.
+//
+//   * InternalServiceException
+//   An internal service error occurred.
+//
+//   * OperationTimeoutException
+//   The operation timed out.
+//
+//   * EncryptionException
+//   An encryption operation failed.
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/glue-2017-03-31/UpdateColumnStatisticsForTable
+func (c *Glue) UpdateColumnStatisticsForTable(input *UpdateColumnStatisticsForTableInput) (*UpdateColumnStatisticsForTableOutput, error) {
+	req, out := c.UpdateColumnStatisticsForTableRequest(input)
+	return out, req.Send()
+}
+
+// UpdateColumnStatisticsForTableWithContext is the same as UpdateColumnStatisticsForTable with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UpdateColumnStatisticsForTable for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *Glue) UpdateColumnStatisticsForTableWithContext(ctx aws.Context, input *UpdateColumnStatisticsForTableInput, opts ...request.Option) (*UpdateColumnStatisticsForTableOutput, error) {
+	req, out := c.UpdateColumnStatisticsForTableRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opUpdateConnection = "UpdateConnection"
 
 // UpdateConnectionRequest generates a "aws/request.Request" representing the
@@ -14165,6 +14713,140 @@ func (s *BatchStopJobRunSuccessfulSubmission) SetJobRunId(v string) *BatchStopJo
 	return s
 }
 
+// Defines a binary column statistics data.
+type BinaryColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Average length of the column.
+	//
+	// AverageLength is a required field
+	AverageLength *float64 `type:"double" required:"true"`
+
+	// Maximum length of the column.
+	//
+	// MaximumLength is a required field
+	MaximumLength *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s BinaryColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BinaryColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BinaryColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BinaryColumnStatisticsData"}
+	if s.AverageLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("AverageLength"))
+	}
+	if s.MaximumLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaximumLength"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAverageLength sets the AverageLength field's value.
+func (s *BinaryColumnStatisticsData) SetAverageLength(v float64) *BinaryColumnStatisticsData {
+	s.AverageLength = &v
+	return s
+}
+
+// SetMaximumLength sets the MaximumLength field's value.
+func (s *BinaryColumnStatisticsData) SetMaximumLength(v int64) *BinaryColumnStatisticsData {
+	s.MaximumLength = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *BinaryColumnStatisticsData) SetNumberOfNulls(v int64) *BinaryColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// Defines a boolean column statistics.
+type BooleanColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Number of false value.
+	//
+	// NumberOfFalses is a required field
+	NumberOfFalses *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+
+	// Number of true value.
+	//
+	// NumberOfTrues is a required field
+	NumberOfTrues *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s BooleanColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s BooleanColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *BooleanColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "BooleanColumnStatisticsData"}
+	if s.NumberOfFalses == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfFalses"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+	if s.NumberOfTrues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfTrues"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNumberOfFalses sets the NumberOfFalses field's value.
+func (s *BooleanColumnStatisticsData) SetNumberOfFalses(v int64) *BooleanColumnStatisticsData {
+	s.NumberOfFalses = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *BooleanColumnStatisticsData) SetNumberOfNulls(v int64) *BooleanColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// SetNumberOfTrues sets the NumberOfTrues field's value.
+func (s *BooleanColumnStatisticsData) SetNumberOfTrues(v int64) *BooleanColumnStatisticsData {
+	s.NumberOfTrues = &v
+	return s
+}
+
 type CancelMLTaskRunInput struct {
 	_ struct{} `type:"structure"`
 
@@ -14801,6 +15483,298 @@ func (s *Column) SetParameters(v map[string]*string) *Column {
 // SetType sets the Type field's value.
 func (s *Column) SetType(v string) *Column {
 	s.Type = &v
+	return s
+}
+
+// Defines a column containing error.
+type ColumnError struct {
+	_ struct{} `type:"structure"`
+
+	// The name of the column.
+	ColumnName *string `min:"1" type:"string"`
+
+	// The error message occurred during operation.
+	Error *ErrorDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s ColumnError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnError) GoString() string {
+	return s.String()
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *ColumnError) SetColumnName(v string) *ColumnError {
+	s.ColumnName = &v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *ColumnError) SetError(v *ErrorDetail) *ColumnError {
+	s.Error = v
+	return s
+}
+
+// Defines a column statistics.
+type ColumnStatistics struct {
+	_ struct{} `type:"structure"`
+
+	// The analyzed time of the column statistics.
+	//
+	// AnalyzedTime is a required field
+	AnalyzedTime *time.Time `type:"timestamp" required:"true"`
+
+	// The name of the column.
+	//
+	// ColumnName is a required field
+	ColumnName *string `min:"1" type:"string" required:"true"`
+
+	// The type of the column.
+	//
+	// ColumnType is a required field
+	ColumnType *string `type:"string" required:"true"`
+
+	// The statistics of the column.
+	//
+	// StatisticsData is a required field
+	StatisticsData *ColumnStatisticsData `type:"structure" required:"true"`
+}
+
+// String returns the string representation
+func (s ColumnStatistics) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnStatistics) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ColumnStatistics) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ColumnStatistics"}
+	if s.AnalyzedTime == nil {
+		invalidParams.Add(request.NewErrParamRequired("AnalyzedTime"))
+	}
+	if s.ColumnName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnName"))
+	}
+	if s.ColumnName != nil && len(*s.ColumnName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ColumnName", 1))
+	}
+	if s.ColumnType == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnType"))
+	}
+	if s.StatisticsData == nil {
+		invalidParams.Add(request.NewErrParamRequired("StatisticsData"))
+	}
+	if s.StatisticsData != nil {
+		if err := s.StatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("StatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAnalyzedTime sets the AnalyzedTime field's value.
+func (s *ColumnStatistics) SetAnalyzedTime(v time.Time) *ColumnStatistics {
+	s.AnalyzedTime = &v
+	return s
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *ColumnStatistics) SetColumnName(v string) *ColumnStatistics {
+	s.ColumnName = &v
+	return s
+}
+
+// SetColumnType sets the ColumnType field's value.
+func (s *ColumnStatistics) SetColumnType(v string) *ColumnStatistics {
+	s.ColumnType = &v
+	return s
+}
+
+// SetStatisticsData sets the StatisticsData field's value.
+func (s *ColumnStatistics) SetStatisticsData(v *ColumnStatisticsData) *ColumnStatistics {
+	s.StatisticsData = v
+	return s
+}
+
+// Defines a column statistics data.
+type ColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Binary Column Statistics Data.
+	BinaryColumnStatisticsData *BinaryColumnStatisticsData `type:"structure"`
+
+	// Boolean Column Statistics Data.
+	BooleanColumnStatisticsData *BooleanColumnStatisticsData `type:"structure"`
+
+	// Date Column Statistics Data.
+	DateColumnStatisticsData *DateColumnStatisticsData `type:"structure"`
+
+	// Decimal Column Statistics Data.
+	DecimalColumnStatisticsData *DecimalColumnStatisticsData `type:"structure"`
+
+	// Double Column Statistics Data.
+	DoubleColumnStatisticsData *DoubleColumnStatisticsData `type:"structure"`
+
+	// Long Column Statistics Data.
+	LongColumnStatisticsData *LongColumnStatisticsData `type:"structure"`
+
+	// String Column Statistics Data.
+	StringColumnStatisticsData *StringColumnStatisticsData `type:"structure"`
+
+	// The name of the column.
+	//
+	// Type is a required field
+	Type *string `type:"string" required:"true" enum:"ColumnStatisticsType"`
+}
+
+// String returns the string representation
+func (s ColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ColumnStatisticsData"}
+	if s.Type == nil {
+		invalidParams.Add(request.NewErrParamRequired("Type"))
+	}
+	if s.BinaryColumnStatisticsData != nil {
+		if err := s.BinaryColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("BinaryColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.BooleanColumnStatisticsData != nil {
+		if err := s.BooleanColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("BooleanColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DateColumnStatisticsData != nil {
+		if err := s.DateColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("DateColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DecimalColumnStatisticsData != nil {
+		if err := s.DecimalColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("DecimalColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.DoubleColumnStatisticsData != nil {
+		if err := s.DoubleColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("DoubleColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.LongColumnStatisticsData != nil {
+		if err := s.LongColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("LongColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.StringColumnStatisticsData != nil {
+		if err := s.StringColumnStatisticsData.Validate(); err != nil {
+			invalidParams.AddNested("StringColumnStatisticsData", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetBinaryColumnStatisticsData sets the BinaryColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetBinaryColumnStatisticsData(v *BinaryColumnStatisticsData) *ColumnStatisticsData {
+	s.BinaryColumnStatisticsData = v
+	return s
+}
+
+// SetBooleanColumnStatisticsData sets the BooleanColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetBooleanColumnStatisticsData(v *BooleanColumnStatisticsData) *ColumnStatisticsData {
+	s.BooleanColumnStatisticsData = v
+	return s
+}
+
+// SetDateColumnStatisticsData sets the DateColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetDateColumnStatisticsData(v *DateColumnStatisticsData) *ColumnStatisticsData {
+	s.DateColumnStatisticsData = v
+	return s
+}
+
+// SetDecimalColumnStatisticsData sets the DecimalColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetDecimalColumnStatisticsData(v *DecimalColumnStatisticsData) *ColumnStatisticsData {
+	s.DecimalColumnStatisticsData = v
+	return s
+}
+
+// SetDoubleColumnStatisticsData sets the DoubleColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetDoubleColumnStatisticsData(v *DoubleColumnStatisticsData) *ColumnStatisticsData {
+	s.DoubleColumnStatisticsData = v
+	return s
+}
+
+// SetLongColumnStatisticsData sets the LongColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetLongColumnStatisticsData(v *LongColumnStatisticsData) *ColumnStatisticsData {
+	s.LongColumnStatisticsData = v
+	return s
+}
+
+// SetStringColumnStatisticsData sets the StringColumnStatisticsData field's value.
+func (s *ColumnStatisticsData) SetStringColumnStatisticsData(v *StringColumnStatisticsData) *ColumnStatisticsData {
+	s.StringColumnStatisticsData = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *ColumnStatisticsData) SetType(v string) *ColumnStatisticsData {
+	s.Type = &v
+	return s
+}
+
+// Defines a column containing error.
+type ColumnStatisticsError struct {
+	_ struct{} `type:"structure"`
+
+	// The ColumnStatistics of the column.
+	ColumnStatistics *ColumnStatistics `type:"structure"`
+
+	// The error message occurred during operation.
+	Error *ErrorDetail `type:"structure"`
+}
+
+// String returns the string representation
+func (s ColumnStatisticsError) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ColumnStatisticsError) GoString() string {
+	return s.String()
+}
+
+// SetColumnStatistics sets the ColumnStatistics field's value.
+func (s *ColumnStatisticsError) SetColumnStatistics(v *ColumnStatistics) *ColumnStatisticsError {
+	s.ColumnStatistics = v
+	return s
+}
+
+// SetError sets the Error field's value.
+func (s *ColumnStatisticsError) SetError(v *ErrorDetail) *ColumnStatisticsError {
+	s.Error = v
 	return s
 }
 
@@ -18923,6 +19897,213 @@ func (s *DatabaseInput) SetParameters(v map[string]*string) *DatabaseInput {
 	return s
 }
 
+// Defines a date column statistics data.
+type DateColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *time.Time `type:"timestamp"`
+
+	// Minimum value of the column.
+	MinimumValue *time.Time `type:"timestamp"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DateColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DateColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DateColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DateColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *DateColumnStatisticsData) SetMaximumValue(v time.Time) *DateColumnStatisticsData {
+	s.MaximumValue = &v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *DateColumnStatisticsData) SetMinimumValue(v time.Time) *DateColumnStatisticsData {
+	s.MinimumValue = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *DateColumnStatisticsData) SetNumberOfDistinctValues(v int64) *DateColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *DateColumnStatisticsData) SetNumberOfNulls(v int64) *DateColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// Defines a decimal column statistics data.
+type DecimalColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *DecimalNumber `type:"structure"`
+
+	// Minimum value of the column.
+	MinimumValue *DecimalNumber `type:"structure"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DecimalColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DecimalColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DecimalColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DecimalColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+	if s.MaximumValue != nil {
+		if err := s.MaximumValue.Validate(); err != nil {
+			invalidParams.AddNested("MaximumValue", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.MinimumValue != nil {
+		if err := s.MinimumValue.Validate(); err != nil {
+			invalidParams.AddNested("MinimumValue", err.(request.ErrInvalidParams))
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *DecimalColumnStatisticsData) SetMaximumValue(v *DecimalNumber) *DecimalColumnStatisticsData {
+	s.MaximumValue = v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *DecimalColumnStatisticsData) SetMinimumValue(v *DecimalNumber) *DecimalColumnStatisticsData {
+	s.MinimumValue = v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *DecimalColumnStatisticsData) SetNumberOfDistinctValues(v int64) *DecimalColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *DecimalColumnStatisticsData) SetNumberOfNulls(v int64) *DecimalColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
+// Contains a numeric value in decimal format.
+type DecimalNumber struct {
+	_ struct{} `type:"structure"`
+
+	// The scale that determines where the decimal point falls in the unscaled value.
+	//
+	// Scale is a required field
+	Scale *int64 `type:"integer" required:"true"`
+
+	// The unscaled numeric value.
+	//
+	// UnscaledValue is automatically base64 encoded/decoded by the SDK.
+	//
+	// UnscaledValue is a required field
+	UnscaledValue []byte `type:"blob" required:"true"`
+}
+
+// String returns the string representation
+func (s DecimalNumber) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DecimalNumber) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DecimalNumber) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DecimalNumber"}
+	if s.Scale == nil {
+		invalidParams.Add(request.NewErrParamRequired("Scale"))
+	}
+	if s.UnscaledValue == nil {
+		invalidParams.Add(request.NewErrParamRequired("UnscaledValue"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetScale sets the Scale field's value.
+func (s *DecimalNumber) SetScale(v int64) *DecimalNumber {
+	s.Scale = &v
+	return s
+}
+
+// SetUnscaledValue sets the UnscaledValue field's value.
+func (s *DecimalNumber) SetUnscaledValue(v []byte) *DecimalNumber {
+	s.UnscaledValue = v
+	return s
+}
+
 type DeleteClassifierInput struct {
 	_ struct{} `type:"structure"`
 
@@ -18975,6 +20156,224 @@ func (s DeleteClassifierOutput) String() string {
 
 // GoString returns the string representation
 func (s DeleteClassifierOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteColumnStatisticsForPartitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// Name of the column.
+	//
+	// ColumnName is a required field
+	ColumnName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of partition values identifying the partition.
+	//
+	// PartitionValues is a required field
+	PartitionValues []*string `type:"list" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForPartitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForPartitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteColumnStatisticsForPartitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteColumnStatisticsForPartitionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnName"))
+	}
+	if s.ColumnName != nil && len(*s.ColumnName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ColumnName", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.PartitionValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionValues"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetCatalogId(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetColumnName(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.ColumnName = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetDatabaseName(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPartitionValues sets the PartitionValues field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetPartitionValues(v []*string) *DeleteColumnStatisticsForPartitionInput {
+	s.PartitionValues = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DeleteColumnStatisticsForPartitionInput) SetTableName(v string) *DeleteColumnStatisticsForPartitionInput {
+	s.TableName = &v
+	return s
+}
+
+type DeleteColumnStatisticsForPartitionOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForPartitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForPartitionOutput) GoString() string {
+	return s.String()
+}
+
+type DeleteColumnStatisticsForTableInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// The name of the column.
+	//
+	// ColumnName is a required field
+	ColumnName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForTableInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForTableInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DeleteColumnStatisticsForTableInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DeleteColumnStatisticsForTableInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnName == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnName"))
+	}
+	if s.ColumnName != nil && len(*s.ColumnName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ColumnName", 1))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetCatalogId(v string) *DeleteColumnStatisticsForTableInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnName sets the ColumnName field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetColumnName(v string) *DeleteColumnStatisticsForTableInput {
+	s.ColumnName = &v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetDatabaseName(v string) *DeleteColumnStatisticsForTableInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *DeleteColumnStatisticsForTableInput) SetTableName(v string) *DeleteColumnStatisticsForTableInput {
+	s.TableName = &v
+	return s
+}
+
+type DeleteColumnStatisticsForTableOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s DeleteColumnStatisticsForTableOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DeleteColumnStatisticsForTableOutput) GoString() string {
 	return s.String()
 }
 
@@ -20307,6 +21706,77 @@ func (s *DevEndpointCustomLibraries) SetExtraPythonLibsS3Path(v string) *DevEndp
 	return s
 }
 
+// Defines a double column statistics data.
+type DoubleColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *float64 `type:"double"`
+
+	// Minimum value of the column.
+	MinimumValue *float64 `type:"double"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s DoubleColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s DoubleColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *DoubleColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "DoubleColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *DoubleColumnStatisticsData) SetMaximumValue(v float64) *DoubleColumnStatisticsData {
+	s.MaximumValue = &v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *DoubleColumnStatisticsData) SetMinimumValue(v float64) *DoubleColumnStatisticsData {
+	s.MinimumValue = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *DoubleColumnStatisticsData) SetNumberOfDistinctValues(v int64) *DoubleColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *DoubleColumnStatisticsData) SetNumberOfNulls(v int64) *DoubleColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
 // Specifies an Amazon DynamoDB table to crawl.
 type DynamoDBTarget struct {
 	_ struct{} `type:"structure"`
@@ -21146,6 +22616,254 @@ func (s *GetClassifiersOutput) SetClassifiers(v []*Classifier) *GetClassifiersOu
 // SetNextToken sets the NextToken field's value.
 func (s *GetClassifiersOutput) SetNextToken(v string) *GetClassifiersOutput {
 	s.NextToken = &v
+	return s
+}
+
+type GetColumnStatisticsForPartitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column names.
+	//
+	// ColumnNames is a required field
+	ColumnNames []*string `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of partition values identifying the partition.
+	//
+	// PartitionValues is a required field
+	PartitionValues []*string `type:"list" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForPartitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForPartitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetColumnStatisticsForPartitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetColumnStatisticsForPartitionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnNames"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.PartitionValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionValues"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetCatalogId(v string) *GetColumnStatisticsForPartitionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnNames sets the ColumnNames field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetColumnNames(v []*string) *GetColumnStatisticsForPartitionInput {
+	s.ColumnNames = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetDatabaseName(v string) *GetColumnStatisticsForPartitionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPartitionValues sets the PartitionValues field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetPartitionValues(v []*string) *GetColumnStatisticsForPartitionInput {
+	s.PartitionValues = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *GetColumnStatisticsForPartitionInput) SetTableName(v string) *GetColumnStatisticsForPartitionInput {
+	s.TableName = &v
+	return s
+}
+
+type GetColumnStatisticsForPartitionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of ColumnStatistics that failed to be retrieved.
+	ColumnStatisticsList []*ColumnStatistics `type:"list"`
+
+	// Error occurred during retrieving column statistics data.
+	Errors []*ColumnError `type:"list"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForPartitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForPartitionOutput) GoString() string {
+	return s.String()
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *GetColumnStatisticsForPartitionOutput) SetColumnStatisticsList(v []*ColumnStatistics) *GetColumnStatisticsForPartitionOutput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *GetColumnStatisticsForPartitionOutput) SetErrors(v []*ColumnError) *GetColumnStatisticsForPartitionOutput {
+	s.Errors = v
+	return s
+}
+
+type GetColumnStatisticsForTableInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column names.
+	//
+	// ColumnNames is a required field
+	ColumnNames []*string `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForTableInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForTableInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *GetColumnStatisticsForTableInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "GetColumnStatisticsForTableInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnNames == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnNames"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *GetColumnStatisticsForTableInput) SetCatalogId(v string) *GetColumnStatisticsForTableInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnNames sets the ColumnNames field's value.
+func (s *GetColumnStatisticsForTableInput) SetColumnNames(v []*string) *GetColumnStatisticsForTableInput {
+	s.ColumnNames = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *GetColumnStatisticsForTableInput) SetDatabaseName(v string) *GetColumnStatisticsForTableInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *GetColumnStatisticsForTableInput) SetTableName(v string) *GetColumnStatisticsForTableInput {
+	s.TableName = &v
+	return s
+}
+
+type GetColumnStatisticsForTableOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of ColumnStatistics that failed to be retrieved.
+	ColumnStatisticsList []*ColumnStatistics `type:"list"`
+
+	// List of ColumnStatistics that failed to be retrieved.
+	Errors []*ColumnError `type:"list"`
+}
+
+// String returns the string representation
+func (s GetColumnStatisticsForTableOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s GetColumnStatisticsForTableOutput) GoString() string {
+	return s.String()
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *GetColumnStatisticsForTableOutput) SetColumnStatisticsList(v []*ColumnStatistics) *GetColumnStatisticsForTableOutput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetErrors sets the Errors field's value.
+func (s *GetColumnStatisticsForTableOutput) SetErrors(v []*ColumnError) *GetColumnStatisticsForTableOutput {
+	s.Errors = v
 	return s
 }
 
@@ -27294,6 +29012,77 @@ func (s *Location) SetS3(v []*CodeGenNodeArg) *Location {
 	return s
 }
 
+// Defines a long column statistics data.
+type LongColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Maximum value of the column.
+	MaximumValue *int64 `type:"long"`
+
+	// Minimum value of the column.
+	MinimumValue *int64 `type:"long"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s LongColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s LongColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *LongColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "LongColumnStatisticsData"}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetMaximumValue sets the MaximumValue field's value.
+func (s *LongColumnStatisticsData) SetMaximumValue(v int64) *LongColumnStatisticsData {
+	s.MaximumValue = &v
+	return s
+}
+
+// SetMinimumValue sets the MinimumValue field's value.
+func (s *LongColumnStatisticsData) SetMinimumValue(v int64) *LongColumnStatisticsData {
+	s.MinimumValue = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *LongColumnStatisticsData) SetNumberOfDistinctValues(v int64) *LongColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *LongColumnStatisticsData) SetNumberOfNulls(v int64) *LongColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
 // A structure for a machine learning transform.
 type MLTransform struct {
 	_ struct{} `type:"structure"`
@@ -30723,6 +32512,87 @@ func (s *StorageDescriptor) SetStoredAsSubDirectories(v bool) *StorageDescriptor
 	return s
 }
 
+// Defines a string column statistics data.
+type StringColumnStatisticsData struct {
+	_ struct{} `type:"structure"`
+
+	// Average value of the column.
+	//
+	// AverageLength is a required field
+	AverageLength *float64 `type:"double" required:"true"`
+
+	// Maximum value of the column.
+	//
+	// MaximumLength is a required field
+	MaximumLength *int64 `type:"long" required:"true"`
+
+	// Number of distinct values.
+	//
+	// NumberOfDistinctValues is a required field
+	NumberOfDistinctValues *int64 `type:"long" required:"true"`
+
+	// Number of nulls.
+	//
+	// NumberOfNulls is a required field
+	NumberOfNulls *int64 `type:"long" required:"true"`
+}
+
+// String returns the string representation
+func (s StringColumnStatisticsData) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s StringColumnStatisticsData) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *StringColumnStatisticsData) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "StringColumnStatisticsData"}
+	if s.AverageLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("AverageLength"))
+	}
+	if s.MaximumLength == nil {
+		invalidParams.Add(request.NewErrParamRequired("MaximumLength"))
+	}
+	if s.NumberOfDistinctValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfDistinctValues"))
+	}
+	if s.NumberOfNulls == nil {
+		invalidParams.Add(request.NewErrParamRequired("NumberOfNulls"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetAverageLength sets the AverageLength field's value.
+func (s *StringColumnStatisticsData) SetAverageLength(v float64) *StringColumnStatisticsData {
+	s.AverageLength = &v
+	return s
+}
+
+// SetMaximumLength sets the MaximumLength field's value.
+func (s *StringColumnStatisticsData) SetMaximumLength(v int64) *StringColumnStatisticsData {
+	s.MaximumLength = &v
+	return s
+}
+
+// SetNumberOfDistinctValues sets the NumberOfDistinctValues field's value.
+func (s *StringColumnStatisticsData) SetNumberOfDistinctValues(v int64) *StringColumnStatisticsData {
+	s.NumberOfDistinctValues = &v
+	return s
+}
+
+// SetNumberOfNulls sets the NumberOfNulls field's value.
+func (s *StringColumnStatisticsData) SetNumberOfNulls(v int64) *StringColumnStatisticsData {
+	s.NumberOfNulls = &v
+	return s
+}
+
 // The database and table in the AWS Glue Data Catalog that is used for input
 // or output data.
 type Table struct {
@@ -32229,6 +34099,256 @@ func (s UpdateClassifierOutput) String() string {
 // GoString returns the string representation
 func (s UpdateClassifierOutput) GoString() string {
 	return s.String()
+}
+
+type UpdateColumnStatisticsForPartitionInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column statistics.
+	//
+	// ColumnStatisticsList is a required field
+	ColumnStatisticsList []*ColumnStatistics `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// A list of partition values identifying the partition.
+	//
+	// PartitionValues is a required field
+	PartitionValues []*string `type:"list" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForPartitionInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForPartitionInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateColumnStatisticsForPartitionInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateColumnStatisticsForPartitionInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnStatisticsList == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnStatisticsList"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.PartitionValues == nil {
+		invalidParams.Add(request.NewErrParamRequired("PartitionValues"))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.ColumnStatisticsList != nil {
+		for i, v := range s.ColumnStatisticsList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ColumnStatisticsList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetCatalogId(v string) *UpdateColumnStatisticsForPartitionInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetColumnStatisticsList(v []*ColumnStatistics) *UpdateColumnStatisticsForPartitionInput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetDatabaseName(v string) *UpdateColumnStatisticsForPartitionInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetPartitionValues sets the PartitionValues field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetPartitionValues(v []*string) *UpdateColumnStatisticsForPartitionInput {
+	s.PartitionValues = v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateColumnStatisticsForPartitionInput) SetTableName(v string) *UpdateColumnStatisticsForPartitionInput {
+	s.TableName = &v
+	return s
+}
+
+type UpdateColumnStatisticsForPartitionOutput struct {
+	_ struct{} `type:"structure"`
+
+	// Error occurred during updating column statistics data.
+	Errors []*ColumnStatisticsError `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForPartitionOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForPartitionOutput) GoString() string {
+	return s.String()
+}
+
+// SetErrors sets the Errors field's value.
+func (s *UpdateColumnStatisticsForPartitionOutput) SetErrors(v []*ColumnStatisticsError) *UpdateColumnStatisticsForPartitionOutput {
+	s.Errors = v
+	return s
+}
+
+type UpdateColumnStatisticsForTableInput struct {
+	_ struct{} `type:"structure"`
+
+	// The ID of the Data Catalog where the partitions in question reside. If none
+	// is supplied, the AWS account ID is used by default.
+	CatalogId *string `min:"1" type:"string"`
+
+	// A list of the column statistics.
+	//
+	// ColumnStatisticsList is a required field
+	ColumnStatisticsList []*ColumnStatistics `type:"list" required:"true"`
+
+	// The name of the catalog database where the partitions reside.
+	//
+	// DatabaseName is a required field
+	DatabaseName *string `min:"1" type:"string" required:"true"`
+
+	// The name of the partitions' table.
+	//
+	// TableName is a required field
+	TableName *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForTableInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForTableInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UpdateColumnStatisticsForTableInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UpdateColumnStatisticsForTableInput"}
+	if s.CatalogId != nil && len(*s.CatalogId) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("CatalogId", 1))
+	}
+	if s.ColumnStatisticsList == nil {
+		invalidParams.Add(request.NewErrParamRequired("ColumnStatisticsList"))
+	}
+	if s.DatabaseName == nil {
+		invalidParams.Add(request.NewErrParamRequired("DatabaseName"))
+	}
+	if s.DatabaseName != nil && len(*s.DatabaseName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("DatabaseName", 1))
+	}
+	if s.TableName == nil {
+		invalidParams.Add(request.NewErrParamRequired("TableName"))
+	}
+	if s.TableName != nil && len(*s.TableName) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("TableName", 1))
+	}
+	if s.ColumnStatisticsList != nil {
+		for i, v := range s.ColumnStatisticsList {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "ColumnStatisticsList", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetCatalogId sets the CatalogId field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetCatalogId(v string) *UpdateColumnStatisticsForTableInput {
+	s.CatalogId = &v
+	return s
+}
+
+// SetColumnStatisticsList sets the ColumnStatisticsList field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetColumnStatisticsList(v []*ColumnStatistics) *UpdateColumnStatisticsForTableInput {
+	s.ColumnStatisticsList = v
+	return s
+}
+
+// SetDatabaseName sets the DatabaseName field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetDatabaseName(v string) *UpdateColumnStatisticsForTableInput {
+	s.DatabaseName = &v
+	return s
+}
+
+// SetTableName sets the TableName field's value.
+func (s *UpdateColumnStatisticsForTableInput) SetTableName(v string) *UpdateColumnStatisticsForTableInput {
+	s.TableName = &v
+	return s
+}
+
+type UpdateColumnStatisticsForTableOutput struct {
+	_ struct{} `type:"structure"`
+
+	// List of ColumnStatisticsErrors.
+	Errors []*ColumnStatisticsError `type:"list"`
+}
+
+// String returns the string representation
+func (s UpdateColumnStatisticsForTableOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UpdateColumnStatisticsForTableOutput) GoString() string {
+	return s.String()
+}
+
+// SetErrors sets the Errors field's value.
+func (s *UpdateColumnStatisticsForTableOutput) SetErrors(v []*ColumnStatisticsError) *UpdateColumnStatisticsForTableOutput {
+	s.Errors = v
+	return s
 }
 
 type UpdateConnectionInput struct {
@@ -34465,6 +36585,29 @@ const (
 
 	// CloudWatchEncryptionModeSseKms is a CloudWatchEncryptionMode enum value
 	CloudWatchEncryptionModeSseKms = "SSE-KMS"
+)
+
+const (
+	// ColumnStatisticsTypeBoolean is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeBoolean = "BOOLEAN"
+
+	// ColumnStatisticsTypeDate is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeDate = "DATE"
+
+	// ColumnStatisticsTypeDecimal is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeDecimal = "DECIMAL"
+
+	// ColumnStatisticsTypeDouble is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeDouble = "DOUBLE"
+
+	// ColumnStatisticsTypeLong is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeLong = "LONG"
+
+	// ColumnStatisticsTypeString is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeString = "STRING"
+
+	// ColumnStatisticsTypeBinary is a ColumnStatisticsType enum value
+	ColumnStatisticsTypeBinary = "BINARY"
 )
 
 const (

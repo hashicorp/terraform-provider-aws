@@ -235,7 +235,7 @@ The `launch_template_config` block supports the following:
 The `timeouts` block allows you to specify [timeouts](https://www.terraform.io/docs/configuration/resources.html#timeouts) for certain actions:
 
 * `create` - (Defaults to 10 mins) Used when requesting the spot instance (only valid if `wait_for_fulfillment = true`)
-* `delete` - (Defaults to 5 mins) Used when destroying the spot instance
+* `delete` - (Defaults to 15 mins) Used when destroying the spot instance
 
 ## Attributes Reference
 

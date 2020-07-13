@@ -89,7 +89,7 @@ func TestAccAWSFsxWindowsFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_backups", "false"),
 					resource.TestMatchResourceAttr(resourceName, "daily_automatic_backup_start_time", regexp.MustCompile(`^\d\d:\d\d$`)),
 					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(`fs-.+\..+`)),
-					resource.TestMatchResourceAttr(resourceName, "kms_key_id", regexp.MustCompile(`^arn:`)),
+					testAccMatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexp.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "network_interface_ids.#", "1"),
 					testAccCheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),

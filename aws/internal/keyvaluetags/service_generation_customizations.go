@@ -92,6 +92,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
 	"github.com/aws/aws-sdk-go/service/route53"
 	"github.com/aws/aws-sdk-go/service/route53resolver"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
@@ -292,6 +293,8 @@ func ServiceClientType(serviceName string) string {
 		funcType = reflect.TypeOf(redshift.New)
 	case "resourcegroups":
 		funcType = reflect.TypeOf(resourcegroups.New)
+	case "resourcegroupstaggingapi":
+		funcType = reflect.TypeOf(resourcegroupstaggingapi.New)
 	case "route53":
 		funcType = reflect.TypeOf(route53.New)
 	case "route53resolver":

@@ -145,7 +145,8 @@ func resourceAwsBackupSelectionRead(d *schema.ResourceData, meta interface{}) er
 	}
 
 	resp, err := conn.GetBackupSelection(input)
-	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") {
+	if isAWSErr(err, backup.ErrCodeResourceNotFoundException, "") ||
+		isAWSErr(err, backup.ErrCodeInvalidParameterValueException, "Cannot find Backup plan") {
 		log.Printf("[WARN] Backup Selection (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return nil
