@@ -78,7 +78,7 @@ func dataSourceAwsEc2InstanceSpotPriceRead(d *schema.ResourceData, meta interfac
 	resultSpotPrice := foundSpotPrice[0]
 
 	d.Set("spot_price", resultSpotPrice.SpotPrice)
-	d.Set("spot_price_timestamp", resultSpotPrice.Timestamp.String())
+	d.Set("spot_price_timestamp", (*resultSpotPrice.Timestamp).Format(time.RFC3339))
 	d.SetId(resource.UniqueId())
 
 	return nil
