@@ -15,7 +15,7 @@ and deleted. Instances also support [provisioning](/docs/provisioners/index.html
 
 ```hcl
 # Create a new instance of the latest Ubuntu 20.04 on an
-# t2.micro node with an AWS Tag naming it "HelloWorld"
+# t3.micro node with an AWS Tag naming it "HelloWorld"
 provider "aws" {
   region = "us-west-2"
 }
@@ -38,7 +38,7 @@ data "aws_ami" "ubuntu" {
 
 resource "aws_instance" "web" {
   ami           = data.aws_ami.ubuntu.id
-  instance_type = "t2.micro"
+  instance_type = "t3.micro"
 
   tags = {
     Name = "HelloWorld"
