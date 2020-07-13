@@ -1,27 +1,25 @@
-// Package AWSAT003 defines an Analyzer that checks for
-// hardcoded regions
-package AWSAT003
+// Package AWSAT005 defines an Analyzer that checks for
+// hardcoded AWS partitions in ARNs
+package AWSAT005
 
 import (
 	"go/ast"
 	"go/token"
-	"regexp"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/bflad/tfproviderlint/passes/commentignore"
 	"golang.org/x/tools/go/analysis"
 	"golang.org/x/tools/go/analysis/passes/inspect"
 	"golang.org/x/tools/go/ast/inspector"
 )
 
-const Doc = `check for hardcoded regions
+const Doc = `check for hardcoded AWS partitions in ARNs
 
-The AWSAT003 analyzer reports hardcoded regions. Testing in non-standard
-partitions with hardcoded regions (and AZs) will cause the tests to fail. 
+The AWSAT005 analyzer reports hardcoded AWS partitions in ARNs. For tests to
+work across AWS partitions, the partitions should not be hardcoded.
 `
 
-const analyzerName = "AWSAT003"
+const analyzerName = "AWSAT005"
 
 var Analyzer = &analysis.Analyzer{
 	Name: analyzerName,
@@ -40,18 +38,6 @@ func run(pass *analysis.Pass) (interface{}, error) {
 	nodeFilter := []ast.Node{
 		(*ast.BasicLit)(nil),
 	}
-
-	resolver := endpoints.DefaultResolver()
-	partitions := resolver.(endpoints.EnumPartitions).Partitions()
-	var regions []string
-
-	for _, p := range partitions {
-		for id := range p.Regions() {
-			regions = append(regions, id)
-		}
-	}
-
-	re := regexp.MustCompile(strings.Join(regions, "|"))
 	inspect.Preorder(nodeFilter, func(n ast.Node) {
 		x := n.(*ast.BasicLit)
 
@@ -63,11 +49,11 @@ func run(pass *analysis.Pass) (interface{}, error) {
 			return
 		}
 
-		if !re.MatchString(x.Value) {
+		if !strings.Contains(x.Value, `arn:aws:`) {
 			return
 		}
 
-		pass.Reportf(x.ValuePos, "%s: regions should not be hardcoded, use aws_region and aws_availability_zones data sources instead", analyzerName)
+		pass.Reportf(x.ValuePos, "%s: avoid hardcoding an AWS partition in an ARN, instead use the aws_partition data source", analyzerName)
 	})
 	return nil, nil
 }

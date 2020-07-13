@@ -1,15 +1,34 @@
-## 2.70.0 (Unreleased)
+## 3.0.0 (Unreleased)
+
+BREAKING CHANGES
+
+* provider: Credential ordering has changed from static, environment, shared credentials, EC2 metadata, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) to static, environment, shared credentials, default AWS Go SDK (shared configuration, web identity, ECS, EC2 Metadata) [GH-14077]
+* provider: The `AWS_METADATA_TIMEOUT` environment variable no longer has any effect as we now depend on the default AWS Go SDK EC2 Metadata client timeout of one second with two retries [GH-14077]
+
+ENHANCEMENTS
+
+* provider: Always enable shared configuration file support (no longer require `AWS_SDK_LOAD_CONFIG` environment variable) [GH-14077]
+* provider: Add `assume_role` configuration block `duration_seconds`, `policy_arns`, `tags`, and `transitive_tag_keys` arguments [GH-14077]
+
+BUG FIXES
+
+* provider: Ensure configured STS endpoint is used during `AssumeRole` API calls [GH-14077]
+* provider: Prefer AWS shared configuration over EC2 metadata credentials by default [GH-14077]
+* provider: Prefer CodeBuild, ECS, EKS credentials over EC2 metadata credentials by default [GH-14077]
+
+## 2.70.0 (July 10, 2020)
 
 FEATURES:
 
-* **New Resource:** `aws_ec2_client_vpn_authorization_rule` [GH-13950]
+* **New Resource:** `aws_ec2_client_vpn_authorization_rule` ([#13950](https://github.com/terraform-providers/terraform-provider-aws/issues/13950))
+* **New Resource:** `aws_ec2_client_vpn_route` ([#14103](https://github.com/terraform-providers/terraform-provider-aws/issues/14103))
 
 ENHANCEMENTS:
 
-* resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) [GH-5225]
-* resource/aws_launch_template: Add `update_default_version` argument to set the launch template's default version to the latest version available on update [GH-5225]
-* resource/aws_organizations_organization: Support `BACKUP_POLICY` value in `enabled_policy_types` plan-time validation (Support Backup policies) [GH-14060]
-* resource/aws_organizations_policy: Support `BACKUP_POLICY` value in `type` plan-time validation (Support Backup policies) [GH-14060]
+* resource/aws_launch_template: Add `default_version` argument (previously only an exported attribute) ([#5225](https://github.com/terraform-providers/terraform-provider-aws/issues/5225))
+* resource/aws_launch_template: Add `update_default_version` argument to set the launch template's default version to the latest version available on update ([#5225](https://github.com/terraform-providers/terraform-provider-aws/issues/5225))
+* resource/aws_organizations_organization: Support `BACKUP_POLICY` value in `enabled_policy_types` plan-time validation (Support Backup policies) ([#14060](https://github.com/terraform-providers/terraform-provider-aws/issues/14060))
+* resource/aws_organizations_policy: Support `BACKUP_POLICY` value in `type` plan-time validation (Support Backup policies) ([#14060](https://github.com/terraform-providers/terraform-provider-aws/issues/14060))
 
 ## 2.69.0 (July 02, 2020)
 
