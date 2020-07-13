@@ -214,6 +214,7 @@ func Provider() terraform.ResourceProvider {
 			"aws_ec2_coip_pools":                             dataSourceAwsEc2CoipPools(),
 			"aws_ec2_instance_type_offering":                 dataSourceAwsEc2InstanceTypeOffering(),
 			"aws_ec2_instance_type_offerings":                dataSourceAwsEc2InstanceTypeOfferings(),
+			"aws_ec2_instance_spot_price":                    dataSourceAwsEc2InstanceSpotPrice(),
 			"aws_ec2_local_gateway":                          dataSourceAwsEc2LocalGateway(),
 			"aws_ec2_local_gateways":                         dataSourceAwsEc2LocalGateways(),
 			"aws_ec2_local_gateway_route_table":              dataSourceAwsEc2LocalGatewayRouteTable(),
