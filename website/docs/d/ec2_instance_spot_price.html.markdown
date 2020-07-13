@@ -14,11 +14,11 @@ Information about most recent Spot Price for a given EC2 instance.
 
 ```hcl
 data "aws_ec2_instance_spot_price" "example" {
-  instance_type = "t3.medium"
+  instance_type     = "t3.medium"
   availability_zone = "us-west-2a"
 
   filter {
-    name  = "product-description"
+    name   = "product-description"
     values = ["Linux/UNIX"]
   }
 }
@@ -29,7 +29,7 @@ data "aws_ec2_instance_spot_price" "example" {
 The following arguments are supported:
 
 * `instance_type` - (Optional) The type of instance for which to query Spot Price information.
-* `availability_zone` - (Optional) The availablity zone in which to query Spot price information.
+* `availability_zone` - (Optional) The availability zone in which to query Spot price information.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. See the [EC2 API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeSpotPriceHistory.html) for supported filters. Detailed below.
 
 ### filter Argument Reference
