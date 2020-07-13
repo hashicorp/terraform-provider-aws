@@ -49,10 +49,25 @@ func testAccPreCheckAWSEc2InstanceSpotPrice(t *testing.T) {
 
 func testAccAWSEc2InstanceSpotPriceDataSourceConfig() string {
 	return fmt.Sprintf(`
-data "aws_ec2_instance_spot_price" "test" {
-  instance_type = "t3.medium"
+# Rather than hardcode an instance type in the testing,
+# use the first result from all available offerings.
+data "aws_ec2_instance_type_offerings" "test" {}
 
-  availability_zone = "us-west-2a"
+data "aws_ec2_instance_type_offering" "test" {
+  filter {
+    name   = "instance-type"
+	values = [tolist(data.aws_ec2_instance_type_offerings.test.instance_types)[0]]
+  }
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+}
+
+data "aws_ec2_instance_spot_price" "test" {
+  instance_type = data.aws_ec2_instance_type_offering.test.instance_type
+
+  availability_zone = data.aws_availability_zones.available.names[0]
 
   filter {
     name   = "product-description"
