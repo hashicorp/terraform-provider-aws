@@ -591,23 +591,11 @@ func TestAccAWSInstance_rootInstanceStore(t *testing.T) {
 		CheckDestroy:  testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: `
-					resource "aws_instance" "test" {
-						# us-west-2
-						# Amazon Linux HVM Instance Store 64-bit (2016.09.0)
-						# https://aws.amazon.com/amazon-linux-ami
-						ami = "ami-44c36524"
-
-						# Only certain instance types support ephemeral root instance stores.
-						# http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
-						instance_type = "m3.medium"
-					}`,
+				Config: testAccInstanceConfigRootInstanceStore(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "ami", "ami-44c36524"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ebs_optimized", "false"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "m3.medium"),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "0"),
 				),
 			},
@@ -3529,6 +3517,18 @@ resource "aws_instance" "test" {
 `))
 }
 
+func testAccInstanceConfigRootInstanceStore() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig(), fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami = "${data.aws_ami.amzn-ami-minimal-hvm-instance-store.id}"
+
+  # Only certain instance types support ephemeral root instance stores.
+  # http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html
+  instance_type = "m3.medium"
+}
+`))
+}
+
 func testAccAwsEc2InstanceEbsRootDeviceBasic() string {
 	return composeConfig(testAccAwsEc2InstanceAmiWithEbsRootVolume, `
 resource "aws_instance" "test" {
@@ -4840,6 +4840,26 @@ data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
   }
 }
 `
+}
+
+// testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig returns the configuration for a data source that
+// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
+// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
+func testAccLatestAmazonLinuxHvmInstanceStoreAmiConfig() string {
+	return fmt.Sprintf(`
+data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
+  most_recent = true
+  owners      = ["amazon"]
+  filter {
+    name   = "name"
+    values = ["amzn-ami-minimal-hvm-*"]
+  }
+  filter {
+    name   = "root-device-type"
+    values = ["instance-store"]
+  }
+}
+`)
 }
 
 // testAccLatestAmazonLinuxPvEbsAmiConfig returns the configuration for a data source that
