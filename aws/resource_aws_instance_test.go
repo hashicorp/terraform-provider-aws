@@ -1062,7 +1062,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCheckInstanceConfigTags,
+				Config: testAccCheckInstanceConfigTags(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -1075,7 +1075,7 @@ func TestAccAWSInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCheckInstanceConfigTagsUpdate,
+				Config: testAccCheckInstanceConfigTagsUpdate(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -3830,15 +3830,17 @@ resource "aws_instance" "test2" {
 }
 `
 
-const testAccCheckInstanceConfigTags = `
+func testAccCheckInstanceConfigTags() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	ami = "ami-4fccb37f"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 	instance_type = "m1.small"
 	tags = {
 		test = "test2"
 	}
 }
-`
+`))
+}
 
 func testAccInstanceConfigEbsBlockDeviceKmsKeyArn() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
@@ -4076,15 +4078,17 @@ resource "aws_instance" "test" {
 }
 `
 
-const testAccCheckInstanceConfigTagsUpdate = `
+func testAccCheckInstanceConfigTagsUpdate() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	ami = "ami-4fccb37f"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 	instance_type = "m1.small"
 	tags = {
 		test2 = "test3"
 	}
 }
-`
+`))
+}
 
 func testAccInstanceConfigWithoutInstanceProfile(rName string) string {
 	return testAccLatestAmazonLinuxHvmEbsAmiConfig() + fmt.Sprintf(`
