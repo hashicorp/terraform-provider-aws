@@ -432,8 +432,8 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 			}
 
 			// Check if the root block device exists.
-			if _, ok := blockDevices["/dev/sda1"]; !ok {
-				return fmt.Errorf("block device doesn't exist: /dev/sda1")
+			if _, ok := blockDevices["/dev/xvda"]; !ok {
+				return fmt.Errorf("block device doesn't exist: /dev/xvda")
 			}
 
 			return nil
@@ -448,7 +448,7 @@ func TestAccAWSInstance_GP2IopsDevice(t *testing.T) {
 		CheckDestroy:    testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceGP2IopsDevice,
+				Config: testAccInstanceGP2IopsDevice(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "root_block_device.#", "1"),
@@ -3491,10 +3491,10 @@ resource "aws_instance" "test" {
 }
 `
 
-const testAccInstanceGP2IopsDevice = `
+func testAccInstanceGP2IopsDevice() string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	# us-west-2
-	ami = "ami-55a7ea65"
+	ami = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
 
 	# In order to attach an encrypted volume to an instance you need to have an
 	# m3.medium or larger. See "Supported Instance Types" in:
@@ -3506,7 +3506,8 @@ resource "aws_instance" "test" {
 		volume_size = 11
 	}
 }
-`
+`))
+}
 
 const testAccInstanceGP2WithIopsValue = `
 resource "aws_instance" "test" {
