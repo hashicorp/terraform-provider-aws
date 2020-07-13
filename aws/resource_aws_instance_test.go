@@ -1480,6 +1480,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 	var before ec2.Instance
 	var after ec2.Instance
 	resourceName := "aws_instance.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -1487,7 +1488,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 		CheckDestroy: testAccCheckInstanceDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfigWithSmallInstanceType,
+				Config: testAccInstanceConfigWithSmallInstanceType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &before),
 				),
@@ -1498,7 +1499,7 @@ func TestAccAWSInstance_changeInstanceType(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccInstanceConfigUpdateInstanceType,
+				Config: testAccInstanceConfigUpdateInstanceType(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(resourceName, &after),
 					testAccCheckInstanceNotRecreated(t, &before, &after),
@@ -3430,11 +3431,11 @@ resource "aws_instance" "test" {
 `))
 }
 
-const testAccInstanceConfigWithSmallInstanceType = `
+func testAccInstanceConfigWithSmallInstanceType(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcConfig(rName, false), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	# us-west-2
-	ami = "ami-55a7ea65"
-	availability_zone = "us-west-2a"
+	ami       = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+	subnet_id = "${aws_subnet.test.id}"
 
 	instance_type = "m3.medium"
 
@@ -3442,13 +3443,14 @@ resource "aws_instance" "test" {
 	    Name = "tf-acctest"
 	}
 }
-`
+`))
+}
 
-const testAccInstanceConfigUpdateInstanceType = `
+func testAccInstanceConfigUpdateInstanceType(rName string) string {
+	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), testAccAwsInstanceVpcConfig(rName, false), fmt.Sprintf(`
 resource "aws_instance" "test" {
-	# us-west-2
-	ami = "ami-55a7ea65"
-	availability_zone = "us-west-2a"
+	ami       = "${data.aws_ami.amzn-ami-minimal-hvm-ebs.id}"
+	subnet_id = "${aws_subnet.test.id}"
 
 	instance_type = "m3.large"
 
@@ -3456,7 +3458,8 @@ resource "aws_instance" "test" {
 	    Name = "tf-acctest"
 	}
 }
-`
+`))
+}
 
 func testAccInstanceGP2IopsDevice() string {
 	return composeConfig(testAccLatestAmazonLinuxHvmEbsAmiConfig(), fmt.Sprintf(`
