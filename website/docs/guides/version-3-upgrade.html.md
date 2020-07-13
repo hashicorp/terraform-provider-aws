@@ -22,6 +22,7 @@ Upgrade topics:
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
+- [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
 
 <!-- /TOC -->
 
@@ -314,3 +315,9 @@ resource "aws_lb_listener_rule" "example" {
   }
 }
 ```
+
+## Resource: aws_s3_bucket
+
+### Removal of Automatic aws_s3_bucket_policy Import
+
+Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.

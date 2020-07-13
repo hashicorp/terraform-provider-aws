@@ -32,7 +32,7 @@ func resourceAwsS3Bucket() *schema.Resource {
 		Update: resourceAwsS3BucketUpdate,
 		Delete: resourceAwsS3BucketDelete,
 		Importer: &schema.ResourceImporter{
-			State: resourceAwsS3BucketImportState,
+			State: schema.ImportStatePassthrough,
 		},
 
 		Schema: map[string]*schema.Schema{
