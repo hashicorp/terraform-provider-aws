@@ -18,11 +18,11 @@ func dataSourceAwsEc2InstanceSpotPrice() *schema.Resource {
 			"filter": dataSourceFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"availability_zone": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
 			},
 			"spot_price": {
 				Type:     schema.TypeString,
