@@ -60,33 +60,12 @@ func dataSourceAwsEc2InstanceSpotPriceRead(d *schema.ResourceData, meta interfac
 		input.Filters = buildAwsDataSourceFilters(v.(*schema.Set))
 	}
 
-	var foundSpotPrice []*ec2.SpotPrice
-
-	for {
-		output, err := conn.DescribeSpotPriceHistory(input)
-
-		if err != nil {
-			return fmt.Errorf("error reading EC2 Spot Price History: %w", err)
-		}
-
-		if output == nil {
-			break
-		}
-
-		for _, instanceSpotPrice := range output.SpotPriceHistory {
-			if instanceSpotPrice == nil {
-				continue
-			}
-
-			foundSpotPrice = append(foundSpotPrice, instanceSpotPrice)
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
+	output, err := conn.DescribeSpotPriceHistory(input)
+	if err != nil {
+		return fmt.Errorf("error reading EC2 Spot Price History: %w", err)
 	}
+
+	foundSpotPrice := output.SpotPriceHistory
 
 	if len(foundSpotPrice) == 0 {
 		return fmt.Errorf("no EC2 Instance Type Offerings found matching criteria; try different search")
