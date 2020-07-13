@@ -76,12 +76,6 @@ func resourceAwsApiGatewayMethodResponse() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeBool},
 				Optional: true,
 			},
-
-			"response_parameters_in_json": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Removed:  "Use `response_parameters` argument instead",
-			},
 		},
 	}
 }
@@ -172,10 +166,7 @@ func resourceAwsApiGatewayMethodResponseUpdate(d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("response_parameters") {
-		ops, err := expandApiGatewayMethodParametersOperations(d, "response_parameters", "responseParameters")
-		if err != nil {
-			return err
-		}
+		ops := expandApiGatewayMethodParametersOperations(d, "response_parameters", "responseParameters")
 		operations = append(operations, ops...)
 	}
 

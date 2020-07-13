@@ -92,6 +92,7 @@ var serviceNames = []string{
 	"mediastore",
 	"mq",
 	"neptune",
+	"networkmanager",
 	"opsworks",
 	"organizations",
 	"pinpoint",
@@ -106,16 +107,20 @@ var serviceNames = []string{
 	"sagemaker",
 	"secretsmanager",
 	"securityhub",
+	"servicediscovery",
 	"sfn",
 	"sns",
 	"sqs",
 	"ssm",
 	"storagegateway",
 	"swf",
+	"synthetics",
 	"transfer",
 	"waf",
 	"wafregional",
 	"wafv2",
+	"worklink",
+	"workspaces",
 }
 
 type TemplateData struct {

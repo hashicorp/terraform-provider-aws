@@ -72,6 +72,7 @@ func TestAccAWSKeyPair_basic(t *testing.T) {
 				Config: testAccAWSKeyPairConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
+					testAccCheckResourceAttrRegionalARN(resourceName, "arn", "ec2", fmt.Sprintf("key-pair/%s", rName)),
 					testAccCheckAWSKeyPairFingerprint(&keyPair, fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "fingerprint", fingerprint),
 					resource.TestCheckResourceAttr(resourceName, "key_name", rName),
@@ -202,7 +203,7 @@ func TestAccAWSKeyPair_disappears(t *testing.T) {
 				Config: testAccAWSKeyPairConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSKeyPairExists(resourceName, &keyPair),
-					testAccCheckAWSKeyPairDisappears(&keyPair),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsKeyPair(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -235,21 +236,6 @@ func testAccCheckAWSKeyPairDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSKeyPairDisappears(keyPair *ec2.KeyPairInfo) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := testAccProvider.Meta().(*AWSClient).ec2conn
-
-		req := &ec2.DeleteKeyPairInput{
-			KeyName: keyPair.KeyName,
-		}
-		if _, err := conn.DeleteKeyPair(req); err != nil {
-			return err
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckAWSKeyPairFingerprint(conf *ec2.KeyPairInfo, expectedFingerprint string) resource.TestCheckFunc {
@@ -290,7 +276,7 @@ func testAccCheckAWSKeyPairExists(n string, res *ec2.KeyPairInfo) resource.TestC
 			return err
 		}
 		if len(resp.KeyPairs) != 1 ||
-			*resp.KeyPairs[0].KeyName != rs.Primary.ID {
+			aws.StringValue(resp.KeyPairs[0].KeyName) != rs.Primary.ID {
 			return fmt.Errorf("KeyPair not found")
 		}
 

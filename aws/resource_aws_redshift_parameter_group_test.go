@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func TestAccAWSRedshiftParameterGroup_basic(t *testing.T) {
@@ -57,18 +58,18 @@ func TestAccAWSRedshiftParameterGroup_withParameters(t *testing.T) {
 						resourceName, "family", "redshift-1.0"),
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "Managed by Terraform"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.490804664.name", "require_ssl"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.490804664.value", "true"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2036118857.name", "query_group"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.2036118857.value", "example"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.484080973.name", "enable_user_activity_logging"),
-					resource.TestCheckResourceAttr(
-						resourceName, "parameter.484080973.value", "true"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "require_ssl",
+						"value": "true",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "query_group",
+						"value": "example",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "parameter.*", map[string]string{
+						"name":  "enable_user_activity_logging",
+						"value": "true",
+					}),
 				),
 			},
 			{
@@ -157,46 +158,6 @@ func TestAccAWSRedshiftParameterGroup_withTags(t *testing.T) {
 			},
 		},
 	})
-}
-
-func TestResourceAWSRedshiftParameterGroupNameValidation(t *testing.T) {
-	cases := []struct {
-		Value    string
-		ErrCount int
-	}{
-		{
-			Value:    "tEsting123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing123!",
-			ErrCount: 1,
-		},
-		{
-			Value:    "1testing123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing--123",
-			ErrCount: 1,
-		},
-		{
-			Value:    "testing123-",
-			ErrCount: 1,
-		},
-		{
-			Value:    acctest.RandStringFromCharSet(256, acctest.CharSetAlpha),
-			ErrCount: 1,
-		},
-	}
-
-	for _, tc := range cases {
-		_, errors := validateRedshiftParamGroupName(tc.Value, "aws_redshift_parameter_group_name")
-
-		if len(errors) != tc.ErrCount {
-			t.Fatalf("Expected the Redshift Parameter Group Name to trigger a validation error")
-		}
-	}
 }
 
 func testAccCheckAWSRedshiftParameterGroupDestroy(s *terraform.State) error {

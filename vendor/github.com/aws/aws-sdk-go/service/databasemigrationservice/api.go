@@ -5220,7 +5220,7 @@ func (s *ApplyPendingMaintenanceActionOutput) SetResourcePendingMaintenanceActio
 	return s
 }
 
-// The name of the Availability Zone for use during database migration.
+// The name of an Availability Zone for use during database migration.
 type AvailabilityZone struct {
 	_ struct{} `type:"structure"`
 
@@ -5377,7 +5377,15 @@ type Connection struct {
 	// string.
 	ReplicationInstanceIdentifier *string `type:"string"`
 
-	// The connection status.
+	// The connection status. This parameter can return one of the following values:
+	//
+	//    * "successful"
+	//
+	//    * "testing"
+	//
+	//    * "failed"
+	//
+	//    * "deleting"
 	Status *string `type:"string"`
 }
 
@@ -5464,7 +5472,7 @@ type CreateEndpointInput struct {
 	// Settings in JSON format for the target Elasticsearch endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
 	// Elasticsearch as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
-	// in the AWS Database Migration User Guide.
+	// in the AWS Database Migration Service User Guide.
 	ElasticsearchSettings *ElasticsearchSettings `type:"structure"`
 
 	// The database endpoint identifier. Identifiers must begin with a letter and
@@ -5482,7 +5490,7 @@ type CreateEndpointInput struct {
 	// The type of engine for the endpoint. Valid values, depending on the EndpointType
 	// value, include "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	//
 	// EngineName is a required field
 	EngineName *string `type:"string" required:"true"`
@@ -5498,16 +5506,16 @@ type CreateEndpointInput struct {
 	// in the AWS Database Migration Service User Guide.
 	ExtraConnectionAttributes *string `type:"string"`
 
-	// Settings in JSON format for the target Apache Kafka endpoint. For information
-	// about other available settings, see Using Object Mapping to Migrate Data
-	// to Apache Kafka (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html#CHAP_Target.Kafka.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// Settings in JSON format for the target Apache Kafka endpoint. For more information
+	// about the available settings, see Using Apache Kafka as a Target for AWS
+	// Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html)
+	// in the AWS Database Migration Service User Guide.
 	KafkaSettings *KafkaSettings `type:"structure"`
 
 	// Settings in JSON format for the target endpoint for Amazon Kinesis Data Streams.
-	// For information about other available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// For more information about the available settings, see Using Amazon Kinesis
+	// Data Streams as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html)
+	// in the AWS Database Migration Service User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
 	// An AWS KMS key identifier that is used to encrypt the connection parameters
@@ -5521,10 +5529,16 @@ type CreateEndpointInput struct {
 	KmsKeyId *string `type:"string"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
-	// about the available settings, see the configuration properties section in
-	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
+	// about the available settings, see Using MongoDB as a Target for AWS Database
+	// Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html#CHAP_Source.MongoDB.Configuration)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the target Amazon Neptune endpoint. For more
+	// information about the available settings, see Specifying Endpoint Settings
+	// for Amazon Neptune as a Target (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings)
+	// in the AWS Database Migration Service User Guide.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The password to be used to log in to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
@@ -5589,6 +5603,11 @@ func (s *CreateEndpointInput) Validate() error {
 	if s.ElasticsearchSettings != nil {
 		if err := s.ElasticsearchSettings.Validate(); err != nil {
 			invalidParams.AddNested("ElasticsearchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NeptuneSettings != nil {
+		if err := s.NeptuneSettings.Validate(); err != nil {
+			invalidParams.AddNested("NeptuneSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -5679,6 +5698,12 @@ func (s *CreateEndpointInput) SetKmsKeyId(v string) *CreateEndpointInput {
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *CreateEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *CreateEndpointInput {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *CreateEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *CreateEndpointInput {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -5915,7 +5940,11 @@ type CreateReplicationInstanceInput struct {
 	// AWS Region, for example: us-east-1d
 	AvailabilityZone *string `type:"string"`
 
-	// A list of DNS name servers supported for the replication instance.
+	// A list of custom DNS name servers supported for the replication instance
+	// to access your on-premise source or target database. This list overrides
+	// the default name servers supported by the replication instance. You can specify
+	// a comma-separated list of internet addresses for up to four on-premise DNS
+	// name servers. For example: "1.1.1.1,2.2.2.2,3.3.3.3,4.4.4.4"
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
@@ -5954,11 +5983,13 @@ type CreateReplicationInstanceInput struct {
 	// represents an instance with a private IP address. The default value is true.
 	PubliclyAccessible *bool `type:"boolean"`
 
-	// The compute and memory capacity of the replication instance as specified
-	// by the replication instance class.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class. For example to specify the instance
+	// class dms.c4.large, set this parameter to "dms.c4.large".
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	//
 	// ReplicationInstanceClass is a required field
 	ReplicationInstanceClass *string `type:"string" required:"true"`
@@ -5968,7 +5999,7 @@ type CreateReplicationInstanceInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 63 alphanumeric characters or hyphens.
+	//    * Must contain 1-63 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -6280,7 +6311,7 @@ type CreateReplicationTaskInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 255 alphanumeric characters or hyphens.
+	//    * Must contain 1-255 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -6290,7 +6321,7 @@ type CreateReplicationTaskInput struct {
 	ReplicationTaskIdentifier *string `type:"string" required:"true"`
 
 	// Overall settings for the task, in JSON format. For more information, see
-	// Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
+	// Specifying Task Settings for AWS Database Migration Service Tasks (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html)
 	// in the AWS Database Migration User Guide.
 	ReplicationTaskSettings *string `type:"string"`
 
@@ -6300,8 +6331,8 @@ type CreateReplicationTaskInput struct {
 	SourceEndpointArn *string `type:"string" required:"true"`
 
 	// The table mappings for the task, in JSON format. For more information, see
-	// Table Mapping (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
-	// in the AWS Database Migration User Guide.
+	// Using Table Mapping to Specify Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TableMapping.html)
+	// in the AWS Database Migration Service User Guide.
 	//
 	// TableMappings is a required field
 	TableMappings *string `type:"string" required:"true"`
@@ -6313,6 +6344,12 @@ type CreateReplicationTaskInput struct {
 	//
 	// TargetEndpointArn is a required field
 	TargetEndpointArn *string `type:"string" required:"true"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration Service User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -6416,6 +6453,12 @@ func (s *CreateReplicationTaskInput) SetTags(v []*Tag) *CreateReplicationTaskInp
 // SetTargetEndpointArn sets the TargetEndpointArn field's value.
 func (s *CreateReplicationTaskInput) SetTargetEndpointArn(v string) *CreateReplicationTaskInput {
 	s.TargetEndpointArn = &v
+	return s
+}
+
+// SetTaskData sets the TaskData field's value.
+func (s *CreateReplicationTaskInput) SetTaskData(v string) *CreateReplicationTaskInput {
+	s.TaskData = &v
 	return s
 }
 
@@ -8156,6 +8199,8 @@ type DescribeReplicationSubnetGroupsInput struct {
 	_ struct{} `type:"structure"`
 
 	// Filters applied to the describe action.
+	//
+	// Valid filter names: replication-subnet-group-id
 	Filters []*Filter `type:"list"`
 
 	// An optional pagination token provided by a previous request. If this parameter
@@ -8905,7 +8950,7 @@ type Endpoint struct {
 	// The database engine name. Valid values, depending on the EndpointType, include
 	// "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	EngineName *string `type:"string"`
 
 	// Value returned by a call to CreateEndpoint that can be used for cross-account
@@ -8940,6 +8985,10 @@ type Endpoint struct {
 	// The settings for the MongoDB source endpoint. For more information, see the
 	// MongoDbSettings structure.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// The settings for the Amazon Neptune target endpoint. For more information,
+	// see the NeptuneSettings structure.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The port value used to access the endpoint.
 	Port *int64 `type:"integer"`
@@ -9076,6 +9125,12 @@ func (s *Endpoint) SetKmsKeyId(v string) *Endpoint {
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *Endpoint) SetMongoDbSettings(v *MongoDbSettings) *Endpoint {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *Endpoint) SetNeptuneSettings(v *NeptuneSettings) *Endpoint {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -9269,7 +9324,7 @@ type EventSubscription struct {
 	// topic was deleted after the subscription was created.
 	Status *string `type:"string"`
 
-	// The time the RDS event notification subscription was created.
+	// The time the AWS DMS event notification subscription was created.
 	SubscriptionCreationTime *string `type:"string"`
 }
 
@@ -10287,7 +10342,7 @@ type ModifyEndpointInput struct {
 	// Settings in JSON format for the target Elasticsearch endpoint. For more information
 	// about the available settings, see Extra Connection Attributes When Using
 	// Elasticsearch as a Target for AWS DMS (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Elasticsearch.html#CHAP_Target.Elasticsearch.Configuration)
-	// in the AWS Database Migration User Guide.
+	// in the AWS Database Migration Service User Guide.
 	ElasticsearchSettings *ElasticsearchSettings `type:"structure"`
 
 	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
@@ -10306,7 +10361,7 @@ type ModifyEndpointInput struct {
 	// The type of engine for the endpoint. Valid values, depending on the EndpointType,
 	// include "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	EngineName *string `type:"string"`
 
 	// The external table definition.
@@ -10316,16 +10371,16 @@ type ModifyEndpointInput struct {
 	// pass the empty string ("") as an argument.
 	ExtraConnectionAttributes *string `type:"string"`
 
-	// Settings in JSON format for the target Apache Kafka endpoint. For information
-	// about other available settings, see Using Object Mapping to Migrate Data
-	// to Apache Kafka (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html#CHAP_Target.Kafka.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// Settings in JSON format for the target Apache Kafka endpoint. For more information
+	// about the available settings, see Using Apache Kafka as a Target for AWS
+	// Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kafka.html)
+	// in the AWS Database Migration Service User Guide.
 	KafkaSettings *KafkaSettings `type:"structure"`
 
 	// Settings in JSON format for the target endpoint for Amazon Kinesis Data Streams.
-	// For information about other available settings, see Using Object Mapping
-	// to Migrate Data to a Kinesis Data Stream (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html#CHAP_Target.Kinesis.ObjectMapping)
-	// in the AWS Database Migration User Guide.
+	// For more information about the available settings, see Using Amazon Kinesis
+	// Data Streams as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Kinesis.html)
+	// in the AWS Database Migration Service User Guide.
 	KinesisSettings *KinesisSettings `type:"structure"`
 
 	// Settings in JSON format for the source MongoDB endpoint. For more information
@@ -10333,6 +10388,12 @@ type ModifyEndpointInput struct {
 	// Using MongoDB as a Target for AWS Database Migration Service (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Source.MongoDB.html)
 	// in the AWS Database Migration Service User Guide.
 	MongoDbSettings *MongoDbSettings `type:"structure"`
+
+	// Settings in JSON format for the target Amazon Neptune endpoint. For more
+	// information about the available settings, see Specifying Endpoint Settings
+	// for Amazon Neptune as a Target (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.EndpointSettings)
+	// in the AWS Database Migration Service User Guide.
+	NeptuneSettings *NeptuneSettings `type:"structure"`
 
 	// The password to be used to login to the endpoint database.
 	Password *string `type:"string" sensitive:"true"`
@@ -10387,6 +10448,11 @@ func (s *ModifyEndpointInput) Validate() error {
 	if s.ElasticsearchSettings != nil {
 		if err := s.ElasticsearchSettings.Validate(); err != nil {
 			invalidParams.AddNested("ElasticsearchSettings", err.(request.ErrInvalidParams))
+		}
+	}
+	if s.NeptuneSettings != nil {
+		if err := s.NeptuneSettings.Validate(); err != nil {
+			invalidParams.AddNested("NeptuneSettings", err.(request.ErrInvalidParams))
 		}
 	}
 
@@ -10477,6 +10543,12 @@ func (s *ModifyEndpointInput) SetKinesisSettings(v *KinesisSettings) *ModifyEndp
 // SetMongoDbSettings sets the MongoDbSettings field's value.
 func (s *ModifyEndpointInput) SetMongoDbSettings(v *MongoDbSettings) *ModifyEndpointInput {
 	s.MongoDbSettings = v
+	return s
+}
+
+// SetNeptuneSettings sets the NeptuneSettings field's value.
+func (s *ModifyEndpointInput) SetNeptuneSettings(v *NeptuneSettings) *ModifyEndpointInput {
+	s.NeptuneSettings = v
 	return s
 }
 
@@ -10717,10 +10789,13 @@ type ModifyReplicationInstanceInput struct {
 	// ReplicationInstanceArn is a required field
 	ReplicationInstanceArn *string `type:"string" required:"true"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class. For example to specify the instance
+	// class dms.c4.large, set this parameter to "dms.c4.large".
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
 	// The replication instance identifier. This parameter is stored as a lowercase
@@ -10979,14 +11054,14 @@ type ModifyReplicationTaskInput struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 255 alphanumeric characters or hyphens.
+	//    * Must contain 1-255 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
 	//    * Cannot end with a hyphen or contain two consecutive hyphens.
 	ReplicationTaskIdentifier *string `type:"string"`
 
-	// JSON file that contains settings for the task, such as target metadata settings.
+	// JSON file that contains settings for the task, such as task metadata settings.
 	ReplicationTaskSettings *string `type:"string"`
 
 	// When using the AWS CLI or boto3, provide the path of the JSON file that contains
@@ -10994,6 +11069,12 @@ type ModifyReplicationTaskInput struct {
 	// DMS API, provide the JSON as the parameter value, for example: --table-mappings
 	// file://mappingfile.json
 	TableMappings *string `type:"string"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration Service User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -11067,6 +11148,12 @@ func (s *ModifyReplicationTaskInput) SetTableMappings(v string) *ModifyReplicati
 	return s
 }
 
+// SetTaskData sets the TaskData field's value.
+func (s *ModifyReplicationTaskInput) SetTaskData(v string) *ModifyReplicationTaskInput {
+	s.TaskData = &v
+	return s
+}
+
 type ModifyReplicationTaskOutput struct {
 	_ struct{} `type:"structure"`
 
@@ -11096,37 +11183,35 @@ type MongoDbSettings struct {
 
 	// The authentication mechanism you use to access the MongoDB source endpoint.
 	//
-	// Valid values: DEFAULT, MONGODB_CR, SCRAM_SHA_1
-	//
-	// DEFAULT – For MongoDB version 2.x, use MONGODB_CR. For MongoDB version
-	// 3.x, use SCRAM_SHA_1. This setting isn't used when authType=No.
+	// For the default value, in MongoDB version 2.x, "default" is "mongodb_cr".
+	// For MongoDB version 3.x or later, "default" is "scram_sha_1". This setting
+	// isn't used when AuthType is set to "no".
 	AuthMechanism *string `type:"string" enum:"AuthMechanismValue"`
 
-	// The MongoDB database name. This setting isn't used when authType=NO.
+	// The MongoDB database name. This setting isn't used when AuthType is set to
+	// "no".
 	//
-	// The default is admin.
+	// The default is "admin".
 	AuthSource *string `type:"string"`
 
 	// The authentication type you use to access the MongoDB source endpoint.
 	//
-	// Valid values: NO, PASSWORD
-	//
-	// When NO is selected, user name and password parameters are not used and can
-	// be empty.
+	// When when set to "no", user name and password parameters are not used and
+	// can be empty.
 	AuthType *string `type:"string" enum:"AuthTypeValue"`
 
 	// The database name on the MongoDB source endpoint.
 	DatabaseName *string `type:"string"`
 
 	// Indicates the number of documents to preview to determine the document organization.
-	// Use this setting when NestingLevel is set to ONE.
+	// Use this setting when NestingLevel is set to "one".
 	//
 	// Must be a positive value greater than 0. Default value is 1000.
 	DocsToInvestigate *string `type:"string"`
 
-	// Specifies the document ID. Use this setting when NestingLevel is set to NONE.
+	// Specifies the document ID. Use this setting when NestingLevel is set to "none".
 	//
-	// Default value is false.
+	// Default value is "false".
 	ExtractDocId *string `type:"string"`
 
 	// The AWS KMS key identifier that is used to encrypt the content on the replication
@@ -11138,10 +11223,8 @@ type MongoDbSettings struct {
 
 	// Specifies either document or table mode.
 	//
-	// Valid values: NONE, ONE
-	//
-	// Default value is NONE. Specify NONE to use document mode. Specify ONE to
-	// use table mode.
+	// Default value is "none". Specify "none" to use document mode. Specify "one"
+	// to use table mode.
 	NestingLevel *string `type:"string" enum:"NestingLevelValue"`
 
 	// The password for the user account you use to access the MongoDB source endpoint.
@@ -11239,6 +11322,120 @@ func (s *MongoDbSettings) SetUsername(v string) *MongoDbSettings {
 	return s
 }
 
+// Provides information that defines an Amazon Neptune endpoint.
+type NeptuneSettings struct {
+	_ struct{} `type:"structure"`
+
+	// The number of milliseconds for AWS DMS to wait to retry a bulk-load of migrated
+	// graph data to the Neptune target database before raising an error. The default
+	// is 250.
+	ErrorRetryDuration *int64 `type:"integer"`
+
+	// If you want AWS Identity and Access Management (IAM) authorization enabled
+	// for this endpoint, set this parameter to true. Then attach the appropriate
+	// IAM policy document to your service role specified by ServiceAccessRoleArn.
+	// The default is false.
+	IamAuthEnabled *bool `type:"boolean"`
+
+	// The maximum size in kilobytes of migrated graph data stored in a .csv file
+	// before AWS DMS bulk-loads the data to the Neptune target database. The default
+	// is 1,048,576 KB. If the bulk load is successful, AWS DMS clears the bucket,
+	// ready to store the next batch of migrated graph data.
+	MaxFileSize *int64 `type:"integer"`
+
+	// The number of times for AWS DMS to retry a bulk load of migrated graph data
+	// to the Neptune target database before raising an error. The default is 5.
+	MaxRetryCount *int64 `type:"integer"`
+
+	// A folder path where you want AWS DMS to store migrated graph data in the
+	// S3 bucket specified by S3BucketName
+	//
+	// S3BucketFolder is a required field
+	S3BucketFolder *string `type:"string" required:"true"`
+
+	// The name of the Amazon S3 bucket where AWS DMS can temporarily store migrated
+	// graph data in .csv files before bulk-loading it to the Neptune target database.
+	// AWS DMS maps the SQL source data to graph data before storing it in these
+	// .csv files.
+	//
+	// S3BucketName is a required field
+	S3BucketName *string `type:"string" required:"true"`
+
+	// The Amazon Resource Name (ARN) of the service role that you created for the
+	// Neptune target endpoint. For more information, see Creating an IAM Service
+	// Role for Accessing Amazon Neptune as a Target (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Target.Neptune.html#CHAP_Target.Neptune.ServiceRole)
+	// in the AWS Database Migration Service User Guide.
+	ServiceAccessRoleArn *string `type:"string"`
+}
+
+// String returns the string representation
+func (s NeptuneSettings) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s NeptuneSettings) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *NeptuneSettings) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "NeptuneSettings"}
+	if s.S3BucketFolder == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketFolder"))
+	}
+	if s.S3BucketName == nil {
+		invalidParams.Add(request.NewErrParamRequired("S3BucketName"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetErrorRetryDuration sets the ErrorRetryDuration field's value.
+func (s *NeptuneSettings) SetErrorRetryDuration(v int64) *NeptuneSettings {
+	s.ErrorRetryDuration = &v
+	return s
+}
+
+// SetIamAuthEnabled sets the IamAuthEnabled field's value.
+func (s *NeptuneSettings) SetIamAuthEnabled(v bool) *NeptuneSettings {
+	s.IamAuthEnabled = &v
+	return s
+}
+
+// SetMaxFileSize sets the MaxFileSize field's value.
+func (s *NeptuneSettings) SetMaxFileSize(v int64) *NeptuneSettings {
+	s.MaxFileSize = &v
+	return s
+}
+
+// SetMaxRetryCount sets the MaxRetryCount field's value.
+func (s *NeptuneSettings) SetMaxRetryCount(v int64) *NeptuneSettings {
+	s.MaxRetryCount = &v
+	return s
+}
+
+// SetS3BucketFolder sets the S3BucketFolder field's value.
+func (s *NeptuneSettings) SetS3BucketFolder(v string) *NeptuneSettings {
+	s.S3BucketFolder = &v
+	return s
+}
+
+// SetS3BucketName sets the S3BucketName field's value.
+func (s *NeptuneSettings) SetS3BucketName(v string) *NeptuneSettings {
+	s.S3BucketName = &v
+	return s
+}
+
+// SetServiceAccessRoleArn sets the ServiceAccessRoleArn field's value.
+func (s *NeptuneSettings) SetServiceAccessRoleArn(v string) *NeptuneSettings {
+	s.ServiceAccessRoleArn = &v
+	return s
+}
+
 // In response to the DescribeOrderableReplicationInstances operation, this
 // object describes an available replication instance. This description includes
 // the replication instance's type, engine version, and allocated storage.
@@ -11273,10 +11470,13 @@ type OrderableReplicationInstance struct {
 	// AWS DMS supports the ReleaseStatus parameter in versions 3.1.4 and later.
 	ReleaseStatus *string `type:"string" enum:"ReleaseStatusValues"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class. For example to specify the instance
+	// class dms.c4.large, set this parameter to "dms.c4.large".
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
 	// The type of storage used by the replication instance.
@@ -12097,7 +12297,8 @@ type ReplicationInstance struct {
 	// The Availability Zone for the instance.
 	AvailabilityZone *string `type:"string"`
 
-	// The DNS name servers for the replication instance.
+	// The DNS name servers supported for the replication instance to access your
+	// on-premise source or target database.
 	DnsNameServers *string `type:"string"`
 
 	// The engine version number of the replication instance.
@@ -12139,10 +12340,12 @@ type ReplicationInstance struct {
 	// The Amazon Resource Name (ARN) of the replication instance.
 	ReplicationInstanceArn *string `type:"string"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class.
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 
 	// The replication instance identifier. This parameter is stored as a lowercase
@@ -12150,7 +12353,7 @@ type ReplicationInstance struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 63 alphanumeric characters or hyphens.
+	//    * Must contain 1-63 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -12175,7 +12378,33 @@ type ReplicationInstance struct {
 	// One or more public IP addresses for the replication instance.
 	ReplicationInstancePublicIpAddresses []*string `type:"list"`
 
-	// The status of the replication instance.
+	// The status of the replication instance. The possible return values include:
+	//
+	//    * "available"
+	//
+	//    * "creating"
+	//
+	//    * "deleted"
+	//
+	//    * "deleting"
+	//
+	//    * "failed"
+	//
+	//    * "modifying"
+	//
+	//    * "upgrading"
+	//
+	//    * "rebooting"
+	//
+	//    * "resetting-master-credentials"
+	//
+	//    * "storage-full"
+	//
+	//    * "incompatible-credentials"
+	//
+	//    * "incompatible-network"
+	//
+	//    * "maintenance"
 	ReplicationInstanceStatus *string `type:"string"`
 
 	// The subnet group for the replication instance.
@@ -12396,10 +12625,12 @@ type ReplicationPendingModifiedValues struct {
 	// to true.
 	MultiAZ *bool `type:"boolean"`
 
-	// The compute and memory capacity of the replication instance.
+	// The compute and memory capacity of the replication instance as defined for
+	// the specified replication instance class.
 	//
-	// Valid Values: dms.t2.micro | dms.t2.small | dms.t2.medium | dms.t2.large
-	// | dms.c4.large | dms.c4.xlarge | dms.c4.2xlarge | dms.c4.4xlarge
+	// For more information on the settings and capacities for the available replication
+	// instance classes, see Selecting the right AWS DMS replication instance for
+	// your migration (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_ReplicationInstance.html#CHAP_ReplicationInstance.InDepth).
 	ReplicationInstanceClass *string `type:"string"`
 }
 
@@ -12606,7 +12837,7 @@ type ReplicationTask struct {
 	//
 	// Constraints:
 	//
-	//    * Must contain from 1 to 255 alphanumeric characters or hyphens.
+	//    * Must contain 1-255 alphanumeric characters or hyphens.
 	//
 	//    * First character must be a letter.
 	//
@@ -12629,7 +12860,20 @@ type ReplicationTask struct {
 	// The status of the replication task.
 	Status *string `type:"string"`
 
-	// The reason the replication task was stopped.
+	// The reason the replication task was stopped. This response parameter can
+	// return one of the following values:
+	//
+	//    * "STOP_REASON_FULL_LOAD_COMPLETED" – Full-load migration completed.
+	//
+	//    * "STOP_REASON_CACHED_CHANGES_APPLIED" – Change data capture (CDC) load
+	//    completed.
+	//
+	//    * "STOP_REASON_CACHED_CHANGES_NOT_APPLIED" – In a full-load and CDC
+	//    migration, the full-load stopped as specified before starting the CDC
+	//    migration.
+	//
+	//    * "STOP_REASON_SERVER_TIME" – The migration stopped at the specified
+	//    server time.
 	StopReason *string `type:"string"`
 
 	// Table mappings specified in the task.
@@ -12637,6 +12881,12 @@ type ReplicationTask struct {
 
 	// The Amazon Resource Name (ARN) string that uniquely identifies the endpoint.
 	TargetEndpointArn *string `type:"string"`
+
+	// Supplemental information that the task requires to migrate the data for certain
+	// source and target endpoints. For more information, see Specifying Supplemental
+	// Data for Task Settings (https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.TaskData.html)
+	// in the AWS Database Migration Service User Guide.
+	TaskData *string `type:"string"`
 }
 
 // String returns the string representation
@@ -12748,6 +12998,12 @@ func (s *ReplicationTask) SetTableMappings(v string) *ReplicationTask {
 // SetTargetEndpointArn sets the TargetEndpointArn field's value.
 func (s *ReplicationTask) SetTargetEndpointArn(v string) *ReplicationTask {
 	s.TargetEndpointArn = &v
+	return s
+}
+
+// SetTaskData sets the TaskData field's value.
+func (s *ReplicationTask) SetTaskData(v string) *ReplicationTask {
+	s.TaskData = &v
 	return s
 }
 
@@ -14062,8 +14318,13 @@ type SupportedEndpointType struct {
 	// The database engine name. Valid values, depending on the EndpointType, include
 	// "mysql", "oracle", "postgres", "mariadb", "aurora", "aurora-postgresql",
 	// "redshift", "s3", "db2", "azuredb", "sybase", "dynamodb", "mongodb", "kinesis",
-	// "kafka", "elasticsearch", "documentdb", and "sqlserver".
+	// "kafka", "elasticsearch", "documentdb", "sqlserver", and "neptune".
 	EngineName *string `type:"string"`
+
+	// The earliest AWS DMS engine version that supports this endpoint engine. Note
+	// that endpoint engines released with AWS DMS versions earlier than 3.1.1 do
+	// not return a value for this parameter.
+	ReplicationInstanceEngineMinimumVersion *string `type:"string"`
 
 	// Indicates if Change Data Capture (CDC) is supported.
 	SupportsCDC *bool `type:"boolean"`
@@ -14094,6 +14355,12 @@ func (s *SupportedEndpointType) SetEngineDisplayName(v string) *SupportedEndpoin
 // SetEngineName sets the EngineName field's value.
 func (s *SupportedEndpointType) SetEngineName(v string) *SupportedEndpointType {
 	s.EngineName = &v
+	return s
+}
+
+// SetReplicationInstanceEngineMinimumVersion sets the ReplicationInstanceEngineMinimumVersion field's value.
+func (s *SupportedEndpointType) SetReplicationInstanceEngineMinimumVersion(v string) *SupportedEndpointType {
+	s.ReplicationInstanceEngineMinimumVersion = &v
 	return s
 }
 
@@ -14365,16 +14632,16 @@ func (s *TableToReload) SetTableName(v string) *TableToReload {
 type Tag struct {
 	_ struct{} `type:"structure"`
 
-	// A key is the required name of the tag. The string value can be from 1 to
-	// 128 Unicode characters in length and can't be prefixed with "aws:" or "dms:".
-	// The string can only contain only the set of Unicode letters, digits, white-space,
-	// '_', '.', '/', '=', '+', '-' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
+	// A key is the required name of the tag. The string value can be 1-128 Unicode
+	// characters in length and can't be prefixed with "aws:" or "dms:". The string
+	// can only contain only the set of Unicode letters, digits, white-space, '_',
+	// '.', '/', '=', '+', '-' (Java regular expressions: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
 	Key *string `type:"string"`
 
-	// A value is the optional value of the tag. The string value can be from 1
-	// to 256 Unicode characters in length and can't be prefixed with "aws:" or
-	// "dms:". The string can only contain only the set of Unicode letters, digits,
-	// white-space, '_', '.', '/', '=', '+', '-' (Java regex: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
+	// A value is the optional value of the tag. The string value can be 1-256 Unicode
+	// characters in length and can't be prefixed with "aws:" or "dms:". The string
+	// can only contain only the set of Unicode letters, digits, white-space, '_',
+	// '.', '/', '=', '+', '-' (Java regular expressions: "^([\\p{L}\\p{Z}\\p{N}_.:/=+\\-]*)$").
 	Value *string `type:"string"`
 }
 
@@ -14531,15 +14798,15 @@ func (s *UpgradeDependencyFailureFault) RequestID() string {
 	return s.RespMetadata.RequestID
 }
 
-// Describes status of a security group associated with the virtual private
-// cloud hosting your replication and DB instances.
+// Describes the status of a security group associated with the virtual private
+// cloud (VPC) hosting your replication and DB instances.
 type VpcSecurityGroupMembership struct {
 	_ struct{} `type:"structure"`
 
 	// The status of the VPC security group.
 	Status *string `type:"string"`
 
-	// The VPC security group Id.
+	// The VPC security group ID.
 	VpcSecurityGroupId *string `type:"string"`
 }
 

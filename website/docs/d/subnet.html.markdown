@@ -98,3 +98,4 @@ In addition the following attributes are exported:
 
 * `arn` - The ARN of the subnet.
 * `owner_id` - The ID of the AWS account that owns the subnet.
+* `outpost_arn` - The Amazon Resource Name (ARN) of the Outpost.

@@ -6,6 +6,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
@@ -28,10 +29,12 @@ func TestAccAWSWafSqlInjectionMatchSet_basic(t *testing.T) {
 					testAccCheckAWSWafSqlInjectionMatchSetExists(resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.field_to_match.2316364334.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.field_to_match.2316364334.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.text_transformation", "URL_DECODE"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "QUERY_STRING",
+						"text_transformation":   "URL_DECODE",
+					}),
 				),
 			},
 			{
@@ -117,10 +120,12 @@ func TestAccAWSWafSqlInjectionMatchSet_changeTuples(t *testing.T) {
 					testAccCheckAWSWafSqlInjectionMatchSetExists(resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.field_to_match.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.field_to_match.2316364334.data", ""),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.field_to_match.2316364334.type", "QUERY_STRING"),
-					resource.TestCheckResourceAttr(resourceName, "sql_injection_match_tuples.3367958210.text_transformation", "URL_DECODE"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "sql_injection_match_tuples.*", map[string]string{
+						"field_to_match.#":      "1",
+						"field_to_match.0.data": "",
+						"field_to_match.0.type": "QUERY_STRING",
+						"text_transformation":   "URL_DECODE",
+					}),
 				),
 			},
 			{

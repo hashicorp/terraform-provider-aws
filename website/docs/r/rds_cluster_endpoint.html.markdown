@@ -3,12 +3,12 @@ subcategory: "RDS"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster_endpoint"
 description: |-
-  Manages a RDS Aurora Cluster Endpoint
+  Manages an RDS Aurora Cluster Endpoint
 ---
 
 # Resource: aws_rds_cluster_endpoint
 
-Manages a RDS Aurora Cluster Endpoint.
+Manages an RDS Aurora Cluster Endpoint.
 You can refer to the [User Guide][1].
 
 
@@ -30,6 +30,8 @@ resource "aws_rds_cluster_instance" "test1" {
   cluster_identifier = "${aws_rds_cluster.default.id}"
   identifier         = "test1"
   instance_class     = "db.t2.small"
+  engine             = "${aws_rds_cluster.default.engine}"
+  engine_version     = "${aws_rds_cluster.default.engine_version}"
 }
 
 resource "aws_rds_cluster_instance" "test2" {
@@ -37,6 +39,8 @@ resource "aws_rds_cluster_instance" "test2" {
   cluster_identifier = "${aws_rds_cluster.default.id}"
   identifier         = "test2"
   instance_class     = "db.t2.small"
+  engine             = "${aws_rds_cluster.default.engine}"
+  engine_version     = "${aws_rds_cluster.default.engine_version}"
 }
 
 resource "aws_rds_cluster_instance" "test3" {
@@ -44,6 +48,8 @@ resource "aws_rds_cluster_instance" "test3" {
   cluster_identifier = "${aws_rds_cluster.default.id}"
   identifier         = "test3"
   instance_class     = "db.t2.small"
+  engine             = "${aws_rds_cluster.default.engine}"
+  engine_version     = "${aws_rds_cluster.default.engine_version}"
 }
 
 resource "aws_rds_cluster_endpoint" "eligible" {

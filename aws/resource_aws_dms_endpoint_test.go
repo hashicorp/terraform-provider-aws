@@ -231,6 +231,78 @@ func TestAccAwsDmsEndpoint_Elasticsearch_FullLoadErrorPercentage(t *testing.T) {
 	})
 }
 
+func TestAccAwsDmsEndpoint_Kafka_Broker(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointKafkaConfigBroker(rName, "ec2-12-345-678-901.compute-1.amazonaws.com:2345"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.broker", "ec2-12-345-678-901.compute-1.amazonaws.com:2345"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointKafkaConfigBroker(rName, "ec2-12-345-678-901.compute-1.amazonaws.com:3456"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.broker", "ec2-12-345-678-901.compute-1.amazonaws.com:3456"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "kafka-default-topic"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAwsDmsEndpoint_Kafka_Topic(t *testing.T) {
+	resourceName := "aws_dms_endpoint.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: dmsEndpointDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: dmsEndpointKafkaConfigTopic(rName, "topic1"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "topic1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"password"},
+			},
+			{
+				Config: dmsEndpointKafkaConfigTopic(rName, "topic2"),
+				Check: resource.ComposeTestCheckFunc(
+					checkDmsEndpointExists(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "kafka_settings.0.topic", "topic2"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAwsDmsEndpoint_Kinesis(t *testing.T) {
 	resourceName := "aws_dms_endpoint.dms_endpoint"
 	randId := acctest.RandString(8) + "-kinesis"
@@ -867,6 +939,35 @@ resource "aws_dms_endpoint" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, fullLoadErrorPercentage))
+}
+
+func dmsEndpointKafkaConfigBroker(rName string, broker string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "kafka"
+
+  kafka_settings {
+    broker = %[2]q
+  }
+}
+`, rName, broker)
+}
+
+func dmsEndpointKafkaConfigTopic(rName string, topic string) string {
+	return fmt.Sprintf(`
+resource "aws_dms_endpoint" "test" {
+  endpoint_id   = %[1]q
+  endpoint_type = "target"
+  engine_name   = "kafka"
+
+  kafka_settings {
+    broker = "ec2-12-345-678-901.compute-1.amazonaws.com:2345"
+    topic  = %[2]q
+  }
+}
+`, rName, topic)
 }
 
 func dmsEndpointKinesisConfig(randId string) string {

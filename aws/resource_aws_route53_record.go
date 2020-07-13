@@ -25,6 +25,7 @@ var r53NoHostedZoneFound = errors.New("No matching Hosted Zone found")
 var r53ValidRecordTypes = regexp.MustCompile("^(A|AAAA|CAA|CNAME|MX|NAPTR|NS|PTR|SOA|SPF|SRV|TXT)$")
 
 func resourceAwsRoute53Record() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsRoute53RecordCreate,
 		Read:   resourceAwsRoute53RecordRead,
@@ -315,6 +316,11 @@ func resourceAwsRoute53RecordUpdate(d *schema.ResourceData, meta interface{}) er
 				HostedZoneId:         aws.String(alias["zone_id"].(string)),
 			}
 		}
+	}
+
+	// If health check id is present send that to AWS
+	if v, _ := d.GetChange("health_check_id"); v.(string) != "" {
+		oldRec.HealthCheckId = aws.String(v.(string))
 	}
 
 	if v, _ := d.GetChange("set_identifier"); v.(string) != "" {
@@ -624,7 +630,17 @@ func findRecord(d *schema.ResourceData, meta interface{}) (*route53.ResourceReco
 		return nil, err
 	}
 
-	en := expandRecordName(d.Get("name").(string), *zoneRecord.HostedZone.Name)
+	var name string
+	// If we're dealing with a change of record name, but we're operating on the old, rather than
+	// the new, resource, then we need to use the old name to find it (in order to delete it).
+	if !d.IsNewResource() && d.HasChange("name") {
+		oldName, _ := d.GetChange("name")
+		name = oldName.(string)
+	} else {
+		name = d.Get("name").(string)
+	}
+
+	en := expandRecordName(name, *zoneRecord.HostedZone.Name)
 	log.Printf("[DEBUG] Expanded record name: %s", en)
 	d.Set("fqdn", en)
 

@@ -92,6 +92,13 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the routing table
 * `owner_id` - The ID of the AWS account that owns the route table
 
+## Import
+
+Default VPC Routing tables can be imported using the `vpc_id`, e.g.
+
+```
+$ terraform import aws_default_route_table.example vpc-33cc44dd
+```
 
 [aws-route-tables]: http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_Route_Tables.html#Route_Replacing_Main_Table
 [tf-route-tables]: /docs/providers/aws/r/route_table.html

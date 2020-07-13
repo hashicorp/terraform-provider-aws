@@ -31,7 +31,7 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 			"input": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.ValidateJsonString,
+				ValidateFunc: validation.StringIsJSON,
 			},
 
 			"result": {
@@ -40,8 +40,9 @@ func dataSourceAwsLambdaInvocation() *schema.Resource {
 			},
 
 			"result_map": {
-				Type:     schema.TypeMap,
-				Computed: true,
+				Type:       schema.TypeMap,
+				Computed:   true,
+				Deprecated: "use `result` attribute with jsondecode() function",
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},

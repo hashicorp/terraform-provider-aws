@@ -10,10 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
-	"github.com/jen20/awspolicyequivalence"
+	awspolicy "github.com/jen20/awspolicyequivalence"
 )
 
 func resourceAwsSqsQueuePolicy() *schema.Resource {
+	//lintignore:R011
 	return &schema.Resource{
 		Create: resourceAwsSqsQueuePolicyUpsert,
 		Read:   resourceAwsSqsQueuePolicyRead,
@@ -35,7 +36,7 @@ func resourceAwsSqsQueuePolicy() *schema.Resource {
 			"policy": {
 				Type:             schema.TypeString,
 				Required:         true,
-				ValidateFunc:     validation.ValidateJsonString,
+				ValidateFunc:     validation.StringIsJSON,
 				DiffSuppressFunc: suppressEquivalentAwsPolicyDiffs,
 			},
 		},
@@ -80,7 +81,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 			log.Printf("[DEBUG] SQS attribute %s not found - retrying", sqs.QueueAttributeNamePolicy)
 			return resource.RetryableError(notUpdatedError)
 		}
-		equivalent, err := awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+		equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(queuePolicy), policy)
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -99,7 +100,7 @@ func resourceAwsSqsQueuePolicyUpsert(d *schema.ResourceData, meta interface{}) e
 			}
 
 			var equivalent bool
-			equivalent, err = awspolicy.PoliciesAreEquivalent(*queuePolicy, policy)
+			equivalent, err = awspolicy.PoliciesAreEquivalent(aws.StringValue(queuePolicy), policy)
 			if !equivalent {
 				return notUpdatedError
 			}
@@ -122,7 +123,7 @@ func resourceAwsSqsQueuePolicyRead(d *schema.ResourceData, meta interface{}) err
 		AttributeNames: []*string{aws.String(sqs.QueueAttributeNamePolicy)},
 	})
 	if err != nil {
-		if isAWSErr(err, "AWS.SimpleQueueService.NonExistentQueue", "") {
+		if isAWSErr(err, sqs.ErrCodeQueueDoesNotExist, "") {
 			log.Printf("[WARN] SQS Queue (%s) not found", d.Id())
 			d.SetId("")
 			return nil

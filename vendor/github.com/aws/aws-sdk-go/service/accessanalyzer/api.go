@@ -1996,7 +1996,8 @@ type AnalyzedResource struct {
 	// ResourceType is a required field
 	ResourceType *string `locationName:"resourceType" type:"string" required:"true" enum:"ResourceType"`
 
-	// Indicates how the access that generated the finding is granted.
+	// Indicates how the access that generated the finding is granted. This is populated
+	// for Amazon S3 bucket findings.
 	SharedVia []*string `locationName:"sharedVia" type:"list"`
 
 	// The current status of the finding generated from the analyzed resource.
@@ -2866,6 +2867,10 @@ type Finding struct {
 	// ResourceType is a required field
 	ResourceType *string `locationName:"resourceType" type:"string" required:"true" enum:"ResourceType"`
 
+	// The sources of the finding. This indicates how the access that generated
+	// the finding is granted. It is populated for Amazon S3 bucket findings.
+	Sources []*FindingSource `locationName:"sources" type:"list"`
+
 	// The current status of the finding.
 	//
 	// Status is a required field
@@ -2953,6 +2958,12 @@ func (s *Finding) SetResourceType(v string) *Finding {
 	return s
 }
 
+// SetSources sets the Sources field's value.
+func (s *Finding) SetSources(v []*FindingSource) *Finding {
+	s.Sources = v
+	return s
+}
+
 // SetStatus sets the Status field's value.
 func (s *Finding) SetStatus(v string) *Finding {
 	s.Status = &v
@@ -2962,6 +2973,68 @@ func (s *Finding) SetStatus(v string) *Finding {
 // SetUpdatedAt sets the UpdatedAt field's value.
 func (s *Finding) SetUpdatedAt(v time.Time) *Finding {
 	s.UpdatedAt = &v
+	return s
+}
+
+// The source of the finding. This indicates how the access that generated the
+// finding is granted. It is populated for Amazon S3 bucket findings.
+type FindingSource struct {
+	_ struct{} `type:"structure"`
+
+	// Includes details about how the access that generated the finding is granted.
+	// This is populated for Amazon S3 bucket findings.
+	Detail *FindingSourceDetail `locationName:"detail" type:"structure"`
+
+	// Indicates the type of access that generated the finding.
+	//
+	// Type is a required field
+	Type *string `locationName:"type" type:"string" required:"true" enum:"FindingSourceType"`
+}
+
+// String returns the string representation
+func (s FindingSource) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FindingSource) GoString() string {
+	return s.String()
+}
+
+// SetDetail sets the Detail field's value.
+func (s *FindingSource) SetDetail(v *FindingSourceDetail) *FindingSource {
+	s.Detail = v
+	return s
+}
+
+// SetType sets the Type field's value.
+func (s *FindingSource) SetType(v string) *FindingSource {
+	s.Type = &v
+	return s
+}
+
+// Includes details about how the access that generated the finding is granted.
+// This is populated for Amazon S3 bucket findings.
+type FindingSourceDetail struct {
+	_ struct{} `type:"structure"`
+
+	// The ARN of the access point that generated the finding.
+	AccessPointArn *string `locationName:"accessPointArn" type:"string"`
+}
+
+// String returns the string representation
+func (s FindingSourceDetail) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s FindingSourceDetail) GoString() string {
+	return s.String()
+}
+
+// SetAccessPointArn sets the AccessPointArn field's value.
+func (s *FindingSourceDetail) SetAccessPointArn(v string) *FindingSourceDetail {
+	s.AccessPointArn = &v
 	return s
 }
 
@@ -3016,6 +3089,10 @@ type FindingSummary struct {
 	//
 	// ResourceType is a required field
 	ResourceType *string `locationName:"resourceType" type:"string" required:"true" enum:"ResourceType"`
+
+	// The sources of the finding. This indicates how the access that generated
+	// the finding is granted. It is populated for Amazon S3 bucket findings.
+	Sources []*FindingSource `locationName:"sources" type:"list"`
 
 	// The status of the finding.
 	//
@@ -3101,6 +3178,12 @@ func (s *FindingSummary) SetResourceOwnerAccount(v string) *FindingSummary {
 // SetResourceType sets the ResourceType field's value.
 func (s *FindingSummary) SetResourceType(v string) *FindingSummary {
 	s.ResourceType = &v
+	return s
+}
+
+// SetSources sets the Sources field's value.
+func (s *FindingSummary) SetSources(v []*FindingSource) *FindingSummary {
+	s.Sources = v
 	return s
 }
 
@@ -4793,6 +4876,17 @@ const (
 
 	// AnalyzerStatusFailed is a AnalyzerStatus enum value
 	AnalyzerStatusFailed = "FAILED"
+)
+
+const (
+	// FindingSourceTypeBucketAcl is a FindingSourceType enum value
+	FindingSourceTypeBucketAcl = "BUCKET_ACL"
+
+	// FindingSourceTypePolicy is a FindingSourceType enum value
+	FindingSourceTypePolicy = "POLICY"
+
+	// FindingSourceTypeS3AccessPoint is a FindingSourceType enum value
+	FindingSourceTypeS3AccessPoint = "S3_ACCESS_POINT"
 )
 
 const (

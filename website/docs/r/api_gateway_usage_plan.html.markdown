@@ -73,19 +73,19 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 #### Api Stages arguments
 
-  * `api_id` (Required) - API Id of the associated API stage in a usage plan.
-  * `stage` (Required) - API stage name of the associated API stage in a usage plan.
+* `api_id` (Required) - API Id of the associated API stage in a usage plan.
+* `stage` (Required) - API stage name of the associated API stage in a usage plan.
 
 #### Quota Settings Arguments
 
-  * `limit` (Optional) - The maximum number of requests that can be made in a given time period.
-  * `offset` (Optional) - The number of requests subtracted from the given limit in the initial time period.
-  * `period` (Optional) - The time period in which the limit applies. Valid values are "DAY", "WEEK" or "MONTH".
+* `limit` (Optional) - The maximum number of requests that can be made in a given time period.
+* `offset` (Optional) - The number of requests subtracted from the given limit in the initial time period.
+* `period` (Optional) - The time period in which the limit applies. Valid values are "DAY", "WEEK" or "MONTH".
 
 #### Throttling Settings Arguments
 
-  * `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
-  * `rate_limit` (Optional) - The API request steady-state rate limit.
+* `burst_limit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
+* `rate_limit` (Optional) - The API request steady-state rate limit.
 
 ## Attributes Reference
 
