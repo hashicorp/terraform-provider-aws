@@ -15,6 +15,7 @@ BREAKING CHANGES
 * resource/aws_dx_gateway: Remove automatic `aws_dx_gateway_association` resource import [GH-14124]
 * resource/aws_elastic_transcoder_preset: Remove `video` configuration block `max_frame_rate` argument default value [GH-7141]
 * resource/aws_emr_cluster: Remove deprecated `instance_group` configuration block, `core_instance_count`, `core_instance_type`, and `master_instance_type` arguments [GH-14137]
+* resource/aws_msk_cluster: Update `encryption_info` `encryption_in_transit` `client_broker` argument default to match API default of `TLS` [GH-14132]
 * resource/aws_s3_bucket: Remove automatic `aws_s3_bucket_policy` resource import [GH-14121]
 * resource/aws_sns_platform_application: `platform_credential` and `platform_principal` attributes are no longer stored in the Terraform state with hash values [GH-3894]
 * resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
