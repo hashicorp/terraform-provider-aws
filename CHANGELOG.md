@@ -17,6 +17,10 @@ BREAKING CHANGES
 * resource/aws_sns_platform_application: `platform_credential` and `platform_principal` attributes are no longer stored in the Terraform state with hash values [GH-3894]
 * resource/aws_spot_fleet_request: Remove 24 hour default for `valid_until` argument [GH-9718]
 
+FEATURES
+
+* **New Data Source:** aws_workspaces_directory [GH-13529]
+
 ENHANCEMENTS
 
 * provider: Always enable shared configuration file support (no longer require `AWS_SDK_LOAD_CONFIG` environment variable) [GH-14077]
