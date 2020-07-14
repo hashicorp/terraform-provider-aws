@@ -154,6 +154,12 @@ output "lambda_result" {
 }
 ```
 
+## Resource: aws_acm_certificate
+
+### certificate_body, certificate_chain, and private_key Arguments No Longer Stored as Hash
+
+Previously when the `certificate_body`, `certificate_chain`, and `platform_principal` arguments were stored in state, they were stored as a hash of the actual value. This prevented Terraform from properly updating the resource when necessary and the hashing has been removed. The Terraform AWS Provider will show an update to these arguments on the first apply after upgrading to version 3.0.0, which is fixing the Terraform state to remove the hash. Since the `private_key` attribute is marked as sensitive, the values in the update will not be visible in the Terraform output. If the non-hashed values have not changed, then no update is occurring other than the Terraform state update. If these arguments are the only updates and they all match the hash removal, the apply will occur without submitting API calls.
+
 ## Resource: aws_autoscaling_group
 
 ### availability_zones and vpc_zone_identifier Arguments Now Report Plan-Time Conflict

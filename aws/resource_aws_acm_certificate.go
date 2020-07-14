@@ -1,6 +1,8 @@
 package aws
 
 import (
+	"crypto/sha1"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
@@ -36,20 +38,17 @@ func resourceAwsAcmCertificate() *schema.Resource {
 		},
 		Schema: map[string]*schema.Schema{
 			"certificate_body": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: suppressACMCertificateDiff,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"certificate_chain": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: suppressACMCertificateDiff,
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"private_key": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: suppressACMCertificateDiff,
-				Sensitive:        true,
+				Type:      schema.TypeString,
+				Optional:  true,
+				Sensitive: true,
 			},
 			"certificate_authority_arn": {
 				Type:     schema.TypeString,
@@ -309,9 +308,17 @@ func resourceAwsAcmCertificateUpdate(d *schema.ResourceData, meta interface{}) e
 	acmconn := meta.(*AWSClient).acmconn
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
-		_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
-		if err != nil {
-			return fmt.Errorf("Error updating certificate: %s", err)
+		// Prior to version 3.0.0 of the Terraform AWS Provider, these attributes were stored in state as hashes.
+		// If the changes to these attributes are only changes only match updating the state value, then skip the API call.
+		oCBRaw, nCBRaw := d.GetChange("certificate_body")
+		oCCRaw, nCCRaw := d.GetChange("certificate_chain")
+		oPKRaw, nPKRaw := d.GetChange("private_key")
+
+		if !isChangeNormalizeCertRemoval(oCBRaw, nCBRaw) || !isChangeNormalizeCertRemoval(oCCRaw, nCCRaw) || !isChangeNormalizeCertRemoval(oPKRaw, nPKRaw) {
+			_, err := resourceAwsAcmCertificateImport(acmconn, d, true)
+			if err != nil {
+				return fmt.Errorf("Error updating certificate: %s", err)
+			}
 		}
 	}
 
@@ -446,8 +453,19 @@ func flattenAcmCertificateOptions(co *acm.CertificateOptions) []interface{} {
 	return []interface{}{m}
 }
 
-func suppressACMCertificateDiff(k, old, new string, d *schema.ResourceData) bool {
-	// old == normalizeCert(new) is there for legacy reasons. The certificates used to be stored as a hash in the state
-	// However that prevented updates
-	return normalizeCert(old) == normalizeCert(new) || old == normalizeCert(new)
+func isChangeNormalizeCertRemoval(oldRaw, newRaw interface{}) bool {
+	old, ok := oldRaw.(string)
+
+	if !ok {
+		return false
+	}
+
+	new, ok := newRaw.(string)
+
+	if !ok {
+		return false
+	}
+
+	newCleanVal := sha1.Sum(stripCR([]byte(strings.TrimSpace(new))))
+	return hex.EncodeToString(newCleanVal[:]) == old
 }
