@@ -1,7 +1,6 @@
 package aws
 
 import (
-	"crypto/sha256"
 	"fmt"
 	"log"
 	"strings"
@@ -60,7 +59,7 @@ func resourceAwsSnsPlatformApplication() *schema.Resource {
 			"platform_credential": {
 				Type:      schema.TypeString,
 				Required:  true,
-				StateFunc: hashSum,
+				Sensitive: true,
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -89,7 +88,7 @@ func resourceAwsSnsPlatformApplication() *schema.Resource {
 			"platform_principal": {
 				Type:      schema.TypeString,
 				Optional:  true,
-				StateFunc: hashSum,
+				Sensitive: true,
 			},
 			"success_feedback_role_arn": {
 				Type:     schema.TypeString,
@@ -156,6 +155,12 @@ func resourceAwsSnsPlatformApplicationUpdate(d *schema.ResourceData, meta interf
 		if v, ok := d.GetOk("platform_principal"); ok {
 			attributes["PlatformPrincipal"] = aws.String(v.(string))
 		}
+	}
+
+	if d.HasChange("platform_principal") {
+		// If the principal has changed we must also send the credential, even if it didn't change,
+		// as they must be specified together in the request.
+		attributes["PlatformCredential"] = aws.String(d.Get("platform_credential").(string))
 	}
 
 	// Make API call to update attributes
@@ -269,10 +274,6 @@ func decodeResourceAwsSnsPlatformApplicationID(input string) (arnS, name, platfo
 	name = platformApplicationArnResourceParts[2]
 	platform = platformApplicationArnResourceParts[1]
 	return
-}
-
-func hashSum(contents interface{}) string {
-	return fmt.Sprintf("%x", sha256.Sum256([]byte(contents.(string))))
 }
 
 func validateAwsSnsPlatformApplication(d *schema.ResourceDiff) error {
