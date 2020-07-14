@@ -125,6 +125,33 @@ func TestAccAWSCodePipeline_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSCodePipeline_disappears(t *testing.T) {
+	githubToken := os.Getenv("GITHUB_TOKEN")
+	if githubToken == "" {
+		t.Skip("Environment variable GITHUB_TOKEN is not set")
+	}
+
+	var p codepipeline.PipelineDeclaration
+	name := acctest.RandString(10)
+	resourceName := "aws_codepipeline.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t); testAccPreCheckAWSCodePipeline(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSCodePipelineDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSCodePipelineConfig_basic(name, githubToken),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSCodePipelineExists(resourceName, &p),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsCodePipeline(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAWSCodePipeline_emptyStageArtifacts(t *testing.T) {
 	githubToken := os.Getenv("GITHUB_TOKEN")
 	if githubToken == "" {
@@ -565,7 +592,7 @@ func testAccPreCheckAWSCodePipeline(t *testing.T) {
 func testAccAWSCodePipelineServiceIAMRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%s"
+  name = "codepipeline-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -621,7 +648,7 @@ EOF
 func testAccAWSCodePipelineServiceIAMRoleWithAssumeRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%s"
+  name = "codepipeline-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -1056,62 +1083,9 @@ func testAccAWSCodePipelineConfig_multiregion(rName, githubToken string) string 
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
-		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
 		fmt.Sprintf(`
-resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.test.arn}",
-        "${aws_s3_bucket.test.arn}/*",
-        "${aws_s3_bucket.alternate.arn}",
-        "${aws_s3_bucket.alternate.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
@@ -1192,62 +1166,9 @@ func testAccAWSCodePipelineConfig_multiregionUpdated(rName, githubToken string) 
 	return composeConfig(
 		testAccAlternateRegionProviderConfig(),
 		testAccAWSCodePipelineS3DefaultBucket(rName),
-		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "awsalternate"),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		testAccAWSCodePipelineS3BucketWithProvider("alternate", rName, "aws.alternate"),
 		fmt.Sprintf(`
-resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.test.arn}",
-        "${aws_s3_bucket.test.arn}/*",
-        "${aws_s3_bucket.alternate.arn}",
-        "${aws_s3_bucket.alternate.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
@@ -1355,7 +1276,10 @@ resource "aws_s3_bucket" "%[1]s" {
 }
 
 func testAccAWSCodePipelineConfigWithNamespace(rName, githubToken string) string {
-	return fmt.Sprintf(`
+	return composeConfig(
+		testAccAWSCodePipelineS3DefaultBucket(rName),
+		testAccAWSCodePipelineServiceIAMRole(rName),
+		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
   name     = "test-pipeline-%[1]s"
   role_arn = "${aws_iam_role.codepipeline_role.arn}"
@@ -1413,59 +1337,7 @@ resource "aws_s3_bucket" "foo" {
   bucket = "tf-test-pipeline-%[1]s"
   acl    = "private"
 }
-
-resource "aws_iam_role" "codepipeline_role" {
-  name = "codepipeline-role-%[1]s"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "codepipeline.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "codepipeline_policy" {
-  name = "codepipeline_policy"
-  role = "${aws_iam_role.codepipeline_role.id}"
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect":"Allow",
-      "Action": [
-        "s3:GetObject",
-        "s3:GetObjectVersion",
-        "s3:GetBucketVersioning"
-      ],
-      "Resource": [
-        "${aws_s3_bucket.foo.arn}",
-        "${aws_s3_bucket.foo.arn}/*"
-      ]
-    },
-    {
-      "Effect": "Allow",
-      "Action": [
-        "codebuild:BatchGetBuilds",
-        "codebuild:StartBuild"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-`, rName, githubToken)
+`, rName, githubToken))
 }
 
 func TestResourceAWSCodePipelineExpandArtifactStoresValidation(t *testing.T) {
