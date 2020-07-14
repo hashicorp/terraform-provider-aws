@@ -252,7 +252,7 @@ func testAccAwsEc2ClientVpnEndpoint_federated(t *testing.T) {
 }
 
 func TestAccAwsEc2ClientVpnEndpoint_withLogGroup(t *testing.T) {
-  var v1, v2 ec2.ClientVpnEndpoint
+	var v1, v2 ec2.ClientVpnEndpoint
 	rStr := acctest.RandString(5)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
 
