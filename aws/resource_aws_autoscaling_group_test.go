@@ -2573,7 +2573,6 @@ resource "aws_launch_configuration" "foobar" {
 }
 
 resource "aws_autoscaling_group" "bar" {
-  availability_zones = ["${aws_subnet.foo.availability_zone}"]
   vpc_zone_identifier = ["${aws_subnet.foo.id}"]
   max_size = 2
   min_size = 2

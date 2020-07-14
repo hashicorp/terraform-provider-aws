@@ -20,6 +20,7 @@ Upgrade topics:
 - [Provider Authentication Updates](#provider-authentication-updates)
 - [Data Source: aws_availability_zones](#data-source-aws_availability_zones)
 - [Data Source: aws_lambda_invocation](#data-source-aws_lambda_invocation)
+- [Resource: aws_autoscaling_group](#resource-aws_autoscaling_group)
 - [Resource: aws_dx_gateway](#resource-aws_dx_gateway)
 - [Resource: aws_elastic_transcoder_preset](#resource-aws_elastic_transcoder_preset)
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
@@ -151,6 +152,12 @@ output "lambda_result" {
   value = jsondecode(data.aws_lambda_invocation.example.result)["key1"]
 }
 ```
+
+## Resource: aws_autoscaling_group
+
+### availability_zones and vpc_zone_identifier Arguments Now Report Plan-Time Conflict
+
+Specifying both the `availability_zones` and `vpc_zone_identifier` arguments previously led to confusing behavior and errors. Now this issue is reported at plan-time. Use the `null` value instead of `[]` (empty list) in conditionals to ensure this validation does not unexpectedly trigger.
 
 ## Resource: aws_dx_gateway
 
