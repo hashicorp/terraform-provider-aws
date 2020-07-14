@@ -1,10 +1,12 @@
 package aws
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"log"
-	"os"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
@@ -13,6 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 	iamwaiter "github.com/terraform-providers/terraform-provider-aws/aws/internal/service/iam/waiter"
+)
+
+const (
+	CodePipelineProviderGitHub = "GitHub"
+
+	CodePipelineGitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
 func resourceAwsCodePipeline() *schema.Resource {
@@ -101,9 +109,10 @@ func resourceAwsCodePipeline() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"configuration": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										Type:             schema.TypeMap,
+										Optional:         true,
+										Elem:             &schema.Schema{Type: schema.TypeString},
+										DiffSuppressFunc: suppressCodePipelineStageActionConfiguration,
 									},
 									"category": {
 										Type:     schema.TypeString,
@@ -320,10 +329,10 @@ func flattenAwsCodePipelineArtifactStores(artifactStores map[string]*codepipelin
 }
 
 func expandAwsCodePipelineStages(d *schema.ResourceData) []*codepipeline.StageDeclaration {
-	configs := d.Get("stage").([]interface{})
+	stages := d.Get("stage").([]interface{})
 	pipelineStages := []*codepipeline.StageDeclaration{}
 
-	for _, stage := range configs {
+	for _, stage := range stages {
 		data := stage.(map[string]interface{})
 		a := data["action"].([]interface{})
 		actions := expandAwsCodePipelineActions(a)
@@ -335,31 +344,23 @@ func expandAwsCodePipelineStages(d *schema.ResourceData) []*codepipeline.StageDe
 	return pipelineStages
 }
 
-func flattenAwsCodePipelineStages(stages []*codepipeline.StageDeclaration) []interface{} {
+func flattenAwsCodePipelineStages(stages []*codepipeline.StageDeclaration, d *schema.ResourceData) []interface{} {
 	stagesList := []interface{}{}
-	for _, stage := range stages {
+	for si, stage := range stages {
 		values := map[string]interface{}{}
 		values["name"] = aws.StringValue(stage.Name)
-		values["action"] = flattenAwsCodePipelineStageActions(stage.Actions)
+		values["action"] = flattenAwsCodePipelineStageActions(si, stage.Actions, d)
 		stagesList = append(stagesList, values)
 	}
 	return stagesList
-
 }
 
-func expandAwsCodePipelineActions(s []interface{}) []*codepipeline.ActionDeclaration {
+func expandAwsCodePipelineActions(a []interface{}) []*codepipeline.ActionDeclaration {
 	actions := []*codepipeline.ActionDeclaration{}
-	for _, config := range s {
+	for _, config := range a {
 		data := config.(map[string]interface{})
 
 		conf := expandAwsCodePipelineStageActionConfiguration(data["configuration"].(map[string]interface{}))
-		if data["provider"].(string) == "GitHub" {
-			githubToken := os.Getenv("GITHUB_TOKEN")
-			if githubToken != "" {
-				conf["OAuthToken"] = aws.String(githubToken)
-			}
-
-		}
 
 		action := codepipeline.ActionDeclaration{
 			ActionTypeId: &codepipeline.ActionTypeId{
@@ -406,9 +407,9 @@ func expandAwsCodePipelineActions(s []interface{}) []*codepipeline.ActionDeclara
 	return actions
 }
 
-func flattenAwsCodePipelineStageActions(actions []*codepipeline.ActionDeclaration) []interface{} {
+func flattenAwsCodePipelineStageActions(si int, actions []*codepipeline.ActionDeclaration, d *schema.ResourceData) []interface{} {
 	actionsList := []interface{}{}
-	for _, action := range actions {
+	for ai, action := range actions {
 		values := map[string]interface{}{
 			"category": aws.StringValue(action.ActionTypeId.Category),
 			"owner":    aws.StringValue(action.ActionTypeId.Owner),
@@ -418,11 +419,17 @@ func flattenAwsCodePipelineStageActions(actions []*codepipeline.ActionDeclaratio
 		}
 		if action.Configuration != nil {
 			config := flattenAwsCodePipelineStageActionConfiguration(action.Configuration)
-			_, ok := config["OAuthToken"]
+
 			actionProvider := aws.StringValue(action.ActionTypeId.Provider)
-			if ok && actionProvider == "GitHub" {
-				delete(config, "OAuthToken")
+			if actionProvider == CodePipelineProviderGitHub {
+				if _, ok := config[CodePipelineGitHubActionConfigurationOAuthToken]; ok {
+					// The AWS API returns "****" for the OAuthToken value. Pull the value from the configuration.
+					addr := fmt.Sprintf("stage.%d.action.%d.configuration.OAuthToken", si, ai)
+					hash := hashCodePipelineGitHubToken(d.Get(addr).(string))
+					config[CodePipelineGitHubActionConfigurationOAuthToken] = hash
+				}
 			}
+
 			values["configuration"] = config
 		}
 
@@ -545,7 +552,7 @@ func resourceAwsCodePipelineRead(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if err := d.Set("stage", flattenAwsCodePipelineStages(pipeline.Stages)); err != nil {
+	if err := d.Set("stage", flattenAwsCodePipelineStages(pipeline.Stages, d)); err != nil {
 		return err
 	}
 
@@ -611,4 +618,29 @@ func resourceAwsCodePipelineDelete(d *schema.ResourceData, meta interface{}) err
 	}
 
 	return err
+}
+
+func suppressCodePipelineStageActionConfiguration(k, old, new string, d *schema.ResourceData) bool {
+	parts := strings.Split(k, ".")
+	parts = parts[:len(parts)-2]
+	providerAddr := strings.Join(append(parts, "provider"), ".")
+	provider := d.Get(providerAddr).(string)
+
+	if provider == CodePipelineProviderGitHub && strings.HasSuffix(k, CodePipelineGitHubActionConfigurationOAuthToken) {
+		hash := hashCodePipelineGitHubToken(new)
+		return old == hash
+	}
+
+	return false
+}
+
+const codePipelineGitHubTokenHashPrefix = "hash-"
+
+func hashCodePipelineGitHubToken(token string) string {
+	// Without this check, the value was getting encoded twice
+	if strings.HasPrefix(token, codePipelineGitHubTokenHashPrefix) {
+		return token
+	}
+	sum := sha256.Sum256([]byte(token))
+	return codePipelineGitHubTokenHashPrefix + hex.EncodeToString(sum[:])
 }
