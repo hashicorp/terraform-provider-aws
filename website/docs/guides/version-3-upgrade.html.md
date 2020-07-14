@@ -26,6 +26,7 @@ Upgrade topics:
 - [Resource: aws_emr_cluster](#resource-aws_emr_cluster)
 - [Resource: aws_lb_listener_rule](#resource-aws_lb_listener_rule)
 - [Resource: aws_s3_bucket](#resource-aws_s3_bucket)
+- [Resource: aws_sns_platform_application](#resource-aws_sns_platform_application)
 - [Resource: aws_spot_fleet_request](#resource-aws_spot_fleet_request)
 
 <!-- /TOC -->
@@ -343,6 +344,12 @@ resource "aws_lb_listener_rule" "example" {
 ### Removal of Automatic aws_s3_bucket_policy Import
 
 Previously when importing the `aws_s3_bucket` resource with the [`terraform import` command](/docs/commands/import.html), the Terraform AWS Provider would automatically attempt to import an associated `aws_s3_bucket_policy` resource as well. This automatic resource import has been removed. Use the [`aws_s3_bucket_policy` resource import](/docs/providers/aws/r/s3_bucket_policy.html#import) to import that resource separately.
+
+## Resource: aws_sns_platform_application
+
+### platform_credential and platform_principal Arguments No Longer Stored as SHA256 Hash
+
+Previously when the `platform_credential` and `platform_principal` arguments were stored in state, they were stored as a SHA256 hash of the actual value. This prevented Terraform from properly updating the resource when necessary and the hashing has been removed. The Terraform AWS Provider will show an update to these arguments on the first apply after upgrading to version 3.0.0, which is fixing the Terraform state to remove the hash. Since the attributes are marked as sensitive, the values in the update will not be visible in the Terraform output. If the non-hashed values have not changed, then no update is occurring other than the Terraform state update. If these arguments are the only two updates and they both match the SHA256 removal, the apply will occur without submitting an actual `SetPlatformApplicationAttributes` API call.
 
 ## Resource: aws_spot_fleet_request
 
